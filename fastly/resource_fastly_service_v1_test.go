@@ -95,6 +95,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"healthcheck":           "",
 					"ssl_check_cert":        true,
 					"ssl_hostname":          "",
+					"ssl_ca_cert":           "",
 					"ssl_cert_hostname":     "",
 					"ssl_sni_hostname":      "",
 					"shield":                "New York",

@@ -271,6 +271,12 @@ func resourceServiceV1() *schema.Resource {
 							Description: "SSL certificate hostname",
 							Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
 						},
+						"ssl_ca_cert": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "CA certificate attached to origin.",
+						},
 						"ssl_cert_hostname": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -1206,6 +1212,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
 					SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
 					SSLHostname:         df["ssl_hostname"].(string),
+					SSLCACert:           df["ssl_ca_cert"].(string),
 					SSLCertHostname:     df["ssl_cert_hostname"].(string),
 					SSLSNIHostname:      df["ssl_sni_hostname"].(string),
 					Shield:              df["shield"].(string),
@@ -2194,6 +2201,7 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 			"shield":                b.Shield,
 			"ssl_check_cert":        b.SSLCheckCert,
 			"ssl_hostname":          b.SSLHostname,
+			"ssl_ca_cert":           b.SSLCACert,
 			"ssl_cert_hostname":     b.SSLCertHostname,
 			"ssl_sni_hostname":      b.SSLSNIHostname,
 			"weight":                int(b.Weight),

@@ -78,6 +78,46 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("%s.notadomain.com", acctest.RandString(10))
+
+	log1 := gofastly.S3{
+		Version:           1,
+		Name:              "somebucketlog",
+		BucketName:        "fastlytestlogging",
+		Domain:            "s3.amazonaws.com",
+		AccessKey:         "somekey",
+		SecretKey:         "somesecret",
+		Period:            uint(3600),
+		GzipLevel:         uint(0),
+		Format:            "%h %l %u %t %r %>s",
+		FormatVersion:     1,
+		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
+		ResponseCondition: "response_condition_test",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1S3LoggingConfig_domain_default(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log1}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "s3logging.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 // Tests that s3_access_key and s3_secret_key are read from the env
 func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -203,6 +243,40 @@ func testAccCheckFastlyServiceV1S3LoggingAttributes(service *gofastly.ServiceDet
 
 		return nil
 	}
+}
+
+func testAccServiceV1S3LoggingConfig_domain_default(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+	condition {
+    name      = "response_condition_test"
+    type      = "RESPONSE"
+    priority  = 8
+    statement = "resp.status == 418"
+  }
+
+  s3logging {
+    name               = "somebucketlog"
+    bucket_name        = "fastlytestlogging"
+    s3_access_key      = "somekey"
+    s3_secret_key      = "somesecret"
+		response_condition = "response_condition_test"
+  }
+
+  force_destroy = true
+}`, name, domain)
 }
 
 func testAccServiceV1S3LoggingConfig(name, domain string) string {

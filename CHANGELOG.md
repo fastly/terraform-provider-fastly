@@ -1,4 +1,7 @@
 ## 0.1.2 (Unreleased)
+
+* s3logging: default S3 domain to `s3.amazonaws.com` to match api default [GH-12]
+
 ## 0.1.1 (June 21, 2017)
 
 NOTES:

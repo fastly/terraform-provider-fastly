@@ -524,6 +524,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "Bucket endpoint",
+							Default:     "s3.amazonaws.com",
 						},
 						"gzip_level": {
 							Type:        schema.TypeInt,

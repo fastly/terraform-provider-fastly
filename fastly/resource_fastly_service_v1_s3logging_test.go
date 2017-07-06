@@ -112,6 +112,8 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "s3logging.#", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "s3logging.910866243.domain", "s3.amazonaws.com"),
 				),
 			},
 		},

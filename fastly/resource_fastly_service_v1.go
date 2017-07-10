@@ -2156,7 +2156,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Syslog for (%s), version (%s): %s", d.Id(), s.ActiveVersion.Number, err)
+			return fmt.Errorf("[ERR] Error looking up Syslog for (%s), version (%d): %s", d.Id(), s.ActiveVersion.Number, err)
 		}
 
 		sll := flattenSyslogs(syslogList)

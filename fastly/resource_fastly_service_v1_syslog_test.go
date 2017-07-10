@@ -111,7 +111,7 @@ func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail
 		})
 
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Syslog Logging for (%s), version (%s): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("[ERR] Error looking up Syslog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(syslogList) != len(syslogs) {

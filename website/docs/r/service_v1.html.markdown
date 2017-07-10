@@ -157,6 +157,8 @@ Defined below.
 Defined below.
 * `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
 Defined below.
+* `syslog` - (Optional) A syslog endpoint to send streaming logs too.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
@@ -343,6 +345,17 @@ compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+
+The `syslog` block supports:
+
+* `name` - (Required) A unique name to identify this Syslog endpoint.
+* `address` - (Required) A hostname or IPv4 address of the Syslog endpoint.
+* `port` - (Optional) The port associated with the address where the Syslog endpoint can be accessed. Default `514`.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (%h %l %u %t %r %>s)
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
+* `token` - (Optional) Whether to prepend each message with a specific token.
+* `use_tls` - (Optional) Whether to use TLS for secure logging. Default `false`.
+* `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with.
 
 The `response_object` block supports:
 

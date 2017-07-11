@@ -356,6 +356,8 @@ The `syslog` block supports:
 * `token` - (Optional) Whether to prepend each message with a specific token.
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Default `false`.
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with.
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
+see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 The `response_object` block supports:
 

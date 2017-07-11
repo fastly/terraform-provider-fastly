@@ -780,6 +780,12 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "The Hostname used to verify the server's certificate",
 						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Name of a condition to apply this logging.",
+						},
 					},
 				},
 			},
@@ -1679,16 +1685,17 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				slf := pRaw.(map[string]interface{})
 
 				opts := gofastly.CreateSyslogInput{
-					Service:       d.Id(),
-					Version:       latestVersion,
-					Name:          slf["name"].(string),
-					Address:       slf["address"].(string),
-					Port:          uint(slf["port"].(int)),
-					Format:        slf["format"].(string),
-					FormatVersion: uint(slf["format_version"].(int)),
-					Token:         slf["token"].(string),
-					UseTLS:        gofastly.CBool(slf["use_tls"].(bool)),
-					TLSCACert:     slf["tls_ca_cert"].(string),
+					Service:           d.Id(),
+					Version:           latestVersion,
+					Name:              slf["name"].(string),
+					Address:           slf["address"].(string),
+					Port:              uint(slf["port"].(int)),
+					Format:            slf["format"].(string),
+					FormatVersion:     uint(slf["format_version"].(int)),
+					Token:             slf["token"].(string),
+					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+					TLSCACert:         slf["tls_ca_cert"].(string),
+					ResponseCondition: slf["response_condition"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -2667,14 +2674,15 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	for _, p := range syslogList {
 		// Convert Syslog to a map for saving to state.
 		ns := map[string]interface{}{
-			"name":           p.Name,
-			"address":        p.Address,
-			"port":           p.Port,
-			"format":         p.Format,
-			"format_version": p.FormatVersion,
-			"token":          p.Token,
-			"use_tls":        p.UseTLS,
-			"tls_ca_cert":    p.TLSCACert,
+			"name":               p.Name,
+			"address":            p.Address,
+			"port":               p.Port,
+			"format":             p.Format,
+			"format_version":     p.FormatVersion,
+			"token":              p.Token,
+			"use_tls":            p.UseTLS,
+			"tls_ca_cert":        p.TLSCACert,
+			"response_condition": p.ResponseCondition,
 		}
 
 		// prune any empty values that come from the default string value in structs

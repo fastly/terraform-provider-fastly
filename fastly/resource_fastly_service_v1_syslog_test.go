@@ -18,12 +18,13 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("%s.notadomain1.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		Version:       1,
-		Name:          "somesyslogname",
-		Address:       "127.0.0.1",
-		Port:          uint(514),
-		Format:        "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion: 1,
+		Version:           1,
+		Name:              "somesyslogname",
+		Address:           "127.0.0.1",
+		Port:              uint(514),
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     1,
+		ResponseCondition: "response_condition_test",
 	}
 
 	log2 := gofastly.Syslog{
@@ -159,9 +160,16 @@ resource "fastly_service_v1" "foo" {
     address = "aws.amazon.com"
     name    = "amazon docs"
   }
+  condition {
+    name      = "response_condition_test"
+    type      = "RESPONSE"
+    priority  = 8
+    statement = "resp.status == 418"
+  }
   syslog {
-    name    = "somesyslogname"
-    address = "127.0.0.1"
+    name               = "somesyslogname"
+    address            = "127.0.0.1"
+	response_condition = "response_condition_test"
   }
   force_destroy = true
 }`, name, domain)
@@ -179,10 +187,17 @@ resource "fastly_service_v1" "foo" {
     address = "aws.amazon.com"
     name    = "amazon docs"
   }
+  condition {
+    name      = "response_condition_test"
+    type      = "RESPONSE"
+    priority  = 8
+    statement = "resp.status == 418"
+  }
   syslog {
-    name    = "somesyslogname"
-    address = "127.0.0.1"
-    port    = 514
+    name               = "somesyslogname"
+    address            = "127.0.0.1"
+    port               = 514
+	response_condition = "response_condition_test"
   }
   syslog {
     name    = "somesyslogname2"

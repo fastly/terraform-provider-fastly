@@ -117,6 +117,7 @@ func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
 		GzipLevel:       uint(0),
 		Format:          "%h %l %u %t %r %>s",
 		FormatVersion:   1,
+		MessageType:     "classic",
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
@@ -156,6 +157,7 @@ func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 		GzipLevel:       uint(0),
 		Format:          "%a %l %u %t %m %U%q %H %>s %b %T",
 		FormatVersion:   2,
+		MessageType:     "classic",
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 

@@ -1,8 +1,14 @@
 ## 0.1.2 (Unreleased)
 
-* s3logging: default S3 domain to `s3.amazonaws.com` to match api default [GH-12]
-* gcs_logging: Optionally use env variable for credentials [GH-15]
+IMPROVEMENTS:
+
 * backend: add `ssl_ca_cert` option [GH-11]
+* s3_logging: Support message_type attribute [GH-14]
+* gcs_logging: Optionally use env variable for credentials [GH-15]
+
+BUG FIXES: 
+
+* s3logging: default S3 domain to `s3.amazonaws.com` to match api default [GH-12]
 
 ## 0.1.1 (June 21, 2017)
 

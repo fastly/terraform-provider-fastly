@@ -569,6 +569,13 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "Name of a condition to apply this logging.",
 						},
+						"message_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "classic",
+							Description:  "How the message should be formatted.",
+							ValidateFunc: validateLoggingMessageType,
+						},
 					},
 				},
 			},
@@ -1415,6 +1422,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					FormatVersion:     uint(sf["format_version"].(int)),
 					TimestampFormat:   sf["timestamp_format"].(string),
 					ResponseCondition: sf["response_condition"].(string),
+					MessageType:       sf["message_type"].(string),
 				}
 
 				log.Printf("[DEBUG] Create S3 Logging Opts: %#v", opts)
@@ -2435,6 +2443,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"format_version":     s.FormatVersion,
 			"timestamp_format":   s.TimestampFormat,
 			"response_condition": s.ResponseCondition,
+			"message_type":       s.MessageType,
 		}
 
 		// prune any empty values that come from the default string value in structs

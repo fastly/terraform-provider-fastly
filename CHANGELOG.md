@@ -1,14 +1,14 @@
-## 0.1.2 (Unreleased)
+## 0.1.2 (August 02, 2017)
 
 IMPROVEMENTS:
 
-* backend: add `ssl_ca_cert` option [GH-11]
-* s3_logging: Support message_type attribute [GH-14]
-* gcs_logging: Optionally use env variable for credentials [GH-15]
+* backend: add `ssl_ca_cert` option ([#11](https://github.com/terraform-providers/terraform-provider-fastly/issues/11))
+* s3_logging: Support message_type attribute ([#14](https://github.com/terraform-providers/terraform-provider-fastly/issues/14))
+* gcs_logging: Optionally use env variable for credentials ([#15](https://github.com/terraform-providers/terraform-provider-fastly/issues/15))
 
 BUG FIXES: 
 
-* s3logging: default S3 domain to `s3.amazonaws.com` to match api default [GH-12]
+* s3logging: default S3 domain to `s3.amazonaws.com` to match api default ([#12](https://github.com/terraform-providers/terraform-provider-fastly/issues/12))
 
 ## 0.1.1 (June 21, 2017)
 

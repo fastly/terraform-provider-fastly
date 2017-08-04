@@ -128,13 +128,14 @@ func testAccCheckFastlyServiceV1Attributes_gcs(service *gofastly.ServiceDetail, 
 
 func testAccServiceV1Config_gcs(name, gcsName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "test.notadomain.com"
+    name    = "%s"
     comment = "tf-testing-domain"
   }
 
@@ -153,18 +154,19 @@ resource "fastly_service_v1" "foo" {
 	}
 
   force_destroy = true
-}`, name, backendName, gcsName)
+}`, name, domainName, backendName, gcsName)
 }
 
 func testAccServiceV1Config_gcs_env(name, gcsName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "test.notadomain.com"
+    name    = "%s"
     comment = "tf-testing-domain"
   }
 
@@ -181,7 +183,7 @@ resource "fastly_service_v1" "foo" {
 	}
 
   force_destroy = true
-}`, name, backendName, gcsName)
+}`, name, domainName, backendName, gcsName)
 }
 
 func setGcsEnv(s string, t *testing.T) func() {

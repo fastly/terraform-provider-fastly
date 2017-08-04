@@ -100,13 +100,14 @@ func testAccCheckFastlyServiceV1Attributes_sumologic(service *gofastly.ServiceDe
 
 func testAccServiceV1Config_sumologic(name, sumologic string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "test.notadomain.com"
+    name    = "%s"
     comment = "tf-testing-domain"
   }
 
@@ -122,5 +123,5 @@ resource "fastly_service_v1" "foo" {
   }
 
   force_destroy = true
-}`, name, backendName, sumologic)
+}`, name, domainName, backendName, sumologic)
 }

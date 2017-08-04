@@ -159,6 +159,8 @@ Defined below.
 Defined below.
 * `syslog` - (Optional) A syslog endpoint to send streaming logs too.
 Defined below.
+* `logentries` - (Optional) A logentries endpoint to send streaming logs too.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
@@ -360,6 +362,16 @@ The `syslog` block supports:
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
+
+The `logentries` block supports:
+
+* `name` - (Required) A unique name to identify this GCS endpoint.
+* `token` - (Required) Logentries Token to be used for authentication (https://logentries.com/doc/input-token/).
+* `port` - (Optional) The port number configured in Logentries to send logs to. Defaults to `20000`.
+* `use_tls` - (Optional) Whether to use TLS for secure logging. Defaults to `true`
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`).
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+
 
 The `response_object` block supports:
 

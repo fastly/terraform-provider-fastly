@@ -1,4 +1,9 @@
 ## 0.1.3 (Unreleased)
+
+IMPROVEMENTS: 
+
+* Add support for syslog logging [GH-16]
+
 ## 0.1.2 (August 02, 2017)
 
 IMPROVEMENTS:

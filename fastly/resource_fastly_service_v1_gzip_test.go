@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly"
+	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
 func TestFastlyServiceV1_FlattenGzips(t *testing.T) {

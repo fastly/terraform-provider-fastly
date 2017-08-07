@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly"
+	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
 func TestAccFastlyServiceV1_conditional_basic(t *testing.T) {

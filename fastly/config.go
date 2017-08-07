@@ -3,7 +3,7 @@ package fastly
 import (
 	"fmt"
 
-	gofastly "github.com/sethvargo/go-fastly"
+	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
 type Config struct {

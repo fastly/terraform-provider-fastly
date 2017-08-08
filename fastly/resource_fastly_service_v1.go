@@ -793,6 +793,13 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "Name of a condition to apply this logging.",
 						},
+						"message_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "classic",
+							Description:  "How the message should be formatted.",
+							ValidateFunc: validateLoggingMessageType,
+						},
 					},
 				},
 			},
@@ -1704,6 +1711,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
 					TLSCACert:         slf["tls_ca_cert"].(string),
 					ResponseCondition: slf["response_condition"].(string),
+					MessageType:       slf["message_type"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -2692,6 +2700,7 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 			"use_tls":            p.UseTLS,
 			"tls_ca_cert":        p.TLSCACert,
 			"response_condition": p.ResponseCondition,
+			"message_type":       p.MessageType,
 		}
 
 		// prune any empty values that come from the default string value in structs

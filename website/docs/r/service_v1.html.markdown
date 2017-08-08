@@ -360,6 +360,7 @@ The `syslog` block supports:
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
 
 The `response_object` block supports:
 

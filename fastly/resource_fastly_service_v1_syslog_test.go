@@ -21,19 +21,35 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		Version:           1,
 		Name:              "somesyslogname",
 		Address:           "127.0.0.1",
+		IPV4:              "127.0.0.1",
 		Port:              uint(514),
 		Format:            "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion:     1,
 		ResponseCondition: "response_condition_test",
+		MessageType:       "classic",
+	}
+
+	log1_after_update := gofastly.Syslog{
+		Version:           1,
+		Name:              "somesyslogname",
+		Address:           "127.0.0.1",
+		IPV4:              "127.0.0.1",
+		Port:              uint(514),
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     1,
+		ResponseCondition: "response_condition_test",
+		MessageType:       "blank",
 	}
 
 	log2 := gofastly.Syslog{
 		Version:       1,
 		Name:          "somesyslogname2",
 		Address:       "127.0.0.2",
+		IPV4:          "127.0.0.2",
 		Port:          uint(10514),
 		Format:        "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion: 1,
+		MessageType:   "classic",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -57,7 +73,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 				Config: testAccServiceV1SyslogConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1, &log2}),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1_after_update, &log2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -77,9 +93,11 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 		Version:       1,
 		Name:          "somesyslogname",
 		Address:       "127.0.0.1",
+		IPV4:          "127.0.0.1",
 		Port:          uint(514),
 		Format:        "%a %l %u %t %m %U%q %H %>s %b %T",
 		FormatVersion: 2,
+		MessageType:   "classic",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -198,6 +216,7 @@ resource "fastly_service_v1" "foo" {
     address            = "127.0.0.1"
     port               = 514
 	response_condition = "response_condition_test"
+    message_type       = "blank"
   }
   syslog {
     name    = "somesyslogname2"

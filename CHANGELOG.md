@@ -3,6 +3,7 @@
 IMPROVEMENTS: 
 
 * Add support for syslog logging [GH-16]
+* Add `message_type` support to syslog logging configuration [GH-30]
 
 ## 0.1.2 (August 02, 2017)
 

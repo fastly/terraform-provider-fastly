@@ -113,6 +113,7 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 		Format:            "%h %l %u %t %r %>s",
 		FormatVersion:     1,
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
+		MessageType:       "classic",
 		ResponseCondition: "response_condition_test",
 	}
 
@@ -130,8 +131,6 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "s3logging.#", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "s3logging.910866243.domain", "s3.amazonaws.com"),
 				),
 			},
 		},

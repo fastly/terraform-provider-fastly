@@ -251,7 +251,7 @@ see [Fastly's Documentation on Conditionals][fastly-conditionals].
 The `healthcheck` block supports:
 
 * `name` - (Required) A unique name to identify this Healthcheck.
-* `host` - (Required) Address of the host to check.
+* `host` - (Required) The Host header to send for this Healthcheck.
 * `path` - (Required) The path to check.
 * `check_interval` - (Optional) How often to run the Healthcheck in milliseconds. Default `5000`.
 * `expected_response` - (Optional) The status code expected from the host. Default `200`.

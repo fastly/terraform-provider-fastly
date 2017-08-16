@@ -2,6 +2,7 @@
 
 IMPROVEMENTS: 
 
+* Add support for Logentries logging [GH-24]
 * Add support for syslog logging [GH-16]
 * Add `message_type` support to syslog logging configuration [GH-30]
 

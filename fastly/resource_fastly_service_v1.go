@@ -804,6 +804,51 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
+			"logentries": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Unique name to refer to this logging setup",
+						},
+						"token": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
+						},
+						// Optional
+						"port": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     20000,
+							Description: "The port number configured in Logentries",
+						},
+						"use_tls": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+							Description: "Whether to use TLS for secure logging",
+						},
+						"format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "%h %l %u %t %r %>s",
+							Description: "Apache-style string or VCL variables to use for log formatting",
+						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Name of a condition to apply this logging.",
+						},
+					},
+				},
+			},
+
 			"response_object": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1019,6 +1064,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"s3logging",
 		"papertrail",
 		"syslog",
+		"logentries",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -1722,6 +1768,60 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// find difference in Logentries
+		if d.HasChange("logentries") {
+			os, ns := d.GetChange("logentries")
+			if os == nil {
+				os = new(schema.Set)
+			}
+			if ns == nil {
+				ns = new(schema.Set)
+			}
+
+			oss := os.(*schema.Set)
+			nss := ns.(*schema.Set)
+			removeLogentries := oss.Difference(nss).List()
+			addLogentries := nss.Difference(oss).List()
+
+			// DELETE old logentries configurations
+			for _, pRaw := range removeLogentries {
+				slf := pRaw.(map[string]interface{})
+				opts := gofastly.DeleteLogentriesInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    slf["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly Logentries removal opts: %#v", opts)
+				err := conn.DeleteLogentries(&opts)
+				if err != nil {
+					return err
+				}
+			}
+
+			// POST new/updated Logentries
+			for _, pRaw := range addLogentries {
+				slf := pRaw.(map[string]interface{})
+
+				opts := gofastly.CreateLogentriesInput{
+					Service:           d.Id(),
+					Version:           latestVersion,
+					Name:              slf["name"].(string),
+					Port:              uint(slf["port"].(int)),
+					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+					Token:             slf["token"].(string),
+					Format:            slf["format"].(string),
+					ResponseCondition: slf["response_condition"].(string),
+				}
+
+				log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
+				_, err := conn.CreateLogentries(&opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 		// find difference in Response Object
 		if d.HasChange("response_object") {
 			or, nr := d.GetChange("response_object")
@@ -2186,6 +2286,23 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("syslog", sll); err != nil {
 			log.Printf("[WARN] Error setting Syslog for (%s): %s", d.Id(), err)
+		}
+
+		// refresh Logentries Logging
+		log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
+		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Logentries for (%s), version (%d): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		lel := flattenLogentries(logentriesList)
+
+		if err := d.Set("logentries", lel); err != nil {
+			log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
 		}
 
 		// refresh Response Objects
@@ -2714,6 +2831,32 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	}
 
 	return pl
+}
+
+func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]interface{} {
+	var LEList []map[string]interface{}
+	for _, currentLE := range logentriesList {
+		// Convert Logentries to a map for saving to state.
+		LEMapString := map[string]interface{}{
+			"name":               currentLE.Name,
+			"port":               currentLE.Port,
+			"use_tls":            currentLE.UseTLS,
+			"token":              currentLE.Token,
+			"format":             currentLE.Format,
+			"response_condition": currentLE.ResponseCondition,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range LEMapString {
+			if v == "" {
+				delete(LEMapString, k)
+			}
+		}
+
+		LEList = append(LEList, LEMapString)
+	}
+
+	return LEList
 }
 
 func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]interface{} {

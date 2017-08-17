@@ -839,6 +839,13 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "%h %l %u %t %r %>s",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
+						"format_version": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+							ValidateFunc: validateLoggingFormatVersion,
+						},
 						"response_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -1811,6 +1818,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
 					Token:             slf["token"].(string),
 					Format:            slf["format"].(string),
+					FormatVersion:     uint(slf["format_version"].(int)),
 					ResponseCondition: slf["response_condition"].(string),
 				}
 
@@ -2843,6 +2851,7 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 			"use_tls":            currentLE.UseTLS,
 			"token":              currentLE.Token,
 			"format":             currentLE.Format,
+			"format_version":     currentLE.FormatVersion,
 			"response_condition": currentLE.ResponseCondition,
 		}
 

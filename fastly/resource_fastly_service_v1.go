@@ -369,6 +369,30 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
+			"dictionary": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A name of the dictionary",
+						},
+						"id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "An ID of the dictionary",
+						},
+						"items": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Description: "A map of dictionary items",
+						},
+					},
+				},
+			},
+
 			"gzip": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1095,6 +1119,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"request_setting",
 		"cache_setting",
 		"vcl",
+		"dictionary",
 	} {
 		if d.HasChange(v) {
 			needsChange = true
@@ -2072,6 +2097,81 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// Find differences in Dictionaries
+		if d.HasChange("dictionary") {
+			log.Printf("[DEBUG] Fastly Service dictionary: %#v", d.Get("dictionary"))
+			oldDicts, newDicts := d.GetChange("dictionary")
+			log.Printf("[DEBUG] Fastly Dictionary old: %#v", oldDicts)
+			log.Printf("[DEBUG] Fastly Dictionary new: %#v", newDicts)
+
+			if oldDicts == nil {
+				oldDicts = new(schema.Set)
+			}
+			if newDicts == nil {
+				newDicts = new(schema.Set)
+			}
+
+			oldDictsSet := oldDicts.(*schema.Set)
+			newDictsSet := newDicts.(*schema.Set)
+
+			remove := oldDictsSet.Difference(newDictsSet).List()
+			add := newDictsSet.Difference(oldDictsSet).List()
+
+			log.Printf("[DEBUG] Fastly Dictionary to remove: %#v", remove)
+			log.Printf("[DEBUG] Fastly Dictionary to add: %#v", add)
+
+			// Delete removed Dictionaries
+			for _, dRaw := range remove {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.DeleteDictionaryInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    df["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly Dictionary removal opts: %#v", opts)
+				err := conn.DeleteDictionary(&opts)
+				if err != nil {
+					return err
+				}
+			}
+
+			// POST new Dictionaries and Items
+			for _, dRaw := range add {
+				df := dRaw.(map[string]interface{})
+				dopts := gofastly.CreateDictionaryInput{
+					Name:    df["name"].(string),
+					Service: d.Id(),
+					Version: latestVersion,
+				}
+
+				log.Printf("[DEBUG] Fastly Dictionary creation opts: %#v", dopts)
+				dict, err := conn.CreateDictionary(&dopts)
+				if err != nil {
+					return err
+				}
+
+				if vals, ok := df["items"]; ok {
+					if len(vals.(map[string]interface{})) > 0 {
+						for k, va := range vals.(map[string]interface{}) {
+							iopts := gofastly.CreateDictionaryItemInput{
+								Dictionary: dict.ID,
+								Service:    d.Id(),
+								ItemKey:    k,
+								ItemValue:  va.(string),
+							}
+							log.Printf("[DEBUG] Fastly Dictionary Item creation opts: %#v", iopts)
+							_, err := conn.CreateDictionaryItem(&iopts)
+							if err != nil {
+								return err
+							}
+						}
+					}
+
+				}
+			}
+		}
+
 		// validate version
 		log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
 		valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
@@ -2416,6 +2516,39 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("cache_setting", csl); err != nil {
 			log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
+		}
+
+		// refresh dictionaries
+		log.Printf("[DEBUG] Refreshing dictionaries for (%s)", d.Id())
+		dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		var dictionaries []*Dictionary
+		if len(dictList) > 0 {
+			for _, dict := range dictList {
+				// refresh dictionary items
+				log.Printf("[DEBUG] Refreshing dictionary items for dictionary (%s), service (%s) ", dict.ID, d.Id())
+				items, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
+					Service:    d.Id(),
+					Dictionary: dict.ID,
+				})
+				if err != nil {
+					return fmt.Errorf("[ERR] Error looking up Dictionary Items for dictionary (%s), service (%s): %s", dict.ID, d.Id(), err)
+				}
+				dictionaries = append(dictionaries, &Dictionary{dictionary: dict, items: items})
+			}
+		}
+
+		dil := flattenDictionaries(dictionaries)
+
+		if err := d.Set("dictionary", dil); err != nil {
+			log.Printf("[WARN] Error setting Dictionaries for (%s): %s", d.Id(), err)
 		}
 
 	} else {

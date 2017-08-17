@@ -31,7 +31,7 @@ func TestResourceFastlyFlattenDictionary(t *testing.T) {
 					"id":   "dict_id_1",
 				}
 
-				items := make(map[string]interface{})
+				items := make(map[string]string)
 				items["key1"] = "val1"
 				items["key2"] = "val2"
 

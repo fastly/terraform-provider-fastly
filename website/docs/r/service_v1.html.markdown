@@ -371,6 +371,7 @@ The `logentries` block supports:
 * `port` - (Optional) The port number configured in Logentries to send logs to. Defaults to `20000`.
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Defaults to `true`
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`).
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 

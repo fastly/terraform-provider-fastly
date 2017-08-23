@@ -24,6 +24,7 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		UseTLS:            true,
 		Token:             "token",
 		Format:            "%h %l %u %t %r %>s",
+		FormatVersion:     1,
 		ResponseCondition: "response_condition_test",
 	}
 
@@ -34,6 +35,7 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		UseTLS:            false,
 		Token:             "newtoken",
 		Format:            "%h %u %t %r %>s",
+		FormatVersion:     1,
 		ResponseCondition: "response_condition_test",
 	}
 
@@ -115,6 +117,42 @@ func testAccCheckFastlyServiceV1LogentriesAttributes(service *gofastly.ServiceDe
 	}
 }
 
+func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	log1 := gofastly.Logentries{
+		Version:           1,
+		Name:              "somelogentriesname",
+		Port:              uint(20000),
+		UseTLS:            true,
+		Token:             "token",
+		Format:            "%h %l %u %t %r %>s",
+		FormatVersion:     2,
+		ResponseCondition: "response_condition_test",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1LogentriesConfig_formatVersion(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "logentries.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccServiceV1LogentriesConfig(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
@@ -172,6 +210,34 @@ resource "fastly_service_v1" "foo" {
     token              = "newtoken"
     format             = "%%h %%u %%t %%r %%>s"
     response_condition = "response_condition_test"
+  }
+  force_destroy = true
+}`, name, domain)
+}
+
+func testAccServiceV1LogentriesConfig_formatVersion(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+  condition {
+    name      = "response_condition_test"
+    type      = "RESPONSE"
+    priority  = 8
+    statement = "resp.status == 418"
+  }
+  logentries {
+    name               = "somelogentriesname"
+    token              = "token"
+    response_condition = "response_condition_test"
+    format_version     = 2
   }
   force_destroy = true
 }`, name, domain)

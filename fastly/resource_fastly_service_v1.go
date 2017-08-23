@@ -289,6 +289,18 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "SSL certificate hostname for SNI verification",
 						},
+						"ssl_client_cert": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Client certificate attached to origin.",
+						},
+						"ssl_client_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Client certificate attached to origin.",
+						},
 						// UseSSL is something we want to support in the future, but
 						// requires SSL setup we don't yet have
 						// TODO: Provide all SSL fields from https://docs.fastly.com/api/config#backend
@@ -1350,6 +1362,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					SSLCACert:           df["ssl_ca_cert"].(string),
 					SSLCertHostname:     df["ssl_cert_hostname"].(string),
 					SSLSNIHostname:      df["ssl_sni_hostname"].(string),
+					SSLClientCert:       df["ssl_client_cert"].(string),
+					SSLClientKey:        df["ssl_client_key"].(string),
 					Shield:              df["shield"].(string),
 					Port:                uint(df["port"].(int)),
 					BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
@@ -2487,6 +2501,8 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 			"ssl_ca_cert":           b.SSLCACert,
 			"ssl_cert_hostname":     b.SSLCertHostname,
 			"ssl_sni_hostname":      b.SSLSNIHostname,
+			"ssl_client_cert":       b.SSLClientCert,
+			"ssl_client_key":        b.SSLClientKey,
 			"weight":                int(b.Weight),
 			"request_condition":     b.RequestCondition,
 			"healthcheck":           b.HealthCheck,

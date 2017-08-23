@@ -98,6 +98,8 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"ssl_ca_cert":           "",
 					"ssl_cert_hostname":     "",
 					"ssl_sni_hostname":      "",
+					"ssl_client_cert":       "",
+					"ssl_client_key":        "",
 					"shield":                "New York",
 					"weight":                100,
 				},

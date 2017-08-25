@@ -672,6 +672,11 @@
 			"revisionTime": "2017-04-03T20:32:25Z",
 			"version": "v1.6.1",
 			"versionExact": "v1.6.1"
+		},
+		{
+			"path": "sethvargo/go-fastly",
+			"revision": "",
+			"version": "7c45c06c74b445c28067583ca6f614aef410c04d"
 		}
 	],
 	"rootPath": "github.com/terraform-providers/terraform-provider-fastly"

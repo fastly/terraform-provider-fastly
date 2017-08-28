@@ -349,6 +349,7 @@ compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `message_type` - (Optional) Message type (classic, loggly, logplex, blank) default is classic. [Fastly Documentation](https://docs.fastly.com/api/logging#logging_gcs)
 
 The `syslog` block supports:
 

@@ -72,10 +72,15 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					MaxConn:             uint(200),
 					RequestCondition:    "",
 					HealthCheck:         "",
+					UseSSL:              false,
 					SSLCheckCert:        true,
 					SSLHostname:         "",
+					SSLCACert:           "",
 					SSLCertHostname:     "",
 					SSLSNIHostname:      "",
+					SSLClientKey:        "",
+					SSLClientCert:       "",
+					SSLCiphers:          []string{"foo", "bar", "baz"},
 					Shield:              "New York",
 					Weight:              uint(100),
 				},
@@ -93,11 +98,15 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"max_conn":              200,
 					"request_condition":     "",
 					"healthcheck":           "",
+					"use_ssl":               false,
 					"ssl_check_cert":        true,
 					"ssl_hostname":          "",
 					"ssl_ca_cert":           "",
 					"ssl_cert_hostname":     "",
 					"ssl_sni_hostname":      "",
+					"ssl_client_key":        "",
+					"ssl_client_cert":       "",
+					"ssl_ciphers":           "foo,bar,baz",
 					"shield":                "New York",
 					"weight":                100,
 				},
@@ -108,7 +117,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 	for _, c := range cases {
 		out := flattenBackends(c.remote)
 		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
+			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
 		}
 	}
 }

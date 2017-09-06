@@ -258,6 +258,18 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "The POP of the shield designated to reduce inbound load.",
 						},
+						"use_ssl": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Whether or not to use SSL to reach the Backend",
+						},
+						"ssl_ciphers": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Comma sepparated list of ciphers",
+						},
 						"ssl_check_cert": {
 							Type:        schema.TypeBool,
 							Optional:    true,
@@ -289,15 +301,21 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "SSL certificate hostname for SNI verification",
 						},
-						// UseSSL is something we want to support in the future, but
-						// requires SSL setup we don't yet have
-						// TODO: Provide all SSL fields from https://docs.fastly.com/api/config#backend
-						// "use_ssl": &schema.Schema{
-						// 	Type:        schema.TypeBool,
-						// 	Optional:    true,
-						// 	Default:     false,
-						// 	Description: "Whether or not to use SSL to reach the Backend",
-						// },
+						"ssl_client_cert": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "SSL certificate file for client connections to the backend.",
+							Sensitive:   true,
+						},
+						"ssl_client_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "SSL key file for client connections to backend.",
+							Sensitive:   true,
+						},
+
 						"weight": {
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -1350,6 +1368,10 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					SSLCACert:           df["ssl_ca_cert"].(string),
 					SSLCertHostname:     df["ssl_cert_hostname"].(string),
 					SSLSNIHostname:      df["ssl_sni_hostname"].(string),
+					UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
+					SSLClientKey:        df["ssl_client_key"].(string),
+					SSLClientCert:       df["ssl_client_cert"].(string),
+					SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
 					Shield:              df["shield"].(string),
 					Port:                uint(df["port"].(int)),
 					BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
@@ -2485,6 +2507,10 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 			"ssl_check_cert":        b.SSLCheckCert,
 			"ssl_hostname":          b.SSLHostname,
 			"ssl_ca_cert":           b.SSLCACert,
+			"ssl_client_key":        b.SSLClientKey,
+			"ssl_client_cert":       b.SSLClientCert,
+			"ssl_ciphers":           strings.Join(b.SSLCiphers, ","),
+			"use_ssl":               b.UseSSL,
 			"ssl_cert_hostname":     b.SSLCertHostname,
 			"ssl_sni_hostname":      b.SSLSNIHostname,
 			"weight":                int(b.Weight),

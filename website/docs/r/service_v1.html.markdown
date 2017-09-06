@@ -187,6 +187,11 @@ Default `1000`
 Default `200`.
 * `port` - (Optional) The port number on which the Backend responds. Default `80`.
 * `request_condition` - (Optional, string) Name of already defined `condition`, which if met, will select this backend during a request.
+* `use_ssl` - (Optional) Whether or not to use SSL to reach the backend. Default `false`.
+* `ssl_ciphers` - (Optional) Comma separated list of OpenSSL Ciphers to try when negotiating to the backend.
+* `ssl_ca_cert` - (Optional) CA certificate attached to origin.
+* `ssl_client_cert` - (Optional) Client certificate attached to origin. Used when connecting to the backend.
+* `ssl_client_key` - (Optional) Client key attached to origin. Used when connecting to the backend.
 * `ssl_check_cert` - (Optional) Be strict about checking SSL certs. Default `true`.
 * `ssl_hostname` - (Optional, deprecated by Fastly) Used for both SNI during the TLS handshake and to validate the cert.
 * `ssl_cert_hostname` - (Optional) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all.

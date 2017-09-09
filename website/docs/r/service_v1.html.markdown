@@ -165,6 +165,8 @@ Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
+* `dictionary` - (Optional) A table that stores key value pairs accessible to VCL functions during VCL processing. Any change to a dictionary resource, including adding or removing items, will cause the whole dictionary to be recreated with a new dictionary ID in Fastly (with a new service version). This means that changes to dictionaries (of the same name), including their items, will be tracked by service versions, but they will be separate dictionaries. This is different from Fastly's default behavior where dictionary items are "version-less", but is required by how this Terraform provider works.
+
 
 The `domain` block supports:
 
@@ -399,6 +401,11 @@ The `vcl` block supports:
 * `main` - (Optional) If `true`, use this block as the main configuration. If
 `false`, use this block as an includable library. Only a single VCL block can be
 marked as the main block. Default is `false`.
+
+The `dictionary` block supports:
+
+* `name` - (Required) A unique name of the dictionary.
+* `items` - (Optional) A map of dictionary items. Becasue dictionary items are often used to store credentials, they are consider sensitive and their keys/values won't be displayed in diff output.
 
 ## Attributes Reference
 

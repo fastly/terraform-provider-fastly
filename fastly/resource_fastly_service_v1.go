@@ -389,6 +389,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Computed:    true,
 							Description: "A map of dictionary items",
+							Sensitive:   true,
 						},
 					},
 				},

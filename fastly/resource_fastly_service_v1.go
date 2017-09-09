@@ -387,6 +387,7 @@ func resourceServiceV1() *schema.Resource {
 						"items": {
 							Type:        schema.TypeMap,
 							Optional:    true,
+							Computed:    true,
 							Description: "A map of dictionary items",
 						},
 					},
@@ -2099,34 +2100,28 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// Find differences in Dictionaries
 		if d.HasChange("dictionary") {
-			log.Printf("[DEBUG] Fastly Service dictionary: %#v", d.Get("dictionary"))
-			oldDicts, newDicts := d.GetChange("dictionary")
-			log.Printf("[DEBUG] Fastly Dictionary old: %#v", oldDicts)
-			log.Printf("[DEBUG] Fastly Dictionary new: %#v", newDicts)
+			oldDictionaries, newDictionaries := d.GetChange("dictionary")
 
-			if oldDicts == nil {
-				oldDicts = new(schema.Set)
+			if oldDictionaries == nil {
+				oldDictionaries = new(schema.Set)
 			}
-			if newDicts == nil {
-				newDicts = new(schema.Set)
+			if newDictionaries == nil {
+				newDictionaries = new(schema.Set)
 			}
 
-			oldDictsSet := oldDicts.(*schema.Set)
-			newDictsSet := newDicts.(*schema.Set)
+			oldDictionariesSet := oldDictionaries.(*schema.Set)
+			newDictionariesSet := newDictionaries.(*schema.Set)
 
-			remove := oldDictsSet.Difference(newDictsSet).List()
-			add := newDictsSet.Difference(oldDictsSet).List()
-
-			log.Printf("[DEBUG] Fastly Dictionary to remove: %#v", remove)
-			log.Printf("[DEBUG] Fastly Dictionary to add: %#v", add)
+			remove := oldDictionariesSet.Difference(newDictionariesSet).List()
+			add := newDictionariesSet.Difference(oldDictionariesSet).List()
 
 			// Delete removed Dictionaries
 			for _, dRaw := range remove {
-				df := dRaw.(map[string]interface{})
+				dictionaryToRemove := dRaw.(map[string]interface{})
 				opts := gofastly.DeleteDictionaryInput{
 					Service: d.Id(),
 					Version: latestVersion,
-					Name:    df["name"].(string),
+					Name:    dictionaryToRemove["name"].(string),
 				}
 
 				log.Printf("[DEBUG] Fastly Dictionary removal opts: %#v", opts)
@@ -2138,11 +2133,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 			// POST new Dictionaries and Items
 			for _, dRaw := range add {
-				df := dRaw.(map[string]interface{})
+				dictionaryToAdd := dRaw.(map[string]interface{})
 				dopts := gofastly.CreateDictionaryInput{
-					Name:    df["name"].(string),
 					Service: d.Id(),
 					Version: latestVersion,
+					Name:    dictionaryToAdd["name"].(string),
 				}
 
 				log.Printf("[DEBUG] Fastly Dictionary creation opts: %#v", dopts)
@@ -2151,14 +2146,14 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 
-				if vals, ok := df["items"]; ok {
-					if len(vals.(map[string]interface{})) > 0 {
-						for k, va := range vals.(map[string]interface{}) {
+				if dictionaryItems, ok := dictionaryToAdd["items"]; ok {
+					if len(dictionaryItems.(map[string]interface{})) > 0 {
+						for itemKey, itemValue := range dictionaryItems.(map[string]interface{}) {
 							iopts := gofastly.CreateDictionaryItemInput{
 								Dictionary: dict.ID,
 								Service:    d.Id(),
-								ItemKey:    k,
-								ItemValue:  va.(string),
+								ItemKey:    itemKey,
+								ItemValue:  itemValue.(string),
 							}
 							log.Printf("[DEBUG] Fastly Dictionary Item creation opts: %#v", iopts)
 							_, err := conn.CreateDictionaryItem(&iopts)
@@ -2520,7 +2515,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		// refresh dictionaries
 		log.Printf("[DEBUG] Refreshing dictionaries for (%s)", d.Id())
-		dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+		dictionariesList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
 			Service: d.Id(),
 			Version: s.ActiveVersion.Number,
 		})
@@ -2529,25 +2524,25 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 		}
 
-		var dictionaries []*Dictionary
-		if len(dictList) > 0 {
-			for _, dict := range dictList {
+		var dictionaries []*dictionaryWithItems
+		if len(dictionariesList) > 0 {
+			for _, dictionary := range dictionariesList {
 				// refresh dictionary items
-				log.Printf("[DEBUG] Refreshing dictionary items for dictionary (%s), service (%s) ", dict.ID, d.Id())
+				log.Printf("[DEBUG] Refreshing dictionary items for dictionary (%s), service (%s) ", dictionary.ID, d.Id())
 				items, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
 					Service:    d.Id(),
-					Dictionary: dict.ID,
+					Dictionary: dictionary.ID,
 				})
 				if err != nil {
-					return fmt.Errorf("[ERR] Error looking up Dictionary Items for dictionary (%s), service (%s): %s", dict.ID, d.Id(), err)
+					return fmt.Errorf("[ERR] Error looking up Dictionary Items for dictionary (%s), service (%s): %s", dictionary.ID, d.Id(), err)
 				}
-				dictionaries = append(dictionaries, &Dictionary{dictionary: dict, items: items})
+				dictionaries = append(dictionaries, &dictionaryWithItems{dictionary: dictionary, items: items})
 			}
 		}
 
-		dil := flattenDictionaries(dictionaries)
+		flatDictionaries := flattenDictionaries(dictionaries)
 
-		if err := d.Set("dictionary", dil); err != nil {
+		if err := d.Set("dictionary", flatDictionaries); err != nil {
 			log.Printf("[WARN] Error setting Dictionaries for (%s): %s", d.Id(), err)
 		}
 
@@ -3196,6 +3191,33 @@ func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
 	}
 
 	return vl
+}
+
+type dictionaryWithItems struct {
+	dictionary *gofastly.Dictionary
+	items      []*gofastly.DictionaryItem
+}
+
+func flattenDictionaries(dictionariesList []*dictionaryWithItems) []map[string]interface{} {
+	var dl []map[string]interface{}
+
+	for _, d := range dictionariesList {
+		nd := map[string]interface{}{
+			"name": d.dictionary.Name,
+			"id":   d.dictionary.ID,
+		}
+
+		if len(d.items) > 0 {
+			is := make(map[string]string)
+			for _, item := range d.items {
+				is[item.ItemKey] = item.ItemValue
+			}
+
+			nd["items"] = is
+		}
+		dl = append(dl, nd)
+	}
+	return dl
 }
 
 func validateVCLs(d *schema.ResourceData) error {

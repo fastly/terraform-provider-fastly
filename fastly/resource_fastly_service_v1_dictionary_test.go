@@ -13,12 +13,12 @@ import (
 
 func TestResourceFastlyFlattenDictionary(t *testing.T) {
 	cases := []struct {
-		remote []*Dictionary
+		remote []*dictionaryWithItems
 		local  []map[string]interface{}
 	}{
 		{
-			remote: []*Dictionary{
-				&Dictionary{
+			remote: []*dictionaryWithItems{
+				&dictionaryWithItems{
 					dictionary: &gofastly.Dictionary{Name: "dictionary1", ID: "dict_id_1"},
 					items:      []*gofastly.DictionaryItem{&gofastly.DictionaryItem{ItemKey: "key1", ItemValue: "val1"}, &gofastly.DictionaryItem{ItemKey: "key2", ItemValue: "val2"}},
 				},
@@ -81,6 +81,27 @@ func TestAccFastlyServiceV1_dictionary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_dictionaryItemsAdd(&service, domainName, dictionaryName),
+				),
+			},
+			resource.TestStep{
+				Config: testAccServiceV1Config_dictionaryItemsRemove(domainName, backendName, dictionaryName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_dictionaryItemsRemove(&service, domainName, dictionaryName),
+				),
+			},
+			resource.TestStep{
+				Config: testAccServiceV1Config_dictionaryAddSecond(domainName, backendName, dictionaryName, dictionaryName+" 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_dictionaryAddSecond(&service, domainName, dictionaryName),
+				),
+			},
+			resource.TestStep{
+				Config: testAccServiceV1Config_dictionaryRemoveAll(domainName, backendName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_dictionaryRemoveAll(&service, domainName),
 				),
 			},
 		},
@@ -186,6 +207,91 @@ func testAccCheckFastlyServiceV1Attributes_dictionaryItemsAdd(service *gofastly.
 	}
 }
 
+func testAccCheckFastlyServiceV1Attributes_dictionaryItemsRemove(service *gofastly.ServiceDetail, name, dictionaryName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if service.Name != name {
+			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+		}
+
+		conn := testAccProvider.Meta().(*FastlyClient).conn
+		dictionariesList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+			Service: service.ID,
+			Version: service.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		}
+
+		dict := dictionariesList[0]
+		itemsList, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
+			Service:    service.ID,
+			Dictionary: dict.ID,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Dictionary Items for (%s), dictionary (%v): %s", service.Name, dict.ID, err)
+		}
+
+		if len(itemsList) != 2 {
+			return fmt.Errorf("[ERR] Number of Dictionary Items mismatch, expected: 2, got: %d for (%s)", len(itemsList), service.Name)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckFastlyServiceV1Attributes_dictionaryAddSecond(service *gofastly.ServiceDetail, name, dictionaryName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if service.Name != name {
+			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+		}
+
+		conn := testAccProvider.Meta().(*FastlyClient).conn
+		dictionariesList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+			Service: service.ID,
+			Version: service.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		}
+
+		if len(dictionariesList) != 2 {
+			return fmt.Errorf("[ERR] Number of Dictionaries mismatch, expected: 2, got: %d for (%s)", len(dictionariesList), service.Name)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckFastlyServiceV1Attributes_dictionaryRemoveAll(service *gofastly.ServiceDetail, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if service.Name != name {
+			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+		}
+
+		conn := testAccProvider.Meta().(*FastlyClient).conn
+		dictionariesList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+			Service: service.ID,
+			Version: service.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		}
+
+		if len(dictionariesList) != 0 {
+			return fmt.Errorf("[ERR] Number of Dictionaries mismatch, expected: , got: %d for (%s)", len(dictionariesList), service.Name)
+		}
+
+		return nil
+	}
+}
+
 func testAccServiceV1Config_dictionary(domainName, backendName, dictionaryName string) string {
 
 	return fmt.Sprintf(`
@@ -241,28 +347,112 @@ resource "fastly_service_v1" "foo" {
 func testAccServiceV1Config_dictionaryItemsAdd(domainName, backendName, dictionaryName string) string {
 
 	return fmt.Sprintf(`
-	resource "fastly_service_v1" "foo" {
-	  name = "%s"
-	
-	  domain {
-		name    = "%s"
-		comment = "tf-testing-domain"
-	  }
-	
-	  backend {
-		address = "%s"
-		name    = "tf -test backend"
-	  }
-	
-	  dictionary {
-		  name = "%s"
-		  items = {
-			  key1 = "item1"
-			  key2 = "item2"
-			  key3 = "item3"
-		  }
-	  }
-	
-	  force_destroy = true
-	}`, domainName, domainName, backendName, dictionaryName)
+resource "fastly_service_v1" "foo" {
+	name = "%s"
+
+	domain {
+	name    = "%s"
+	comment = "tf-testing-domain"
+	}
+
+	backend {
+	address = "%s"
+	name    = "tf -test backend"
+	}
+
+	dictionary {
+		name = "%s"
+		items = {
+			key1 = "item1"
+			key2 = "item2"
+			key3 = "item3"
+		}
+	}
+
+	force_destroy = true
+}`, domainName, domainName, backendName, dictionaryName)
+}
+
+func testAccServiceV1Config_dictionaryItemsRemove(domainName, backendName, dictionaryName string) string {
+
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+	name = "%s"
+
+	domain {
+	name    = "%s"
+	comment = "tf-testing-domain"
+	}
+
+	backend {
+	address = "%s"
+	name    = "tf -test backend"
+	}
+
+	dictionary {
+		name = "%s"
+		items = {
+			key1 = "item1"
+			key3 = "item3"
+		}
+	}
+
+	force_destroy = true
+}`, domainName, domainName, backendName, dictionaryName)
+}
+
+func testAccServiceV1Config_dictionaryAddSecond(domainName, backendName, dictionaryName, anotherDictionaryName string) string {
+
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+	name = "%s"
+
+	domain {
+	name    = "%s"
+	comment = "tf-testing-domain"
+	}
+
+	backend {
+	address = "%s"
+	name    = "tf -test backend"
+	}
+
+	dictionary {
+		name = "%s"
+		items = {
+			key1 = "item1"
+			key3 = "item3"
+		}
+	}
+
+	dictionary {
+	name = "%s"
+	items = {
+		key1 = "item1"
+		key3 = "item3"
+	}
+}
+
+	force_destroy = true
+}`, domainName, domainName, backendName, dictionaryName, anotherDictionaryName)
+}
+
+func testAccServiceV1Config_dictionaryRemoveAll(domainName, backendName string) string {
+
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+	name = "%s"
+
+	domain {
+	name    = "%s"
+	comment = "tf-testing-domain"
+	}
+
+	backend {
+	address = "%s"
+	name    = "tf -test backend"
+	}
+
+	force_destroy = true
+}`, domainName, domainName, backendName)
 }

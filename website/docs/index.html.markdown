@@ -42,7 +42,7 @@ explained below:
 - Environment variables
 
 
-### Static API Key ###
+### Static API Key
 
 Static credentials can be provided by adding a `api_key` in-line in the
 Fastly provider block:
@@ -59,9 +59,9 @@ resource "fastly_service_v1" "myservice" {
 }
 ```
 
-The API key for an account can be found on the Account page: https://app.fastly.com/#account
+You can create a credential on the Personal API Tokens page: https://manage.fastly.com/account/personal/tokens
 
-###Environment variables
+### Environment variables
 
 You can provide your API key via `FASTLY_API_KEY` environment variable,
 representing your Fastly API key. When using this method, you may omit the

@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-	ApiKey string
+	ApiKey  string
+	BaseURL string
 }
 
 type FastlyClient struct {
@@ -21,7 +22,11 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, fmt.Errorf("[Err] No API key for Fastly")
 	}
 
-	fconn, err := gofastly.NewClient(c.ApiKey)
+	if c.BaseURL == "" {
+		c.BaseURL = gofastly.DefaultEndpoint
+	}
+
+	fconn, err := gofastly.NewClientForEndpoint(c.ApiKey, c.BaseURL)
 	if err != nil {
 		return nil, err
 	}

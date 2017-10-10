@@ -209,10 +209,10 @@ used in the `request_condition`, `response_condition`, or
 
 * `name` - (Required) The unique name for the condition.
 * `statement` - (Required) The statement used to determine if the condition is met.
-* `priority` - (Required) A number used to determine the order in which multiple
-conditions execute. Lower numbers execute first.
 * `type` - (Required) Type of condition, either `REQUEST` (req), `RESPONSE`
 (req, resp), or `CACHE` (req, beresp).
+* `priority` - (Optional) A number used to determine the order in which multiple
+conditions execute. Lower numbers execute first. Default `10`.
 
 The `cache_setting` block supports:
 

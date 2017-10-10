@@ -81,7 +81,8 @@ func resourceServiceV1() *schema.Resource {
 						},
 						"priority": {
 							Type:        schema.TypeInt,
-							Required:    true,
+							Optional:    true,
+							Default:     10,
 							Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
 						},
 						"type": {

@@ -358,7 +358,6 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Description: "Max 'Time To Live' for stale (unreachable) objects.",
-							Default:     300,
 						},
 						"ttl": {
 							Type:        schema.TypeInt,

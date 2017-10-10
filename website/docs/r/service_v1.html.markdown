@@ -221,7 +221,6 @@ The `cache_setting` block supports:
 on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/guides/performance-tuning/controlling-caching#caching-action-descriptions).
 * `cache_condition` - (Optional) Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`.
 * `stale_ttl` - (Optional) Max "Time To Live" for stale (unreachable) objects.
-Default `300`.
 * `ttl` - (Optional) The Time-To-Live (TTL) for the object.
 
 The `gzip` block supports:

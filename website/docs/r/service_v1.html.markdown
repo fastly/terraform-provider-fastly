@@ -275,7 +275,7 @@ defining behavior that should change based on a predefined `condition`:
 * `request_condition` - (Optional) Name of already defined `condition` to
 determine if this request setting should be applied.
 * `max_stale_age` - (Optional) How old an object is allowed to be to serve
-`stale-if-error` or `stale-while-revalidate`, in seconds. Default `60`.
+`stale-if-error` or `stale-while-revalidate`, in seconds.
 * `force_miss` - (Optional) Force a cache miss for the request. If specified,
 can be `true` or `false`.
 * `force_ssl` - (Optional) Forces the request to use SSL (Redirects a non-SSL request to SSL).

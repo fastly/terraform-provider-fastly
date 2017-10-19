@@ -953,7 +953,6 @@ func resourceServiceV1() *schema.Resource {
 						"max_stale_age": {
 							Type:        schema.TypeInt,
 							Optional:    true,
-							Default:     60,
 							Description: "How old an object is allowed to be, in seconds. Default `60`",
 						},
 						"force_miss": {

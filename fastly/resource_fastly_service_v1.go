@@ -750,7 +750,7 @@ func resourceServiceV1() *schema.Resource {
 						"message_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "",
+							Default:     "classic",
 							Description: "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
 						},
 					},

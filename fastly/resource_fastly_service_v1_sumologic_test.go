@@ -149,8 +149,8 @@ resource "fastly_service_v1" "foo" {
   }
 
   sumologic {
-  	name = "%s"
-  	url = "%s"
+    name = "%s"
+    url = "%s"
     format_version = %d
     format = "%s"
   }

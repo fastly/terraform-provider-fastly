@@ -51,7 +51,22 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	sumologicName := fmt.Sprintf("sumologic %s", acctest.RandString(3))
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	s := gofastly.Sumologic{
+		Name:          "sumologger",
+		URL:           "https://sumologic.com/collector/1",
+		FormatVersion: 2,
+		Format:        "my format",
+	}
+
+	sn := gofastly.Sumologic{
+		Name:          "sumologger",
+		URL:           "https://sumologic.com/collector/1",
+		FormatVersion: 2,
+		Format:        "my format new",
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -59,17 +74,32 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccServiceV1Config_sumologic(name, sumologicName),
+				Config: testAccServiceV1ConfigSumologic(name, domainName, backendName, s),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_sumologic(&service, name, sumologicName),
+					testAccCheckFastlyServiceV1AttributesSumologic(&service, name, s),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "sumologic.#", "1"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccServiceV1ConfigSumologic(name, domainName, backendName, sn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1AttributesSumologic(&service, name, sn),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "sumologic.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFastlyServiceV1Attributes_sumologic(service *gofastly.ServiceDetail, name, sumologic string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1AttributesSumologic(service *gofastly.ServiceDetail, name string, sumologic gofastly.Sumologic) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if service.Name != name {
@@ -90,17 +120,19 @@ func testAccCheckFastlyServiceV1Attributes_sumologic(service *gofastly.ServiceDe
 			return fmt.Errorf("Sumologic missing, expected: 1, got: %d", len(sumologicList))
 		}
 
-		if sumologicList[0].Name != sumologic {
-			return fmt.Errorf("Sumologic name mismatch, expected: %s, got: %#v", sumologic, sumologicList[0].Name)
+		if sumologicList[0].Name != sumologic.Name {
+			return fmt.Errorf("Sumologic name mismatch, expected: %s, got: %#v", sumologic.Name, sumologicList[0].Name)
+		}
+
+		if sumologicList[0].Format != sumologic.Format {
+			return fmt.Errorf("Sumologic format mismatch, expected: %s, got: %#v", sumologic.Format, sumologicList[0].Format)
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceV1Config_sumologic(name, sumologic string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+func testAccServiceV1ConfigSumologic(name, domainName, backendName string, sumologic gofastly.Sumologic) string {
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
@@ -118,10 +150,11 @@ resource "fastly_service_v1" "foo" {
 
   sumologic {
   	name = "%s"
-  	url = "https://sumologic.com/collector/1"
-  	format_version = 2
+  	url = "%s"
+    format_version = %d
+    format = "%s"
   }
 
   force_destroy = true
-}`, name, domainName, backendName, sumologic)
+}`, name, domainName, backendName, sumologic.Name, sumologic.URL, sumologic.FormatVersion, sumologic.Format)
 }

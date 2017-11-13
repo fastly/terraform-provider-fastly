@@ -253,6 +253,12 @@
 			"revisionTime": "2017-01-17T13:00:17Z"
 		},
 		{
+			"checksumSHA1": "4pT+8pZB4ffU1JCOey71ECsD6Ds=",
+			"path": "github.com/google/jsonapi",
+			"revision": "e0fc4eed33051d6424c608a3db2f57a65217a185",
+			"revisionTime": "2017-11-08T17:49:09Z"
+		},
+		{
 			"checksumSHA1": "cdOCt0Yb+hdErz8NAQqayxPmRsY=",
 			"path": "github.com/hashicorp/errwrap",
 			"revision": "7554cd9344cec97297fa6649b055a8c98c2a1e55"
@@ -576,10 +582,10 @@
 			"revisionTime": "2017-08-25T22:07:33Z"
 		},
 		{
-			"checksumSHA1": "f+FTR45Y7gjB7iTdBWrbwCrr4tM=",
+			"checksumSHA1": "/nMyc1LUba3IGL6CFW7Yx/dbZw0=",
 			"path": "github.com/sethvargo/go-fastly/fastly",
-			"revision": "8d3144bdefbc73b225ac176671978d102d31862a",
-			"revisionTime": "2017-08-25T22:07:33Z"
+			"revision": "c1e80fc42a3d4c7d85ece91b682cd2db602c4df7",
+			"revisionTime": "2017-11-10T20:59:32Z"
 		},
 		{
 			"checksumSHA1": "vE43s37+4CJ2CDU6TlOUOYE0K9c=",

@@ -1037,6 +1037,8 @@ func resourceServiceV1() *schema.Resource {
 					},
 				},
 			},
+
+			"waf": wafSchema,
 		},
 	}
 }
@@ -1067,7 +1069,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*FastlyClient).conn
 
-	// Update Name. No new verions is required for this
+	// Update Name. No new version is required for this
 	if d.HasChange("name") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ID:   d.Id(),
@@ -1101,6 +1103,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"request_setting",
 		"cache_setting",
 		"vcl",
+		"waf",
 	} {
 		if d.HasChange(v) {
 			needsChange = true
@@ -2033,6 +2036,10 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		if err := updateWAF(conn, d, latestVersion); err != nil {
+			return err
+		}
+
 		// Find differences in Cache Settings
 		if d.HasChange("cache_setting") {
 			oc, nc := d.GetChange("cache_setting")
@@ -2411,6 +2418,16 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("vcl", vl); err != nil {
 			log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
+		}
+
+		// refresh WAFs
+		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
+		wafs, err := refreshWAFs(conn, d.Id(), s.ActiveVersion.Number)
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+		if err := d.Set("waf", wafs); err != nil {
+			log.Printf("[WARN] Error setting WAFs for (%s): %s", d.Id(), err)
 		}
 
 		// refresh Cache Settings

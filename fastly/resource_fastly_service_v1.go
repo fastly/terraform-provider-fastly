@@ -805,6 +805,12 @@ func resourceServiceV1() *schema.Resource {
 							Default:     false,
 							Description: "Use TLS for secure logging",
 						},
+						"tls_hostname": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Used during the TLS handshake to validate the certificate.",
+						},
 						"tls_ca_cert": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -1795,6 +1801,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					FormatVersion:     uint(slf["format_version"].(int)),
 					Token:             slf["token"].(string),
 					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+					TLSHostname:       slf["tls_hostname"].(string),
 					TLSCACert:         slf["tls_ca_cert"].(string),
 					ResponseCondition: slf["response_condition"].(string),
 					MessageType:       slf["message_type"].(string),
@@ -2862,6 +2869,7 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 			"format_version":     p.FormatVersion,
 			"token":              p.Token,
 			"use_tls":            p.UseTLS,
+			"tls_hostname":       p.TLSHostname,
 			"tls_ca_cert":        p.TLSCACert,
 			"response_condition": p.ResponseCondition,
 			"message_type":       p.MessageType,

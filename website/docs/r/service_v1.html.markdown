@@ -188,6 +188,8 @@ Default `200`.
 * `port` - (Optional) The port number on which the Backend responds. Default `80`.
 * `request_condition` - (Optional, string) Name of already defined `condition`, which if met, will select this backend during a request.
 * `use_ssl` - (Optional) Whether or not to use SSL to reach the backend. Default `false`.
+* `max_tls_version` - (Optional) Maximum allowed TLS version on SSL connections to this backend.
+* `min_tls_version` - (Optional) Minimum allowed TLS version on SSL connections to this backend.
 * `ssl_ciphers` - (Optional) Comma separated list of OpenSSL Ciphers to try when negotiating to the backend.
 * `ssl_ca_cert` - (Optional) CA certificate attached to origin.
 * `ssl_client_cert` - (Optional) Client certificate attached to origin. Used when connecting to the backend.

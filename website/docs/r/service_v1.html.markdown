@@ -364,6 +364,7 @@ The `syslog` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
 * `token` - (Optional) Whether to prepend each message with a specific token.
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Default `false`.
+* `tls_hostname` - (Optional) Used during the TLS handshake to validate the certificate.
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].

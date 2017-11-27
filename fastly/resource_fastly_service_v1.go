@@ -809,7 +809,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Default:     "",
-							Description: "The Hostname used to verify the server's certificate",
+							Description: "A secure certificate to authenticate the server with.",
 						},
 						"response_condition": {
 							Type:        schema.TypeString,

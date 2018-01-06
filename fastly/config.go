@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 
+	"github.com/hashicorp/terraform/terraform"
 	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
@@ -21,6 +22,7 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, fmt.Errorf("[Err] No API key for Fastly")
 	}
 
+	gofastly.UserAgent = terraform.UserAgentString()
 	fconn, err := gofastly.NewClient(c.ApiKey)
 	if err != nil {
 		return nil, err

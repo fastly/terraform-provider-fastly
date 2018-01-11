@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"crypto/sha1"
+	"crypto/sha512"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -545,7 +546,7 @@ func resourceServiceV1() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								switch v.(type) {
 								case string:
-									hash := sha1.Sum([]byte(v.(string)))
+									hash := sha512.Sum512([]byte(v.(string)))
 									return hex.EncodeToString(hash[:])
 								default:
 									return ""
@@ -561,7 +562,7 @@ func resourceServiceV1() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								switch v.(type) {
 								case string:
-									hash := sha1.Sum([]byte(v.(string)))
+									hash := sha512.Sum512([]byte(v.(string)))
 									return hex.EncodeToString(hash[:])
 								default:
 									return ""

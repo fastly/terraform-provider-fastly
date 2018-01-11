@@ -542,6 +542,15 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
 							Description: "AWS Access Key",
 							Sensitive:   true,
+							StateFunc: func(v interface{}) string {
+								switch v.(type) {
+								case string:
+									hash := sha1.Sum([]byte(v.(string)))
+									return hex.EncodeToString(hash[:])
+								default:
+									return ""
+								}
+							},
 						},
 						"s3_secret_key": {
 							Type:        schema.TypeString,
@@ -549,6 +558,15 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
 							Description: "AWS Secret Key",
 							Sensitive:   true,
+							StateFunc: func(v interface{}) string {
+								switch v.(type) {
+								case string:
+									hash := sha1.Sum([]byte(v.(string)))
+									return hex.EncodeToString(hash[:])
+								default:
+									return ""
+								}
+							},
 						},
 						// Optional fields
 						"path": {

@@ -1,4 +1,9 @@
-## 0.2.0 (Unreleased)
+## 0.1.4 (Unreleased)
+
+IMPROVEMENTS:
+
+* s3_logging: Obfuscate secrets before persisting state file ([#63](https://github.com/terraform-providers/terraform-provider-fastly/issues/63))
+
 ## 0.1.3 (December 18, 2017)
 
 IMPROVEMENTS: 

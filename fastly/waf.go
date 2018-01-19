@@ -7,9 +7,17 @@ import (
 	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
+type rule struct {
+	tags   []string
+	ids    []int
+	status string
+	force  bool
+}
+
 type terraformWAF struct {
 	waf   *gofastly.WAF
 	owasp *gofastly.OWASP
+	rules []*rule
 }
 
 var (
@@ -42,10 +50,58 @@ var (
 					Optional:    true,
 					Description: "Name of the corresponding response object.",
 				},
+				"rule": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Importer: &schema.ResourceImporter{},
+						Schema: map[string]*schema.Schema{
+							"tags": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ids": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+							},
+							"status": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"force": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
 )
+
+func expandRules(raw map[string]interface{}) *rule {
+	ifTags := raw["tags"].([]interface{})
+	var t []string
+	for _, i := range ifTags {
+		t = append(t, i.(string))
+	}
+
+	ifIds := raw["ids"].([]interface{})
+	var d []int
+	for _, j := range ifIds {
+		d = append(d, j.(int))
+	}
+	return &rule{
+		tags:   t,
+		ids:    d,
+		status: raw["status"].(string),
+		force:  raw["force"].(bool),
+	}
+}
 
 // expandWAF takes input matching the wafSchema and transforms it into a terraformWAF
 func expandWAF(wafMap map[string]interface{}) terraformWAF {
@@ -65,6 +121,11 @@ func expandWAF(wafMap map[string]interface{}) terraformWAF {
 	owaspSchema := wafMap["owasp"].(*schema.Set).List()
 	if len(owaspSchema) == 1 {
 		tf.owasp = expandOWASP(owaspSchema[0].(map[string]interface{}))
+	}
+
+	rulesSchema := wafMap["rule"].(*schema.Set).List()
+	for _, ruleInterface := range rulesSchema {
+		tf.rules = append(tf.rules, expandRules(ruleInterface.(map[string]interface{})))
 	}
 
 	return tf
@@ -187,6 +248,46 @@ func updateWAF(client *gofastly.Client, d *schema.ResourceData, version int) err
 				return err
 			}
 		}
+
+		if len(tfWAF.rules) > 0 {
+			for _, wafRule := range tfWAF.rules {
+				if len(wafRule.tags) > 0 {
+					for _, tag := range wafRule.tags {
+						tagUpdate := &gofastly.UpdateWAFRuleTagStatusInput{
+							Service: d.Id(),
+							WAF:     tfWAF.waf.ID,
+							Status:  wafRule.status,
+							Tag:     tag,
+							Force:   wafRule.force,
+						}
+						if _, err := client.UpdateWAFRuleTagStatus(tagUpdate); err != nil {
+							return err
+						}
+					}
+				} else if len(wafRule.ids) > 0 {
+					for _, id := range wafRule.ids {
+						idUpdate := &gofastly.UpdateWAFRuleStatusInput{
+							ID:      fmt.Sprintf("%s-%d", tfWAF.waf.ID, id),
+							RuleID:  id,
+							Service: d.Id(),
+							WAF:     tfWAF.waf.ID,
+							Status:  wafRule.status,
+						}
+						if _, err := client.UpdateWAFRuleStatus(idUpdate); err != nil {
+							return err
+						}
+					}
+				}
+			}
+
+			ruleSetsUpdate := &gofastly.UpdateWAFRuleRuleSetsInput{
+				Service: d.Id(),
+				ID:      tfWAF.waf.ID,
+			}
+			if _, err := client.UpdateWAFRuleSets(ruleSetsUpdate); err != nil {
+				return err
+			}
+		}
 	}
 
 	for _, wafID := range oldIDs.Intersection(newIDs).List() {
@@ -194,6 +295,7 @@ func updateWAF(client *gofastly.Client, d *schema.ResourceData, version int) err
 		wafUpdate := &gofastly.UpdateWAFInput{
 			Service:           d.Id(),
 			Version:           version,
+			ID:                tfWAF.waf.ID,
 			PrefetchCondition: tfWAF.waf.PrefetchCondition,
 			Response:          tfWAF.waf.Response,
 		}

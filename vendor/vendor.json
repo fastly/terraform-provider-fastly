@@ -686,5 +686,5 @@
 			"versionExact": "v1.6.1"
 		}
 	],
-	"rootPath": "github.com/GannettDigital/terraform-provider-fastly"
+	"rootPath": "github.com/terraform-provider/terraform-provider-fastly"
 }

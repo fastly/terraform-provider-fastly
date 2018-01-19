@@ -582,10 +582,10 @@
 			"revisionTime": "2017-08-25T22:07:33Z"
 		},
 		{
-			"checksumSHA1": "/nMyc1LUba3IGL6CFW7Yx/dbZw0=",
+			"checksumSHA1": "8DQ/wNBFqSgpkGg/JayusgXGiU8=",
 			"path": "github.com/sethvargo/go-fastly/fastly",
-			"revision": "c1e80fc42a3d4c7d85ece91b682cd2db602c4df7",
-			"revisionTime": "2017-11-10T20:59:32Z"
+			"revision": "4c86d131640b9e67f29f6bf4716af1135e68ecff",
+			"revisionTime": "2017-12-26T20:38:35Z"
 		},
 		{
 			"checksumSHA1": "vE43s37+4CJ2CDU6TlOUOYE0K9c=",
@@ -686,5 +686,5 @@
 			"versionExact": "v1.6.1"
 		}
 	],
-	"rootPath": "github.com/terraform-providers/terraform-provider-fastly"
+	"rootPath": "github.com/GannettDigital/terraform-provider-fastly"
 }

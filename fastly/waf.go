@@ -248,6 +248,24 @@ func updateWAF(client *gofastly.Client, d *schema.ResourceData, version int) err
 				return err
 			}
 		}
+	}
+
+	for _, wafID := range oldIDs.Intersection(newIDs).List() {
+		tfWAF := newIDMap[wafID.(string)]
+		wafUpdate := &gofastly.UpdateWAFInput{
+			Service:           d.Id(),
+			Version:           version,
+			ID:                tfWAF.waf.ID,
+			PrefetchCondition: tfWAF.waf.PrefetchCondition,
+			Response:          tfWAF.waf.Response,
+		}
+		if _, err := client.UpdateWAF(wafUpdate); err != nil {
+			return err
+		}
+
+		if _, err := updateOWASP(client, d.Id(), wafID.(string), tfWAF.owasp); err != nil {
+			return err
+		}
 
 		if len(tfWAF.rules) > 0 {
 			for _, wafRule := range tfWAF.rules {
@@ -287,24 +305,6 @@ func updateWAF(client *gofastly.Client, d *schema.ResourceData, version int) err
 			if _, err := client.UpdateWAFRuleSets(ruleSetsUpdate); err != nil {
 				return err
 			}
-		}
-	}
-
-	for _, wafID := range oldIDs.Intersection(newIDs).List() {
-		tfWAF := newIDMap[wafID.(string)]
-		wafUpdate := &gofastly.UpdateWAFInput{
-			Service:           d.Id(),
-			Version:           version,
-			ID:                tfWAF.waf.ID,
-			PrefetchCondition: tfWAF.waf.PrefetchCondition,
-			Response:          tfWAF.waf.Response,
-		}
-		if _, err := client.UpdateWAF(wafUpdate); err != nil {
-			return err
-		}
-
-		if _, err := updateOWASP(client, d.Id(), wafID.(string), tfWAF.owasp); err != nil {
-			return err
 		}
 	}
 

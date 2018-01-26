@@ -1,4 +1,7 @@
 ## 0.1.5 (Unreleased)
+
+* s3_logging: Support for "redundancy" attribute ([64](https://github.com/terraform-providers/terraform-provider-fastly/pull/64))
+
 ## 0.1.4 (January 16, 2018)
 
 IMPROVEMENTS:

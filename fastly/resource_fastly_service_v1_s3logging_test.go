@@ -45,6 +45,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Format:            "%h %l %u %t %r %>s",
 		FormatVersion:     1,
 		MessageType:       "blank",
+		Redundancy:        "reduced_redundancy",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
 		ResponseCondition: "response_condition_test",
 	}
@@ -365,6 +366,7 @@ resource "fastly_service_v1" "foo" {
     s3_secret_key      = "somesecret"
     response_condition = "response_condition_test"
     message_type       = "blank"
+    redundancy         = "reduced_redundancy"
   }
 
   s3logging {

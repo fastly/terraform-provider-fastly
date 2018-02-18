@@ -1,6 +1,9 @@
-## 0.1.5 (Unreleased)
+## 0.2.0 (Unreleased)
 
 * s3_logging: Support for "redundancy" attribute ([64](https://github.com/terraform-providers/terraform-provider-fastly/pull/64))
+* Support for overriding base API url ([68](https://github.com/terraform-providers/terraform-provider-fastly/pull/68))
+* Support for overriding user agent ([62](https://github.com/terraform-providers/terraform-provider-fastly/pull/62))
+* sumologic: Fixes sumologic implementation ([56](https://github.com/terraform-providers/terraform-provider-fastly/pull/56))
 
 ## 0.1.4 (January 16, 2018)
 

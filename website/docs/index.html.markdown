@@ -89,4 +89,5 @@ The following arguments are supported in the `provider` block:
 
 * `base_url` - (Optional) This is the API server hostname. It is required
   if using a private instance of the API and otherwise defaults to the
-  public Fastly production service.
+  public Fastly production service. It can also be sourced from the
+  `FASTLY_API_URL` environment variable

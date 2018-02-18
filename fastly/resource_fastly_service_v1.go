@@ -1143,6 +1143,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"request_setting",
 		"cache_setting",
 		"vcl",
+		"sumologic",
 	} {
 		if d.HasChange(v) {
 			needsChange = true

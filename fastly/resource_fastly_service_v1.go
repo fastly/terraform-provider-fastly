@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"crypto/sha1"
+	"crypto/sha512"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -542,6 +543,15 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
 							Description: "AWS Access Key",
 							Sensitive:   true,
+							StateFunc: func(v interface{}) string {
+								switch v.(type) {
+								case string:
+									hash := sha512.Sum512([]byte(v.(string)))
+									return hex.EncodeToString(hash[:])
+								default:
+									return ""
+								}
+							},
 						},
 						"s3_secret_key": {
 							Type:        schema.TypeString,
@@ -549,6 +559,15 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
 							Description: "AWS Secret Key",
 							Sensitive:   true,
+							StateFunc: func(v interface{}) string {
+								switch v.(type) {
+								case string:
+									hash := sha512.Sum512([]byte(v.(string)))
+									return hex.EncodeToString(hash[:])
+								default:
+									return ""
+								}
+							},
 						},
 						// Optional fields
 						"path": {
@@ -592,6 +611,11 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     "%Y-%m-%dT%H:%M:%S.000",
 							Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+						},
+						"redundancy": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The S3 redundancy level.",
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -1596,6 +1620,14 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+				}
+
+				redundancy := strings.ToLower(sf["redundancy"].(string))
+				switch redundancy {
+				case "standard":
+					opts.Redundancy = gofastly.S3RedundancyStandard
+				case "reduced_redundancy":
+					opts.Redundancy = gofastly.S3RedundancyReduced
 				}
 
 				log.Printf("[DEBUG] Create S3 Logging Opts: %#v", opts)
@@ -2774,6 +2806,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"format":             s.Format,
 			"format_version":     s.FormatVersion,
 			"timestamp_format":   s.TimestampFormat,
+			"redundancy":         s.Redundancy,
 			"response_condition": s.ResponseCondition,
 			"message_type":       s.MessageType,
 		}

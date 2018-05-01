@@ -188,6 +188,8 @@ Default `200`.
 * `port` - (Optional) The port number on which the Backend responds. Default `80`.
 * `request_condition` - (Optional, string) Name of already defined `condition`, which if met, will select this backend during a request.
 * `use_ssl` - (Optional) Whether or not to use SSL to reach the backend. Default `false`.
+* `max_tls_version` - (Optional) Maximum allowed TLS version on SSL connections to this backend.
+* `min_tls_version` - (Optional) Minimum allowed TLS version on SSL connections to this backend.
 * `ssl_ciphers` - (Optional) Comma separated list of OpenSSL Ciphers to try when negotiating to the backend.
 * `ssl_ca_cert` - (Optional) CA certificate attached to origin.
 * `ssl_client_cert` - (Optional) Client certificate attached to origin. Used when connecting to the backend.
@@ -317,6 +319,7 @@ compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
 * `timestamp_format` - (Optional) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `redundancy` - (Optional) The S3 redundancy level. Should be formatted; one of: `standard`, `reduced_redundancy` or null. Default `null`.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
@@ -343,7 +346,7 @@ The `gcslogging` block supports:
 * `name` - (Required) A unique name to identify this GCS endpoint.
 * `email` - (Required) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`.
 * `bucket_name` - (Required) The name of the bucket in which to store the logs.
-* `secret_key` - (Required) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`.
+* `secret_key` - (Required) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required.
 * `path` - (Optional) Path to store the files. Must end with a trailing slash.
 If this field is left empty, the files will be saved in the bucket's root path.
 * `period` - (Optional) How frequently the logs should be transferred, in
@@ -364,6 +367,7 @@ The `syslog` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
 * `token` - (Optional) Whether to prepend each message with a specific token.
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Default `false`.
+* `tls_hostname` - (Optional) Used during the TLS handshake to validate the certificate.
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].

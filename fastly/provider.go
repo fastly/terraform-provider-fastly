@@ -3,6 +3,7 @@ package fastly
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -16,6 +17,14 @@ func Provider() terraform.ResourceProvider {
 					"FASTLY_API_KEY",
 				}, nil),
 				Description: "Fastly API Key from https://app.fastly.com/#account",
+			},
+			"base_url": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"FASTLY_API_URL",
+				}, gofastly.DefaultEndpoint),
+				Description: "Fastly API URL",
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -31,7 +40,8 @@ func Provider() terraform.ResourceProvider {
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
-		ApiKey: d.Get("api_key").(string),
+		ApiKey:  d.Get("api_key").(string),
+		BaseURL: d.Get("base_url").(string),
 	}
 	return config.Client()
 }

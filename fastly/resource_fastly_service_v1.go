@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"crypto/sha1"
+	"crypto/sha512"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -264,6 +265,18 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     false,
 							Description: "Whether or not to use SSL to reach the Backend",
+						},
+						"max_tls_version": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Maximum allowed TLS version on SSL connections to this backend.",
+						},
+						"min_tls_version": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Minimum allowed TLS version on SSL connections to this backend.",
 						},
 						"ssl_ciphers": {
 							Type:        schema.TypeString,
@@ -530,6 +543,15 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
 							Description: "AWS Access Key",
 							Sensitive:   true,
+							StateFunc: func(v interface{}) string {
+								switch v.(type) {
+								case string:
+									hash := sha512.Sum512([]byte(v.(string)))
+									return hex.EncodeToString(hash[:])
+								default:
+									return ""
+								}
+							},
 						},
 						"s3_secret_key": {
 							Type:        schema.TypeString,
@@ -537,6 +559,15 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
 							Description: "AWS Secret Key",
 							Sensitive:   true,
+							StateFunc: func(v interface{}) string {
+								switch v.(type) {
+								case string:
+									hash := sha512.Sum512([]byte(v.(string)))
+									return hex.EncodeToString(hash[:])
+								default:
+									return ""
+								}
+							},
 						},
 						// Optional fields
 						"path": {
@@ -580,6 +611,11 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     "%Y-%m-%dT%H:%M:%S.000",
 							Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+						},
+						"redundancy": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The S3 redundancy level.",
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -805,11 +841,17 @@ func resourceServiceV1() *schema.Resource {
 							Default:     false,
 							Description: "Use TLS for secure logging",
 						},
+						"tls_hostname": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Used during the TLS handshake to validate the certificate.",
+						},
 						"tls_ca_cert": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Default:     "",
-							Description: "The Hostname used to verify the server's certificate",
+							Description: "A secure certificate to authenticate the server with.",
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -1104,6 +1146,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"cache_setting",
 		"vcl",
 		"waf",
+		"sumologic",
 	} {
 		if d.HasChange(v) {
 			needsChange = true
@@ -1382,6 +1425,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
 					SSLClientKey:        df["ssl_client_key"].(string),
 					SSLClientCert:       df["ssl_client_cert"].(string),
+					MaxTLSVersion:       df["max_tls_version"].(string),
+					MinTLSVersion:       df["min_tls_version"].(string),
 					SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
 					Shield:              df["shield"].(string),
 					Port:                uint(df["port"].(int)),
@@ -1581,6 +1626,14 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+				}
+
+				redundancy := strings.ToLower(sf["redundancy"].(string))
+				switch redundancy {
+				case "standard":
+					opts.Redundancy = gofastly.S3RedundancyStandard
+				case "reduced_redundancy":
+					opts.Redundancy = gofastly.S3RedundancyReduced
 				}
 
 				log.Printf("[DEBUG] Create S3 Logging Opts: %#v", opts)
@@ -1800,6 +1853,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					FormatVersion:     uint(slf["format_version"].(int)),
 					Token:             slf["token"].(string),
 					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+					TLSHostname:       slf["tls_hostname"].(string),
 					TLSCACert:         slf["tls_ca_cert"].(string),
 					ResponseCondition: slf["response_condition"].(string),
 					MessageType:       slf["message_type"].(string),
@@ -2541,6 +2595,8 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 			"ssl_ca_cert":           b.SSLCACert,
 			"ssl_client_key":        b.SSLClientKey,
 			"ssl_client_cert":       b.SSLClientCert,
+			"max_tls_version":       b.MaxTLSVersion,
+			"min_tls_version":       b.MinTLSVersion,
 			"ssl_ciphers":           strings.Join(b.SSLCiphers, ","),
 			"use_ssl":               b.UseSSL,
 			"ssl_cert_hostname":     b.SSLCertHostname,
@@ -2772,6 +2828,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"format":             s.Format,
 			"format_version":     s.FormatVersion,
 			"timestamp_format":   s.TimestampFormat,
+			"redundancy":         s.Redundancy,
 			"response_condition": s.ResponseCondition,
 			"message_type":       s.MessageType,
 		}
@@ -2883,6 +2940,7 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 			"format_version":     p.FormatVersion,
 			"token":              p.Token,
 			"use_tls":            p.UseTLS,
+			"tls_hostname":       p.TLSHostname,
 			"tls_ca_cert":        p.TLSCACert,
 			"response_condition": p.ResponseCondition,
 			"message_type":       p.MessageType,

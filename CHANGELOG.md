@@ -1,11 +1,24 @@
-## 0.1.3 (Unreleased)
+## 0.2.0 (Unreleased)
+
+* s3_logging: Support for "redundancy" attribute ([64](https://github.com/terraform-providers/terraform-provider-fastly/pull/64))
+* Support for overriding base API url ([68](https://github.com/terraform-providers/terraform-provider-fastly/pull/68))
+* Support for overriding user agent ([62](https://github.com/terraform-providers/terraform-provider-fastly/pull/62))
+* sumologic: Fixes sumologic implementation ([56](https://github.com/terraform-providers/terraform-provider-fastly/pull/56))
+
+## 0.1.4 (January 16, 2018)
+
+IMPROVEMENTS:
+
+* s3_logging: Obfuscate secrets before persisting state file ([#63](https://github.com/terraform-providers/terraform-provider-fastly/issues/63))
+
+## 0.1.3 (December 18, 2017)
 
 IMPROVEMENTS: 
 
-* Add support for Logentries logging [GH-24]
-* Add support for format_version for Logentries logs [GH-36]
-* Add support for syslog logging [GH-16]
-* Add `message_type` support to syslog logging configuration [GH-30]
+* Add support for Logentries logging ([#24](https://github.com/terraform-providers/terraform-provider-fastly/issues/24))
+* Add support for format_version for Logentries logs ([#36](https://github.com/terraform-providers/terraform-provider-fastly/issues/36))
+* Add support for syslog logging ([#16](https://github.com/terraform-providers/terraform-provider-fastly/issues/16))
+* Add `message_type` support to syslog logging configuration ([#30](https://github.com/terraform-providers/terraform-provider-fastly/issues/30))
 
 ## 0.1.2 (August 02, 2017)
 

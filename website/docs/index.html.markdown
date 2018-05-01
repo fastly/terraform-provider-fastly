@@ -86,3 +86,8 @@ The following arguments are supported in the `provider` block:
 
 * `api_key` - (Optional) This is the API key. It must be provided, but
   it can also be sourced from the `FASTLY_API_KEY` environment variable
+
+* `base_url` - (Optional) This is the API server hostname. It is required
+  if using a private instance of the API and otherwise defaults to the
+  public Fastly production service. It can also be sourced from the
+  `FASTLY_API_URL` environment variable

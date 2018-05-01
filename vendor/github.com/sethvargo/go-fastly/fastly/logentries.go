@@ -80,7 +80,6 @@ type CreateLogentriesInput struct {
 	Format            string       `form:"format,omitempty"`
 	FormatVersion     uint         `form:"format_version,omitempty"`
 	ResponseCondition string       `form:"response_condition,omitempty"`
-	Placement         string       `form:"placement,omitempty"`
 }
 
 // CreateLogentries creates a new Fastly logentries.

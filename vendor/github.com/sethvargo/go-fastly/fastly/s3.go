@@ -101,7 +101,6 @@ type CreateS3Input struct {
 	ResponseCondition string       `form:"response_condition,omitempty"`
 	TimestampFormat   string       `form:"timestamp_format,omitempty"`
 	Redundancy        S3Redundancy `form:"redundancy,omitempty"`
-        Placement         string       `form:"placement,omitempty"`
 }
 
 // CreateS3 creates a new Fastly S3.

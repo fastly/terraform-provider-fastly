@@ -80,7 +80,6 @@ type CreateSumologicInput struct {
 	ResponseCondition string `form:"response_condition,omitempty"`
 	MessageType       string `form:"message_type,omitempty"`
 	FormatVersion     int    `form:"format_version,omitempty"`
-	Placement         string `form:"placement,omitempty"`
 }
 
 // CreateSumologic creates a new Fastly sumologic.

@@ -253,10 +253,10 @@
 			"revisionTime": "2017-01-17T13:00:17Z"
 		},
 		{
-			"checksumSHA1": "4pT+8pZB4ffU1JCOey71ECsD6Ds=",
+			"checksumSHA1": "RcJTtlXIdHaHBALkvGuietZzX9Y=",
 			"path": "github.com/google/jsonapi",
-			"revision": "e0fc4eed33051d6424c608a3db2f57a65217a185",
-			"revisionTime": "2017-11-08T17:49:09Z"
+			"revision": "2dcc18f43696303ed67ecda84a1bccd3455f4486",
+			"revisionTime": "2018-03-13T01:38:58Z"
 		},
 		{
 			"checksumSHA1": "cdOCt0Yb+hdErz8NAQqayxPmRsY=",
@@ -686,5 +686,5 @@
 			"versionExact": "v1.6.1"
 		}
 	],
-	"rootPath": "github.com/terraform-provider/terraform-provider-fastly"
+	"rootPath": "github.com/terraform-providers/terraform-provider-fastly"
 }

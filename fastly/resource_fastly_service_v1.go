@@ -1079,6 +1079,8 @@ func resourceServiceV1() *schema.Resource {
 					},
 				},
 			},
+
+			"waf": wafSchema,
 		},
 	}
 }
@@ -1109,7 +1111,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*FastlyClient).conn
 
-	// Update Name. No new verions is required for this
+	// Update Name. No new version is required for this
 	if d.HasChange("name") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ID:   d.Id(),
@@ -1143,6 +1145,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"request_setting",
 		"cache_setting",
 		"vcl",
+		"waf",
 		"sumologic",
 	} {
 		if d.HasChange(v) {
@@ -1232,9 +1235,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				log.Printf("[DEBUG] Fastly Conditions Removal opts: %#v", opts)
-				err := conn.DeleteCondition(&opts)
-				if err != nil {
-					return err
+				if !strings.Contains(opts.Name, "Waf") && !strings.Contains(opts.Name, "WAF") {
+					err := conn.DeleteCondition(&opts)
+					if err != nil {
+						return err
+					}
 				}
 			}
 
@@ -1942,9 +1947,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				log.Printf("[DEBUG] Fastly Response Object removal opts: %#v", opts)
-				err := conn.DeleteResponseObject(&opts)
-				if err != nil {
-					return err
+				if !strings.Contains(opts.Name, "Waf") && !strings.Contains(opts.Name, "WAF") {
+					err := conn.DeleteResponseObject(&opts)
+					if err != nil {
+						return err
+					}
 				}
 			}
 
@@ -2085,6 +2092,10 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				}
 			}
+		}
+
+		if err := updateWAF(conn, d, latestVersion); err != nil {
+			return err
 		}
 
 		// Find differences in Cache Settings
@@ -2465,6 +2476,16 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("vcl", vl); err != nil {
 			log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
+		}
+
+		// refresh WAFs
+		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
+		wafs, err := refreshWAFs(conn, d.Id(), s.ActiveVersion.Number)
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+		if err := d.Set("waf", wafs); err != nil {
+			log.Printf("[WARN] Error setting WAFs for (%s): %s", d.Id(), err)
 		}
 
 		// refresh Cache Settings

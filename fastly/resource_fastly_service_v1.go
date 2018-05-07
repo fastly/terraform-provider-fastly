@@ -825,6 +825,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
 							Description: "The email address associated with the target BigQuery dataset on your account.",
+							Sensitive:   true,
 						},
 						"secret_key": {
 							Type:        schema.TypeString,
@@ -832,6 +833,11 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
 							Description: "The secret key associated with the target BigQuery dataset on your account.",
 							Sensitive:   true,
+						},
+						"format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The logging format desired.",
 						},
 					},
 				},
@@ -1891,6 +1897,10 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Table:     sf["table"].(string),
 					User:      sf["email"].(string),
 					SecretKey: sf["secret_key"].(string),
+				}
+
+				if sf["format"].(string) != "" {
+					opts.Format = sf["format"].(string)
 				}
 
 				log.Printf("[DEBUG] Create bigquerylogging opts: %#v", opts)

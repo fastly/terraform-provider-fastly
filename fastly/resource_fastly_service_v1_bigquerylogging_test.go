@@ -135,20 +135,20 @@ resource "fastly_service_v1" "foo" {
   domain {
     name    = "%s"
     comment = "tf-testing-domain"
-  }
+	}
 
   backend {
     address = "%s"
     name    = "tf -test backend"
-	}
-	
-	bigquerylogging {
-		name = "%s"
-		email = "email@example.com",
-		secret_key = "secretKey",
+  }
+
+  bigquerylogging {
+    name       = "%s"
+    email      = "email@example.com",
+    secret_key = "secretKey",
     project_id = "example-gcp-project"
-    dataset = "example-bq-dataset"
-    table = "example-bq-table"
+    dataset    = "example-bq-dataset"
+    table      = "example-bq-table"
   }
 
   force_destroy = true
@@ -173,11 +173,11 @@ resource "fastly_service_v1" "foo" {
     name    = "tf -test backend"
   }
 
-	bigquerylogging {
-		name = "%s"
+  bigquerylogging {
+    name       = "%s"
     project_id = "example-gcp-project"
-    dataset = "example-bq-dataset"
-    table = "example-bq-table"
+    dataset    = "example-bq-dataset"
+    table      = "example-bq-table"
   }
 
   force_destroy = true

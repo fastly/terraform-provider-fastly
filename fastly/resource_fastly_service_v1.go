@@ -838,6 +838,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "The logging format desired.",
+							Default:     "%h %l %u %t \"%r\" %>s %b",
 						},
 					},
 				},

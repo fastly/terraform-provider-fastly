@@ -1,4 +1,4 @@
-## 0.2.0 (Unreleased)
+## 0.2.0 (June 04, 2018)
 
 * s3_logging: Support for "redundancy" attribute ([64](https://github.com/terraform-providers/terraform-provider-fastly/pull/64))
 * Support for overriding base API url ([68](https://github.com/terraform-providers/terraform-provider-fastly/pull/68))

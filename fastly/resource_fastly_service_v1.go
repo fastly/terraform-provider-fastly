@@ -1910,9 +1910,6 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				if sf["format"].(string) != "" {
 					opts.Format = sf["format"].(string)
 				}
-				if sf["response_condition"].(string) != "" {
-					opts.Format = sf["response_condition"].(string)
-				}
 
 				log.Printf("[DEBUG] Create bigquerylogging opts: %#v", opts)
 				_, err := conn.CreateBigQuery(&opts)

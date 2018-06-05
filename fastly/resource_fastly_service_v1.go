@@ -840,6 +840,12 @@ func resourceServiceV1() *schema.Resource {
 							Description: "The logging format desired.",
 							Default:     "%h %l %u %t \"%r\" %>s %b",
 						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Name of a condition to apply this logging.",
+						},
 					},
 				},
 			},
@@ -1890,18 +1896,22 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			for _, pRaw := range addBigquerylogging {
 				sf := pRaw.(map[string]interface{})
 				opts := gofastly.CreateBigQueryInput{
-					Service:   d.Id(),
-					Version:   latestVersion,
-					Name:      sf["name"].(string),
-					ProjectID: sf["project_id"].(string),
-					Dataset:   sf["dataset"].(string),
-					Table:     sf["table"].(string),
-					User:      sf["email"].(string),
-					SecretKey: sf["secret_key"].(string),
+					Service:           d.Id(),
+					Version:           latestVersion,
+					Name:              sf["name"].(string),
+					ProjectID:         sf["project_id"].(string),
+					Dataset:           sf["dataset"].(string),
+					Table:             sf["table"].(string),
+					User:              sf["email"].(string),
+					SecretKey:         sf["secret_key"].(string),
+					ResponseCondition: sf["response_condition"].(string),
 				}
 
 				if sf["format"].(string) != "" {
 					opts.Format = sf["format"].(string)
+				}
+				if sf["response_condition"].(string) != "" {
+					opts.Format = sf["response_condition"].(string)
 				}
 
 				log.Printf("[DEBUG] Create bigquerylogging opts: %#v", opts)
@@ -3037,13 +3047,14 @@ func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
 	for _, currentBQ := range bqList {
 		// Convert gcs to a map for saving to state.
 		BQMapString := map[string]interface{}{
-			"name":       currentBQ.Name,
-			"format":     currentBQ.Format,
-			"email":      currentBQ.User,
-			"secret_key": currentBQ.SecretKey,
-			"project_id": currentBQ.ProjectID,
-			"dataset":    currentBQ.Dataset,
-			"table":      currentBQ.Table,
+			"name":               currentBQ.Name,
+			"format":             currentBQ.Format,
+			"email":              currentBQ.User,
+			"secret_key":         currentBQ.SecretKey,
+			"project_id":         currentBQ.ProjectID,
+			"dataset":            currentBQ.Dataset,
+			"table":              currentBQ.Table,
+			"response_condition": currentBQ.ResponseCondition,
 		}
 
 		// prune any empty values that come from the default string value in structs

@@ -825,6 +825,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
 							Description: "The email address associated with the target BigQuery dataset on your account.",
+							Sensitive:   true,
 						},
 						"secret_key": {
 							Type:        schema.TypeString,
@@ -832,6 +833,17 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
 							Description: "The secret key associated with the target BigQuery dataset on your account.",
 							Sensitive:   true,
+						},
+						"format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The logging format desired.",
+						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Name of a condition to apply this logging.",
 						},
 					},
 				},
@@ -1884,18 +1896,23 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			// POST new/updated bigquerylogging
+			// POST new bigquerylogging
 			for _, pRaw := range addBigquerylogging {
 				sf := pRaw.(map[string]interface{})
 				opts := gofastly.CreateBigQueryInput{
-					Service:   d.Id(),
-					Version:   latestVersion,
-					Name:      sf["name"].(string),
-					ProjectID: sf["project_id"].(string),
-					Dataset:   sf["dataset"].(string),
-					Table:     sf["table"].(string),
-					User:      sf["email"].(string),
-					SecretKey: sf["secret_key"].(string),
+					Service:           d.Id(),
+					Version:           latestVersion,
+					Name:              sf["name"].(string),
+					ProjectID:         sf["project_id"].(string),
+					Dataset:           sf["dataset"].(string),
+					Table:             sf["table"].(string),
+					User:              sf["email"].(string),
+					SecretKey:         sf["secret_key"].(string),
+					ResponseCondition: sf["response_condition"].(string),
+				}
+
+				if sf["format"].(string) != "" {
+					opts.Format = sf["format"].(string)
 				}
 
 				log.Printf("[DEBUG] Create bigquerylogging opts: %#v", opts)
@@ -3047,13 +3064,14 @@ func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
 	for _, currentBQ := range bqList {
 		// Convert gcs to a map for saving to state.
 		BQMapString := map[string]interface{}{
-			"name":       currentBQ.Name,
-			"format":     currentBQ.Format,
-			"email":      currentBQ.User,
-			"secret_key": currentBQ.SecretKey,
-			"project_id": currentBQ.ProjectID,
-			"dataset":    currentBQ.Dataset,
-			"table":      currentBQ.Table,
+			"name":               currentBQ.Name,
+			"format":             currentBQ.Format,
+			"email":              currentBQ.User,
+			"secret_key":         currentBQ.SecretKey,
+			"project_id":         currentBQ.ProjectID,
+			"dataset":            currentBQ.Dataset,
+			"table":              currentBQ.Table,
+			"response_condition": currentBQ.ResponseCondition,
 		}
 
 		// prune any empty values that come from the default string value in structs

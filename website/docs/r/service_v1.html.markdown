@@ -358,6 +358,17 @@ compressed. Default `0`.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://docs.fastly.com/api/logging#logging_gcs)
 
+The `bigquerylogging` block supports:
+
+* `name` - (Required) A unique name to identify this BigQuery logging endpoint.
+* `project_id` - (Required) The ID of your GCP project.
+* `dataset` - (Required) The ID of your BigQuery dataset.
+* `table` - (Required) The ID of your BigQuery table.
+* `email` - (Optional) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable.
+* `secret_key` - (Optional) The secret key associated with the sservice account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines.
+* `format` - (Optional) Apache style log formatting. Must produce JSON that matches the schema of your BigQuery table.
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+
 The `syslog` block supports:
 
 * `name` - (Required) A unique name to identify this Syslog endpoint.

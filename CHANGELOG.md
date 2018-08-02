@@ -1,8 +1,8 @@
-## 0.3.0 (Unreleased)
+## 0.3.0 (August 02, 2018)
 
 FEATURES:
 
-* Add support for BigQuery logging [GH-80]
+* Add support for BigQuery logging ([#80](https://github.com/terraform-providers/terraform-provider-fastly/issues/80))
 
 ## 0.2.0 (June 04, 2018)
 

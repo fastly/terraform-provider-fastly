@@ -1,3 +1,4 @@
+## 0.4.0 (Unreleased)
 ## 0.3.0 (August 02, 2018)
 
 FEATURES:

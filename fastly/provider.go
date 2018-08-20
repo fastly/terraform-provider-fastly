@@ -11,19 +11,15 @@ func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_key": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"FASTLY_API_KEY",
-				}, nil),
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("FASTLY_API_KEY", nil),
 				Description: "Fastly API Key from https://app.fastly.com/#account",
 			},
 			"base_url": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"FASTLY_API_URL",
-				}, gofastly.DefaultEndpoint),
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("FASTLY_API_URL", gofastly.DefaultEndpoint),
 				Description: "Fastly API URL",
 			},
 		},

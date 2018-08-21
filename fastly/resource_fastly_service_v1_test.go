@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -196,6 +197,43 @@ func TestAccFastlyServiceV1_updateBackend(t *testing.T) {
 					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName, backendName2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "active_version", "2"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "backend.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_updateInvalidBackend(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
+	badBackendName := fmt.Sprintf("%s.aws.amazon.com.", acctest.RandString(3))
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config:      testAccServiceV1Config_backend(name, domain, badBackendName),
+				ExpectError: regexp.MustCompile("Bad Request"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{}),
+				),
+			},
+
+			resource.TestStep{
+				Config: testAccServiceV1Config_backend_update(name, domain, backendName, backendName2, 3400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName, backendName2}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "active_version", "1"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "backend.#", "2"),
 				),

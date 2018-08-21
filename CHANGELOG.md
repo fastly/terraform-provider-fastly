@@ -1,4 +1,9 @@
-## 0.4.0 (Unreleased)
+## 0.3.1 (Unreleased)
+
+BUG FIXES:
+
+* Handle deletion of already deleted or never created resources ([#89](https://github.com/terraform-providers/terraform-provider-fastly/pull/89))
+
 ## 0.3.0 (August 02, 2018)
 
 FEATURES:

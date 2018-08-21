@@ -1456,7 +1456,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
 				err := conn.DeleteBackend(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}

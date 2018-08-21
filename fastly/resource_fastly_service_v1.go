@@ -1291,7 +1291,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Conditions Removal opts: %#v", opts)
 				err := conn.DeleteCondition(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1345,7 +1349,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Domain removal opts: %#v", opts)
 				err := conn.DeleteDomain(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1397,7 +1405,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Healthcheck removal opts: %#v", opts)
 				err := conn.DeleteHealthCheck(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1531,7 +1543,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Header removal opts: %#v", opts)
 				err := conn.DeleteHeader(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1581,7 +1597,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Gzip removal opts: %#v", opts)
 				err := conn.DeleteGzip(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1650,7 +1670,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly S3 Logging removal opts: %#v", opts)
 				err := conn.DeleteS3(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1727,7 +1751,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Papertrail removal opts: %#v", opts)
 				err := conn.DeletePapertrail(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1780,7 +1808,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Sumologic removal opts: %#v", opts)
 				err := conn.DeleteSumologic(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1833,7 +1865,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly gcslogging removal opts: %#v", opts)
 				err := conn.DeleteGCS(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1891,7 +1927,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly bigquerylogging removal opts: %#v", opts)
 				err := conn.DeleteBigQuery(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1949,7 +1989,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Syslog removal opts: %#v", opts)
 				err := conn.DeleteSyslog(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2008,7 +2052,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Logentries removal opts: %#v", opts)
 				err := conn.DeleteLogentries(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2063,7 +2111,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Response Object removal opts: %#v", opts)
 				err := conn.DeleteResponseObject(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2118,7 +2170,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Request Setting removal opts: %#v", opts)
 				err := conn.DeleteRequestSetting(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2170,7 +2226,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly VCL Removal opts: %#v", opts)
 				err := conn.DeleteVCL(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2234,7 +2294,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Cache Settings removal opts: %#v", opts)
 				err := conn.DeleteCacheSetting(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}

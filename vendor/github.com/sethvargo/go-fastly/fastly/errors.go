@@ -25,16 +25,20 @@ var ErrMissingTag = errors.New("Missing required field 'Tag'")
 // a "Version" key, but one was not set.
 var ErrMissingVersion = errors.New("Missing required field 'Version'")
 
+// ErrMissingContent is an error that is returned when an input struct requires a
+// "Content" key, but one was not set.
+var ErrMissingContent = errors.New("Missing required field 'Content'")
+
 // ErrMissingName is an error that is returned when an input struct requires a
 // "Name" key, but one was not set.
 var ErrMissingName = errors.New("Missing required field 'Name'")
 
 // ErrMissingKey is an error that is returned when an input struct requires a
-// "Name" key, but one was not set.
+// "Key" key, but one was not set.
 var ErrMissingKey = errors.New("Missing required field 'Key'")
 
 // ErrMissingURL is an error that is returned when an input struct requires a
-// "Name" key, but one was not set.
+// "URL" key, but one was not set.
 var ErrMissingURL = errors.New("Missing required field 'URL'")
 
 // ErrMissingID is an error that is returned when an input struct requires an

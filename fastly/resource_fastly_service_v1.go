@@ -847,6 +847,12 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "Name of a condition to apply this logging.",
 						},
+						"template": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Big query table name suffix template",
+						},
 					},
 				},
 			},
@@ -2004,6 +2010,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					User:              sf["email"].(string),
 					SecretKey:         sf["secret_key"].(string),
 					ResponseCondition: sf["response_condition"].(string),
+					Template:          sf["template"].(string),
 				}
 
 				if sf["format"].(string) != "" {
@@ -3247,6 +3254,7 @@ func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
 			"dataset":            currentBQ.Dataset,
 			"table":              currentBQ.Table,
 			"response_condition": currentBQ.ResponseCondition,
+			"template":           currentBQ.Template,
 		}
 
 		// prune any empty values that come from the default string value in structs

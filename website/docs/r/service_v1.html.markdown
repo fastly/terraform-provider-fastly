@@ -440,3 +440,11 @@ Service.
 [fastly-conditionals]: https://docs.fastly.com/guides/conditions/using-conditions
 [fastly-sumologic]: https://docs.fastly.com/api/logging#logging_sumologic
 [fastly-gcs]: https://docs.fastly.com/api/logging#logging_gcs
+
+## Import
+
+Fastly Service can be imported using their service ID, e.g.
+
+```
+$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
+```

@@ -1,5 +1,9 @@
 ## 0.3.1 (Unreleased)
 
+IMPROVEMENTS:
+
+* [GH-90] Add `template` to Google BigQuery logging
+
 BUG FIXES:
 
 * Handle deletion of already deleted or never created resources ([#89](https://github.com/terraform-providers/terraform-provider-fastly/pull/89))

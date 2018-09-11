@@ -1,7 +1,8 @@
-## 0.3.1 (Unreleased)
+## 0.4.0 (Unreleased)
 
 IMPROVEMENTS:
 
+* [GH-93] Add support for regular VCL Snippets
 * [GH-90] Add `template` to Google BigQuery logging
 
 BUG FIXES:

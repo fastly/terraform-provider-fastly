@@ -162,6 +162,7 @@ Defined below.
 * `logentries` - (Optional) A logentries endpoint to send streaming logs too.
 Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
+* `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
@@ -408,6 +409,12 @@ The `response_object` block supports:
 * `cache_condition` - (Optional) Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
+The `snippet` block supports:
+
+* `name` - (Required) A unique name for the VCL Snippet configuration block.
+* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
+* `content` (Required) The VCL code that specifies exactly what the snippet does.
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
 The `vcl` block supports:
 

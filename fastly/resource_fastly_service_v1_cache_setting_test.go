@@ -65,40 +65,40 @@ func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1CacheSettingsAttributes(service *gofastly.ServiceDetail, rqs []*gofastly.CacheSetting) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1CacheSettingsAttributes(service *gofastly.ServiceDetail, cs []*gofastly.CacheSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
-		rqList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
+		cList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 			Service: service.ID,
 			Version: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Request Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("[ERR] Error looking up Cache Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		if len(rqList) != len(rqs) {
-			return fmt.Errorf("Request Setting List count mismatch, expected (%d), got (%d)", len(rqs), len(rqList))
+		if len(cList) != len(cs) {
+			return fmt.Errorf("Cache Setting List count mismatch, expected (%d), got (%d)", len(cs), len(cList))
 		}
 
 		var found int
-		for _, r := range rqs {
-			for _, lr := range rqList {
-				if r.Name == lr.Name {
+		for _, c := range cs {
+			for _, lc := range cList {
+				if c.Name == lc.Name {
 					// we don't know these things ahead of time, so populate them now
-					r.ServiceID = service.ID
-					r.Version = service.ActiveVersion.Number
-					if !reflect.DeepEqual(r, lr) {
-						return fmt.Errorf("Bad match Request Setting match, expected (%#v), got (%#v)", r, lr)
+					c.ServiceID = service.ID
+					c.Version = service.ActiveVersion.Number
+					if !reflect.DeepEqual(c, lc) {
+						return fmt.Errorf("Bad match Cache Setting match, expected (%#v), got (%#v)", c, lc)
 					}
 					found++
 				}
 			}
 		}
 
-		if found != len(rqs) {
-			return fmt.Errorf("Error matching Request Setting rules (%d/%d)", found, len(rqs))
+		if found != len(cs) {
+			return fmt.Errorf("Error matching Cache Setting rules (%d/%d)", found, len(cs))
 		}
 
 		return nil

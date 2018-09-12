@@ -31,3 +31,18 @@ func validateLoggingMessageType(v interface{}, k string) (ws []string, errors []
 	}
 	return
 }
+
+func validateDirectorType(v interface{}, k string) (ws []string, errors []error) {
+	value := uint(v.(int))
+	validVersions := map[uint]struct{}{
+		1: {},
+		3: {},
+		4: {},
+	}
+
+	if _, ok := validVersions[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['1' (random), '3' (hash), '4' (client)]", k))
+	}
+	return
+}

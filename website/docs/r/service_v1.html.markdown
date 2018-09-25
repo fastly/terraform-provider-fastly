@@ -119,6 +119,40 @@ resource "fastly_service_v1" "demo" {
 }
 ```
 
+Basic usage with [custom Director](https://docs.fastly.com/api/config#director):
+
+```hcl
+resource "fastly_service_v1" "demo" {
+  name = "demofastly"
+
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "origin1"
+    port    = 80
+  }
+
+  backend {
+    address = "127.0.0.2"
+    name    = "origin2"
+    port    = 80
+  }
+
+  director {
+    name = "mydirector"
+    quorum = 0
+    type = 3
+    backends = [ "origin1", "origin2" ]
+  }
+
+  force_destroy = true
+}
+```
+
 -> **Note:** For an AWS S3 Bucket, the Backend address is
 `<domain>.s3-website-<region>.amazonaws.com`. The `default_host` attribute
 should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
@@ -137,6 +171,7 @@ Defined below. Backends must be defined in this argument, or defined in the
 * `condition` - (Optional) A set of conditions to add logic to any basic
 configuration object in this service. Defined below.
 * `cache_setting` - (Optional) A set of Cache Settings, allowing you to override
+* `director` - (Optional) A director to allow more control over balancing traffic over backends.
 when an item is not to be cached based on an above `condition`. Defined below
 * `gzip` - (Required) A set of gzip rules to control automatic gzipping of
 content. Defined below.
@@ -216,6 +251,17 @@ used in the `request_condition`, `response_condition`, or
 (req, resp), or `CACHE` (req, beresp).
 * `priority` - (Optional) A number used to determine the order in which multiple
 conditions execute. Lower numbers execute first. Default `10`.
+
+The `director` block supports:
+
+* `name` - (Required) Unique name for this Director.
+* `backends` - (Required) Names of defined backends to map the director to. Example: `[ "origin1", "origin2" ]`
+* `comment` - (Optional) An optional comment about the Director.
+* `shield` - (Optional) Selected POP to serve as a "shield" for origin servers.
+* `capacity` - (Optional) Load balancing weight for the backends. Default `100`.
+* `quorum` - (Optional) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`.
+* `type` - (Optional) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client).  Default `1`.
+* `retries` - (Optional) How many backends to search if it fails. Default `5`.
 
 The `cache_setting` block supports:
 
@@ -432,6 +478,7 @@ The following attributes are exported:
 * `name` – Name of this service.
 * `active_version` - The currently active version of your Fastly
 Service.
+* `director` - Set of Directors. See above for details.
 * `domain` – Set of Domains. See above for details.
 * `backend` – Set of Backends. See above for details.
 * `header` – Set of Headers. See above for details.

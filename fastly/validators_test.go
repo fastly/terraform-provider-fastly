@@ -53,3 +53,31 @@ func TestValidateLoggingMessageType(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateDirectorType(t *testing.T) {
+	validVersions := []int{
+		1,
+		3,
+		4,
+	}
+	for _, v := range validVersions {
+		_, errors := validateDirectorType(v, "type")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid director type: %q", v, errors)
+		}
+	}
+
+	invalidVersions := []int{
+		0,
+		-1,
+		2,
+		5,
+		6,
+	}
+	for _, v := range invalidVersions {
+		_, errors := validateDirectorType(v, "type")
+		if len(errors) != 1 {
+			t.Fatalf("%q should not be a valid director type", v)
+		}
+	}
+}

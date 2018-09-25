@@ -4,6 +4,7 @@ IMPROVEMENTS:
 
 * [GH-93] Add support for regular VCL Snippets
 * [GH-90] Add `template` to Google BigQuery logging
+* [GH-43] Add support for custom directors
 
 BUG FIXES:
 

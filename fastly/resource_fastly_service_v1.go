@@ -679,6 +679,11 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Description: "The S3 redundancy level.",
 						},
+						"placement": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "The placement for the logging endpoint. Can be ",
+					},
 						"response_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -692,6 +697,11 @@ func resourceServiceV1() *schema.Resource {
 							Description:  "How the message should be formatted.",
 							ValidateFunc: validateLoggingMessageType,
 						},
+
+
+
+
+
 					},
 				},
 			},
@@ -724,6 +734,11 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "%h %l %u %t %r %>s",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
+						"placement": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "The placement for the logging endpoint. Can be ",
+					},
 						"response_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -764,6 +779,11 @@ func resourceServiceV1() *schema.Resource {
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
 							ValidateFunc: validateLoggingFormatVersion,
 						},
+						"placement": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "The placement for the logging endpoint. Can be ",
+					},
 						"response_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -834,6 +854,12 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "%h %l %u %t %r %>s",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
+
+						"placement": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "The placement for the logging endpoint. Can be ",
+					},
 						"timestamp_format": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -903,6 +929,11 @@ func resourceServiceV1() *schema.Resource {
 							Description: "The logging format desired.",
 							Default:     "%h %l %u %t \"%r\" %>s %b",
 						},
+						"placement": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "The placement for the logging endpoint. Can be ",
+					},
 						"response_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -992,6 +1023,11 @@ func resourceServiceV1() *schema.Resource {
 							Description:  "How the message should be formatted.",
 							ValidateFunc: validateLoggingMessageType,
 						},
+						"placement": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The placement for the logging endpoint. Can be ",
+						},
 					},
 				},
 			},
@@ -1037,6 +1073,11 @@ func resourceServiceV1() *schema.Resource {
 							Default:      1,
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
 							ValidateFunc: validateLoggingFormatVersion,
+						},
+						"placement": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The placement for the logging endpoint. Can be ",
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -1918,6 +1959,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+					Placement: 		   sf["placement"].(string),
 				}
 
 				redundancy := strings.ToLower(sf["redundancy"].(string))
@@ -1983,6 +2025,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Port:              uint(pf["port"].(int)),
 					Format:            pf["format"].(string),
 					ResponseCondition: pf["response_condition"].(string),
+					Placement: 		   pf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -2040,6 +2083,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					FormatVersion:     sf["format_version"].(int),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+					Placement: 		   sf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
@@ -2102,6 +2146,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					MessageType:       sf["message_type"].(string),
 					ResponseCondition: sf["response_condition"].(string),
+					Placement: 		   sf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
@@ -2161,6 +2206,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					SecretKey:         sf["secret_key"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 					Template:          sf["template"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				if sf["format"].(string) != "" {
@@ -2222,6 +2268,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Port:              uint(slf["port"].(int)),
 					Format:            slf["format"].(string),
 					FormatVersion:     uint(slf["format_version"].(int)),
+					Placement:         slf["placement"].(string),
 					Token:             slf["token"].(string),
 					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
 					TLSHostname:       slf["tls_hostname"].(string),
@@ -2287,6 +2334,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Format:            slf["format"].(string),
 					FormatVersion:     uint(slf["format_version"].(int)),
 					ResponseCondition: slf["response_condition"].(string),
+					Placement: 		   slf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
@@ -3533,6 +3581,7 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 			"format":             currentLE.Format,
 			"format_version":     currentLE.FormatVersion,
 			"response_condition": currentLE.ResponseCondition,
+			"placement": currentLE.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs

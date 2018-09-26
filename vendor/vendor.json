@@ -576,9 +576,9 @@
 			"revisionTime": "2016-09-27T10:08:44Z"
 		},
 		{
-			"checksumSHA1": "+mAkrZAT0A8eQAIf+ZD/DWWTa+c=",
+			"checksumSHA1": "H6CINrQ0S6NJ3HSVzdejuZng7B0=",
 			"path": "github.com/sethvargo/go-fastly",
-			"revision": "8d3144bdefbc73b225ac176671978d102d31862a",
+			"revision": "16e557cdd5fed48d0fd4f68b6360c900f9e2407a",
 			"revisionTime": "2017-08-25T22:07:33Z"
 		},
 		{

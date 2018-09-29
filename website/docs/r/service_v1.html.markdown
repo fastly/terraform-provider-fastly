@@ -192,6 +192,8 @@ Defined below.
 Defined below.
 * `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
 Defined below.
+* `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
+Defined below.
 * `syslog` - (Optional) A syslog endpoint to send streaming logs too.
 Defined below.
 * `logentries` - (Optional) A logentries endpoint to send streaming logs too.

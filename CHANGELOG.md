@@ -2,9 +2,9 @@
 
 IMPROVEMENTS:
 
-* [GH-93] Add support for regular VCL Snippets
-* [GH-90] Add `template` to Google BigQuery logging
-* [GH-43] Add support for custom directors
+* Add support for regular VCL Snippets ([#93](https://github.com/terraform-providers/terraform-provider-fastly/pull/93))
+* Add `template` to Google BigQuery logging ([#90](https://github.com/terraform-providers/terraform-provider-fastly/pull/90))
+* Add support for custom directors ([#43](https://github.com/terraform-providers/terraform-provider-fastly/pull/43))
 
 BUG FIXES:
 

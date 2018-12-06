@@ -54,6 +54,30 @@ func TestValidateLoggingMessageType(t *testing.T) {
 	}
 }
 
+func TestValidateLoggingPlacement(t *testing.T) {
+	validPlacements := []string{
+		"none",
+		"waf_debug",
+	}
+	for _, v := range validPlacements {
+		_, errors := validateLoggingPlacement(v, "placement")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid placement", v)
+		}
+	}
+
+	invalidPlacements := []string{
+		"invalid_placement_1",
+		"invalid_placement_2",
+	}
+	for _, v := range invalidPlacements {
+		_, errors := validateLoggingPlacement(v, "placement")
+		if len(errors) != 1 {
+			t.Fatalf("%q should not be a valid placement", v)
+		}
+	}
+}
+
 func TestValidateDirectorType(t *testing.T) {
 	validVersions := []int{
 		1,

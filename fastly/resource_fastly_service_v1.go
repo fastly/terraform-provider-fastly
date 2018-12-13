@@ -3757,6 +3757,11 @@ func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) 
 func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 	var sl []map[string]interface{}
 	for _, snippet := range snippetList {
+		// Skip dynamic snippets
+		if snippet.Dynamic == 1 {
+			continue
+		}
+
 		// Convert VCLs to a map for saving to state.
 		snippetMap := map[string]interface{}{
 			"name":     snippet.Name,

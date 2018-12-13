@@ -1,4 +1,13 @@
-## 0.5.0 (Unreleased)
+## 0.5.0 (December 13, 2018)
+
+IMPROVEMENTS:
+
+* Add `placement` support to all logging providers ([#106](https://github.com/terraform-providers/terraform-provider-fastly/pull/106))
+
+BUG FIXES:
+
+* Skip dynamic VCL Snippets in order to prevent their deletion ([#107](https://github.com/terraform-providers/terraform-provider-fastly/pull/107))
+
 ## 0.4.0 (October 02, 2018)
 
 IMPROVEMENTS:

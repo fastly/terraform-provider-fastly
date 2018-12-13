@@ -692,6 +692,12 @@ func resourceServiceV1() *schema.Resource {
 							Description:  "How the message should be formatted.",
 							ValidateFunc: validateLoggingMessageType,
 						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement,
+						},
 					},
 				},
 			},
@@ -729,6 +735,12 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     "",
 							Description: "Name of a condition to apply this logging",
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement,
 						},
 					},
 				},
@@ -776,6 +788,12 @@ func resourceServiceV1() *schema.Resource {
 							Default:      "classic",
 							Description:  "How the message should be formatted.",
 							ValidateFunc: validateLoggingMessageType,
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement,
 						},
 					},
 				},
@@ -852,6 +870,12 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "classic",
 							Description: "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
 						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement,
+						},
 					},
 				},
 			},
@@ -914,6 +938,12 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     "",
 							Description: "Big query table name suffix template",
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement,
 						},
 					},
 				},
@@ -992,6 +1022,12 @@ func resourceServiceV1() *schema.Resource {
 							Description:  "How the message should be formatted.",
 							ValidateFunc: validateLoggingMessageType,
 						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement,
+						},
 					},
 				},
 			},
@@ -1043,6 +1079,12 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     "",
 							Description: "Name of a condition to apply this logging.",
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement,
 						},
 					},
 				},
@@ -1918,6 +1960,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				redundancy := strings.ToLower(sf["redundancy"].(string))
@@ -1983,6 +2026,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Port:              uint(pf["port"].(int)),
 					Format:            pf["format"].(string),
 					ResponseCondition: pf["response_condition"].(string),
+					Placement:         pf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -2040,6 +2084,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					FormatVersion:     sf["format_version"].(int),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
@@ -2102,6 +2147,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					MessageType:       sf["message_type"].(string),
 					ResponseCondition: sf["response_condition"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
@@ -2161,6 +2207,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					SecretKey:         sf["secret_key"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 					Template:          sf["template"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				if sf["format"].(string) != "" {
@@ -2228,6 +2275,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TLSCACert:         slf["tls_ca_cert"].(string),
 					ResponseCondition: slf["response_condition"].(string),
 					MessageType:       slf["message_type"].(string),
+					Placement:         slf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -2287,6 +2335,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Format:            slf["format"].(string),
 					FormatVersion:     uint(slf["format_version"].(int)),
 					ResponseCondition: slf["response_condition"].(string),
+					Placement:         slf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
@@ -3364,6 +3413,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"redundancy":         s.Redundancy,
 			"response_condition": s.ResponseCondition,
 			"message_type":       s.MessageType,
+			"placement":          s.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3389,6 +3439,7 @@ func flattenPapertrails(papertrailList []*gofastly.Papertrail) []map[string]inte
 			"port":               p.Port,
 			"format":             p.Format,
 			"response_condition": p.ResponseCondition,
+			"placement":          p.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3415,6 +3466,7 @@ func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interfa
 			"response_condition": p.ResponseCondition,
 			"message_type":       p.MessageType,
 			"format_version":     int(p.FormatVersion),
+			"placement":          p.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3446,6 +3498,7 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 			"message_type":       currentGCS.MessageType,
 			"format":             currentGCS.Format,
 			"timestamp_format":   currentGCS.TimestampFormat,
+			"placement":          currentGCS.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3475,6 +3528,7 @@ func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
 			"table":              currentBQ.Table,
 			"response_condition": currentBQ.ResponseCondition,
 			"template":           currentBQ.Template,
+			"placement":          currentBQ.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3506,6 +3560,7 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 			"tls_ca_cert":        p.TLSCACert,
 			"response_condition": p.ResponseCondition,
 			"message_type":       p.MessageType,
+			"placement":          p.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3533,6 +3588,7 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 			"format":             currentLE.Format,
 			"format_version":     currentLE.FormatVersion,
 			"response_condition": currentLE.ResponseCondition,
+			"placement":          currentLE.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs

@@ -1,4 +1,4 @@
-## 0.5.0 (December 13, 2018)
+## 0.5.0 (Unreleased)
 
 IMPROVEMENTS:
 

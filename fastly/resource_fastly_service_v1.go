@@ -42,6 +42,15 @@ func resourceServiceV1() *schema.Resource {
 				Computed: true,
 			},
 
+			// Allow user to specify a draft only change, so the terraform apply does not activate the version in fastly.
+			// This is sometimes useful as fastly diffs can be easier to read than terraform diffs.
+			"draft_only": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set to true, and terraform apply will not activate the change in fastly, it will simply make the change and validate it. Change will need to be activated manually.",
+			},
+
 			"domain": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -2651,6 +2660,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		if !valid {
 			return fmt.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
+		}
+
+		draftChange := d.Get("draft_only").(bool)
+		if draftChange {
+			return fmt.Errorf("[WARN] Terraform change is specified as draft only, Fastly version (%d) is pushed and validated, please activate manually.", latestVersion)
 		}
 
 		log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)

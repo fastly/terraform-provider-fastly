@@ -658,14 +658,14 @@ func resourceServiceV1() *schema.Resource {
 						"format": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "%h %l %u %t %r %>s",
+							Default:     "%h %l %u %t \"%r\" %>s %b",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
 						"format_version": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      1,
-							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+							Default:      2,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).",
 							ValidateFunc: validateLoggingFormatVersion,
 						},
 						"timestamp_format": {
@@ -727,7 +727,7 @@ func resourceServiceV1() *schema.Resource {
 						"format": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "%h %l %u %t %r %>s",
+							Default:     "%h %l %u %t \"%r\" %>s %b",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
 						"response_condition": {
@@ -766,14 +766,14 @@ func resourceServiceV1() *schema.Resource {
 						"format": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "%h %l %u %t %r %>s",
+							Default:     "%h %l %u %t \"%r\" %>s %b",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
 						"format_version": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      1,
-							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+							Default:      2,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).",
 							ValidateFunc: validateLoggingFormatVersion,
 						},
 						"response_condition": {
@@ -849,7 +849,7 @@ func resourceServiceV1() *schema.Resource {
 						"format": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "%h %l %u %t %r %>s",
+							Default:     "%h %l %u %t \"%r\" %>s %b",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
 						"timestamp_format": {
@@ -924,7 +924,7 @@ func resourceServiceV1() *schema.Resource {
 						"format": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "The logging format desired.",
+							Description: "Apache style log formatting. Must produce JSON that matches the schema of your BigQuery table.",
 							Default:     "%h %l %u %t \"%r\" %>s %b",
 						},
 						"response_condition": {
@@ -981,8 +981,8 @@ func resourceServiceV1() *schema.Resource {
 						"format_version": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      1,
-							Description:  "The version of the custom logging format. Can be either 1 or 2. (Default: 1)",
+							Default:      2,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).",
 							ValidateFunc: validateLoggingFormatVersion,
 						},
 						"token": {
@@ -1064,14 +1064,14 @@ func resourceServiceV1() *schema.Resource {
 						"format": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "%h %l %u %t %r %>s",
+							Default:     "%h %l %u %t \"%r\" %>s %b",
 							Description: "Apache-style string or VCL variables to use for log formatting",
 						},
 						"format_version": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      1,
-							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+							Default:      2,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).",
 							ValidateFunc: validateLoggingFormatVersion,
 						},
 						"response_condition": {

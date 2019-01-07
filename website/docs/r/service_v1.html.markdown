@@ -365,8 +365,8 @@ seconds. Default `3600`.
 * `gzip_level` - (Optional) Level of GZIP compression, from `0-9`. `0` is no
 compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t \"%r\" %>s %b`).
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
 * `timestamp_format` - (Optional) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
 * `redundancy` - (Optional) The S3 redundancy level. Should be formatted; one of: `standard`, `reduced_redundancy` or null. Default `null`.
@@ -379,7 +379,7 @@ The `papertrail` block supports:
 * `name` - (Required) A unique name to identify this Papertrail endpoint.
 * `address` - (Required) The address of the Papertrail endpoint.
 * `port` - (Required) The port associated with the address where the Papertrail endpoint can be accessed.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t \"%r\" %>s %b`).
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
@@ -388,8 +388,8 @@ The `sumologic` block supports:
 
 * `name` - (Required) A unique name to identify this Sumologic endpoint.
 * `url` - (Required) The URL to Sumologic collector endpoint
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t \"%r\" %>s %b`).
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic][fastly-sumologic]
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
@@ -407,7 +407,7 @@ seconds. Default `3600`.
 * `gzip_level` - (Optional) Level of GZIP compression, from `0-9`. `0` is no
 compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t \"%r\" %>s %b`).
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://docs.fastly.com/api/logging#logging_gcs)
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
@@ -430,8 +430,8 @@ The `syslog` block supports:
 * `name` - (Required) A unique name to identify this Syslog endpoint.
 * `address` - (Required) A hostname or IPv4 address of the Syslog endpoint.
 * `port` - (Optional) The port associated with the address where the Syslog endpoint can be accessed. Default `514`.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (%h %l %u %t %r %>s)
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t \"%r\" %>s %b`).
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).
 * `token` - (Optional) Whether to prepend each message with a specific token.
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Default `false`.
 * `tls_hostname` - (Optional) Used during the TLS handshake to validate the certificate.
@@ -447,8 +447,8 @@ The `logentries` block supports:
 * `token` - (Required) Logentries Token to be used for authentication (https://logentries.com/doc/input-token/).
 * `port` - (Optional) The port number configured in Logentries to send logs to. Defaults to `20000`.
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Defaults to `true`
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`).
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t \"%r\" %>s %b`).
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 2 (the default, version 2 log format) or 1 (the version 1 log format).
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 

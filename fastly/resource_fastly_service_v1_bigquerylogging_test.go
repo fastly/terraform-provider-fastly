@@ -19,7 +19,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 	}{
 		{
 			remote: []*gofastly.BigQuery{
-				&gofastly.BigQuery{
+				{
 					Name:      "bigquery-example",
 					User:      "email@example.com",
 					ProjectID: "example-gcp-project",
@@ -29,7 +29,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":       "bigquery-example",
 					"email":      "email@example.com",
 					"project_id": "example-gcp-project",

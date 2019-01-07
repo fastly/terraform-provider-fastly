@@ -26,8 +26,8 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		SecretKey:         "somesecret",
 		Period:            uint(3600),
 		GzipLevel:         uint(0),
-		Format:            "%h %l %u %t %r %>s",
-		FormatVersion:     1,
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     2,
 		MessageType:       "classic",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
 		ResponseCondition: "response_condition_test",
@@ -42,8 +42,8 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		SecretKey:         "somesecret",
 		Period:            uint(3600),
 		GzipLevel:         uint(0),
-		Format:            "%h %l %u %t %r %>s",
-		FormatVersion:     1,
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     2,
 		MessageType:       "blank",
 		Redundancy:        "reduced_redundancy",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
@@ -59,8 +59,8 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		SecretKey:       "someothersecret",
 		GzipLevel:       uint(3),
 		Period:          uint(60),
-		Format:          "%h %l %u %t %r %>s",
-		FormatVersion:   1,
+		Format:          "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:   2,
 		MessageType:     "classic",
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
@@ -111,8 +111,8 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 		SecretKey:         "somesecret",
 		Period:            uint(3600),
 		GzipLevel:         uint(0),
-		Format:            "%h %l %u %t %r %>s",
-		FormatVersion:     1,
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     2,
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
 		MessageType:       "classic",
 		ResponseCondition: "response_condition_test",
@@ -157,8 +157,8 @@ func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
 		SecretKey:       "someEnv",
 		Period:          uint(3600),
 		GzipLevel:       uint(0),
-		Format:          "%h %l %u %t %r %>s",
-		FormatVersion:   1,
+		Format:          "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:   2,
 		MessageType:     "classic",
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
@@ -197,8 +197,8 @@ func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 		SecretKey:       "somesecret",
 		Period:          uint(3600),
 		GzipLevel:       uint(0),
-		Format:          "%a %l %u %t %m %U%q %H %>s %b %T",
-		FormatVersion:   2,
+		Format:          "%h %l %u %t %r %>s",
+		FormatVersion:   1,
 		MessageType:     "classic",
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
@@ -429,8 +429,8 @@ resource "fastly_service_v1" "foo" {
     domain         = "s3-us-west-2.amazonaws.com"
     s3_access_key  = "somekey"
     s3_secret_key  = "somesecret"
-    format         = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
-    format_version = 2
+    format         = "%%h %%l %%u %%t %%r %%>s"
+    format_version = 1
   }
 
   force_destroy = true

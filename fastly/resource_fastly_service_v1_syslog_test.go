@@ -24,7 +24,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		IPV4:              "127.0.0.1",
 		Port:              uint(514),
 		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     1,
+		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
 		MessageType:       "classic",
 	}
@@ -36,7 +36,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		IPV4:              "127.0.0.1",
 		Port:              uint(514),
 		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     1,
+		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
 		MessageType:       "blank",
 	}
@@ -48,7 +48,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		IPV4:          "127.0.0.2",
 		Port:          uint(10514),
 		Format:        "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion: 1,
+		FormatVersion: 2,
 		MessageType:   "classic",
 	}
 
@@ -95,8 +95,8 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 		Address:       "127.0.0.1",
 		IPV4:          "127.0.0.1",
 		Port:          uint(514),
-		Format:        "%a %l %u %t %m %U%q %H %>s %b %T",
-		FormatVersion: 2,
+		Format:        "%h %l %u %t %r %>s",
+		FormatVersion: 1,
 		MessageType:   "classic",
 	}
 
@@ -243,8 +243,8 @@ resource "fastly_service_v1" "foo" {
     name           = "somesyslogname"
     address        = "127.0.0.1"
     port           = 514
-    format         = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
-    format_version = 2
+    format         = "%%h %%l %%u %%t %%r %%>s"
+    format_version = 1
   }
   force_destroy = true
 }`, name, domain)

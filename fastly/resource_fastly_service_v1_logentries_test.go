@@ -23,8 +23,8 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		Port:              uint(20000),
 		UseTLS:            true,
 		Token:             "token",
-		Format:            "%h %l %u %t %r %>s",
-		FormatVersion:     1,
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
 	}
 
@@ -34,8 +34,8 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		Port:              uint(10000),
 		UseTLS:            false,
 		Token:             "newtoken",
-		Format:            "%h %u %t %r %>s",
-		FormatVersion:     1,
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
 	}
 
@@ -129,7 +129,7 @@ func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
 		UseTLS:            true,
 		Token:             "token",
 		Format:            "%h %l %u %t %r %>s",
-		FormatVersion:     2,
+		FormatVersion:     1,
 		ResponseCondition: "response_condition_test",
 	}
 
@@ -208,7 +208,7 @@ resource "fastly_service_v1" "foo" {
     port               = "10000"
     use_tls            = "false"
     token              = "newtoken"
-    format             = "%%h %%u %%t %%r %%>s"
+    format             = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     response_condition = "response_condition_test"
   }
   force_destroy = true
@@ -237,7 +237,8 @@ resource "fastly_service_v1" "foo" {
     name               = "somelogentriesname"
     token              = "token"
     response_condition = "response_condition_test"
-    format_version     = 2
+    format             = "%%h %%l %%u %%t %%r %%>s"
+    format_version     = 1
   }
   force_destroy = true
 }`, name, domain)

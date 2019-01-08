@@ -21,7 +21,7 @@ func TestFastlyServiceV1_FlattenDirectors(t *testing.T) {
 	}{
 		{
 			remote_director: []*gofastly.Director{
-				&gofastly.Director{
+				{
 					Name:     "somedirector",
 					Type:     3,
 					Quorum:   75,
@@ -30,13 +30,13 @@ func TestFastlyServiceV1_FlattenDirectors(t *testing.T) {
 				},
 			},
 			remote_directorbackend: []*gofastly.DirectorBackend{
-				&gofastly.DirectorBackend{
+				{
 					Director: "somedirector",
 					Backend:  "somebackend",
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":     "somedirector",
 					"type":     3,
 					"quorum":   75,
@@ -48,37 +48,37 @@ func TestFastlyServiceV1_FlattenDirectors(t *testing.T) {
 		},
 		{
 			remote_director: []*gofastly.Director{
-				&gofastly.Director{
+				{
 					Name: "somedirector",
 				},
-				&gofastly.Director{
+				{
 					Name: "someotherdirector",
 				},
 			},
 			remote_directorbackend: []*gofastly.DirectorBackend{
-				&gofastly.DirectorBackend{
+				{
 					Director: "somedirector",
 					Backend:  "somebackend",
 				},
-				&gofastly.DirectorBackend{
+				{
 					Director: "somedirector",
 					Backend:  "someotherbackend",
 				},
-				&gofastly.DirectorBackend{
+				{
 					Director: "someotherdirector",
 					Backend:  "somebackend",
 				},
-				&gofastly.DirectorBackend{
+				{
 					Director: "someotherdirector",
 					Backend:  "someotherbackend",
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":     "somedirector",
 					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
 				},
-				map[string]interface{}{
+				{
 					"name":     "someotherdirector",
 					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
 				},
@@ -169,7 +169,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1DirectorsConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -181,7 +181,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccServiceV1DirectorsConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),

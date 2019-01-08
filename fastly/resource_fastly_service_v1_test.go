@@ -19,13 +19,13 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 	}{
 		{
 			remote: []*gofastly.Domain{
-				&gofastly.Domain{
+				{
 					Name:    "test.notexample.com",
 					Comment: "not comment",
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":    "test.notexample.com",
 					"comment": "not comment",
 				},
@@ -33,12 +33,12 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 		},
 		{
 			remote: []*gofastly.Domain{
-				&gofastly.Domain{
+				{
 					Name: "test.notexample.com",
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":    "test.notexample.com",
 					"comment": "",
 				},
@@ -61,7 +61,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 	}{
 		{
 			remote: []*gofastly.Backend{
-				&gofastly.Backend{
+				{
 					Name:                "test.notexample.com",
 					Address:             "www.notexample.com",
 					Port:                uint(80),
@@ -89,7 +89,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":                  "test.notexample.com",
 					"address":               "www.notexample.com",
 					"port":                  80,
@@ -139,7 +139,7 @@ func TestAccFastlyServiceV1_updateDomain(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -153,7 +153,7 @@ func TestAccFastlyServiceV1_updateDomain(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config_domainUpdate(nameUpdate, domainName1, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -182,7 +182,7 @@ func TestAccFastlyServiceV1_updateBackend(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config_backend(name, domain, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -190,7 +190,7 @@ func TestAccFastlyServiceV1_updateBackend(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config_backend_update(name, domain, backendName, backendName2, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -218,7 +218,7 @@ func TestAccFastlyServiceV1_updateInvalidBackend(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccServiceV1Config_backend(name, domain, badBackendName),
 				ExpectError: regexp.MustCompile("Bad Request"),
 				Check: resource.ComposeTestCheckFunc(
@@ -227,7 +227,7 @@ func TestAccFastlyServiceV1_updateInvalidBackend(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config_backend_update(name, domain, backendName, backendName2, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -252,7 +252,7 @@ func TestAccFastlyServiceV1_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config(name, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -306,7 +306,7 @@ func TestAccFastlyServiceV1_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config(name, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -424,7 +424,7 @@ func TestAccFastlyServiceV1_defaultTTL(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config_backend(name, domain, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -432,7 +432,7 @@ func TestAccFastlyServiceV1_defaultTTL(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config_backend_update(name, domain, backendName, backendName2, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -444,7 +444,7 @@ func TestAccFastlyServiceV1_defaultTTL(t *testing.T) {
 				),
 			},
 			// Now update the default_ttl to 0 and encounter the issue https://github.com/hashicorp/terraform/issues/12910
-			resource.TestStep{
+			{
 				Config: testAccServiceV1Config_backend_update(name, domain, backendName, backendName2, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),

@@ -19,7 +19,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 	}{
 		{
 			remote: []*gofastly.GCS{
-				&gofastly.GCS{
+				{
 					Name:      "GCS collector",
 					User:      "email@example.com",
 					Bucket:    "bucketName",
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":        "GCS collector",
 					"email":       "email@example.com",
 					"bucket_name": "bucketName",

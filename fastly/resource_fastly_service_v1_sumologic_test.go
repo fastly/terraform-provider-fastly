@@ -18,7 +18,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 	}{
 		{
 			remote: []*gofastly.Sumologic{
-				&gofastly.Sumologic{
+				{
 					Name:              "sumo collector",
 					URL:               "https://sumologic.com/collector/1",
 					Format:            "log format",
@@ -28,7 +28,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":               "sumo collector",
 					"url":                "https://sumologic.com/collector/1",
 					"format":             "log format",
@@ -73,7 +73,7 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1ConfigSumologic(name, domainName, backendName, s),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -84,7 +84,7 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 						"fastly_service_v1.foo", "sumologic.#", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServiceV1ConfigSumologic(name, domainName, backendName, sn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),

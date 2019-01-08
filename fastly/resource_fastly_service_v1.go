@@ -42,6 +42,13 @@ func resourceServiceV1() *schema.Resource {
 				Computed: true,
 			},
 
+			"activate": {
+				Type:        schema.TypeBool,
+				Description: "Conditionally prevents the Service from being activated",
+				Default:     true,
+				Optional:    true,
+			},
+
 			"domain": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -2653,18 +2660,23 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
-		log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-		_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-			Service: d.Id(),
-			Version: latestVersion,
-		})
-		if err != nil {
-			return fmt.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
-		}
+		shouldActivate := d.Get("activate").(bool)
+		if shouldActivate {
+			log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+			_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
+				Service: d.Id(),
+				Version: latestVersion,
+			})
+			if err != nil {
+				return fmt.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
+			}
 
-		// Only if the version is valid and activated do we set the active_version.
-		// This prevents us from getting stuck in cloning an invalid version
-		d.Set("active_version", latestVersion)
+			// Only if the version is valid and activated do we set the active_version.
+			// This prevents us from getting stuck in cloning an invalid version
+			d.Set("active_version", latestVersion)
+		} else {
+			log.Printf("[DEBUG] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+		}
 	}
 
 	return resourceServiceV1Read(d, meta)

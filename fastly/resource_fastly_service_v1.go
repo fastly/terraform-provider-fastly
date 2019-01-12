@@ -2675,7 +2675,10 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			// This prevents us from getting stuck in cloning an invalid version
 			d.Set("active_version", latestVersion)
 		} else {
-			log.Printf("[DEBUG] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+			log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+			log.Print("[INFO] The Terraform definition is explicitly specified to not activate the changes on Fastly")
+			log.Printf("[INFO] Version (%v) has been pushed and validated", latestVersion)
+			log.Printf("[INFO] Visit https://manage.fastly.com/configure/services/%s/versions/%v and activate it manually", d.Id(), latestVersion)
 		}
 	}
 

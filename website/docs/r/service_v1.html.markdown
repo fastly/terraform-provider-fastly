@@ -162,6 +162,7 @@ Fastly documentation on [Amazon S3][fastly-s3].
 
 The following arguments are supported:
 
+* `activate` - (Optional) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to false. Default true.
 * `name` - (Required) The unique name for the Service to create.
 * `domain` - (Required) A set of Domain names to serve as entry points for your
 Service. Defined below.

@@ -162,6 +162,7 @@ Fastly documentation on [Amazon S3][fastly-s3].
 
 The following arguments are supported:
 
+* `activate` - (Optional) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to false. Default true.
 * `name` - (Required) The unique name for the Service to create.
 * `domain` - (Required) A set of Domain names to serve as entry points for your
 Service. Defined below.
@@ -483,21 +484,30 @@ marked as the main block. Default is `false`.
 
 The following attributes are exported:
 
-* `id` - The ID of the Service.
-* `name` – Name of this service.
-* `active_version` - The currently active version of your Fastly
-Service.
-* `director` - Set of Directors. See above for details.
-* `domain` – Set of Domains. See above for details.
+* `id` – The ID of the Service.
+* `active_version` – The currently active version of your Fastly Service.
 * `backend` – Set of Backends. See above for details.
-* `header` – Set of Headers. See above for details.
-* `s3logging` – Set of S3 Logging configurations. See above for details.
-* `papertrail` – Set of Papertrail configurations. See above for details.
-* `response_object` - Set of Response Object configurations. See above for details.
-* `vcl` – Set of custom VCL configurations. See above for details.
+* `bigquerylogging` – Set of Google BigQuery configurations. See above for details.
+* `cache_setting` – Set of Cache Setting configurations. See above for details.
+* `condition` – Set of Condition configurations. See above for details.
 * `default_host` – Default host specified.
-* `default_ttl` - Default TTL.
-* `force_destroy` - Force the destruction of the Service on delete.
+* `default_ttl` – Default TTL.
+* `director` – Set of Directors. See above for details.
+* `domain` – Set of Domains. See above for details.
+* `gcslogging` – Set of Google Cloud Storage configurations. See above for details.
+* `gzip` – Set of Gzip configurations. See above for details.
+* `header` – Set of Headers. See above for details.
+* `healthcheck` – Set of Health Check configurations. See above for details.
+* `logentries` – Set of Logentries configurations. See above for details.
+* `name` – Name of this service.
+* `papertrail` – Set of Papertrail configurations. See above for details.
+* `request_setting` – Set of Request Setting configurations. See above for details.
+* `response_object` – Set of Response Object configurations. See above for details.
+* `s3logging` – Set of S3 Logging configurations. See above for details.
+* `snippet` – Set of Snippet configurations. See above for details.
+* `sumologic` – Set of Sumologic configurations. See above for details.
+* `syslog` – Set of Syslog configurations. See above for details.
+* `vcl` – Set of custom VCL configurations. See above for details.
 
 [fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
 [fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records

@@ -1,4 +1,9 @@
 ## 0.6.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* provider: Enable request/response logging [GH-120]
+
 ## 0.5.0 (January 08, 2019)
 
 IMPROVEMENTS:

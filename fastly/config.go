@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 
+	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
 	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
@@ -25,12 +26,13 @@ func (c *Config) Client() (interface{}, error) {
 
 	gofastly.UserAgent = terraform.UserAgentString()
 
-	fconn, err := gofastly.NewClientForEndpoint(c.ApiKey, c.BaseURL)
-
+	fastlyClient, err := gofastly.NewClientForEndpoint(c.ApiKey, c.BaseURL)
 	if err != nil {
 		return nil, err
 	}
 
-	client.conn = fconn
+	fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", fastlyClient.HTTPClient.Transport)
+
+	client.conn = fastlyClient
 	return &client, nil
 }

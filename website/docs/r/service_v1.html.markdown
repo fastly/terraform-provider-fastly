@@ -482,23 +482,10 @@ marked as the main block. Default is `false`.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to the arguments listed above, the following attributes are exported:
 
-* `id` - The ID of the Service.
-* `name` – Name of this service.
-* `active_version` - The currently active version of your Fastly
-Service.
-* `director` - Set of Directors. See above for details.
-* `domain` – Set of Domains. See above for details.
-* `backend` – Set of Backends. See above for details.
-* `header` – Set of Headers. See above for details.
-* `s3logging` – Set of S3 Logging configurations. See above for details.
-* `papertrail` – Set of Papertrail configurations. See above for details.
-* `response_object` - Set of Response Object configurations. See above for details.
-* `vcl` – Set of custom VCL configurations. See above for details.
-* `default_host` – Default host specified.
-* `default_ttl` - Default TTL.
-* `force_destroy` - Force the destruction of the Service on delete.
+* `id` – The ID of the Service.
+* `active_version` – The currently active version of your Fastly Service.
 
 [fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
 [fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records

@@ -23,11 +23,17 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 		Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 	}
 
-	s2 := gofastly.Snippet{
+	updatedS1 := gofastly.Snippet{
+		Name:     "recv_test",
+		Type:     gofastly.SnippetTypeRecv,
+		Priority: int(110),
+		Content:  "if ( req.url ) {\n set req.http.different-header = \"true\";\n}",
+	}
+	updatedS2 := gofastly.Snippet{
 		Name:     "fetch_test",
 		Type:     gofastly.SnippetTypeFetch,
 		Priority: int(50),
-		Content:  "if ( req.url ~ \"^/pass\" ) {\n return(pass);\n}",
+		Content:  "restart;\n",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -40,10 +46,11 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1SnippetAttributes(&service, []*gofastly.Snippet{&s1}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "vcl_snippet.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.name", "recv_test"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.type", "recv"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.priority", "110"),
 				),
 			},
 
@@ -51,11 +58,14 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 				Config: testAccServiceV1Snippet_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SnippetAttributes(&service, []*gofastly.Snippet{&s1, &s2}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "vcl_snippet.#", "2"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "vcl_snippet.2.name", "fetch_test"),
+					testAccCheckFastlyServiceV1SnippetAttributes(&service, []*gofastly.Snippet{&updatedS1, &updatedS2}),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.name", "recv_test"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.type", "recv"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.priority", "110"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.name", "fetch_test"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.type", "fetch"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.priority", "50"),
 				),
 			},
 		},
@@ -80,14 +90,19 @@ func testAccCheckFastlyServiceV1SnippetAttributes(service *gofastly.ServiceDetai
 		}
 
 		var found int
-		for _, r := range snippets {
+		for _, expected := range snippets {
 			for _, lr := range sList {
-				if r.Name == lr.Name {
-					// we don't know these things ahead of time, so populate them now
-					r.ServiceID = service.ID
-					r.Version = service.ActiveVersion.Number
-					if !reflect.DeepEqual(r, lr) {
-						return fmt.Errorf("Bad VCL Snippet match, expected (%#v), got (%#v)", r, lr)
+				if expected.Name == lr.Name {
+					expected.ServiceID = service.ID
+					expected.Version = service.ActiveVersion.Number
+
+					// We don't know these things ahead of time, so ignore them
+					lr.ID = ""
+					lr.CreatedAt = ""
+					lr.UpdatedAt = ""
+
+					if !reflect.DeepEqual(expected, lr) {
+						return fmt.Errorf("Unexpected VCL Snippet.\nExpected: %#v\nGot: %#v\n", expected, lr)
 					}
 					found++
 				}
@@ -95,7 +110,7 @@ func testAccCheckFastlyServiceV1SnippetAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(snippets) {
-			return fmt.Errorf("Error matching VCL Snippets (%d/%d)", found, len(snippets))
+			return fmt.Errorf("Error matching VCL Snippets. Found: %d / Expected: %d", found, len(snippets))
 		}
 
 		return nil
@@ -118,11 +133,11 @@ resource "fastly_service_v1" "foo" {
     port    = 80
   }
 
-  vcl_snippet {
-    name = "recv_test"
-    type = "recv"
+  snippet {
+    name     = "recv_test"
+    type     = "recv"
     priority = 110
-    content = "myfunc()"
+    content  = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
   }
 
   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
@@ -147,18 +162,18 @@ resource "fastly_service_v1" "foo" {
     port    = 80
   }
 
-  vcl_snippet {
-    name = "recv_test"
-    type = "recv"
+  snippet {
+    name     = "recv_test"
+    type     = "recv"
     priority = 110
-    content = "if (resp.status >= 500) { restart }"
+    content  = "if ( req.url ) {\n set req.http.different-header = \"true\";\n}"
   }
 
-  vcl_snippet {
-    name = "fetch_test"
-    type = "fetch"
+  snippet {
+    name     = "fetch_test"
+    type     = "fetch"
     priority = 50
-    content = "restart"
+    content  = "restart;\n"
   }
 
   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"

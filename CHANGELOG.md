@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * provider: Enable request/response logging [GH-120]
+* activate: Add support for service activation behavior ([#45](https://github.com/terraform-providers/terraform-provider-fastly/pull/45))
 
 ## 0.5.0 (January 08, 2019)
 

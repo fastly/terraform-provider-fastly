@@ -1,8 +1,8 @@
-## 0.6.0 (Unreleased)
+## 0.6.0 (February 08, 2019)
 
 IMPROVEMENTS:
 
-* provider: Enable request/response logging [GH-120]
+* provider: Enable request/response logging ([#120](https://github.com/terraform-providers/terraform-provider-fastly/issues/120))
 * activate: Add support for service activation behavior ([#45](https://github.com/terraform-providers/terraform-provider-fastly/pull/45))
 
 ## 0.5.0 (January 08, 2019)

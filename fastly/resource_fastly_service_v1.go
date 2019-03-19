@@ -141,7 +141,7 @@ func resourceServiceV1() *schema.Resource {
 						"check_interval": {
 							Type:        schema.TypeInt,
 							Optional:    true,
-							Default:     5000,
+							Default:     60000,
 							Description: "How often to run the healthcheck in milliseconds",
 						},
 						"expected_response": {

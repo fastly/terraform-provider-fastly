@@ -1,6 +1,8 @@
 package fastly
 
 import (
+	"errors"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
@@ -43,6 +45,7 @@ func resourceACLV1() *schema.Resource {
 
 func resourceACLV1Create(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
+	serviceID := d.Get("service_id").(string)
 
 	service, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 		ID: d.Get("service_id").(string),
@@ -58,9 +61,22 @@ func resourceACLV1Create(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	valid, message, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
+		Service: serviceID,
+		Version: versionNumber,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !valid {
+		return errors.New(message)
+	}
+
 	acl, err := conn.CreateACL(&gofastly.CreateACLInput{
 		Name:    d.Get("name").(string),
-		Service: d.Get("service_id").(string),
+		Service: serviceID,
 		Version: versionNumber,
 	})
 
@@ -69,7 +85,7 @@ func resourceACLV1Create(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("activate").(bool) {
-		activateVersion(service.ID, versionNumber, meta)
+		activateVersion(serviceID, versionNumber, meta)
 	}
 
 	d.SetId(acl.Name)
@@ -84,12 +100,25 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	versionNumber, err := getVersionNumber(serviceID, d.Get("version").(int), meta)
 
+	if err != nil {
+		return err
+	}
+
 	if d.HasChange("name") {
+		valid, message, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
+			Service: serviceID,
+			Version: versionNumber,
+		})
+
 		if err != nil {
 			return err
 		}
 
-		_, err := conn.UpdateACL(&gofastly.UpdateACLInput{
+		if !valid {
+			return errors.New(message)
+		}
+
+		_, err = conn.UpdateACL(&gofastly.UpdateACLInput{
 			Name:    d.Id(),
 			NewName: name,
 			Service: serviceID,
@@ -141,6 +170,19 @@ func resourceACLV1Delete(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return err
+	}
+
+	valid, message, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
+		Service: serviceID,
+		Version: versionNumber,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !valid {
+		return errors.New(message)
 	}
 
 	err = conn.DeleteACL(&gofastly.DeleteACLInput{

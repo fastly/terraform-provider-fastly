@@ -88,7 +88,7 @@ func resourceACLV1Create(d *schema.ResourceData, meta interface{}) error {
 		activateVersion(serviceID, versionNumber, meta)
 	}
 
-	d.SetId(acl.Name)
+	d.SetId(acl.ID)
 	d.Set("version", acl.Version)
 	return resourceACLV1Read(d, meta)
 }
@@ -97,7 +97,6 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
-	name := d.Get("name").(string)
 	versionNumber, err := getVersionNumber(serviceID, d.Get("version").(int), meta)
 
 	if err != nil {
@@ -105,6 +104,8 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("name") {
+		oldName, newName := d.GetChange("name")
+
 		valid, message, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
 			Service: serviceID,
 			Version: versionNumber,
@@ -119,8 +120,8 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		_, err = conn.UpdateACL(&gofastly.UpdateACLInput{
-			Name:    d.Id(),
-			NewName: name,
+			Name:    oldName.(string),
+			NewName: newName.(string),
 			Service: serviceID,
 			Version: versionNumber,
 		})
@@ -134,7 +135,6 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 		activateVersion(serviceID, versionNumber, meta)
 	}
 
-	d.SetId(name)
 	d.Set("version", versionNumber)
 
 	return resourceACLV1Read(d, meta)
@@ -153,7 +153,7 @@ func resourceACLV1Read(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(acl.Name)
+	d.SetId(acl.ID)
 	d.Set("name", acl.Name)
 	d.Set("service_id", acl.ServiceID)
 	d.Set("version", acl.Version)

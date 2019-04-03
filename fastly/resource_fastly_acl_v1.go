@@ -55,7 +55,22 @@ func resourceACLV1Create(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	versionNumber, err := getVersionNumber(service.ID, service.ActiveVersion.Number, meta)
+	clonedVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
+		Service: serviceID,
+		Version: service.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	versionNumber := clonedVersion.Number
+
+	acl, err := conn.CreateACL(&gofastly.CreateACLInput{
+		Name:    d.Get("name").(string),
+		Service: serviceID,
+		Version: versionNumber,
+	})
 
 	if err != nil {
 		return err
@@ -74,16 +89,6 @@ func resourceACLV1Create(d *schema.ResourceData, meta interface{}) error {
 		return errors.New(message)
 	}
 
-	acl, err := conn.CreateACL(&gofastly.CreateACLInput{
-		Name:    d.Get("name").(string),
-		Service: serviceID,
-		Version: versionNumber,
-	})
-
-	if err != nil {
-		return err
-	}
-
 	if d.Get("activate").(bool) {
 		activateVersion(serviceID, versionNumber, meta)
 	}
@@ -97,14 +102,39 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
-	versionNumber, err := getVersionNumber(serviceID, d.Get("version").(int), meta)
+
+	service, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
+		ID: d.Get("service_id").(string),
+	})
 
 	if err != nil {
 		return err
 	}
 
+	clonedVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
+		Service: serviceID,
+		Version: service.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	versionNumber := clonedVersion.Number
+
 	if d.HasChange("name") {
 		oldName, newName := d.GetChange("name")
+
+		_, err = conn.UpdateACL(&gofastly.UpdateACLInput{
+			Name:    oldName.(string),
+			NewName: newName.(string),
+			Service: serviceID,
+			Version: versionNumber,
+		})
+
+		if err != nil {
+			return err
+		}
 
 		valid, message, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
 			Service: serviceID,
@@ -117,17 +147,6 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		if !valid {
 			return errors.New(message)
-		}
-
-		_, err = conn.UpdateACL(&gofastly.UpdateACLInput{
-			Name:    oldName.(string),
-			NewName: newName.(string),
-			Service: serviceID,
-			Version: versionNumber,
-		})
-
-		if err != nil {
-			return err
 		}
 	}
 
@@ -166,7 +185,30 @@ func resourceACLV1Delete(d *schema.ResourceData, meta interface{}) error {
 
 	serviceID := d.Get("service_id").(string)
 
-	versionNumber, err := getVersionNumber(serviceID, d.Get("version").(int), meta)
+	service, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
+		ID: d.Get("service_id").(string),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	clonedVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
+		Service: serviceID,
+		Version: service.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	versionNumber := clonedVersion.Number
+
+	err = conn.DeleteACL(&gofastly.DeleteACLInput{
+		Name:    d.Get("name").(string),
+		Service: d.Get("service_id").(string),
+		Version: versionNumber,
+	})
 
 	if err != nil {
 		return err
@@ -185,51 +227,11 @@ func resourceACLV1Delete(d *schema.ResourceData, meta interface{}) error {
 		return errors.New(message)
 	}
 
-	err = conn.DeleteACL(&gofastly.DeleteACLInput{
-		Name:    d.Get("name").(string),
-		Service: d.Get("service_id").(string),
-		Version: versionNumber,
-	})
-
-	if err != nil {
-		return err
-	}
-
 	if d.Get("activate").(bool) {
 		activateVersion(serviceID, versionNumber, meta)
 	}
 
 	return nil
-}
-
-func getVersionNumber(serviceID string, version int, meta interface{}) (int, error) {
-	conn := meta.(*FastlyClient).conn
-
-	versionDetails, err := conn.GetVersion(&gofastly.GetVersionInput{
-		Service: serviceID,
-		Version: version,
-	})
-
-	if err != nil {
-		return 0, err
-	}
-
-	versionNumber := versionDetails.Number
-
-	if versionDetails.Locked {
-		clonedVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
-			Service: serviceID,
-			Version: versionDetails.Number,
-		})
-
-		if err != nil {
-			return 0, err
-		}
-
-		versionNumber = clonedVersion.Number
-	}
-
-	return versionNumber, nil
 }
 
 func activateVersion(serviceID string, version int, meta interface{}) error {

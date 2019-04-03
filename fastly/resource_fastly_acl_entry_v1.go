@@ -19,11 +19,13 @@ func resourceACLEntryV1() *schema.Resource {
 			"service_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "ID of the service",
 			},
 			"acl_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "ID of the ACL",
 			},
 			"ip": {

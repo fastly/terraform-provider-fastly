@@ -40,6 +40,12 @@ func resourceServiceV1() *schema.Resource {
 				Description: "A personal freeform descriptive note",
 			},
 
+			"version_comment": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A personal freeform descriptive note",
+			},
+
 			// Active Version represents the currently activated version in Fastly. In
 			// Terraform, we abstract this number away from the users and manage
 			// creating and activating. It's used internally, but also exported for
@@ -1389,6 +1395,28 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// Update the active version's comment. No new version is required for this
+	if d.HasChange("version_comment") && !needsChange {
+		latestVersion := d.Get("active_version").(int)
+		if latestVersion == 0 {
+			// If the service was just created, there is an empty Version 1 available
+			// that is unlocked and can be updated
+			latestVersion = 1
+		}
+
+		opts := gofastly.UpdateVersionInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Comment: d.Get("version_comment").(string),
+		}
+
+		log.Printf("[DEBUG] Update Version opts: %#v", opts)
+		_, err := conn.UpdateVersion(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	if needsChange {
 		latestVersion := d.Get("active_version").(int)
 		if latestVersion == 0 {
@@ -1414,6 +1442,21 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			// itself. Typically, 7 seconds is enough
 			log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
 			time.Sleep(7 * time.Second)
+
+			// Update the cloned version's comment
+			if d.Get("version_comment").(string) != "" {
+				opts := gofastly.UpdateVersionInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Comment: d.Get("version_comment").(string),
+				}
+
+				log.Printf("[DEBUG] Update Version opts: %#v", opts)
+				_, err := conn.UpdateVersion(&opts)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		// update general settings
@@ -2720,6 +2763,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", s.Name)
 	d.Set("comment", s.Comment)
+	d.Set("version_comment", s.Version.Comment)
 	d.Set("active_version", s.ActiveVersion.Number)
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll

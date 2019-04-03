@@ -12,7 +12,11 @@ func resourceACLEntryV1() *schema.Resource {
 		Update: resourceACLEntryV1Update,
 		Delete: resourceACLEntryV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("service_id", d.Get("service_id").(string))
+				d.Set("acl_id", d.Get("acl_id").(string))
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{

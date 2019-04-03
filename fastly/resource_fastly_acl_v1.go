@@ -14,7 +14,10 @@ func resourceACLV1() *schema.Resource {
 		Update: resourceACLV1Update,
 		Delete: resourceACLV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("service_id", d.Get("service_id").(string))
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{

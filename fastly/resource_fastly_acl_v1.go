@@ -44,7 +44,7 @@ func resourceACLV1() *schema.Resource {
 					return nil, err
 				}
 
-				d.SetId(acl.ID)
+				d.Set("name", acl.Name)
 				d.Set("service_id", acl.ServiceID)
 				d.Set("version", acl.Version)
 				return []*schema.ResourceData{d}, nil

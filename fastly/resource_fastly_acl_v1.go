@@ -2,6 +2,8 @@ package fastly
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	gofastly "github.com/sethvargo/go-fastly/fastly"
@@ -15,7 +17,36 @@ func resourceACLV1() *schema.Resource {
 		Delete: resourceACLV1Delete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("service_id", d.Get("service_id").(string))
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected SERVICE-ID/NAME", d.Id())
+				}
+
+				serviceID := idParts[0]
+				aclName := idParts[1]
+
+				conn := meta.(*FastlyClient).conn
+				service, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
+					ID: serviceID,
+				})
+
+				if err != nil {
+					return nil, err
+				}
+
+				acl, err := conn.GetACL(&gofastly.GetACLInput{
+					Name:    aclName,
+					Service: serviceID,
+					Version: service.ActiveVersion.Number,
+				})
+
+				if err != nil {
+					return nil, err
+				}
+
+				d.SetId(acl.ID)
+				d.Set("service_id", acl.ServiceID)
+				d.Set("version", acl.Version)
 				return []*schema.ResourceData{d}, nil
 			},
 		},

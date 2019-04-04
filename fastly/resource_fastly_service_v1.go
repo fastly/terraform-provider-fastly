@@ -1239,8 +1239,7 @@ func resourceServiceV1() *schema.Resource {
 							StateFunc: func(v interface{}) string {
 								switch v.(type) {
 								case string:
-									hash := sha1.Sum([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
+									return v.(string)
 								default:
 									return ""
 								}

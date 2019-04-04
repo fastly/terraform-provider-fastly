@@ -1,6 +1,9 @@
 package fastly
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
@@ -13,8 +16,16 @@ func resourceACLEntryV1() *schema.Resource {
 		Delete: resourceACLEntryV1Delete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("service_id", d.Get("service_id").(string))
-				d.Set("acl_id", d.Get("acl_id").(string))
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected SERVICE-ID/ACL-ID/ID", d.Id())
+				}
+
+				serviceID := idParts[0]
+				aclID := idParts[1]
+
+				d.Set("service_id", serviceID)
+				d.Set("acl_id", aclID)
 				return []*schema.ResourceData{d}, nil
 			},
 		},

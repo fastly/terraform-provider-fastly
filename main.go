@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Wikia/terraform-provider-fastly/fastly"
+	"github.com/terraform-providers/terraform-provider-fastly/fastly"
 	"github.com/hashicorp/terraform/plugin"
 )
 

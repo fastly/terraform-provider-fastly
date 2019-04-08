@@ -124,7 +124,11 @@ func resourceACLV1Create(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("activate").(bool) {
-		activateVersion(serviceID, versionNumber, meta)
+		err = activateVersion(serviceID, versionNumber, meta)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(acl.ID)
@@ -185,7 +189,11 @@ func resourceACLV1Update(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("activate").(bool) {
-		activateVersion(serviceID, versionNumber, meta)
+		err = activateVersion(serviceID, versionNumber, meta)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	d.Set("version", versionNumber)
@@ -262,7 +270,11 @@ func resourceACLV1Delete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("activate").(bool) {
-		activateVersion(serviceID, versionNumber, meta)
+		err = activateVersion(serviceID, versionNumber, meta)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

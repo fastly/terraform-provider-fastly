@@ -157,7 +157,7 @@ github.com/posener/complete
 github.com/posener/complete/cmd/install
 github.com/posener/complete/cmd
 github.com/posener/complete/match
-# github.com/sethvargo/go-fastly v0.0.0-20181208165200-c9e8e74a07f0
+# github.com/sethvargo/go-fastly v0.4.3-0.20190412183535-2c4beda14a9c
 github.com/sethvargo/go-fastly/fastly
 # github.com/ulikunitz/xz v0.5.4
 github.com/ulikunitz/xz

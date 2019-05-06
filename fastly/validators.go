@@ -1,6 +1,11 @@
 package fastly
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
+)
 
 func validateLoggingFormatVersion(v interface{}, k string) (ws []string, errors []error) {
 	value := uint(v.(int))
@@ -59,4 +64,12 @@ func validateDirectorType(v interface{}, k string) (ws []string, errors []error)
 			"%q must be one of ['1' (random), '3' (hash), '4' (client)]", k))
 	}
 	return
+}
+
+func validateConditionType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"REQUEST",
+		"RESPONSE",
+		"CACHE",
+	}, false)
 }

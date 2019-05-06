@@ -105,3 +105,28 @@ func TestValidateDirectorType(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateConditionType(t *testing.T) {
+	for _, ctvt := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"REQUEST", 0, 0},
+		{"RESPONSE", 0, 0},
+		{"CACHE", 0, 0},
+		{"request", 0, 1},
+		{"response", 0, 1},
+		{"cache", 0, 1},
+	} {
+		t.Run(ctvt.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateConditionType()(ctvt.value, "type")
+			if len(actualWarns) != ctvt.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", ctvt.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != ctvt.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", ctvt.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

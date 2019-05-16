@@ -78,6 +78,35 @@ func TestValidateLoggingPlacement(t *testing.T) {
 	}
 }
 
+func TestValidateDirectorQuorum(t *testing.T) {
+	validQuorums := []int{
+		0,
+		9,
+		55,
+		83,
+		100,
+	}
+	for _, v := range validQuorums {
+		_, errors := validateDirectorQuorum(v, "quorum")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid director quorum: %q", v, errors)
+		}
+	}
+
+	invalidQuorums := []int{
+		-1,
+		-50,
+		101,
+		150,
+	}
+	for _, v := range invalidQuorums {
+		_, errors := validateDirectorQuorum(v, "quorum")
+		if len(errors) != 1 {
+			t.Fatalf("%q should not be a valid director quorum", v)
+		}
+	}
+}
+
 func TestValidateDirectorType(t *testing.T) {
 	validVersions := []int{
 		1,

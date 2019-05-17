@@ -186,3 +186,29 @@ func TestValidateHeaderAction(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateHeaderType(t *testing.T) {
+	validTypes := []string{
+		"request",
+		"fetch",
+		"cache",
+		"response",
+	}
+	for _, v := range validTypes {
+		_, errors := validateHeaderType(v, "type")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid header type: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"invalid_type_1",
+		"invalid_type_2",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateHeaderType(v, "type")
+		if len(errors) != 1 {
+			t.Fatalf("%q should not be a valid header type", v)
+		}
+	}
+}

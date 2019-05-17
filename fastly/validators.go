@@ -154,3 +154,19 @@ func validateHeaderAction(v interface{}, k string) (ws []string, errors []error)
 	}
 	return
 }
+
+func validateHeaderType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	validTypes := map[string]struct{}{
+		"request":  {},
+		"fetch":    {},
+		"cache":    {},
+		"response": {},
+	}
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['request', 'fetch', 'cache', 'response']", k))
+	}
+	return
+}

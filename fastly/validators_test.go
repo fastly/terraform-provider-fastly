@@ -159,3 +159,30 @@ func TestValidateConditionType(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateHeaderAction(t *testing.T) {
+	validActions := []string{
+		"set",
+		"append",
+		"delete",
+		"regex",
+		"regex_repeat",
+	}
+	for _, v := range validActions {
+		_, errors := validateHeaderAction(v, "action")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid header action: %q", v, errors)
+		}
+	}
+
+	invalidActions := []string{
+		"invalid_action_1",
+		"invalid_action_2",
+	}
+	for _, v := range invalidActions {
+		_, errors := validateHeaderAction(v, "action")
+		if len(errors) != 1 {
+			t.Fatalf("%q should not be a valid header action", v)
+		}
+	}
+}

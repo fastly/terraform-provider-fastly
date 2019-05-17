@@ -137,3 +137,20 @@ func validateSnippetType(v interface{}, k string) (ws []string, errors []error) 
 	}
 	return
 }
+
+func validateHeaderAction(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	validActions := map[string]struct{}{
+		"set":          {},
+		"append":       {},
+		"delete":       {},
+		"regex":        {},
+		"regex_repeat": {},
+	}
+
+	if _, ok := validActions[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['set', 'append', 'delete', 'regex', 'regex_repeat']", k))
+	}
+	return
+}

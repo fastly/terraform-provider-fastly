@@ -170,3 +170,25 @@ func validateHeaderType(v interface{}, k string) (ws []string, errors []error) {
 	}
 	return
 }
+
+func validateSnippetType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	validTypes := map[string]struct{}{
+		"init":    {},
+		"recv":    {},
+		"hit":     {},
+		"miss":    {},
+		"pass":    {},
+		"fetch":   {},
+		"error":   {},
+		"deliver": {},
+		"log":     {},
+		"none":    {},
+	}
+
+	if _, ok := validTypes[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['init', 'recv', 'hit', 'miss', 'pass', 'fetch', 'error', 'deliver', 'log', 'none']", k))
+	}
+	return
+}

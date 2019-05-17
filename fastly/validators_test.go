@@ -212,3 +212,35 @@ func TestValidateHeaderType(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateSnippetType(t *testing.T) {
+	validTypes := []string{
+		"init",
+		"recv",
+		"hit",
+		"miss",
+		"pass",
+		"fetch",
+		"error",
+		"deliver",
+		"log",
+		"none",
+	}
+	for _, v := range validTypes {
+		_, errors := validateSnippetType(v, "type")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid snippet type: %q", v, errors)
+		}
+	}
+
+	invalidTypes := []string{
+		"invalid_type_1",
+		"invalid_type_2",
+	}
+	for _, v := range invalidTypes {
+		_, errors := validateSnippetType(v, "type")
+		if len(errors) != 1 {
+			t.Fatalf("%q should not be a valid snippet type", v)
+		}
+	}
+}

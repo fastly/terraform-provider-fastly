@@ -62,7 +62,7 @@ func TestValidateLoggingPlacement(t *testing.T) {
 	for _, v := range validPlacements {
 		_, errors := validateLoggingPlacement(v, "placement")
 		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid placement", v)
+			t.Fatalf("%q should be a valid placement: %q", v, errors)
 		}
 	}
 
@@ -108,26 +108,26 @@ func TestValidateDirectorQuorum(t *testing.T) {
 }
 
 func TestValidateDirectorType(t *testing.T) {
-	validVersions := []int{
+	validTypes := []int{
 		1,
 		3,
 		4,
 	}
-	for _, v := range validVersions {
+	for _, v := range validTypes {
 		_, errors := validateDirectorType(v, "type")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid director type: %q", v, errors)
 		}
 	}
 
-	invalidVersions := []int{
+	invalidTypes := []int{
 		0,
 		-1,
 		2,
 		5,
 		6,
 	}
-	for _, v := range invalidVersions {
+	for _, v := range invalidTypes {
 		_, errors := validateDirectorType(v, "type")
 		if len(errors) != 1 {
 			t.Fatalf("%q should not be a valid director type", v)

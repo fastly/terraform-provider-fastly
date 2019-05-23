@@ -348,7 +348,7 @@ Fastly-Geo-Region into the request headers.
 The `s3logging` block supports:
 
 * `name` - (Required) A unique name to identify this S3 Logging Bucket.
-* `bucket_name` - (Optional) An optional comment about the Domain.
+* `bucket_name` - (Required) The name of the bucket in which to store the logs.
 * `s3_access_key` - (Required) AWS Access Key of an account with the required
 permissions to post logs. It is **strongly** recommended you create a separate
 IAM user with permissions to only operate on this Bucket. This key will be

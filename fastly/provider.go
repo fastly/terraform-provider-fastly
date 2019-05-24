@@ -1,9 +1,9 @@
 package fastly
 
 import (
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
 // Provider returns a terraform.ResourceProvider.

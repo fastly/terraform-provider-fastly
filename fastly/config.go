@@ -3,9 +3,9 @@ package fastly
 import (
 	"fmt"
 
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
 )
 
 type Config struct {

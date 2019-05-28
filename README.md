@@ -61,3 +61,16 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 ```sh
 $ make testacc
 ```
+
+In order to run an individual acceptance test, the '-run' flag can be used together with a regular expression.
+The following example uses a regular expression matching single test called 'TestAccFastlyServiceV1_basic'.
+
+```sh
+$ make testacc TESTARGS='-run=TestAccFastlyServiceV1_basic'
+```
+
+The following example uses a regular expression to execute a grouping of basic acceptance tests.
+
+```sh
+$ make testacc TESTARGS='-run=TestAccFastlyServiceV1_.*_basic'
+```

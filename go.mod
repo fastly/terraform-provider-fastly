@@ -7,5 +7,4 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.0
 	github.com/hashicorp/terraform v0.12.0
 	github.com/sethvargo/go-fastly v0.0.0-20181208165200-c9e8e74a07f0
-	github.com/smartystreets/goconvey v0.0.0-20190222223459-a17d461953aa // indirect
 )

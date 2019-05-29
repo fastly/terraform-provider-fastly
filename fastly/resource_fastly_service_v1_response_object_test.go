@@ -11,6 +11,48 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.ResponseObject
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.ResponseObject{
+				{
+					Version:          1,
+					Name:             "responseObjecttesting",
+					Status:           200,
+					Response:         "OK",
+					Content:          "test content",
+					ContentType:      "text/html",
+					RequestCondition: "test-request-condition",
+					CacheCondition:   "test-cache-condition",
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":              "responseObjecttesting",
+					"status":            uint(200),
+					"response":          "OK",
+					"content":           "test content",
+					"content_type":      "text/html",
+					"request_condition": "test-request-condition",
+					"cache_condition":   "test-cache-condition",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenResponseObjects(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestAccFastlyServiceV1_response_object_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

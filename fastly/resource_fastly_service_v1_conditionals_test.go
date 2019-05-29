@@ -11,6 +11,41 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenConditions(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.Condition
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.Condition{
+				{
+					Name:      "some amz condition",
+					Priority:  10,
+					Type:      "REQUEST",
+					Statement: `req.url ~ "^/yolo/"`,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":      "some amz condition",
+					"priority":  10,
+					"type":      "REQUEST",
+					"statement": "req.url ~ \"^/yolo/\"",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenConditions(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestAccFastlyServiceV1_conditional_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

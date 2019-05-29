@@ -11,6 +11,44 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenPapertrail(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.Papertrail
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.Papertrail{
+				{
+					Version:           1,
+					Name:              "papertrailtesting",
+					Address:           "test1.papertrailapp.com",
+					Port:              3600,
+					Format:            "%h %l %u %t %r %>s",
+					ResponseCondition: "test_response_condition",
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":               "papertrailtesting",
+					"address":            "test1.papertrailapp.com",
+					"port":               uint(3600),
+					"format":             "%h %l %u %t %r %>s",
+					"response_condition": "test_response_condition",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenPapertrails(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

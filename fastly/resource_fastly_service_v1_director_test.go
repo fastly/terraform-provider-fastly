@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestFastlyServiceV1_FlattenDirectors(t *testing.T) {
+func TestResourceFastlyFlattenDirectors(t *testing.T) {
 	cases := []struct {
 		remote_director        []*gofastly.Director
 		remote_directorbackend []*gofastly.DirectorBackend

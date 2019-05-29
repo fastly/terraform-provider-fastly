@@ -1,21 +1,9 @@
-# Changelog
+## 0.6.1 (Unreleased)
 
-All notable changes to this project will be documented in this file.
+NOTES:
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-## 0.6.1 - 2019-05-24
-
-### Changed
-* client: Update go-fastly client to v0.4.3 ([#153](https://github.com/terraform-providers/terraform-provider-fastly/issues/153))
-* modules: Updated to manage dependencies through go modules ([#128](https://github.com/terraform-providers/terraform-provider-fastly/pull/128))
-
-### Fixed
-* docs: Updated documentation for s3logging resource ([#147](https://github.com/terraform-providers/terraform-provider-fastly/pull/147))
-* docs: Correction to typo in README.md cover build instructions ([#122](https://github.com/terraform-providers/terraform-provider-fastly/pull/122))
+* provider: Switch codebase dependency management from `govendor` to Go modules ([#128](https://github.com/terraform-providers/terraform-provider-fastly/pull/128))
+* provider: Update `go-fastly` client to v0.4.3 ([#154](https://github.com/terraform-providers/terraform-provider-fastly/pull/154))
 
 ## 0.6.0 (February 08, 2019)
 

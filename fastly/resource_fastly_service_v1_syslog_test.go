@@ -12,6 +12,50 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenSyslog(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.Syslog
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.Syslog{
+				{
+					Version:           1,
+					Name:              "somesyslogname",
+					Address:           "127.0.0.1",
+					IPV4:              "127.0.0.1",
+					Port:              8080,
+					Format:            "%h %l %u %t \"%r\" %>s %b",
+					FormatVersion:     1,
+					ResponseCondition: "response_condition_test",
+					MessageType:       "classic",
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":               "somesyslogname",
+					"address":            "127.0.0.1",
+					"port":               uint(8080),
+					"format":             "%h %l %u %t \"%r\" %>s %b",
+					"format_version":     uint(1),
+					"response_condition": "response_condition_test",
+					"message_type":       "classic",
+					"use_tls":            false,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenSyslogs(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

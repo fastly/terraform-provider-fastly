@@ -11,6 +11,56 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.HealthCheck
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.HealthCheck{
+				{
+					Version:          1,
+					Name:             "myhealthcheck",
+					Host:             "example1.com",
+					Path:             "/test1.txt",
+					CheckInterval:    4000,
+					ExpectedResponse: 200,
+					HTTPVersion:      "1.1",
+					Initial:          2,
+					Method:           "HEAD",
+					Threshold:        3,
+					Timeout:          5000,
+					Window:           5,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":              "myhealthcheck",
+					"host":              "example1.com",
+					"path":              "/test1.txt",
+					"check_interval":    uint(4000),
+					"expected_response": uint(200),
+					"http_version":      "1.1",
+					"initial":           uint(2),
+					"method":            "HEAD",
+					"threshold":         uint(3),
+					"timeout":           uint(5000),
+					"window":            uint(5),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenHealthchecks(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestAccFastlyServiceV1_healthcheck_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

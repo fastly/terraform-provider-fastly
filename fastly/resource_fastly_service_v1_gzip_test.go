@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestFastlyServiceV1_FlattenGzips(t *testing.T) {
+func TestResourceFastlyFlattenGzips(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Gzip
 		local  []map[string]interface{}

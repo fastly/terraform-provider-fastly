@@ -11,6 +11,43 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.CacheSetting
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.CacheSetting{
+				{
+					Name:           "alt_backend",
+					Action:         gofastly.CacheSettingActionPass,
+					StaleTTL:       3600,
+					CacheCondition: "serve_alt_backend",
+					TTL:            300,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":            "alt_backend",
+					"action":          gofastly.CacheSettingActionPass,
+					"cache_condition": "serve_alt_backend",
+					"stale_ttl":       uint(3600),
+					"ttl":             uint(300),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenCacheSettings(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

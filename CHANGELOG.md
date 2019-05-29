@@ -1,4 +1,4 @@
-## 0.6.1 (Unreleased)
+## 0.6.1 (May 29, 2019)
 
 NOTES:
 

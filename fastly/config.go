@@ -6,7 +6,10 @@ import (
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-fastly/version"
 )
+
+const TerraformProviderProductUserAgent = "TerraformProviderFastly"
 
 type Config struct {
 	ApiKey  string
@@ -24,7 +27,9 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, fmt.Errorf("[Err] No API key for Fastly")
 	}
 
-	gofastly.UserAgent = terraform.UserAgentString()
+	composedUserAgent := fmt.Sprintf("%s %s/%s", terraform.UserAgentString(), TerraformProviderProductUserAgent, version.ProviderVersion)
+
+	gofastly.UserAgent = composedUserAgent
 
 	fastlyClient, err := gofastly.NewClientForEndpoint(c.ApiKey, c.BaseURL)
 	if err != nil {

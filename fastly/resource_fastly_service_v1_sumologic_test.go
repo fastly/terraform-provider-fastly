@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 			remote: []*gofastly.Sumologic{
 				{
 					Name:              "sumo collector",
-					URL:               "https://sumologic.com/collector/1",
+					URL:               "https://collectors.sumologic.com/receiver/1",
 					Format:            "log format",
 					FormatVersion:     2,
 					MessageType:       "classic",
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 			local: []map[string]interface{}{
 				{
 					"name":               "sumo collector",
-					"url":                "https://sumologic.com/collector/1",
+					"url":                "https://collectors.sumologic.com/receiver/1",
 					"format":             "log format",
 					"format_version":     2,
 					"message_type":       "classic",
@@ -56,14 +56,14 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 
 	s := gofastly.Sumologic{
 		Name:          "sumologger",
-		URL:           "https://sumologic.com/collector/1",
+		URL:           "https://collectors.sumologic.com/receiver/1",
 		FormatVersion: 2,
 		Format:        "my format",
 	}
 
 	sn := gofastly.Sumologic{
 		Name:          "sumologger",
-		URL:           "https://sumologic.com/collector/1",
+		URL:           "https://collectors.sumologic.com/receiver/1",
 		FormatVersion: 2,
 		Format:        "my format new",
 	}

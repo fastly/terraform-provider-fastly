@@ -13,6 +13,11 @@ import (
 )
 
 func TestResourceFastlyFlattenGCS(t *testing.T) {
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
+
 	cases := []struct {
 		remote []*gofastly.GCS
 		local  []map[string]interface{}
@@ -22,8 +27,8 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 				{
 					Name:      "GCS collector",
 					User:      "email@example.com",
-					Bucket:    "bucketName",
-					SecretKey: "secretKey",
+					Bucket:    "bucketname",
+					SecretKey: secretKey,
 					Format:    "log format",
 					Period:    3600,
 					GzipLevel: 0,
@@ -33,8 +38,8 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 				{
 					"name":        "GCS collector",
 					"email":       "email@example.com",
-					"bucket_name": "bucketName",
-					"secret_key":  "secretKey",
+					"bucket_name": "bucketname",
+					"secret_key":  secretKey,
 					"format":      "log format",
 					"period":      3600,
 					"gzip_level":  0,
@@ -55,6 +60,10 @@ func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -62,7 +71,7 @@ func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1Config_gcs(name, gcsName),
+				Config: testAccServiceV1Config_gcs(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_gcs(&service, name, gcsName),
@@ -76,9 +85,13 @@ func TestAccFastlyServiceV1_gcslogging_env(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
 
 	// set env Vars to something we expect
-	resetEnv := setGcsEnv("someEnv", t)
+	resetEnv := setGcsEnv("someEnv", secretKey, t)
 	defer resetEnv()
 
 	resource.Test(t, resource.TestCase{
@@ -126,7 +139,7 @@ func testAccCheckFastlyServiceV1Attributes_gcs(service *gofastly.ServiceDetail, 
 	}
 }
 
-func testAccServiceV1Config_gcs(name, gcsName string) string {
+func testAccServiceV1Config_gcs(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -147,14 +160,14 @@ resource "fastly_service_v1" "foo" {
 	gcslogging {
 	  name =  "%s"
 		email = "email@example.com",
-		bucket_name = "bucketName",
-		secret_key = "secretKey",
+		bucket_name = "bucketname",
+		secret_key = %q,
 		format = "log format",
 		response_condition = "",
 	}
 
   force_destroy = true
-}`, name, domainName, backendName, gcsName)
+}`, name, domainName, backendName, gcsName, secretKey)
 }
 
 func testAccServiceV1Config_gcs_env(name, gcsName string) string {
@@ -177,7 +190,7 @@ resource "fastly_service_v1" "foo" {
 
 	gcslogging {
 	  name =  "%s"
-		bucket_name = "bucketName",
+		bucket_name = "bucketname",
 		format = "log format",
 		response_condition = "",
 	}
@@ -186,13 +199,13 @@ resource "fastly_service_v1" "foo" {
 }`, name, domainName, backendName, gcsName)
 }
 
-func setGcsEnv(s string, t *testing.T) func() {
+func setGcsEnv(email, secretKey string, t *testing.T) func() {
 	e := getGcsEnv()
 	// Set all the envs to a dummy value
-	if err := os.Setenv("FASTLY_GCS_EMAIL", s); err != nil {
+	if err := os.Setenv("FASTLY_GCS_EMAIL", email); err != nil {
 		t.Fatalf("Error setting env var FASTLY_GCS_EMAIL: %s", err)
 	}
-	if err := os.Setenv("FASTLY_GCS_SECRET_KEY", s); err != nil {
+	if err := os.Setenv("FASTLY_GCS_SECRET_KEY", secretKey); err != nil {
 		t.Fatalf("Error setting env var FASTLY_GCS_SECRET_KEY: %s", err)
 	}
 

@@ -1,4 +1,9 @@
 ## 0.7.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* user-agent: Appending the terraform provider version to the User-Agent header
+
 ## 0.6.1 (May 29, 2019)
 
 NOTES:

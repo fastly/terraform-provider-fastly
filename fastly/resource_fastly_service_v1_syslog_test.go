@@ -47,7 +47,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 			actual := flattenSyslogs(tt.in)
 
 			if !reflect.DeepEqual(actual, tt.expected) {
-				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+				t.Errorf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
 			}
 		})
 	}

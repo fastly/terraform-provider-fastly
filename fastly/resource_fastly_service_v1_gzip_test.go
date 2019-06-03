@@ -71,26 +71,26 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 					if o["name"].(string) == l["name"].(string) {
 						found++
 						if o["extensions"] == nil && l["extensions"] != nil {
-							t.Fatalf("output extensions are nil, local are not")
+							t.Errorf("output extensions are nil, local are not")
 						}
 
 						if o["extensions"] != nil {
 							oex := o["extensions"].(*schema.Set)
 							lex := l["extensions"].(*schema.Set)
 							if !oex.Equal(lex) {
-								t.Fatalf("Extensions don't match, expected: %#v, got: %#v", lex, oex)
+								t.Errorf("Extensions don't match, expected: %#v, got: %#v", lex, oex)
 							}
 						}
 
 						if o["content_types"] == nil && l["content_types"] != nil {
-							t.Fatalf("output content types are nil, local are not")
+							t.Errorf("output content types are nil, local are not")
 						}
 
 						if o["content_types"] != nil {
 							oct := o["content_types"].(*schema.Set)
 							lct := l["content_types"].(*schema.Set)
 							if !oct.Equal(lct) {
-								t.Fatalf("ContentTypes don't match, expected: %#v, got: %#v", lct, oct)
+								t.Errorf("ContentTypes don't match, expected: %#v, got: %#v", lct, oct)
 							}
 						}
 
@@ -99,7 +99,7 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 			}
 
 			if found != expectedCount {
-				t.Fatalf("Found and expected mismatch: %d / %d", found, expectedCount)
+				t.Errorf("Found and expected mismatch: %d / %d", found, expectedCount)
 			}
 		})
 	}

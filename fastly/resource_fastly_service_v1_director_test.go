@@ -90,14 +90,14 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 					if o["name"].(string) == l["name"].(string) {
 						found++
 						if o["backends"] == nil && l["backends"] != nil {
-							t.Fatalf("output backends are nil, local are not")
+							t.Errorf("output backends are nil, local are not")
 						}
 
 						if o["backends"] != nil {
 							oex := o["backends"].(*schema.Set)
 							lex := l["backends"].(*schema.Set)
 							if !oex.Equal(lex) {
-								t.Fatalf("Backends don't match, expected: %#v, got: %#v", lex, oex)
+								t.Errorf("Backends don't match, expected: %#v, got: %#v", lex, oex)
 							}
 						}
 					}
@@ -105,7 +105,7 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 			}
 
 			if found != expectedCount {
-				t.Fatalf("Found and expected mismatch: %d / %d", found, expectedCount)
+				t.Errorf("Found and expected mismatch: %d / %d", found, expectedCount)
 			}
 		})
 	}

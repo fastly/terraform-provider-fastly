@@ -12,45 +12,44 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenLogentries(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.Logentries
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Logentries{
-				{
-					Version:           1,
-					Name:              "somelogentriesname",
-					Port:              8080,
-					Token:             "mytoken",
-					Format:            "%h %l %u %t %r %>s",
-					FormatVersion:     1,
-					ResponseCondition: "response_condition_test",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":               "somelogentriesname",
-					"port":               uint(8080),
-					"token":              "mytoken",
-					"format":             "%h %l %u %t %r %>s",
-					"format_version":     uint(1),
-					"response_condition": "response_condition_test",
-					"use_tls":            false,
-				},
+var flattenLogentriesTests = []struct {
+	name     string
+	in       []*gofastly.Logentries
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Logentries{
+			{
+				Version: 1, Name: "somelogentriesname",
+				Port: 8080, Token: "mytoken",
+				Format: "%h %l %u %t %r %>s", FormatVersion: 1,
+				ResponseCondition: "response_condition_test",
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "somelogentriesname", "port": uint(8080),
+				"token": "mytoken", "format": "%h %l %u %t %r %>s",
+				"format_version": uint(1), "response_condition": "response_condition_test",
+				"use_tls": false,
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenLogentries(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenLogentries(t *testing.T) {
 
+	for _, tt := range flattenLogentriesTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenLogentries(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {

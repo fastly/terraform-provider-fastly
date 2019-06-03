@@ -11,46 +11,44 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.ResponseObject
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.ResponseObject{
-				{
-					Version:          1,
-					Name:             "responseObjecttesting",
-					Status:           200,
-					Response:         "OK",
-					Content:          "test content",
-					ContentType:      "text/html",
-					RequestCondition: "test-request-condition",
-					CacheCondition:   "test-cache-condition",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":              "responseObjecttesting",
-					"status":            uint(200),
-					"response":          "OK",
-					"content":           "test content",
-					"content_type":      "text/html",
-					"request_condition": "test-request-condition",
-					"cache_condition":   "test-cache-condition",
-				},
+var flattenResponseObjectTests = []struct {
+	name     string
+	in       []*gofastly.ResponseObject
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.ResponseObject{
+			{
+				Version: 1, Name: "responseObjecttesting",
+				Status: 200, Response: "OK",
+				Content: "test content", ContentType: "text/html",
+				RequestCondition: "test-request-condition", CacheCondition: "test-cache-condition",
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "responseObjecttesting", "status": uint(200),
+				"response": "OK", "content": "test content",
+				"content_type": "text/html", "request_condition": "test-request-condition",
+				"cache_condition": "test-cache-condition",
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenResponseObjects(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
 
+	for _, tt := range flattenResponseObjectTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenResponseObjects(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1_response_object_basic(t *testing.T) {

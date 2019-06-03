@@ -11,42 +11,42 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenPapertrail(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.Papertrail
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Papertrail{
-				{
-					Version:           1,
-					Name:              "papertrailtesting",
-					Address:           "test1.papertrailapp.com",
-					Port:              3600,
-					Format:            "%h %l %u %t %r %>s",
-					ResponseCondition: "test_response_condition",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":               "papertrailtesting",
-					"address":            "test1.papertrailapp.com",
-					"port":               uint(3600),
-					"format":             "%h %l %u %t %r %>s",
-					"response_condition": "test_response_condition",
-				},
+var flattenPapertrailTests = []struct {
+	name     string
+	in       []*gofastly.Papertrail
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Papertrail{
+			{
+				Version: 1, Name: "papertrailtesting",
+				Address: "test1.papertrailapp.com", Port: 3600,
+				Format: "%h %l %u %t %r %>s", ResponseCondition: "test_response_condition",
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "papertrailtesting", "address": "test1.papertrailapp.com",
+				"port": uint(3600), "format": "%h %l %u %t %r %>s",
+				"response_condition": "test_response_condition",
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenPapertrails(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 
+	for _, tt := range flattenPapertrailTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenPapertrails(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {

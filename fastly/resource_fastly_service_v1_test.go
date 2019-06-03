@@ -12,118 +12,106 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenDomains(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Domain
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Domain{
-				{
-					Name:    "test.notexample.com",
-					Comment: "not comment",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":    "test.notexample.com",
-					"comment": "not comment",
-				},
+var flattenDomainTests = []struct {
+	name     string
+	in       []*gofastly.Domain
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Domain{
+			{
+				Name: "test.notexample.com",
 			},
 		},
-		{
-			remote: []*gofastly.Domain{
-				{
-					Name: "test.notexample.com",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":    "test.notexample.com",
-					"comment": "",
-				},
+		expected: []map[string]interface{}{
+			{
+				"name": "test.notexample.com", "comment": "",
 			},
 		},
-	}
+	},
+	{
+		name: "flatten with comment",
+		in: []*gofastly.Domain{
+			{
+				Name: "test.notexample.com", Comment: "not comment",
+			},
+		},
+		expected: []map[string]interface{}{
+			{
+				"name": "test.notexample.com", "comment": "not comment",
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenDomains(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
+func TestResourceFastlyFlattenDomains(t *testing.T) {
+
+	for _, tt := range flattenDomainTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenDomains(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
 	}
 }
 
-func TestResourceFastlyFlattenBackend(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Backend
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Backend{
-				{
-					Name:                "test.notexample.com",
-					Address:             "www.notexample.com",
-					Port:                uint(80),
-					AutoLoadbalance:     true,
-					BetweenBytesTimeout: uint(10000),
-					ConnectTimeout:      uint(1000),
-					ErrorThreshold:      uint(0),
-					FirstByteTimeout:    uint(15000),
-					MaxConn:             uint(200),
-					RequestCondition:    "",
-					HealthCheck:         "",
-					UseSSL:              false,
-					SSLCheckCert:        true,
-					SSLHostname:         "",
-					SSLCACert:           "",
-					SSLCertHostname:     "",
-					SSLSNIHostname:      "",
-					SSLClientKey:        "",
-					SSLClientCert:       "",
-					MaxTLSVersion:       "",
-					MinTLSVersion:       "",
-					SSLCiphers:          []string{"foo", "bar", "baz"},
-					Shield:              "New York",
-					Weight:              uint(100),
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":                  "test.notexample.com",
-					"address":               "www.notexample.com",
-					"port":                  80,
-					"auto_loadbalance":      true,
-					"between_bytes_timeout": 10000,
-					"connect_timeout":       1000,
-					"error_threshold":       0,
-					"first_byte_timeout":    15000,
-					"max_conn":              200,
-					"request_condition":     "",
-					"healthcheck":           "",
-					"use_ssl":               false,
-					"ssl_check_cert":        true,
-					"ssl_hostname":          "",
-					"ssl_ca_cert":           "",
-					"ssl_cert_hostname":     "",
-					"ssl_sni_hostname":      "",
-					"ssl_client_key":        "",
-					"ssl_client_cert":       "",
-					"max_tls_version":       "",
-					"min_tls_version":       "",
-					"ssl_ciphers":           "foo,bar,baz",
-					"shield":                "New York",
-					"weight":                100,
-				},
+var flattenBackendTests = []struct {
+	name     string
+	in       []*gofastly.Backend
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Backend{
+			{
+				Name: "test.notexample.com", Address: "www.notexample.com",
+				Port: uint(80), AutoLoadbalance: true,
+				BetweenBytesTimeout: uint(10000), ConnectTimeout: uint(1000),
+				ErrorThreshold: uint(0), FirstByteTimeout: uint(15000),
+				MaxConn: uint(200), RequestCondition: "",
+				HealthCheck: "", UseSSL: false,
+				SSLCheckCert: true, SSLHostname: "",
+				SSLCACert: "", SSLCertHostname: "",
+				SSLSNIHostname: "", SSLClientKey: "",
+				SSLClientCert: "", MaxTLSVersion: "",
+				MinTLSVersion: "", SSLCiphers: []string{"foo", "bar", "baz"},
+				Shield: "New York", Weight: uint(100),
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "test.notexample.com", "address": "www.notexample.com",
+				"port": 80, "auto_loadbalance": true,
+				"between_bytes_timeout": 10000, "connect_timeout": 1000,
+				"error_threshold": 0, "first_byte_timeout": 15000,
+				"max_conn": 200, "request_condition": "",
+				"healthcheck": "", "use_ssl": false,
+				"ssl_check_cert": true, "ssl_hostname": "",
+				"ssl_ca_cert": "", "ssl_cert_hostname": "",
+				"ssl_sni_hostname": "", "ssl_client_key": "", "ssl_client_cert": "",
+				"max_tls_version": "", "min_tls_version": "",
+				"ssl_ciphers": "foo,bar,baz", "shield": "New York",
+				"weight": 100,
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenBackends(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
-		}
+func TestResourceFastlyFlattenBackend(t *testing.T) {
+
+	for _, tt := range flattenBackendTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenBackends(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
 	}
 }
 

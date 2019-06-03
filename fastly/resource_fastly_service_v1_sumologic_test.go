@@ -11,40 +11,41 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenSumologic(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Sumologic
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Sumologic{
-				{
-					Name:              "sumo collector",
-					URL:               "https://sumologic.com/collector/1",
-					Format:            "log format",
-					FormatVersion:     2,
-					MessageType:       "classic",
-					ResponseCondition: "condition 1",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":               "sumo collector",
-					"url":                "https://sumologic.com/collector/1",
-					"format":             "log format",
-					"format_version":     2,
-					"message_type":       "classic",
-					"response_condition": "condition 1",
-				},
+var flattenSumologicTests = []struct {
+	name     string
+	in       []*gofastly.Sumologic
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Sumologic{
+			{
+				Name: "sumo collector", URL: "https://sumologic.com/collector/1",
+				Format: "log format", FormatVersion: 2,
+				MessageType: "classic", ResponseCondition: "condition 1",
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "sumo collector", "url": "https://sumologic.com/collector/1",
+				"format": "log format", "format_version": 2,
+				"message_type": "classic", "response_condition": "condition 1",
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenSumologics(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
+func TestResourceFastlyFlattenSumologic(t *testing.T) {
+
+	for _, tt := range flattenSumologicTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenSumologics(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
 	}
 }
 

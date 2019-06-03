@@ -12,107 +12,102 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+var flattenDirectorTests = []struct {
+	name                   string
+	remote_director        []*gofastly.Director
+	remote_directorbackend []*gofastly.DirectorBackend
+	expected               []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		remote_director: []*gofastly.Director{
+			{
+				Name: "somedirector", Type: 3,
+				Quorum: 75, Capacity: 25, Retries: 10,
+			},
+		},
+		remote_directorbackend: []*gofastly.DirectorBackend{
+			{
+				Director: "somedirector", Backend: "somebackend",
+			},
+		},
+		expected: []map[string]interface{}{
+			{
+				"name": "somedirector", "type": 3,
+				"quorum": 75, "capacity": 25,
+				"retries": 10, "backends": schema.NewSet(schema.HashString, []interface{}{"somebackend"}),
+			},
+		},
+	},
+	{
+		name: "override flatten",
+		remote_director: []*gofastly.Director{
+			{
+				Name: "somedirector",
+			},
+			{
+				Name: "someotherdirector",
+			},
+		},
+		remote_directorbackend: []*gofastly.DirectorBackend{
+			{
+				Director: "somedirector", Backend: "somebackend",
+			},
+			{
+				Director: "somedirector", Backend: "someotherbackend",
+			},
+			{
+				Director: "someotherdirector", Backend: "somebackend",
+			},
+			{
+				Director: "someotherdirector", Backend: "someotherbackend",
+			},
+		},
+		expected: []map[string]interface{}{
+			{
+				"name":     "somedirector",
+				"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
+			},
+			{
+				"name":     "someotherdirector",
+				"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
+			},
+		},
+	},
+}
+
 func TestResourceFastlyFlattenDirectors(t *testing.T) {
-	cases := []struct {
-		remote_director        []*gofastly.Director
-		remote_directorbackend []*gofastly.DirectorBackend
 
-		local []map[string]interface{}
-	}{
-		{
-			remote_director: []*gofastly.Director{
-				{
-					Name:     "somedirector",
-					Type:     3,
-					Quorum:   75,
-					Capacity: 25,
-					Retries:  10,
-				},
-			},
-			remote_directorbackend: []*gofastly.DirectorBackend{
-				{
-					Director: "somedirector",
-					Backend:  "somebackend",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":     "somedirector",
-					"type":     3,
-					"quorum":   75,
-					"capacity": 25,
-					"retries":  10,
-					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend"}),
-				},
-			},
-		},
-		{
-			remote_director: []*gofastly.Director{
-				{
-					Name: "somedirector",
-				},
-				{
-					Name: "someotherdirector",
-				},
-			},
-			remote_directorbackend: []*gofastly.DirectorBackend{
-				{
-					Director: "somedirector",
-					Backend:  "somebackend",
-				},
-				{
-					Director: "somedirector",
-					Backend:  "someotherbackend",
-				},
-				{
-					Director: "someotherdirector",
-					Backend:  "somebackend",
-				},
-				{
-					Director: "someotherdirector",
-					Backend:  "someotherbackend",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":     "somedirector",
-					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
-				},
-				{
-					"name":     "someotherdirector",
-					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
-				},
-			},
-		},
-	}
+	for _, tt := range flattenDirectorTests {
+		t.Run(tt.name, func(t *testing.T) {
 
-	for _, c := range cases {
-		out := flattenDirectors(c.remote_director, c.remote_directorbackend)
-		// loop, because deepequal wont work with our sets
-		expectedCount := len(c.local)
-		var found int
-		for _, o := range out {
-			for _, l := range c.local {
-				if o["name"].(string) == l["name"].(string) {
-					found++
-					if o["backends"] == nil && l["backends"] != nil {
-						t.Fatalf("output backends are nil, local are not")
-					}
+			out := flattenDirectors(tt.remote_director, tt.remote_directorbackend)
+			// loop, because deepequal wont work with our sets
+			expectedCount := len(tt.expected)
+			var found int
+			for _, o := range out {
+				for _, l := range tt.expected {
+					if o["name"].(string) == l["name"].(string) {
+						found++
+						if o["backends"] == nil && l["backends"] != nil {
+							t.Fatalf("output backends are nil, local are not")
+						}
 
-					if o["backends"] != nil {
-						oex := o["backends"].(*schema.Set)
-						lex := l["backends"].(*schema.Set)
-						if !oex.Equal(lex) {
-							t.Fatalf("Backends don't match, expected: %#v, got: %#v", lex, oex)
+						if o["backends"] != nil {
+							oex := o["backends"].(*schema.Set)
+							lex := l["backends"].(*schema.Set)
+							if !oex.Equal(lex) {
+								t.Fatalf("Backends don't match, expected: %#v, got: %#v", lex, oex)
+							}
 						}
 					}
 				}
 			}
-		}
 
-		if found != expectedCount {
-			t.Fatalf("Found and expected mismatch: %d / %d", found, expectedCount)
-		}
+			if found != expectedCount {
+				t.Fatalf("Found and expected mismatch: %d / %d", found, expectedCount)
+			}
+		})
 	}
 }
 

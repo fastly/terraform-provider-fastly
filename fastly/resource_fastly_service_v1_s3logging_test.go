@@ -12,6 +12,54 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+var flattenS3loggingTests = []struct {
+	name     string
+	in       []*gofastly.S3
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.S3{
+			{
+				Version: 1, Name: "somebucketlog",
+				BucketName: "fastlytestlogging", Domain: "s3-us-west-2.amazonaws.com",
+				AccessKey: "somekey", SecretKey: "somesecret",
+				Period: 3600, GzipLevel: 0,
+				Format: "%h %l %u %t %r %>s", FormatVersion: 1,
+				MessageType: "classic", TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+				Redundancy:        gofastly.S3RedundancyStandard,
+				ResponseCondition: "response_condition_test",
+			},
+		},
+		expected: []map[string]interface{}{
+			{
+				"name":        "somebucketlog",
+				"bucket_name": "fastlytestlogging", "domain": "s3-us-west-2.amazonaws.com",
+				"s3_access_key": "somekey", "s3_secret_key": "somesecret",
+				"period": uint(3600), "gzip_level": uint(0),
+				"format": "%h %l %u %t %r %>s", "format_version": uint(1),
+				"message_type": "classic",
+				"redundancy":   gofastly.S3RedundancyStandard, "timestamp_format": "%Y-%m-%dT%H:%M:%S.000",
+				"response_condition": "response_condition_test",
+			},
+		},
+	},
+}
+
+func TestResourceFastlyFlattenS3logging(t *testing.T) {
+
+	for _, tt := range flattenS3loggingTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenS3s(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
+}
+
 func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

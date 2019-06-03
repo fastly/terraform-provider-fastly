@@ -12,42 +12,43 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenGCS(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.GCS
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.GCS{
-				{
-					Name:      "GCS collector",
-					User:      "email@example.com",
-					Bucket:    "bucketName",
-					SecretKey: "secretKey",
-					Format:    "log format",
-					Period:    3600,
-					GzipLevel: 0,
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":        "GCS collector",
-					"email":       "email@example.com",
-					"bucket_name": "bucketName",
-					"secret_key":  "secretKey",
-					"format":      "log format",
-					"period":      3600,
-					"gzip_level":  0,
-				},
+var flattenGCSTests = []struct {
+	name     string
+	in       []*gofastly.GCS
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.GCS{
+			{
+				Name: "GCS collector", User: "email@example.com",
+				Bucket: "bucketName", SecretKey: "secretKey",
+				Format: "log format", Period: 3600,
+				GzipLevel: 0,
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "GCS collector", "email": "email@example.com",
+				"bucket_name": "bucketName", "secret_key": "secretKey",
+				"format": "log format", "period": 3600,
+				"gzip_level": 0,
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenGCS(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
+func TestResourceFastlyFlattenGCS(t *testing.T) {
+
+	for _, tt := range flattenGCSTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenGCS(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
 	}
 }
 

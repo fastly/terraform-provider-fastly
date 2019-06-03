@@ -11,54 +11,48 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.HealthCheck
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.HealthCheck{
-				{
-					Version:          1,
-					Name:             "myhealthcheck",
-					Host:             "example1.com",
-					Path:             "/test1.txt",
-					CheckInterval:    4000,
-					ExpectedResponse: 200,
-					HTTPVersion:      "1.1",
-					Initial:          2,
-					Method:           "HEAD",
-					Threshold:        3,
-					Timeout:          5000,
-					Window:           5,
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":              "myhealthcheck",
-					"host":              "example1.com",
-					"path":              "/test1.txt",
-					"check_interval":    uint(4000),
-					"expected_response": uint(200),
-					"http_version":      "1.1",
-					"initial":           uint(2),
-					"method":            "HEAD",
-					"threshold":         uint(3),
-					"timeout":           uint(5000),
-					"window":            uint(5),
-				},
+var flattenHealthCheckTests = []struct {
+	name     string
+	in       []*gofastly.HealthCheck
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.HealthCheck{
+			{
+				Version: 1, Name: "myhealthcheck",
+				Host: "example1.com", Path: "/test1.txt",
+				CheckInterval: 4000, ExpectedResponse: 200,
+				HTTPVersion: "1.1", Initial: 2,
+				Method: "HEAD", Threshold: 3,
+				Timeout: 5000, Window: 5,
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "myhealthcheck", "host": "example1.com",
+				"path": "/test1.txt", "check_interval": uint(4000),
+				"expected_response": uint(200), "http_version": "1.1",
+				"initial": uint(2), "method": "HEAD",
+				"threshold": uint(3), "timeout": uint(5000),
+				"window": uint(5),
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenHealthchecks(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 
+	for _, tt := range flattenHealthCheckTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenHealthchecks(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1_healthcheck_basic(t *testing.T) {

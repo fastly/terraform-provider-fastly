@@ -11,39 +11,40 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenSnippets(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.Snippet
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Snippet{
-				{
-					Name:     "recv_test",
-					Type:     gofastly.SnippetTypeRecv,
-					Priority: 110,
-					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":     "recv_test",
-					"type":     gofastly.SnippetTypeRecv,
-					"priority": 110,
-					"content":  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
-				},
+var flattenSnippetTests = []struct {
+	name     string
+	in       []*gofastly.Snippet
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Snippet{
+			{
+				Name: "recv_test", Type: gofastly.SnippetTypeRecv,
+				Priority: 110, Content: "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "recv_test", "type": gofastly.SnippetTypeRecv,
+				"priority": 110, "content": "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenSnippets(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenSnippets(t *testing.T) {
 
+	for _, tt := range flattenSnippetTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenSnippets(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {

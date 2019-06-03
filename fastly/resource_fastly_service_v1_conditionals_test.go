@@ -11,39 +11,42 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenConditions(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.Condition
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Condition{
-				{
-					Name:      "some amz condition",
-					Priority:  10,
-					Type:      "REQUEST",
-					Statement: `req.url ~ "^/yolo/"`,
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":      "some amz condition",
-					"priority":  10,
-					"type":      "REQUEST",
-					"statement": "req.url ~ \"^/yolo/\"",
-				},
+var flattenConditionTests = []struct {
+	name     string
+	in       []*gofastly.Condition
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Condition{
+			{
+				Name: "some amz condition", Priority: 10,
+				Type: "REQUEST", Statement: `req.url ~ "^/yolo/"`,
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name":      "some amz condition",
+				"priority":  10,
+				"type":      "REQUEST",
+				"statement": "req.url ~ \"^/yolo/\"",
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenConditions(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenConditions(t *testing.T) {
 
+	for _, tt := range flattenConditionTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenConditions(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1_conditional_basic(t *testing.T) {

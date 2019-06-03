@@ -12,93 +12,96 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+var flattenGZipTests = []struct {
+	name     string
+	in       []*gofastly.Gzip
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Gzip{
+			{
+				Name: "somegzip", Extensions: "css",
+			},
+		},
+		expected: []map[string]interface{}{
+			{
+				"name": "somegzip", "extensions": schema.NewSet(schema.HashString, []interface{}{"css"}),
+			},
+		},
+	},
+	{
+		name: "flatten with content types",
+		in: []*gofastly.Gzip{
+			{
+				Name: "somegzip", Extensions: "css json js",
+				ContentTypes: "text/html",
+			},
+			{
+				Name: "someothergzip", Extensions: "css js",
+				ContentTypes: "text/html text/xml",
+			},
+		},
+		expected: []map[string]interface{}{
+			{
+				"name":          "somegzip",
+				"extensions":    schema.NewSet(schema.HashString, []interface{}{"css", "json", "js"}),
+				"content_types": schema.NewSet(schema.HashString, []interface{}{"text/html"}),
+			},
+			{
+				"name":          "someothergzip",
+				"extensions":    schema.NewSet(schema.HashString, []interface{}{"css", "js"}),
+				"content_types": schema.NewSet(schema.HashString, []interface{}{"text/html", "text/xml"}),
+			},
+		},
+	},
+}
+
 func TestResourceFastlyFlattenGzips(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Gzip
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Gzip{
-				{
-					Name:       "somegzip",
-					Extensions: "css",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":       "somegzip",
-					"extensions": schema.NewSet(schema.HashString, []interface{}{"css"}),
-				},
-			},
-		},
-		{
-			remote: []*gofastly.Gzip{
-				{
-					Name:         "somegzip",
-					Extensions:   "css json js",
-					ContentTypes: "text/html",
-				},
-				{
-					Name:         "someothergzip",
-					Extensions:   "css js",
-					ContentTypes: "text/html text/xml",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":          "somegzip",
-					"extensions":    schema.NewSet(schema.HashString, []interface{}{"css", "json", "js"}),
-					"content_types": schema.NewSet(schema.HashString, []interface{}{"text/html"}),
-				},
-				{
-					"name":          "someothergzip",
-					"extensions":    schema.NewSet(schema.HashString, []interface{}{"css", "js"}),
-					"content_types": schema.NewSet(schema.HashString, []interface{}{"text/html", "text/xml"}),
-				},
-			},
-		},
-	}
 
-	for _, c := range cases {
-		out := flattenGzips(c.remote)
-		// loop, because deepequal wont work with our sets
-		expectedCount := len(c.local)
-		var found int
-		for _, o := range out {
-			for _, l := range c.local {
-				if o["name"].(string) == l["name"].(string) {
-					found++
-					if o["extensions"] == nil && l["extensions"] != nil {
-						t.Fatalf("output extensions are nil, local are not")
-					}
+	for _, tt := range flattenGZipTests {
+		t.Run(tt.name, func(t *testing.T) {
 
-					if o["extensions"] != nil {
-						oex := o["extensions"].(*schema.Set)
-						lex := l["extensions"].(*schema.Set)
-						if !oex.Equal(lex) {
-							t.Fatalf("Extensions don't match, expected: %#v, got: %#v", lex, oex)
+			out := flattenGzips(tt.in)
+			// loop, because deepequal wont work with our sets
+			expectedCount := len(tt.expected)
+			var found int
+			for _, o := range out {
+				for _, l := range tt.expected {
+					if o["name"].(string) == l["name"].(string) {
+						found++
+						if o["extensions"] == nil && l["extensions"] != nil {
+							t.Fatalf("output extensions are nil, local are not")
 						}
-					}
 
-					if o["content_types"] == nil && l["content_types"] != nil {
-						t.Fatalf("output content types are nil, local are not")
-					}
-
-					if o["content_types"] != nil {
-						oct := o["content_types"].(*schema.Set)
-						lct := l["content_types"].(*schema.Set)
-						if !oct.Equal(lct) {
-							t.Fatalf("ContentTypes don't match, expected: %#v, got: %#v", lct, oct)
+						if o["extensions"] != nil {
+							oex := o["extensions"].(*schema.Set)
+							lex := l["extensions"].(*schema.Set)
+							if !oex.Equal(lex) {
+								t.Fatalf("Extensions don't match, expected: %#v, got: %#v", lex, oex)
+							}
 						}
-					}
 
+						if o["content_types"] == nil && l["content_types"] != nil {
+							t.Fatalf("output content types are nil, local are not")
+						}
+
+						if o["content_types"] != nil {
+							oct := o["content_types"].(*schema.Set)
+							lct := l["content_types"].(*schema.Set)
+							if !oct.Equal(lct) {
+								t.Fatalf("ContentTypes don't match, expected: %#v, got: %#v", lct, oct)
+							}
+						}
+
+					}
 				}
 			}
-		}
 
-		if found != expectedCount {
-			t.Fatalf("Found and expected mismatch: %d / %d", found, expectedCount)
-		}
+			if found != expectedCount {
+				t.Fatalf("Found and expected mismatch: %d / %d", found, expectedCount)
+			}
+		})
 	}
 }
 

@@ -11,41 +11,42 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.CacheSetting
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.CacheSetting{
-				{
-					Name:           "alt_backend",
-					Action:         gofastly.CacheSettingActionPass,
-					StaleTTL:       3600,
-					CacheCondition: "serve_alt_backend",
-					TTL:            300,
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":            "alt_backend",
-					"action":          gofastly.CacheSettingActionPass,
-					"cache_condition": "serve_alt_backend",
-					"stale_ttl":       uint(3600),
-					"ttl":             uint(300),
-				},
+var flattenCacheSettingsTests = []struct {
+	name     string
+	in       []*gofastly.CacheSetting
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.CacheSetting{
+			{
+				Name: "alt_backend", Action: gofastly.CacheSettingActionPass,
+				StaleTTL: 3600, CacheCondition: "serve_alt_backend",
+				TTL: 300,
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "alt_backend", "action": gofastly.CacheSettingActionPass,
+				"cache_condition": "serve_alt_backend", "stale_ttl": uint(3600),
+				"ttl": uint(300),
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenCacheSettings(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
 
+	for _, tt := range flattenCacheSettingsTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenCacheSettings(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {

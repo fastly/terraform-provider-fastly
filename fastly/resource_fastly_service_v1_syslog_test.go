@@ -12,48 +12,45 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenSyslog(t *testing.T) {
-
-	cases := []struct {
-		remote []*gofastly.Syslog
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.Syslog{
-				{
-					Version:           1,
-					Name:              "somesyslogname",
-					Address:           "127.0.0.1",
-					IPV4:              "127.0.0.1",
-					Port:              8080,
-					Format:            "%h %l %u %t \"%r\" %>s %b",
-					FormatVersion:     1,
-					ResponseCondition: "response_condition_test",
-					MessageType:       "classic",
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":               "somesyslogname",
-					"address":            "127.0.0.1",
-					"port":               uint(8080),
-					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     uint(1),
-					"response_condition": "response_condition_test",
-					"message_type":       "classic",
-					"use_tls":            false,
-				},
+var flattenSyslogTests = []struct {
+	name     string
+	in       []*gofastly.Syslog
+	expected []map[string]interface{}
+}{
+	{
+		name: "basic flatten",
+		in: []*gofastly.Syslog{
+			{
+				Version: 1, Name: "somesyslogname",
+				Address: "127.0.0.1", IPV4: "127.0.0.1",
+				Port: 8080, Format: "%h %l %u %t \"%r\" %>s %b",
+				FormatVersion: 1, ResponseCondition: "response_condition_test",
+				MessageType: "classic",
 			},
 		},
-	}
+		expected: []map[string]interface{}{
+			{
+				"name": "somesyslogname", "address": "127.0.0.1",
+				"port": uint(8080), "format": "%h %l %u %t \"%r\" %>s %b",
+				"format_version": uint(1), "response_condition": "response_condition_test",
+				"message_type": "classic", "use_tls": false,
+			},
+		},
+	},
+}
 
-	for _, c := range cases {
-		out := flattenSyslogs(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
+func TestResourceFastlyFlattenSyslog(t *testing.T) {
 
+	for _, tt := range flattenSyslogTests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := flattenSyslogs(tt.in)
+
+			if !reflect.DeepEqual(actual, tt.expected) {
+				t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", tt.expected, actual)
+			}
+		})
+	}
 }
 
 func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {

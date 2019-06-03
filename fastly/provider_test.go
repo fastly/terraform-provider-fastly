@@ -1,6 +1,10 @@
 package fastly
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"os"
 	"testing"
 
@@ -16,6 +20,24 @@ func init() {
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"fastly": testAccProvider,
 	}
+}
+
+func generateKey() (string, error) {
+	reader := rand.Reader
+	bitSize := 2048
+
+	key, err := rsa.GenerateKey(reader, bitSize)
+	if err != nil {
+		return "", err
+	}
+	var privateKey = &pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(key),
+	}
+
+	bytes := pem.EncodeToMemory(privateKey)
+
+	return string(bytes), nil
 }
 
 func TestProvider(t *testing.T) {

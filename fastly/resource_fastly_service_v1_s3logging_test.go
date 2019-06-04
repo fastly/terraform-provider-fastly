@@ -12,6 +12,12 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+const testAwsPrimaryAccessKey = "KEYABCDEFGHIJKLMNOPQ"
+const testAwsPrimarySecretKey = "SECRET0123456789012345678901234567890123"
+
+const testAwsOtherAccessKey = "KEYQPONMLKJIHGFEDCBA"
+const testAwsOtherSecretKey = "SECRETOTHER01234567890123456789012345678"
+
 var flattenS3loggingTests = []struct {
 	name     string
 	in       []*gofastly.S3
@@ -23,7 +29,7 @@ var flattenS3loggingTests = []struct {
 			{
 				Version: 1, Name: "somebucketlog",
 				BucketName: "fastlytestlogging", Domain: "s3-us-west-2.amazonaws.com",
-				AccessKey: "somekey", SecretKey: "somesecret",
+				AccessKey: testAwsPrimaryAccessKey, SecretKey: testAwsPrimarySecretKey,
 				Period: 3600, GzipLevel: 0,
 				Format: "%h %l %u %t %r %>s", FormatVersion: 1,
 				MessageType: "classic", TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
@@ -35,7 +41,7 @@ var flattenS3loggingTests = []struct {
 			{
 				"name":        "somebucketlog",
 				"bucket_name": "fastlytestlogging", "domain": "s3-us-west-2.amazonaws.com",
-				"s3_access_key": "somekey", "s3_secret_key": "somesecret",
+				"s3_access_key": testAwsPrimaryAccessKey, "s3_secret_key": testAwsPrimarySecretKey,
 				"period": uint(3600), "gzip_level": uint(0),
 				"format": "%h %l %u %t %r %>s", "format_version": uint(1),
 				"message_type": "classic",
@@ -70,8 +76,8 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3-us-west-2.amazonaws.com",
-		AccessKey:         "somekey",
-		SecretKey:         "somesecret",
+		AccessKey:         testAwsPrimaryAccessKey,
+		SecretKey:         testAwsPrimarySecretKey,
 		Period:            uint(3600),
 		GzipLevel:         uint(0),
 		Format:            "%h %l %u %t %r %>s",
@@ -86,8 +92,8 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3-us-west-2.amazonaws.com",
-		AccessKey:         "somekey",
-		SecretKey:         "somesecret",
+		AccessKey:         testAwsPrimaryAccessKey,
+		SecretKey:         testAwsPrimarySecretKey,
 		Period:            uint(3600),
 		GzipLevel:         uint(0),
 		Format:            "%h %l %u %t %r %>s",
@@ -103,8 +109,8 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Name:            "someotherbucketlog",
 		BucketName:      "fastlytestlogging2",
 		Domain:          "s3-us-west-2.amazonaws.com",
-		AccessKey:       "someotherkey",
-		SecretKey:       "someothersecret",
+		AccessKey:       testAwsOtherAccessKey,
+		SecretKey:       testAwsOtherSecretKey,
 		GzipLevel:       uint(3),
 		Period:          uint(60),
 		Format:          "%h %l %u %t %r %>s",
@@ -119,7 +125,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1S3LoggingConfig(name, domainName1),
+				Config: testAccServiceV1S3LoggingConfig(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log1}),
@@ -155,8 +161,8 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3.amazonaws.com",
-		AccessKey:         "somekey",
-		SecretKey:         "somesecret",
+		AccessKey:         testAwsPrimaryAccessKey,
+		SecretKey:         testAwsPrimarySecretKey,
 		Period:            uint(3600),
 		GzipLevel:         uint(0),
 		Format:            "%h %l %u %t %r %>s",
@@ -193,7 +199,7 @@ func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	// set env Vars to something we expect
-	resetEnv := setEnv("someEnv", t)
+	resetEnv := setEnv(testAwsPrimaryAccessKey, testAwsPrimarySecretKey, t)
 	defer resetEnv()
 
 	log3 := gofastly.S3{
@@ -201,8 +207,8 @@ func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
 		Name:            "somebucketlog",
 		BucketName:      "fastlytestlogging",
 		Domain:          "s3-us-west-2.amazonaws.com",
-		AccessKey:       "someEnv",
-		SecretKey:       "someEnv",
+		AccessKey:       testAwsPrimaryAccessKey,
+		SecretKey:       testAwsPrimarySecretKey,
 		Period:          uint(3600),
 		GzipLevel:       uint(0),
 		Format:          "%h %l %u %t %r %>s",
@@ -241,8 +247,8 @@ func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 		Name:            "somebucketlog",
 		BucketName:      "fastlytestlogging",
 		Domain:          "s3-us-west-2.amazonaws.com",
-		AccessKey:       "somekey",
-		SecretKey:       "somesecret",
+		AccessKey:       testAwsPrimaryAccessKey,
+		SecretKey:       testAwsPrimarySecretKey,
 		Period:          uint(3600),
 		GzipLevel:       uint(0),
 		Format:          "%a %l %u %t %m %U%q %H %>s %b %T",
@@ -257,7 +263,7 @@ func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1S3LoggingConfig_formatVersion(name, domainName1),
+				Config: testAccServiceV1S3LoggingConfig_formatVersion(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log1}),
@@ -340,16 +346,16 @@ resource "fastly_service_v1" "foo" {
   s3logging {
     name               = "somebucketlog"
     bucket_name        = "fastlytestlogging"
-    s3_access_key      = "somekey"
-    s3_secret_key      = "somesecret"
+    s3_access_key      = "%s"
+    s3_secret_key      = "%s"
 		response_condition = "response_condition_test"
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, testAwsPrimaryAccessKey, testAwsPrimarySecretKey)
 }
 
-func testAccServiceV1S3LoggingConfig(name, domain string) string {
+func testAccServiceV1S3LoggingConfig(name, domain, key, secret string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -375,13 +381,13 @@ resource "fastly_service_v1" "foo" {
     name               = "somebucketlog"
     bucket_name        = "fastlytestlogging"
     domain             = "s3-us-west-2.amazonaws.com"
-    s3_access_key      = "somekey"
-    s3_secret_key      = "somesecret"
+    s3_access_key      = "%s"
+    s3_secret_key      = "%s"
 		response_condition = "response_condition_test"
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, key, secret)
 }
 
 func testAccServiceV1S3LoggingConfig_update(name, domain string) string {
@@ -410,8 +416,8 @@ resource "fastly_service_v1" "foo" {
     name               = "somebucketlog"
     bucket_name        = "fastlytestlogging"
     domain             = "s3-us-west-2.amazonaws.com"
-    s3_access_key      = "somekey"
-    s3_secret_key      = "somesecret"
+    s3_access_key      = "%s"
+    s3_secret_key      = "%s"
     response_condition = "response_condition_test"
     message_type       = "blank"
     redundancy         = "reduced_redundancy"
@@ -421,14 +427,14 @@ resource "fastly_service_v1" "foo" {
     name          = "someotherbucketlog"
     bucket_name   = "fastlytestlogging2"
     domain        = "s3-us-west-2.amazonaws.com"
-    s3_access_key = "someotherkey"
-    s3_secret_key = "someothersecret"
+    s3_access_key = "%s"
+    s3_secret_key = "%s"
     period        = 60
     gzip_level    = 3
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, testAwsPrimaryAccessKey, testAwsPrimarySecretKey, testAwsOtherAccessKey, testAwsOtherSecretKey)
 }
 
 func testAccServiceV1S3LoggingConfig_env(name, domain string) string {
@@ -456,7 +462,7 @@ resource "fastly_service_v1" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceV1S3LoggingConfig_formatVersion(name, domain string) string {
+func testAccServiceV1S3LoggingConfig_formatVersion(name, domain, key, secret string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -475,23 +481,23 @@ resource "fastly_service_v1" "foo" {
     name           = "somebucketlog"
     bucket_name    = "fastlytestlogging"
     domain         = "s3-us-west-2.amazonaws.com"
-    s3_access_key  = "somekey"
-    s3_secret_key  = "somesecret"
+    s3_access_key  = "%s"
+    s3_secret_key  = "%s"
     format         = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
     format_version = 2
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, key, secret)
 }
 
-func setEnv(s string, t *testing.T) func() {
+func setEnv(key, secret string, t *testing.T) func() {
 	e := getEnv()
 	// Set all the envs to a dummy value
-	if err := os.Setenv("FASTLY_S3_ACCESS_KEY", s); err != nil {
-		t.Fatalf("Error setting env var AWS_ACCESS_KEY_ID: %s", err)
+	if err := os.Setenv("FASTLY_S3_ACCESS_KEY", key); err != nil {
+		t.Fatalf("Error setting env var FASTLY_S3_ACCESS_KEY: %s", err)
 	}
-	if err := os.Setenv("FASTLY_S3_SECRET_KEY", s); err != nil {
+	if err := os.Setenv("FASTLY_S3_SECRET_KEY", secret); err != nil {
 		t.Fatalf("Error setting env var FASTLY_S3_SECRET_KEY: %s", err)
 	}
 

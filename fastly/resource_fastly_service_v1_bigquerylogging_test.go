@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+var secretKey, _ = generateKey()
+
 var flattenBigQueryTests = []struct {
 	name     string
 	in       []*gofastly.BigQuery
@@ -23,14 +25,14 @@ var flattenBigQueryTests = []struct {
 			{
 				Name: "bigquery-example", User: "email@example.com",
 				ProjectID: "example-gcp-project", Dataset: "example-bq-dataset",
-				Table: "example-bq-table", SecretKey: "secretKey",
+				Table: "example-bq-table", SecretKey: secretKey,
 			},
 		},
 		expected: []map[string]interface{}{
 			{
 				"name": "bigquery-example", "email": "email@example.com",
 				"project_id": "example-gcp-project", "dataset": "example-bq-dataset",
-				"table": "example-bq-table", "secret_key": "secretKey",
+				"table": "example-bq-table", "secret_key": secretKey,
 			},
 		},
 	},
@@ -54,6 +56,10 @@ func TestAccFastlyServiceV1_bigquerylogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -61,7 +67,7 @@ func TestAccFastlyServiceV1_bigquerylogging(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1Config_bigquery(name, bqName),
+				Config: testAccServiceV1Config_bigquery(name, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_bq(&service, name, bqName),
@@ -75,9 +81,13 @@ func TestAccFastlyServiceV1_bigquerylogging_env(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
 
 	// set env Vars to something we expect
-	resetEnv := setBQEnv("someEnv", t)
+	resetEnv := setBQEnv("someEnv", secretKey, t)
 	defer resetEnv()
 
 	resource.Test(t, resource.TestCase{
@@ -125,7 +135,7 @@ func testAccCheckFastlyServiceV1Attributes_bq(service *gofastly.ServiceDetail, n
 	}
 }
 
-func testAccServiceV1Config_bigquery(name, gcsName string) string {
+func testAccServiceV1Config_bigquery(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -146,14 +156,14 @@ resource "fastly_service_v1" "foo" {
   bigquerylogging {
     name       = "%s"
     email      = "email@example.com",
-    secret_key = "secretKey",
+    secret_key = %q,
     project_id = "example-gcp-project"
-    dataset    = "example-bq-dataset"
-    table      = "example-bq-table"
+    dataset    = "example_bq_dataset"
+    table      = "example_bq_table"
   }
 
   force_destroy = true
-}`, name, domainName, backendName, gcsName)
+}`, name, domainName, backendName, gcsName, secretKey)
 }
 
 func testAccServiceV1Config_bigquery_env(name, gcsName string) string {
@@ -177,21 +187,21 @@ resource "fastly_service_v1" "foo" {
   bigquerylogging {
     name       = "%s"
     project_id = "example-gcp-project"
-    dataset    = "example-bq-dataset"
-    table      = "example-bq-table"
+    dataset    = "example_bq_dataset"
+    table      = "example_bq_table"
   }
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName)
 }
 
-func setBQEnv(s string, t *testing.T) func() {
+func setBQEnv(email, secretKey string, t *testing.T) func() {
 	e := getBQEnv()
 	// Set all the envs to a dummy value
-	if err := os.Setenv("FASTLY_BQ_EMAIL", s); err != nil {
+	if err := os.Setenv("FASTLY_BQ_EMAIL", email); err != nil {
 		t.Fatalf("Error setting env var FASTLY_BQ_EMAIL: %s", err)
 	}
-	if err := os.Setenv("FASTLY_BQ_SECRET_KEY", s); err != nil {
+	if err := os.Setenv("FASTLY_BQ_SECRET_KEY", secretKey); err != nil {
 		t.Fatalf("Error setting env var FASTLY_BQ_SECRET_KEY: %s", err)
 	}
 

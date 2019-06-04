@@ -57,14 +57,14 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 
 	s := gofastly.Sumologic{
 		Name:          "sumologger",
-		URL:           "https://sumologic.com/collector/1",
+		URL:           "https://collectors.sumologic.com/receiver/1",
 		FormatVersion: 2,
 		Format:        "my format",
 	}
 
 	sn := gofastly.Sumologic{
 		Name:          "sumologger",
-		URL:           "https://sumologic.com/collector/1",
+		URL:           "https://collectors.sumologic.com/receiver/1",
 		FormatVersion: 2,
 		Format:        "my format new",
 	}

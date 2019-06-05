@@ -94,9 +94,10 @@ func resourceServiceV1() *schema.Resource {
 							Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
+							ValidateFunc: validateConditionType(),
 						},
 					},
 				},

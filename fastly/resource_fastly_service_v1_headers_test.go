@@ -11,6 +11,51 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenHeaders(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.Header
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.Header{
+				{
+					Name:              "myheader",
+					Action:            "delete",
+					IgnoreIfSet:       true,
+					Type:              "cache",
+					Destination:       "http.aws-id",
+					Source:            "",
+					Regex:             "",
+					Substitution:      "",
+					Priority:          100,
+					RequestCondition:  "",
+					CacheCondition:    "",
+					ResponseCondition: "",
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":          "myheader",
+					"action":        gofastly.HeaderActionDelete,
+					"ignore_if_set": true,
+					"type":          gofastly.HeaderTypeCache,
+					"destination":   "http.aws-id",
+					"priority":      int(100),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenHeaders(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestFastlyServiceV1_BuildHeaders(t *testing.T) {
 	cases := []struct {
 		remote *gofastly.CreateHeaderInput

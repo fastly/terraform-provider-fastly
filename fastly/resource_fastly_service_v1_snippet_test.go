@@ -11,6 +11,41 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestResourceFastlyFlattenSnippets(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.Snippet
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.Snippet{
+				{
+					Name:     "recv_test",
+					Type:     gofastly.SnippetTypeRecv,
+					Priority: 110,
+					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":     "recv_test",
+					"type":     gofastly.SnippetTypeRecv,
+					"priority": 110,
+					"content":  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenSnippets(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
+
 func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

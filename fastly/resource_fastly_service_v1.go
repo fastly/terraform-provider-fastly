@@ -382,16 +382,11 @@ func resourceServiceV1() *schema.Resource {
 							Description: "Selected POP to serve as a 'shield' for origin servers.",
 						},
 						"quorum": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Default:     75,
-							Description: "Percentage of capacity that needs to be up for the director itself to be considered up",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								if v.(int) < 0 || v.(int) > 100 {
-									es = append(es, fmt.Errorf("Fastly Director quorum should be a percentage between 0 and 100; found %d", v.(int)))
-								}
-								return
-							},
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      75,
+							Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
+							ValidateFunc: validateDirectorQuorum(),
 						},
 						"type": {
 							Type:         schema.TypeInt,

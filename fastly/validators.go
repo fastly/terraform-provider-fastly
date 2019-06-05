@@ -51,6 +51,10 @@ func validateLoggingPlacement(v interface{}, k string) (ws []string, errors []er
 	return
 }
 
+func validateDirectorQuorum() schema.SchemaValidateFunc {
+	return validation.IntBetween(0, 100)
+}
+
 func validateDirectorType(v interface{}, k string) (ws []string, errors []error) {
 	value := uint(v.(int))
 	validVersions := map[uint]struct{}{

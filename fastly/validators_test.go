@@ -155,3 +155,32 @@ func TestValidateConditionType(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateHeaderAction(t *testing.T) {
+	for _, testcase := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"set", 0, 0},
+		{"append", 0, 0},
+		{"delete", 0, 0},
+		{"regex", 0, 0},
+		{"regex_repeat", 0, 0},
+		{"SET", 0, 1},
+		{"APPEND", 0, 1},
+		{"DELETE", 0, 1},
+		{"REGEX", 0, 1},
+		{"REGEX_REPEAT", 0, 1},
+	} {
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateHeaderAction()(testcase.value, "action")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

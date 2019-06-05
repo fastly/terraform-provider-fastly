@@ -493,22 +493,10 @@ func resourceServiceV1() *schema.Resource {
 							Description: "A name to refer to this Header object",
 						},
 						"action": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "One of set, append, delete, regex, or regex_repeat",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"set", "append", "delete", "regex", "regex_repeat"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly Header action is case sensitive and must be one of 'set', 'append', 'delete', 'regex', or 'regex_repeat'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of set, append, delete, regex, or regex_repeat",
+							ValidateFunc: validateHeaderAction(),
 						},
 						"type": {
 							Type:        schema.TypeString,

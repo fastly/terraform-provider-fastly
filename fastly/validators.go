@@ -77,3 +77,13 @@ func validateConditionType() schema.SchemaValidateFunc {
 		"CACHE",
 	}, false)
 }
+
+func validateHeaderAction() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"set",
+		"append",
+		"delete",
+		"regex",
+		"regex_repeat",
+	}, false)
+}

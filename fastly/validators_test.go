@@ -132,7 +132,7 @@ func TestValidateDirectorType(t *testing.T) {
 }
 
 func TestValidateConditionType(t *testing.T) {
-	for _, ctvt := range []struct {
+	for _, testcase := range []struct {
 		value          string
 		expectedWarns  int
 		expectedErrors int
@@ -144,13 +144,13 @@ func TestValidateConditionType(t *testing.T) {
 		{"response", 0, 1},
 		{"cache", 0, 1},
 	} {
-		t.Run(ctvt.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateConditionType()(ctvt.value, "type")
-			if len(actualWarns) != ctvt.expectedWarns {
-				t.Errorf("expected %d warnings, actual %d ", ctvt.expectedWarns, len(actualWarns))
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateConditionType()(testcase.value, "type")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
-			if len(actualErrors) != ctvt.expectedErrors {
-				t.Errorf("expected %d errors, actual %d ", ctvt.expectedErrors, len(actualErrors))
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
 			}
 		})
 	}

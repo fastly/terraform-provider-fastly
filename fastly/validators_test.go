@@ -3,78 +3,77 @@ package fastly
 import "testing"
 
 func TestValidateLoggingFormatVersion(t *testing.T) {
-	validVersions := []int{
-		1,
-		2,
-	}
-	for _, v := range validVersions {
-		_, errors := validateLoggingFormatVersion(v, "format_version")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid format version: %q", v, errors)
-		}
-	}
-
-	invalidVersions := []int{
-		0,
-		3,
-		4,
-		5,
-	}
-	for _, v := range invalidVersions {
-		_, errors := validateLoggingFormatVersion(v, "format_version")
-		if len(errors) != 1 {
-			t.Fatalf("%q should not be a valid format version", v)
-		}
+	for name, testcase := range map[string]struct {
+		value          int
+		expectedWarns  int
+		expectedErrors int
+	}{
+		"0": {0, 0, 1},
+		"1": {1, 0, 0},
+		"2": {2, 0, 0},
+		"3": {3, 0, 1},
+		"4": {4, 0, 1},
+		"5": {5, 0, 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actualWarns, actualErrors := validateLoggingFormatVersion()(testcase.value, "format_version")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
 	}
 }
 
 func TestValidateLoggingMessageType(t *testing.T) {
-	validTypes := []string{
-		"classic",
-		"loggly",
-		"logplex",
-		"blank",
-	}
-	for _, v := range validTypes {
-		_, errors := validateLoggingMessageType(v, "message_type")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid message type: %q", v, errors)
-		}
-	}
-
-	invalidTypes := []string{
-		"invalid_type_1",
-		"invalid_type_2",
-	}
-	for _, v := range invalidTypes {
-		_, errors := validateLoggingMessageType(v, "message_type")
-		if len(errors) != 1 {
-			t.Fatalf("%q should not be a valid message type", v)
-		}
+	for _, testcase := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"classic", 0, 0},
+		{"loggly", 0, 0},
+		{"logplex", 0, 0},
+		{"blank", 0, 0},
+		{"CLASSIC", 0, 1},
+		{"LOGGLY", 0, 1},
+		{"LOGPLEX", 0, 1},
+		{"BLANK", 0, 1},
+	} {
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateLoggingMessageType()(testcase.value, "message_type")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
 	}
 }
 
 func TestValidateLoggingPlacement(t *testing.T) {
-	validPlacements := []string{
-		"none",
-		"waf_debug",
-	}
-	for _, v := range validPlacements {
-		_, errors := validateLoggingPlacement(v, "placement")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid placement", v)
-		}
-	}
-
-	invalidPlacements := []string{
-		"invalid_placement_1",
-		"invalid_placement_2",
-	}
-	for _, v := range invalidPlacements {
-		_, errors := validateLoggingPlacement(v, "placement")
-		if len(errors) != 1 {
-			t.Fatalf("%q should not be a valid placement", v)
-		}
+	for _, testcase := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"none", 0, 0},
+		{"waf_debug", 0, 0},
+		{"NONE", 0, 1},
+		{"WAF_DEBUG", 0, 1},
+	} {
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateLoggingPlacement()(testcase.value, "placement")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
 	}
 }
 
@@ -104,30 +103,27 @@ func TestValidateDirectorQuorum(t *testing.T) {
 }
 
 func TestValidateDirectorType(t *testing.T) {
-	validVersions := []int{
-		1,
-		3,
-		4,
-	}
-	for _, v := range validVersions {
-		_, errors := validateDirectorType(v, "type")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid director type: %q", v, errors)
-		}
-	}
-
-	invalidVersions := []int{
-		0,
-		-1,
-		2,
-		5,
-		6,
-	}
-	for _, v := range invalidVersions {
-		_, errors := validateDirectorType(v, "type")
-		if len(errors) != 1 {
-			t.Fatalf("%q should not be a valid director type", v)
-		}
+	for name, testcase := range map[string]struct {
+		value          int
+		expectedWarns  int
+		expectedErrors int
+	}{
+		"0": {0, 0, 1},
+		"1": {1, 0, 0},
+		"2": {2, 0, 1},
+		"3": {3, 0, 0},
+		"4": {4, 0, 0},
+		"5": {5, 0, 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actualWarns, actualErrors := validateDirectorType()(testcase.value, "type")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
 	}
 }
 

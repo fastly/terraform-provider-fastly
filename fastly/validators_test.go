@@ -184,3 +184,30 @@ func TestValidateHeaderAction(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateHeaderType(t *testing.T) {
+	for _, testcase := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"request", 0, 0},
+		{"fetch", 0, 0},
+		{"cache", 0, 0},
+		{"response", 0, 0},
+		{"REQUEST", 0, 1},
+		{"FETCH", 0, 1},
+		{"CACHE", 0, 1},
+		{"RESPONSE", 0, 1},
+	} {
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateHeaderType()(testcase.value, "type")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

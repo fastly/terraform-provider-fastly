@@ -87,3 +87,12 @@ func validateHeaderAction() schema.SchemaValidateFunc {
 		"regex_repeat",
 	}, false)
 }
+
+func validateHeaderType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"request",
+		"fetch",
+		"cache",
+		"response",
+	}, false)
+}

@@ -499,22 +499,10 @@ func resourceServiceV1() *schema.Resource {
 							ValidateFunc: validateHeaderAction(),
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Type to manipulate: request, fetch, cache, response",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"request", "fetch", "cache", "response"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly Header type is case sensitive and must be one of 'request', 'fetch', 'cache', or 'response'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type to manipulate: request, fetch, cache, response",
+							ValidateFunc: validateHeaderType(),
 						},
 						"destination": {
 							Type:        schema.TypeString,

@@ -1239,22 +1239,10 @@ func resourceServiceV1() *schema.Resource {
 							Description: "A unique name to refer to this VCL snippet",
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"init", "recv", "hit", "miss", "pass", "fetch", "error", "deliver", "log", "none"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly VCL snippet location is case sensitive and must be one of 'init', 'recv', 'hit', 'miss', 'pass', 'fetch', 'error', 'deliver', 'log' or 'none'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+							ValidateFunc: validateSnippetType(),
 						},
 						"content": {
 							Type:        schema.TypeString,

@@ -96,3 +96,18 @@ func validateHeaderType() schema.SchemaValidateFunc {
 		"response",
 	}, false)
 }
+
+func validateSnippetType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"init",
+		"recv",
+		"hit",
+		"miss",
+		"pass",
+		"fetch",
+		"error",
+		"deliver",
+		"log",
+		"none",
+	}, false)
+}

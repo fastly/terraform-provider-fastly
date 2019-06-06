@@ -211,3 +211,42 @@ func TestValidateHeaderType(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateSnippetType(t *testing.T) {
+	for _, testcase := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"init", 0, 0},
+		{"recv", 0, 0},
+		{"hit", 0, 0},
+		{"miss", 0, 0},
+		{"pass", 0, 0},
+		{"fetch", 0, 0},
+		{"error", 0, 0},
+		{"deliver", 0, 0},
+		{"log", 0, 0},
+		{"none", 0, 0},
+		{"INIT", 0, 1},
+		{"RECV", 0, 1},
+		{"HIT", 0, 1},
+		{"MISS", 0, 1},
+		{"PASS", 0, 1},
+		{"FETCH", 0, 1},
+		{"ERROR", 0, 1},
+		{"DELIVER", 0, 1},
+		{"LOG", 0, 1},
+		{"NONE", 0, 1},
+	} {
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateSnippetType()(testcase.value, "type")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

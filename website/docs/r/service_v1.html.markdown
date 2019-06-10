@@ -225,6 +225,7 @@ Default `1000`
 * `max_conn` - (Optional) Maximum number of connections for this Backend.
 Default `200`.
 * `port` - (Optional) The port number on which the Backend responds. Default `80`.
+* `override_host` - (Optional) The hostname to override the Host header.
 * `request_condition` - (Optional, string) Name of already defined `condition`, which if met, will select this backend during a request.
 * `use_ssl` - (Optional) Whether or not to use SSL to reach the backend. Default `false`.
 * `max_tls_version` - (Optional) Maximum allowed TLS version on SSL connections to this backend.

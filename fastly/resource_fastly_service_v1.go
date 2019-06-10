@@ -382,23 +382,18 @@ func resourceServiceV1() *schema.Resource {
 							Description: "Selected POP to serve as a 'shield' for origin servers.",
 						},
 						"quorum": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Default:     75,
-							Description: "Percentage of capacity that needs to be up for the director itself to be considered up",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								if v.(int) < 0 || v.(int) > 100 {
-									es = append(es, fmt.Errorf("Fastly Director quorum should be a percentage between 0 and 100; found %d", v.(int)))
-								}
-								return
-							},
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      75,
+							Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
+							ValidateFunc: validateDirectorQuorum(),
 						},
 						"type": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      1,
 							Description:  "Type of load balance group to use. Integer, 1 to 4. Values: 1 (random), 3 (hash), 4 (client)",
-							ValidateFunc: validateDirectorType,
+							ValidateFunc: validateDirectorType(),
 						},
 						"retries": {
 							Type:        schema.TypeInt,
@@ -498,40 +493,16 @@ func resourceServiceV1() *schema.Resource {
 							Description: "A name to refer to this Header object",
 						},
 						"action": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "One of set, append, delete, regex, or regex_repeat",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"set", "append", "delete", "regex", "regex_repeat"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly Header action is case sensitive and must be one of 'set', 'append', 'delete', 'regex', or 'regex_repeat'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of set, append, delete, regex, or regex_repeat",
+							ValidateFunc: validateHeaderAction(),
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Type to manipulate: request, fetch, cache, response",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"request", "fetch", "cache", "response"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly Header type is case sensitive and must be one of 'request', 'fetch', 'cache', or 'response'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type to manipulate: request, fetch, cache, response",
+							ValidateFunc: validateHeaderType(),
 						},
 						"destination": {
 							Type:        schema.TypeString,
@@ -674,7 +645,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"timestamp_format": {
 							Type:        schema.TypeString,
@@ -698,13 +669,13 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      "classic",
 							Description:  "How the message should be formatted.",
-							ValidateFunc: validateLoggingMessageType,
+							ValidateFunc: validateLoggingMessageType(),
 						},
 						"placement": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "Where in the generated VCL the logging call should be placed.",
-							ValidateFunc: validateLoggingPlacement,
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -748,7 +719,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "Where in the generated VCL the logging call should be placed.",
-							ValidateFunc: validateLoggingPlacement,
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -782,7 +753,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -795,13 +766,13 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      "classic",
 							Description:  "How the message should be formatted.",
-							ValidateFunc: validateLoggingMessageType,
+							ValidateFunc: validateLoggingMessageType(),
 						},
 						"placement": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "Where in the generated VCL the logging call should be placed.",
-							ValidateFunc: validateLoggingPlacement,
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -882,7 +853,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "Where in the generated VCL the logging call should be placed.",
-							ValidateFunc: validateLoggingPlacement,
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -951,7 +922,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "Where in the generated VCL the logging call should be placed.",
-							ValidateFunc: validateLoggingPlacement,
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -991,7 +962,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"token": {
 							Type:        schema.TypeString,
@@ -1028,13 +999,13 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      "classic",
 							Description:  "How the message should be formatted.",
-							ValidateFunc: validateLoggingMessageType,
+							ValidateFunc: validateLoggingMessageType(),
 						},
 						"placement": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "Where in the generated VCL the logging call should be placed.",
-							ValidateFunc: validateLoggingPlacement,
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -1080,7 +1051,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -1092,7 +1063,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Description:  "Where in the generated VCL the logging call should be placed.",
-							ValidateFunc: validateLoggingPlacement,
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -1268,22 +1239,10 @@ func resourceServiceV1() *schema.Resource {
 							Description: "A unique name to refer to this VCL snippet",
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"init", "recv", "hit", "miss", "pass", "fetch", "error", "deliver", "log", "none"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly VCL snippet location is case sensitive and must be one of 'init', 'recv', 'hit', 'miss', 'pass', 'fetch', 'error', 'deliver', 'log' or 'none'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+							ValidateFunc: validateSnippetType(),
 						},
 						"content": {
 							Type:        schema.TypeString,

@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * user-agent: Appending the terraform provider version to the User-Agent header
+* validation: Refactor of validator functions from resource_fastly_service_v1.go into validation.go ([#164](https://github.com/terraform-providers/terraform-provider-fastly/pull/164))
 
 ## 0.6.1 (May 29, 2019)
 

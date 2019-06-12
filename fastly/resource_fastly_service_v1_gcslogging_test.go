@@ -159,11 +159,11 @@ resource "fastly_service_v1" "foo" {
 
 	gcslogging {
 	  name =  "%s"
-		email = "email@example.com",
-		bucket_name = "bucketname",
-		secret_key = %q,
-		format = "log format",
-		response_condition = "",
+		email = "email@example.com"
+		bucket_name = "bucketname"
+		secret_key = %q
+		format = "log format"
+		response_condition = ""
 	}
 
   force_destroy = true
@@ -190,9 +190,9 @@ resource "fastly_service_v1" "foo" {
 
 	gcslogging {
 	  name =  "%s"
-		bucket_name = "bucketname",
-		format = "log format",
-		response_condition = "",
+		bucket_name = "bucketname"
+		format = "log format"
+		response_condition = ""
 	}
 
   force_destroy = true

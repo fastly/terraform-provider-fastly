@@ -1,9 +1,6 @@
 package fastly
 
 import (
-	"crypto/sha1"
-	"crypto/sha512"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -94,11 +91,6 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The statement used to determine if the condition is met",
-							StateFunc: func(v interface{}) string {
-								value := v.(string)
-								// Trim newlines and spaces, to match Fastly API
-								return strings.TrimSpace(value)
-							},
 						},
 						"priority": {
 							Type:        schema.TypeInt,
@@ -602,15 +594,6 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
 							Description: "AWS Access Key",
 							Sensitive:   true,
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha512.Sum512([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						"s3_secret_key": {
 							Type:        schema.TypeString,
@@ -618,15 +601,6 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
 							Description: "AWS Secret Key",
 							Sensitive:   true,
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha512.Sum512([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						// Optional fields
 						"path": {
@@ -1388,15 +1362,6 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The contents of this VCL configuration",
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha1.Sum([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						"main": {
 							Type:        schema.TypeBool,
@@ -1428,15 +1393,6 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The contents of the VCL snippet",
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha1.Sum([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						"priority": {
 							Type:        schema.TypeInt,

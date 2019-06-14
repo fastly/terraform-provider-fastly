@@ -52,9 +52,9 @@ func TestAccFastlyServiceDictionaryItemV1(t *testing.T) {
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		//CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDictionaryItemsV1Config(name, dictName),
@@ -109,11 +109,22 @@ func testAccCheckFastlyServiceDictionaryItemsV1Attributes(service *gofastly.Serv
 	}
 }
 
-func testAccServiceDictionaryItemsV1Config(name, dictName string) string {
+func testAccServiceDictionaryItemsV1Config(serviceName, dictName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
+variable "mydict" {
+	type = object({ name=string, items=map(string) })
+	default = {
+		name = "%s" 
+		items = {
+			key1: "value1"
+			key2: "value2"
+		}
+	}
+}
+
 resource "fastly_service_v1" "foo" {
   name = "%s"
 
@@ -128,7 +139,7 @@ resource "fastly_service_v1" "foo" {
   }
 
   dictionary {
-	name       = "%s"
+	name       = var.mydict.name
 	write_only = false
   }
 
@@ -137,10 +148,7 @@ resource "fastly_service_v1" "foo" {
 
 resource "fastly_service_dictionary_items_v1" "items" {
     service_id = "${fastly_service_v1.foo.id}"
-    dictionary_id = "${{for s in fastly_service_v1.foo.dictionary : s.name => s if s["name"] == "%s"}["%s"]["dictionary_id"]}"
-    items = {
-        key1 = "value1"
-        key2 = "value2"
-	}
-}`, name, domainName, backendName, dictName, dictName, dictName)
+    dictionary_id = "${{for s in fastly_service_v1.foo.dictionary : s.name => s.dictionary_id}[var.mydict.name]}"
+    items = var.mydict.items
+}`, dictName, serviceName, domainName, backendName)
 }

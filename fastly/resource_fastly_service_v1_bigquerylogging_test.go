@@ -116,7 +116,7 @@ func testAccCheckFastlyServiceV1Attributes_bq(service *gofastly.ServiceDetail, n
 		}
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
-		bqList, err := conn.GetBigQuery(&gofastly.GetBigQueryInput{
+		bqList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 			Service: service.ID,
 			Version: service.ActiveVersion.Number,
 		})

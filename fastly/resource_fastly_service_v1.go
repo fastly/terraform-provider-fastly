@@ -2884,7 +2884,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		// refresh BigQuery Logging
 		log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
-		BQList, err := conn.GetBigQuery(&gofastly.GetBigQueryInput{
+		BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 			Service: d.Id(),
 			Version: s.ActiveVersion.Number,
 		})

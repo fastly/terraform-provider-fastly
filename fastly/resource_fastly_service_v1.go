@@ -256,6 +256,11 @@ func resourceServiceV1() *schema.Resource {
 							Default:     80,
 							Description: "The port number Backend responds on. Default 80",
 						},
+						"override_host": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The hostname to override the Host header",
+						},
 						"request_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -1618,6 +1623,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Version:             latestVersion,
 					Name:                df["name"].(string),
 					Address:             df["address"].(string),
+					OverrideHost:        df["override_host"].(string),
 					AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
 					SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
 					SSLHostname:         df["ssl_hostname"].(string),
@@ -2878,7 +2884,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		// refresh BigQuery Logging
 		log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
-		BQList, err := conn.GetBigQuery(&gofastly.GetBigQueryInput{
+		BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 			Service: d.Id(),
 			Version: s.ActiveVersion.Number,
 		})
@@ -3141,6 +3147,7 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 			"first_byte_timeout":    int(b.FirstByteTimeout),
 			"max_conn":              int(b.MaxConn),
 			"port":                  int(b.Port),
+			"override_host":         b.OverrideHost,
 			"shield":                b.Shield,
 			"ssl_check_cert":        b.SSLCheckCert,
 			"ssl_hostname":          b.SSLHostname,

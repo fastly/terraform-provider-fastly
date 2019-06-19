@@ -64,6 +64,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 				{
 					Name:                "test.notexample.com",
 					Address:             "www.notexample.com",
+					OverrideHost:        "origin.example.com",
 					Port:                uint(80),
 					AutoLoadbalance:     true,
 					BetweenBytesTimeout: uint(10000),
@@ -92,6 +93,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 				{
 					"name":                  "test.notexample.com",
 					"address":               "www.notexample.com",
+					"override_host":         "origin.example.com",
 					"port":                  80,
 					"auto_loadbalance":      true,
 					"between_bytes_timeout": 10000,

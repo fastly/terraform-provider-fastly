@@ -133,8 +133,8 @@ func testAccCheckFastlyServiceV1SnippetAttributes(service *gofastly.ServiceDetai
 
 					// We don't know these things ahead of time, so ignore them
 					lr.ID = ""
-					lr.CreatedAt = ""
-					lr.UpdatedAt = ""
+					lr.CreatedAt = nil
+					lr.UpdatedAt = nil
 
 					if !reflect.DeepEqual(expected, lr) {
 						return fmt.Errorf("Unexpected VCL Snippet.\nExpected: %#v\nGot: %#v\n", expected, lr)

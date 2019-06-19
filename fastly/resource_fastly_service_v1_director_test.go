@@ -220,8 +220,8 @@ func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDet
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ID
 					d.Version = service.ActiveVersion.Number
-					ld.CreatedAt = ""
-					ld.UpdatedAt = ""
+					ld.CreatedAt = nil
+					ld.UpdatedAt = nil
 					if !reflect.DeepEqual(d, ld) {
 						return fmt.Errorf("Bad match Director match, expected (%#v), got (%#v)", d, ld)
 					}

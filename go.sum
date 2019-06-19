@@ -63,8 +63,8 @@ github.com/dnaeon/go-vcr v1.0.1/go.mod h1:aBB1+wY4s93YsC3HHjMBMrwTj2R9FHDzUr9KyG
 github.com/dylanmei/iso8601 v0.1.0 h1:812NGQDBcqquTfH5Yeo7lwR0nzx/cKdsmf3qMjPURUI=
 github.com/dylanmei/iso8601 v0.1.0/go.mod h1:w9KhXSgIyROl1DefbMYIE7UVSIvELTbMrCfx+QkYnoQ=
 github.com/dylanmei/winrmtest v0.0.0-20170819153634-c2fbb09e6c08/go.mod h1:VBVDFSBXCIW8JaHQpI8lldSKfYaLMzP9oyq6IJ4fhzY=
-github.com/fastly/go-fastly v0.4.3 h1:EAedEO5kxlx4P43ACD4hodudCxODcQn2ZS65Q9LHYpc=
-github.com/fastly/go-fastly v0.4.3/go.mod h1:ACxsUdqChasXcraa3/IigjE01rVn3A1F4vaI18Gmm0g=
+github.com/fastly/go-fastly v1.0.0 h1:56wmg3LX3Q9BkFikg4qZf+xFJTrIuHYmxIjCVKo9wNg=
+github.com/fastly/go-fastly v1.0.0/go.mod h1:ACxsUdqChasXcraa3/IigjE01rVn3A1F4vaI18Gmm0g=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/go-ini/ini v1.25.4 h1:Mujh4R/dH6YL8bxuISne3xX2+qcQ9p0IxKAP6ExWoUo=
 github.com/go-ini/ini v1.25.4/go.mod h1:ByCAeIL28uOIIG0E3PJtZPDL8WnHpFKFOtgjp+3Ies8=

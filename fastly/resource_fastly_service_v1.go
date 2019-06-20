@@ -1074,6 +1074,67 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
+			"splunk": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The unique name of the Splunk logging endpoint",
+						},
+						"url": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The Splunk URL to stream logs to",
+						},
+						"token": {
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", ""),
+							Description: "The Splunk token to be used for authentication",
+							Sensitive:   true,
+							StateFunc: func(v interface{}) string {
+								switch v.(type) {
+								case string:
+									hash := sha512.Sum512([]byte(v.(string)))
+									return hex.EncodeToString(hash[:])
+								default:
+									return ""
+								}
+							},
+						},
+						// Optional fields
+						"format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "%h %l %u %t \"%r\" %>s %b",
+							Description: "Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t \"%r\" %>s %b`)",
+						},
+						"format_version": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      2,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
+							ValidateFunc: validateLoggingFormatVersion(),
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed",
+							ValidateFunc: validateLoggingPlacement(),
+						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the condition to apply",
+						},
+					},
+				},
+			},
+
 			"response_object": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1334,6 +1395,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"syslog",
 		"sumologic",
 		"logentries",
+		"splunk",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -2319,6 +2381,65 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// find difference in Splunk logging configurations
+		if d.HasChange("splunk") {
+			os, ns := d.GetChange("splunk")
+			if os == nil {
+				os = new(schema.Set)
+			}
+			if ns == nil {
+				ns = new(schema.Set)
+			}
+
+			oss := os.(*schema.Set)
+			nss := ns.(*schema.Set)
+
+			remove := oss.Difference(nss).List()
+			add := nss.Difference(oss).List()
+
+			// DELETE old Splunk logging configurations
+			for _, sRaw := range remove {
+				sf := sRaw.(map[string]interface{})
+				opts := gofastly.DeleteSplunkInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    sf["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Splunk removal opts: %#v", opts)
+				err := conn.DeleteSplunk(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new/updated Splunk configurations
+			for _, sRaw := range add {
+				sf := sRaw.(map[string]interface{})
+				opts := gofastly.CreateSplunkInput{
+					Service:           d.Id(),
+					Version:           latestVersion,
+					Name:              sf["name"].(string),
+					URL:               sf["url"].(string),
+					Format:            sf["format"].(string),
+					FormatVersion:     uint(sf["format_version"].(int)),
+					ResponseCondition: sf["response_condition"].(string),
+					Placement:         sf["placement"].(string),
+					Token:             sf["token"].(string),
+				}
+
+				log.Printf("[DEBUG] Splunk create opts: %#v", opts)
+				_, err := conn.CreateSplunk(&opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 		// find difference in Response Object
 		if d.HasChange("response_object") {
 			or, nr := d.GetChange("response_object")
@@ -2930,6 +3051,23 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("logentries", lel); err != nil {
 			log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
+		}
+
+		// refresh Splunk Logging
+		log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
+		splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Splunks for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		spl := flattenSplunks(splunkList)
+
+		if err := d.Set("splunk", spl); err != nil {
+			log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
 		}
 
 		// refresh Response Objects
@@ -3584,6 +3722,33 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 	}
 
 	return LEList
+}
+
+func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
+	var sl []map[string]interface{}
+	for _, s := range splunkList {
+		// Convert Splunk to a map for saving to state.
+		nbs := map[string]interface{}{
+			"name":               s.Name,
+			"url":                s.URL,
+			"format":             s.Format,
+			"format_version":     s.FormatVersion,
+			"response_condition": s.ResponseCondition,
+			"placement":          s.Placement,
+			"token":              s.Token,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range nbs {
+			if v == "" {
+				delete(nbs, k)
+			}
+		}
+
+		sl = append(sl, nbs)
+	}
+
+	return sl
 }
 
 func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]interface{} {

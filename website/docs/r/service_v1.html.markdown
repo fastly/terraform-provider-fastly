@@ -199,6 +199,8 @@ Defined below.
 Defined below.
 * `logentries` - (Optional) A logentries endpoint to send streaming logs too.
 Defined below.
+* `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
@@ -454,6 +456,15 @@ The `logentries` block supports:
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
+The `splunk` block supports:
+
+* `name` - (Required) A unique name to identify the Splunk endpoint.
+* `url` - (Required) The Splunk URL to stream logs to.
+* `token` - (Required) The Splunk token to be used for authentication.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Default `%h %l %u %t \"%r\" %>s %b`.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed, overriding any `format_version` default. Can be either `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
 The `response_object` block supports:
 

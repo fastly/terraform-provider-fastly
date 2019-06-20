@@ -33,6 +33,13 @@ func resourceServiceV1() *schema.Resource {
 				Description: "Unique name for this Service",
 			},
 
+			"comment": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "Managed by Terraform",
+				Description: "A personal freeform descriptive note",
+			},
+
 			// Active Version represents the currently activated version in Fastly. In
 			// Terraform, we abstract this number away from the users and manage
 			// creating and activating. It's used internally, but also exported for
@@ -1345,7 +1352,7 @@ func resourceServiceV1Create(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 	service, err := conn.CreateService(&gofastly.CreateServiceInput{
 		Name:    d.Get("name").(string),
-		Comment: "Managed by Terraform",
+		Comment: d.Get("comment").(string),
 	})
 
 	if err != nil {
@@ -1363,11 +1370,12 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*FastlyClient).conn
 
-	// Update Name. No new verions is required for this
-	if d.HasChange("name") {
+	// Update Name and/or Comment. No new verions is required for this
+	if d.HasChange("name") || d.HasChange("comment") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
-			ID:   d.Id(),
-			Name: d.Get("name").(string),
+			ID:      d.Id(),
+			Name:    d.Get("name").(string),
+			Comment: d.Get("comment").(string),
 		})
 		if err != nil {
 			return err
@@ -2798,6 +2806,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", s.Name)
+	d.Set("comment", s.Comment)
 	d.Set("active_version", s.ActiveVersion.Number)
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll

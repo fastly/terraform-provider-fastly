@@ -248,6 +248,7 @@ func TestAccFastlyServiceV1_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	comment := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	versionComment := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
 	domainName2 := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
 
@@ -265,6 +266,8 @@ func TestAccFastlyServiceV1_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "comment", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "version_comment", ""),
+					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "active_version", "1"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "domain.#", "1"),
@@ -274,13 +277,15 @@ func TestAccFastlyServiceV1_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1Config_basicUpdate(name, comment, domainName2),
+				Config: testAccServiceV1Config_basicUpdate(name, comment, versionComment, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "comment", comment),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "version_comment", versionComment),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "active_version", "2"),
 					resource.TestCheckResourceAttr(
@@ -524,11 +529,12 @@ resource "fastly_service_v1" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceV1Config_basicUpdate(name, comment, domain string) string {
+func testAccServiceV1Config_basicUpdate(name, comment, versionComment, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name    = "%s"
   comment = "%s"
+  version_comment = "%s"
 
   domain {
     name    = "%s"
@@ -541,7 +547,7 @@ resource "fastly_service_v1" "foo" {
   }
 
   force_destroy = true
-}`, name, comment, domain)
+}`, name, comment, versionComment, domain)
 }
 
 func testAccServiceV1Config_domainUpdate(name, domain1, domain2 string) string {

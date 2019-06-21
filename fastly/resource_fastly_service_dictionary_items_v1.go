@@ -2,10 +2,9 @@ package fastly
 
 import (
 	"fmt"
-	"strings"
-
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
+	"strings"
 )
 
 func resourceServiceDictionaryItemsV1() *schema.Resource {
@@ -155,8 +154,19 @@ func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.Set("items", flattenDictionaryItems(dictList))
+	filteredDictList := filterDictionaryItems(dictList, func(currentDictItem gofastly.DictionaryItem) bool {
 
+		data := d.Get("items")
+		items := data.(map[string]interface{})
+
+		if _, ok := items[currentDictItem.ItemKey]; ok {
+			return true
+		}
+
+		return false
+	})
+
+	d.Set("items", flattenDictionaryItems(filteredDictList))
 	return nil
 }
 
@@ -185,6 +195,17 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 
 	d.SetId("")
 	return nil
+}
+
+func filterDictionaryItems(dictList []*gofastly.DictionaryItem, f func(gofastly.DictionaryItem) bool) []*gofastly.DictionaryItem {
+	filteredDictList := make([]*gofastly.DictionaryItem, 0)
+	for _, item := range dictList {
+		if f(*item) {
+			filteredDictList = append(filteredDictList, item)
+		}
+	}
+
+	return filteredDictList
 }
 
 func flattenDictionaryItems(dictItemList []*gofastly.DictionaryItem) map[string]string {

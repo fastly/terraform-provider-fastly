@@ -46,12 +46,12 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceDictionaryItemV1(t *testing.T) {
+func TestAccFastlyServiceDictionaryItemV1_create(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
 
-	expectedItems := map[string]string{
+	expectedRemoteItems := map[string]string{
 		"key1": "value1",
 		"key2": "value2",
 	}
@@ -62,28 +62,30 @@ func TestAccFastlyServiceDictionaryItemV1(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDictionaryItemsV1Config(name, dictName),
+				Config: testAccServiceDictionaryItemsV1Config_create(name, dictName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceDictionaryItemsV1Attributes(&service, name, dictName, expectedItems),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", "2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemV1_update_items(t *testing.T) {
+func TestAccFastlyServiceDictionaryItemV1_update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
 
-	expectedItems := map[string]string{
+	expectedRemoteItems := map[string]string{
 		"key1": "value1",
 		"key2": "value2",
 	}
 
-	expectedItemsAfterUpdate := map[string]string{
-		"key2": "valuetwo",
+	expectedRemoteItemsAfterUpdate := map[string]string{
+		"key1": "valueOne",
+		"key2": "value2",
 		"key3": "value3",
 	}
 
@@ -93,24 +95,124 @@ func TestAccFastlyServiceDictionaryItemV1_update_items(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDictionaryItemsV1Config(name, dictName),
+				Config: testAccServiceDictionaryItemsV1Config_create(name, dictName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceDictionaryItemsV1Attributes(&service, name, dictName, expectedItems),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", "2"),
 				),
 			},
 			{
-				Config: testAccServiceDictionaryItemsV1ConfigUpdateItems(name, dictName),
+				Config: testAccServiceDictionaryItemsV1Config_update(name, dictName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceDictionaryItemsV1Attributes(&service, name, dictName, expectedItemsAfterUpdate),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItemsAfterUpdate),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", "3"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFastlyServiceDictionaryItemsV1Attributes(service *gofastly.ServiceDetail, name, dictName string, expectedItems map[string]string) resource.TestCheckFunc {
+func TestAccFastlyServiceDictionaryItemV1_external_item_is_ignored(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
+	config := testAccServiceDictionaryItemsV1Config_create(name, dictName)
+
+	expectedRemoteItems := map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	}
+
+	expectedRemoteItemsAfterUpdate := map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+		"key3": "value3",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", "2"),
+				),
+			},
+			{
+				PreConfig: func() { createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3") },
+				Config:    config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItemsAfterUpdate),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceDictionaryItemV1_external_item_remains(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
+
+	expectedRemoteItems := map[string]string{
+		"key1": "value1",
+		"key2": "value2",
+	}
+
+	expectedRemoteItemsAfterUpdate := map[string]string{
+		"key3": "value3",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDictionaryItemsV1Config_create(name, dictName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", "2"),
+				),
+			},
+			{
+				PreConfig: func() { createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3") },
+				Config:    testAccServiceDictionaryItemsV1Config_remove(name, dictName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItemsAfterUpdate),
+					testAccCheckFastlyServiceDictionaryItemsV1DoesNotExists("fastly_service_dictionary_items_v1.items"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceDictionaryItemsV1DoesNotExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[n]
+		if ok {
+			return fmt.Errorf("Found: %s", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckFastlyServiceDictionaryItemsV1RemoteState(service *gofastly.ServiceDetail, name, dictName string, expectedItems map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if service.Name != name {
@@ -147,8 +249,56 @@ func testAccCheckFastlyServiceDictionaryItemsV1Attributes(service *gofastly.Serv
 	}
 }
 
+func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetail, dictName, expectedKey, expectedValue string) {
 
-func testAccServiceDictionaryItemsV1Config(serviceName, dictName string) string {
+	conn := testAccProvider.Meta().(*FastlyClient).conn
+
+	dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
+		Service: service.ID,
+		Version: service.ActiveVersion.Number,
+		Name:    dictName,
+	})
+
+	if err != nil {
+		t.Fatalf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+	}
+
+	_, err = conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
+		Service:    service.ID,
+		Dictionary: dict.ID,
+
+		ItemKey:   expectedKey,
+		ItemValue: expectedValue,
+	})
+
+	if err != nil {
+		t.Fatalf("[ERR] Error Createing Dictionary item for (%s), dictionary (%s): %s", service.Name, dict.Name, err)
+	}
+
+}
+
+func testAccServiceDictionaryItemsV1Config_create(serviceName, dictName string) string {
+
+	dictItems := `{
+	key1: "value1"
+	key2: "value2"
+}`
+
+	return testAccServiceDictionaryItemsV1Config(serviceName, dictName, dictItems)
+}
+
+func testAccServiceDictionaryItemsV1Config_update(serviceName, dictName string) string {
+
+	dictItems := `{
+	key1: "valueOne"
+	key2: "value2"
+	key3: "value3"
+}`
+
+	return testAccServiceDictionaryItemsV1Config(serviceName, dictName, dictItems)
+}
+
+func testAccServiceDictionaryItemsV1Config(serviceName, dictName, dictItems string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -157,10 +307,7 @@ variable "mydict" {
 	type = object({ name=string, items=map(string) })
 	default = {
 		name = "%s" 
-		items = {
-			key1: "value1"
-			key2: "value2"
-		}
+		items = %s
 	}
 }
 
@@ -189,25 +336,15 @@ resource "fastly_service_dictionary_items_v1" "items" {
     service_id = "${fastly_service_v1.foo.id}"
     dictionary_id = "${{for s in fastly_service_v1.foo.dictionary : s.name => s.dictionary_id}[var.mydict.name]}"
     items = var.mydict.items
-}`, dictName, serviceName, domainName, backendName)
+}`, dictName, dictItems, serviceName, domainName, backendName)
 }
 
-func testAccServiceDictionaryItemsV1ConfigUpdateItems(serviceName, dictName string) string {
+func testAccServiceDictionaryItemsV1Config_remove(serviceName, dictName string) string {
+
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
-variable "mydict" {
-	type = object({ name=string, items=map(string) })
-	default = {
-		name = "%s" 
-		items = {
-			key2: "valuetwo"
-			key3: "value3"
-		}
-	}
-}
-
 resource "fastly_service_v1" "foo" {
   name = "%s"
 
@@ -222,16 +359,10 @@ resource "fastly_service_v1" "foo" {
   }
 
   dictionary {
-	name       = var.mydict.name
+	name       = "%s"
 	write_only = false
   }
 
   force_destroy = true
-}
-
-resource "fastly_service_dictionary_items_v1" "items" {
-    service_id = "${fastly_service_v1.foo.id}"
-    dictionary_id = "${{for s in fastly_service_v1.foo.dictionary : s.name => s.dictionary_id}[var.mydict.name]}"
-    items = var.mydict.items
-}`, dictName, serviceName, domainName, backendName)
+}`, serviceName, domainName, backendName, dictName)
 }

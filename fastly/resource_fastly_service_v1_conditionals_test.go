@@ -106,6 +106,10 @@ func testAccCheckFastlyServiceV1ConditionalAttributes(service *gofastly.ServiceD
 					// we don't know these things ahead of time, so populate them now
 					c.ServiceID = service.ID
 					c.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lc.CreatedAt = nil
+					lc.UpdatedAt = nil
 					if !reflect.DeepEqual(c, lc) {
 						return fmt.Errorf("Bad match Conditions match, expected (%#v), got (%#v)", c, lc)
 					}

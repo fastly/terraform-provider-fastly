@@ -114,6 +114,10 @@ func testAccCheckFastlyServiceV1RequestSettingsAttributes(service *gofastly.Serv
 					// we don't know these things ahead of time, so populate them now
 					r.ServiceID = service.ID
 					r.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lr.CreatedAt = nil
+					lr.UpdatedAt = nil
 					if !reflect.DeepEqual(r, lr) {
 						return fmt.Errorf("Bad match Request Setting match, expected (%#v), got (%#v)", r, lr)
 					}

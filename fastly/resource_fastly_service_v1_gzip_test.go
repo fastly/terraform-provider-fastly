@@ -183,6 +183,10 @@ func testAccCheckFastlyServiceV1GzipsAttributes(service *gofastly.ServiceDetail,
 					// we don't know these things ahead of time, so populate them now
 					g.ServiceID = service.ID
 					g.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lg.CreatedAt = nil
+					lg.UpdatedAt = nil
 					if !reflect.DeepEqual(g, lg) {
 						return fmt.Errorf("Bad match Gzip match, expected (%#v), got (%#v)", g, lg)
 					}

@@ -127,6 +127,8 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 					// we don't know these things ahead of time, so populate them now
 					p.ServiceID = service.ID
 					p.Version = service.ActiveVersion.Number
+					// we don't support the format_version field, so set it to the zero value
+					lp.FormatVersion = 0
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lp.CreatedAt = nil

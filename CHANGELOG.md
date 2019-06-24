@@ -1,9 +1,20 @@
 ## 0.7.0 (Unreleased)
 
-IMPROVEMENTS:
+FEATURES:
 
-* user-agent: Appending the terraform provider version to the User-Agent header
-* validation: Refactor of validator functions from resource_fastly_service_v1.go into validation.go ([#164](https://github.com/terraform-providers/terraform-provider-fastly/pull/164))
+* Add support for Splunk remote logging ([#130](https://github.com/terraform-providers/terraform-provider-fastly/issues/130))
+* Add support for Microsoft Azure Blob Storage remote logging ([#117](https://github.com/terraform-providers/terraform-provider-fastly/issues/117))
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1: Add `comment` argument ([#70](https://github.com/terraform-providers/terraform-provider-fastly/issues/70))
+* resource/fastly_service_v1: Add `version_comment` argument ([#126](https://github.com/terraform-providers/terraform-provider-fastly/issues/126))
+* resource/fastly_service_v1/backend: Add `override_host` argument ([#163](https://github.com/terraform-providers/terraform-provider-fastly/issues/163))
+* resource/fastly_service_v1/condition: Add validation for `type` argument ([#148](https://github.com/terraform-providers/terraform-provider-fastly/issues/148))
+
+NOTES:
+
+* provider: Update `go-fastly` client to v1.0.0 ([#165](https://github.com/terraform-providers/terraform-provider-fastly/pull/165))
 
 ## 0.6.1 (May 29, 2019)
 

@@ -136,6 +136,10 @@ func testAccCheckFastlyServiceV1ResponseObjectAttributes(service *gofastly.Servi
 					// we don't know these things ahead of time, so populate them now
 					p.ServiceID = service.ID
 					p.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lp.CreatedAt = nil
+					lp.UpdatedAt = nil
 					if !reflect.DeepEqual(p, lp) {
 						return fmt.Errorf("Bad match Response Object match, expected (%#v), got (%#v)", p, lp)
 					}

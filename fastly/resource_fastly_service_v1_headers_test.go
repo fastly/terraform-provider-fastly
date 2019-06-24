@@ -222,6 +222,10 @@ func testAccCheckFastlyServiceV1HeaderAttributes(service *gofastly.ServiceDetail
 					// we don't know these things ahead of time, so populate them now
 					h.ServiceID = service.ID
 					h.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lh.CreatedAt = nil
+					lh.UpdatedAt = nil
 					if !reflect.DeepEqual(h, lh) {
 						return fmt.Errorf("Bad match Header match, expected (%#v), got (%#v)", h, lh)
 					}

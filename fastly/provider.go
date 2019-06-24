@@ -28,6 +28,7 @@ func Provider() terraform.ResourceProvider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"fastly_service_v1": resourceServiceV1(),
+			"fastly_service_acl_entries_v1": resourceServiceAclEntriesV1(),
 		},
 
 		ConfigureFunc: providerConfigure,

@@ -1,10 +1,11 @@
 package fastly
 
 import (
-"fmt"
-gofastly "github.com/fastly/go-fastly/fastly"
-"github.com/hashicorp/terraform/helper/schema"
-"strings"
+	"fmt"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform/helper/schema"
+	"log"
+	"strings"
 )
 
 func resourceServiceAclEntriesV1() *schema.Resource {
@@ -32,24 +33,30 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 				Description: "ACL Id",
 			},
 			"entry": {
-				Type: schema.TypeSet,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Description: "ACL Entries",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:     schema.TypeString,
+						"id": {
+							Type:        schema.TypeString,
 							Description: "",
-							Required: true,
+							Computed:    true,
+						},
+						"ip": {
+							Type:        schema.TypeString,
+							Description: "",
+							Required:    true,
 						},
 						"subnet": {
-							Type:        schema.TypeInt,
+							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "",
 						},
 						"negated": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 							Description: "",
 						},
 						"comment": {
@@ -59,7 +66,6 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 						},
 					},
 				},
-
 			},
 		},
 	}
@@ -72,19 +78,31 @@ func resourceServiceAclEntriesV1Create(d *schema.ResourceData, meta interface{})
 	aclId := d.Get("acl_id").(string)
 
 	entries := d.Get("entry")
+	acles := entries.(*schema.Set)
 
+	for _, vRaw := range acles.List() {
+		val := vRaw.(map[string]interface{})
 
+		opts := &gofastly.CreateACLEntryInput{
+			Service: serviceID,
+			ACL:     aclId,
+			IP:      val["ip"].(string),
+			Subnet:  val["subnet"].(string),
+			Negated: val["negated"].(bool),
+			Comment: val["comment"].(string),
+		}
+
+		log.Printf("[DEBUG] Create ACL Entry Opts: %#v", opts)
+
+		_, err := conn.CreateACLEntry(opts)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	// TODO review this
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclId))
-	return resourceServiceAclEntriesV1Read(d, meta)
-}
-
-func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{}) error {
-
-	conn := meta.(*FastlyClient).conn
-	comp := strings.Split(d.Id(), "/")
-
 	return resourceServiceAclEntriesV1Read(d, meta)
 }
 
@@ -92,14 +110,114 @@ func resourceServiceAclEntriesV1Read(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*FastlyClient).conn
 	comp := strings.Split(d.Id(), "/")
 
+	opts := &gofastly.ListACLEntriesInput{
+		Service: comp[0],
+		ACL:     comp[1],
+	}
+
+	aclEntries, err := conn.ListACLEntries(opts)
+
+	if err != nil {
+		return err
+	}
+
+	acles := flattenAclEntries(aclEntries)
+
+	if err := d.Set("entry", acles); err != nil {
+		log.Printf("[WARn] Error setting entry for (%s): %s", d.Id(), err)
+	}
+
 	return nil
+}
+
+func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{}) error {
+
+	conn := meta.(*FastlyClient).conn
+	comp := strings.Split(d.Id(), "/")
+
+	if d.HasChange("entry") {
+
+		oe, ne := d.GetChange("entry")
+		if oe == nil {
+			oe = new(schema.Set)
+		}
+		if ne == nil {
+			ne = new(schema.Set)
+		}
+
+		oes := oe.(*schema.Set)
+		nes := ne.(*schema.Set)
+
+		removeEntries := oes.Difference(nes).List()
+		addEntries := nes.Difference(oes).List()
+
+		// DELETE old ACL entry
+		for _, vRaw := range removeEntries {
+			val := vRaw.(map[string]interface{})
+			opts := gofastly.DeleteACLEntryInput{
+				Service: comp[0],
+				ACL:     comp[1],
+				ID:      val["id"].(string),
+			}
+
+			log.Printf("[DEBUG] Fastly ACL Entry removal opts: %#v", opts)
+			err := conn.DeleteACLEntry(&opts)
+			if errRes, ok := err.(*gofastly.HTTPError); ok {
+				if errRes.StatusCode != 404 {
+					return err
+				}
+			} else if err != nil {
+				return err
+			}
+		}
+
+		// POST new ACL entry
+		for _, vRaw := range addEntries {
+			val := vRaw.(map[string]interface{})
+			opts := gofastly.CreateACLEntryInput{
+				Service: comp[0],
+				ACL:     comp[1],
+				IP:      val["ip"].(string),
+				Subnet:  val["subnet"].(string),
+				Negated: val["negated"].(bool),
+				Comment: val["comment"].(string),
+			}
+
+			log.Printf("[DEBUG] Fastly ACL Entry creation opts: %#v", opts)
+			_, err := conn.CreateACLEntry(&opts)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return resourceServiceAclEntriesV1Read(d, meta)
 }
 
 func resourceServiceAclEntriesV1Delete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 	comp := strings.Split(d.Id(), "/")
 
+	entries := d.Get("entry")
+	acles := entries.(*schema.Set)
 
+	for _, vRaw := range acles.List() {
+		val := vRaw.(map[string]interface{})
+
+		opts := &gofastly.DeleteACLEntryInput{
+			Service: comp[0],
+			ACL:     comp[1],
+			ID:      val["id"].(string),
+		}
+
+		log.Printf("[DEBUG] Create ACL Entry Opts: %#v", opts)
+
+		err := conn.DeleteACLEntry(opts)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	d.SetId("")
 	return nil
@@ -111,8 +229,9 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 
 	for _, currentAclEntry := range aclEntryList {
 		aes := map[string]interface{}{
-			"ip": currentAclEntry.IP,
-			"subnet": currentAclEntry.Subnet,
+			"id":      currentAclEntry.ID,
+			"ip":      currentAclEntry.IP,
+			"subnet":  currentAclEntry.Subnet,
 			"negated": currentAclEntry.Negated,
 			"comment": currentAclEntry.Comment,
 		}

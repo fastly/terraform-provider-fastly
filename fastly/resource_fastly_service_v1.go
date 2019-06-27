@@ -1083,15 +1083,6 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", ""),
 							Description: "The Splunk token to be used for authentication",
 							Sensitive:   true,
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha512.Sum512([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						// Optional fields
 						"format": {
@@ -1149,15 +1140,6 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE", ""),
 							Description: "The Azure shared access signature providing write access to the blob service objects",
 							Sensitive:   true,
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha512.Sum512([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						// Optional fields
 						"path": {

@@ -232,12 +232,14 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 func testAccServiceV1SplunkConfig_complete(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
+	format := "%h %l %u %t \"%r\" %>s %b"
+
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-  name = "%s"
+  name = %q
 
   domain {
-    name    = "%s"
+    name    = %q
     comment = "tf-testing-domain"
   }
 
@@ -257,25 +259,26 @@ resource "fastly_service_v1" "foo" {
     name               = "test-splunk-1"
     url                = "https://mysplunkendpoint.example.com/services/collector/event"
     token              = "test-token"
-    format             = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format             = %q
     format_version     = 1
     placement          = "waf_debug"
     response_condition = "error_response_5XX"
   }
 
   force_destroy = true
-}`, serviceName, domainName)
+}`, serviceName, domainName, format)
 }
 
 func testAccServiceV1SplunkConfig_update(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-  name = "%s"
+  name = %q
 
   domain {
-    name    = "%s"
+    name    = %q
     comment = "tf-testing-domain"
   }
 
@@ -302,7 +305,7 @@ resource "fastly_service_v1" "foo" {
     name               = "test-splunk-1"
     url                = "https://mysplunkendpoint.example.com/services/collector/event"
     token              = "test-token"
-    format             = "%%h %%l %%u %%{now}V %%{req.method}V %%{req.url}V %%>s %%{resp.http.Content-Length}V"
+    format             = %q
     format_version     = 2
     placement          = "waf_debug"
     response_condition = "error_response_5XX"
@@ -312,14 +315,14 @@ resource "fastly_service_v1" "foo" {
     name               = "test-splunk-2"
     url                = "https://mysplunkendpoint.example.com/services/collector/event"
     token              = "test-token"
-    format             = "%%h %%l %%u %%{now}V %%{req.method}V %%{req.url}V %%>s %%{resp.http.Content-Length}V"
+    format             = %q
     format_version     = 2
     placement          = "waf_debug"
     response_condition = "ok_response_2XX"
   }
 
   force_destroy = true
-}`, serviceName, domainName)
+}`, serviceName, domainName, format, format)
 }
 
 func testAccServiceV1SplunkConfig_default(serviceName string) string {
@@ -327,10 +330,10 @@ func testAccServiceV1SplunkConfig_default(serviceName string) string {
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-  name = "%s"
+  name = %q
 
   domain {
-    name    = "%s"
+    name    = %q
     comment = "tf-testing-domain"
   }
 
@@ -354,10 +357,10 @@ func testAccServiceV1SplunkConfig_env(serviceName string) string {
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-  name = "%s"
+  name = %q
 
   domain {
-    name    = "%s"
+    name    = %q
     comment = "tf-testing-domain"
   }
 

@@ -157,8 +157,8 @@ resource "fastly_service_v1" "foo" {
 
   bigquerylogging {
     name       = "%s"
-    email      = "email@example.com",
-    secret_key = %q,
+    email      = "email@example.com"
+    secret_key = %q
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"

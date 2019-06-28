@@ -1,4 +1,9 @@
 ## 0.8.0 (Unreleased)
+
+NOTES:
+
+* provider: This release includes only a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and there should not be any significant behavioural changes. ([#173](https://github.com/terraform-providers/terraform-provider-fastly/pull/173))
+
 ## 0.7.0 (June 25, 2019)
 
 FEATURES:

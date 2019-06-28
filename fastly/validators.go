@@ -38,7 +38,6 @@ func validateConditionType() schema.SchemaValidateFunc {
 		"REQUEST",
 		"RESPONSE",
 		"CACHE",
-		"PREFETCH",
 	}, false)
 }
 

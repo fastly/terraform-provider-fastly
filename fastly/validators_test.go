@@ -136,11 +136,9 @@ func TestValidateConditionType(t *testing.T) {
 		{"REQUEST", 0, 0},
 		{"RESPONSE", 0, 0},
 		{"CACHE", 0, 0},
-		{"PREFETCH", 0, 0},
 		{"request", 0, 1},
 		{"response", 0, 1},
 		{"cache", 0, 1},
-		{"prefetch", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
 			actualWarns, actualErrors := validateConditionType()(testcase.value, "type")

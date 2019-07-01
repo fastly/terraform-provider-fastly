@@ -63,6 +63,36 @@ func TestAccFastlyServiceV1_dictionary(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_update_dictionary_name(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
+
+	updatedDictName := fmt.Sprintf("new dict %s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_dictionary(name, dictName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_dictionary(&service, name, dictName),
+				),
+			},
+			{
+				Config: testAccServiceV1Config_dictionary(name, updatedDictName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_dictionary(&service, name, updatedDictName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceV1Attributes_dictionary(service *gofastly.ServiceDetail, name, dictName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 

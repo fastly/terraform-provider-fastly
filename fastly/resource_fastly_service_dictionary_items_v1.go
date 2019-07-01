@@ -4,7 +4,6 @@ import (
 	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
-	"strings"
 )
 
 func resourceServiceDictionaryItemsV1() *schema.Resource {
@@ -144,11 +143,13 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
-	comp := strings.Split(d.Id(), "/")
+	serviceID := d.Get("service_id").(string)
+	dictionaryID := d.Get("dictionary_id").(string)
+
 	// TODO Size check
 	dictList, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
-		Service:    comp[0],
-		Dictionary: comp[1],
+		Service:    serviceID,
+		Dictionary: dictionaryID,
 	})
 	if err != nil {
 		return err

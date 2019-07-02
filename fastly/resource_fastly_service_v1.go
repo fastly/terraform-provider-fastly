@@ -1397,12 +1397,6 @@ func resourceServiceV1() *schema.Resource {
 							Description: "Unique name to refer to this Dictionary",
 						},
 						// Optional fields
-						"write_only": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
-							Description: "Determines if items in the dictionary are readable or not.",
-						},
 						"dictionary_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -4298,8 +4292,7 @@ func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
 	df := dictMap.(map[string]interface{})
 	opts := gofastly.CreateDictionaryInput{
-		Name:      df["name"].(string),
-		WriteOnly: gofastly.CBool(df["write_only"].(bool)),
+		Name: df["name"].(string),
 	}
 
 	return &opts, nil
@@ -4312,7 +4305,6 @@ func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface
 		dictMapString := map[string]interface{}{
 			"dictionary_id": currentDict.ID,
 			"name":          currentDict.Name,
-			"write_only":    currentDict.WriteOnly,
 		}
 
 		// prune any empty values that come from the default string value in structs

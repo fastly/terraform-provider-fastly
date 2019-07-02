@@ -518,7 +518,6 @@ marked as the main block. Default is `false`.
 The `dictionary` block supports:
 
 * `name` - (Required) A unique name to identify this dictionary.
-* `write_only` - (Optional) Determines if items in the dictionary are readable or not.  Default `false`
 
 ## Attributes Reference
 

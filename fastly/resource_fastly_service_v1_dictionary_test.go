@@ -19,16 +19,14 @@ func TestResourceFastlyFlattenDictionary(t *testing.T) {
 		{
 			remote: []*gofastly.Dictionary{
 				{
-					ID:        "1234567890",
-					Name:      "dictionary-example",
-					WriteOnly: true,
+					ID:   "1234567890",
+					Name: "dictionary-example",
 				},
 			},
 			local: []map[string]interface{}{
 				{
 					"dictionary_id": "1234567890",
 					"name":          "dictionary-example",
-					"write_only":    true,
 				},
 			},
 		},
@@ -63,7 +61,7 @@ func TestAccFastlyServiceV1_dictionary(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_update_dictionary_name(t *testing.T) {
+func TestAccFastlyServiceV1_dictionary_update_name(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
@@ -139,7 +137,6 @@ resource "fastly_service_v1" "foo" {
 
   dictionary {
 	name       = "%s"
-	write_only = false
   }
 
   force_destroy = true

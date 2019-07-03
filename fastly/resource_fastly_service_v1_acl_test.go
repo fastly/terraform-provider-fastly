@@ -19,14 +19,14 @@ func TestResourceFastlyFlattenAcl(t *testing.T) {
 		{
 			remote: []*gofastly.ACL{
 				{
-					ID:        "1234567890",
-					Name:      "acl-example",
+					ID:   "1234567890",
+					Name: "acl-example",
 				},
 			},
 			local: []map[string]interface{}{
 				{
 					"acl_id": "1234567890",
-					"name":    "acl-example",
+					"name":   "acl-example",
 				},
 			},
 		},

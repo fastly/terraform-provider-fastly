@@ -326,15 +326,14 @@ resource "fastly_service_v1" "foo" {
 
   dictionary {
 	name       = var.mydict.name
-	write_only = false
   }
 
   force_destroy = true
 }
 
 resource "fastly_service_dictionary_items_v1" "items" {
-    service_id = "${fastly_service_v1.foo.id}"
-    dictionary_id = "${{for s in fastly_service_v1.foo.dictionary : s.name => s.dictionary_id}[var.mydict.name]}"
+    service_id = fastly_service_v1.foo.id
+    dictionary_id = {for s in fastly_service_v1.foo.dictionary : s.name => s.dictionary_id}[var.mydict.name]
     items = var.mydict.items
 }`, dictName, dictItems, serviceName, domainName, backendName)
 }
@@ -360,7 +359,6 @@ resource "fastly_service_v1" "foo" {
 
   dictionary {
 	name       = "%s"
-	write_only = false
   }
 
   force_destroy = true

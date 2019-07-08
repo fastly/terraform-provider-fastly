@@ -74,3 +74,7 @@ func validateSnippetType() schema.SchemaValidateFunc {
 		"none",
 	}, false)
 }
+
+func validateBackendWeight() schema.SchemaValidateFunc {
+	return validation.IntBetween(1, 100)
+}

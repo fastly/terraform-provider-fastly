@@ -349,10 +349,11 @@ func resourceServiceV1() *schema.Resource {
 						},
 
 						"weight": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Default:     100,
-							Description: "The portion of traffic to send to a specific origins. Each origin receives weight/total of the traffic.",
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      100,
+							Description:  "The percentage of the total traffic used to load balance this backend against others.",
+							ValidateFunc: validateBackendWeight(),
 						},
 					},
 				},

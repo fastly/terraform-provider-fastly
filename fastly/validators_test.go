@@ -246,3 +246,28 @@ func TestValidateSnippetType(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateBackendWeight(t *testing.T) {
+	for name, testcase := range map[string]struct {
+		value          int
+		expectedWarns  int
+		expectedErrors int
+	}{
+		"1":   {1, 0, 0},
+		"55":  {55, 0, 0},
+		"100": {100, 0, 0},
+		"0":   {0, 0, 1},
+		"101": {101, 0, 1},
+		"150": {150, 0, 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actualWarns, actualErrors := validateBackendWeight()(testcase.value, "weight")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

@@ -245,7 +245,7 @@ Default `200`.
 * `ssl_cert_hostname` - (Optional) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all.
 * `ssl_sni_hostname` - (Optional) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all.
 * `shield` - (Optional) The POP of the shield designated to reduce inbound load.
-* `weight` - (Optional) The [portion of traffic](https://docs.fastly.com/guides/performance-tuning/load-balancing-configuration.html#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives `weight / total` of the traffic. Default `100`.
+* `weight` - (Optional) The percentage (`1-100`) of the total traffic used to [load balance](https://docs.fastly.com/guides/performance-tuning/load-balancing-configuration.html#how-weight-affects-load-balancing) this backend against others. Default `100`.
 * `healthcheck` - (Optional) Name of a defined `healthcheck` to assign to this backend.
 
 The `condition` block supports allows you to add logic to any basic configuration

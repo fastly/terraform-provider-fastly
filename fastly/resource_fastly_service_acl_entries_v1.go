@@ -110,18 +110,32 @@ func resourceServiceAclEntriesV1Read(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*FastlyClient).conn
 	comp := strings.Split(d.Id(), "/")
 
-	opts := &gofastly.ListACLEntriesInput{
+	aclEntries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
 		Service: comp[0],
 		ACL:     comp[1],
-	}
+	})
 
-	aclEntries, err := conn.ListACLEntries(opts)
+	filteredAclEntries := filterAclEntries(aclEntries, func(currentAclEntry gofastly.ACLEntry) bool {
+
+		data := d.Get("entry")
+		entries := data.(*schema.Set)
+
+		for _, entry := range entries.List() {
+			aclEntry := entry.(map[string]interface{})
+
+			if aclEntry["ip"] == currentAclEntry.IP {
+				return true
+			}
+		}
+
+		return false
+	})
 
 	if err != nil {
 		return err
 	}
 
-	acles := flattenAclEntries(aclEntries)
+	acles := flattenAclEntries(filteredAclEntries)
 
 	if err := d.Set("entry", acles); err != nil {
 		log.Printf("[WARn] Error setting entry for (%s): %s", d.Id(), err)
@@ -246,4 +260,15 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 	}
 
 	return resultList
+}
+
+func filterAclEntries(aclEntries []*gofastly.ACLEntry, f func(entry gofastly.ACLEntry) bool) []*gofastly.ACLEntry {
+	filteredAclEntries := make([]*gofastly.ACLEntry, 0)
+	for _, entry := range aclEntries {
+		if f(*entry) {
+			filteredAclEntries = append(filteredAclEntries, entry)
+		}
+	}
+
+	return filteredAclEntries
 }

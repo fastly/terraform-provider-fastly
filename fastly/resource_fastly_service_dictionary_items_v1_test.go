@@ -73,6 +73,35 @@ func TestAccFastlyServiceDictionaryItemV1_create(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceDictionaryItemV1_create_dynamic(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
+
+	expectedRemoteItems := map[string]string{
+		"alpha": "alpha.demo.notexample.com",
+		"beta":  "beta.demo.notexample.com",
+		"gamma": "gamma.demo.notexample.com",
+		"delta": "delta.demo.notexample.com",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDictionaryItemsV1Config_create_dynamic(name, dictName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.myservice", &service),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.common", "items.%", "4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceDictionaryItemV1_update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -363,4 +392,47 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, serviceName, domainName, backendName, dictName)
+}
+
+func testAccServiceDictionaryItemsV1Config_create_dynamic(serviceName, dictName string) string {
+
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	return fmt.Sprintf(`
+locals {
+  dictionary_name = "%s"
+  host_base = "demo.notexample.com"
+  host_divisions = ["alpha", "beta", "gamma", "delta"]
+}
+
+resource "fastly_service_v1" "myservice" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+	}
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  dictionary {
+    name       = local.dictionary_name
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_service_dictionary_items_v1" "common" {
+  service_id = fastly_service_v1.myservice.id
+  dictionary_id = {for d in fastly_service_v1.myservice.dictionary : d.name => d.dictionary_id}[local.dictionary_name]
+  items = {
+    for division in local.host_divisions:
+      division => format("%%s.%%s", division, local.host_base)
+  }
+
+}`, dictName, serviceName, domainName, backendName)
 }

@@ -45,24 +45,24 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 						},
 						"ip": {
 							Type:        schema.TypeString,
-							Description: "",
+							Description: "An IP address that is the focus for the ACL",
 							Required:    true,
 						},
 						"subnet": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "An optional subnet mask applied to the IP address",
 						},
 						"negated": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							Description: "",
+							Description: "A boolean that will negate the match if true",
 						},
 						"comment": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "A personal freeform descriptive note",
 						},
 					},
 				},

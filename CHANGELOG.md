@@ -1,4 +1,9 @@
-## 0.9.0 (Unreleased)
+## 0.8.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/fastly_service_v1/condition: Support `PREFETCH` in `type` validation ([#171](https://github.com/terraform-providers/terraform-provider-fastly/issues/171))
+
 ## 0.8.0 (June 28, 2019)
 
 NOTES:

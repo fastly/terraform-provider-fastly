@@ -64,7 +64,6 @@ func resourceServiceDictionaryItemsV1Create(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	// TODO review this
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, dictionaryID))
 	return resourceServiceDictionaryItemsV1Read(d, meta)
 }

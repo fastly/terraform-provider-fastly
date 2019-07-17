@@ -12,9 +12,6 @@ func resourceServiceDynamicSnippetContentV1() *schema.Resource {
 		Read:   resourceServiceDynamicSnippetV1Read,
 		Update: resourceServiceDynamicSnippetV1Update,
 		Delete: resourceServiceDynamicSnippetV1Delete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"service_id": {

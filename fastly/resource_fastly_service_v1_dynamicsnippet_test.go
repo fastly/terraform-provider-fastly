@@ -36,7 +36,7 @@ func TestResourceFastlyFlattenDynamicSnippets(t *testing.T) {
 			},
 			local: []map[string]interface{}{
 				{
-					"name":     "recv_test",
+					"name":     "recv_test_01",
 					"type":     gofastly.SnippetTypeRecv,
 					"priority": 110,
 				},

@@ -8,12 +8,14 @@ import (
 type BatchOperation string
 
 const (
-	Create BatchOperation = "create"
-	Update BatchOperation = "update"
-	Upsert BatchOperation = "upsert"
-	Delete BatchOperation = "delete"
+	CreateBatchOperation BatchOperation = "create"
+	UpdateBatchOperation BatchOperation = "update"
+	UpsertBatchOperation BatchOperation = "upsert"
+	DeleteBatchOperation BatchOperation = "delete"
 
-	BatchModifyMaximumItems = 1000
+	// Represents the maximum number of operations that can be sent within a single batch request.
+	// This is currently not documented in the API.
+	BatchModifyMaximumOperations = 1000
 )
 
 type statusResp struct {

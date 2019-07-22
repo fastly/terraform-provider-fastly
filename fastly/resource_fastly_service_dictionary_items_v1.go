@@ -47,25 +47,21 @@ func resourceServiceDictionaryItemsV1Create(d *schema.ResourceData, meta interfa
 	dictionaryID := d.Get("dictionary_id").(string)
 	items := d.Get("items").(map[string]interface{})
 
-	var batchItems = []gofastly.BatchDictionaryItem{}
+	var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
 
 	for key, val := range items {
 
-		batchItems = append(batchItems, gofastly.BatchDictionaryItem{
-			Operation: gofastly.Create,
+		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
+			Operation: gofastly.CreateBatchOperation,
 			ItemKey:   key,
 			ItemValue: val.(string),
 		})
 	}
 
-	err := conn.BatchModifyDictionaryItems(&gofastly.BatchModifyDictionaryItemsInput{
-		Service:    serviceID,
-		Dictionary: dictionaryID,
-		Items:      batchItems,
-	})
-
+	// Process the batch operations
+	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, dictionaryID))
@@ -83,7 +79,7 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 
 	if d.HasChange("items") {
 
-		var batchDictionaryItems = []gofastly.BatchDictionaryItem{}
+		var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
 
 		o, n := d.GetChange("items")
 
@@ -94,8 +90,8 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 		for key := range os {
 			if _, ok := ns[key]; !ok {
 
-				batchDictionaryItems = append(batchDictionaryItems, gofastly.BatchDictionaryItem{
-					Operation: gofastly.Delete,
+				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
+					Operation: gofastly.DeleteBatchOperation,
 					ItemKey:   key,
 				})
 			}
@@ -105,8 +101,8 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 			// Handle replaces
 			if _, ok := os[key]; ok {
 
-				batchDictionaryItems = append(batchDictionaryItems, gofastly.BatchDictionaryItem{
-					Operation: gofastly.Update,
+				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
+					Operation: gofastly.UpdateBatchOperation,
 					ItemKey:   key,
 					ItemValue: val.(string),
 				})
@@ -115,8 +111,8 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 			// Handle additions
 			if _, ok := os[key]; !ok {
 
-				batchDictionaryItems = append(batchDictionaryItems, gofastly.BatchDictionaryItem{
-					Operation: gofastly.Create,
+				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
+					Operation: gofastly.CreateBatchOperation,
 					ItemKey:   key,
 					ItemValue: val.(string),
 				})
@@ -124,14 +120,10 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 			}
 		}
 
-		err := conn.BatchModifyDictionaryItems(&gofastly.BatchModifyDictionaryItemsInput{
-			Service:    serviceID,
-			Dictionary: dictionaryID,
-			Items:      batchDictionaryItems,
-		})
-
+		// Process the batch operations
+		err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 		if err != nil {
-			return fmt.Errorf("Error updating dictionary items: service %s, dictionary %s, %#v", serviceID, dictionaryID, err)
+			return fmt.Errorf("Error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 		}
 
 		d.SetPartial("items")
@@ -180,24 +172,20 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 	dictionaryID := d.Get("dictionary_id").(string)
 	items := d.Get("items").(map[string]interface{})
 
-	var batchItems = []gofastly.BatchDictionaryItem{}
+	var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
 
 	for key, _ := range items {
 
-		batchItems = append(batchItems, gofastly.BatchDictionaryItem{
-			Operation: gofastly.Delete,
+		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
+			Operation: gofastly.DeleteBatchOperation,
 			ItemKey:   key,
 		})
 	}
 
-	err := conn.BatchModifyDictionaryItems(&gofastly.BatchModifyDictionaryItemsInput{
-		Service:    serviceID,
-		Dictionary: dictionaryID,
-		Items:      batchItems,
-	})
-
+	// Process the batch operations
+	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId("")
@@ -222,4 +210,29 @@ func flattenDictionaryItems(dictItemList []*gofastly.DictionaryItem) map[string]
 	}
 
 	return resultList
+}
+
+func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictionaryID string, batchDictionaryItems []*gofastly.BatchDictionaryItem) error {
+
+	batchSize := gofastly.BatchModifyMaximumOperations
+
+	for i := 0; i < len(batchDictionaryItems); i += batchSize {
+		j := i + batchSize
+		if j > len(batchDictionaryItems) {
+			j = len(batchDictionaryItems)
+		}
+
+		err := conn.BatchModifyDictionaryItems(&gofastly.BatchModifyDictionaryItemsInput{
+			Service:    serviceID,
+			Dictionary: dictionaryID,
+			Items:      batchDictionaryItems[i:j],
+		})
+
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }

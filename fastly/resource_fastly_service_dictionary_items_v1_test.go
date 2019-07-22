@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
@@ -230,6 +231,37 @@ func TestAccFastlyServiceDictionaryItemV1_external_item_remains(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceDictionaryItemV1_batch_1001_items(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
+
+	var expectedRemoteItems = make(map[string]string)
+	expectedBatchSize := gofastly.BatchModifyMaximumOperations + 1
+
+	for i := 0; i < expectedBatchSize; i++ {
+		expectedRemoteItems[fmt.Sprintf("key%d", i)] = fmt.Sprintf("value%d", i)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDictionaryItemsV1Config_batch(name, dictName, expectedBatchSize),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItems),
+					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", strconv.Itoa(expectedBatchSize)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceDictionaryItemsV1DoesNotExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
@@ -276,6 +308,19 @@ func testAccCheckFastlyServiceDictionaryItemsV1RemoteState(service *gofastly.Ser
 
 		return nil
 	}
+}
+
+func testAccServiceDictionaryItemsV1Config_batch(serviceName, dictName string, batchSize int) string {
+
+	var dictItems = "{\n"
+
+	for i := 0; i < batchSize; i++ {
+		dictItems += fmt.Sprintf("key%d: \"value%d\"\n", i, i)
+	}
+
+	dictItems += "}\n"
+
+	return testAccServiceDictionaryItemsV1Config(serviceName, dictName, dictItems)
 }
 
 func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetail, dictName, expectedKey, expectedValue string) {

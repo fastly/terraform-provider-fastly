@@ -193,7 +193,7 @@ type BatchModifyDictionaryItemsInput struct {
 	Service    string `json:"-,"`
 	Dictionary string `json:"-,"`
 
-	Items []BatchDictionaryItem `json:"items"`
+	Items []*BatchDictionaryItem `json:"items"`
 }
 
 type BatchDictionaryItem struct {
@@ -214,7 +214,7 @@ func (c *Client) BatchModifyDictionaryItems(i *BatchModifyDictionaryItemsInput) 
 		return ErrMissingDictionary
 	}
 
-	if len(i.Items) > BatchModifyMaximumItems {
+	if len(i.Items) > BatchModifyMaximumOperations {
 		return ErrBatchUpdateMaximumItemsExceeded
 	}
 

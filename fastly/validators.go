@@ -74,3 +74,7 @@ func validateSnippetType() schema.SchemaValidateFunc {
 		"none",
 	}, false)
 }
+
+func validateDictionaryItems() schema.SchemaValidateFunc {
+	return validation.IntAtMost(10000)
+}

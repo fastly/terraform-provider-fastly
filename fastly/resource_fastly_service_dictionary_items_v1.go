@@ -21,20 +21,21 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Service Id",
+				Description: "The service the dictionary belongs to",
 			},
 
 			"dictionary_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Dictionary Id",
+				Description: "The dictionary the items belong to",
 			},
 
 			"items": {
 				Type:        schema.TypeMap,
-				Description: "Dictionary Items",
 				Optional:    true,
+				Description: "Key/value pairs that make up an item in the dictionary",
+				ValidateFunc: validateDictionaryItems(),
 			},
 		},
 	}
@@ -140,7 +141,6 @@ func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
 
-	// TODO Size check
 	dictList, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
 		Service:    serviceID,
 		Dictionary: dictionaryID,
@@ -149,19 +149,7 @@ func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	filteredDictList := filterDictionaryItems(dictList, func(currentDictItem gofastly.DictionaryItem) bool {
-
-		data := d.Get("items")
-		items := data.(map[string]interface{})
-
-		if _, ok := items[currentDictItem.ItemKey]; ok {
-			return true
-		}
-
-		return false
-	})
-
-	d.Set("items", flattenDictionaryItems(filteredDictList))
+	d.Set("items", flattenDictionaryItems(dictList))
 	return nil
 }
 
@@ -190,17 +178,6 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 
 	d.SetId("")
 	return nil
-}
-
-func filterDictionaryItems(dictList []*gofastly.DictionaryItem, f func(gofastly.DictionaryItem) bool) []*gofastly.DictionaryItem {
-	filteredDictList := make([]*gofastly.DictionaryItem, 0)
-	for _, item := range dictList {
-		if f(*item) {
-			filteredDictList = append(filteredDictList, item)
-		}
-	}
-
-	return filteredDictList
 }
 
 func flattenDictionaryItems(dictItemList []*gofastly.DictionaryItem) map[string]string {

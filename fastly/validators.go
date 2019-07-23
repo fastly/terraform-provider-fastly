@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -76,5 +77,22 @@ func validateSnippetType() schema.SchemaValidateFunc {
 }
 
 func validateDictionaryItems() schema.SchemaValidateFunc {
-	return validation.IntAtMost(10000)
+	max := 10000
+
+	return func(i interface{}, k string) (s []string, es []error) {
+
+		v, ok := i.(map[string]interface{})
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be a map[string]interface", k))
+			return
+		}
+
+		if len(v) > max {
+			es = append(es, fmt.Errorf("expected %s to be at most (%d), got %d", k, max, len(v)))
+			return
+		}
+
+		return
+	}
+
 }

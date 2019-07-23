@@ -1,6 +1,9 @@
 package fastly
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestValidateLoggingFormatVersion(t *testing.T) {
 	for name, testcase := range map[string]struct {
@@ -248,16 +251,15 @@ func TestValidateSnippetType(t *testing.T) {
 }
 
 func TestValidateDictionaryItemMaxSize(t *testing.T) {
+
 	for name, testcase := range map[string]struct {
-		value          int
+		value          map[string]interface{}
 		expectedWarns  int
 		expectedErrors int
 	}{
-		"Ten dictionary items":                  {10, 0, 0},
-		"One Hundres dictionary items":          {100, 0, 0},
-		"One Thousand dictionary items":         {1000, 0, 0},
-		"Ten thousand dictionary items":         {10000, 0, 0},
-		"Ten thousand and one dictionary items": {10001, 0, 1},
+		"Ten hundred dictionary items":          {createTestDictionaryItems(10), 0, 0},
+		"Ten thousand dictionary items":         {createTestDictionaryItems(10000), 0, 0},
+		"Ten thousand and one dictionary items": {createTestDictionaryItems(10001), 0, 1},
 	} {
 		t.Run(name, func(t *testing.T) {
 			actualWarns, actualErrors := validateDictionaryItems()(testcase.value, "dictionary_items")
@@ -269,4 +271,15 @@ func TestValidateDictionaryItemMaxSize(t *testing.T) {
 			}
 		})
 	}
+}
+
+func createTestDictionaryItems(size int) map[string]interface{} {
+
+	dictionaryItems := make(map[string]interface{})
+
+	for i := 0; i < size; i++ {
+		dictionaryItems[fmt.Sprintf("key%d", i)] = fmt.Sprintf("value%d", i)
+	}
+
+	return dictionaryItems
 }

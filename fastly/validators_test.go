@@ -253,10 +253,10 @@ func TestValidateDictionaryItemMaxSize(t *testing.T) {
 		expectedWarns  int
 		expectedErrors int
 	}{
-		"Ten dictionary items": {10, 0, 0},
-		"One Hundres dictionary items": {100, 0, 0},
-		"One Thousand dictionary items": {1000, 0, 0},
-		"Ten thousand dictionary items": {10000, 0, 0},
+		"Ten dictionary items":                  {10, 0, 0},
+		"One Hundres dictionary items":          {100, 0, 0},
+		"One Thousand dictionary items":         {1000, 0, 0},
+		"Ten thousand dictionary items":         {10000, 0, 0},
 		"Ten thousand and one dictionary items": {10001, 0, 1},
 	} {
 		t.Run(name, func(t *testing.T) {

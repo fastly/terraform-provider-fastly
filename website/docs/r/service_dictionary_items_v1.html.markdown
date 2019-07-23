@@ -10,11 +10,14 @@ description: |-
 
 Provides a grouping of fastly dictionary items that can be applied to a service.
  
-This resource will populate a dictionary with the items configured in the items map and it will track their state going forward.
-Additional dictionary items can be added through the Fastly API/console.  These externally created items will be ignored by the resource.
+This resource will populate a dictionary with the items and it will track their state going forward.
+Additional dictionary items can be added through the Fastly API/console, but will be removed from fastly if terraform detects a difference in the remote state.
 
 The Fastly API/console can also be used to modify the items that are managed through Terraform.  In this case the default behaviour of the 
-resource will be to align the local and remoted states.  This would adjust the values in the items or delete them accordingly.  If Terraform is being used to only create items then the lifecyle ignore_changes field can be used with the resource.  An example of this configuraiton is provided below.    
+resource will be to realign the remoted state.  The items in the remote fastly dictionary will be updated or deleted according to the terraform plan.  
+
+If Terraform is being used to only create initial items in a dictionary, then the lifecyle ignore_changes field can be used with the resource.  An example of this configuraiton is provided below.    
+
 
 ## Example Usage
 
@@ -148,6 +151,9 @@ resource "fastly_service_dictionary_items_v1" "project" {
 ```
 
 Lifecyle ignore_changes usage:
+
+The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
+items in a dictionary.  If an external means, (for example via the Fastly API) is used to manage items in a dictionary, then this will stop terraform realigning the remote state.
 
 ```hcl
 ...

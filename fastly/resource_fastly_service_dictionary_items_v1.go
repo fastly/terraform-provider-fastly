@@ -4,6 +4,7 @@ import (
 	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
+	"strings"
 )
 
 func resourceServiceDictionaryItemsV1() *schema.Resource {
@@ -13,7 +14,7 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 		Update: resourceServiceDictionaryItemsV1Update,
 		Delete: resourceServiceDictionaryItemsV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceServiceDictionaryItemsV1Import,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,10 +33,9 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 			},
 
 			"items": {
-				Type:         schema.TypeMap,
-				Optional:     true,
-				Description:  "Key/value pairs that make up an item in the dictionary",
-				ValidateFunc: validateDictionaryItems(),
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Key/value pairs that make up an item in the dictionary",
 			},
 		},
 	}
@@ -178,6 +178,29 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 
 	d.SetId("")
 	return nil
+}
+
+func resourceServiceDictionaryItemsV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	split := strings.Split(d.Id(), "/")
+
+	if len(split) != 2 {
+		return nil, fmt.Errorf("Invalid id: %s. The ID should be in the format [service_id]/[dictionary_id]", d.Id())
+	}
+
+	serviceID := split[0]
+	dictionaryID := split[1]
+
+	err := d.Set("service_id", serviceID)
+	if err != nil {
+		return nil, fmt.Errorf("Error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+	}
+
+	err = d.Set("dictionary_id", dictionaryID)
+	if err != nil {
+		return nil, fmt.Errorf("Error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func flattenDictionaryItems(dictItemList []*gofastly.DictionaryItem) map[string]string {

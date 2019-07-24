@@ -184,7 +184,7 @@ func TestAccFastlyServiceDictionaryItemV1_external_item_is_removed(t *testing.T)
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemV1_external_item_remains(t *testing.T) {
+func TestAccFastlyServiceDictionaryItemV1_external_item_deleted(t *testing.T) {
 
 	var service gofastly.ServiceDetail
 
@@ -196,9 +196,7 @@ func TestAccFastlyServiceDictionaryItemV1_external_item_remains(t *testing.T) {
 		"key2": "value2",
 	}
 
-	expectedRemoteItemsAfterUpdate := map[string]string{
-		"key3": "value3",
-	}
+	expectedRemoteItemsAfterUpdate := map[string]string{}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

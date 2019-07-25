@@ -3,20 +3,20 @@ layout: "fastly"
 page_title: "Fastly: service_dictionary_items_v1"
 sidebar_current: "docs-fastly-resource-service-v1"
 description: |-
-  Provides a grouping of fastly dictionary items that can be applied to a service. 
+  Provides a grouping of Fastly dictionary items that can be applied to a service. 
 ---
 
 # fastly_service_dictionary_items_v1
 
-Provides a grouping of fastly dictionary items that can be applied to a service.
+Provides a map of Fastly dictionary items that can be applied to a service.
  
 This resource will populate a dictionary with the items and it will track their state going forward.
-Additional dictionary items can be added through the Fastly API/console, but will be removed from fastly if terraform detects a difference in the remote state.
+Additional dictionary items can be added through the Fastly API or UI, but will be removed from Fastly if Terraform detects a difference in the remote state.
 
-The Fastly API/console can also be used to modify the items that are managed through Terraform.  In this case the default behaviour of the 
-resource will be to realign the remoted state.  The items in the remote fastly dictionary will be updated or deleted according to the terraform plan.  
+The Fastly API or UI can also be used to modify the items that are managed through Terraform.  In this case the default behaviour of the 
+resource will be to realign the remoted state.  The items in the remote Fastly dictionary will be updated or deleted according to the Terraform plan.  
 
-If Terraform is being used to only create initial items in a dictionary, then the lifecyle ignore_changes field can be used with the resource.  An example of this configuraiton is provided below.    
+If Terraform is being used to only create initial items in a dictionary, then the lifecyle `ignore_changes` field can be used with the resource.  An example of this configuraiton is provided below.    
 
 
 ## Example Usage
@@ -153,7 +153,7 @@ resource "fastly_service_dictionary_items_v1" "project" {
 Lifecyle ignore_changes usage:
 
 The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
-items in a dictionary.  If an external means, (for example via the Fastly API) is used to manage items in a dictionary, then this will stop terraform realigning the remote state.
+items in a dictionary.  If an external means, (for example via the Fastly API or UI) is used to manage items in a dictionary, then this will stop Terraform realigning the remote state.
 
 ```hcl
 ...
@@ -191,8 +191,8 @@ The following arguments are supported:
 
 ## Import
 
-Dictionary items can be populated through the Fastly API and/or the console.  These items can then be managed by terraform through the use of the import command.
-Resources are imported into the terraform state through the use of an ID, and the fastly_service_dictionary_items_v1 resouce has an ID that is made up of the following format.
+Dictionary items can be populated through the Fastly API or UI.  These items can then be managed by Terraform through the use of the import command.
+Resources are imported into the Terraform state through the use of an ID, and the fastly_service_dictionary_items_v1 resouce has an ID that is made up of the following format.
 
 ```
 <serviceID>/<dictionaryID>
@@ -204,8 +204,8 @@ This is an example of the import command being applied to the resource named `fa
 $ terraform import fastly_service_dictionary_items_v1.items <serviceID>/<dictionaryID>
 ```
 
-If terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing terraform state.  
-The following is an example of the terraform state command to remove the resource named `fastly_service_dictionary_items_v1.items` from the terraform state file.
+If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
+The following is an example of the Terraform state command to remove the resource named `fastly_service_dictionary_items_v1.items` from the Terraform state file.
 
 ```
 $ terraform state rm fastly_service_dictionary_items_v1.items

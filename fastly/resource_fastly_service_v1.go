@@ -1400,7 +1400,7 @@ func resourceServiceV1() *schema.Resource {
 						"dictionary_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Generated dictionary id",
+							Description: "Generated dictionary ID",
 						},
 					},
 				},

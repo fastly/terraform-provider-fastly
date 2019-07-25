@@ -188,3 +188,25 @@ The following arguments are supported:
 
 [fastly-dictionary]: https://docs.fastly.com/api/config#dictionary
 [fastly-dictionary_item]: https://docs.fastly.com/api/config#dictionary_item
+
+## Import
+
+Dictionary items can be populated through the Fastly API and/or the console.  These items can then be managed by terraform through the use of the import command.
+Resources are imported into the terraform state through the use of an ID, and the fastly_service_dictionary_items_v1 resouce has an ID that is made up of the following format.
+
+```
+<serviceID>/<dictionaryID>
+```
+
+This is an example of the import command being applied to the resource named `fastly_service_dictionary_items_v1.items`
+
+```
+$ terraform import fastly_service_dictionary_items_v1.items <serviceID>/<dictionaryID>
+```
+
+If terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing terraform state.  
+The following is an example of the terraform state command to remove the resource named `fastly_service_dictionary_items_v1.items` from the terraform state file.
+
+```
+$ terraform state rm fastly_service_dictionary_items_v1.items
+``` 

@@ -11,7 +11,7 @@ description: |-
 Provides a map of Fastly dictionary items that can be applied to a service.
  
 This resource will populate a dictionary with the items and will track their state.
-Additional dictionary items can be added through the Fastly API or UI, but will be removed from Fastly if Terraform detects a difference in the remote state.
+Dictionary items can also be added through the Fastly API or UI, but will be removed from Fastly if Terraform detects a difference in the remote state.
 
 The Fastly API or UI can also be used to modify the items that are managed through Terraform.  In this case the default behaviour of the 
 resource will be to realign the remoted state.  The items in the remote Fastly dictionary will be updated or deleted according to the Terraform plan.  

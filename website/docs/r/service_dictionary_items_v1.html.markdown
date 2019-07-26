@@ -179,9 +179,9 @@ resource "fastly_service_dictionary_items_v1" "items" {
 
 The following arguments are supported:
 
-* `service_id` - (Required) The ID of the Service that the dictionary belongs to
+* `service_id` - (Required) The ID of the service that the dictionary belongs to
 * `dictionary_id` - (Required) The ID of the dictionary that the items belong to
-* `items` - (Optional) A Map representing an entry in the dictionary, (key/value)
+* `items` - (Optional) A map representing an entry in the dictionary, (key/value)
 
 
 ## Attributes Reference

@@ -8,7 +8,7 @@ description: |-
 
 # fastly_service_dictionary_items_v1
 
-Provides a map of Fastly dictionary items that can be applied to a service.
+Defines a map of Fastly dictionary items that can be used to populate a service dictionary.
  
 This resource will populate a dictionary with the items and will track their state.
 Dictionary items can also be added through the Fastly API or UI, but will be removed from Fastly if Terraform detects a difference in the remote state.
@@ -150,7 +150,7 @@ resource "fastly_service_dictionary_items_v1" "project" {
 }
 ```
 
-Lifecyle ignore_changes usage:
+###Supporting API and UI dictionary updates with ignore_changes
 
 The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
 items in a dictionary.  If an external means, (for example via the Fastly API or UI) is used to manage items in a dictionary, then this will stop Terraform realigning the remote state.
@@ -191,17 +191,10 @@ The following arguments are supported:
 
 ## Import
 
-Dictionary items in your HCL can be populated by pulling the current remote state of an existing Fastly service, using the `import` command.
-Resources are imported into the Terraform state through the use of an ID, and the fastly_service_dictionary_items_v1 resouce has an ID that is made up of the following format.
-
-```
-<serviceID>/<dictionaryID>
-```
-
 This is an example of the import command being applied to the resource named `fastly_service_dictionary_items_v1.items`
 
 ```
-$ terraform import fastly_service_dictionary_items_v1.items <serviceID>/<dictionaryID>
+$ terraform import fastly_service_dictionary_items_v1.items 7fMJYRRNW9BhKxJhoDRcIc/4OeVlYFuaCO3VjE49MWaU2
 ```
 
 If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  

@@ -183,15 +183,16 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-[fastly-dictionary]: https://docs.fastly.com/api/config#dictionary
-[fastly-dictionary_item]: https://docs.fastly.com/api/config#dictionary_item
+* [fastly-dictionary](https://docs.fastly.com/api/config#dictionary)
+* [fastly-dictionary_item](https://docs.fastly.com/api/config#dictionary_item)
 
 ## Import
 
 This is an example of the import command being applied to the resource named `fastly_service_dictionary_items_v1.items`
+The resource ID is a combined value of the `service_id` and `dictionary_id` separated by a forward slash.
 
 ```
-$ terraform import fastly_service_dictionary_items_v1.items 7fMJYRRNW9BhKxJhoDRcIc/4OeVlYFuaCO3VjE49MWaU2
+$ terraform import fastly_service_dictionary_items_v1.items xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx
 ```
 
 If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  

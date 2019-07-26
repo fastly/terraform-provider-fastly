@@ -526,11 +526,11 @@ In addition to the arguments listed above, the following attributes are exported
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
 
-[fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
-[fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records
-[fastly-conditionals]: https://docs.fastly.com/guides/conditions/using-conditions
-[fastly-sumologic]: https://docs.fastly.com/api/logging#logging_sumologic
-[fastly-gcs]: https://docs.fastly.com/api/logging#logging_gcs
+* [fastly-s3](https://docs.fastly.com/guides/integrations/amazon-s3)
+* [fastly-cname](https://docs.fastly.com/guides/basic-setup/adding-cname-records)
+* [fastly-conditionals](https://docs.fastly.com/guides/conditions/using-conditions)
+* [fastly-sumologic](https://docs.fastly.com/api/logging#logging_sumologic)
+* [fastly-gcs](https://docs.fastly.com/api/logging#logging_gcs)
 
 ## Import
 

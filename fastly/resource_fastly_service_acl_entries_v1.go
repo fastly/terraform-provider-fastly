@@ -4,7 +4,6 @@ import (
 	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 	"strings"
 )
 
@@ -15,7 +14,7 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 		Update: resourceServiceAclEntriesV1Update,
 		Delete: resourceServiceAclEntriesV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceServiceACLEntriesV1Import,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -75,79 +74,60 @@ func resourceServiceAclEntriesV1Create(d *schema.ResourceData, meta interface{})
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
-	aclId := d.Get("acl_id").(string)
+	aclID := d.Get("acl_id").(string)
+	entries := d.Get("entry").(*schema.Set)
 
-	entries := d.Get("entry")
-	acles := entries.(*schema.Set)
+	var batchACLEntries = []*gofastly.BatchACLEntry{}
 
-	for _, vRaw := range acles.List() {
+	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]interface{})
 
-		opts := &gofastly.CreateACLEntryInput{
-			Service: serviceID,
-			ACL:     aclId,
-			IP:      val["ip"].(string),
-			Subnet:  val["subnet"].(string),
-			Negated: val["negated"].(bool),
-			Comment: val["comment"].(string),
-		}
-
-		log.Printf("[DEBUG] Create ACL Entry Opts: %#v", opts)
-
-		_, err := conn.CreateACLEntry(opts)
-
-		if err != nil {
-			return err
-		}
+		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
+			Operation: gofastly.CreateBatchOperation,
+			IP:        val["ip"].(string),
+			Subnet:    val["subnet"].(string),
+			Negated:   val["negated"].(bool),
+			Comment:   val["comment"].(string),
+		})
 	}
 
-	// TODO review this
-	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclId))
+	// Process the batch operations
+	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
+	if err != nil {
+		return fmt.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+	}
+
+	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclID))
 	return resourceServiceAclEntriesV1Read(d, meta)
 }
 
 func resourceServiceAclEntriesV1Read(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
-	comp := strings.Split(d.Id(), "/")
+
+	serviceID := d.Get("service_id").(string)
+	aclID := d.Get("acl_id").(string)
 
 	aclEntries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
-		Service: comp[0],
-		ACL:     comp[1],
-	})
-
-	filteredAclEntries := filterAclEntries(aclEntries, func(currentAclEntry gofastly.ACLEntry) bool {
-
-		data := d.Get("entry")
-		entries := data.(*schema.Set)
-
-		for _, entry := range entries.List() {
-			aclEntry := entry.(map[string]interface{})
-
-			if aclEntry["ip"] == currentAclEntry.IP {
-				return true
-			}
-		}
-
-		return false
+		Service: serviceID,
+		ACL:     aclID,
 	})
 
 	if err != nil {
 		return err
 	}
 
-	acles := flattenAclEntries(filteredAclEntries)
-
-	if err := d.Set("entry", acles); err != nil {
-		log.Printf("[WARn] Error setting entry for (%s): %s", d.Id(), err)
-	}
-
+	d.Set("entry", flattenAclEntries(aclEntries))
 	return nil
 }
 
 func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*FastlyClient).conn
-	comp := strings.Split(d.Id(), "/")
+
+	serviceID := d.Get("service_id").(string)
+	aclID := d.Get("acl_id").(string)
+
+	var batchACLEntries = []*gofastly.BatchACLEntry{}
 
 	if d.HasChange("entry") {
 
@@ -168,41 +148,32 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 		// DELETE old ACL entry
 		for _, vRaw := range removeEntries {
 			val := vRaw.(map[string]interface{})
-			opts := gofastly.DeleteACLEntryInput{
-				Service: comp[0],
-				ACL:     comp[1],
-				ID:      val["id"].(string),
-			}
 
-			log.Printf("[DEBUG] Fastly ACL Entry removal opts: %#v", opts)
-			err := conn.DeleteACLEntry(&opts)
-			if errRes, ok := err.(*gofastly.HTTPError); ok {
-				if errRes.StatusCode != 404 {
-					return err
-				}
-			} else if err != nil {
-				return err
-			}
+			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
+				Operation: gofastly.DeleteBatchOperation,
+				ID:        val["id"].(string),
+			})
 		}
 
 		// POST new ACL entry
 		for _, vRaw := range addEntries {
 			val := vRaw.(map[string]interface{})
-			opts := gofastly.CreateACLEntryInput{
-				Service: comp[0],
-				ACL:     comp[1],
-				IP:      val["ip"].(string),
-				Subnet:  val["subnet"].(string),
-				Negated: val["negated"].(bool),
-				Comment: val["comment"].(string),
-			}
 
-			log.Printf("[DEBUG] Fastly ACL Entry creation opts: %#v", opts)
-			_, err := conn.CreateACLEntry(&opts)
-			if err != nil {
-				return err
-			}
+			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
+				Operation: gofastly.CreateBatchOperation,
+				ID:        val["id"].(string),
+				IP:        val["ip"].(string),
+				Subnet:    val["subnet"].(string),
+				Negated:   val["negated"].(bool),
+				Comment:   val["comment"].(string),
+			})
 		}
+	}
+
+	// Process the batch operations
+	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
+	if err != nil {
+		return fmt.Errorf("Error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	return resourceServiceAclEntriesV1Read(d, meta)
@@ -210,27 +181,26 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 
 func resourceServiceAclEntriesV1Delete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
-	comp := strings.Split(d.Id(), "/")
 
-	entries := d.Get("entry")
-	acles := entries.(*schema.Set)
+	serviceID := d.Get("service_id").(string)
+	aclID := d.Get("acl_id").(string)
+	entries := d.Get("entry").(*schema.Set)
 
-	for _, vRaw := range acles.List() {
+	var batchACLEntries = []*gofastly.BatchACLEntry{}
+
+	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]interface{})
 
-		opts := &gofastly.DeleteACLEntryInput{
-			Service: comp[0],
-			ACL:     comp[1],
-			ID:      val["id"].(string),
-		}
+		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
+			Operation: gofastly.DeleteBatchOperation,
+			ID:        val["id"].(string),
+		})
+	}
 
-		log.Printf("[DEBUG] Create ACL Entry Opts: %#v", opts)
-
-		err := conn.DeleteACLEntry(opts)
-
-		if err != nil {
-			return err
-		}
+	// Process the batch operations
+	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
+	if err != nil {
+		return fmt.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	d.SetId("")
@@ -262,13 +232,50 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 	return resultList
 }
 
-func filterAclEntries(aclEntries []*gofastly.ACLEntry, f func(entry gofastly.ACLEntry) bool) []*gofastly.ACLEntry {
-	filteredAclEntries := make([]*gofastly.ACLEntry, 0)
-	for _, entry := range aclEntries {
-		if f(*entry) {
-			filteredAclEntries = append(filteredAclEntries, entry)
-		}
+func resourceServiceACLEntriesV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	split := strings.Split(d.Id(), "/")
+
+	if len(split) != 2 {
+		return nil, fmt.Errorf("Invalid id: %s. The ID should be in the format [service_id]/[acl_id]", d.Id())
 	}
 
-	return filteredAclEntries
+	serviceID := split[0]
+	aclID := split[1]
+
+	err := d.Set("service_id", serviceID)
+	if err != nil {
+		return nil, fmt.Errorf("Error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+	}
+
+	err = d.Set("acl_id", aclID)
+	if err != nil {
+		return nil, fmt.Errorf("Error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, batchACLEntries []*gofastly.BatchACLEntry) error {
+
+	batchSize := gofastly.BatchModifyMaximumOperations
+
+	for i := 0; i < len(batchACLEntries); i += batchSize {
+		j := i + batchSize
+		if j > len(batchACLEntries) {
+			j = len(batchACLEntries)
+		}
+
+		err := conn.BatchModifyACLEntries(&gofastly.BatchModifyACLEntriesInput{
+			Service: serviceID,
+			ACL:     aclID,
+			Entries: batchACLEntries[i:j],
+		})
+
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }

@@ -180,6 +180,43 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceAclEntriesV1_import(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl %s", acctest.RandString(10))
+
+	expectedRemoteEntries := []map[string]interface{}{
+		{
+			"id":      "",
+			"ip":      "127.0.0.1",
+			"subnet":  "24",
+			"negated": false,
+			"comment": "ALC Entry 1",
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(name, aclName, expectedRemoteEntries),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+				),
+			},
+			{
+				ResourceName:      "fastly_service_acl_entries_v1.entries",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceAclEntriesV1RemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]interface{}) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
@@ -314,4 +351,47 @@ resource "fastly_service_v1" "foo" {
 
 	force_destroy = true
 }`, serviceName, domainName, backendName)
+}
+
+func testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName string, aclEntriesList []map[string]interface{}) string {
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	aclEntries := ""
+
+	for _, val := range aclEntriesList {
+		aclEntries += "entry {\n"
+		aclEntries += fmt.Sprintf("ip = \"%s\"\n", val["ip"])
+		aclEntries += fmt.Sprintf("subnet = \"%s\"\n", val["subnet"])
+		aclEntries += fmt.Sprintf("negated = %t\n", val["negated"])
+		aclEntries += fmt.Sprintf("comment = \"%s\"\n", val["comment"])
+		aclEntries += "}\n"
+	}
+
+	return fmt.Sprintf(`
+variable "myacl_name" {
+	type = string
+	default = "%s"
+}
+
+resource "fastly_service_v1" "foo" {
+	name = "%s"
+	domain {
+		name    = "%s"
+		comment = "tf-testing-domain"
+	}
+	backend {
+		address = "%s"
+		name    = "tf-testing-backend"
+	}
+	acl {
+		name       = var.myacl_name
+	}
+	force_destroy = true
+}
+ resource "fastly_service_acl_entries_v1" "entries" {
+	service_id = fastly_service_v1.foo.id
+	acl_id = {for s in fastly_service_v1.foo.acl : s.name => s.acl_id}[var.myacl_name]
+	%s
+}`, aclName, serviceName, domainName, backendName, aclEntries)
 }

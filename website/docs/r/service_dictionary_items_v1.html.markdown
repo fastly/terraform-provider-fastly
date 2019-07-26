@@ -153,7 +153,7 @@ resource "fastly_service_dictionary_items_v1" "project" {
 ###Supporting API and UI dictionary updates with ignore_changes
 
 The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
-items in a dictionary.  If an external means, (for example via the Fastly API or UI) is used to manage items in a dictionary, then this will stop Terraform realigning the remote state.
+items in a dictionary.  If, after your first deploy, the Fastly API or UI is to be used to manage items in a dictionary, then this will stop Terraform realigning the remote state with the initial set of dictionary items defined in your HCL.
 
 ```hcl
 ...

@@ -80,7 +80,7 @@ func TestAccFastlyServiceAclEntriesV1_create(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAclEntriesV1Config_create(serviceName, aclName),
+				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -122,7 +122,7 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAclEntriesV1Config_create(serviceName, aclName),
+				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -130,7 +130,7 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceAclEntriesV1Config_update(serviceName, aclName),
+				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntriesAfterUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntriesAfterUpdate),
@@ -162,7 +162,7 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceAclEntriesV1Config_create(serviceName, aclName),
+				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -170,7 +170,7 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceAclEntriesV1Config_delete(serviceName, aclName),
+				Config: testAccServiceDictionaryItemsV1Config_one_acl_no_entries(serviceName, aclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					resource.TestCheckNoResourceAttr("fastly_service_v1.foo", "entry"),
@@ -259,98 +259,27 @@ func testAccCheckFastlyServiceAclEntriesV1RemoteState(service *gofastly.ServiceD
 	}
 }
 
-func testAccServiceAclEntriesV1Config_create(serviceName, aclName string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+func testAccServiceDictionaryItemsV1Config_one_acl_no_entries(serviceName, aclName string) string {
 
-	return fmt.Sprintf(`
-variable "myacl_name" {
-	type = string
-	default = "%s"
-}
-
-resource "fastly_service_v1" "foo" {
-	name = "%s"
-	domain {
-		name    = "%s"
-		comment = "tf-testing-domain"
-	}
-	backend {
-		address = "%s"
-		name    = "tf-testing-backend"
-	}
-	acl {
-		name       = var.myacl_name
-	}
-	force_destroy = true
-}
- resource "fastly_service_acl_entries_v1" "entries" {
-	service_id = fastly_service_v1.foo.id
-	acl_id = {for s in fastly_service_v1.foo.acl : s.name => s.acl_id}[var.myacl_name]
-	entry {
-		ip = "127.0.0.1"
-		subnet = "24"
-		negated = false
-		comment = "ALC Entry 1"
-	}
-}`, aclName, serviceName, domainName, backendName)
-}
-
-func testAccServiceAclEntriesV1Config_update(serviceName, aclName string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	return fmt.Sprintf(`
-variable "myacl_name" {
-	type = string
-	default = "%s"
-}
-
-resource "fastly_service_v1" "foo" {
-	name = "%s"
-	domain {
-		name    = "%s"
-		comment = "tf-testing-domain"
-	}
-	backend {
-		address = "%s"
-		name    = "tf-testing-backend"
-	}
-	acl {
-		name       = var.myacl_name
-	}
-	force_destroy = true
-}
- resource "fastly_service_acl_entries_v1" "entries" {
-	service_id = fastly_service_v1.foo.id
-	acl_id = {for s in fastly_service_v1.foo.acl : s.name => s.acl_id}[var.myacl_name]
-	entry {
-		ip = "127.0.0.2"
-		subnet = "24"
-		negated = false
-		comment = "ALC Entry 1"
-	}
-}`, aclName, serviceName, domainName, backendName)
-}
-
-func testAccServiceAclEntriesV1Config_delete(serviceName, aclName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-	name = "%s"
-	domain {
-		name    = "%s"
-		comment = "tf-testing-domain"
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
 	}
-	backend {
-		address = "%s"
-		name    = "tf-testing-backend"
-	}
-
-	force_destroy = true
-}`, serviceName, domainName, backendName)
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+  acl {
+	name       = "%s"
+  }
+  force_destroy = true
+}`, serviceName, domainName, backendName, aclName)
 }
 
 func testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName string, aclEntriesList []map[string]interface{}) string {

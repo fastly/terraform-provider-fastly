@@ -10,7 +10,8 @@ description: |-
 
 Defines a map of Fastly dictionary items that can be used to populate a service dictionary.  This resource will populate a dictionary with the items and will track their state.
 
-**Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run terraform again.  
+
+~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run terraform again.  
 
 If Terraform is being used to populate the initial content of a dictionary which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
 

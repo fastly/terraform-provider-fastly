@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -77,7 +78,8 @@ func validateSnippetType() schema.SchemaValidateFunc {
 }
 
 func validateDictionaryItems() schema.SchemaValidateFunc {
-	max := 10000
+
+	max := gofastly.MaximumDictionarySize
 
 	return func(i interface{}, k string) (s []string, es []error) {
 

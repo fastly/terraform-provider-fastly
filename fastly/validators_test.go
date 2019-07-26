@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"testing"
 )
 
@@ -258,8 +259,8 @@ func TestValidateDictionaryItemMaxSize(t *testing.T) {
 		expectedErrors int
 	}{
 		"Ten hundred dictionary items":          {createTestDictionaryItems(10), 0, 0},
-		"Ten thousand dictionary items":         {createTestDictionaryItems(10000), 0, 0},
-		"Ten thousand and one dictionary items": {createTestDictionaryItems(10001), 0, 1},
+		"Ten thousand dictionary items":         {createTestDictionaryItems(gofastly.MaximumDictionarySize), 0, 0},
+		"Ten thousand and one dictionary items": {createTestDictionaryItems(gofastly.MaximumDictionarySize + 1), 0, 1},
 	} {
 		t.Run(name, func(t *testing.T) {
 			actualWarns, actualErrors := validateDictionaryItems()(testcase.value, "dictionary_items")

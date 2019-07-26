@@ -95,6 +95,8 @@ github.com/fastly/go-fastly v1.1.0 h1:6XaWf7vnetohY1PVkS5fPtmwgItU0WUP9CspL3+2Ld
 github.com/fastly/go-fastly v1.1.0/go.mod h1:ACxsUdqChasXcraa3/IigjE01rVn3A1F4vaI18Gmm0g=
 github.com/fastly/go-fastly v1.2.0 h1:6msl05/o4fpsJFJm35EX5t0ltsYxNo5wc9CypGH5U94=
 github.com/fastly/go-fastly v1.2.0/go.mod h1:ACxsUdqChasXcraa3/IigjE01rVn3A1F4vaI18Gmm0g=
+github.com/fastly/go-fastly v1.2.1 h1:7aZI3PL9vHDuHcBgLwj3uv+yCd80tpKTr10B3Q3A1Vk=
+github.com/fastly/go-fastly v1.2.1/go.mod h1:ACxsUdqChasXcraa3/IigjE01rVn3A1F4vaI18Gmm0g=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=

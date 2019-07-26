@@ -16,7 +16,7 @@ Dictionary items can also be added through the Fastly API or UI, but will be rem
 The Fastly API or UI can also be used to modify the items that are managed through Terraform.  In this case the default behaviour of the 
 resource will be to realign the remoted state.  The items in the remote Fastly dictionary will be updated or deleted according to the Terraform plan.  
 
-If Terraform is being used to only create initial items in a dictionary, then the lifecyle `ignore_changes` field can be used with the resource.  An example of this configuraiton is provided below.    
+If Terraform is being used to populate the initial content of a dictionary which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
 
 
 ## Example Usage

@@ -191,7 +191,7 @@ The following arguments are supported:
 
 ## Import
 
-Dictionary items can be populated through the Fastly API or UI.  These items can then be managed by Terraform through the use of the import command.
+Dictionary items in your HCL can be populated by pulling the current remote state of an existing Fastly service, using the `import` command.
 Resources are imported into the Terraform state through the use of an ID, and the fastly_service_dictionary_items_v1 resouce has an ID that is made up of the following format.
 
 ```

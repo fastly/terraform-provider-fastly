@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"reflect"
+	"sort"
+	"strconv"
 	"testing"
 )
 
@@ -80,7 +82,7 @@ func TestAccFastlyServiceAclEntriesV1_create(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -122,7 +124,7 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -130,7 +132,7 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntriesAfterUpdate),
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntriesAfterUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntriesAfterUpdate),
@@ -162,7 +164,7 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -203,7 +205,7 @@ func TestAccFastlyServiceAclEntriesV1_import(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDictionaryItemsV1Config_one_acl_with_entries(name, aclName, expectedRemoteEntries),
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(name, aclName, expectedRemoteEntries),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 				),
@@ -216,6 +218,57 @@ func TestAccFastlyServiceAclEntriesV1_import(t *testing.T) {
 		},
 	})
 }
+
+
+func TestAccFastlyServiceAclEntriesV1_process_1001_entries(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl %s", acctest.RandString(10))
+
+	expectedBatchSize := gofastly.BatchModifyMaximumOperations + 1
+
+	expectedRemoteEntries := make([]map[string]interface{}, 0)
+
+	ipPart3 := 0
+	ipPart4 := 1
+	for i := 0; i < expectedBatchSize; i++ {
+
+		if ipPart4 > 254 {
+			ipPart3++
+			ipPart4 = 1
+		}
+
+		expectedRemoteEntries = append(expectedRemoteEntries, map[string]interface{}{
+			"id":      "",
+			"ip":      fmt.Sprintf("127.0.%d.%d", ipPart3, ipPart4),
+			"subnet":  "22",
+			"negated": false,
+			"comment": fmt.Sprintf("ALC Entry %d %d", ipPart3, ipPart4),
+		})
+
+		ipPart4++
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(name, aclName, expectedRemoteEntries),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, name, aclName, expectedRemoteEntries),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", strconv.Itoa(expectedBatchSize)),
+				),
+			},
+
+		},
+	})
+}
+
 
 func testAccCheckFastlyServiceAclEntriesV1RemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]interface{}) resource.TestCheckFunc {
 
@@ -251,6 +304,14 @@ func testAccCheckFastlyServiceAclEntriesV1RemoteState(service *gofastly.ServiceD
 			val["id"] = ""
 		}
 
+		sort.Slice(flatAclEntries, func(i, j int) bool {
+			return flatAclEntries[i]["ip"].(string) < flatAclEntries[j]["ip"].(string)
+		})
+
+		sort.Slice(expectedEntries, func(i, j int) bool {
+			return expectedEntries[i]["ip"].(string) < expectedEntries[j]["ip"].(string)
+		})
+
 		if !reflect.DeepEqual(flatAclEntries, expectedEntries) {
 			return fmt.Errorf("[ERR] Error matching:\nexpected: %#v\ngot: %#v", expectedEntries, flatAclEntries)
 		}
@@ -282,7 +343,7 @@ resource "fastly_service_v1" "foo" {
 }`, serviceName, domainName, backendName, aclName)
 }
 
-func testAccServiceDictionaryItemsV1Config_one_acl_with_entries(serviceName, aclName string, aclEntriesList []map[string]interface{}) string {
+func testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName string, aclEntriesList []map[string]interface{}) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 

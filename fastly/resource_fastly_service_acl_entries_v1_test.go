@@ -219,7 +219,6 @@ func TestAccFastlyServiceAclEntriesV1_import(t *testing.T) {
 	})
 }
 
-
 func TestAccFastlyServiceAclEntriesV1_process_1001_entries(t *testing.T) {
 
 	var service gofastly.ServiceDetail
@@ -264,11 +263,9 @@ func TestAccFastlyServiceAclEntriesV1_process_1001_entries(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", strconv.Itoa(expectedBatchSize)),
 				),
 			},
-
 		},
 	})
 }
-
 
 func testAccCheckFastlyServiceAclEntriesV1RemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]interface{}) resource.TestCheckFunc {
 

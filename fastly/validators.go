@@ -1,8 +1,10 @@
 package fastly
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	gofastly "github.com/fastly/go-fastly/fastly"
 )
 
 func validateLoggingFormatVersion() schema.SchemaValidateFunc {
@@ -73,4 +75,26 @@ func validateSnippetType() schema.SchemaValidateFunc {
 		"log",
 		"none",
 	}, false)
+}
+
+func validateACLEntries() schema.SchemaValidateFunc {
+
+	max := gofastly.MaximumACLSize
+
+	return func(i interface{}, k string) (s []string, es []error) {
+
+		v, ok := i.(*schema.Set)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be a schema.Set", k))
+			return
+		}
+
+		if len(v.List()) > max {
+			es = append(es, fmt.Errorf("expected %s to be at most (%d), got %d", k, max, len(v.List())))
+			return
+		}
+
+		return
+	}
+
 }

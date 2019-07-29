@@ -1,6 +1,11 @@
 package fastly
 
-import "testing"
+import (
+	"fmt"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform/helper/schema"
+	"testing"
+)
 
 func TestValidateLoggingFormatVersion(t *testing.T) {
 	for name, testcase := range map[string]struct {
@@ -245,4 +250,40 @@ func TestValidateSnippetType(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateACLEntriesMaxSize(t *testing.T) {
+
+	for name, testcase := range map[string]struct {
+		value          *schema.Set
+		expectedWarns  int
+		expectedErrors int
+	}{
+		"Ten hundred ACL entries":          {createTestACLEntries(10), 0, 0},
+		"Ten thousand ACL entries":         {createTestACLEntries(gofastly.MaximumACLSize), 0, 0},
+		"Ten thousand and one ACL entries": {createTestACLEntries(gofastly.MaximumACLSize + 1), 0, 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actualWarns, actualErrors := validateACLEntries()(testcase.value, "acl_entries")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}
+
+func createTestACLEntries(size int) *schema.Set {
+
+	set := &schema.Set{
+		F:schema.HashString,
+	}
+
+	for i := 0; i < size; i++ {
+		set.Add(fmt.Sprintf("127.0.0.%d", i))
+	}
+
+	return set
 }

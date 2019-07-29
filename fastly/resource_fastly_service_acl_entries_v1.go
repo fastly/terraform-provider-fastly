@@ -35,6 +35,7 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "ACL Entries",
+				ValidateFunc: validateACLEntries(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {

@@ -2,6 +2,8 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -12,6 +14,9 @@ func resourceServiceDynamicSnippetContentV1() *schema.Resource {
 		Read:   resourceServiceDynamicSnippetV1Read,
 		Update: resourceServiceDynamicSnippetV1Update,
 		Delete: resourceServiceDynamicSnippetV1Delete,
+		Importer: &schema.ResourceImporter{
+			State: resourceServiceDynamicSnippetContentV1Import,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_id": {
@@ -111,4 +116,27 @@ func resourceServiceDynamicSnippetV1Delete(d *schema.ResourceData, meta interfac
 	// Dynamic snippet content cannot be deleted. Removing from state only
 	d.SetId("")
 	return nil
+}
+
+func resourceServiceDynamicSnippetContentV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+	split := strings.Split(d.Id(), "/")
+
+	if len(split) != 2 {
+		return nil, fmt.Errorf("Invalid id: %s. The ID should be in the format [service_id]/[snippet_id]", d.Id())
+	}
+
+	serviceID := split[0]
+	snippetID := split[1]
+
+	err := d.Set("service_id", serviceID)
+	if err != nil {
+		return nil, fmt.Errorf("Error importing dynamic snippet content: service %s, dynamic snippet %s, %s", serviceID, snippetID, err)
+	}
+
+	err = d.Set("snippet_id", snippetID)
+	if err != nil {
+		return nil, fmt.Errorf("Error importing dynamic snippet content: service %s, dynamic snippet %s, %s", serviceID, snippetID, err)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

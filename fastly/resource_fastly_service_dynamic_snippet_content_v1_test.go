@@ -12,10 +12,13 @@ import (
 
 func TestAccFastlyServiceDynamicSnippetContentV1_create(t *testing.T) {
 	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	dynamicSnippetName := fmt.Sprintf("dynamic snippet %s", acctest.RandString(10))
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
-	expectedRemoteItems := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+	expectedNumberOfSnippets := "1"
+	expectedSnippetName := "dyn_hit_test"
+	expectedSnippetType := "hit"
+	expectedSnippetPriority := "100"
+	expectedSnippetContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,15 +26,15 @@ func TestAccFastlyServiceDynamicSnippetContentV1_create(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDynamicSnippetContentV1ConfigWithDynamicSnippet(name, dynamicSnippetName, expectedRemoteItems),
+				Config: testAccServiceDynamicSnippetContentV1ConfigWithDynamicSnippet(serviceName, expectedSnippetName, expectedSnippetContent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(&service, name, dynamicSnippetName, expectedRemoteItems),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.3857668632.name", "recv_test"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.3857668632.type", "recv"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.3857668632.priority", "110"),
-					resource.TestCheckResourceAttr("fastly_service_dynamic_snippet_content_v1.content", "content", expectedRemoteItems),
+					testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(&service, serviceName, expectedSnippetName, expectedSnippetContent),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", expectedNumberOfSnippets),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.name", expectedSnippetName),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.type", expectedSnippetType),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.priority", expectedSnippetPriority),
+					resource.TestCheckResourceAttr("fastly_service_dynamic_snippet_content_v1.content", "content", expectedSnippetContent),
 				),
 			},
 		},
@@ -148,6 +151,44 @@ func TestAccFastlyServiceDynamicSnippetContentV1_normal_snippet_is_not_removed(t
 			},
 		},
 	})
+}
+
+func TestAccFastlyServiceDynamicSnippetContentV1_import(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	expectedNumberOfSnippets := "1"
+	expectedSnippetName := "dyn_hit_test"
+	expectedSnippetType := "hit"
+	expectedSnippetPriority := "100"
+	expectedSnippetContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDynamicSnippetContentV1ConfigWithDynamicSnippet(serviceName, expectedSnippetName, expectedSnippetContent),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(&service, serviceName, expectedSnippetName, expectedSnippetContent),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", expectedNumberOfSnippets),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.name", expectedSnippetName),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.type", expectedSnippetType),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.priority", expectedSnippetPriority),
+					resource.TestCheckResourceAttr("fastly_service_dynamic_snippet_content_v1.content", "content", expectedSnippetContent),
+				),
+			},
+			{
+				ResourceName:      "fastly_service_dynamic_snippet_content_v1.content",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+
 }
 
 func testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(service *gofastly.ServiceDetail, name, dynamicSnippetName, expectedContent string) resource.TestCheckFunc {

@@ -56,7 +56,7 @@ description: |-
  }
  ```
 
- ###Supporting API dynamic snippet updates with ignore_changes
+ ### Supporting API dynamic snippet updates with ignore_changes
 
  The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
 content in a dynamic snippet.  If, after your first deploy, the Fastly API is to be used to manage items in a dynamic snippet, then this will stop Terraform realigning the remote state with the initial content defined in your HCL.

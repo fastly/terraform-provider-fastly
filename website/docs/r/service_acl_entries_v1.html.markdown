@@ -20,7 +20,6 @@ If Terraform is being used to populate the initial content of an ACL which you i
 Basic usage:
 
 ```hcl
-
 variable "myacl_name" {
 	type = string
 	default = "My ACL"
@@ -59,7 +58,7 @@ resource "fastly_service_acl_entries_v1" "entries" {
 }
 ```
 
-###Supporting API and UI ACL updates with ignore_changes
+### Supporting API and UI ACL updates with ignore_changes
 
 The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
 entries in an ACL.  If, after your first deploy, the Fastly API or UI is to be used to manage entries in an ACL, then this will stop Terraform realigning the remote state with the initial set of ACL entries defined in your HCL.
@@ -82,7 +81,6 @@ resource "fastly_service_acl_entries_v1" "entries" {
   }
   
 }
-
 ```
 
 

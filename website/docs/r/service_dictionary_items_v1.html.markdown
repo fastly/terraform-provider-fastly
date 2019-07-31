@@ -21,7 +21,6 @@ If Terraform is being used to populate the initial content of a dictionary which
 Basic usage:
 
 ```hcl
-
 variable "mydict_name" {
 	type = string
 	default = "My Dictionary"
@@ -56,13 +55,11 @@ resource "fastly_service_dictionary_items_v1" "items" {
         key2: "value2"
     }
 }
-
 ```
 
 Complex object usage:
 
 ```hcl
-
 variable "mydict" {
   type = object({ name=string, items=map(string) })
   default = {
@@ -100,7 +97,6 @@ resource "fastly_service_dictionary_items_v1" "items" {
   dictionary_id = {for d in fastly_service_v1.myservice.dictionary : d.name => d.dictionary_id}[var.mydict.name]
   items = var.mydict.items
 }
-
 ```
 
 Expression and functions usage:
@@ -143,11 +139,10 @@ resource "fastly_service_dictionary_items_v1" "project" {
     for division in local.host_divisions:
       division => format("%s.%s", division, local.host_base)
   }
-
 }
 ```
 
-###Supporting API and UI dictionary updates with ignore_changes
+### Supporting API and UI dictionary updates with ignore_changes
 
 The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
 items in a dictionary.  If, after your first deploy, the Fastly API or UI is to be used to manage items in a dictionary, then this will stop Terraform realigning the remote state with the initial set of dictionary items defined in your HCL.
@@ -167,8 +162,6 @@ resource "fastly_service_dictionary_items_v1" "items" {
       ignore_changes = [items,]
     }
 }
-
-
 ```
 
 

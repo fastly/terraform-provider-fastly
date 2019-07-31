@@ -2,14 +2,15 @@ package fastly
 
 import (
 	"fmt"
-	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 	"reflect"
 	"sort"
 	"strconv"
 	"testing"
+
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestResourceFastlyFlattenAclEntries(t *testing.T) {
@@ -137,6 +138,64 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntriesAfterUpdate),
 					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceAclEntriesV1_update_additional_fields(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	aclName := "ACL Test Update Negated Field"
+
+	expectedRemoteEntries := []map[string]interface{}{
+		{
+			"id":      "",
+			"ip":      "127.0.0.1",
+			"subnet":  "24",
+			"negated": false,
+			"comment": "ACL Entry 1",
+		},
+	}
+
+	expectedRemoteEntriesAfterUpdate := []map[string]interface{}{
+		{
+			"id":      "",
+			"ip":      "127.0.0.1",
+			"subnet":  "20",
+			"negated": true,
+			"comment": "ACL Entry 1 Updated",
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.ip", "127.0.0.1"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.subnet", "24"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.negated", "false"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.comment", "ACL Entry 1"),
+				),
+			},
+			{
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntriesAfterUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntriesAfterUpdate),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.ip", "127.0.0.1"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.subnet", "20"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.negated", "true"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.comment", "ACL Entry 1 Updated"),
 				),
 			},
 		},

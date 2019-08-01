@@ -58,6 +58,69 @@ resource "fastly_service_acl_entries_v1" "entries" {
 }
 ```
 
+Complex object usage:
+
+The following example demonstrates the use of dynamic nested blocks to create ACL entries.
+
+```hcl
+locals {
+  acl_name = "my_acl"
+  acl_entries = [
+    {
+      ip      = "1.2.3.4"
+      comment = "acl_entry_1"
+    },
+    {
+      ip      = "1.2.3.5"
+      comment = "acl_entry_2"
+    },
+    {
+      ip      = "1.2.3.6"
+      comment = "acl_entry_3"
+    }
+  ]
+}
+
+resource "fastly_service_v1" "myservice" {
+  name = "demofastly"
+
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
+
+  backend {
+    address = "1.2.3.4"
+    name    = "localhost"
+    port    = 80
+  }
+
+  acl {
+    name = local.acl_name
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_service_acl_entries_v1" "entries" {
+  service_id = fastly_service_v1.myservice.id
+  acl_id     = { for d in fastly_service_v1.myservice.acl : d.name => d.acl_id }[local.acl_name]
+  dynamic "entry" {
+    for_each = [for e in local.acl_entries : {
+      ip      = e.ip
+      comment = e.comment
+    }]
+
+    content {
+      ip      = entry.value.ip
+      subnet  = 22
+      comment = entry.value.comment
+      negated = false
+    }
+  }
+}
+```
+
 ### Supporting API and UI ACL updates with ignore_changes
 
 The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
@@ -88,8 +151,8 @@ resource "fastly_service_acl_entries_v1" "entries" {
 
 The following arguments are supported:
 
-* `service_id` - (Required) The ID of the Service that the acl belongs to
-* `acl_id` - (Required) The ID of the acl that the items belong to
+* `service_id` - (Required) The ID of the Service that the ACL belongs to
+* `acl_id` - (Required) The ID of the ACL that the items belong to
 * `entry` - (Optional) A Set ACL entries that are applied to the service. Defined below
 
 The `entry` block supports:

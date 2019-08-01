@@ -210,7 +210,7 @@ Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
-* `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions.
+* `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
 
 
 The `domain` block supports:

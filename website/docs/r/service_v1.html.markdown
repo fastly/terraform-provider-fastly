@@ -210,6 +210,7 @@ Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
+* `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
 
 The `domain` block supports:
 
@@ -513,12 +514,21 @@ The `vcl` block supports:
 `false`, use this block as an includable library. Only a single VCL block can be
 marked as the main block. Default is `false`.
 
+The `acl` block supports:
+
+* `name` - (Required) A unique name to identify this ACL.
+
+
 ## Attributes Reference
 
 In addition to the arguments listed above, the following attributes are exported:
 
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
+
+The `acl` block attributes:
+
+* `acl_id` - The ID of the ACL 
 
 [fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
 [fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records

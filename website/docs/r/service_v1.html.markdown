@@ -526,7 +526,7 @@ In addition to the arguments listed above, the following attributes are exported
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
 
-The `acl` block attributes:
+The `acl` block exports:
 
 * `acl_id` - The ID of the ACL 
 

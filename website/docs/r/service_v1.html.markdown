@@ -528,7 +528,7 @@ In addition to the arguments listed above, the following attributes are exported
 
 The `acl` block exports:
 
-* `acl_id` - The ID of the ACL 
+* `acl_id` - The ID of the ACL.
 
 [fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
 [fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records

@@ -11,7 +11,7 @@ description: |-
 
  Defines content that represents blocks of VCL logic that is inserted into your service.  This resource will populate the content of a dynamic snippet and allow it to be manged without the creation of a new service verison. 
  
- ~> **Warning:** Terraform will take precedence over any changes you make through the API. Such changes are likely to be reversed if you run terraform again.  
+ ~> **Warning:** Terraform will take precedence over any changes you make through the API. Such changes are likely to be reversed if you run Terraform again.  
 
  If Terraform is being used to populate the initial content of a dynamic snippet which you intend to manage via the API, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
 
@@ -22,7 +22,7 @@ description: |-
 
  ```hcl 
  resource "fastly_service_v1" "myservice" {
-   name = "snippet_test1"
+   name = "snippet_test"
  
    domain {
      name    = "snippet.fastlytestdomain.com"
@@ -51,14 +51,67 @@ description: |-
    service_id = fastly_service_v1.myservice.id
    snippet_id = { for s in fastly_service_v1.myservice.dynamicsnippet : s.name => s.snippet_id }["My Dynamic Snippet"]
  
-   content = "if ( req.url ) {\n set req.http.my-snippet-test-header4 = \"true\";\n}"
+   content = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+ 
+ }
+ ```
+
+Multiple dynamic snippets:
+
+ ```hcl
+ resource "fastly_service_v1" "myservice" {
+   name = "snippet_test"
+ 
+   domain {
+     name    = "snippet.fastlytestdomain.com"
+     comment = "snippet test"
+   }
+ 
+   backend {
+     address = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
+     name    = "AWS S3 hosting"
+     port    = 80
+   }
+ 
+   dynamicsnippet {
+     name     = "My Dynamic Snippet One"
+     type     = "recv"
+     priority = 110
+   }
+   
+   dynamicsnippet {
+        name     = "My Dynamic Snippet Two"
+        type     = "recv"
+        priority = 110
+      }
+ 
+   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
+ 
+   force_destroy = true
+ }
+ 
+ resource "fastly_service_dynamic_snippet_content_v1" "my_dyn_content_one" {
+ 
+   service_id = fastly_service_v1.myservice.id
+   snippet_id = { for s in fastly_service_v1.myservice.dynamicsnippet : s.name => s.snippet_id }["My Dynamic Snippet One"]
+ 
+   content = "if ( req.url ) {\n set req.http.my-snippet-test-header-one = \"true\";\n}"
+ 
+ }
+
+ resource "fastly_service_dynamic_snippet_content_v1" "my_dyn_content_two" {
+ 
+   service_id = fastly_service_v1.myservice.id
+   snippet_id = { for s in fastly_service_v1.myservice.dynamicsnippet : s.name => s.snippet_id }["My Dynamic Snippet Two"]
+ 
+   content = "if ( req.url ) {\n set req.http.my-snippet-test-header-two = \"true\";\n}"
  
  }
  ```
 
  ### Supporting API dynamic snippet updates with ignore_changes
 
- The following example demonstrates how the lifecycle ignore_change field can be used to suppress updates against the 
+ The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
 content in a dynamic snippet.  If, after your first deploy, the Fastly API is to be used to manage items in a dynamic snippet, then this will stop Terraform realigning the remote state with the initial content defined in your HCL.
 
  ```hcl

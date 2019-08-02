@@ -526,6 +526,10 @@ In addition to the arguments listed above, the following attributes are exported
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
 
+The `dictionary` block exports:
+
+ * `dictionary_id` - The ID of the dictionary
+
 * [fastly-s3](https://docs.fastly.com/guides/integrations/amazon-s3)
 * [fastly-cname](https://docs.fastly.com/guides/basic-setup/adding-cname-records)
 * [fastly-conditionals](https://docs.fastly.com/guides/conditions/using-conditions)

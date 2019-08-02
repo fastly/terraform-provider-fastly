@@ -26,13 +26,6 @@ func TestResourceFastlyFlattenDynamicSnippets(t *testing.T) {
 					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 					Dynamic:  1,
 				},
-				{
-					Name:     "recv_test_02",
-					Type:     gofastly.SnippetTypeRecv,
-					Priority: 110,
-					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
-					Dynamic:  0,
-				},
 			},
 			local: []map[string]interface{}{
 				{
@@ -41,6 +34,18 @@ func TestResourceFastlyFlattenDynamicSnippets(t *testing.T) {
 					"priority": 110,
 				},
 			},
+		},
+		{
+			remote: []*gofastly.Snippet{
+				{
+					Name:     "recv_test_02",
+					Type:     gofastly.SnippetTypeRecv,
+					Priority: 110,
+					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+					Dynamic:  0,
+				},
+			},
+			local: []map[string]interface{}(nil),
 		},
 	}
 

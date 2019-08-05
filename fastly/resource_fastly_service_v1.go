@@ -1389,7 +1389,7 @@ func resourceServiceV1() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{        
+					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -1405,8 +1405,9 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Default:     100,
-							Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",        
-        		"snippet_id": {
+							Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
+						},
+						"snippet_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Generated VCL snippet Id",
@@ -4558,7 +4559,7 @@ func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string
 
 	return sl
 }
-  
+
 func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
 	df := dictMap.(map[string]interface{})
 	opts := gofastly.CreateDictionaryInput{

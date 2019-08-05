@@ -1395,17 +1395,17 @@ func resourceServiceV1() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-              Description: "Unique name to refer to this ACL",
+							Description: "Unique name to refer to this ACL",
 						},
 						// Optional fields
 						"acl_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Generated acl id",              
-            },
-          },
-        },
-      },
+							Description: "Generated acl id",
+						},
+					},
+				},
+			},
 			"dictionary": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1415,7 +1415,7 @@ func resourceServiceV1() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-						  Description: "Unique name to refer to this Dictionary",
+							Description: "Unique name to refer to this Dictionary",
 						},
 						// Optional fields
 						"dictionary_id": {
@@ -2960,7 +2960,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly ACL removal opts: %#v", opts)
 				err := conn.DeleteACL(&opts)
-        
+
 				if errRes, ok := err.(*gofastly.HTTPError); ok {
 					if errRes.StatusCode != 404 {
 						return err
@@ -2985,8 +2985,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			}
-		}        
-        
+		}
 
 		// Find differences in dictionary
 		if d.HasChange("dictionary") {

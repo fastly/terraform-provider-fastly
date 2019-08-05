@@ -1,6 +1,8 @@
 package fastly
 
 import (
+	"fmt"
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"testing"
 )
 
@@ -138,9 +140,11 @@ func TestValidateConditionType(t *testing.T) {
 		{"REQUEST", 0, 0},
 		{"RESPONSE", 0, 0},
 		{"CACHE", 0, 0},
+		{"PREFETCH", 0, 0},
 		{"request", 0, 1},
 		{"response", 0, 1},
 		{"cache", 0, 1},
+		{"prefetch", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
 			actualWarns, actualErrors := validateConditionType()(testcase.value, "type")
@@ -247,4 +251,38 @@ func TestValidateSnippetType(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateDictionaryItemMaxSize(t *testing.T) {
+
+	for name, testcase := range map[string]struct {
+		value          map[string]interface{}
+		expectedWarns  int
+		expectedErrors int
+	}{
+		"Ten hundred dictionary items":          {createTestDictionaryItems(10), 0, 0},
+		"Ten thousand dictionary items":         {createTestDictionaryItems(gofastly.MaximumDictionarySize), 0, 0},
+		"Ten thousand and one dictionary items": {createTestDictionaryItems(gofastly.MaximumDictionarySize + 1), 0, 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			actualWarns, actualErrors := validateDictionaryItems()(testcase.value, "dictionary_items")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}
+
+func createTestDictionaryItems(size int) map[string]interface{} {
+
+	dictionaryItems := make(map[string]interface{})
+
+	for i := 0; i < size; i++ {
+		dictionaryItems[fmt.Sprintf("key%d", i)] = fmt.Sprintf("value%d", i)
+	}
+
+	return dictionaryItems
 }

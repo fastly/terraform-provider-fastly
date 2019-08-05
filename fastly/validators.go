@@ -1,6 +1,8 @@
 package fastly
 
 import (
+	"fmt"
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -38,6 +40,7 @@ func validateConditionType() schema.SchemaValidateFunc {
 		"REQUEST",
 		"RESPONSE",
 		"CACHE",
+		"PREFETCH",
 	}, false)
 }
 
@@ -73,4 +76,26 @@ func validateSnippetType() schema.SchemaValidateFunc {
 		"log",
 		"none",
 	}, false)
+}
+
+func validateDictionaryItems() schema.SchemaValidateFunc {
+
+	max := gofastly.MaximumDictionarySize
+
+	return func(i interface{}, k string) (s []string, es []error) {
+
+		v, ok := i.(map[string]interface{})
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be a map[string]interface", k))
+			return
+		}
+
+		if len(v) > max {
+			es = append(es, fmt.Errorf("expected %s to be at most (%d), got %d", k, max, len(v)))
+			return
+		}
+
+		return
+	}
+
 }

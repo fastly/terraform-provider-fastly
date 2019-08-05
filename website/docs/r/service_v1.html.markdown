@@ -180,7 +180,7 @@ when an item is not to be cached based on an above `condition`. Defined below
 content. Defined below.
 * `header` - (Optional) A set of Headers to manipulate for each request. Defined
 below.
-* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how fastly interacts with the cache based on its health.
+* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
 * `default_host` - (Optional) The default hostname.
 * `default_ttl` - (Optional) The default Time-to-live (TTL) for
 requests.
@@ -211,6 +211,8 @@ Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
+* `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
+* `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
 
 The `domain` block supports:
 
@@ -520,6 +522,14 @@ The `vcl` block supports:
 `false`, use this block as an includable library. Only a single VCL block can be
 marked as the main block. Default is `false`.
 
+The `acl` block supports:
+
+* `name` - (Required) A unique name to identify this ACL.
+
+The `dictionary` block supports:
+
+* `name` - (Required) A unique name to identify this dictionary.
+
 ## Attributes Reference
 
 In addition to the arguments listed above, the following attributes are exported:
@@ -531,6 +541,13 @@ The `dynamicsnippet` block exports:
 
 * `snippet_id` - The ID of the dynamic snippet.
 
+The `acl` block exports:
+
+* `acl_id` - The ID of the ACL.
+
+The `dictionary` block exports:
+
+* `dictionary_id` - The ID of the dictionary.
 
 [fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
 [fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records

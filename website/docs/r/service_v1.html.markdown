@@ -207,6 +207,7 @@ Defined below.
 Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
+* `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
@@ -502,9 +503,15 @@ see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 The `snippet` block supports:
 
-* `name` - (Required) A unique name for the VCL Snippet configuration block.
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
 * `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
 * `content` (Required) The VCL code that specifies exactly what the snippet does.
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
+
+The `dynamicsnippet` block supports:
+
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
+* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
 * `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
 The `vcl` block supports:
@@ -529,6 +536,10 @@ In addition to the arguments listed above, the following attributes are exported
 
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
+
+The `dynamicsnippet` block exports:
+
+* `snippet_id` - The ID of the dynamic snippet.
 
 The `acl` block exports:
 

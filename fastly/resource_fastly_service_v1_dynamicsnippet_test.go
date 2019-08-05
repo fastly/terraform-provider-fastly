@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceFastlyFlattenSnippets(t *testing.T) {
+func TestResourceFastlyFlattenDynamicSnippets(t *testing.T) {
 
 	cases := []struct {
 		remote []*gofastly.Snippet
@@ -20,29 +20,29 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 		{
 			remote: []*gofastly.Snippet{
 				{
-					Name:     "recv_test",
+					Name:     "recv_test_01",
 					Type:     gofastly.SnippetTypeRecv,
 					Priority: 110,
 					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+					Dynamic:  1,
 				},
 			},
 			local: []map[string]interface{}{
 				{
-					"name":     "recv_test",
+					"name":     "recv_test_01",
 					"type":     gofastly.SnippetTypeRecv,
 					"priority": 110,
-					"content":  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 				},
 			},
 		},
 		{
 			remote: []*gofastly.Snippet{
 				{
-					Name:     "recv_test",
+					Name:     "recv_test_02",
 					Type:     gofastly.SnippetTypeRecv,
 					Priority: 110,
 					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
-					Dynamic:  1,
+					Dynamic:  0,
 				},
 			},
 			local: []map[string]interface{}(nil),
@@ -50,7 +50,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenSnippets(c.remote)
+		out := flattenDynamicSnippets(c.remote)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
@@ -58,7 +58,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 
 }
 
-func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
+func TestAccFastlyServiceV1DynamicSnippet_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -67,20 +67,20 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 		Name:     "recv_test",
 		Type:     gofastly.SnippetTypeRecv,
 		Priority: int(110),
-		Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+		Dynamic:  1,
 	}
 
 	updatedS1 := gofastly.Snippet{
 		Name:     "recv_test",
 		Type:     gofastly.SnippetTypeRecv,
 		Priority: int(110),
-		Content:  "if ( req.url ) {\n set req.http.different-header = \"true\";\n}",
+		Dynamic:  1,
 	}
 	updatedS2 := gofastly.Snippet{
 		Name:     "fetch_test",
 		Type:     gofastly.SnippetTypeFetch,
 		Priority: int(50),
-		Content:  "restart;\n",
+		Dynamic:  1,
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -89,37 +89,37 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1Snippet(name, domainName1),
+				Config: testAccServiceV1DynamicSnippet(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SnippetAttributes(&service, []*gofastly.Snippet{&s1}),
+					testAccCheckFastlyServiceV1DynamicSnippetAttributes(&service, []*gofastly.Snippet{&s1}),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "name", name),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.name", "recv_test"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.type", "recv"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.priority", "110"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.1074880210.name", "recv_test"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.1074880210.type", "recv"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.1074880210.priority", "110"),
 				),
 			},
 
 			{
-				Config: testAccServiceV1Snippet_update(name, domainName1),
+				Config: testAccServiceV1DynamicSnippet_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SnippetAttributes(&service, []*gofastly.Snippet{&updatedS1, &updatedS2}),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.#", "2"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.name", "recv_test"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.type", "recv"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.priority", "110"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.name", "fetch_test"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.type", "fetch"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.priority", "50"),
+					testAccCheckFastlyServiceV1DynamicSnippetAttributes(&service, []*gofastly.Snippet{&updatedS1, &updatedS2}),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.1074880210.name", "recv_test"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.1074880210.type", "recv"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.1074880210.priority", "110"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.3801163681.name", "fetch_test"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.3801163681.type", "fetch"),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.3801163681.priority", "50"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFastlyServiceV1SnippetAttributes(service *gofastly.ServiceDetail, snippets []*gofastly.Snippet) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1DynamicSnippetAttributes(service *gofastly.ServiceDetail, snippets []*gofastly.Snippet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -129,11 +129,11 @@ func testAccCheckFastlyServiceV1SnippetAttributes(service *gofastly.ServiceDetai
 		})
 
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("[ERR] Error looking up VCL Dynamic Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(sList) != len(snippets) {
-			return fmt.Errorf("Snippet List count mismatch, expected (%d), got (%d)", len(snippets), len(sList))
+			return fmt.Errorf("Dynamic Snippet List count mismatch, expected (%d), got (%d)", len(snippets), len(sList))
 		}
 
 		var found int
@@ -149,7 +149,7 @@ func testAccCheckFastlyServiceV1SnippetAttributes(service *gofastly.ServiceDetai
 					lr.UpdatedAt = nil
 
 					if !reflect.DeepEqual(expected, lr) {
-						return fmt.Errorf("Unexpected VCL Snippet.\nExpected: %#v\nGot: %#v\n", expected, lr)
+						return fmt.Errorf("Unexpected VCL Dynamic Snippet.\nExpected: %#v\nGot: %#v\n", expected, lr)
 					}
 					found++
 				}
@@ -157,14 +157,14 @@ func testAccCheckFastlyServiceV1SnippetAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(snippets) {
-			return fmt.Errorf("Error matching VCL Snippets. Found: %d / Expected: %d", found, len(snippets))
+			return fmt.Errorf("Error matching VCL Dynamic Snippets. Found: %d / Expected: %d", found, len(snippets))
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceV1Snippet(name, domain string) string {
+func testAccServiceV1DynamicSnippet(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -180,11 +180,10 @@ resource "fastly_service_v1" "foo" {
     port    = 80
   }
 
-  snippet {
+  dynamicsnippet {
     name     = "recv_test"
     type     = "recv"
     priority = 110
-    content  = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
   }
 
   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
@@ -193,7 +192,7 @@ resource "fastly_service_v1" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceV1Snippet_update(name, domain string) string {
+func testAccServiceV1DynamicSnippet_update(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -209,18 +208,16 @@ resource "fastly_service_v1" "foo" {
     port    = 80
   }
 
-  snippet {
+  dynamicsnippet {
     name     = "recv_test"
     type     = "recv"
     priority = 110
-    content  = "if ( req.url ) {\n set req.http.different-header = \"true\";\n}"
   }
 
-  snippet {
+  dynamicsnippet {
     name     = "fetch_test"
     type     = "fetch"
     priority = 50
-    content  = "restart;\n"
   }
 
   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"

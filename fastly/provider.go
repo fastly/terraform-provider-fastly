@@ -27,7 +27,8 @@ func Provider() terraform.ResourceProvider {
 			"fastly_ip_ranges": dataSourceFastlyIPRanges(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"fastly_service_v1":                  resourceServiceV1(),
+			"fastly_service_v1":             resourceServiceV1(),
+			"fastly_service_acl_entries_v1": resourceServiceAclEntries
 			"fastly_service_dictionary_items_v1": resourceServiceDictionaryItemsV1(),
 		},
 

@@ -210,8 +210,8 @@ Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
+* `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
 * `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
-
 
 The `domain` block supports:
 
@@ -515,6 +515,10 @@ The `vcl` block supports:
 `false`, use this block as an includable library. Only a single VCL block can be
 marked as the main block. Default is `false`.
 
+The `acl` block supports:
+
+* `name` - (Required) A unique name to identify this ACL.
+
 The `dictionary` block supports:
 
 * `name` - (Required) A unique name to identify this dictionary.
@@ -526,15 +530,19 @@ In addition to the arguments listed above, the following attributes are exported
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
 
+The `acl` block exports:
+
+* `acl_id` - The ID of the ACL.
+
 The `dictionary` block exports:
 
- * `dictionary_id` - The ID of the dictionary.
+* `dictionary_id` - The ID of the dictionary.
 
-* [fastly-s3](https://docs.fastly.com/guides/integrations/amazon-s3)
-* [fastly-cname](https://docs.fastly.com/guides/basic-setup/adding-cname-records)
-* [fastly-conditionals](https://docs.fastly.com/guides/conditions/using-conditions)
-* [fastly-sumologic](https://docs.fastly.com/api/logging#logging_sumologic)
-* [fastly-gcs](https://docs.fastly.com/api/logging#logging_gcs)
+[fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
+[fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records
+[fastly-conditionals]: https://docs.fastly.com/guides/conditions/using-conditions
+[fastly-sumologic]: https://docs.fastly.com/api/logging#logging_sumologic
+[fastly-gcs]: https://docs.fastly.com/api/logging#logging_gcs
 
 ## Import
 

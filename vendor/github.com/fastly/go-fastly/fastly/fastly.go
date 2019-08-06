@@ -5,6 +5,25 @@ import (
 	"encoding"
 )
 
+type BatchOperation string
+
+const (
+	CreateBatchOperation BatchOperation = "create"
+	UpdateBatchOperation BatchOperation = "update"
+	UpsertBatchOperation BatchOperation = "upsert"
+	DeleteBatchOperation BatchOperation = "delete"
+
+	// Represents the maximum number of operations that can be sent within a single batch request.
+	// This is currently not documented in the API.
+	BatchModifyMaximumOperations = 1000
+
+	// Represents the maximum number of items that can be placed within an Edge Dictionary.
+	MaximumDictionarySize = 10000
+
+	// Represents the maximum number of entries that can be placed within an ACL.
+	MaximumACLSize = 10000
+)
+
 type statusResp struct {
 	Status string
 	Msg    string

@@ -1385,6 +1385,76 @@ func resourceServiceV1() *schema.Resource {
 					},
 				},
 			},
+			"dynamicsnippet": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A unique name to refer to this VCL snippet",
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+							ValidateFunc: validateSnippetType(),
+						},
+						"priority": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     100,
+							Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
+						},
+						"snippet_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Generated VCL snippet Id",
+						},
+					},
+				},
+			},
+			"acl": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Unique name to refer to this ACL",
+						},
+						// Optional fields
+						"acl_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Generated acl id",
+						},
+					},
+				},
+			},
+			"dictionary": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Unique name to refer to this Dictionary",
+						},
+						// Optional fields
+						"dictionary_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Generated dictionary ID",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -1455,7 +1525,10 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"request_setting",
 		"cache_setting",
 		"snippet",
+		"dynamicsnippet",
 		"vcl",
+		"acl",
+		"dictionary",
 	} {
 		if d.HasChange(v) {
 			needsChange = true
@@ -2835,6 +2908,62 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// Find differences in VCL dynamic snippets
+		if d.HasChange("dynamicsnippet") {
+			// Note: as above with Gzip and S3 logging, we don't utilize the PUT
+			// endpoint to update a VCL dynamic snippet, we simply destroy it and create a new one.
+			oldDynamicSnippetVal, newDynamicSnippetVal := d.GetChange("dynamicsnippet")
+			if oldDynamicSnippetVal == nil {
+				oldDynamicSnippetVal = new(schema.Set)
+			}
+			if newDynamicSnippetVal == nil {
+				newDynamicSnippetVal = new(schema.Set)
+			}
+
+			oldDynamicSnippetSet := oldDynamicSnippetVal.(*schema.Set)
+			newDynamicSnippetSet := newDynamicSnippetVal.(*schema.Set)
+
+			remove := oldDynamicSnippetSet.Difference(newDynamicSnippetSet).List()
+			add := newDynamicSnippetSet.Difference(oldDynamicSnippetSet).List()
+
+			// Delete removed VCL Snippet configurations
+			for _, dRaw := range remove {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.DeleteSnippetInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    df["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Removal opts: %#v", opts)
+				err := conn.DeleteSnippet(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new VCL Snippet configurations
+			for _, dRaw := range add {
+				opts, err := buildDynamicSnippet(dRaw.(map[string]interface{}))
+				if err != nil {
+					log.Printf("[DEBUG] Error building VCL Dynamic Snippet: %s", err)
+					return err
+				}
+				opts.Service = d.Id()
+				opts.Version = latestVersion
+
+				log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Addition opts: %#v", opts)
+				_, err = conn.CreateSnippet(opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 		// Find differences in Cache Settings
 		if d.HasChange("cache_setting") {
 			oc, nc := d.GetChange("cache_setting")
@@ -2883,6 +3012,117 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Cache Settings Addition opts: %#v", opts)
 				_, err = conn.CreateCacheSetting(opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// Find differences in ACLs
+		if d.HasChange("acl") {
+
+			oldACLVal, newACLVal := d.GetChange("acl")
+			if oldACLVal == nil {
+				oldACLVal = new(schema.Set)
+			}
+			if newACLVal == nil {
+				newACLVal = new(schema.Set)
+			}
+
+			oldACLSet := oldACLVal.(*schema.Set)
+			newACLSet := newACLVal.(*schema.Set)
+
+			remove := oldACLSet.Difference(newACLSet).List()
+			add := newACLSet.Difference(oldACLSet).List()
+
+			// Delete removed ACL configurations
+			for _, vRaw := range remove {
+				val := vRaw.(map[string]interface{})
+				opts := gofastly.DeleteACLInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    val["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly ACL removal opts: %#v", opts)
+				err := conn.DeleteACL(&opts)
+
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new ACL configurations
+			for _, vRaw := range add {
+				val := vRaw.(map[string]interface{})
+				opts := gofastly.CreateACLInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    val["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
+				_, err := conn.CreateACL(&opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// Find differences in dictionary
+		if d.HasChange("dictionary") {
+
+			oldDictVal, newDictVal := d.GetChange("dictionary")
+
+			if oldDictVal == nil {
+				oldDictVal = new(schema.Set)
+			}
+			if newDictVal == nil {
+				newDictVal = new(schema.Set)
+			}
+
+			oldDictSet := oldDictVal.(*schema.Set)
+			newDictSet := newDictVal.(*schema.Set)
+
+			remove := oldDictSet.Difference(newDictSet).List()
+			add := newDictSet.Difference(oldDictSet).List()
+
+			// Delete removed dictionary configurations
+			for _, dRaw := range remove {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.DeleteDictionaryInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    df["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly Dictionary Removal opts: %#v", opts)
+				err := conn.DeleteDictionary(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new dictionary configurations
+			for _, dRaw := range add {
+				opts, err := buildDictionary(dRaw.(map[string]interface{}))
+				if err != nil {
+					log.Printf("[DEBUG] Error building Dicitionary: %s", err)
+					return err
+				}
+				opts.Service = d.Id()
+				opts.Version = latestVersion
+
+				log.Printf("[DEBUG] Fastly Dictionary Addition opts: %#v", opts)
+				_, err = conn.CreateDictionary(opts)
 				if err != nil {
 					return err
 				}
@@ -3313,6 +3553,22 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
 		}
 
+		// refresh ACLs
+		log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
+		aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up ACLs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		al := flattenACLs(aclList)
+
+		if err := d.Set("acl", al); err != nil {
+			log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
+		}
+
 		// refresh VCL Snippets
 		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
@@ -3329,6 +3585,12 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
 		}
 
+		dynamicSnippets := flattenDynamicSnippets(snippetList)
+
+		if err := d.Set("dynamicsnippet", dynamicSnippets); err != nil {
+			log.Printf("[WARN] Error setting VCL Dynamic Snippets for (%s): %s", d.Id(), err)
+		}
+
 		// refresh Cache Settings
 		log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
 		cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
@@ -3343,6 +3605,22 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("cache_setting", csl); err != nil {
 			log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
+		}
+
+		// refresh Dictionaries
+		log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
+		dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		dict := flattenDictionaries(dictList)
+
+		if err := d.Set("dictionary", dict); err != nil {
+			log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
 		}
 
 	} else {
@@ -4132,12 +4410,69 @@ func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
 	return vl
 }
 
+func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
+	var al []map[string]interface{}
+	for _, acl := range aclList {
+		// Convert VCLs to a map for saving to state.
+		vclMap := map[string]interface{}{
+			"acl_id": acl.ID,
+			"name":   acl.Name,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range vclMap {
+			if v == "" {
+				delete(vclMap, k)
+			}
+		}
+
+		al = append(al, vclMap)
+	}
+
+	return al
+}
+
 func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
 	df := snippetMap.(map[string]interface{})
 	opts := gofastly.CreateSnippetInput{
 		Name:     df["name"].(string),
 		Content:  df["content"].(string),
 		Priority: df["priority"].(int),
+	}
+
+	snippetType := strings.ToLower(df["type"].(string))
+	switch snippetType {
+	case "init":
+		opts.Type = gofastly.SnippetTypeInit
+	case "recv":
+		opts.Type = gofastly.SnippetTypeRecv
+	case "hit":
+		opts.Type = gofastly.SnippetTypeHit
+	case "miss":
+		opts.Type = gofastly.SnippetTypeMiss
+	case "pass":
+		opts.Type = gofastly.SnippetTypePass
+	case "fetch":
+		opts.Type = gofastly.SnippetTypeFetch
+	case "error":
+		opts.Type = gofastly.SnippetTypeError
+	case "deliver":
+		opts.Type = gofastly.SnippetTypeDeliver
+	case "log":
+		opts.Type = gofastly.SnippetTypeLog
+	case "none":
+		opts.Type = gofastly.SnippetTypeNone
+	}
+
+	return &opts, nil
+}
+
+func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
+	df := dynamicSnippetMap.(map[string]interface{})
+	opts := gofastly.CreateSnippetInput{
+		Name:     df["name"].(string),
+		Priority: df["priority"].(int),
+		Dynamic:  1,
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))
@@ -4194,6 +4529,66 @@ func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 	}
 
 	return sl
+}
+
+func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string]interface{} {
+	var sl []map[string]interface{}
+	for _, dynamicSnippet := range dynamicSnippetList {
+		// Skip non-dynamic snippets
+		if dynamicSnippet.Dynamic == 0 {
+			continue
+		}
+
+		// Convert VCLs to a map for saving to state.
+		dynamicSnippetMap := map[string]interface{}{
+			"snippet_id": dynamicSnippet.ID,
+			"name":       dynamicSnippet.Name,
+			"type":       dynamicSnippet.Type,
+			"priority":   int(dynamicSnippet.Priority),
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range dynamicSnippetMap {
+			if v == "" {
+				delete(dynamicSnippetMap, k)
+			}
+		}
+
+		sl = append(sl, dynamicSnippetMap)
+	}
+
+	return sl
+}
+
+func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
+	df := dictMap.(map[string]interface{})
+	opts := gofastly.CreateDictionaryInput{
+		Name: df["name"].(string),
+	}
+
+	return &opts, nil
+}
+
+func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
+	var dl []map[string]interface{}
+	for _, currentDict := range dictList {
+
+		dictMapString := map[string]interface{}{
+			"dictionary_id": currentDict.ID,
+			"name":          currentDict.Name,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range dictMapString {
+			if v == "" {
+				delete(dictMapString, k)
+			}
+		}
+
+		dl = append(dl, dictMapString)
+	}
+
+	return dl
 }
 
 func validateVCLs(d *schema.ResourceData) error {

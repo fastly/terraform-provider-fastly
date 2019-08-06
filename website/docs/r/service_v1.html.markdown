@@ -180,7 +180,7 @@ when an item is not to be cached based on an above `condition`. Defined below
 content. Defined below.
 * `header` - (Optional) A set of Headers to manipulate for each request. Defined
 below.
-* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how fastly interacts with the cache based on its health.
+* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
 * `default_host` - (Optional) The default hostname.
 * `default_ttl` - (Optional) The default Time-to-live (TTL) for
 requests.
@@ -207,9 +207,12 @@ Defined below.
 Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
+* `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
+* `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
+* `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
 
 The `domain` block supports:
 
@@ -500,9 +503,15 @@ see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 The `snippet` block supports:
 
-* `name` - (Required) A unique name for the VCL Snippet configuration block.
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
 * `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
 * `content` (Required) The VCL code that specifies exactly what the snippet does.
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
+
+The `dynamicsnippet` block supports:
+
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
+* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
 * `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
 The `vcl` block supports:
@@ -513,12 +522,32 @@ The `vcl` block supports:
 `false`, use this block as an includable library. Only a single VCL block can be
 marked as the main block. Default is `false`.
 
+The `acl` block supports:
+
+* `name` - (Required) A unique name to identify this ACL.
+
+The `dictionary` block supports:
+
+* `name` - (Required) A unique name to identify this dictionary.
+
 ## Attributes Reference
 
 In addition to the arguments listed above, the following attributes are exported:
 
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
+
+The `dynamicsnippet` block exports:
+
+* `snippet_id` - The ID of the dynamic snippet.
+
+The `acl` block exports:
+
+* `acl_id` - The ID of the ACL.
+
+The `dictionary` block exports:
+
+* `dictionary_id` - The ID of the dictionary.
 
 [fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
 [fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records

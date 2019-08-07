@@ -1,7 +1,7 @@
 ---
 layout: "fastly"
 page_title: "Fastly: service_acl_entries_v1"
-sidebar_current: "docs-fastly-resource-service-v1"
+sidebar_current: "docs-fastly-resource-service-acl-entries-v1"
 description: |-
   Defines a set of Fastly ACL entries that can be used to populate a service ACL. 
 ---

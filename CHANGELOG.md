@@ -1,4 +1,9 @@
-## 0.10.0 (Unreleased)
+## 0.9.1 (Unreleased)
+
+BUG FIXES:
+
+* docs: Fix sidebar navigation links and markdown rendering ([#186](https://github.com/terraform-providers/terraform-provider-fastly/pull/186))
+
 ## 0.9.0 (August 07, 2019)
 
 FEATURES:

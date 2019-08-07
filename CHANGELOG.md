@@ -1,4 +1,18 @@
-## 0.8.2 (Unreleased)
+## 0.9.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `fastly_service_acl_entries_v1` ([#184](_https://github.com/terraform-providers/terraform-provider-fastly/pull/184_))
+* **New Resource:** `fastly_service_dictionary_items_v1` ([#184](_https://github.com/terraform-providers/terraform-provider-fastly/pull/184_))
+* **New Resource:** `fastly_service_dynamic_snippet_content_v1` ([#184](_https://github.com/terraform-providers/terraform-provider-fastly/pull/184_))
+* **New Nested Resource:** `fastly_service_v1/acl` ([#184](_https://github.com/terraform-providers/terraform-provider-fastly/pull/184_))
+* **New Nested Resource:** `fastly_service_v1/dictionary` ([#184](_https://github.com/terraform-providers/terraform-provider-fastly/pull/184_))
+* **New Nested Resource:** `fastly_service_v1/dynamicsnippet` ([#184](_https://github.com/terraform-providers/terraform-provider-fastly/pull/184_))
+
+NOTES:
+
+* provider: Update `go-fastly` client to v1.2.1 ([#184](_https://github.com/terraform-providers/terraform-provider-fastly/pull/184_))
+
 ## 0.8.1 (July 12, 2019)
 
 BUG FIXES:

@@ -536,6 +536,7 @@ In addition to the arguments listed above, the following attributes are exported
 
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
+* `cloned_version` - The latest cloned version by the provider. The value gets only set after running `terraform apply`.
 
 The `dynamicsnippet` block exports:
 

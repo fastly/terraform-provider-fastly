@@ -1,4 +1,9 @@
 ## 0.10.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1: Add `cloned_version` argument ([#190](https://github.com/terraform-providers/terraform-provider-fastly/pull/190))
+
 ## 0.9.0 (August 07, 2019)
 
 FEATURES:

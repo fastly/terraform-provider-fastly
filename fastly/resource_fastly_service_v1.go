@@ -52,6 +52,17 @@ func resourceServiceV1() *schema.Resource {
 				Computed: true,
 			},
 
+			// Cloned Version represents the latest cloned version by the provider. It
+			// gets set whenever Terraform detects changes and clones the currently
+			// activated version in order to modify it. Active Version and Cloned
+			// Version can be different if the Activate field is set to false in order
+			// to prevent the service from being activated. It is not used internally,
+			// but it is exported for users to see after running `terraform apply`.
+			"cloned_version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
 			"activate": {
 				Type:        schema.TypeBool,
 				Description: "Conditionally prevents the Service from being activated",
@@ -1576,6 +1587,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 			// The new version number is named "Number", but it's actually a string
 			latestVersion = newVersion.Number
+			d.Set("cloned_version", latestVersion)
 
 			// New versions are not immediately found in the API, or are not
 			// immediately mutable, so we need to sleep a few and let Fastly ready

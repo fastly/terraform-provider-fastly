@@ -1456,7 +1456,6 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							ForceNew:    true,
 							Description: "Determines if items in the dictionary are readable or not",
 						},
 					},

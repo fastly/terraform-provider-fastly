@@ -3,8 +3,8 @@ package fastly
 import (
 	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func validateLoggingFormatVersion() schema.SchemaValidateFunc {

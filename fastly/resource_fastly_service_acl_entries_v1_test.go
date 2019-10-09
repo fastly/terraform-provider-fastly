@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestResourceFastlyFlattenAclEntries(t *testing.T) {

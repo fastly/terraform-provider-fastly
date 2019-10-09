@@ -5,6 +5,6 @@ require (
 	github.com/dnaeon/go-vcr v1.0.1 // indirect
 	github.com/fastly/go-fastly v1.2.1
 	github.com/google/jsonapi v0.0.0-20180313013858-2dcc18f43696 // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.0
-	github.com/hashicorp/terraform v0.12.7
+	github.com/hashicorp/go-cleanhttp v0.5.1
+	github.com/hashicorp/terraform-plugin-sdk v1.1.0
 )

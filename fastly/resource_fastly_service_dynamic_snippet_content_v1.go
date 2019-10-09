@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceServiceDynamicSnippetContentV1() *schema.Resource {

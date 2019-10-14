@@ -1,4 +1,14 @@
-## 0.10.1 (Unreleased)
+## 0.11.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1/dictionary: Add `write_only` argument ([#189](https://github.com/terraform-providers/terraform-provider-fastly/pull/189))
+
+NOTES:
+
+* provider: The underlying Terraform codebase dependency for the provider SDK and acceptance testing framework has been migrated from `github.com/hashicorp/terraform` to `github.com/hashicorp/terraform-plugin-sdk`. They are functionality equivalent and this should only impact codebase development to switch imports. For more information see the [Terraform Plugin SDK page in the Extending Terraform documentation](https://www.terraform.io/docs/extend/plugin-sdk.html). ([#191](https://github.com/terraform-providers/terraform-provider-fastly/pull/191))
+* provider: The actual Terraform version used by the provider will now be included in the `User-Agent` header for Terraform 0.12 and later. Terraform 0.11 and earlier will use `Terraform/0.11+compatible` as this information was not accessible in those versions. ([#182](https://github.com/terraform-providers/terraform-provider-fastly/pull/182))
+
 ## 0.10.0 (October 02, 2019)
 
 ENHANCEMENTS:

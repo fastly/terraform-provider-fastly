@@ -1,5 +1,7 @@
 module github.com/terraform-providers/terraform-provider-fastly
 
+go 1.13
+
 require (
 	github.com/ajg/form v0.0.0-20160822230020-523a5da1a92f // indirect
 	github.com/dnaeon/go-vcr v1.0.1 // indirect

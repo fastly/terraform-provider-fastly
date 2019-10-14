@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/hashicorp/terraform/helper/logging"
-	"github.com/hashicorp/terraform/httpclient"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/httpclient"
 	"github.com/terraform-providers/terraform-provider-fastly/version"
 )
 

@@ -333,7 +333,7 @@ The `healthcheck` block supports:
 The `request_setting` block allow you to customize Fastly's request handling, by
 defining behavior that should change based on a predefined `condition`:
 
-* `name` - (Required) The domain for this request setting.
+* `name` - (Required) Unique name to refer to this Request Setting.
 * `request_condition` - (Optional) Name of already defined `condition` to
 determine if this request setting should be applied.
 * `max_stale_age` - (Optional) How old an object is allowed to be to serve

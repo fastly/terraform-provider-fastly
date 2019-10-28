@@ -296,7 +296,7 @@ gzip. Example: `["css", "js"]`.
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 
-The `Header` block supports adding, removing, or modifying Request and Response
+The `header` block supports adding, removing, or modifying Request and Response
 headers. See Fastly's documentation on
 [Adding or modifying headers on HTTP requests and responses](https://docs.fastly.com/guides/basic-configuration/adding-or-modifying-headers-on-http-requests-and-responses#field-description-table) for more detailed information on any of the properties below.
 

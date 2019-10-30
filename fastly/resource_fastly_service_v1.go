@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
+var errFastlyNoServiceFound = errors.New("No matching Fastly Service found")
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -3195,7 +3195,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 	_, err := findService(d.Id(), meta)
 	if err != nil {
 		switch err {
-		case fastlyNoServiceFoundErr:
+		case errFastlyNoServiceFound:
 			log.Printf("[WARN] %s for ID (%s)", err, d.Id())
 			d.SetId("")
 			return nil
@@ -3686,7 +3686,7 @@ func resourceServiceV1Delete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		switch err {
 		// we expect no records to be found here
-		case fastlyNoServiceFoundErr:
+		case errFastlyNoServiceFound:
 			d.SetId("")
 			return nil
 		default:
@@ -3710,7 +3710,7 @@ func resourceServiceV1Delete(d *schema.ResourceData, meta interface{}) error {
 // in question. This endpoint only returns active or "alive" services. If the
 // Service is not included, then it's "gone"
 //
-// Returns a fastlyNoServiceFoundErr error if the Service is not found in the
+// Returns a errFastlyNoServiceFound error if the Service is not found in the
 // ListServices response.
 func findService(id string, meta interface{}) (*gofastly.Service, error) {
 	conn := meta.(*FastlyClient).conn
@@ -3727,7 +3727,7 @@ func findService(id string, meta interface{}) (*gofastly.Service, error) {
 		}
 	}
 
-	return nil, fastlyNoServiceFoundErr
+	return nil, errFastlyNoServiceFound
 }
 
 func flattenDomains(list []*gofastly.Domain) []map[string]interface{} {

@@ -505,7 +505,8 @@ The `snippet` block supports:
 
 * `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
 * `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
-* `content` (Required) The VCL code that specifies exactly what the snippet does.
+* `content` (Optional) The VCL code that specifies exactly what the snippet does. Conflicts with `sensitive_content`.
+* `sensitive_content` (Optional) The VCL code that specifies exactly what the snippet does. Will not be displayed in diffs. Conflicts with `content`.
 * `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
 The `dynamicsnippet` block supports:

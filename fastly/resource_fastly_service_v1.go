@@ -1836,6 +1836,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 			obs := ob.(*schema.Set)
 			nbs := nb.(*schema.Set)
+
 			removeBackends := obs.Difference(nbs).List()
 			addBackends := nbs.Difference(obs).List()
 
@@ -1896,6 +1897,65 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				_, err := conn.CreateBackend(&opts)
 				if err != nil {
 					return err
+				}
+			}
+
+			// Due to a limitation of using schema.Set as the type for backends;
+			// we don't update the backend in-place and instead delete and
+			// re-create. Unfortunately the delete propogates through the backend
+			// model relationships and removes the backend from any active
+			// directors.
+			//
+			// Therefore, if the service version has directors which
+			// contain backends that have changed in this set we must re-add
+			// them to the director manually.
+			dr := d.Get("director")
+			if dr != nil {
+				// Collect directors with backends as map of director name to
+				// backend list.
+				var dbs map[string][]string
+				drs := dr.(*schema.Set).List()
+				for _, dRaw := range drs {
+					df := dRaw.(map[string]interface{})
+					if v, ok := df["backends"]; ok {
+						if v.(*schema.Set).Len() > 0 {
+							var bs []string
+							for _, b := range v.(*schema.Set).List() {
+								bs = append(bs, b.(string))
+							}
+							dbs[df["name"].(string)] = bs
+						}
+					}
+				}
+
+				// Collect new backend names.
+				var abs []string
+				for _, dRaw := range addBackends {
+					df := dRaw.(map[string]interface{})
+					abs = append(abs, df["name"].(string))
+				}
+
+				// For each director backend, create if in change set.
+				for director, backends := range dbs {
+					for _, db := range backends {
+						for _, backend := range abs {
+							if db == backend {
+								opts := gofastly.CreateDirectorBackendInput{
+									Service:  d.Id(),
+									Version:  latestVersion,
+									Director: director,
+									Backend:  backend,
+								}
+
+								log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
+								_, err := conn.CreateDirectorBackend(&opts)
+								if err != nil {
+									return err
+								}
+
+							}
+						}
+					}
 				}
 			}
 		}

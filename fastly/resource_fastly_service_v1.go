@@ -1384,8 +1384,14 @@ func resourceServiceV1() *schema.Resource {
 						},
 						"content": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							Description: "The contents of the VCL snippet",
+						},
+						"sensitive_content": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Sensitive:   true,
+							Description: "The contents of the VCL snippet (not displayed in diffs)",
 						},
 						"priority": {
 							Type:        schema.TypeInt,
@@ -4452,9 +4458,25 @@ func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
 
 func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
 	df := snippetMap.(map[string]interface{})
+
+	name := df["name"].(string)
+	cont := df["content"].(string)
+	scont := df["sensitive_content"].(string)
+
+	if len(cont) == 0 && len(scont) == 0 {
+		return nil, fmt.Errorf("[ERR] Neither content nor sensitive_content is specified for Snippet (%s)", name)
+	}
+	if len(cont) > 0 && len(scont) > 0 {
+		return nil, fmt.Errorf("[ERR] Content and sensitive_content are exclusive in Snippet (%s)", name)
+	}
+
+	if len(cont) == 0 {
+		cont = scont
+	}
+
 	opts := gofastly.CreateSnippetInput{
-		Name:     df["name"].(string),
-		Content:  df["content"].(string),
+		Name:     name,
+		Content:  cont,
 		Priority: df["priority"].(int),
 	}
 

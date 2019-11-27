@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-// WAFSchema the WAF block schema
-var WAFSchema = &schema.Schema{
+// wafSchema the WAF block schema
+var wafSchema = &schema.Schema{
 	Type:     schema.TypeList,
 	Optional: true,
 	MaxItems: 1,

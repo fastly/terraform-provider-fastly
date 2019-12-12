@@ -174,6 +174,7 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 				Description:  "XSS attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"rule": activeRule,
 		},
 	}
 }
@@ -209,6 +210,12 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 		return err
 	}
 
+	if d.HasChange("rule") {
+		if err := updateRules(d, meta, wafID, latestVersion.Number); err != nil {
+			return err
+		}
+	}
+
 	err = conn.DeployWAFVersion(&gofastly.DeployWAFVersionInput{
 		WAFID:            wafID,
 		WAFVersionNumber: latestVersion.Number,
@@ -226,10 +233,16 @@ func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] latest waf version is %d", latestVersion.Number)
-	if err = refreshWAFVersion(d, latestVersion); err != nil {
+	log.Printf("[DEBUG] latest WAF version is %d", latestVersion.Number)
+
+	if err = refreshWAFConfig(d, latestVersion); err != nil {
 		return err
 	}
+
+	if err := readWAFRules(meta, d, latestVersion.Number); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -319,7 +332,7 @@ func buildUpdateInput(d *schema.ResourceData, id string, number int) *gofastly.U
 	}
 }
 
-func refreshWAFVersion(d *schema.ResourceData, version *gofastly.WAFVersion) error {
+func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) error {
 
 	pairings := composePairings(version)
 

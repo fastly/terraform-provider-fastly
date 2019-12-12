@@ -66,7 +66,7 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput)
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -88,7 +88,7 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput)
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -117,10 +117,10 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	wafVerInput1 := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput1)
+	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput1, "")
 
 	wafVerInput2 := testAccFastlyServiceWAFVersionV1BuildConfig(22)
-	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput2)
+	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput2, "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -149,7 +149,7 @@ func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput)
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -224,7 +224,7 @@ func testAccFastlyServiceWAFVersionV1GetVersionNumber(versions []*gofastly.WAFVe
 	return gofastly.WAFVersion{}, fmt.Errorf("version number %d not found", number)
 }
 
-func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface{}) string {
+func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface{}, rules string) string {
 
 	hcl := `
         resource "fastly_service_waf_configuration_v1" "waf" {
@@ -244,7 +244,8 @@ func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface
          `, k, v)
 		}
 	}
-	return hcl + `}`
+	return hcl + fmt.Sprintf(`%s
+        }`, rules)
 }
 
 func testAccFastlyServiceWAFVersionV1(name, extraHCL string) string {

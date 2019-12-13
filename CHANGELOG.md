@@ -1,4 +1,9 @@
-## 0.12.0 (Unreleased)
+## 0.11.1 (Unreleased)
+
+BUG FIXES:
+
+* data-source/fastly_ip_ranges: Use `go-fastly` client in order to fetch Fastly's assigned IP ranges ([#201](https://github.com/terraform-providers/terraform-provider-fastly/pull/201))
+
 ## 0.11.0 (October 15, 2019)
 
 ENHANCEMENTS:

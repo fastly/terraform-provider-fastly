@@ -134,7 +134,7 @@ func buildBatchDeleteWAFActiveRulesInput(items []interface{}, wafID string, wafV
 
 func executeBatchWAFActiveRulesOperations(conn *gofastly.Client, input *gofastly.BatchModificationWAFActiveRulesInput) error {
 
-	batchSize := gofastly.BatchModifyMaximumOperations
+	batchSize := gofastly.WAFBatchModifyMaximumOperations
 	items := input.Rules
 
 	for i := 0; i < len(items); i += batchSize {

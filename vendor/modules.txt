@@ -8,7 +8,7 @@ cloud.google.com/go/internal/version
 cloud.google.com/go/compute/metadata
 # github.com/agext/levenshtein v1.2.2
 github.com/agext/levenshtein
-# github.com/ajg/form v0.0.0-20160822230020-523a5da1a92f
+# github.com/ajg/form v1.5.1
 github.com/ajg/form
 # github.com/apparentlymart/go-cidr v1.0.1
 github.com/apparentlymart/go-cidr/cidr
@@ -58,7 +58,7 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly v1.2.1
+# github.com/fastly/go-fastly v1.4.0
 github.com/fastly/go-fastly/fastly
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
@@ -75,7 +75,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/jsonapi v0.0.0-20180313013858-2dcc18f43696
+# github.com/google/jsonapi v0.0.0-20181016150055-d0428f63eb51
 github.com/google/jsonapi
 # github.com/google/uuid v1.1.1
 github.com/google/uuid

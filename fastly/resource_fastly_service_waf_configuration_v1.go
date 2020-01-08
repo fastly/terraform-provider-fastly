@@ -3,12 +3,13 @@ package fastly
 import (
 	"errors"
 	"fmt"
-	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"log"
 	"reflect"
 	"sort"
+
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceServiceWAFConfigurationV1() *schema.Resource {
@@ -249,32 +250,21 @@ func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interfac
 func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
-	latestVersion, err := getLatestVersion(d, meta)
-	if err != nil {
-		return err
-	}
-
 	wafID := d.Get("waf_id").(string)
-	if latestVersion.Locked {
-		latestVersion, err = conn.CloneWAFVersion(&gofastly.CloneWAFVersionInput{
-			WAFID:            wafID,
-			WAFVersionNumber: latestVersion.Number,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	// TODO: Remove all rules from WAF version
-
-	err = conn.DeployWAFVersion(&gofastly.DeployWAFVersionInput{
-		WAFID:            wafID,
-		WAFVersionNumber: latestVersion.Number,
+	emptyVersion, err := conn.CreateEmptyWAFVersion(&gofastly.CreateEmptyWAFVersionInput{
+		WAFID: wafID,
 	})
 	if err != nil {
 		return err
 	}
 
+	err = conn.DeployWAFVersion(&gofastly.DeployWAFVersionInput{
+		WAFID:            wafID,
+		WAFVersionNumber: emptyVersion.Number,
+	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

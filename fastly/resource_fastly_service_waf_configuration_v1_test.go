@@ -2,12 +2,13 @@ package fastly
 
 import (
 	"fmt"
+	"reflect"
+	"testing"
+
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"reflect"
-	"testing"
 )
 
 func TestAccFastlyServiceWAFVersionV1DetermineVersion(t *testing.T) {
@@ -167,7 +168,7 @@ func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 				Config: testAccFastlyServiceWAFVersionV1(name, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists(serviceRef, &service),
-					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput, 2),
+					testAccCheckFastlyServiceWAFVersionV1CheckEmpty(&service, 2),
 				),
 			},
 		},
@@ -210,6 +211,56 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 		remote := testAccFastlyServiceWAFVersionV1ToMap(latestVersion)
 		if !reflect.DeepEqual(remote, local) {
 			return fmt.Errorf("Error matching:\nexpected: %#v\nand  got: %#v", local, remote)
+		}
+		return nil
+	}
+}
+
+func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDetail, latestVersion int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		conn := testAccProvider.Meta().(*FastlyClient).conn
+		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
+			FilterService: service.ID,
+			FilterVersion: service.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		}
+
+		if len(wafResp.Items) != 1 {
+			return fmt.Errorf("[ERR] Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+		}
+
+		waf := wafResp.Items[0]
+		verResp, err := conn.ListWAFVersions(&gofastly.ListWAFVersionsInput{
+			WAFID: waf.ID,
+		})
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up WAF version records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		}
+
+		if len(verResp.Items) < 1 {
+			return fmt.Errorf("[ERR] Expected result size (%d), got (%d)", 1, len(verResp.Items))
+		}
+
+		emptyVersion, err := testAccFastlyServiceWAFVersionV1GetVersionNumber(verResp.Items, latestVersion)
+		if err != nil {
+			return err
+		}
+
+		if !emptyVersion.Locked {
+			return fmt.Errorf("[ERR] Expected Locked = (%v),  got (%v)", true, emptyVersion.Locked)
+		}
+		if emptyVersion.DeployedAt == nil {
+			return fmt.Errorf("[ERR] Expected DeployedAt not nil,  got (%v)", emptyVersion.DeployedAt)
+		}
+
+		totalRules := emptyVersion.ActiveRulesFastlyBlockCount + emptyVersion.ActiveRulesFastlyLogCount + emptyVersion.ActiveRulesOWASPBlockCount +
+			emptyVersion.ActiveRulesOWASPLogCount + emptyVersion.ActiveRulesOWASPScoreCount + emptyVersion.ActiveRulesTrustwaveBlockCount + emptyVersion.ActiveRulesTrustwaveLogCount
+
+		if totalRules != 0 {
+			return fmt.Errorf("expected no active rules rules: got %d", totalRules)
 		}
 		return nil
 	}

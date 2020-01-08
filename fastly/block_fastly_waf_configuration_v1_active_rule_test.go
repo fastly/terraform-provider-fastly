@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccFastlyServiceWAFVersionV1FlattenWAFRules(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFActiveRule
 		local  []map[string]interface{}
@@ -35,7 +35,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRules(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		out := flattenWAFRules(c.remote)
+		out := flattenWAFActiveRules(c.remote)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
 		}

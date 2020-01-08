@@ -84,7 +84,8 @@ func readWAFRules(meta interface{}, d *schema.ResourceData, v int) error {
 		return err
 	}
 
-	rules := flattenWAFRules(resp.Items)
+	rules := flattenWAFActiveRules(resp.Items)
+
 	if err := d.Set("rule", rules); err != nil {
 		log.Printf("[WARN] Error setting WAF rules for (%s): %s", d.Id(), err)
 	}
@@ -156,7 +157,7 @@ func executeBatchWAFActiveRulesOperations(conn *gofastly.Client, input *gofastly
 	return nil
 }
 
-func flattenWAFRules(rules []*gofastly.WAFActiveRule) []map[string]interface{} {
+func flattenWAFActiveRules(rules []*gofastly.WAFActiveRule) []map[string]interface{} {
 	rl := make([]map[string]interface{}, len(rules))
 	for i, r := range rules {
 

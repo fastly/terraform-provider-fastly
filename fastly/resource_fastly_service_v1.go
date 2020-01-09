@@ -988,14 +988,13 @@ func resourceServiceV1() *schema.Resource {
 						"tls_ca_cert": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SYSLOG_CA_KEY", ""),
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SYSLOG_CA_CERT", ""),
 							Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
 						},
 						"tls_client_cert": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SYSLOG_CLIENT_CERT", ""),
-							Default:     "",
 							Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
 						},
 						"tls_client_key": {

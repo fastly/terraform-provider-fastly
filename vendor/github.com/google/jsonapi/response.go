@@ -68,7 +68,10 @@ func MarshalPayload(w io.Writer, models interface{}) error {
 		return err
 	}
 
-	return json.NewEncoder(w).Encode(payload)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Marshal does the same as MarshalPayload except it just returns the payload
@@ -125,7 +128,10 @@ func MarshalPayloadWithoutIncluded(w io.Writer, model interface{}) error {
 	}
 	payload.clearIncluded()
 
-	return json.NewEncoder(w).Encode(payload)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		return err
+	}
+	return nil
 }
 
 // marshalOne does the same as MarshalOnePayload except it just returns the
@@ -189,7 +195,11 @@ func MarshalOnePayloadEmbedded(w io.Writer, model interface{}) error {
 
 	payload := &OnePayload{Data: rootNode}
 
-	return json.NewEncoder(w).Encode(payload)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func visitModelNode(model interface{}, included *map[string]*Node,
@@ -197,13 +207,9 @@ func visitModelNode(model interface{}, included *map[string]*Node,
 	node := new(Node)
 
 	var er error
-	value := reflect.ValueOf(model)
-	if value.IsNil() {
-		return nil, nil
-	}
 
-	modelValue := value.Elem()
-	modelType := value.Type().Elem()
+	modelValue := reflect.ValueOf(model).Elem()
+	modelType := reflect.ValueOf(model).Type().Elem()
 
 	for i := 0; i < modelValue.NumField(); i++ {
 		structField := modelValue.Type().Field(i)
@@ -270,9 +276,6 @@ func visitModelNode(model interface{}, included *map[string]*Node,
 				// We had a JSON float (numeric), but our field was not one of the
 				// allowed numeric types
 				er = ErrBadJSONAPIID
-			}
-
-			if er != nil {
 				break
 			}
 

@@ -12,7 +12,10 @@ import (
 // http://jsonapi.org/format/#document-top-level
 // and here: http://jsonapi.org/format/#error-objects.
 func MarshalErrors(w io.Writer, errorObjects []*ErrorObject) error {
-	return json.NewEncoder(w).Encode(&ErrorsPayload{Errors: errorObjects})
+	if err := json.NewEncoder(w).Encode(&ErrorsPayload{Errors: errorObjects}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ErrorsPayload is a serializer struct for representing a valid JSON API errors payload.

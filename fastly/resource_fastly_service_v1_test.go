@@ -458,6 +458,8 @@ func TestAccFastlyServiceV1_defaultTTL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "default_ttl", "3600"),
 				),
 			},
 
@@ -482,6 +484,30 @@ func TestAccFastlyServiceV1_defaultTTL(t *testing.T) {
 						"fastly_service_v1.foo", "default_ttl", "0"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "active_version", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_createDefaultTTL(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("terraform-acc-test-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_backendTTL(name, domain, backendName, 3400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "default_ttl", "3400"),
 				),
 			},
 		},

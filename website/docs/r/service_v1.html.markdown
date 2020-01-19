@@ -296,7 +296,7 @@ gzip. Example: `["css", "js"]`.
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 
-The `Header` block supports adding, removing, or modifying Request and Response
+The `header` block supports adding, removing, or modifying Request and Response
 headers. See Fastly's documentation on
 [Adding or modifying headers on HTTP requests and responses](https://docs.fastly.com/guides/basic-configuration/adding-or-modifying-headers-on-http-requests-and-responses#field-description-table) for more detailed information on any of the properties below.
 
@@ -333,7 +333,7 @@ The `healthcheck` block supports:
 The `request_setting` block allow you to customize Fastly's request handling, by
 defining behavior that should change based on a predefined `condition`:
 
-* `name` - (Required) The domain for this request setting.
+* `name` - (Required) Unique name to refer to this Request Setting.
 * `request_condition` - (Optional) Name of already defined `condition` to
 determine if this request setting should be applied.
 * `max_stale_age` - (Optional) How old an object is allowed to be to serve

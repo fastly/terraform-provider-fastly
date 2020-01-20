@@ -1,4 +1,9 @@
-## 0.11.2 (Unreleased)
+## 0.12.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1/syslog: Add `tls_client_cert` and `tls_client_key` arguments ([#203](https://github.com/terraform-providers/terraform-provider-fastly/pull/203))
+
 ## 0.11.1 (December 16, 2019)
 
 BUG FIXES:

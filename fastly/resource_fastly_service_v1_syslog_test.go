@@ -296,7 +296,7 @@ resource "fastly_service_v1" "foo" {
   syslog {
     name               = "somesyslogname"
     address            = "127.0.0.1"
-	response_condition = "response_condition_test"
+    response_condition = "response_condition_test"
   }
   force_destroy = true
 }`, name, domain)
@@ -324,7 +324,7 @@ resource "fastly_service_v1" "foo" {
     name               = "somesyslogname"
     address            = "127.0.0.1"
     port               = 514
-	response_condition = "response_condition_test"
+    response_condition = "response_condition_test"
     message_type       = "blank"
   }
   syslog {
@@ -373,10 +373,10 @@ resource "fastly_service_v1" "foo" {
   }
   syslog {
     name               = "somesyslogname"
-	address            = "127.0.0.1"
-	port               = 514
-	use_tls            = true
-	tls_hostname       = "example.com"
+    address            = "127.0.0.1"
+    port               = 514
+    use_tls            = true
+    tls_hostname       = "example.com"
   }
   force_destroy = true
 }`, name, domain)

@@ -1621,6 +1621,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// update general settings
+
+		// If the requested default_ttl is 0, and this is the first
+		// version being created, HasChange will return false, but we need
+		// to set it anyway, so ensure we update the settings in that
+		// case.
 		if d.HasChange("default_host") || d.HasChange("default_ttl") || (d.Get("default_ttl") == 0 && initialVersion) {
 			opts := gofastly.UpdateSettingsInput{
 				Service: d.Id(),

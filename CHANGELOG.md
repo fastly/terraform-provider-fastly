@@ -1,4 +1,9 @@
 ## 0.12.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/fastly_service_v1: Allow a service to be created with a `default_ttl` of `0` ([#205](https://github.com/terraform-providers/terraform-provider-fastly/pull/205))
+
 ## 0.12.0 (January 21, 2020)
 
 ENHANCEMENTS:

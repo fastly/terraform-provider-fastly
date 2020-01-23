@@ -66,7 +66,7 @@ func TestAccFastlyServiceV1WAFAdd(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	waf := composeWAF(condition, response, false)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -87,7 +87,7 @@ func TestAccFastlyServiceV1WAFAddAndRemove(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	waf := composeWAF(condition, response, false)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -123,7 +123,7 @@ func TestAccFastlyServiceV1WAFUpdateResponse(t *testing.T) {
 	waf := composeWAF(condition, response, false)
 	updatedWaf := composeWAF(condition, updateResponse, false)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -153,7 +153,7 @@ func TestAccFastlyServiceV1WAFUpdateCondition(t *testing.T) {
 	waf := composeWAF(condition, response, false)
 	updatedWaf := composeWAF(updatedCondition, response, false)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -191,7 +191,7 @@ func TestAccFastlyServiceV1WAFDisableEnable(t *testing.T) {
 		},
 	})
 	wafConfig := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF1)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

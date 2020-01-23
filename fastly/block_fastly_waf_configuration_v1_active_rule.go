@@ -50,6 +50,7 @@ func updateRules(d *schema.ResourceData, meta interface{}, wafID string, Number 
 	remove := oss.Difference(nss).List()
 	add := nss.Difference(oss).List()
 
+	log.Print("[INFO] WAF rules update")
 	if len(remove) > 0 {
 		deleteOpts := buildBatchDeleteWAFActiveRulesInput(remove, wafID, Number)
 		log.Printf("[DEBUG] WAF rules delete opts: %#v", deleteOpts)
@@ -76,6 +77,7 @@ func readWAFRules(meta interface{}, d *schema.ResourceData, v int) error {
 	conn := meta.(*FastlyClient).conn
 	wafID := d.Get("waf_id").(string)
 
+	log.Printf("[INFO] retrieving active rules for WAF: %s", wafID)
 	resp, err := conn.ListAllWAFActiveRules(&gofastly.ListAllWAFActiveRulesInput{
 		WAFID:            wafID,
 		WAFVersionNumber: v,

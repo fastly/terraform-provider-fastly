@@ -89,7 +89,7 @@ func dataSourceFastlyWAFRulesRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	log.Printf("[DEBUG] Reading WAF rules")
+	log.Printf("[INFO] Reading WAF rules with ops: %#v", input)
 	res, err := conn.ListAllWAFRules(input)
 	if err != nil {
 		return fmt.Errorf("error listing WAF rules: %s", err)

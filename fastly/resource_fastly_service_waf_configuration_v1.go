@@ -186,6 +186,7 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 // this method calls update because the creation of the waf (within the service resource) automatically creates
 // the first waf version, and this makes both a create and an updating exactly the same operation.
 func resourceServiceWAFConfigurationV1Create(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] creating configuration for WAF: %s", d.Get("waf_id").(string))
 	d.SetId(d.Get("waf_id").(string))
 	return resourceServiceWAFConfigurationV1Update(d, meta)
 }
@@ -199,6 +200,7 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 	}
 
 	wafID := d.Get("waf_id").(string)
+	log.Printf("[INFO] updating configuration for WAF: %s", wafID)
 	if latestVersion.Locked {
 		latestVersion, err = conn.CloneWAFVersion(&gofastly.CloneWAFVersionInput{
 			WAFID:            wafID,
@@ -237,14 +239,17 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interface{}) error {
 
 	latestVersion, err := getLatestVersion(d, meta)
-	if err != nil {
+	if errRes, ok := err.(*gofastly.HTTPError); ok {
+		if errRes.StatusCode == 404 {
+			log.Printf("[DEBUG] WAF (%s) was not found - removing from state", d.Get("waf_id").(string))
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
-	log.Printf("[DEBUG] latest WAF version is %d", latestVersion.Number)
 
-	if err = refreshWAFConfig(d, latestVersion); err != nil {
-		return err
-	}
+	log.Printf("[INFO] retrieving WAF version number: %d", latestVersion.Number)
+	refreshWAFConfig(d, latestVersion)
 
 	if err := readWAFRules(meta, d, latestVersion.Number); err != nil {
 		return err
@@ -257,6 +262,7 @@ func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interf
 	conn := meta.(*FastlyClient).conn
 
 	wafID := d.Get("waf_id").(string)
+	log.Printf("[INFO] destroying configuration by creating empty version of WAF: %s", wafID)
 	emptyVersion, err := conn.CreateEmptyWAFVersion(&gofastly.CreateEmptyWAFVersionInput{
 		WAFID: wafID,
 	})
@@ -271,6 +277,7 @@ func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interf
 	if err != nil {
 		return err
 	}
+	d.SetId("")
 	return nil
 }
 
@@ -397,7 +404,7 @@ func buildUpdateInput(d *schema.ResourceData, id string, number int) *gofastly.U
 	return input
 }
 
-func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) error {
+func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) {
 
 	pairings := composePairings(version)
 	for k, v := range pairings {
@@ -416,12 +423,9 @@ func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) erro
 				continue
 			}
 		}
-		if err := d.Set(k, v); err != nil {
-			return err
-		}
+		d.Set(k, v)
 		log.Printf("[DEBUG] GetOk for %v is %v \n", k, ok)
 	}
-	return nil
 }
 
 func composePairings(version *gofastly.WAFVersion) map[string]interface{} {

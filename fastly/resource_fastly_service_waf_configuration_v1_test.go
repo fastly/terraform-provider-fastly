@@ -69,7 +69,7 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -91,7 +91,7 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -123,7 +123,7 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 	wafVerInput2 := testAccFastlyServiceWAFVersionV1BuildConfig(22)
 	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput2, "")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -152,7 +152,7 @@ func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

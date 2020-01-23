@@ -175,6 +175,33 @@ func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(nil, "")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists(serviceRef, &service),
+				),
+			},
+			{
+				ResourceName:      "fastly_service_waf_configuration_v1.waf",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.ServiceDetail, local map[string]interface{}, latestVersion int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 

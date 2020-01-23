@@ -189,6 +189,47 @@ func TestAccFastlyServiceWAFVersionV1DeleteRules(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceWAFVersionV1ImportWithRules(t *testing.T) {
+
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	rules := []gofastly.WAFActiveRule{
+		{
+			ModSecID: 2029718,
+			Status:   "log",
+			Revision: 1,
+		},
+		{
+			ModSecID: 2037405,
+			Status:   "log",
+			Revision: 1,
+		},
+	}
+
+	rulesTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules)
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(nil, rulesTF)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists(serviceRef, &service),
+				),
+			},
+			{
+				ResourceName:      "fastly_service_waf_configuration_v1.waf",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceWAFVersionV1CheckRules(service *gofastly.ServiceDetail, expected []gofastly.WAFActiveRule, wafVerNo int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 

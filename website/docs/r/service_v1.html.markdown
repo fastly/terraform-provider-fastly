@@ -152,6 +152,58 @@ resource "fastly_service_v1" "demo" {
 }
 ```
 
+-> **Note:** The following example is only available from x.x.x of the Fastly terraform provider.
+
+Basic usage with [Web Application Firewall](https://docs.fastly.com/en/guides/web-application-firewall):
+
+```hcl
+resource "fastly_service_v1" "demo" {
+  name = "demofastly"
+
+  domain {
+    name    = "example.com"
+    comment = "demo"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "origin1"
+    port    = 80
+  }
+
+  condition {
+    name      = "WAF_Prefetch"
+    type      = "PREFETCH"
+    statement = "req.backend.is_origin"
+  }
+
+  # This condition will always be false
+  # adding it to the response object created below
+  # prevents Fastly from returning a 403 on all of your traffic.
+  condition {
+    name      = "WAF_always_false"
+    statement = "false"
+    type      = "REQUEST"
+  }
+
+  response_object {
+    name              = "WAF_Response"
+    status            = "403"
+    response          = "Forbidden"
+    content_type      = "text/html"
+    content           = "<html><body>Forbidden</body></html>"
+    request_condition = "WAF_always_false"
+  }
+
+  waf {
+    prefetch_condition = "WAF_Prefetch"
+    response_object    = "WAF_Response"
+  }
+
+  force_destroy = true
+}
+```
+
 -> **Note:** For an AWS S3 Bucket, the Backend address is
 `<domain>.s3-website-<region>.amazonaws.com`. The `default_host` attribute
 should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
@@ -799,6 +851,13 @@ via API. Default is `false`. It is important to note that changing this attribut
 dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if
 the items are managed outside of Terraform.
 
+The `waf` block supports:
+
+* `response_object` - (Required) The name of the [response object](#response_object) used by the Web Application Firewall.
+* `prefetch_condition` - (Required) Name of already defined `condition` to apply. This `condition` must be of type `PREFETCH`. 
+For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `disabled` - (Optional) This flag disables the WAF. When a WAF is disabled, all configuration remains but in a inactive state. 
+
 ## Attributes Reference
 
 In addition to the arguments listed above, the following attributes are exported:
@@ -819,11 +878,15 @@ The `dictionary` block exports:
 
 * `dictionary_id` - The ID of the dictionary.
 
-[fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
-[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
-[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
-[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
-[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
+The `waf` block exports:
+
+* `waf_id` - The ID of the WAF.
+
+[fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
+[fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records
+[fastly-conditionals]: https://docs.fastly.com/guides/conditions/using-conditions
+[fastly-sumologic]: https://docs.fastly.com/api/logging#logging_sumologic
+[fastly-gcs]: https://docs.fastly.com/api/logging#logging_gcs
 
 ## Import
 

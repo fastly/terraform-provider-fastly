@@ -27,6 +27,13 @@ func validateLoggingPlacement() schema.SchemaValidateFunc {
 	}, false)
 }
 
+func validateLoggingServerSideEncryption() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"AES256",
+		"aws:kms",
+	}, false)
+}
+
 func validateDirectorQuorum() schema.SchemaValidateFunc {
 	return validation.IntBetween(0, 100)
 }

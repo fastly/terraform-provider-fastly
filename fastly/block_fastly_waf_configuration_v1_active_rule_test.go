@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"sort"
@@ -8,7 +9,9 @@ import (
 
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -38,6 +41,55 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 		out := flattenWAFActiveRules(c.remote)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
+		}
+	}
+}
+
+func TestAccFastlyServiceWAFVersionV1FlattenWAFDeleteByModSecID(t *testing.T) {
+
+	addInput := []map[string]interface{}{{"modsec_rule_id": 1}, {"modsec_rule_id": 12}, {"modsec_rule_id": 123}}
+	add := make([]interface{}, len(addInput), len(addInput))
+	for i := range addInput {
+		add[i] = addInput[i]
+	}
+
+	deleteInput := []map[string]interface{}{{"modsec_rule_id": 12}, {"modsec_rule_id": 123}, {"modsec_rule_id": 1234}}
+	remove := make([]interface{}, len(deleteInput), len(deleteInput))
+	for i := range deleteInput {
+		remove[i] = deleteInput[i]
+	}
+
+	expectedInput := []map[string]interface{}{{"modsec_rule_id": 1234}}
+	expected := make([]interface{}, len(expectedInput), len(expectedInput))
+	for i := range expectedInput {
+		expected[i] = expectedInput[i]
+	}
+
+	cases := []struct {
+		add      []interface{}
+		remove   *schema.Set
+		expected *schema.Set
+	}{
+		{
+			add:      []interface{}{},
+			remove:   schema.NewSet(testHashFunc, []interface{}{}),
+			expected: schema.NewSet(testHashFunc, []interface{}{}),
+		},
+		{
+			add:      add,
+			remove:   schema.NewSet(testHashFunc, []interface{}{}),
+			expected: schema.NewSet(testHashFunc, []interface{}{}),
+		},
+		{
+			add:      add,
+			remove:   schema.NewSet(testHashFunc, remove),
+			expected: schema.NewSet(testHashFunc, expected),
+		},
+	}
+	for _, c := range cases {
+		out := deleteByModSecID(c.remove, c.add)
+		if !c.expected.Equal(out) {
+			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.expected, c.remove)
 		}
 	}
 }
@@ -84,6 +136,11 @@ func TestAccFastlyServiceWAFVersionV1UpdateRules(t *testing.T) {
 
 	rules1 := []gofastly.WAFActiveRule{
 		{
+			ModSecID: 1010090,
+			Status:   "log",
+			Revision: 1,
+		},
+		{
 			ModSecID: 2029718,
 			Status:   "log",
 			Revision: 1,
@@ -95,6 +152,11 @@ func TestAccFastlyServiceWAFVersionV1UpdateRules(t *testing.T) {
 		},
 	}
 	rules2 := []gofastly.WAFActiveRule{
+		{
+			ModSecID: 1010080,
+			Status:   "block",
+			Revision: 1,
+		},
 		{
 			ModSecID: 2029718,
 			Status:   "block",
@@ -290,4 +352,11 @@ func testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules []gofastly.WAFAc
 		result = result + rule
 	}
 	return result
+}
+
+func testHashFunc(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%d-", m["modsec_rule_id"].(int)))
+	return hashcode.String(buf.String())
 }

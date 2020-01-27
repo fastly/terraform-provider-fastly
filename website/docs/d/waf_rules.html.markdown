@@ -44,7 +44,7 @@ Usage without filters:
 
 ```hcl
 data "fastly_waf_rules" "all" {
-  // This will retrieve the entire list of rules available from the API at the time.
+  # This will retrieve the entire list of rules available from the API at the time.
 }
 ```
 
@@ -136,6 +136,8 @@ resource "fastly_service_waf_configuration_v1" "waf" {
 ## Attribute Reference
 
 * `rules` - The Web Application Firewall's rules result set.
+
+~> **Warning:** Deprecated rules will not be present on this data source's result set.
 
 The `rules` block supports:
 

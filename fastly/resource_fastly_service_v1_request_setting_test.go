@@ -5,11 +5,55 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.RequestSetting
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.RequestSetting{
+				{
+					Name:             "alt_backend",
+					RequestCondition: "serve_alt_backend",
+					DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
+					XForwardedFor:    gofastly.RequestSettingXFFAppend,
+					MaxStaleAge:      90,
+					Action:           gofastly.RequestSettingActionPass,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":              "alt_backend",
+					"request_condition": "serve_alt_backend",
+					"default_host":      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
+					"xff":               gofastly.RequestSettingXFFAppend,
+					"max_stale_age":     uint(90),
+					"action":            gofastly.RequestSettingActionPass,
+					"bypass_busy_wait":  false,
+					"force_miss":        false,
+					"force_ssl":         false,
+					"geo_headers":       false,
+					"timer_support":     false,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenRequestSettings(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
 
 func TestAccFastlyServiceV1RequestSetting_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -29,7 +73,7 @@ func TestAccFastlyServiceV1RequestSetting_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1RequestSetting(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -70,6 +114,10 @@ func testAccCheckFastlyServiceV1RequestSettingsAttributes(service *gofastly.Serv
 					// we don't know these things ahead of time, so populate them now
 					r.ServiceID = service.ID
 					r.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lr.CreatedAt = nil
+					lr.UpdatedAt = nil
 					if !reflect.DeepEqual(r, lr) {
 						return fmt.Errorf("Bad match Request Setting match, expected (%#v), got (%#v)", r, lr)
 					}

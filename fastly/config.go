@@ -3,13 +3,19 @@ package fastly
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/httpclient"
+	"github.com/terraform-providers/terraform-provider-fastly/version"
 )
+
+const TerraformProviderProductUserAgent = "terraform-provider-fastly"
 
 type Config struct {
 	ApiKey  string
 	BaseURL string
+
+	terraformVersion string
 }
 
 type FastlyClient struct {
@@ -23,14 +29,18 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, fmt.Errorf("[Err] No API key for Fastly")
 	}
 
-	gofastly.UserAgent = terraform.UserAgentString()
+	tfUserAgent := httpclient.TerraformUserAgent(c.terraformVersion)
+	providerUserAgent := fmt.Sprintf("%s/%s", TerraformProviderProductUserAgent, version.ProviderVersion)
+	ua := fmt.Sprintf("%s %s", tfUserAgent, providerUserAgent)
+	gofastly.UserAgent = ua
 
-	fconn, err := gofastly.NewClientForEndpoint(c.ApiKey, c.BaseURL)
-
+	fastlyClient, err := gofastly.NewClientForEndpoint(c.ApiKey, c.BaseURL)
 	if err != nil {
 		return nil, err
 	}
 
-	client.conn = fconn
+	fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", fastlyClient.HTTPClient.Transport)
+
+	client.conn = fastlyClient
 	return &client, nil
 }

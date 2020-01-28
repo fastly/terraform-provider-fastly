@@ -3,14 +3,74 @@ package fastly
 import (
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func TestResourceFastlyFlattenSyslog(t *testing.T) {
+	key, cert, err := generateKeyAndCert()
+	if err != nil {
+		t.Errorf("Failed to generate key and cert: %s", err)
+	}
+
+	cases := []struct {
+		remote []*gofastly.Syslog
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.Syslog{
+				{
+					Version:           1,
+					Name:              "somesyslogname",
+					Address:           "127.0.0.1",
+					IPV4:              "127.0.0.1",
+					Port:              8080,
+					Format:            "%h %l %u %t \"%r\" %>s %b",
+					FormatVersion:     1,
+					ResponseCondition: "response_condition_test",
+					MessageType:       "classic",
+					Token:             "abcd1234",
+					UseTLS:            true,
+					TLSCACert:         cert,
+					TLSHostname:       "example.com",
+					TLSClientCert:     cert,
+					TLSClientKey:      key,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":               "somesyslogname",
+					"address":            "127.0.0.1",
+					"port":               uint(8080),
+					"format":             "%h %l %u %t \"%r\" %>s %b",
+					"format_version":     uint(1),
+					"response_condition": "response_condition_test",
+					"message_type":       "classic",
+					"token":              "abcd1234",
+					"use_tls":            true,
+					"tls_hostname":       "example.com",
+					"tls_ca_cert":        cert,
+					"tls_client_cert":    cert,
+					"tls_client_key":     key,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenSyslogs(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
 
 func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -120,6 +180,55 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_syslog_useTls(t *testing.T) {
+	key, cert, err := generateKeyAndCert()
+	if err != nil {
+		t.Errorf("Failed to generate key and cert: %s", err)
+	}
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("%s.notadomain1.com", acctest.RandString(10))
+
+	// set env Vars to something we expect
+	resetEnv := setSyslogEnv(key, cert, t)
+	defer resetEnv()
+
+	log1 := gofastly.Syslog{
+		Version:       1,
+		Name:          "somesyslogname",
+		Address:       "127.0.0.1",
+		IPV4:          "127.0.0.1",
+		Port:          uint(514),
+		Format:        "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion: 1,
+		MessageType:   "classic",
+		UseTLS:        true,
+		TLSCACert:     cert,
+		TLSHostname:   "example.com",
+		TLSClientCert: cert,
+		TLSClientKey:  key,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1SyslogConfig_useTls(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "syslog.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail, syslogs []*gofastly.Syslog) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
@@ -187,7 +296,7 @@ resource "fastly_service_v1" "foo" {
   syslog {
     name               = "somesyslogname"
     address            = "127.0.0.1"
-	response_condition = "response_condition_test"
+    response_condition = "response_condition_test"
   }
   force_destroy = true
 }`, name, domain)
@@ -215,7 +324,7 @@ resource "fastly_service_v1" "foo" {
     name               = "somesyslogname"
     address            = "127.0.0.1"
     port               = 514
-	response_condition = "response_condition_test"
+    response_condition = "response_condition_test"
     message_type       = "blank"
   }
   syslog {
@@ -248,4 +357,69 @@ resource "fastly_service_v1" "foo" {
   }
   force_destroy = true
 }`, name, domain)
+}
+
+func testAccServiceV1SyslogConfig_useTls(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+  syslog {
+    name               = "somesyslogname"
+    address            = "127.0.0.1"
+    port               = 514
+    use_tls            = true
+    tls_hostname       = "example.com"
+  }
+  force_destroy = true
+}`, name, domain)
+}
+
+func setSyslogEnv(key string, cert string, t *testing.T) func() {
+	e := getSyslogEnv()
+	// Set all the envs to a dummy value
+	if err := os.Setenv("FASTLY_SYSLOG_CA_CERT", cert); err != nil {
+		t.Fatalf("Error setting env var FASTLY_SYSLOG_CA_CERT: %s", err)
+	}
+	if err := os.Setenv("FASTLY_SYSLOG_CLIENT_CERT", cert); err != nil {
+		t.Fatalf("Error setting env var FASTLY_SYSLOG_CLIENT_CERT: %s", err)
+	}
+	if err := os.Setenv("FASTLY_SYSLOG_CLIENT_KEY", key); err != nil {
+		t.Fatalf("Error setting env var FASTLY_SYSLOG_CLIENT_KEY: %s", err)
+	}
+
+	return func() {
+		// re-set all the envs we unset above
+		if err := os.Setenv("FASTLY_SYSLOG_CA_CERT", e.CaCert); err != nil {
+			t.Fatalf("Error resetting env var FASTLY_SYSLOG_CA_CERT: %s", err)
+		}
+		if err := os.Setenv("FASTLY_SYSLOG_CLIENT_CERT", e.ClientCert); err != nil {
+			t.Fatalf("Error resetting env var FASTLY_SYSLOG_CLIENT_CERT: %s", err)
+		}
+		if err := os.Setenv("FASTLY_SYSLOG_CLIENT_KEY", e.ClientKey); err != nil {
+			t.Fatalf("Error resetting env var FASTLY_SYSLOG_CLIENT_KEY: %s", err)
+		}
+	}
+}
+
+// struct to preserve the current environment
+type currentSyslogEnv struct {
+	CaCert, ClientCert, ClientKey string
+}
+
+func getSyslogEnv() *currentSyslogEnv {
+	// Grab any existing Fastly Syslog certs and keys and preserve, in the off chance
+	// they're actually set in the enviornment
+	return &currentSyslogEnv{
+		CaCert:     os.Getenv("FASTLY_SYSLOG_CA_CERT"),
+		ClientCert: os.Getenv("FASTLY_SYSLOG_CLIENT_CERT"),
+		ClientKey:  os.Getenv("FASTLY_SYSLOG_CLIENT_KEY"),
+	}
 }

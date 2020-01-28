@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccFastlyIPRanges(t *testing.T) {
@@ -16,7 +16,7 @@ func TestAccFastlyIPRanges(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccFastlyIPRangesConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccFastlyIPRanges("data.fastly_ip_ranges.some"),

@@ -1,17 +1,14 @@
 package fastly
 
 import (
-	"crypto/sha1"
-	"crypto/sha512"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
@@ -33,6 +30,19 @@ func resourceServiceV1() *schema.Resource {
 				Description: "Unique name for this Service",
 			},
 
+			"comment": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "Managed by Terraform",
+				Description: "A personal freeform descriptive note",
+			},
+
+			"version_comment": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A personal freeform descriptive note",
+			},
+
 			// Active Version represents the currently activated version in Fastly. In
 			// Terraform, we abstract this number away from the users and manage
 			// creating and activating. It's used internally, but also exported for
@@ -40,6 +50,24 @@ func resourceServiceV1() *schema.Resource {
 			"active_version": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+
+			// Cloned Version represents the latest cloned version by the provider. It
+			// gets set whenever Terraform detects changes and clones the currently
+			// activated version in order to modify it. Active Version and Cloned
+			// Version can be different if the Activate field is set to false in order
+			// to prevent the service from being activated. It is not used internally,
+			// but it is exported for users to see after running `terraform apply`.
+			"cloned_version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			"activate": {
+				Type:        schema.TypeBool,
+				Description: "Conditionally prevents the Service from being activated",
+				Default:     true,
+				Optional:    true,
 			},
 
 			"domain": {
@@ -74,11 +102,6 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The statement used to determine if the condition is met",
-							StateFunc: func(v interface{}) string {
-								value := v.(string)
-								// Trim newlines and spaces, to match Fastly API
-								return strings.TrimSpace(value)
-							},
 						},
 						"priority": {
 							Type:        schema.TypeInt,
@@ -87,9 +110,10 @@ func resourceServiceV1() *schema.Resource {
 							Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
+							ValidateFunc: validateConditionType(),
 						},
 					},
 				},
@@ -248,6 +272,11 @@ func resourceServiceV1() *schema.Resource {
 							Default:     80,
 							Description: "The port number Backend responds on. Default 80",
 						},
+						"override_host": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The hostname to override the Host header",
+						},
 						"request_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -335,6 +364,63 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     100,
 							Description: "The portion of traffic to send to a specific origins. Each origin receives weight/total of the traffic.",
+						},
+					},
+				},
+			},
+
+			"director": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A name to refer to this director",
+						},
+						"backends": {
+							Type:        schema.TypeSet,
+							Required:    true,
+							Description: "List of backends associated with this director",
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+						// optional fields
+						"capacity": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     100,
+							Description: "Load balancing weight for the backends",
+						},
+						"comment": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"shield": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Selected POP to serve as a 'shield' for origin servers.",
+						},
+						"quorum": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      75,
+							Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
+							ValidateFunc: validateDirectorQuorum(),
+						},
+						"type": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      1,
+							Description:  "Type of load balance group to use. Integer, 1 to 4. Values: 1 (random), 3 (hash), 4 (client)",
+							ValidateFunc: validateDirectorType(),
+						},
+						"retries": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     5,
+							Description: "How many backends to search if it fails",
 						},
 					},
 				},
@@ -428,40 +514,16 @@ func resourceServiceV1() *schema.Resource {
 							Description: "A name to refer to this Header object",
 						},
 						"action": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "One of set, append, delete, regex, or regex_repeat",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"set", "append", "delete", "regex", "regex_repeat"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly Header action is case sensitive and must be one of 'set', 'append', 'delete', 'regex', or 'regex_repeat'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of set, append, delete, regex, or regex_repeat",
+							ValidateFunc: validateHeaderAction(),
 						},
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Type to manipulate: request, fetch, cache, response",
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								var found bool
-								for _, t := range []string{"request", "fetch", "cache", "response"} {
-									if v.(string) == t {
-										found = true
-									}
-								}
-								if !found {
-									es = append(es, fmt.Errorf(
-										"Fastly Header type is case sensitive and must be one of 'request', 'fetch', 'cache', or 'response'; found: %s", v.(string)))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Type to manipulate: request, fetch, cache, response",
+							ValidateFunc: validateHeaderType(),
 						},
 						"destination": {
 							Type:        schema.TypeString,
@@ -543,15 +605,6 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
 							Description: "AWS Access Key",
 							Sensitive:   true,
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha512.Sum512([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						"s3_secret_key": {
 							Type:        schema.TypeString,
@@ -559,15 +612,6 @@ func resourceServiceV1() *schema.Resource {
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
 							Description: "AWS Secret Key",
 							Sensitive:   true,
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha512.Sum512([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						// Optional fields
 						"path": {
@@ -604,7 +648,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"timestamp_format": {
 							Type:        schema.TypeString,
@@ -628,7 +672,13 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      "classic",
 							Description:  "How the message should be formatted.",
-							ValidateFunc: validateLoggingMessageType,
+							ValidateFunc: validateLoggingMessageType(),
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -668,9 +718,16 @@ func resourceServiceV1() *schema.Resource {
 							Default:     "",
 							Description: "Name of a condition to apply this logging",
 						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement(),
+						},
 					},
 				},
 			},
+
 			"sumologic": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -699,7 +756,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -712,7 +769,13 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      "classic",
 							Description:  "How the message should be formatted.",
-							ValidateFunc: validateLoggingMessageType,
+							ValidateFunc: validateLoggingMessageType(),
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -788,6 +851,81 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Default:     "classic",
 							Description: "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement(),
+						},
+					},
+				},
+			},
+
+			"bigquerylogging": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Unique name to refer to this logging setup",
+						},
+						"project_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The ID of your GCP project",
+						},
+						"dataset": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The ID of your BigQuery dataset",
+						},
+						"table": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The ID of your BigQuery table",
+						},
+						// Optional fields
+						"email": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
+							Description: "The email address associated with the target BigQuery dataset on your account.",
+							Sensitive:   true,
+						},
+						"secret_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
+							Description: "The secret key associated with the target BigQuery dataset on your account.",
+							Sensitive:   true,
+						},
+						"format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The logging format desired.",
+							Default:     "%h %l %u %t \"%r\" %>s %b",
+						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Name of a condition to apply this logging.",
+						},
+						"template": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Big query table name suffix template",
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -883,7 +1021,7 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"token": {
 							Type:        schema.TypeString,
@@ -906,8 +1044,21 @@ func resourceServiceV1() *schema.Resource {
 						"tls_ca_cert": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "",
-							Description: "A secure certificate to authenticate the server with.",
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SYSLOG_CA_CERT", ""),
+							Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+						},
+						"tls_client_cert": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SYSLOG_CLIENT_CERT", ""),
+							Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+						},
+						"tls_client_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SYSLOG_CLIENT_KEY", ""),
+							Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+							Sensitive:   true,
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
@@ -920,7 +1071,13 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      "classic",
 							Description:  "How the message should be formatted.",
-							ValidateFunc: validateLoggingMessageType,
+							ValidateFunc: validateLoggingMessageType(),
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement(),
 						},
 					},
 				},
@@ -966,13 +1123,163 @@ func resourceServiceV1() *schema.Resource {
 							Optional:     true,
 							Default:      1,
 							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-							ValidateFunc: validateLoggingFormatVersion,
+							ValidateFunc: validateLoggingFormatVersion(),
 						},
 						"response_condition": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Default:     "",
 							Description: "Name of a condition to apply this logging.",
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed.",
+							ValidateFunc: validateLoggingPlacement(),
+						},
+					},
+				},
+			},
+
+			"splunk": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The unique name of the Splunk logging endpoint",
+						},
+						"url": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The Splunk URL to stream logs to",
+						},
+						"token": {
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", ""),
+							Description: "The Splunk token to be used for authentication",
+							Sensitive:   true,
+						},
+						// Optional fields
+						"format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "%h %l %u %t \"%r\" %>s %b",
+							Description: "Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t \"%r\" %>s %b`)",
+						},
+						"format_version": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      2,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
+							ValidateFunc: validateLoggingFormatVersion(),
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed",
+							ValidateFunc: validateLoggingPlacement(),
+						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the condition to apply",
+						},
+					},
+				},
+			},
+
+			"blobstoragelogging": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The unique name of the Azure Blob Storage logging endpoint",
+						},
+						"account_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The unique Azure Blob Storage namespace in which your data objects are stored",
+						},
+						"container": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The name of the Azure Blob Storage container in which to store logs",
+						},
+						"sas_token": {
+							Type:        schema.TypeString,
+							Required:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE", ""),
+							Description: "The Azure shared access signature providing write access to the blob service objects",
+							Sensitive:   true,
+						},
+						// Optional fields
+						"path": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The path to upload logs to. Must end with a trailing slash",
+						},
+						"period": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     3600,
+							Description: "How frequently the logs should be transferred, in seconds (default: 3600)",
+						},
+						"timestamp_format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "%Y-%m-%dT%H:%M:%S.000",
+							Description: "strftime specified timestamp formatting (default: `%Y-%m-%dT%H:%M:%S.000`)",
+						},
+						"gzip_level": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							Description: "The Gzip compression level (default: 0)",
+						},
+						"public_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+						},
+						"format": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "%h %l %u %t \"%r\" %>s %b",
+							Description: "Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t \"%r\" %>s %b`)",
+						},
+						"format_version": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      2,
+							Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
+							ValidateFunc: validateLoggingFormatVersion(),
+						},
+						"message_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "classic",
+							Description:  "How the message should be formatted (default: `classic`)",
+							ValidateFunc: validateLoggingMessageType(),
+						},
+						"placement": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Where in the generated VCL the logging call should be placed",
+							ValidateFunc: validateLoggingPlacement(),
+						},
+						"response_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name of the condition to apply",
 						},
 					},
 				},
@@ -1102,6 +1409,7 @@ func resourceServiceV1() *schema.Resource {
 					},
 				},
 			},
+
 			"vcl": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1116,15 +1424,6 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The contents of this VCL configuration",
-							StateFunc: func(v interface{}) string {
-								switch v.(type) {
-								case string:
-									hash := sha1.Sum([]byte(v.(string)))
-									return hex.EncodeToString(hash[:])
-								default:
-									return ""
-								}
-							},
 						},
 						"main": {
 							Type:        schema.TypeBool,
@@ -1137,6 +1436,112 @@ func resourceServiceV1() *schema.Resource {
 			},
 
 			"waf": wafSchema,
+			"snippet": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A unique name to refer to this VCL snippet",
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+							ValidateFunc: validateSnippetType(),
+						},
+						"content": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "The contents of the VCL snippet",
+						},
+						"priority": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     100,
+							Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
+						},
+					},
+				},
+			},
+			"dynamicsnippet": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A unique name to refer to this VCL snippet",
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+							ValidateFunc: validateSnippetType(),
+						},
+						"priority": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     100,
+							Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
+						},
+						"snippet_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Generated VCL snippet Id",
+						},
+					},
+				},
+			},
+			"acl": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Unique name to refer to this ACL",
+						},
+						// Optional fields
+						"acl_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Generated acl id",
+						},
+					},
+				},
+			},
+			"dictionary": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Unique name to refer to this Dictionary",
+						},
+						// Optional fields
+						"dictionary_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Generated dictionary ID",
+						},
+						"write_only": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Determines if items in the dictionary are readable or not",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -1149,7 +1554,7 @@ func resourceServiceV1Create(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 	service, err := conn.CreateService(&gofastly.CreateServiceInput{
 		Name:    d.Get("name").(string),
-		Comment: "Managed by Terraform",
+		Comment: d.Get("comment").(string),
 	})
 
 	if err != nil {
@@ -1167,11 +1572,12 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 	conn := meta.(*FastlyClient).conn
 
-	// Update Name. No new version is required for this
-	if d.HasChange("name") {
+	// Update Name and/or Comment. No new verions is required for this
+	if d.HasChange("name") || d.HasChange("comment") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
-			ID:   d.Id(),
-			Name: d.Get("name").(string),
+			ID:      d.Id(),
+			Name:    d.Get("name").(string),
+			Comment: d.Get("comment").(string),
 		})
 		if err != nil {
 			return err
@@ -1188,6 +1594,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"backend",
 		"default_host",
 		"default_ttl",
+		"director",
 		"header",
 		"gzip",
 		"healthcheck",
@@ -1196,23 +1603,55 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"gcslogging",
 		"bigquerylogging",
 		"syslog",
+		"sumologic",
 		"logentries",
+		"splunk",
+		"blobstoragelogging",
 		"response_object",
 		"condition",
 		"request_setting",
 		"cache_setting",
+		"snippet",
+		"dynamicsnippet",
 		"vcl",
 		"waf",
 		"sumologic",
+		"acl",
+		"dictionary",
 	} {
 		if d.HasChange(v) {
 			needsChange = true
 		}
 	}
 
+	// Update the active version's comment. No new version is required for this
+	if d.HasChange("version_comment") && !needsChange {
+		latestVersion := d.Get("active_version").(int)
+		if latestVersion == 0 {
+			// If the service was just created, there is an empty Version 1 available
+			// that is unlocked and can be updated
+			latestVersion = 1
+		}
+
+		opts := gofastly.UpdateVersionInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Comment: d.Get("version_comment").(string),
+		}
+
+		log.Printf("[DEBUG] Update Version opts: %#v", opts)
+		_, err := conn.UpdateVersion(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	initialVersion := false
+
 	if needsChange {
 		latestVersion := d.Get("active_version").(int)
 		if latestVersion == 0 {
+			initialVersion = true
 			// If the service was just created, there is an empty Version 1 available
 			// that is unlocked and can be updated
 			latestVersion = 1
@@ -1229,16 +1668,37 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 			// The new version number is named "Number", but it's actually a string
 			latestVersion = newVersion.Number
+			d.Set("cloned_version", latestVersion)
 
 			// New versions are not immediately found in the API, or are not
 			// immediately mutable, so we need to sleep a few and let Fastly ready
 			// itself. Typically, 7 seconds is enough
 			log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
 			time.Sleep(7 * time.Second)
+
+			// Update the cloned version's comment
+			if d.Get("version_comment").(string) != "" {
+				opts := gofastly.UpdateVersionInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Comment: d.Get("version_comment").(string),
+				}
+
+				log.Printf("[DEBUG] Update Version opts: %#v", opts)
+				_, err := conn.UpdateVersion(&opts)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		// update general settings
-		if d.HasChange("default_host") || d.HasChange("default_ttl") {
+
+		// If the requested default_ttl is 0, and this is the first
+		// version being created, HasChange will return false, but we need
+		// to set it anyway, so ensure we update the settings in that
+		// case.
+		if d.HasChange("default_host") || d.HasChange("default_ttl") || (d.Get("default_ttl") == 0 && initialVersion) {
 			opts := gofastly.UpdateSettingsInput{
 				Service: d.Id(),
 				Version: latestVersion,
@@ -1297,6 +1757,13 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					if err != nil {
 						return err
 					}
+				err := conn.DeleteCondition(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
 				}
 			}
 
@@ -1349,7 +1816,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Domain removal opts: %#v", opts)
 				err := conn.DeleteDomain(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1401,7 +1872,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Healthcheck removal opts: %#v", opts)
 				err := conn.DeleteHealthCheck(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1460,7 +1935,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
 				err := conn.DeleteBackend(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1473,6 +1952,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Version:             latestVersion,
 					Name:                df["name"].(string),
 					Address:             df["address"].(string),
+					OverrideHost:        df["override_host"].(string),
 					AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
 					SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
 					SSLHostname:         df["ssl_hostname"].(string),
@@ -1505,6 +1985,93 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		if d.HasChange("director") {
+			od, nd := d.GetChange("director")
+			if od == nil {
+				od = new(schema.Set)
+			}
+			if nd == nil {
+				nd = new(schema.Set)
+			}
+
+			ods := od.(*schema.Set)
+			nds := nd.(*schema.Set)
+
+			removeDirector := ods.Difference(nds).List()
+			addDirector := nds.Difference(ods).List()
+
+			// DELETE old director configurations
+			for _, dRaw := range removeDirector {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.DeleteDirectorInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    df["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Director Removal opts: %#v", opts)
+				err := conn.DeleteDirector(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new/updated Director
+			for _, dRaw := range addDirector {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.CreateDirectorInput{
+					Service:  d.Id(),
+					Version:  latestVersion,
+					Name:     df["name"].(string),
+					Comment:  df["comment"].(string),
+					Shield:   df["shield"].(string),
+					Capacity: uint(df["capacity"].(int)),
+					Quorum:   uint(df["quorum"].(int)),
+					Retries:  uint(df["retries"].(int)),
+				}
+
+				switch df["type"].(int) {
+				case 1:
+					opts.Type = gofastly.DirectorTypeRandom
+				case 2:
+					opts.Type = gofastly.DirectorTypeRoundRobin
+				case 3:
+					opts.Type = gofastly.DirectorTypeHash
+				case 4:
+					opts.Type = gofastly.DirectorTypeClient
+				}
+
+				log.Printf("[DEBUG] Director Create opts: %#v", opts)
+				_, err := conn.CreateDirector(&opts)
+				if err != nil {
+					return err
+				}
+
+				if v, ok := df["backends"]; ok {
+					if len(v.(*schema.Set).List()) > 0 {
+						for _, b := range v.(*schema.Set).List() {
+							opts := gofastly.CreateDirectorBackendInput{
+								Service:  d.Id(),
+								Version:  latestVersion,
+								Director: df["name"].(string),
+								Backend:  b.(string),
+							}
+
+							log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
+							_, err := conn.CreateDirectorBackend(&opts)
+							if err != nil {
+								return err
+							}
+						}
+					}
+				}
+			}
+		}
+
 		if d.HasChange("header") {
 			oh, nh := d.GetChange("header")
 			if oh == nil {
@@ -1531,7 +2098,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Header removal opts: %#v", opts)
 				err := conn.DeleteHeader(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1581,7 +2152,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Gzip removal opts: %#v", opts)
 				err := conn.DeleteGzip(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1650,7 +2225,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly S3 Logging removal opts: %#v", opts)
 				err := conn.DeleteS3(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1683,6 +2262,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				redundancy := strings.ToLower(sf["redundancy"].(string))
@@ -1727,7 +2307,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Papertrail removal opts: %#v", opts)
 				err := conn.DeletePapertrail(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1744,6 +2328,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Port:              uint(pf["port"].(int)),
 					Format:            pf["format"].(string),
 					ResponseCondition: pf["response_condition"].(string),
+					Placement:         pf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -1780,7 +2365,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Sumologic removal opts: %#v", opts)
 				err := conn.DeleteSumologic(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1797,6 +2386,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					FormatVersion:     sf["format_version"].(int),
 					ResponseCondition: sf["response_condition"].(string),
 					MessageType:       sf["message_type"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
@@ -1833,7 +2423,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly gcslogging removal opts: %#v", opts)
 				err := conn.DeleteGCS(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1855,6 +2449,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					TimestampFormat:   sf["timestamp_format"].(string),
 					MessageType:       sf["message_type"].(string),
 					ResponseCondition: sf["response_condition"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
@@ -1891,12 +2486,16 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly bigquerylogging removal opts: %#v", opts)
 				err := conn.DeleteBigQuery(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
 
-			// POST new bigquerylogging
+			// POST new/updated bigquerylogging
 			for _, pRaw := range addBigquerylogging {
 				sf := pRaw.(map[string]interface{})
 				opts := gofastly.CreateBigQueryInput{
@@ -1909,6 +2508,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					User:              sf["email"].(string),
 					SecretKey:         sf["secret_key"].(string),
 					ResponseCondition: sf["response_condition"].(string),
+					Template:          sf["template"].(string),
+					Placement:         sf["placement"].(string),
 				}
 
 				if sf["format"].(string) != "" {
@@ -1949,7 +2550,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Syslog removal opts: %#v", opts)
 				err := conn.DeleteSyslog(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -1970,8 +2575,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
 					TLSHostname:       slf["tls_hostname"].(string),
 					TLSCACert:         slf["tls_ca_cert"].(string),
+					TLSClientCert:     slf["tls_client_cert"].(string),
+					TLSClientKey:      slf["tls_client_key"].(string),
 					ResponseCondition: slf["response_condition"].(string),
 					MessageType:       slf["message_type"].(string),
+					Placement:         slf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -2008,7 +2616,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Logentries removal opts: %#v", opts)
 				err := conn.DeleteLogentries(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2027,10 +2639,136 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Format:            slf["format"].(string),
 					FormatVersion:     uint(slf["format_version"].(int)),
 					ResponseCondition: slf["response_condition"].(string),
+					Placement:         slf["placement"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
 				_, err := conn.CreateLogentries(&opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// find difference in Splunk logging configurations
+		if d.HasChange("splunk") {
+			os, ns := d.GetChange("splunk")
+			if os == nil {
+				os = new(schema.Set)
+			}
+			if ns == nil {
+				ns = new(schema.Set)
+			}
+
+			oss := os.(*schema.Set)
+			nss := ns.(*schema.Set)
+
+			remove := oss.Difference(nss).List()
+			add := nss.Difference(oss).List()
+
+			// DELETE old Splunk logging configurations
+			for _, sRaw := range remove {
+				sf := sRaw.(map[string]interface{})
+				opts := gofastly.DeleteSplunkInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    sf["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Splunk removal opts: %#v", opts)
+				err := conn.DeleteSplunk(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new/updated Splunk configurations
+			for _, sRaw := range add {
+				sf := sRaw.(map[string]interface{})
+				opts := gofastly.CreateSplunkInput{
+					Service:           d.Id(),
+					Version:           latestVersion,
+					Name:              sf["name"].(string),
+					URL:               sf["url"].(string),
+					Format:            sf["format"].(string),
+					FormatVersion:     uint(sf["format_version"].(int)),
+					ResponseCondition: sf["response_condition"].(string),
+					Placement:         sf["placement"].(string),
+					Token:             sf["token"].(string),
+				}
+
+				log.Printf("[DEBUG] Splunk create opts: %#v", opts)
+				_, err := conn.CreateSplunk(&opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// find difference in Blob Storage logging configurations
+		if d.HasChange("blobstoragelogging") {
+			obsl, nbsl := d.GetChange("blobstoragelogging")
+			if obsl == nil {
+				obsl = new(schema.Set)
+			}
+			if nbsl == nil {
+				nbsl = new(schema.Set)
+			}
+
+			obsls := obsl.(*schema.Set)
+			nbsls := nbsl.(*schema.Set)
+
+			remove := obsls.Difference(nbsls).List()
+			add := nbsls.Difference(obsls).List()
+
+			// DELETE old Blob Storage logging configurations
+			for _, bslRaw := range remove {
+				bslf := bslRaw.(map[string]interface{})
+				opts := gofastly.DeleteBlobStorageInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    bslf["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Blob Storage logging removal opts: %#v", opts)
+				err := conn.DeleteBlobStorage(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new/updated Blob Storage logging configurations
+			for _, bslRaw := range add {
+				bslf := bslRaw.(map[string]interface{})
+				opts := gofastly.CreateBlobStorageInput{
+					Service:           d.Id(),
+					Version:           latestVersion,
+					Name:              bslf["name"].(string),
+					Path:              bslf["path"].(string),
+					AccountName:       bslf["account_name"].(string),
+					Container:         bslf["container"].(string),
+					SASToken:          bslf["sas_token"].(string),
+					Period:            uint(bslf["period"].(int)),
+					TimestampFormat:   bslf["timestamp_format"].(string),
+					GzipLevel:         uint(bslf["gzip_level"].(int)),
+					PublicKey:         bslf["public_key"].(string),
+					Format:            bslf["format"].(string),
+					FormatVersion:     uint(bslf["format_version"].(int)),
+					MessageType:       bslf["message_type"].(string),
+					Placement:         bslf["placement"].(string),
+					ResponseCondition: bslf["response_condition"].(string),
+				}
+
+				log.Printf("[DEBUG] Blob Storage logging create opts: %#v", opts)
+				_, err := conn.CreateBlobStorage(&opts)
 				if err != nil {
 					return err
 				}
@@ -2067,8 +2805,6 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					if err != nil {
 						return err
 					}
-				}
-			}
 
 			// POST new/updated Response Object
 			for _, rRaw := range addResponseObject {
@@ -2120,7 +2856,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Request Setting removal opts: %#v", opts)
 				err := conn.DeleteRequestSetting(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2172,7 +2912,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly VCL Removal opts: %#v", opts)
 				err := conn.DeleteVCL(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2211,6 +2955,116 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		if err := updateWAF(conn, d, latestVersion); err != nil {
 			return err
+		// Find differences in VCL snippets
+		if d.HasChange("snippet") {
+			// Note: as above with Gzip and S3 logging, we don't utilize the PUT
+			// endpoint to update a VCL snippet, we simply destroy it and create a new one.
+			oldSnippetVal, newSnippetVal := d.GetChange("snippet")
+			if oldSnippetVal == nil {
+				oldSnippetVal = new(schema.Set)
+			}
+			if newSnippetVal == nil {
+				newSnippetVal = new(schema.Set)
+			}
+
+			oldSnippetSet := oldSnippetVal.(*schema.Set)
+			newSnippetSet := newSnippetVal.(*schema.Set)
+
+			remove := oldSnippetSet.Difference(newSnippetSet).List()
+			add := newSnippetSet.Difference(oldSnippetSet).List()
+
+			// Delete removed VCL Snippet configurations
+			for _, dRaw := range remove {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.DeleteSnippetInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    df["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly VCL Snippet Removal opts: %#v", opts)
+				err := conn.DeleteSnippet(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new VCL Snippet configurations
+			for _, dRaw := range add {
+				opts, err := buildSnippet(dRaw.(map[string]interface{}))
+				if err != nil {
+					log.Printf("[DEBUG] Error building VCL Snippet: %s", err)
+					return err
+				}
+				opts.Service = d.Id()
+				opts.Version = latestVersion
+
+				log.Printf("[DEBUG] Fastly VCL Snippet Addition opts: %#v", opts)
+				_, err = conn.CreateSnippet(opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// Find differences in VCL dynamic snippets
+		if d.HasChange("dynamicsnippet") {
+			// Note: as above with Gzip and S3 logging, we don't utilize the PUT
+			// endpoint to update a VCL dynamic snippet, we simply destroy it and create a new one.
+			oldDynamicSnippetVal, newDynamicSnippetVal := d.GetChange("dynamicsnippet")
+			if oldDynamicSnippetVal == nil {
+				oldDynamicSnippetVal = new(schema.Set)
+			}
+			if newDynamicSnippetVal == nil {
+				newDynamicSnippetVal = new(schema.Set)
+			}
+
+			oldDynamicSnippetSet := oldDynamicSnippetVal.(*schema.Set)
+			newDynamicSnippetSet := newDynamicSnippetVal.(*schema.Set)
+
+			remove := oldDynamicSnippetSet.Difference(newDynamicSnippetSet).List()
+			add := newDynamicSnippetSet.Difference(oldDynamicSnippetSet).List()
+
+			// Delete removed VCL Snippet configurations
+			for _, dRaw := range remove {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.DeleteSnippetInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    df["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Removal opts: %#v", opts)
+				err := conn.DeleteSnippet(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new VCL Snippet configurations
+			for _, dRaw := range add {
+				opts, err := buildDynamicSnippet(dRaw.(map[string]interface{}))
+				if err != nil {
+					log.Printf("[DEBUG] Error building VCL Dynamic Snippet: %s", err)
+					return err
+				}
+				opts.Service = d.Id()
+				opts.Version = latestVersion
+
+				log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Addition opts: %#v", opts)
+				_, err = conn.CreateSnippet(opts)
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		// Find differences in Cache Settings
@@ -2240,7 +3094,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Fastly Cache Settings removal opts: %#v", opts)
 				err := conn.DeleteCacheSetting(&opts)
-				if err != nil {
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
 					return err
 				}
 			}
@@ -2263,6 +3121,117 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// Find differences in ACLs
+		if d.HasChange("acl") {
+
+			oldACLVal, newACLVal := d.GetChange("acl")
+			if oldACLVal == nil {
+				oldACLVal = new(schema.Set)
+			}
+			if newACLVal == nil {
+				newACLVal = new(schema.Set)
+			}
+
+			oldACLSet := oldACLVal.(*schema.Set)
+			newACLSet := newACLVal.(*schema.Set)
+
+			remove := oldACLSet.Difference(newACLSet).List()
+			add := newACLSet.Difference(oldACLSet).List()
+
+			// Delete removed ACL configurations
+			for _, vRaw := range remove {
+				val := vRaw.(map[string]interface{})
+				opts := gofastly.DeleteACLInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    val["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly ACL removal opts: %#v", opts)
+				err := conn.DeleteACL(&opts)
+
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new ACL configurations
+			for _, vRaw := range add {
+				val := vRaw.(map[string]interface{})
+				opts := gofastly.CreateACLInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    val["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
+				_, err := conn.CreateACL(&opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// Find differences in dictionary
+		if d.HasChange("dictionary") {
+
+			oldDictVal, newDictVal := d.GetChange("dictionary")
+
+			if oldDictVal == nil {
+				oldDictVal = new(schema.Set)
+			}
+			if newDictVal == nil {
+				newDictVal = new(schema.Set)
+			}
+
+			oldDictSet := oldDictVal.(*schema.Set)
+			newDictSet := newDictVal.(*schema.Set)
+
+			remove := oldDictSet.Difference(newDictSet).List()
+			add := newDictSet.Difference(oldDictSet).List()
+
+			// Delete removed dictionary configurations
+			for _, dRaw := range remove {
+				df := dRaw.(map[string]interface{})
+				opts := gofastly.DeleteDictionaryInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    df["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly Dictionary Removal opts: %#v", opts)
+				err := conn.DeleteDictionary(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new dictionary configurations
+			for _, dRaw := range add {
+				opts, err := buildDictionary(dRaw.(map[string]interface{}))
+				if err != nil {
+					log.Printf("[DEBUG] Error building Dicitionary: %s", err)
+					return err
+				}
+				opts.Service = d.Id()
+				opts.Version = latestVersion
+
+				log.Printf("[DEBUG] Fastly Dictionary Addition opts: %#v", opts)
+				_, err = conn.CreateDictionary(opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
 		// validate version
 		log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
 		valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
@@ -2278,18 +3247,26 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
-		log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-		_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-			Service: d.Id(),
-			Version: latestVersion,
-		})
-		if err != nil {
-			return fmt.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
-		}
+		shouldActivate := d.Get("activate").(bool)
+		if shouldActivate {
+			log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+			_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
+				Service: d.Id(),
+				Version: latestVersion,
+			})
+			if err != nil {
+				return fmt.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
+			}
 
-		// Only if the version is valid and activated do we set the active_version.
-		// This prevents us from getting stuck in cloning an invalid version
-		d.Set("active_version", latestVersion)
+			// Only if the version is valid and activated do we set the active_version.
+			// This prevents us from getting stuck in cloning an invalid version
+			d.Set("active_version", latestVersion)
+		} else {
+			log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+			log.Print("[INFO] The Terraform definition is explicitly specified to not activate the changes on Fastly")
+			log.Printf("[INFO] Version (%v) has been pushed and validated", latestVersion)
+			log.Printf("[INFO] Visit https://manage.fastly.com/configure/services/%s/versions/%v and activate it manually", d.Id(), latestVersion)
+		}
 	}
 
 	return resourceServiceV1Read(d, meta)
@@ -2321,6 +3298,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", s.Name)
+	d.Set("comment", s.Comment)
+	d.Set("version_comment", s.Version.Comment)
 	d.Set("active_version", s.ActiveVersion.Number)
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll
@@ -2373,6 +3352,40 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("backend", bl); err != nil {
 			log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
+		}
+
+		// refresh directors
+		log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
+		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		log.Printf("[DEBUG] Refreshing Director Backends for (%s)", d.Id())
+		var directorBackendList []*gofastly.DirectorBackend
+
+		for _, director := range directorList {
+			for _, backend := range backendList {
+				directorBackendGet, err := conn.GetDirectorBackend(&gofastly.GetDirectorBackendInput{
+					Service:  d.Id(),
+					Version:  s.ActiveVersion.Number,
+					Director: director.Name,
+					Backend:  backend.Name,
+				})
+				if err == nil {
+					directorBackendList = append(directorBackendList, directorBackendGet)
+				}
+			}
+		}
+
+		dirl := flattenDirectors(directorList, directorBackendList)
+
+		if err := d.Set("director", dirl); err != nil {
+			log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
 		}
 
 		// refresh headers
@@ -2542,6 +3555,40 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
 		}
 
+		// refresh Splunk Logging
+		log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
+		splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Splunks for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		spl := flattenSplunks(splunkList)
+
+		if err := d.Set("splunk", spl); err != nil {
+			log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
+		}
+
+		// refresh Blob Storage Logging
+		log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
+		blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Blob Storages for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		bsl := flattenBlobStorages(blobStorageList)
+
+		if err := d.Set("blobstoragelogging", bsl); err != nil {
+			log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
+		}
+
 		// refresh Response Objects
 		log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
 		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
@@ -2617,6 +3664,42 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 		if err := d.Set("waf", wafs); err != nil {
 			log.Printf("[WARN] Error setting WAFs for (%s): %s", d.Id(), err)
+		// refresh ACLs
+		log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
+		aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up ACLs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		al := flattenACLs(aclList)
+
+		if err := d.Set("acl", al); err != nil {
+			log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
+		}
+
+		// refresh VCL Snippets
+		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
+		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		vsl := flattenSnippets(snippetList)
+
+		if err := d.Set("snippet", vsl); err != nil {
+			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
+		}
+
+		dynamicSnippets := flattenDynamicSnippets(snippetList)
+
+		if err := d.Set("dynamicsnippet", dynamicSnippets); err != nil {
+			log.Printf("[WARN] Error setting VCL Dynamic Snippets for (%s): %s", d.Id(), err)
 		}
 
 		// refresh Cache Settings
@@ -2633,6 +3716,22 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("cache_setting", csl); err != nil {
 			log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
+		}
+
+		// refresh Dictionaries
+		log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
+		dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		dict := flattenDictionaries(dictList)
+
+		if err := d.Set("dictionary", dict); err != nil {
+			log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
 		}
 
 	} else {
@@ -2693,55 +3792,6 @@ func resourceServiceV1Delete(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func flattenDomains(list []*gofastly.Domain) []map[string]interface{} {
-	dl := make([]map[string]interface{}, 0, len(list))
-
-	for _, d := range list {
-		dl = append(dl, map[string]interface{}{
-			"name":    d.Name,
-			"comment": d.Comment,
-		})
-	}
-
-	return dl
-}
-
-func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
-	var bl []map[string]interface{}
-	for _, b := range backendList {
-		// Convert Backend to a map for saving to state.
-		nb := map[string]interface{}{
-			"name":                  b.Name,
-			"address":               b.Address,
-			"auto_loadbalance":      b.AutoLoadbalance,
-			"between_bytes_timeout": int(b.BetweenBytesTimeout),
-			"connect_timeout":       int(b.ConnectTimeout),
-			"error_threshold":       int(b.ErrorThreshold),
-			"first_byte_timeout":    int(b.FirstByteTimeout),
-			"max_conn":              int(b.MaxConn),
-			"port":                  int(b.Port),
-			"shield":                b.Shield,
-			"ssl_check_cert":        b.SSLCheckCert,
-			"ssl_hostname":          b.SSLHostname,
-			"ssl_ca_cert":           b.SSLCACert,
-			"ssl_client_key":        b.SSLClientKey,
-			"ssl_client_cert":       b.SSLClientCert,
-			"max_tls_version":       b.MaxTLSVersion,
-			"min_tls_version":       b.MinTLSVersion,
-			"ssl_ciphers":           strings.Join(b.SSLCiphers, ","),
-			"use_ssl":               b.UseSSL,
-			"ssl_cert_hostname":     b.SSLCertHostname,
-			"ssl_sni_hostname":      b.SSLSNIHostname,
-			"weight":                int(b.Weight),
-			"request_condition":     b.RequestCondition,
-			"healthcheck":           b.HealthCheck,
-		}
-
-		bl = append(bl, nb)
-	}
-	return bl
-}
-
 // findService finds a Fastly Service via the ListServices endpoint, returning
 // the Service if found.
 //
@@ -2771,6 +3821,92 @@ func findService(id string, meta interface{}) (*gofastly.Service, error) {
 	}
 
 	return nil, fastlyNoServiceFoundErr
+}
+
+func flattenDomains(list []*gofastly.Domain) []map[string]interface{} {
+	dl := make([]map[string]interface{}, 0, len(list))
+
+	for _, d := range list {
+		dl = append(dl, map[string]interface{}{
+			"name":    d.Name,
+			"comment": d.Comment,
+		})
+	}
+
+	return dl
+}
+
+func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
+	var bl []map[string]interface{}
+	for _, b := range backendList {
+		// Convert Backend to a map for saving to state.
+		nb := map[string]interface{}{
+			"name":                  b.Name,
+			"address":               b.Address,
+			"auto_loadbalance":      b.AutoLoadbalance,
+			"between_bytes_timeout": int(b.BetweenBytesTimeout),
+			"connect_timeout":       int(b.ConnectTimeout),
+			"error_threshold":       int(b.ErrorThreshold),
+			"first_byte_timeout":    int(b.FirstByteTimeout),
+			"max_conn":              int(b.MaxConn),
+			"port":                  int(b.Port),
+			"override_host":         b.OverrideHost,
+			"shield":                b.Shield,
+			"ssl_check_cert":        b.SSLCheckCert,
+			"ssl_hostname":          b.SSLHostname,
+			"ssl_ca_cert":           b.SSLCACert,
+			"ssl_client_key":        b.SSLClientKey,
+			"ssl_client_cert":       b.SSLClientCert,
+			"max_tls_version":       b.MaxTLSVersion,
+			"min_tls_version":       b.MinTLSVersion,
+			"ssl_ciphers":           strings.Join(b.SSLCiphers, ","),
+			"use_ssl":               b.UseSSL,
+			"ssl_cert_hostname":     b.SSLCertHostname,
+			"ssl_sni_hostname":      b.SSLSNIHostname,
+			"weight":                int(b.Weight),
+			"request_condition":     b.RequestCondition,
+			"healthcheck":           b.HealthCheck,
+		}
+
+		bl = append(bl, nb)
+	}
+	return bl
+}
+
+func flattenDirectors(directorList []*gofastly.Director, directorBackendList []*gofastly.DirectorBackend) []map[string]interface{} {
+	var dl []map[string]interface{}
+	for _, d := range directorList {
+		// Convert Director to a map for saving to state.
+		nd := map[string]interface{}{
+			"name":     d.Name,
+			"comment":  d.Comment,
+			"shield":   d.Shield,
+			"type":     d.Type,
+			"quorum":   int(d.Quorum),
+			"capacity": int(d.Capacity),
+			"retries":  int(d.Retries),
+		}
+
+		var b []interface{}
+		for _, db := range directorBackendList {
+			if d.Name == db.Director {
+				b = append(b, db.Backend)
+			}
+		}
+		if len(b) > 0 {
+			nd["backends"] = schema.NewSet(schema.HashString, b)
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range nd {
+			if v == "" {
+				delete(nd, k)
+			}
+		}
+
+		dl = append(dl, nd)
+	}
+	return dl
 }
 
 func flattenHeaders(headerList []*gofastly.Header) []map[string]interface{} {
@@ -2962,6 +4098,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"redundancy":         s.Redundancy,
 			"response_condition": s.ResponseCondition,
 			"message_type":       s.MessageType,
+			"placement":          s.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -2987,6 +4124,7 @@ func flattenPapertrails(papertrailList []*gofastly.Papertrail) []map[string]inte
 			"port":               p.Port,
 			"format":             p.Format,
 			"response_condition": p.ResponseCondition,
+			"placement":          p.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3013,6 +4151,7 @@ func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interfa
 			"response_condition": p.ResponseCondition,
 			"message_type":       p.MessageType,
 			"format_version":     int(p.FormatVersion),
+			"placement":          p.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3044,6 +4183,7 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 			"message_type":       currentGCS.MessageType,
 			"format":             currentGCS.Format,
 			"timestamp_format":   currentGCS.TimestampFormat,
+			"placement":          currentGCS.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3101,8 +4241,11 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 			"use_tls":            p.UseTLS,
 			"tls_hostname":       p.TLSHostname,
 			"tls_ca_cert":        p.TLSCACert,
+			"tls_client_cert":    p.TLSClientCert,
+			"tls_client_key":     p.TLSClientKey,
 			"response_condition": p.ResponseCondition,
 			"message_type":       p.MessageType,
+			"placement":          p.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3130,6 +4273,7 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 			"format":             currentLE.Format,
 			"format_version":     currentLE.FormatVersion,
 			"response_condition": currentLE.ResponseCondition,
+			"placement":          currentLE.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -3143,6 +4287,67 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 	}
 
 	return LEList
+}
+
+func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
+	var sl []map[string]interface{}
+	for _, s := range splunkList {
+		// Convert Splunk to a map for saving to state.
+		nbs := map[string]interface{}{
+			"name":               s.Name,
+			"url":                s.URL,
+			"format":             s.Format,
+			"format_version":     s.FormatVersion,
+			"response_condition": s.ResponseCondition,
+			"placement":          s.Placement,
+			"token":              s.Token,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range nbs {
+			if v == "" {
+				delete(nbs, k)
+			}
+		}
+
+		sl = append(sl, nbs)
+	}
+
+	return sl
+}
+
+func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]interface{} {
+	var bsl []map[string]interface{}
+	for _, bs := range blobStorageList {
+		// Convert Blob Storages to a map for saving to state.
+		nbs := map[string]interface{}{
+			"name":               bs.Name,
+			"path":               bs.Path,
+			"account_name":       bs.AccountName,
+			"container":          bs.Container,
+			"sas_token":          bs.SASToken,
+			"period":             bs.Period,
+			"timestamp_format":   bs.TimestampFormat,
+			"gzip_level":         bs.GzipLevel,
+			"public_key":         bs.PublicKey,
+			"format":             bs.Format,
+			"format_version":     bs.FormatVersion,
+			"message_type":       bs.MessageType,
+			"placement":          bs.Placement,
+			"response_condition": bs.ResponseCondition,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range nbs {
+			if v == "" {
+				delete(nbs, k)
+			}
+		}
+
+		bsl = append(bsl, nbs)
+	}
+
+	return bsl
 }
 
 func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]interface{} {
@@ -3314,6 +4519,189 @@ func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
 	}
 
 	return vl
+}
+
+func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
+	var al []map[string]interface{}
+	for _, acl := range aclList {
+		// Convert VCLs to a map for saving to state.
+		vclMap := map[string]interface{}{
+			"acl_id": acl.ID,
+			"name":   acl.Name,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range vclMap {
+			if v == "" {
+				delete(vclMap, k)
+			}
+		}
+
+		al = append(al, vclMap)
+	}
+
+	return al
+}
+
+func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
+	df := snippetMap.(map[string]interface{})
+	opts := gofastly.CreateSnippetInput{
+		Name:     df["name"].(string),
+		Content:  df["content"].(string),
+		Priority: df["priority"].(int),
+	}
+
+	snippetType := strings.ToLower(df["type"].(string))
+	switch snippetType {
+	case "init":
+		opts.Type = gofastly.SnippetTypeInit
+	case "recv":
+		opts.Type = gofastly.SnippetTypeRecv
+	case "hit":
+		opts.Type = gofastly.SnippetTypeHit
+	case "miss":
+		opts.Type = gofastly.SnippetTypeMiss
+	case "pass":
+		opts.Type = gofastly.SnippetTypePass
+	case "fetch":
+		opts.Type = gofastly.SnippetTypeFetch
+	case "error":
+		opts.Type = gofastly.SnippetTypeError
+	case "deliver":
+		opts.Type = gofastly.SnippetTypeDeliver
+	case "log":
+		opts.Type = gofastly.SnippetTypeLog
+	case "none":
+		opts.Type = gofastly.SnippetTypeNone
+	}
+
+	return &opts, nil
+}
+
+func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
+	df := dynamicSnippetMap.(map[string]interface{})
+	opts := gofastly.CreateSnippetInput{
+		Name:     df["name"].(string),
+		Priority: df["priority"].(int),
+		Dynamic:  1,
+	}
+
+	snippetType := strings.ToLower(df["type"].(string))
+	switch snippetType {
+	case "init":
+		opts.Type = gofastly.SnippetTypeInit
+	case "recv":
+		opts.Type = gofastly.SnippetTypeRecv
+	case "hit":
+		opts.Type = gofastly.SnippetTypeHit
+	case "miss":
+		opts.Type = gofastly.SnippetTypeMiss
+	case "pass":
+		opts.Type = gofastly.SnippetTypePass
+	case "fetch":
+		opts.Type = gofastly.SnippetTypeFetch
+	case "error":
+		opts.Type = gofastly.SnippetTypeError
+	case "deliver":
+		opts.Type = gofastly.SnippetTypeDeliver
+	case "log":
+		opts.Type = gofastly.SnippetTypeLog
+	case "none":
+		opts.Type = gofastly.SnippetTypeNone
+	}
+
+	return &opts, nil
+}
+
+func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
+	var sl []map[string]interface{}
+	for _, snippet := range snippetList {
+		// Skip dynamic snippets
+		if snippet.Dynamic == 1 {
+			continue
+		}
+
+		// Convert VCLs to a map for saving to state.
+		snippetMap := map[string]interface{}{
+			"name":     snippet.Name,
+			"type":     snippet.Type,
+			"priority": int(snippet.Priority),
+			"content":  snippet.Content,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range snippetMap {
+			if v == "" {
+				delete(snippetMap, k)
+			}
+		}
+
+		sl = append(sl, snippetMap)
+	}
+
+	return sl
+}
+
+func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string]interface{} {
+	var sl []map[string]interface{}
+	for _, dynamicSnippet := range dynamicSnippetList {
+		// Skip non-dynamic snippets
+		if dynamicSnippet.Dynamic == 0 {
+			continue
+		}
+
+		// Convert VCLs to a map for saving to state.
+		dynamicSnippetMap := map[string]interface{}{
+			"snippet_id": dynamicSnippet.ID,
+			"name":       dynamicSnippet.Name,
+			"type":       dynamicSnippet.Type,
+			"priority":   int(dynamicSnippet.Priority),
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range dynamicSnippetMap {
+			if v == "" {
+				delete(dynamicSnippetMap, k)
+			}
+		}
+
+		sl = append(sl, dynamicSnippetMap)
+	}
+
+	return sl
+}
+
+func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
+	df := dictMap.(map[string]interface{})
+	opts := gofastly.CreateDictionaryInput{
+		Name:      df["name"].(string),
+		WriteOnly: gofastly.CBool(df["write_only"].(bool)),
+	}
+
+	return &opts, nil
+}
+
+func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
+	var dl []map[string]interface{}
+	for _, currentDict := range dictList {
+
+		dictMapString := map[string]interface{}{
+			"dictionary_id": currentDict.ID,
+			"name":          currentDict.Name,
+			"write_only":    currentDict.WriteOnly,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range dictMapString {
+			if v == "" {
+				delete(dictMapString, k)
+			}
+		}
+
+		dl = append(dl, dictMapString)
+	}
+
+	return dl
 }
 
 func validateVCLs(d *schema.ResourceData) error {

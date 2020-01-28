@@ -5,10 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestResourceFastlyFlattenSumologic(t *testing.T) {
@@ -18,9 +18,9 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 	}{
 		{
 			remote: []*gofastly.Sumologic{
-				&gofastly.Sumologic{
+				{
 					Name:              "sumo collector",
-					URL:               "https://sumologic.com/collector/1",
+					URL:               "https://collectors.sumologic.com/receiver/1",
 					Format:            "log format",
 					FormatVersion:     2,
 					MessageType:       "classic",
@@ -28,9 +28,9 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 				},
 			},
 			local: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":               "sumo collector",
-					"url":                "https://sumologic.com/collector/1",
+					"url":                "https://collectors.sumologic.com/receiver/1",
 					"format":             "log format",
 					"format_version":     2,
 					"message_type":       "classic",
@@ -56,14 +56,14 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 
 	s := gofastly.Sumologic{
 		Name:          "sumologger",
-		URL:           "https://sumologic.com/collector/1",
+		URL:           "https://collectors.sumologic.com/receiver/1",
 		FormatVersion: 2,
 		Format:        "my format",
 	}
 
 	sn := gofastly.Sumologic{
 		Name:          "sumologger",
-		URL:           "https://sumologic.com/collector/1",
+		URL:           "https://collectors.sumologic.com/receiver/1",
 		FormatVersion: 2,
 		Format:        "my format new",
 	}
@@ -73,7 +73,7 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1ConfigSumologic(name, domainName, backendName, s),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -84,7 +84,7 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 						"fastly_service_v1.foo", "sumologic.#", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccServiceV1ConfigSumologic(name, domainName, backendName, sn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),

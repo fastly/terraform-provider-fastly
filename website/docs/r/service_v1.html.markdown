@@ -119,6 +119,40 @@ resource "fastly_service_v1" "demo" {
 }
 ```
 
+Basic usage with [custom Director](https://docs.fastly.com/api/config#director):
+
+```hcl
+resource "fastly_service_v1" "demo" {
+  name = "demofastly"
+
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "origin1"
+    port    = 80
+  }
+
+  backend {
+    address = "127.0.0.2"
+    name    = "origin2"
+    port    = 80
+  }
+
+  director {
+    name = "mydirector"
+    quorum = 0
+    type = 3
+    backends = [ "origin1", "origin2" ]
+  }
+
+  force_destroy = true
+}
+```
+
 -> **Note:** For an AWS S3 Bucket, the Backend address is
 `<domain>.s3-website-<region>.amazonaws.com`. The `default_host` attribute
 should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
@@ -128,7 +162,10 @@ Fastly documentation on [Amazon S3][fastly-s3].
 
 The following arguments are supported:
 
+* `activate` - (Optional) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to false. Default true.
 * `name` - (Required) The unique name for the Service to create.
+* `comment` - (Optional) Description field for the service. Default `Managed by Terraform`.
+* `version_comment` - (Optional) Description field for the version.
 * `domain` - (Required) A set of Domain names to serve as entry points for your
 Service. Defined below.
 * `backend` - (Optional) A set of Backends to service requests from your Domains.
@@ -137,12 +174,13 @@ Defined below. Backends must be defined in this argument, or defined in the
 * `condition` - (Optional) A set of conditions to add logic to any basic
 configuration object in this service. Defined below.
 * `cache_setting` - (Optional) A set of Cache Settings, allowing you to override
+* `director` - (Optional) A director to allow more control over balancing traffic over backends.
 when an item is not to be cached based on an above `condition`. Defined below
 * `gzip` - (Required) A set of gzip rules to control automatic gzipping of
 content. Defined below.
 * `header` - (Optional) A set of Headers to manipulate for each request. Defined
 below.
-* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how fastly interacts with the cache based on its health.
+* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
 * `default_host` - (Optional) The default hostname.
 * `default_ttl` - (Optional) The default Time-to-live (TTL) for
 requests.
@@ -157,14 +195,24 @@ Defined below.
 Defined below.
 * `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
 Defined below.
+* `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
+Defined below.
 * `syslog` - (Optional) A syslog endpoint to send streaming logs too.
 Defined below.
 * `logentries` - (Optional) A logentries endpoint to send streaming logs too.
 Defined below.
+* `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
+Defined below.
+* `blobstoragelogging` - (Optional) An Azure Blob Storage endpoint to send streaming logs too.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
+* `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
+* `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. The
 ability to upload custom VCL code is not enabled by default for new Fastly
 accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
+* `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
+* `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
 
 The `domain` block supports:
 
@@ -186,6 +234,7 @@ Default `1000`
 * `max_conn` - (Optional) Maximum number of connections for this Backend.
 Default `200`.
 * `port` - (Optional) The port number on which the Backend responds. Default `80`.
+* `override_host` - (Optional) The hostname to override the Host header.
 * `request_condition` - (Optional, string) Name of already defined `condition`, which if met, will select this backend during a request.
 * `use_ssl` - (Optional) Whether or not to use SSL to reach the backend. Default `false`.
 * `max_tls_version` - (Optional) Maximum allowed TLS version on SSL connections to this backend.
@@ -216,6 +265,17 @@ used in the `request_condition`, `response_condition`, or
 * `priority` - (Optional) A number used to determine the order in which multiple
 conditions execute. Lower numbers execute first. Default `10`.
 
+The `director` block supports:
+
+* `name` - (Required) Unique name for this Director.
+* `backends` - (Required) Names of defined backends to map the director to. Example: `[ "origin1", "origin2" ]`
+* `comment` - (Optional) An optional comment about the Director.
+* `shield` - (Optional) Selected POP to serve as a "shield" for origin servers.
+* `capacity` - (Optional) Load balancing weight for the backends. Default `100`.
+* `quorum` - (Optional) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`.
+* `type` - (Optional) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client).  Default `1`.
+* `retries` - (Optional) How many backends to search if it fails. Default `5`.
+
 The `cache_setting` block supports:
 
 * `name` - (Required) Unique name for this Cache Setting.
@@ -236,7 +296,7 @@ gzip. Example: `["css", "js"]`.
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 
-The `Header` block supports adding, removing, or modifying Request and Response
+The `header` block supports adding, removing, or modifying Request and Response
 headers. See Fastly's documentation on
 [Adding or modifying headers on HTTP requests and responses](https://docs.fastly.com/guides/basic-configuration/adding-or-modifying-headers-on-http-requests-and-responses#field-description-table) for more detailed information on any of the properties below.
 
@@ -273,7 +333,7 @@ The `healthcheck` block supports:
 The `request_setting` block allow you to customize Fastly's request handling, by
 defining behavior that should change based on a predefined `condition`:
 
-* `name` - (Required) The domain for this request setting.
+* `name` - (Required) Unique name to refer to this Request Setting.
 * `request_condition` - (Optional) Name of already defined `condition` to
 determine if this request setting should be applied.
 * `max_stale_age` - (Optional) How old an object is allowed to be to serve
@@ -298,7 +358,7 @@ Fastly-Geo-Region into the request headers.
 The `s3logging` block supports:
 
 * `name` - (Required) A unique name to identify this S3 Logging Bucket.
-* `bucket_name` - (Optional) An optional comment about the Domain.
+* `bucket_name` - (Required) The name of the bucket in which to store the logs.
 * `s3_access_key` - (Required) AWS Access Key of an account with the required
 permissions to post logs. It is **strongly** recommended you create a separate
 IAM user with permissions to only operate on this Bucket. This key will be
@@ -317,11 +377,13 @@ seconds. Default `3600`.
 compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
 * `timestamp_format` - (Optional) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
 * `redundancy` - (Optional) The S3 redundancy level. Should be formatted; one of: `standard`, `reduced_redundancy` or null. Default `null`.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 The `papertrail` block supports:
 
@@ -331,6 +393,7 @@ The `papertrail` block supports:
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 The `sumologic` block supports:
 
@@ -340,6 +403,7 @@ The `sumologic` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic][fastly-sumologic]
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 The `gcslogging` block supports:
 
@@ -357,6 +421,20 @@ compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://docs.fastly.com/api/logging#logging_gcs)
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
+
+The `bigquerylogging` block supports:
+
+* `name` - (Required) A unique name to identify this BigQuery logging endpoint.
+* `project_id` - (Required) The ID of your GCP project.
+* `dataset` - (Required) The ID of your BigQuery dataset.
+* `table` - (Required) The ID of your BigQuery table.
+* `email` - (Optional) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable.
+* `secret_key` - (Optional) The secret key associated with the sservice account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines.
+* `format` - (Optional) Apache style log formatting. Must produce JSON that matches the schema of your BigQuery table.
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `template` - (Optional) Big query table name suffix template. If set will be interpreted as a strftime compatible string and used as the [Template Suffix for your table](https://cloud.google.com/bigquery/streaming-data-into-bigquery#template-tables).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 The `bigquerylogging` block supports:
 
@@ -378,10 +456,13 @@ The `syslog` block supports:
 * `token` - (Optional) Whether to prepend each message with a specific token.
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Default `false`.
 * `tls_hostname` - (Optional) Used during the TLS handshake to validate the certificate.
-* `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with.
+* `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`
+* `tls_client_cert` - (Optional) The client certificate used to make authenticated requests. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CLIENT_CERT`
+* `tls_client_key` - (Optional) The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 The `logentries` block supports:
 
@@ -392,7 +473,34 @@ The `logentries` block supports:
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`).
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
+The `splunk` block supports:
+
+* `name` - (Required) A unique name to identify the Splunk endpoint.
+* `url` - (Required) The Splunk URL to stream logs to.
+* `token` - (Required) The Splunk token to be used for authentication.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Default `%h %l %u %t \"%r\" %>s %b`.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed, overriding any `format_version` default. Can be either `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+The `blobstoragelogging` block supports:
+
+* `name` - (Required) A unique name to identify the Azure Blob Storage endpoint.
+* `account_name` - (Required) The unique Azure Blob Storage namespace in which your data objects are stored.
+* `container` - (Required) The name of the Azure Blob Storage container in which to store logs.
+* `sas_token` - (Required) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work.
+* `path` - (Optional) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path.
+* `period` - (Optional) How frequently the logs should be transferred in seconds. Default `3600`.
+* `timestamp_format` - (Optional) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`.
+* `gzip_level` - (Optional) Level of GZIP compression from `0`to `9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`.
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Default `%h %l %u %t \"%r\" %>s %b`.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `message_type` - (Optional) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed, overriding any `format_version` default. Can be either `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
 The `response_object` block supports:
 
@@ -405,6 +513,18 @@ The `response_object` block supports:
 * `cache_condition` - (Optional) Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
+The `snippet` block supports:
+
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
+* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
+* `content` (Required) The VCL code that specifies exactly what the snippet does.
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
+
+The `dynamicsnippet` block supports:
+
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
+* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
 The `vcl` block supports:
 
@@ -414,27 +534,48 @@ The `vcl` block supports:
 `false`, use this block as an includable library. Only a single VCL block can be
 marked as the main block. Default is `false`.
 
+The `acl` block supports:
+
+* `name` - (Required) A unique name to identify this ACL.
+
+The `dictionary` block supports:
+
+* `name` - (Required) A unique name to identify this dictionary.
+* `write_only` - (Optional) If `true`, the dictionary is a private dictionary, and items are not readable in the UI or
+via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the
+dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if
+the items are managed outside of Terraform.
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to the arguments listed above, the following attributes are exported:
 
-* `id` - The ID of the Service.
-* `name` – Name of this service.
-* `active_version` - The currently active version of your Fastly
-Service.
-* `domain` – Set of Domains. See above for details.
-* `backend` – Set of Backends. See above for details.
-* `header` – Set of Headers. See above for details.
-* `s3logging` – Set of S3 Logging configurations. See above for details.
-* `papertrail` – Set of Papertrail configurations. See above for details.
-* `response_object` - Set of Response Object configurations. See above for details.
-* `vcl` – Set of custom VCL configurations. See above for details.
-* `default_host` – Default host specified.
-* `default_ttl` - Default TTL.
-* `force_destroy` - Force the destruction of the Service on delete.
+* `id` – The ID of the Service.
+* `active_version` – The currently active version of your Fastly Service.
+* `cloned_version` - The latest cloned version by the provider. The value gets only set after running `terraform apply`.
+
+The `dynamicsnippet` block exports:
+
+* `snippet_id` - The ID of the dynamic snippet.
+
+The `acl` block exports:
+
+* `acl_id` - The ID of the ACL.
+
+The `dictionary` block exports:
+
+* `dictionary_id` - The ID of the dictionary.
 
 [fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
 [fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records
 [fastly-conditionals]: https://docs.fastly.com/guides/conditions/using-conditions
 [fastly-sumologic]: https://docs.fastly.com/api/logging#logging_sumologic
 [fastly-gcs]: https://docs.fastly.com/api/logging#logging_gcs
+
+## Import
+
+Fastly Service can be imported using their service ID, e.g.
+
+```
+$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
+```

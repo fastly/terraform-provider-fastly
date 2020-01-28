@@ -5,11 +5,48 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.CacheSetting
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.CacheSetting{
+				{
+					Name:           "alt_backend",
+					Action:         gofastly.CacheSettingActionPass,
+					StaleTTL:       3600,
+					CacheCondition: "serve_alt_backend",
+					TTL:            300,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":            "alt_backend",
+					"action":          gofastly.CacheSettingActionPass,
+					"cache_condition": "serve_alt_backend",
+					"stale_ttl":       uint(3600),
+					"ttl":             uint(300),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenCacheSettings(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
 
 func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -36,7 +73,7 @@ func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1CacheSetting(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -50,7 +87,7 @@ func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccServiceV1CacheSetting_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -65,40 +102,44 @@ func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1CacheSettingsAttributes(service *gofastly.ServiceDetail, rqs []*gofastly.CacheSetting) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1CacheSettingsAttributes(service *gofastly.ServiceDetail, cs []*gofastly.CacheSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
-		rqList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
+		cList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 			Service: service.ID,
 			Version: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Request Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("[ERR] Error looking up Cache Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		if len(rqList) != len(rqs) {
-			return fmt.Errorf("Request Setting List count mismatch, expected (%d), got (%d)", len(rqs), len(rqList))
+		if len(cList) != len(cs) {
+			return fmt.Errorf("Cache Setting List count mismatch, expected (%d), got (%d)", len(cs), len(cList))
 		}
 
 		var found int
-		for _, r := range rqs {
-			for _, lr := range rqList {
-				if r.Name == lr.Name {
+		for _, c := range cs {
+			for _, lc := range cList {
+				if c.Name == lc.Name {
 					// we don't know these things ahead of time, so populate them now
-					r.ServiceID = service.ID
-					r.Version = service.ActiveVersion.Number
-					if !reflect.DeepEqual(r, lr) {
-						return fmt.Errorf("Bad match Request Setting match, expected (%#v), got (%#v)", r, lr)
+					c.ServiceID = service.ID
+					c.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lc.CreatedAt = nil
+					lc.UpdatedAt = nil
+					if !reflect.DeepEqual(c, lc) {
+						return fmt.Errorf("Bad match Cache Setting match, expected (%#v), got (%#v)", c, lc)
 					}
 					found++
 				}
 			}
 		}
 
-		if found != len(rqs) {
-			return fmt.Errorf("Error matching Request Setting rules (%d/%d)", found, len(rqs))
+		if found != len(cs) {
+			return fmt.Errorf("Error matching Cache Setting rules (%d/%d)", found, len(cs))
 		}
 
 		return nil

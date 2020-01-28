@@ -5,11 +5,46 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func TestResourceFastlyFlattenConditions(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.Condition
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.Condition{
+				{
+					Name:      "some amz condition",
+					Priority:  10,
+					Type:      "REQUEST",
+					Statement: `req.url ~ "^/yolo/"`,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":      "some amz condition",
+					"priority":  10,
+					"type":      "REQUEST",
+					"statement": "req.url ~ \"^/yolo/\"",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenConditions(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
 
 func TestAccFastlyServiceV1_conditional_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -28,7 +63,7 @@ func TestAccFastlyServiceV1_conditional_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1ConditionConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -71,6 +106,10 @@ func testAccCheckFastlyServiceV1ConditionalAttributes(service *gofastly.ServiceD
 					// we don't know these things ahead of time, so populate them now
 					c.ServiceID = service.ID
 					c.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lc.CreatedAt = nil
+					lc.UpdatedAt = nil
 					if !reflect.DeepEqual(c, lc) {
 						return fmt.Errorf("Bad match Conditions match, expected (%#v), got (%#v)", c, lc)
 					}

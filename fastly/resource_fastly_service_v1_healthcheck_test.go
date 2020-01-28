@@ -5,11 +5,61 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	gofastly "github.com/sethvargo/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
+
+	cases := []struct {
+		remote []*gofastly.HealthCheck
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.HealthCheck{
+				{
+					Version:          1,
+					Name:             "myhealthcheck",
+					Host:             "example1.com",
+					Path:             "/test1.txt",
+					CheckInterval:    4000,
+					ExpectedResponse: 200,
+					HTTPVersion:      "1.1",
+					Initial:          2,
+					Method:           "HEAD",
+					Threshold:        3,
+					Timeout:          5000,
+					Window:           5,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":              "myhealthcheck",
+					"host":              "example1.com",
+					"path":              "/test1.txt",
+					"check_interval":    uint(4000),
+					"expected_response": uint(200),
+					"http_version":      "1.1",
+					"initial":           uint(2),
+					"method":            "HEAD",
+					"threshold":         uint(3),
+					"timeout":           uint(5000),
+					"window":            uint(5),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenHealthchecks(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
+
+}
 
 func TestAccFastlyServiceV1_healthcheck_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -51,7 +101,7 @@ func TestAccFastlyServiceV1_healthcheck_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccServiceV1HealthCheckConfig(name, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -63,7 +113,7 @@ func TestAccFastlyServiceV1_healthcheck_basic(t *testing.T) {
 				),
 			},
 
-			resource.TestStep{
+			{
 				Config: testAccServiceV1HealthCheckConfig_update(name, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -102,6 +152,10 @@ func testAccCheckFastlyServiceV1HealthCheckAttributes(service *gofastly.ServiceD
 					// we don't know these things ahead of time, so populate them now
 					h.ServiceID = service.ID
 					h.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also wont know
+					// these ahead of time
+					lh.CreatedAt = nil
+					lh.UpdatedAt = nil
 					if !reflect.DeepEqual(h, lh) {
 						return fmt.Errorf("Bad match Healthcheck match, expected (%#v), got (%#v)", h, lh)
 					}

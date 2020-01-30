@@ -99,3 +99,7 @@ func validateDictionaryItems() schema.SchemaValidateFunc {
 	}
 
 }
+
+func validatePoolQuorum() schema.SchemaValidateFunc {
+	return validation.IntBetween(0, 100)
+}

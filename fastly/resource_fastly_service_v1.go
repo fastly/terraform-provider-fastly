@@ -207,6 +207,143 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
+			"pool": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// required fields
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A name for this Pool",
+						},
+						// Optional fields, defaults where they exist
+						"shield": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Selected POP to serve as a shield for servers. Optional. Defaults to null meaning no origin shielding if not set.",
+						},
+						"request_condition": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Condition which, if met, will select this pool during a request. Optional.",
+						},
+						"max_conn_default": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     200,
+							Description: "Maximum number of connections. Optional. Defaults to 200 if not set.",
+						},
+						"connect_timeout": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     1000,
+							Description: "How long to wait for a timeout in milliseconds",
+						},
+						"first_byte_timeout": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     15000,
+							Description: "How long to wait for the first bytes in milliseconds",
+						},
+						"quorum": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      75,
+							Description:  "Percentage of capacity (0-100) that needs to be operationally available for a pool to be considered up. Optional. Defaults to 75 if not set.",
+							ValidateFunc: validatePoolQuorum(),
+						},
+						"use_tls": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Whether or not to use TLS to reach any server in the pool. Optional. Defaults to 0.",
+						},
+						"tls_ca_cert": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "CA certificate attached to origin. Optional.",
+						},
+						"tls_ciphers": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "List of OpenSSL ciphers (see OpenSSL docs for details). Optional.",
+						},
+						"tls_client_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Client key attached to server. Optional.",
+						},
+						"tls_client_cert": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Client certificate attached to server. Optional.",
+						},
+						"tls_sni_hostname": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "SNI hostname. Optional.",
+						},
+						"tls_check_cert": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Be strict on checking TLS certs. Optional.",
+						},
+						"tls_cert_hostname": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "TLS cert hostname. Optional.",
+						},
+						// Fastly API states that this should be an int. how to specify a version number with an int?
+						"min_tls_version": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Minimum allowed TLS version on connections to this server. Optional.",
+							// ValidateFunc: validateTlsVersion(),
+						},
+						"max_tls_version": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Maximum allowed TLS version on connections to this server. Optional.",
+							// ValidateFunc: validateTlsVersion(),
+						},
+						"healthcheck": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Name of the healthcheck to use with this pool. Can be empty and could be reused across multiple backend and pools.",
+						},
+						"comment": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Optional",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "What type of load balance group to use. Values can be random, hash, client.",
+						},
+						"override_host": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The hostname to override the Host header. Optional. Defaults to null meaning no override of the Host header will occur. This setting can also be added to a Server definition. If the field is set on a Server definition it will override the Pool setting.",
+						},
+					},
+				},
+			},
+
 			"backend": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1559,6 +1696,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"vcl",
 		"acl",
 		"dictionary",
+		"pool",
 	} {
 		if d.HasChange(v) {
 			needsChange = true
@@ -1839,6 +1977,79 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Create Healthcheck Opts: %#v", opts)
 				_, err := conn.CreateHealthCheck(&opts)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		// Pools need to be updated
+		if d.HasChange("pool") {
+			op, np := d.GetChange("pool")
+			if op == nil {
+				op = new(schema.Set)
+			}
+			if np == nil {
+				np = new(schema.Set)
+			}
+
+			ops := op.(*schema.Set)
+			nos := np.(*schema.Set)
+			removePool := ops.Difference(nos).List()
+			addPool := nos.Difference(ops).List()
+
+			// DELETE old pool configurations
+			for _, pRaw := range removePool {
+				pf := pRaw.(map[string]interface{})
+				opts := gofastly.DeletePoolInput{
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    pf["name"].(string),
+				}
+
+				log.Printf("[DEBUG] Fastly Pool removal opts: %#v", opts)
+				err := conn.DeletePool(&opts)
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+
+			// POST new/updated Pool
+			for _, pRaw := range addPool {
+				pf := pRaw.(map[string]interface{})
+
+				opts := gofastly.CreatePoolInput{
+					Service:          d.Id(),
+					Version:          latestVersion,
+					Name:             pf["name"].(string),
+					Shield:           pf["shield"].(*string),
+					OverrideHost:     pf["override_host"].(*string),
+					UseTLS:           pf["use_tls"].(*gofastly.Compatibool),
+					Type:             pf["type"].(gofastly.PoolType),
+					RequestCondition: pf["request_condition"].(*string),
+					MaxConnDefault:   pf["max_conn_default"].(*uint),
+					ConnectTimeout:   pf["connect_timeout"].(*uint),
+					FirstByteTimeout: pf["first_byte_timeout"].(*uint),
+					Quorum:           pf["quorum"].(*uint),
+					TLSCACert:        pf["tls_ca_cert"].(*string),
+					TLSCiphers:       pf["tls_ciphers"].(*string),
+					TLSClientKey:     pf["tls_client_key"].(*string),
+					TLSClientCert:    pf["tls_client_cert"].(*string),
+					TLSSNIHostname:   pf["tls_sni_hostname"].(*string),
+					TLSCheckCert:     pf["tls_check_cert"].(*gofastly.Compatibool),
+					TLSCertHostname:  pf["tls_cert_hostname"].(*string),
+					MinTLSVersion:    pf["min_tls_version"].(*string),
+					MaxTLSVersion:    pf["max_tls_version"].(*string),
+					Healthcheck:      pf["healthcheck"].(*string),
+					Comment:          pf["comment"].(*string),
+				}
+
+				log.Printf("[DEBUG] Create Pool Opts: %#v", opts)
+				_, err := conn.CreatePool(&opts)
 				if err != nil {
 					return err
 				}
@@ -3377,6 +3588,23 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Error setting Healthcheck for (%s): %s", d.Id(), err)
 		}
 
+		// refresh Pool
+		log.Printf("[DEBUG] Refreshing Pools for (%s)", d.Id())
+		poolsList, err := conn.ListPools(&gofastly.ListPoolsInput{
+			Service: d.Id(),
+			Version: s.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Pool for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		pooll := flattenPools(poolsList)
+
+		if err := d.Set("pool", pooll); err != nil {
+			log.Printf("[WARN] Error setting Pool for (%s): %s", d.Id(), err)
+		}
+
 		// refresh S3 Logging
 		log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
@@ -4007,6 +4235,47 @@ func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]i
 	}
 
 	return hl
+}
+
+func flattenPools(poolList []*gofastly.Pool) []map[string]interface{} {
+	var pl []map[string]interface{}
+	for _, p := range poolList {
+		// Convert Pools to a map for saving to state.
+		np := map[string]interface{}{
+			"name":               p.Name,
+			"shield":             p.Shield,
+			"override_host":      p.OverrideHost,
+			"use_tls":            p.UseTLS,
+			"type":               p.Type,
+			"request_condition":  p.RequestCondition,
+			"max_conn_default":   p.MaxConnDefault,
+			"connect_timeout":    p.ConnectTimeout,
+			"first_byte_timeout": p.FirstByteTimeout,
+			"quorum":             p.Quorum,
+			"tls_ca_cert":        p.TLSCACert,
+			"tls_ciphers":        p.TLSCiphers,
+			"tls_client_key":     p.TLSClientKey,
+			"tls_client_cert":    p.TLSClientCert,
+			"tls_sni_hostname":   p.TLSSNIHostname,
+			"tls_check_cert":     p.TLSCheckCert,
+			"tls_cert_hostname":  p.TLSCertHostname,
+			"min_tls_version":    p.MinTLSVersion,
+			"max_tls_version":    p.MaxTLSVersion,
+			"healthcheck":        p.Healthcheck,
+			"comment":            p.Comment,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range np {
+			if v == "" {
+				delete(np, k)
+			}
+		}
+
+		pl = append(pl, np)
+	}
+
+	return pl
 }
 
 func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {

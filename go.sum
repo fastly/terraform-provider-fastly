@@ -48,6 +48,8 @@ github.com/fastly/go-fastly v1.2.1 h1:7aZI3PL9vHDuHcBgLwj3uv+yCd80tpKTr10B3Q3A1V
 github.com/fastly/go-fastly v1.2.1/go.mod h1:ACxsUdqChasXcraa3/IigjE01rVn3A1F4vaI18Gmm0g=
 github.com/fastly/go-fastly v1.4.0 h1:HAEsfIT97X6Tv5QXBxW4BfDoeecBe+F3yJdRvaQRVhs=
 github.com/fastly/go-fastly v1.4.0/go.mod h1:cBtWXhszIFx9xpzgm9L/3PW3Ixszo153xJBEHJghGUk=
+github.com/fastly/go-fastly v1.5.0 h1:yNzc7CRrNYV3voxgYs420UplsR+YVJPMwYMyh5lzeL4=
+github.com/fastly/go-fastly v1.5.0/go.mod h1:cBtWXhszIFx9xpzgm9L/3PW3Ixszo153xJBEHJghGUk=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=

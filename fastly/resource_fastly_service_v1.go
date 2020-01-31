@@ -218,6 +218,11 @@ func resourceServiceV1() *schema.Resource {
 							Required:    true,
 							Description: "A name for this Pool",
 						},
+						"id": {
+							Type:        schema.TypeString,
+							Description: "",
+							Computed:    true,
+						},
 						// Optional fields, defaults where they exist
 						"shield": {
 							Type:        schema.TypeString,

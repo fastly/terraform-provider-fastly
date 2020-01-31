@@ -31,6 +31,7 @@ func Provider() terraform.ResourceProvider {
 			"fastly_service_acl_entries_v1":             resourceServiceAclEntriesV1(),
 			"fastly_service_dictionary_items_v1":        resourceServiceDictionaryItemsV1(),
 			"fastly_service_dynamic_snippet_content_v1": resourceServiceDynamicSnippetContentV1(),
+			"fastly_service_pool_servers_v1":            resourceServicePoolServersV1(),
 		},
 	}
 

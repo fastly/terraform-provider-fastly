@@ -2209,8 +2209,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					ResponseCondition:            sf["response_condition"].(string),
 					MessageType:                  sf["message_type"].(string),
 					Placement:                    sf["placement"].(string),
-					ServerSideEncryption:         sf["server_side_encryption"].(string),
-					ServerSideEncryptionKmsKeyId: sf["server_side_encryption_kms_key_id"].(string),
+					ServerSideEncryptionKMSKeyID: sf["server_side_encryption_kms_key_id"].(string),
 				}
 
 				redundancy := strings.ToLower(sf["redundancy"].(string))
@@ -2219,6 +2218,14 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					opts.Redundancy = gofastly.S3RedundancyStandard
 				case "reduced_redundancy":
 					opts.Redundancy = gofastly.S3RedundancyReduced
+				}
+
+				encryption := sf["server_side_encryption"].(string)
+				switch encryption {
+				case "AES256":
+					opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionAES
+				case "aws:kms":
+					opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionKMS
 				}
 
 				log.Printf("[DEBUG] Create S3 Logging Opts: %#v", opts)

@@ -1837,12 +1837,44 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			obs := ob.(*schema.Set)
 			nbs := nb.(*schema.Set)
 
-			removeBackends := obs.Difference(nbs).List()
-			addBackends := nbs.Difference(obs).List()
+			// Gather names of previous backends into Set, so we can use as
+			// lookup later to determine whether to add/update/remove.
+			oldNames := schema.NewSet(schema.HashString, make([]interface{}, 0))
+			for _, bRaw := range obs.List() {
+				bf := bRaw.(map[string]interface{})
+				oldNames.Add(bf["name"].(string))
+			}
+
+			// Loop over the Set of new backends, if the backend name existed
+			// previously, consider it an update and push into updateBackends,
+			// if not push into addBackends.
+			var addBackends, updateBackends []map[string]interface{}
+			newNames := schema.NewSet(schema.HashString, make([]interface{}, 0))
+			for _, bRaw := range nbs.Difference(obs).List() {
+				bf := bRaw.(map[string]interface{})
+				name := bf["name"].(string)
+				newNames.Add(bf["name"].(string))
+				if oldNames.Contains(name) {
+					updateBackends = append(updateBackends, bf)
+					continue
+				}
+				addBackends = append(addBackends, bf)
+			}
+
+			// Loop over set of old backend difference, if backend name doesn't
+			// exist in new backends (either add or update) push into
+			// removeBackends.
+			var removeBackends []map[string]interface{}
+			for _, bRaw := range obs.Difference(nbs).List() {
+				bf := bRaw.(map[string]interface{})
+				name := bf["name"].(string)
+				if !oldNames.Contains(name) {
+					removeBackends = append(removeBackends, bf)
+				}
+			}
 
 			// DELETE old Backends
-			for _, bRaw := range removeBackends {
-				bf := bRaw.(map[string]interface{})
+			for _, bf := range removeBackends {
 				opts := gofastly.DeleteBackendInput{
 					Service: d.Id(),
 					Version: latestVersion,
@@ -1861,36 +1893,35 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// Find and post new Backends
-			for _, dRaw := range addBackends {
-				df := dRaw.(map[string]interface{})
+			for _, bf := range addBackends {
 				opts := gofastly.CreateBackendInput{
 					Service:             d.Id(),
 					Version:             latestVersion,
-					Name:                df["name"].(string),
-					Address:             df["address"].(string),
-					OverrideHost:        df["override_host"].(string),
-					AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
-					SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
-					SSLHostname:         df["ssl_hostname"].(string),
-					SSLCACert:           df["ssl_ca_cert"].(string),
-					SSLCertHostname:     df["ssl_cert_hostname"].(string),
-					SSLSNIHostname:      df["ssl_sni_hostname"].(string),
-					UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
-					SSLClientKey:        df["ssl_client_key"].(string),
-					SSLClientCert:       df["ssl_client_cert"].(string),
-					MaxTLSVersion:       df["max_tls_version"].(string),
-					MinTLSVersion:       df["min_tls_version"].(string),
-					SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
-					Shield:              df["shield"].(string),
-					Port:                uint(df["port"].(int)),
-					BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
-					ConnectTimeout:      uint(df["connect_timeout"].(int)),
-					ErrorThreshold:      uint(df["error_threshold"].(int)),
-					FirstByteTimeout:    uint(df["first_byte_timeout"].(int)),
-					MaxConn:             uint(df["max_conn"].(int)),
-					Weight:              uint(df["weight"].(int)),
-					RequestCondition:    df["request_condition"].(string),
-					HealthCheck:         df["healthcheck"].(string),
+					Name:                bf["name"].(string),
+					Address:             bf["address"].(string),
+					OverrideHost:        bf["override_host"].(string),
+					AutoLoadbalance:     gofastly.CBool(bf["auto_loadbalance"].(bool)),
+					SSLCheckCert:        gofastly.CBool(bf["ssl_check_cert"].(bool)),
+					SSLHostname:         bf["ssl_hostname"].(string),
+					SSLCACert:           bf["ssl_ca_cert"].(string),
+					SSLCertHostname:     bf["ssl_cert_hostname"].(string),
+					SSLSNIHostname:      bf["ssl_sni_hostname"].(string),
+					UseSSL:              gofastly.CBool(bf["use_ssl"].(bool)),
+					SSLClientKey:        bf["ssl_client_key"].(string),
+					SSLClientCert:       bf["ssl_client_cert"].(string),
+					MaxTLSVersion:       bf["max_tls_version"].(string),
+					MinTLSVersion:       bf["min_tls_version"].(string),
+					SSLCiphers:          strings.Split(bf["ssl_ciphers"].(string), ","),
+					Shield:              bf["shield"].(string),
+					Port:                uint(bf["port"].(int)),
+					BetweenBytesTimeout: uint(bf["between_bytes_timeout"].(int)),
+					ConnectTimeout:      uint(bf["connect_timeout"].(int)),
+					ErrorThreshold:      uint(bf["error_threshold"].(int)),
+					FirstByteTimeout:    uint(bf["first_byte_timeout"].(int)),
+					MaxConn:             uint(bf["max_conn"].(int)),
+					Weight:              uint(bf["weight"].(int)),
+					RequestCondition:    bf["request_condition"].(string),
+					HealthCheck:         bf["healthcheck"].(string),
 				}
 
 				log.Printf("[DEBUG] Create Backend Opts: %#v", opts)
@@ -1900,64 +1931,45 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			// Due to a limitation of using schema.Set as the type for backends;
-			// we don't update the backend in-place and instead delete and
-			// re-create. Unfortunately the delete propogates through the backend
-			// model relationships and removes the backend from any active
-			// directors.
-			//
-			// Therefore, if the service version has directors which
-			// contain backends that have changed in this set we must re-add
-			// them to the director manually.
-			dr := d.Get("director")
-			if dr != nil {
-				// Collect directors with backends as map of director name to
-				// backend list.
-				var dbs map[string][]string
-				drs := dr.(*schema.Set).List()
-				for _, dRaw := range drs {
-					df := dRaw.(map[string]interface{})
-					if v, ok := df["backends"]; ok {
-						if v.(*schema.Set).Len() > 0 {
-							var bs []string
-							for _, b := range v.(*schema.Set).List() {
-								bs = append(bs, b.(string))
-							}
-							dbs[df["name"].(string)] = bs
-						}
-					}
+			// Update existing Backends
+			for _, bf := range updateBackends {
+				opts := gofastly.UpdateBackendInput{
+					Service:             d.Id(),
+					Version:             latestVersion,
+					Name:                bf["name"].(string),
+					Address:             bf["address"].(string),
+					OverrideHost:        bf["override_host"].(string),
+					AutoLoadbalance:     gofastly.CBool(bf["auto_loadbalance"].(bool)),
+					SSLCheckCert:        gofastly.CBool(bf["ssl_check_cert"].(bool)),
+					SSLHostname:         bf["ssl_hostname"].(string),
+					SSLCACert:           bf["ssl_ca_cert"].(string),
+					SSLCertHostname:     bf["ssl_cert_hostname"].(string),
+					SSLSNIHostname:      bf["ssl_sni_hostname"].(string),
+					UseSSL:              gofastly.CBool(bf["use_ssl"].(bool)),
+					SSLClientKey:        bf["ssl_client_key"].(string),
+					SSLClientCert:       bf["ssl_client_cert"].(string),
+					MaxTLSVersion:       bf["max_tls_version"].(string),
+					MinTLSVersion:       bf["min_tls_version"].(string),
+					SSLCiphers:          strings.Split(bf["ssl_ciphers"].(string), ","),
+					Shield:              bf["shield"].(string),
+					Port:                uint(bf["port"].(int)),
+					BetweenBytesTimeout: uint(bf["between_bytes_timeout"].(int)),
+					ConnectTimeout:      uint(bf["connect_timeout"].(int)),
+					ErrorThreshold:      uint(bf["error_threshold"].(int)),
+					FirstByteTimeout:    uint(bf["first_byte_timeout"].(int)),
+					MaxConn:             uint(bf["max_conn"].(int)),
+					Weight:              uint(bf["weight"].(int)),
+					RequestCondition:    bf["request_condition"].(string),
+					HealthCheck:         bf["healthcheck"].(string),
 				}
 
-				// Collect new backend names.
-				var abs []string
-				for _, dRaw := range addBackends {
-					df := dRaw.(map[string]interface{})
-					abs = append(abs, df["name"].(string))
-				}
-
-				// For each director backend, create if in change set.
-				for director, backends := range dbs {
-					for _, db := range backends {
-						for _, backend := range abs {
-							if db == backend {
-								opts := gofastly.CreateDirectorBackendInput{
-									Service:  d.Id(),
-									Version:  latestVersion,
-									Director: director,
-									Backend:  backend,
-								}
-
-								log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
-								_, err := conn.CreateDirectorBackend(&opts)
-								if err != nil {
-									return err
-								}
-
-							}
-						}
-					}
+				log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
+				_, err := conn.UpdateBackend(&opts)
+				if err != nil {
+					return err
 				}
 			}
+
 		}
 
 		if d.HasChange("director") {

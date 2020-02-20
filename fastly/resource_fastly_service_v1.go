@@ -683,7 +683,7 @@ func resourceServiceV1() *schema.Resource {
 						"server_side_encryption": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Description:  "Specify where type of server side encryption should be used.",
+							Description:  "Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`.",
 							ValidateFunc: validateLoggingServerSideEncryption(),
 						},
 						"server_side_encryption_kms_key_id": {

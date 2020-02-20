@@ -687,9 +687,9 @@ func resourceServiceV1() *schema.Resource {
 							ValidateFunc: validateLoggingServerSideEncryption(),
 						},
 						"server_side_encryption_kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to aws:kms"
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to aws:kms",
 						},
 					},
 				},

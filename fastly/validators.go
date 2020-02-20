@@ -29,8 +29,8 @@ func validateLoggingPlacement() schema.SchemaValidateFunc {
 
 func validateLoggingServerSideEncryption() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
-		"AES256",
-		"aws:kms",
+		gofastly.S3ServerSideEncryptionAES,
+		gofastly.S3ServerSideEncryptionKMS,
 	}, false)
 }
 

@@ -67,6 +67,7 @@ func validateSnippetType() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"init",
 		"recv",
+		"hash",
 		"hit",
 		"miss",
 		"pass",

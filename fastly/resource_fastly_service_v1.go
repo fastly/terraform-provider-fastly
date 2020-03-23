@@ -2223,9 +2223,9 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 				encryption := sf["server_side_encryption"].(string)
 				switch encryption {
-				case "AES256":
+				case string(gofastly.S3ServerSideEncryptionAES):
 					opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionAES
-				case "aws:kms":
+				case string(gofastly.S3ServerSideEncryptionKMS):
 					opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionKMS
 				}
 

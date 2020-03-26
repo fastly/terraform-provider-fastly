@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
@@ -16,7 +17,7 @@ func TestAccFastlyServiceV1_creation_with_versionless_resources(t *testing.T) {
 	aclName := "tf_test_acl_versionless"
 	dynamicSnippetName := "tf_test_dynamic_snippet"
 
-	domainName := "tf.test.versionlessexample.com"
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

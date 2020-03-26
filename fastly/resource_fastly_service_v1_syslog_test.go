@@ -75,7 +75,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName1 := fmt.Sprintf("%s.notadomain1.com", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
 		Version:           1,
@@ -147,7 +147,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName1 := fmt.Sprintf("%s.notadomain1.com", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
 		Version:       1,
@@ -187,7 +187,7 @@ func TestAccFastlyServiceV1_syslog_useTls(t *testing.T) {
 	}
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName1 := fmt.Sprintf("%s.notadomain1.com", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	// set env Vars to something we expect
 	resetEnv := setSyslogEnv(key, cert, t)

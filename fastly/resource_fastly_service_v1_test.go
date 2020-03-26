@@ -175,7 +175,7 @@ func TestAccFastlyServiceV1_updateDomain(t *testing.T) {
 func TestAccFastlyServiceV1_updateBackend(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
@@ -210,7 +210,7 @@ func TestAccFastlyServiceV1_updateBackend(t *testing.T) {
 func TestAccFastlyServiceV1_updateInvalidBackend(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	badBackendName := fmt.Sprintf("%s.aws.amazon.com.", acctest.RandString(3))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
@@ -249,8 +249,8 @@ func TestAccFastlyServiceV1_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	comment := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	versionComment := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName1 := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
-	domainName2 := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	domainName2 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -304,7 +304,7 @@ func TestAccFastlyServiceV1_basic(t *testing.T) {
 func TestAccFastlyServiceV1_disappears(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the service
@@ -444,7 +444,7 @@ func testAccCheckFastlyServiceV1Attributes_backends(service *gofastly.ServiceDet
 func TestAccFastlyServiceV1_defaultTTL(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain := fmt.Sprintf("terraform-acc-test-%s.com", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
@@ -493,7 +493,7 @@ func TestAccFastlyServiceV1_defaultTTL(t *testing.T) {
 func TestAccFastlyServiceV1_createDefaultTTL(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain := fmt.Sprintf("terraform-acc-test-%s.com", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.Test(t, resource.TestCase{
@@ -517,7 +517,7 @@ func TestAccFastlyServiceV1_createDefaultTTL(t *testing.T) {
 func TestAccFastlyServiceV1_createZeroDefaultTTL(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain := fmt.Sprintf("terraform-acc-test-%s.com", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.Test(t, resource.TestCase{

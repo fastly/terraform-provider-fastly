@@ -81,11 +81,11 @@ var ErrMissingMonth = errors.New("Missing required field 'Month'")
 // requires a "NewName" key, but one was not set
 var ErrMissingNewName = errors.New("Missing required field 'NewName'")
 
-// ErrMissingAcl is an error that is returned when an unout struct
+// ErrMissingAcl is an error that is returned when an input struct
 // required an "Acl" key, but one is not set
 var ErrMissingACL = errors.New("Missing required field 'ACL'")
 
-// ErrMissingIP is an error that is returned when an unout struct
+// ErrMissingIP is an error that is returned when an input struct
 // required an "IP" key, but one is not set
 var ErrMissingIP = errors.New("Missing required field 'IP'")
 
@@ -113,9 +113,25 @@ var ErrMissingConfigSetID = errors.New("Missing required field 'ConfigSetID'")
 // requires a list of WAF id's, but it is empty
 var ErrMissingWAFList = errors.New("WAF slice is empty")
 
+// ErrMissingPool is an error that is returned when an input struct requires
+// a "Pool" key, but one was not set.
+var ErrMissingPool = errors.New("Missing required field 'Pool'")
+
+// ErrMissingServer is an error that is returned when an input struct requires
+// a "Server" key, but one was not set.
+var ErrMissingServer = errors.New("Missing required field 'Server'")
+
+// ErrMissingAddress is an error that is returned when an input struct requires
+// a "Address" key, but one was not set.
+var ErrMissingAddress = errors.New("Missing required field 'Address'")
+
 // ErrBatchUpdateMaximumItemsExceeded is an error that indicates that too many batch operations are being executed.
 // The Fastly API specifies an maximum limit.
 var ErrBatchUpdateMaximumOperationsExceeded = errors.New("batch modify maximum operations exceeded")
+
+// ErrMissingKMSKeyID is an error that is returned from an input struct that requires
+// a "ServerSideEncryptionKMSKeyID" key, but one was not set.
+var ErrMissingKMSKeyID = errors.New("Missing required field 'ServerSideEncryptionKMSKeyID'")
 
 // Ensure HTTPError is, in fact, an error.
 var _ error = (*HTTPError)(nil)

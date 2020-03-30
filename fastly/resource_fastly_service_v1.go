@@ -680,6 +680,17 @@ func resourceServiceV1() *schema.Resource {
 							Description:  "Where in the generated VCL the logging call should be placed.",
 							ValidateFunc: validateLoggingPlacement(),
 						},
+						"server_side_encryption": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`.",
+							ValidateFunc: validateLoggingServerSideEncryption(),
+						},
+						"server_side_encryption_kms_key_id": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`",
+						},
 					},
 				},
 			},
@@ -2183,22 +2194,23 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				opts := gofastly.CreateS3Input{
-					Service:           d.Id(),
-					Version:           latestVersion,
-					Name:              sf["name"].(string),
-					BucketName:        sf["bucket_name"].(string),
-					AccessKey:         sf["s3_access_key"].(string),
-					SecretKey:         sf["s3_secret_key"].(string),
-					Period:            uint(sf["period"].(int)),
-					GzipLevel:         uint(sf["gzip_level"].(int)),
-					Domain:            sf["domain"].(string),
-					Path:              sf["path"].(string),
-					Format:            sf["format"].(string),
-					FormatVersion:     uint(sf["format_version"].(int)),
-					TimestampFormat:   sf["timestamp_format"].(string),
-					ResponseCondition: sf["response_condition"].(string),
-					MessageType:       sf["message_type"].(string),
-					Placement:         sf["placement"].(string),
+					Service:                      d.Id(),
+					Version:                      latestVersion,
+					Name:                         sf["name"].(string),
+					BucketName:                   sf["bucket_name"].(string),
+					AccessKey:                    sf["s3_access_key"].(string),
+					SecretKey:                    sf["s3_secret_key"].(string),
+					Period:                       uint(sf["period"].(int)),
+					GzipLevel:                    uint(sf["gzip_level"].(int)),
+					Domain:                       sf["domain"].(string),
+					Path:                         sf["path"].(string),
+					Format:                       sf["format"].(string),
+					FormatVersion:                uint(sf["format_version"].(int)),
+					TimestampFormat:              sf["timestamp_format"].(string),
+					ResponseCondition:            sf["response_condition"].(string),
+					MessageType:                  sf["message_type"].(string),
+					Placement:                    sf["placement"].(string),
+					ServerSideEncryptionKMSKeyID: sf["server_side_encryption_kms_key_id"].(string),
 				}
 
 				redundancy := strings.ToLower(sf["redundancy"].(string))
@@ -2207,6 +2219,14 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					opts.Redundancy = gofastly.S3RedundancyStandard
 				case "reduced_redundancy":
 					opts.Redundancy = gofastly.S3RedundancyReduced
+				}
+
+				encryption := sf["server_side_encryption"].(string)
+				switch encryption {
+				case string(gofastly.S3ServerSideEncryptionAES):
+					opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionAES
+				case string(gofastly.S3ServerSideEncryptionKMS):
+					opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionKMS
 				}
 
 				log.Printf("[DEBUG] Create S3 Logging Opts: %#v", opts)

@@ -27,6 +27,13 @@ func validateLoggingPlacement() schema.SchemaValidateFunc {
 	}, false)
 }
 
+func validateLoggingServerSideEncryption() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		string(gofastly.S3ServerSideEncryptionAES),
+		string(gofastly.S3ServerSideEncryptionKMS),
+	}, false)
+}
+
 func validateDirectorQuorum() schema.SchemaValidateFunc {
 	return validation.IntBetween(0, 100)
 }

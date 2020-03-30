@@ -26,16 +26,13 @@ func (c *Client) Purge(i *PurgeInput) (*Purge, error) {
 		return nil, ErrMissingURL
 	}
 
-	req, err := c.RawRequest("PURGE", i.URL, nil)
-	if err != nil {
-		return nil, err
-	}
-
+	ro := new(RequestOptions)
+	ro.Parallel = true
 	if i.Soft {
-		req.Header.Set("Fastly-Soft-Purge", "1")
+		ro.Headers["Fastly-Soft-Purge"] = "1"
 	}
 
-	resp, err := checkResp(c.HTTPClient.Do(req))
+	resp, err := c.Post("purge/"+i.URL, ro)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +67,10 @@ func (c *Client) PurgeKey(i *PurgeKeyInput) (*Purge, error) {
 	}
 
 	path := fmt.Sprintf("/service/%s/purge/%s", i.Service, i.Key)
-	req, err := c.RawRequest("POST", path, nil)
+
+	ro := new(RequestOptions)
+	ro.Parallel = true
+	req, err := c.RawRequest("POST", path, ro)
 	if err != nil {
 		return nil, err
 	}

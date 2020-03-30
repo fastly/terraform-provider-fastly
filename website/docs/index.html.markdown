@@ -16,6 +16,9 @@ Pricing and signup information can be found at https://www.fastly.com/signup
 
 Use the navigation to the left to read about the available resources.
 
+The Fastly provider prior to version xxx requires using [--parallelism=1]
+(/docs/commands/apply.html#parallelism-n) for `apply` operations.
+
 ## Example Usage
 
 ```hcl

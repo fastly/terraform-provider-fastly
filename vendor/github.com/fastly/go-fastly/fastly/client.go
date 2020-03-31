@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/ajg/form"
 	"github.com/google/jsonapi"
@@ -35,7 +36,7 @@ const RealtimeStatsEndpoint = "https://rt.fastly.com"
 var ProjectURL = "github.com/fastly/go-fastly"
 
 // ProjectVersion is the version of this library.
-var ProjectVersion = "1.6.0"
+var ProjectVersion = "1.7.2"
 
 // UserAgent is the user agent for this particular client.
 var UserAgent = fmt.Sprintf("FastlyGo/%s (+%s; %s)",
@@ -49,6 +50,10 @@ type Client struct {
 	// HTTPClient is the HTTP client to use. If one is not provided, a default
 	// client will be used.
 	HTTPClient *http.Client
+
+	// updateLock forces serialization of calls that modify a service.
+	// Concurrent modifications have undefined semantics.
+	updateLock sync.Mutex
 
 	// apiKey is the Fastly API key to authenticate requests.
 	apiKey string
@@ -117,11 +122,19 @@ func (c *Client) init() (*Client, error) {
 
 // Get issues an HTTP GET request.
 func (c *Client) Get(p string, ro *RequestOptions) (*http.Response, error) {
+	if ro == nil {
+		ro = new(RequestOptions)
+	}
+	ro.Parallel = true
 	return c.Request("GET", p, ro)
 }
 
 // Head issues an HTTP HEAD request.
 func (c *Client) Head(p string, ro *RequestOptions) (*http.Response, error) {
+	if ro == nil {
+		ro = new(RequestOptions)
+	}
+	ro.Parallel = true
 	return c.Request("HEAD", p, ro)
 }
 
@@ -198,7 +211,13 @@ func (c *Client) Request(verb, p string, ro *RequestOptions) (*http.Response, er
 		return nil, err
 	}
 
+	if ro == nil || !ro.Parallel {
+		c.updateLock.Lock()
+		defer c.updateLock.Unlock()
+
+	}
 	resp, err := checkResp(c.HTTPClient.Do(req))
+
 	if err != nil {
 		return resp, err
 	}

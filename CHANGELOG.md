@@ -1,4 +1,15 @@
-## 0.12.2 (Unreleased)
+## 0.13.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1/s3logging: Add `server_side_encryption` and `server_side_encryption_kms_key_id` arguments ([#206](https://github.com/terraform-providers/terraform-provider-fastly/pull/206))
+* resource/fastly_service_v1/snippet: Support `hash` in `type` validation ([#211](https://github.com/terraform-providers/terraform-provider-fastly/issues/211))
+* resource/fastly_service_v1/dynamicsnippet: Support `hash` in `type` validation ([#211](https://github.com/terraform-providers/terraform-provider-fastly/issues/211))
+
+NOTES:
+
+* provider: Update `go-fastly` client to v1.7.2 ([#213](https://github.com/terraform-providers/terraform-provider-fastly/pull/213))
+
 ## 0.12.1 (January 23, 2020)
 
 BUG FIXES:

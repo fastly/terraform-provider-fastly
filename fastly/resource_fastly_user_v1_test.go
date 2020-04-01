@@ -12,7 +12,7 @@ import (
 
 func TestAccFastlyUserV1_basic(t *testing.T) {
 	var user gofastly.User
-	login := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	login := fmt.Sprintf("tf-test-%s@example.com", acctest.RandString(10))
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	role := "engineer"
 	name2 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

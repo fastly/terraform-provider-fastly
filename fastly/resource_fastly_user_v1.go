@@ -32,7 +32,7 @@ func resourceUserV1() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "user",
-				Description:  "The user-assigned permissions role. Can be `user`, `billing`, `engineer`, or `superuser`.",
+				Description:  "The user-assigned permissions role. Can be `user` (the default), `billing`, `engineer`, or `superuser`.",
 				ValidateFunc: validateUserRole(),
 			},
 		},

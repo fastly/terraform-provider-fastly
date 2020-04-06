@@ -27,7 +27,7 @@ resource "fastly_user_v1" "demo" {
 
 The following arguments are supported:
 
-* `login` - (Required) The email address, which is the login name, of the User.
+* `login` - (Required, Forces new resource) The email address, which is the login name, of the User.
 * `name` - (Required) The real life name of the user.
 * `role` - (Optional) The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`.
 

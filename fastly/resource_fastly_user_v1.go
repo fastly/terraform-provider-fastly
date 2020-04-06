@@ -19,6 +19,7 @@ func resourceUserV1() *schema.Resource {
 			"login": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The email address, which is the login name, of this user.",
 			},
 

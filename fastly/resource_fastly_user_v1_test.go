@@ -41,11 +41,46 @@ func TestAccFastlyUserV1_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserV1Exists("fastly_user_v1.foo", &user),
 					resource.TestCheckResourceAttr(
-						"fastly_user_v1.foo", "login", login),
-					resource.TestCheckResourceAttr(
 						"fastly_user_v1.foo", "name", name2),
 					resource.TestCheckResourceAttr(
 						"fastly_user_v1.foo", "role", role2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyUserV1_updateLogin(t *testing.T) {
+	var user gofastly.User
+	login := fmt.Sprintf("tf-test-%s@example.com", acctest.RandString(10))
+	login2 := fmt.Sprintf("tf-test-%s@example.com", acctest.RandString(10))
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	role := "engineer"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckUserV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserV1Config(login, name, role),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserV1Exists("fastly_user_v1.foo", &user),
+					resource.TestCheckResourceAttr(
+						"fastly_user_v1.foo", "login", login),
+					resource.TestCheckResourceAttr(
+						"fastly_user_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_user_v1.foo", "role", role),
+				),
+			},
+
+			{
+				Config: testAccUserV1Config(login2, name, role),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserV1Exists("fastly_user_v1.foo", &user),
+					resource.TestCheckResourceAttr(
+						"fastly_user_v1.foo", "login", login2),
 				),
 			},
 		},

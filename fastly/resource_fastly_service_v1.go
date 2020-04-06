@@ -4509,6 +4509,8 @@ func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) 
 		opts.Type = gofastly.SnippetTypeInit
 	case "recv":
 		opts.Type = gofastly.SnippetTypeRecv
+	case "hash":
+		opts.Type = gofastly.SnippetTypeHash
 	case "hit":
 		opts.Type = gofastly.SnippetTypeHit
 	case "miss":
@@ -4544,6 +4546,8 @@ func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippet
 		opts.Type = gofastly.SnippetTypeInit
 	case "recv":
 		opts.Type = gofastly.SnippetTypeRecv
+	case "hash":
+		opts.Type = gofastly.SnippetTypeHash
 	case "hit":
 		opts.Type = gofastly.SnippetTypeHit
 	case "miss":

@@ -29,7 +29,7 @@ The following arguments are supported:
 
 * `login` - (Required, Forces new resource) The email address, which is the login name, of the User.
 * `name` - (Required) The real life name of the user.
-* `role` - (Optional) The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`.
+* `role` - (Optional) The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do).
 
 ## Attributes Reference
 

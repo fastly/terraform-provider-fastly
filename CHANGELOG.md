@@ -1,4 +1,17 @@
 ## 0.14.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `fastly_user_v1` ([#214](https://github.com/terraform-providers/terraform-provider-fastly/pull/214))
+
+BUG FIXES:
+
+* resource/fastly_service_v1/snippet: Fix support for `hash` snippet type ([#217](https://github.com/terraform-providers/terraform-provider-fastly/pull/217))
+
+NOTES:
+
+* provider: Update `go` to v1.14.x ([#215](https://github.com/terraform-providers/terraform-provider-fastly/pull/215))
+
 ## 0.13.0 (April 01, 2020)
 
 ENHANCEMENTS:

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -106,4 +107,16 @@ func validateDictionaryItems() schema.SchemaValidateFunc {
 		return
 	}
 
+}
+
+func validateUserRole() schema.SchemaValidateFunc {
+	return validation.StringInSlice(
+		[]string{
+			"user",
+			"billing",
+			"engineer",
+			"superuser",
+		},
+		false,
+	)
 }

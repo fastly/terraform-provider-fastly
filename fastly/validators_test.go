@@ -314,3 +314,30 @@ func createTestDictionaryItems(size int) map[string]interface{} {
 
 	return dictionaryItems
 }
+
+func TestValidateUserRole(t *testing.T) {
+	for _, testcase := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"user", 0, 0},
+		{"billing", 0, 0},
+		{"engineer", 0, 0},
+		{"superuser", 0, 0},
+		{"USER", 0, 1},
+		{"BILLING", 0, 1},
+		{"ENGINEER", 0, 1},
+		{"SUPERUSER", 0, 1},
+	} {
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := validateUserRole()(testcase.value, "role")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

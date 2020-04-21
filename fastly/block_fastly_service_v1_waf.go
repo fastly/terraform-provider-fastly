@@ -35,7 +35,7 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 				},
 				"prefetch_condition": {
 					Type:        schema.TypeString,
-					Required:    true,
+					Optional:    true,
 					Description: "The Web Application Firewall's (WAF) prefetch condition",
 				},
 				"waf_id": {

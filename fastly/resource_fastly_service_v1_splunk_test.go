@@ -579,7 +579,7 @@ func setSplunkEnv(token string, cert string, t *testing.T) func() {
 		t.Fatalf("Error setting env var FASTLY_SPLUNK_TOKEN: %s", err)
 	}
 
-	if err := os.Setenv("FASTLY_SYSLOG_CA_CERT", cert); err != nil {
+	if err := os.Setenv("FASTLY_SPLUNK_CA_CERT", cert); err != nil {
 		t.Fatalf("Error setting env var FASTLY_SPLUNK_CA_CERT: %s", err)
 	}
 

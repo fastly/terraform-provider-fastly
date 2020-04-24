@@ -13,6 +13,11 @@ import (
 )
 
 func TestResourceFastlyFlattenSplunk(t *testing.T) {
+	_, cert, err := generateKeyAndCert()
+	if err != nil {
+		t.Errorf("Failed to generate key and cert: %s", err)
+	}
+
 	cases := []struct {
 		remote []*gofastly.Splunk
 		local  []map[string]interface{}
@@ -27,6 +32,8 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					ResponseCondition: "error_response",
 					Placement:         "waf_debug",
 					Token:             "test-token",
+					TLSCACert:         cert,
+					TLSHostname:       "example.com",
 				},
 			},
 			local: []map[string]interface{}{
@@ -38,6 +45,8 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"response_condition": "error_response",
 					"placement":          "waf_debug",
 					"token":              "test-token",
+					"tls_hostname":       "example.com",
+					"tls_ca_cert":        cert,
 				},
 			},
 		},
@@ -91,7 +100,7 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1SplunkConfig_complete(serviceName),
+				Config: testAccServiceV1SplunkConfig_basic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}),
@@ -149,18 +158,101 @@ func TestAccFastlyServiceV1_splunk_default(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	_, cert, err := generateKeyAndCert()
+	if err != nil {
+		t.Errorf("Failed to generate key and cert: %s", err)
+	}
+
+	splunkLogOne := gofastly.Splunk{
+		Name:              "test-splunk-1",
+		URL:               "https://mysplunkendpoint.example.com/services/collector/event",
+		Token:             "test-token",
+		Format:            "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:     1,
+		Placement:         "waf_debug",
+		ResponseCondition: "error_response_5XX",
+		TLSHostname:       "example.com",
+		TLSCACert:         cert,
+	}
+
+	splunkLogOneUpdated := gofastly.Splunk{
+		Name:              "test-splunk-1",
+		URL:               "https://mysplunkendpoint.example.com/services/collector/event",
+		Token:             "test-token",
+		Format:            "%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V",
+		FormatVersion:     2,
+		Placement:         "waf_debug",
+		ResponseCondition: "error_response_5XX",
+		TLSHostname:       "example.com",
+		TLSCACert:         cert,
+	}
+
+	splunkLogTwo := gofastly.Splunk{
+		Name:              "test-splunk-2",
+		URL:               "https://mysplunkendpoint.example.com/services/collector/event",
+		Token:             "test-token",
+		Format:            "%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V",
+		FormatVersion:     2,
+		Placement:         "waf_debug",
+		ResponseCondition: "ok_response_2XX",
+		TLSHostname:       "example.com",
+		TLSCACert:         cert,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1SplunkConfig_useTLS(serviceName, cert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", serviceName),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "splunk.#", "1"),
+				),
+			},
+
+			{
+				Config: testAccServiceV1SplunkConfig_updateUseTLS(serviceName, cert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", serviceName),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "splunk.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceV1_splunk_env(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
+	_, cert, err := generateKeyAndCert()
+	if err != nil {
+		t.Errorf("Failed to generate key and cert: %s", err)
+	}
+
 	// set env variable to something we expect
-	resetEnv := setSplunkEnv("test-token", t)
+	resetEnv := setSplunkEnv("test-token", cert, t)
 	defer resetEnv()
 
 	splunkLog := gofastly.Splunk{
 		Name:          "test-splunk",
 		URL:           "https://mysplunkendpoint.example.com/services/collector/event",
 		Token:         "test-token",
+		TLSCACert:     cert,
 		Format:        "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion: 2,
 	}
@@ -229,7 +321,7 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 	}
 }
 
-func testAccServiceV1SplunkConfig_complete(serviceName string) string {
+func testAccServiceV1SplunkConfig_basic(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	format := "%h %l %u %t \"%r\" %>s %b"
@@ -267,6 +359,48 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, serviceName, domainName, format)
+}
+
+func testAccServiceV1SplunkConfig_useTLS(serviceName string, cert string) string {
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	format := "%h %l %u %t \"%r\" %>s %b"
+
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = %q
+
+  domain {
+    name    = %q
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "tf-test-backend"
+  }
+
+  condition {
+    name      = "error_response_5XX"
+    statement = "resp.status >= 500 && resp.status < 600"
+    priority  = 10
+    type      = "RESPONSE"
+  }
+
+  splunk {
+    name               = "test-splunk-1"
+    url                = "https://mysplunkendpoint.example.com/services/collector/event"
+    token              = "test-token"
+    format             = %q
+    format_version     = 1
+    placement          = "waf_debug"
+		tls_hostname       = "example.com"
+		tls_ca_cert        = %q
+    response_condition = "error_response_5XX"
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, format, cert)
 }
 
 func testAccServiceV1SplunkConfig_update(serviceName string) string {
@@ -325,6 +459,66 @@ resource "fastly_service_v1" "foo" {
 }`, serviceName, domainName, format, format)
 }
 
+func testAccServiceV1SplunkConfig_updateUseTLS(serviceName string, cert string) string {
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
+
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = %q
+
+  domain {
+    name    = %q
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "tf-test-backend"
+  }
+
+  condition {
+    name      = "error_response_5XX"
+    statement = "resp.status >= 500 && resp.status < 600"
+    priority  = 10
+    type      = "RESPONSE"
+  }
+
+  condition {
+    name      = "ok_response_2XX"
+    statement = "resp.status >= 200 && resp.status < 300"
+    priority  = 10
+    type      = "RESPONSE"
+  }
+
+  splunk {
+    name               = "test-splunk-1"
+    url                = "https://mysplunkendpoint.example.com/services/collector/event"
+    token              = "test-token"
+    format             = %q
+    format_version     = 2
+    placement          = "waf_debug"
+		tls_hostname       = "example.com"
+		tls_ca_cert        = %q
+    response_condition = "error_response_5XX"
+  }
+
+  splunk {
+    name               = "test-splunk-2"
+    url                = "https://mysplunkendpoint.example.com/services/collector/event"
+    token              = "test-token"
+    format             = %q
+    format_version     = 2
+    placement          = "waf_debug"
+		tls_hostname       = "example.com"
+		tls_ca_cert        = %q
+    response_condition = "ok_response_2XX"
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, format, cert, format, cert)
+}
+
 func testAccServiceV1SplunkConfig_default(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -378,11 +572,15 @@ resource "fastly_service_v1" "foo" {
 }`, serviceName, domainName)
 }
 
-func setSplunkEnv(token string, t *testing.T) func() {
+func setSplunkEnv(token string, cert string, t *testing.T) func() {
 	e := getSplunkEnv()
 	// Set all the envs to a dummy value
 	if err := os.Setenv("FASTLY_SPLUNK_TOKEN", token); err != nil {
 		t.Fatalf("Error setting env var FASTLY_SPLUNK_TOKEN: %s", err)
+	}
+
+	if err := os.Setenv("FASTLY_SYSLOG_CA_CERT", cert); err != nil {
+		t.Fatalf("Error setting env var FASTLY_SPLUNK_CA_CERT: %s", err)
 	}
 
 	return func() {
@@ -390,18 +588,23 @@ func setSplunkEnv(token string, t *testing.T) func() {
 		if err := os.Setenv("FASTLY_SPLUNK_TOKEN", e.Token); err != nil {
 			t.Fatalf("Error resetting env var FASTLY_SPLUNK_TOKEN: %s", err)
 		}
+
+		if err := os.Setenv("FASTLY_SPLUNK_CA_CERT", e.Token); err != nil {
+			t.Fatalf("Error resetting env var FASTLY_SPLUNK_CA_CERT: %s", err)
+		}
 	}
 }
 
 // struct to preserve the current environment
 type currentSplunkEnv struct {
-	Token string
+	Token, CaCert string
 }
 
 func getSplunkEnv() *currentSplunkEnv {
-	// Grab the existing Fastly Splunk token and preserve, in the off chance
-	// they're actually set in the enviornment
+	// Grab the existing Fastly Splunk-related environment variables and preserve,
+	// in the off chance they're actually set in the environment.
 	return &currentSplunkEnv{
-		Token: os.Getenv("FASTLY_SPLUNK_TOKEN"),
+		Token:  os.Getenv("FASTLY_SPLUNK_TOKEN"),
+		CaCert: os.Getenv("FASTLY_SPLUNK_CA_CERT"),
 	}
 }

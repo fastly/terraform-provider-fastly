@@ -36,7 +36,7 @@ const RealtimeStatsEndpoint = "https://rt.fastly.com"
 var ProjectURL = "github.com/fastly/go-fastly"
 
 // ProjectVersion is the version of this library.
-var ProjectVersion = "1.7.2"
+var ProjectVersion = "1.10.0"
 
 // UserAgent is the user agent for this particular client.
 var UserAgent = fmt.Sprintf("FastlyGo/%s (+%s; %s)",
@@ -104,6 +104,17 @@ func NewRealtimeStatsClient() *RTSClient {
 		panic(err)
 	}
 	return &RTSClient{client: c}
+}
+
+// NewRealtimeStatsClientForEndpoint creates an RTSClient from a token and endpoint url.
+// `token` is a Fastly API token and `endpoint` is RealtimeStatsEndpoint for the production
+// realtime stats API.
+func NewRealtimeStatsClientForEndpoint(token, endpoint string) (*RTSClient, error) {
+	c, err := NewClientForEndpoint(token, endpoint)
+	if err != nil {
+		return nil, err
+	}
+	return &RTSClient{client: c}, nil
 }
 
 func (c *Client) init() (*Client, error) {

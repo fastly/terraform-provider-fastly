@@ -1147,14 +1147,13 @@ func resourceServiceV1() *schema.Resource {
 						"tls_hostname": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "",
 							Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
 						},
 						"tls_ca_cert": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
-							Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+							Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.",
 						},
 					},
 				},

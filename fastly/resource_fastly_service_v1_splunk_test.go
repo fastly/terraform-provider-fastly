@@ -394,8 +394,8 @@ resource "fastly_service_v1" "foo" {
     format             = %q
     format_version     = 1
     placement          = "waf_debug"
-		tls_hostname       = "example.com"
-		tls_ca_cert        = %q
+	  tls_hostname       = "example.com"
+    tls_ca_cert        = %q
     response_condition = "error_response_5XX"
   }
 

@@ -194,7 +194,7 @@ resource "fastly_service_v1" "foo" {
 
 	httpslogging {
 		name               = "httpslogger"
-    format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
 	}
@@ -219,14 +219,14 @@ resource "fastly_service_v1" "foo" {
 
 	httpslogging {
 		name               = "httpslogger"
-    format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b"
+		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b"
 		method             = "POST"
 		url                = "https://example.com/logs/1"
 	}
 
 	httpslogging {
 		name               = "httpslogger2"
-    format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		method             = "POST"
 		url                = "https://example.com/logs/2"
 		request_max_bytes  = 1000

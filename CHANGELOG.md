@@ -1,4 +1,14 @@
 ## 0.15.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1: Add `httpslogging` argument ([#222](https://github.com/terraform-providers/terraform-provider-fastly/pull/222))
+* resource/fastly_service_v1/splunk: Add `tls_hostname` and `tls_ca_cert` arguments ([#221](https://github.com/terraform-providers/terraform-provider-fastly/pull/221))
+
+NOTES:
+
+* provider: Update `go-fastly` client to v1.10.0 ([#220](https://github.com/terraform-providers/terraform-provider-fastly/pull/220))
+
 ## 0.14.0 (April 14, 2020)
 
 FEATURES:

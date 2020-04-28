@@ -1144,6 +1144,17 @@ func resourceServiceV1() *schema.Resource {
 							Optional:    true,
 							Description: "The name of the condition to apply",
 						},
+						"tls_hostname": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
+						},
+						"tls_ca_cert": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
+							Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.",
+						},
 					},
 				},
 			},
@@ -2655,6 +2666,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					ResponseCondition: sf["response_condition"].(string),
 					Placement:         sf["placement"].(string),
 					Token:             sf["token"].(string),
+					TLSHostname:       sf["tls_hostname"].(string),
+					TLSCACert:         sf["tls_ca_cert"].(string),
 				}
 
 				log.Printf("[DEBUG] Splunk create opts: %#v", opts)
@@ -4253,6 +4266,8 @@ func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 			"response_condition": s.ResponseCondition,
 			"placement":          s.Placement,
 			"token":              s.Token,
+			"tls_hostname":       s.TLSHostname,
+			"tls_ca_cert":        s.TLSCACert,
 		}
 
 		// prune any empty values that come from the default string value in structs

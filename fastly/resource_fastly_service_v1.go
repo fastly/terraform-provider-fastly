@@ -1251,6 +1251,7 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
+			"httpslogging": httpsloggingSchema,
 			"response_object": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1572,6 +1573,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"logentries",
 		"splunk",
 		"blobstoragelogging",
+		"httpslogging",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -2744,6 +2746,13 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		// find differences in HTTPS logging configuration
+		if d.HasChange("httpslogging") {
+			if err := processHTTPS(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
+
 		// find difference in Response Object
 		if d.HasChange("response_object") {
 			or, nr := d.GetChange("response_object")
@@ -3558,6 +3567,11 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 
 		if err := d.Set("blobstoragelogging", bsl); err != nil {
 			log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
+		}
+
+		// Refresh HTTPS
+		if err := readHTTPS(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Response Objects

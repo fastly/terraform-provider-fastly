@@ -1252,6 +1252,8 @@ func resourceServiceV1() *schema.Resource {
 			},
 
 			"httpslogging": httpsloggingSchema,
+
+			"logging_elasticsearch": elasticsearchSchema,
 			"response_object": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1574,6 +1576,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"splunk",
 		"blobstoragelogging",
 		"httpslogging",
+		"logging_elasticsearch",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -2749,6 +2752,13 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		// find differences in HTTPS logging configuration
 		if d.HasChange("httpslogging") {
 			if err := processHTTPS(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
+
+		// find differences in Elasticsearch logging configuration
+		if d.HasChange("logging_elasticsearch") {
+			if err := processElasticsearch(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}

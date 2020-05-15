@@ -10,6 +10,8 @@ description: |-
 
 Defines a set of Fastly ACL entries that can be used to populate a service ACL.  This resource will populate an ACL with the entries and will track their state.
 
+Note: You must plan / apply the acl definition along with the variable/locals first. Once provisioned you can then add in the fastly_service_acl_entries_v1 resource to populate the ACL container with entries. 
+
 ~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.  
 
 If Terraform is being used to populate the initial content of an ACL which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    

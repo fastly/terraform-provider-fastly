@@ -1251,9 +1251,10 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
-			"httpslogging": httpsloggingSchema,
-
+			"httpslogging":          httpsloggingSchema,
 			"logging_elasticsearch": elasticsearchSchema,
+			"logging_ftp":           ftpSchema,
+
 			"response_object": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1577,6 +1578,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"blobstoragelogging",
 		"httpslogging",
 		"logging_elasticsearch",
+		"logging_ftp",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -2759,6 +2761,13 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		// find differences in Elasticsearch logging configuration
 		if d.HasChange("logging_elasticsearch") {
 			if err := processElasticsearch(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
+
+		// find differences in FTP logging configuration
+		if d.HasChange("logging_ftp") {
+			if err := processFTP(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}

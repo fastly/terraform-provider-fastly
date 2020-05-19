@@ -149,6 +149,10 @@ var ErrMissingCertBlob = errors.New("Missing required field 'CertBlob'")
 // a "IntermediatesBlob" key, but one was not set.
 var ErrMissingIntermediatesBlob = errors.New("Missing required field 'IntermediatesBlob'")
 
+// ErrStatusNotOk is an error that indicates that indicates that the response body returned
+// by the Fastly API was not `{"status": "ok"}`
+var ErrStatusNotOk = errors.New("Unexpected 'status' field in API response body")
+
 // Ensure HTTPError is, in fact, an error.
 var _ error = (*HTTPError)(nil)
 
@@ -190,12 +194,12 @@ func NewHTTPError(resp *http.Response) *HTTPError {
 
 	// If this is a jsonapi response, decode it accordingly
 	if resp.Header.Get("Content-Type") == jsonapi.MediaType {
-		if err := decodeJSON(&e, resp.Body); err != nil {
+		if err := decodeBodyMap(resp.Body, &e); err != nil {
 			panic(err)
 		}
 	} else {
 		var lerr *legacyError
-		decodeJSON(&lerr, resp.Body)
+		decodeBodyMap(resp.Body, &lerr)
 		if lerr != nil {
 			e.Errors = append(e.Errors, &ErrorObject{
 				Title:  lerr.Message,

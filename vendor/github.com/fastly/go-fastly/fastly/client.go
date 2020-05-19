@@ -25,18 +25,26 @@ const APIKeyEnvVar = "FASTLY_API_KEY"
 // APIKeyHeader is the name of the header that contains the Fastly API key.
 const APIKeyHeader = "Fastly-Key"
 
+// EndpointEnvVar is the name of an environment variable that can be used
+// to change the URL of API requests.
+const EndpointEnvVar = "FASTLY_API_URL"
+
 // DefaultEndpoint is the default endpoint for Fastly. Since Fastly does not
 // support an on-premise solution, this is likely to always be the default.
 const DefaultEndpoint = "https://api.fastly.com"
 
-// RealtimeStatsEndpoint is the realtime stats endpoint for Fastly.
-const RealtimeStatsEndpoint = "https://rt.fastly.com"
+// RealtimeStatsEndpointEnvVar is the name of an environment variable that can be used
+// to change the URL of realtime stats requests.
+const RealtimeStatsEndpointEnvVar = "FASTLY_RTS_URL"
+
+// DefaultRealtimeStatsEndpoint is the realtime stats endpoint for Fastly.
+const DefaultRealtimeStatsEndpoint = "https://rt.fastly.com"
 
 // ProjectURL is the url for this library.
 var ProjectURL = "github.com/fastly/go-fastly"
 
 // ProjectVersion is the version of this library.
-var ProjectVersion = "1.10.0"
+var ProjectVersion = "1.13.0"
 
 // UserAgent is the user agent for this particular client.
 var UserAgent = fmt.Sprintf("FastlyGo/%s (+%s; %s)",
@@ -83,7 +91,13 @@ func DefaultClient() *Client {
 // function will not error if the API token is not supplied. Attempts to make a
 // request that requires an API key will return a 403 response.
 func NewClient(key string) (*Client, error) {
-	return NewClientForEndpoint(key, DefaultEndpoint)
+	endpoint, ok := os.LookupEnv(EndpointEnvVar)
+
+	if !ok {
+		endpoint = DefaultEndpoint
+	}
+
+	return NewClientForEndpoint(key, endpoint)
 }
 
 // NewClientForEndpoint creates a new API client with the given key and API
@@ -99,7 +113,13 @@ func NewClientForEndpoint(key string, endpoint string) (*Client, error) {
 // This function requires the environment variable `FASTLY_API_KEY` is set and contains
 // a valid API key to authenticate with Fastly.
 func NewRealtimeStatsClient() *RTSClient {
-	c, err := NewClientForEndpoint(os.Getenv(APIKeyEnvVar), RealtimeStatsEndpoint)
+	endpoint, ok := os.LookupEnv(RealtimeStatsEndpointEnvVar)
+
+	if !ok {
+		endpoint = DefaultRealtimeStatsEndpoint
+	}
+
+	c, err := NewClientForEndpoint(os.Getenv(APIKeyEnvVar), endpoint)
 	if err != nil {
 		panic(err)
 	}
@@ -322,8 +342,9 @@ func checkResp(resp *http.Response, err error) (*http.Response, error) {
 	}
 }
 
-// decodeJSON is used to decode an HTTP response body into an interface as JSON.
-func decodeJSON(out interface{}, body io.ReadCloser) error {
+// decodeBodyMap is used to decode an HTTP response body into a mapstructure struct.
+// It closes `body`.
+func decodeBodyMap(body io.ReadCloser, out interface{}) error {
 	defer body.Close()
 
 	var parsed interface{}
@@ -332,6 +353,13 @@ func decodeJSON(out interface{}, body io.ReadCloser) error {
 		return err
 	}
 
+	return decodeMap(parsed, out)
+}
+
+// decodeMap decodes an `in` struct or map to a mapstructure tagged `out`.
+// It applies the decoder defaults used throughout go-fastly.
+// Note that this uses opposite argument order from Go's copy().
+func decodeMap(in interface{}, out interface{}) error {
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			mapToHTTPHeaderHookFunc(),
@@ -343,5 +371,5 @@ func decodeJSON(out interface{}, body io.ReadCloser) error {
 	if err != nil {
 		return err
 	}
-	return decoder.Decode(parsed)
+	return decoder.Decode(in)
 }

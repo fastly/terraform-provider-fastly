@@ -85,8 +85,7 @@ resource "aws_s3_bucket" "website" {
 }
 ```
 
-Basic usage with [custom
-VCL](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/):
+Basic usage with [custom VCL](https://docs.fastly.com/guides/vcl/uploading-custom-vcl):
 
 ```hcl
 resource "fastly_service_v1" "demo" {
@@ -209,6 +208,8 @@ Defined below.
 * `logging_elasticsearch` - (optional) An Elasticsearch endpoint to send streaming logs to.
 Defined below.
 * `logging_ftp` - (Optional) An FTP endpoint to send streaming logs to.
+Defined below.
+* `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
 Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
@@ -553,6 +554,25 @@ The `logging_ftp` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the condition to apply.
+
+The `logging_sftp` block supports:
+
+* `name` - (Required) The unique name of the SFTP logging endpoint.
+* `address` - (Required) The SFTP address to stream logs to.
+* `path` - (Required) The path to upload log files to. If the path ends in / then it is treated as a directory.
+* `ssh_known_hosts` - (Required) A list of host keys for all hosts we can connect to over SFTP.
+* `user` - (Required) The username for the server.
+* `port` - (Optional) The port the SFTP service listens on. (Default: `22`).
+* `password` - (Optional) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
+* `secret_key` - (Optional) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
+* `gzip_level` - (Optional) What level of GZIP encoding to have when dumping logs (default 0, no compression).
+* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `response_condition` - (Optional) The name of the condition to apply.
+* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
 
 The `response_object` block supports:
 

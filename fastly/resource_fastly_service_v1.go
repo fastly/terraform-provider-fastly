@@ -1539,7 +1539,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	// Update Name and/or Comment. No new verions is required for this
-	if d.HasChange("name") || d.HasChange("comment") {
+	if d.HasChanges("name", "comment") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ID:      d.Id(),
 			Name:    d.Get("name").(string),
@@ -1663,7 +1663,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		// version being created, HasChange will return false, but we need
 		// to set it anyway, so ensure we update the settings in that
 		// case.
-		if d.HasChange("default_host") || d.HasChange("default_ttl") || (d.Get("default_ttl") == 0 && initialVersion) {
+		if d.HasChanges("default_host", "default_ttl") || (d.Get("default_ttl") == 0 && initialVersion) {
 			opts := gofastly.UpdateSettingsInput{
 				Service: d.Id(),
 				Version: latestVersion,

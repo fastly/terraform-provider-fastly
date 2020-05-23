@@ -80,7 +80,7 @@ func resourceUserV1Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	// Update Name and/or Role.
-	if d.HasChange("name") || d.HasChange("role") {
+	if d.HasChanges("name", "role") {
 		_, err := conn.UpdateUser(&gofastly.UpdateUserInput{
 			ID:   d.Id(),
 			Name: d.Get("name").(string),

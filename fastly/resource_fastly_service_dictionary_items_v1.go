@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"strings"
 )
 
 func resourceServiceDictionaryItemsV1() *schema.Resource {
@@ -34,6 +35,7 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 
 			"items": {
 				Type:         schema.TypeMap,
+				Elem:         &schema.Schema{Type: schema.TypeString},
 				Optional:     true,
 				Description:  "Map of key/value pairs that make up an item in the dictionary",
 				ValidateFunc: validateDictionaryItems(),

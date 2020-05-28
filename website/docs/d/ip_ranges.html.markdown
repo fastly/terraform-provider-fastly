@@ -19,10 +19,11 @@ resource "aws_security_group" "from_fastly" {
   name = "from_fastly"
 
   ingress {
-    from_port   = "443"
-    to_port     = "443"
-    protocol    = "tcp"
-    cidr_blocks = ["${data.fastly_ip_ranges.fastly.cidr_blocks}"]
+    from_port         = "443"
+    to_port           = "443"
+    protocol          = "tcp"
+    cidr_blocks       = ["${data.fastly_ip_ranges.fastly.cidr_blocks}"]
+    ipv6_cidr_blocks  = ["${data.fastly_ip_ranges.fastly.ipv6_cidr_blocks}"]
   }
 }
 ```
@@ -30,5 +31,6 @@ resource "aws_security_group" "from_fastly" {
 ## Attributes Reference
 
 * `cidr_blocks` - The lexically ordered list of CIDR blocks.
+* `ipv6_cidr_blocks` - The lexically ordered list of ipv6 CIDR blocks.
 
 [1]: https://docs.fastly.com/guides/securing-communications/accessing-fastlys-ip-ranges

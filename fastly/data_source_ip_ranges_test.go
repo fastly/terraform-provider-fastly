@@ -33,16 +33,25 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 		a := r.Primary.Attributes
 
 		var (
-			cidrBlockSize int
-			err           error
+			cidrBlockSize     int
+			ipv6cidrBlockSize int
+			err               error
 		)
 
 		if cidrBlockSize, err = strconv.Atoi(a["cidr_blocks.#"]); err != nil {
 			return err
 		}
 
+		if ipv6cidrBlockSize, err = strconv.Atoi(a["ipv6_cidr_blocks.#"]); err != nil {
+			return err
+		}
+
 		if cidrBlockSize < 10 {
 			return fmt.Errorf("cidr_blocks seem suspiciously low: %d", cidrBlockSize)
+		}
+
+		if 0 >= ipv6cidrBlockSize {
+			return fmt.Errorf("ipv6_cidr_blocks are missing")
 		}
 
 		var cidrBlocks sort.StringSlice = make([]string, cidrBlockSize)
@@ -61,6 +70,23 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 
 		if !sort.IsSorted(cidrBlocks) {
 			return fmt.Errorf("unexpected order of cidr_blocks: %s", cidrBlocks)
+		}
+
+		var ipv6cidrBlocks sort.StringSlice = make([]string, ipv6cidrBlockSize)
+
+		for j := range make([]string, ipv6cidrBlockSize) {
+
+			block := a[fmt.Sprintf("ipv6_cidr_blocks.%d", j)]
+
+			if _, _, err := net.ParseCIDR(block); err != nil {
+				return fmt.Errorf("malformed CIDR block %s: %s", block, err)
+			}
+
+			ipv6cidrBlocks[j] = block
+		}
+
+		if !sort.IsSorted(ipv6cidrBlocks) {
+			return fmt.Errorf("unexpected order of ipv6_cidr_blocks: %s", ipv6cidrBlocks)
 		}
 
 		return nil

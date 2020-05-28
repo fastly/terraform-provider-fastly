@@ -112,6 +112,7 @@ func resourceServiceV1() *schema.Resource {
 			"logging_sftp":          sftpSchema,
 			"logging_datadog":       datadogSchema,
 			"logging_loggly":        logglySchema,
+			"logging_newrelic":      newrelicSchema,
 
 			"response_object": responseobjectSchema,
 			"request_setting": requestsettingSchema,
@@ -193,6 +194,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"logging_sftp",
 		"logging_datadog",
 		"logging_loggly",
+		"logging_newrelic",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -416,6 +418,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
+		if d.HasChange("logging_newrelic") {
+			if err := processNewRelic(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
 		if d.HasChange("response_object") {
 			if err := processResponseObject(d, conn, latestVersion); err != nil {
 				return err
@@ -604,6 +611,9 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if err := readLoggly(conn, d, s); err != nil {
+			return err
+		}
+		if err := readNewRelic(conn, d, s); err != nil {
 			return err
 		}
 		if err := readResponseObject(conn, d, s); err != nil {

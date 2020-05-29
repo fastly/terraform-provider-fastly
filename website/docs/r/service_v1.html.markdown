@@ -249,7 +249,7 @@ Default `200`.
 * `ssl_hostname` - (Optional, deprecated by Fastly) Used for both SNI during the TLS handshake and to validate the cert.
 * `ssl_cert_hostname` - (Optional) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all.
 * `ssl_sni_hostname` - (Optional) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all.
-* `shield` - (Optional) The POP of the shield designated to reduce inbound load.
+* `shield` - (Optional) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the [`GET /datacenters`](https://docs.fastly.com/api/tools#datacenter) API response.
 * `weight` - (Optional) The [portion of traffic](https://docs.fastly.com/guides/performance-tuning/load-balancing-configuration.html#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives `weight / total` of the traffic. Default `100`.
 * `healthcheck` - (Optional) Name of a defined `healthcheck` to assign to this backend.
 
@@ -272,7 +272,7 @@ The `director` block supports:
 * `name` - (Required) Unique name for this Director.
 * `backends` - (Required) Names of defined backends to map the director to. Example: `[ "origin1", "origin2" ]`
 * `comment` - (Optional) An optional comment about the Director.
-* `shield` - (Optional) Selected POP to serve as a "shield" for origin servers.
+* `shield` - (Optional) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://docs.fastly.com/api/tools#datacenter) API response.
 * `capacity` - (Optional) Load balancing weight for the backends. Default `100`.
 * `quorum` - (Optional) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`.
 * `type` - (Optional) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client).  Default `1`.

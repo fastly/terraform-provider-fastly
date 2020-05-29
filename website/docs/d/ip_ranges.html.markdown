@@ -30,7 +30,7 @@ resource "aws_security_group" "from_fastly" {
 
 ## Attributes Reference
 
-* `cidr_blocks` - The lexically ordered list of CIDR blocks.
+* `cidr_blocks` - The lexically ordered list of ipv4 CIDR blocks.
 * `ipv6_cidr_blocks` - The lexically ordered list of ipv6 CIDR blocks.
 
 [1]: https://docs.fastly.com/guides/securing-communications/accessing-fastlys-ip-ranges

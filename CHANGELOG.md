@@ -1,4 +1,13 @@
 ## 0.16.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/fastly_ip_ranges: Expose Fastly's IpV6 CIDR ranges via `ipv6_cidr_blocks` property ([#201](https://github.com/terraform-providers/terraform-provider-fastly/pull/240))
+
+NOTES:
+
+* provider: Update `go-fastly` client to v1.14.1 ([#184](https://github.com/terraform-providers/terraform-provider-fastly/pull/240))
+
 ## 0.15.0 (April 28, 2020)
 
 ENHANCEMENTS:

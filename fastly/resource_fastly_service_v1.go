@@ -4077,7 +4077,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"message_type":                      s.MessageType,
 			"placement":                         s.Placement,
 			"server_side_encryption":            s.ServerSideEncryption,
-			"server_side_encryption_kms_key_id": s.ServerSideEncryptionKmsKeyId,
+			"server_side_encryption_kms_key_id": s.ServerSideEncryptionKMSKeyID,
 		}
 
 		// prune any empty values that come from the default string value in structs

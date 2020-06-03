@@ -1,4 +1,9 @@
-## 0.17.0 (Unreleased)
+## 0.16.1 (Unreleased)
+
+BUG FIXES:
+
+* resource/fastly_service_v1/s3logging: Fix persistence of `server_side_encryption` and `server_side_encryption_kms_key_id` arguments ([#246](https://github.com/terraform-providers/terraform-provider-fastly/pull/246))
+
 ## 0.16.0 (June 01, 2020)
 
 ENHANCEMENTS:

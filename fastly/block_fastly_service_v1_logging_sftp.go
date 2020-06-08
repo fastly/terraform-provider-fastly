@@ -239,7 +239,7 @@ func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
 			"period":             sl.Period,
 			"gzip_level":         sl.GzipLevel,
 			"timestamp_format":   sl.TimestampFormat,
-			"message_type":   sl.MessageType,
+			"message_type":       sl.MessageType,
 			"format":             sl.Format,
 			"format_version":     sl.FormatVersion,
 			"response_condition": sl.ResponseCondition,

@@ -95,6 +95,7 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		// Defaults
 		Port:            22,
 		Period:          3600,
+		MessageType:     "classic",
 		GzipLevel:       0,
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 		FormatVersion:   2,

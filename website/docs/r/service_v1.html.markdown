@@ -85,7 +85,8 @@ resource "aws_s3_bucket" "website" {
 }
 ```
 
-Basic usage with [custom VCL](https://docs.fastly.com/guides/vcl/uploading-custom-vcl):
+Basic usage with [custom
+VCL](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/):
 
 ```hcl
 resource "fastly_service_v1" "demo" {
@@ -573,6 +574,7 @@ The `logging_sftp` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `response_condition` - (Optional) The name of the condition to apply.
 * `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
 
 The `response_object` block supports:
 

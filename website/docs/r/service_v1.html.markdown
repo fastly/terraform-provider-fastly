@@ -366,7 +366,7 @@ Fastly-Geo-Region into the request headers.
 
 The `s3logging` block supports:
 
-* `name` - (Required) A unique name to identify this S3 Logging Bucket.
+* `name` - (Required) The unique name of the S3 logging endpoint.
 * `bucket_name` - (Required) The name of the bucket in which to store the logs.
 * `s3_access_key` - (Required) AWS Access Key of an account with the required
 permissions to post logs. It is **strongly** recommended you create a separate
@@ -380,12 +380,13 @@ not be encrypted. You can provide this secret via an environment variable, `FAST
 If this field is left empty, the files will be saved in the bucket's root path.
 * `domain` - (Optional) If you created the S3 bucket outside of `us-east-1`,
 then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`.
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
 * `period` - (Optional) How frequently the logs should be transferred, in
 seconds. Default `3600`.
 * `gzip_level` - (Optional) Level of GZIP compression, from `0-9`. `0` is no
 compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`).
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
 * `timestamp_format` - (Optional) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).

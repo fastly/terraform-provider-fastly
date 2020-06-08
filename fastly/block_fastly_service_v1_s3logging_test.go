@@ -3,10 +3,10 @@ package fastly
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -17,6 +17,67 @@ const testAwsPrimarySecretKey = "SECRET0123456789012345678901234567890123"
 
 const testAwsOtherAccessKey = "KEYQPONMLKJIHGFEDCBA"
 const testAwsOtherSecretKey = "SECRETOTHER01234567890123456789012345678"
+
+func TestResourceFastlyFlattenS3(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.S3
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.S3{
+				{
+					Name:                         "s3-endpoint",
+					BucketName:                   "bucket",
+					Domain:                       "domain",
+					AccessKey:                    testAwsPrimaryAccessKey,
+					SecretKey:                    testAwsPrimarySecretKey,
+					Path:                         "/",
+					Period:                       3600,
+					GzipLevel:                    5,
+					Format:                       "%h %l %u %t %r %>s",
+					FormatVersion:                2,
+					ResponseCondition:            "response_condition_test",
+					MessageType:                  "classic",
+					TimestampFormat:              "%Y-%m-%dT%H:%M:%S.000",
+					Placement:                    "none",
+					PublicKey:                    pgpPublicKey(),
+					Redundancy:                   "reduced_redundancy",
+					ServerSideEncryptionKMSKeyID: "kmskey",
+					ServerSideEncryption:         gofastly.S3ServerSideEncryptionAES,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":                              "s3-endpoint",
+					"bucket_name":                       "bucket",
+					"domain":                            "domain",
+					"s3_access_key":                     testAwsPrimaryAccessKey,
+					"s3_secret_key":                     testAwsPrimarySecretKey,
+					"path":                              "/",
+					"period":                            uint(3600),
+					"gzip_level":                        uint(5),
+					"format":                            "%h %l %u %t %r %>s",
+					"format_version":                    uint(2),
+					"response_condition":                "response_condition_test",
+					"message_type":                      "classic",
+					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
+					"placement":                         "none",
+					"public_key":                        pgpPublicKey(),
+					"redundancy":                        gofastly.S3RedundancyReduced,
+					"server_side_encryption":            gofastly.S3ServerSideEncryptionAES,
+					"server_side_encryption_kms_key_id": "kmskey",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenS3s(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching:%s", diff)
+		}
+	}
+}
 
 func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -31,6 +92,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		AccessKey:         testAwsPrimaryAccessKey,
 		SecretKey:         testAwsPrimarySecretKey,
 		Period:            uint(3600),
+		PublicKey:         pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.,
 		GzipLevel:         uint(0),
 		Format:            "%h %l %u %t %r %>s",
 		FormatVersion:     1,
@@ -47,6 +109,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		AccessKey:         testAwsPrimaryAccessKey,
 		SecretKey:         testAwsPrimarySecretKey,
 		Period:            uint(3600),
+		PublicKey:         pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.,
 		GzipLevel:         uint(0),
 		Format:            "%h %l %u %t %r %>s",
 		FormatVersion:     1,
@@ -257,8 +320,8 @@ func testAccCheckFastlyServiceV1S3LoggingAttributes(service *gofastly.ServiceDet
 					// these ahead of time
 					ls.CreatedAt = nil
 					ls.UpdatedAt = nil
-					if !reflect.DeepEqual(s, ls) {
-						return fmt.Errorf("Bad match S3 logging match, expected (%#v), got (%#v)", s, ls)
+					if diff := cmp.Diff(s, ls); diff != "" {
+						return fmt.Errorf("Bad match S3 logging match: %s", diff)
 					}
 					found++
 				}
@@ -288,7 +351,7 @@ resource "fastly_service_v1" "foo" {
     name    = "amazon docs"
   }
 
-	condition {
+  condition {
     name      = "response_condition_test"
     type      = "RESPONSE"
     priority  = 8
@@ -300,7 +363,7 @@ resource "fastly_service_v1" "foo" {
     bucket_name        = "fastlytestlogging"
     s3_access_key      = "%s"
     s3_secret_key      = "%s"
-		response_condition = "response_condition_test"
+    response_condition = "response_condition_test"
   }
 
   force_destroy = true
@@ -322,7 +385,7 @@ resource "fastly_service_v1" "foo" {
     name    = "amazon docs"
   }
 
-	condition {
+  condition {
     name      = "response_condition_test"
     type      = "RESPONSE"
     priority  = 8
@@ -335,7 +398,10 @@ resource "fastly_service_v1" "foo" {
     domain             = "s3-us-west-2.amazonaws.com"
     s3_access_key      = "%s"
     s3_secret_key      = "%s"
-		response_condition = "response_condition_test"
+    response_condition = "response_condition_test"
+    public_key         = <<EOF
+`+pgpPublicKey()+`
+EOF
   }
 
   force_destroy = true
@@ -372,6 +438,9 @@ resource "fastly_service_v1" "foo" {
     s3_secret_key      = "%s"
     response_condition = "response_condition_test"
     message_type       = "blank"
+    public_key         = <<EOF
+`+pgpPublicKey()+`
+EOF
     redundancy         = "reduced_redundancy"
   }
 
@@ -471,7 +540,7 @@ type currentEnv struct {
 
 func getEnv() *currentEnv {
 	// Grab any existing Fastly AWS S3 keys and preserve, in the off chance
-	// they're actually set in the enviornment
+	// they're actually set in the environment
 	return &currentEnv{
 		Key:    os.Getenv("FASTLY_S3_ACCESS_KEY"),
 		Secret: os.Getenv("FASTLY_S3_SECRET_KEY"),

@@ -218,6 +218,8 @@ Defined below.
 Defined below.
 * `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
 Defined below.
+* `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
@@ -610,6 +612,16 @@ The `logging_newrelic` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the condition to apply.
+
+The `logging_scalyr` block supports:
+
+* `name` - (Required) The unique name of the Scalyr logging endpoint.
+* `token` - (Required) The token to use for authentication (https://www.scalyr.com/keys).
+* `region` - (Optional) The region that log data will be sent to. One of US or EU. Defaults to US if undefined.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
 The `response_object` block supports:
 

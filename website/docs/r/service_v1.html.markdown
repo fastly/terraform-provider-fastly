@@ -86,8 +86,7 @@ resource "aws_s3_bucket" "website" {
 ```
 
 Basic usage with [custom
-VCL](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) (must be
-enabled on your Fastly account):
+VCL](https://docs.fastly.com/guides/vcl/uploading-custom-vcl):
 
 ```hcl
 resource "fastly_service_v1" "demo" {
@@ -210,9 +209,7 @@ Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
-* `vcl` - (Optional) A set of custom VCL configuration blocks. The
-ability to upload custom VCL code is not enabled by default for new Fastly
-accounts (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
+* `vcl` - (Optional) A set of custom VCL configuration blocks. For more information on using Custom VCL (see the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for details).
 * `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
 * `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
 

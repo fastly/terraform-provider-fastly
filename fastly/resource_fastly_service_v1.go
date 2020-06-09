@@ -422,6 +422,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
+<<<<<<< HEAD
 		if d.HasChange("logging_newrelic") {
 			if err := processNewRelic(d, conn, latestVersion); err != nil {
 				return err

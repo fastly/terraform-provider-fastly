@@ -3199,37 +3199,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh directors
-		log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
-		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		log.Printf("[DEBUG] Refreshing Director Backends for (%s)", d.Id())
-		var directorBackendList []*gofastly.DirectorBackend
-
-		for _, director := range directorList {
-			for _, backend := range backendList {
-				directorBackendGet, err := conn.GetDirectorBackend(&gofastly.GetDirectorBackendInput{
-					Service:  d.Id(),
-					Version:  s.ActiveVersion.Number,
-					Director: director.Name,
-					Backend:  backend.Name,
-				})
-				if err == nil {
-					directorBackendList = append(directorBackendList, directorBackendGet)
-				}
-			}
-		}
-
-		dirl := flattenDirectors(directorList, directorBackendList)
-
-		if err := d.Set("director", dirl); err != nil {
-			log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
+		if err := readDirector(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh headers

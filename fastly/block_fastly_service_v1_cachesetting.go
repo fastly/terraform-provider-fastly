@@ -5,6 +5,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+	"strings"
 )
 
 var cachesettingSchema = &schema.Schema{
@@ -116,4 +117,57 @@ func readCacheSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly
 		log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
 	}
 	return nil
+}
+
+
+func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput, error) {
+	df := cacheMap.(map[string]interface{})
+	opts := gofastly.CreateCacheSettingInput{
+		Name:           df["name"].(string),
+		StaleTTL:       uint(df["stale_ttl"].(int)),
+		CacheCondition: df["cache_condition"].(string),
+	}
+
+	if v, ok := df["ttl"]; ok {
+		opts.TTL = uint(v.(int))
+	}
+
+	act := strings.ToLower(df["action"].(string))
+	switch act {
+	case "cache":
+		opts.Action = gofastly.CacheSettingActionCache
+	case "pass":
+		opts.Action = gofastly.CacheSettingActionPass
+	case "restart":
+		opts.Action = gofastly.CacheSettingActionRestart
+	}
+
+	return &opts, nil
+}
+
+
+
+func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]interface{} {
+	var csl []map[string]interface{}
+	for _, cl := range csList {
+		// Convert Cache Settings to a map for saving to state.
+		clMap := map[string]interface{}{
+			"name":            cl.Name,
+			"action":          cl.Action,
+			"cache_condition": cl.CacheCondition,
+			"stale_ttl":       cl.StaleTTL,
+			"ttl":             cl.TTL,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range clMap {
+			if v == "" {
+				delete(clMap, k)
+			}
+		}
+
+		csl = append(csl, clMap)
+	}
+
+	return csl
 }

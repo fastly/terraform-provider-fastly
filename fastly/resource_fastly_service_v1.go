@@ -2410,20 +2410,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh gzips
-		log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
-		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Gzips for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		gl := flattenGzips(gzipsList)
-
-		if err := d.Set("gzip", gl); err != nil {
-			log.Printf("[WARN] Error setting Gzips for (%s): %s", d.Id(), err)
+		if err := readGZIP(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Healthcheck

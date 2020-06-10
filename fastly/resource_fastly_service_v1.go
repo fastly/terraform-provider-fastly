@@ -69,25 +69,6 @@ func resourceServiceV1() *schema.Resource {
 				Optional:    true,
 			},
 
-			"domain": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The domain that this Service will respond to",
-						},
-
-						"comment": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-
 			"default_ttl": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -107,6 +88,7 @@ func resourceServiceV1() *schema.Resource {
 				Optional: true,
 			},
 
+			"domain": 				domainSchema,
 			"backend": 				backendSchema,
 			"cache_setting": 		cachesettingSchema,
 			"condition":			conditionSchema,

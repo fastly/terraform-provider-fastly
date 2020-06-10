@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -137,5 +138,25 @@ func processBigQueryLogging(d *schema.ResourceData, conn *gofastly.Client, lates
 			return err
 		}
 	}
+	return nil
+}
+
+
+func readBigQueryLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
+	BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	bql := flattenBigQuery(BQList)
+	if err := d.Set("bigquerylogging", bql); err != nil {
+		log.Printf("[WARN] Error setting bigquerylogging for (%s): %s", d.Id(), err)
+	}
+
 	return nil
 }

@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 )
 
 var syslogSchema = &schema.Schema{
@@ -98,5 +100,72 @@ var syslogSchema = &schema.Schema{
 			},
 		},
 	},
+}
+
+
+func processSyslog(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+	os, ns := d.GetChange("syslog")
+	if os == nil {
+		os = new(schema.Set)
+	}
+	if ns == nil {
+		ns = new(schema.Set)
+	}
+
+	oss := os.(*schema.Set)
+	nss := ns.(*schema.Set)
+	removeSyslog := oss.Difference(nss).List()
+	addSyslog := nss.Difference(oss).List()
+
+	// DELETE old syslog configurations
+	for _, pRaw := range removeSyslog {
+		slf := pRaw.(map[string]interface{})
+		opts := gofastly.DeleteSyslogInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Name:    slf["name"].(string),
+		}
+
+		log.Printf("[DEBUG] Fastly Syslog removal opts: %#v", opts)
+		err := conn.DeleteSyslog(&opts)
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			if errRes.StatusCode != 404 {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// POST new/updated Syslog
+	for _, pRaw := range addSyslog {
+		slf := pRaw.(map[string]interface{})
+
+		opts := gofastly.CreateSyslogInput{
+			Service:           d.Id(),
+			Version:           latestVersion,
+			Name:              slf["name"].(string),
+			Address:           slf["address"].(string),
+			Port:              uint(slf["port"].(int)),
+			Format:            slf["format"].(string),
+			FormatVersion:     uint(slf["format_version"].(int)),
+			Token:             slf["token"].(string),
+			UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+			TLSHostname:       slf["tls_hostname"].(string),
+			TLSCACert:         slf["tls_ca_cert"].(string),
+			TLSClientCert:     slf["tls_client_cert"].(string),
+			TLSClientKey:      slf["tls_client_key"].(string),
+			ResponseCondition: slf["response_condition"].(string),
+			MessageType:       slf["message_type"].(string),
+			Placement:         slf["placement"].(string),
+		}
+
+		log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
+		_, err := conn.CreateSyslog(&opts)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 

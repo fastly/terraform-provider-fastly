@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -102,3 +103,21 @@ func processCondition(d *schema.ResourceData, conn *gofastly.Client, latestVersi
 }
 
 
+func readCondition(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
+	conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Conditions for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	cl := flattenConditions(conditionList)
+
+	if err := d.Set("condition", cl); err != nil {
+		log.Printf("[WARN] Error setting Conditions for (%s): %s", d.Id(), err)
+	}
+	return nil
+}

@@ -5,6 +5,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+	"strings"
 )
 
 var snippetSchema = &schema.Schema{
@@ -111,4 +112,71 @@ func readSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Serv
 		log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
 	}
 	return nil
+}
+
+
+func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
+	df := snippetMap.(map[string]interface{})
+	opts := gofastly.CreateSnippetInput{
+		Name:     df["name"].(string),
+		Content:  df["content"].(string),
+		Priority: df["priority"].(int),
+	}
+
+	snippetType := strings.ToLower(df["type"].(string))
+	switch snippetType {
+	case "init":
+		opts.Type = gofastly.SnippetTypeInit
+	case "recv":
+		opts.Type = gofastly.SnippetTypeRecv
+	case "hash":
+		opts.Type = gofastly.SnippetTypeHash
+	case "hit":
+		opts.Type = gofastly.SnippetTypeHit
+	case "miss":
+		opts.Type = gofastly.SnippetTypeMiss
+	case "pass":
+		opts.Type = gofastly.SnippetTypePass
+	case "fetch":
+		opts.Type = gofastly.SnippetTypeFetch
+	case "error":
+		opts.Type = gofastly.SnippetTypeError
+	case "deliver":
+		opts.Type = gofastly.SnippetTypeDeliver
+	case "log":
+		opts.Type = gofastly.SnippetTypeLog
+	case "none":
+		opts.Type = gofastly.SnippetTypeNone
+	}
+
+	return &opts, nil
+}
+
+func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
+	var sl []map[string]interface{}
+	for _, snippet := range snippetList {
+		// Skip dynamic snippets
+		if snippet.Dynamic == 1 {
+			continue
+		}
+
+		// Convert VCLs to a map for saving to state.
+		snippetMap := map[string]interface{}{
+			"name":     snippet.Name,
+			"type":     snippet.Type,
+			"priority": int(snippet.Priority),
+			"content":  snippet.Content,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range snippetMap {
+			if v == "" {
+				delete(snippetMap, k)
+			}
+		}
+
+		sl = append(sl, snippetMap)
+	}
+
+	return sl
 }

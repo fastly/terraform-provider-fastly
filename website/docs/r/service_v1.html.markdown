@@ -222,6 +222,8 @@ Defined below.
 Defined below.
 * `logging_googlepubsub` - (Optional) A Google Cloud Pub/Sub endpoint to send streaming logs to.
 Defined below.
+* `logging_kafka` - (Optional) A Kafka endpoint to send streaming logs to.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
@@ -632,6 +634,23 @@ The `logging_googlepubsub` block supports:
 * `secret_key` - (Required) Your Google Cloud Platform account secret key. The private_key field in your service account authentication JSON.
 * `project_id` - (Required) The ID of your Google Cloud Platform project.
 * `topic` - (Required) The Google Cloud Pub/Sub topic to which logs will be published.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+The `logging_kafka` block supports:
+
+* `name` - (Required) The unique name of the Kafka logging endpoint.
+* `topic` - (Required) The Kafka topic to send logs to.
+* `brokers` - (Required) A comma-separated list of IP addresses or hostnames of Kafka brokers.
+* `compression_codec` - (Optional) The codec used for compression of your logs. One of: gzip, snappy, lz4.
+* `required_acks` - (Optional) The Number of acknowledgements a leader must receive before a write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.
+* `use_tls` - (Optional) Whether to use TLS for secure logging. Can be either true or false.
+* `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format.
+* `tls_client_cert` - (Optional) The client certificate used to make authenticated requests. Must be in PEM format.
+* `tls_client_key` - (Optional) The client private key used to make authenticated requests. Must be in PEM format.
+* `tls_hostname` - (Optional) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
 * `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -113,6 +114,26 @@ func processResponseObject(d *schema.ResourceData, conn *gofastly.Client, latest
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+
+func readResponseObject(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
+	responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Response Object for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	rol := flattenResponseObjects(responseObjectList)
+
+	if err := d.Set("response_object", rol); err != nil {
+		log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
 	}
 	return nil
 }

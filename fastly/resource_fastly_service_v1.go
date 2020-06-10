@@ -1848,20 +1848,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Response Objects
-		log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
-		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Response Object for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		rol := flattenResponseObjects(responseObjectList)
-
-		if err := d.Set("response_object", rol); err != nil {
-			log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
+		if err := readResponseObject(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Conditions

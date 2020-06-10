@@ -6,7 +6,6 @@ import (
 
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 )
 
 var sumologicSchema = &schema.Schema{
@@ -61,7 +60,6 @@ var sumologicSchema = &schema.Schema{
 		},
 	},
 }
-
 
 func processSumologic(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("sumologic")
@@ -121,7 +119,6 @@ func processSumologic(d *schema.ResourceData, conn *gofastly.Client, latestVersi
 	return nil
 }
 
-
 func readSumologic(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
@@ -139,7 +136,6 @@ func readSumologic(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Se
 	}
 	return nil
 }
-
 
 func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interface{} {
 	var l []map[string]interface{}

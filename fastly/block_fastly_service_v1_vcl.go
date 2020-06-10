@@ -34,7 +34,6 @@ var vclSchema = &schema.Schema{
 	},
 }
 
-
 func processVCL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
 	// endpoint to update a VCL, we simply destroy it and create a new one.
@@ -105,7 +104,6 @@ func processVCL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 	return nil
 }
 
-
 func readVCL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
 	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
@@ -123,7 +121,6 @@ func readVCL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceD
 	}
 	return nil
 }
-
 
 func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
 	var vl []map[string]interface{}
@@ -147,8 +144,6 @@ func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
 
 	return vl
 }
-
-
 
 func validateVCLs(d *schema.ResourceData) error {
 	// TODO: this would be nice to move into a resource/collection validation function, once that is available

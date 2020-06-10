@@ -96,7 +96,6 @@ func processSnippet(d *schema.ResourceData, conn *gofastly.Client, latestVersion
 	return nil
 }
 
-
 func readSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
@@ -114,7 +113,6 @@ func readSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Serv
 	}
 	return nil
 }
-
 
 func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
 	df := snippetMap.(map[string]interface{})

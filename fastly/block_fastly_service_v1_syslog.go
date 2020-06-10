@@ -104,7 +104,6 @@ var syslogSchema = &schema.Schema{
 	},
 }
 
-
 func processSyslog(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("syslog")
 	if os == nil {
@@ -171,7 +170,6 @@ func processSyslog(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-
 func readSyslog(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
 	syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
@@ -190,7 +188,6 @@ func readSyslog(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servi
 	}
 	return nil
 }
-
 
 func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	var pl []map[string]interface{}
@@ -225,4 +222,3 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 
 	return pl
 }
-

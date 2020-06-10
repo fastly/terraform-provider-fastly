@@ -88,31 +88,31 @@ func resourceServiceV1() *schema.Resource {
 				Optional: true,
 			},
 
-			"domain": 				domainSchema,
-			"backend": 				backendSchema,
-			"cache_setting": 		cachesettingSchema,
-			"condition":			conditionSchema,
-			"healthcheck":			healthcheckSchema,
-			"director":				directorSchema,
-			"gzip":					gzipSchema,
-			"header":				headerSchema,
-			"s3logging":			s3loggingSchema,
-			"papertrail":			papertrailSchema,
-			"sumologic":			sumologicSchema,
-			"gcslogging":			gcsloggingSchema,
-			"bigquerylogging":		bigqueryloggingSchema,
-			"syslog":				syslogSchema,
-			"logentries":			logentriesSchema,
-			"splunk":				splunkSchema,
-			"blobstoragelogging":	blobstorageloggingSchema,
-			"httpslogging":			httpsloggingSchema,
-			"response_object":		responseobjectSchema,
-			"request_setting":		requestsettingSchema,
-			"vcl":					vclSchema,
-			"snippet":				snippetSchema,
-			"dynamicsnippet":		dynamicsnippetSchema,
-			"acl":					aclSchema,
-			"dictionary":			dictionarySchema,
+			"domain":             domainSchema,
+			"backend":            backendSchema,
+			"cache_setting":      cachesettingSchema,
+			"condition":          conditionSchema,
+			"healthcheck":        healthcheckSchema,
+			"director":           directorSchema,
+			"gzip":               gzipSchema,
+			"header":             headerSchema,
+			"s3logging":          s3loggingSchema,
+			"papertrail":         papertrailSchema,
+			"sumologic":          sumologicSchema,
+			"gcslogging":         gcsloggingSchema,
+			"bigquerylogging":    bigqueryloggingSchema,
+			"syslog":             syslogSchema,
+			"logentries":         logentriesSchema,
+			"splunk":             splunkSchema,
+			"blobstoragelogging": blobstorageloggingSchema,
+			"httpslogging":       httpsloggingSchema,
+			"response_object":    responseobjectSchema,
+			"request_setting":    requestsettingSchema,
+			"vcl":                vclSchema,
+			"snippet":            snippetSchema,
+			"dynamicsnippet":     dynamicsnippetSchema,
+			"acl":                aclSchema,
+			"dictionary":         dictionarySchema,
 		},
 	}
 }
@@ -290,7 +290,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// Conditions need to be updated first, as they can be referenced by other
 		// configuration objects (Backends, Request Headers, etc)
-		
+
 		if d.HasChange("condition") {
 			if err := processCondition(d, conn, latestVersion); err != nil {
 				return err
@@ -668,11 +668,3 @@ func findService(id string, meta interface{}) (*gofastly.Service, error) {
 
 	return nil, fastlyNoServiceFoundErr
 }
-
-
-
-
-
-
-
-

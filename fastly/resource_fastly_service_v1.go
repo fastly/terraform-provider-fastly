@@ -1022,19 +1022,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Cache Settings
-		log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
-		cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Cache Settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		csl := flattenCacheSettings(cslList)
-
-		if err := d.Set("cache_setting", csl); err != nil {
-			log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
+		if err := readCacheSetting(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Dictionaries

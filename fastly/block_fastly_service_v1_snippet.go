@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -89,6 +90,25 @@ func processSnippet(d *schema.ResourceData, conn *gofastly.Client, latestVersion
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+
+func readSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
+	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	vsl := flattenSnippets(snippetList)
+
+	if err := d.Set("snippet", vsl); err != nil {
+		log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
 	}
 	return nil
 }

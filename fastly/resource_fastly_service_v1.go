@@ -2685,49 +2685,7 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 
 
 
-func buildHeader(headerMap interface{}) (*gofastly.CreateHeaderInput, error) {
-	df := headerMap.(map[string]interface{})
-	opts := gofastly.CreateHeaderInput{
-		Name:              df["name"].(string),
-		IgnoreIfSet:       gofastly.CBool(df["ignore_if_set"].(bool)),
-		Destination:       df["destination"].(string),
-		Priority:          uint(df["priority"].(int)),
-		Source:            df["source"].(string),
-		Regex:             df["regex"].(string),
-		Substitution:      df["substitution"].(string),
-		RequestCondition:  df["request_condition"].(string),
-		CacheCondition:    df["cache_condition"].(string),
-		ResponseCondition: df["response_condition"].(string),
-	}
 
-	act := strings.ToLower(df["action"].(string))
-	switch act {
-	case "set":
-		opts.Action = gofastly.HeaderActionSet
-	case "append":
-		opts.Action = gofastly.HeaderActionAppend
-	case "delete":
-		opts.Action = gofastly.HeaderActionDelete
-	case "regex":
-		opts.Action = gofastly.HeaderActionRegex
-	case "regex_repeat":
-		opts.Action = gofastly.HeaderActionRegexRepeat
-	}
-
-	ty := strings.ToLower(df["type"].(string))
-	switch ty {
-	case "request":
-		opts.Type = gofastly.HeaderTypeRequest
-	case "fetch":
-		opts.Type = gofastly.HeaderTypeFetch
-	case "cache":
-		opts.Type = gofastly.HeaderTypeCache
-	case "response":
-		opts.Type = gofastly.HeaderTypeResponse
-	}
-
-	return &opts, nil
-}
 
 func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput, error) {
 	df := cacheMap.(map[string]interface{})

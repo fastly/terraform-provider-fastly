@@ -1525,75 +1525,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// Find differences in Gzips
 		if d.HasChange("gzip") {
-			og, ng := d.GetChange("gzip")
-			if og == nil {
-				og = new(schema.Set)
-			}
-			if ng == nil {
-				ng = new(schema.Set)
-			}
-
-			ogs := og.(*schema.Set)
-			ngs := ng.(*schema.Set)
-
-			remove := ogs.Difference(ngs).List()
-			add := ngs.Difference(ogs).List()
-
-			// Delete removed gzip rules
-			for _, dRaw := range remove {
-				df := dRaw.(map[string]interface{})
-				opts := gofastly.DeleteGzipInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    df["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Fastly Gzip removal opts: %#v", opts)
-				err := conn.DeleteGzip(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new Gzips
-			for _, dRaw := range add {
-				df := dRaw.(map[string]interface{})
-				opts := gofastly.CreateGzipInput{
-					Service:        d.Id(),
-					Version:        latestVersion,
-					Name:           df["name"].(string),
-					CacheCondition: df["cache_condition"].(string),
-				}
-
-				if v, ok := df["content_types"]; ok {
-					if len(v.(*schema.Set).List()) > 0 {
-						var cl []string
-						for _, c := range v.(*schema.Set).List() {
-							cl = append(cl, c.(string))
-						}
-						opts.ContentTypes = strings.Join(cl, " ")
-					}
-				}
-
-				if v, ok := df["extensions"]; ok {
-					if len(v.(*schema.Set).List()) > 0 {
-						var el []string
-						for _, e := range v.(*schema.Set).List() {
-							el = append(el, e.(string))
-						}
-						opts.Extensions = strings.Join(el, " ")
-					}
-				}
-
-				log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
-				_, err := conn.CreateGzip(&opts)
-				if err != nil {
-					return err
-				}
+			if err := processGZIP(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

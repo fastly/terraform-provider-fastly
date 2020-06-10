@@ -2621,19 +2621,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh GCS Logging
-		log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
-		GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up GCS for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		gcsl := flattenGCS(GCSList)
-		if err := d.Set("gcslogging", gcsl); err != nil {
-			log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
+		if err := readGCSLogging(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh BigQuery Logging

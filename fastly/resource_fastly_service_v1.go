@@ -2315,15 +2315,7 @@ func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 	return sl
 }
 
-func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
-	df := dictMap.(map[string]interface{})
-	opts := gofastly.CreateDictionaryInput{
-		Name:      df["name"].(string),
-		WriteOnly: gofastly.CBool(df["write_only"].(bool)),
-	}
 
-	return &opts, nil
-}
 
 func validateVCLs(d *schema.ResourceData) error {
 	// TODO: this would be nice to move into a resource/collection validation function, once that is available

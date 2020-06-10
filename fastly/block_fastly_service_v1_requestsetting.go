@@ -187,7 +187,6 @@ func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]inte
 	return rl
 }
 
-
 func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequestSettingInput, error) {
 	df := requestSettingMap.(map[string]interface{})
 	opts := gofastly.CreateRequestSettingInput{

@@ -212,7 +212,6 @@ func processS3Logging(d *schema.ResourceData, conn *gofastly.Client, latestVersi
 	return nil
 }
 
-
 func readS3Logging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
 	s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
@@ -231,7 +230,6 @@ func readS3Logging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Se
 	}
 	return nil
 }
-
 
 func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 	var sl []map[string]interface{}

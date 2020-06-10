@@ -290,174 +290,128 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// Conditions need to be updated first, as they can be referenced by other
 		// configuration objects (Backends, Request Headers, etc)
-
-		// Find difference in Conditions
+		
 		if d.HasChange("condition") {
 			if err := processCondition(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in domains
 		if d.HasChange("domain") {
 			if err := processDomain(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
 		// Healthchecks need to be updated BEFORE backends
 		if d.HasChange("healthcheck") {
 			if err := processHealthCheck(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in backends
 		if d.HasChange("backend") {
 			if err := processBackend(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
 		if d.HasChange("director") {
 			if err := processDirector(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
 		if d.HasChange("header") {
 			if err := processHeader(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in Gzips
 		if d.HasChange("gzip") {
 			if err := processGZIP(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in s3logging
 		if d.HasChange("s3logging") {
 			if err := processS3Logging(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in Papertrail
 		if d.HasChange("papertrail") {
 			if err := processPapertrail(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in Sumologic
 		if d.HasChange("sumologic") {
 			if err := processSumologic(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in gcslogging
 		if d.HasChange("gcslogging") {
 			if err := processGCSLogging(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in bigquerylogging
 		if d.HasChange("bigquerylogging") {
 			if err := processBigQueryLogging(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in Syslog
 		if d.HasChange("syslog") {
 			if err := processSyslog(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in Logentries
 		if d.HasChange("logentries") {
 			if err := processLogEntries(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in Splunk logging configurations
 		if d.HasChange("splunk") {
 			if err := processSplunk(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in Blob Storage logging configurations
 		if d.HasChange("blobstoragelogging") {
 			if err := processBlobStorageLogging(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find differences in HTTPS logging configuration
 		if d.HasChange("httpslogging") {
 			if err := processHTTPS(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in Response Object
 		if d.HasChange("response_object") {
 			if err := processResponseObject(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// find difference in request settings
 		if d.HasChange("request_setting") {
 			if err := processRequestSetting(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in VCLs
 		if d.HasChange("vcl") {
 			if err := processVCL(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in VCL snippets
 		if d.HasChange("snippet") {
 			if err := processSnippet(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in VCL dynamic snippets
 		if d.HasChange("dynamicsnippet") {
 			if err := processDynamicSnippet(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in Cache Settings
 		if d.HasChange("cache_setting") {
 			if err := processCacheSetting(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in ACLs
 		if d.HasChange("acl") {
 			if err := processACL(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
-
-		// Find differences in dictionary
 		if d.HasChange("dictionary") {
 			if err := processDictionary(d, conn, latestVersion); err != nil {
 				return err
@@ -553,123 +507,75 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readDomain(conn, d, s); err != nil {
 			return err
 		}
-
-		// Refresh Backends
 		if err := readBackend(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh directors
 		if err := readDirector(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh headers
 		if err := readHeader(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh gzips
 		if err := readGZIP(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Healthcheck
 		if err := readHealthCheck(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh S3 Logging
 		if err := readS3Logging(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Papertrail Logging
 		if err := readPapertrail(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Sumologic Logging
 		if err := readSumologic(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh GCS Logging
 		if err := readGCSLogging(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh BigQuery Logging
 		if err := readBigQueryLogging(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Syslog Logging
 		if err := readSyslog(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Logentries Logging
 		if err := readLogEntries(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Splunk Logging
 		if err := readSplunk(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Blob Storage Logging
 		if err := readBlobStorageLogging(conn, d, s); err != nil {
 			return err
 		}
-
-		// Refresh HTTPS
 		if err := readHTTPS(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Response Objects
 		if err := readResponseObject(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Conditions
 		if err := readCondition(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Request Settings
 		if err := readRequestSetting(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh VCLs
 		if err := readVCL(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh ACLs
 		if err := readACL(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh VCL Snippets
 		if err := readSnippet(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Dynamic Snippets
 		if err := readDynamicSnippet(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Cache Settings
 		if err := readCacheSetting(conn, d, s); err != nil {
 			return err
 		}
-
-		// refresh Dictionaries
 		if err := readDictionary(conn, d, s); err != nil {
 			return err
 		}

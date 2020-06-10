@@ -2140,20 +2140,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Logentries Logging
-		log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
-		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Logentries for (%s), version (%d): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		lel := flattenLogentries(logentriesList)
-
-		if err := d.Set("logentries", lel); err != nil {
-			log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
+		if err := readLogEntries(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Splunk Logging

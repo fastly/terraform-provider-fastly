@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 )
 
 var papertrailSchema = &schema.Schema{
@@ -46,4 +48,64 @@ var papertrailSchema = &schema.Schema{
 			},
 		},
 	},
+}
+
+
+func processPapertrail(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+	os, ns := d.GetChange("papertrail")
+	if os == nil {
+		os = new(schema.Set)
+	}
+	if ns == nil {
+		ns = new(schema.Set)
+	}
+
+	oss := os.(*schema.Set)
+	nss := ns.(*schema.Set)
+	removePapertrail := oss.Difference(nss).List()
+	addPapertrail := nss.Difference(oss).List()
+
+	// DELETE old papertrail configurations
+	for _, pRaw := range removePapertrail {
+		pf := pRaw.(map[string]interface{})
+		opts := gofastly.DeletePapertrailInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Name:    pf["name"].(string),
+		}
+
+		log.Printf("[DEBUG] Fastly Papertrail removal opts: %#v", opts)
+		err := conn.DeletePapertrail(&opts)
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			if errRes.StatusCode != 404 {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// POST new/updated Papertrail
+	for _, pRaw := range addPapertrail {
+		pf := pRaw.(map[string]interface{})
+
+		opts := gofastly.CreatePapertrailInput{
+			Service:           d.Id(),
+			Version:           latestVersion,
+			Name:              pf["name"].(string),
+			Address:           pf["address"].(string),
+			Port:              uint(pf["port"].(int)),
+			Format:            pf["format"].(string),
+			ResponseCondition: pf["response_condition"].(string),
+			Placement:         pf["placement"].(string),
+		}
+
+		log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
+		_, err := conn.CreatePapertrail(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

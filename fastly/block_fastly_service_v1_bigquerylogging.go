@@ -160,3 +160,34 @@ func readBigQueryLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofas
 
 	return nil
 }
+
+
+func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
+	var BQList []map[string]interface{}
+	for _, currentBQ := range bqList {
+		// Convert gcs to a map for saving to state.
+		BQMapString := map[string]interface{}{
+			"name":               currentBQ.Name,
+			"format":             currentBQ.Format,
+			"email":              currentBQ.User,
+			"secret_key":         currentBQ.SecretKey,
+			"project_id":         currentBQ.ProjectID,
+			"dataset":            currentBQ.Dataset,
+			"table":              currentBQ.Table,
+			"response_condition": currentBQ.ResponseCondition,
+			"template":           currentBQ.Template,
+			"placement":          currentBQ.Placement,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range BQMapString {
+			if v == "" {
+				delete(BQMapString, k)
+			}
+		}
+
+		BQList = append(BQList, BQMapString)
+	}
+
+	return BQList
+}

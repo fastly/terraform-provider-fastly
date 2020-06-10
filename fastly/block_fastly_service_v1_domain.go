@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -78,6 +79,30 @@ func processDomain(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+
+func readDomain(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	// TODO: update go-fastly to support an ActiveVersion struct, which contains
+	// domain and backend info in the response. Here we do 2 additional queries
+	// to find out that info
+	log.Printf("[DEBUG] Refreshing Domains for (%s)", d.Id())
+	domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Domains for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	// Refresh Domains
+	dl := flattenDomains(domainList)
+
+	if err := d.Set("domain", dl); err != nil {
+		log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
 	}
 	return nil
 }

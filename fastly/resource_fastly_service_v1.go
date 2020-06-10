@@ -4426,7 +4426,6 @@ func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
 	return vl
 }
 
-
 func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
 	df := snippetMap.(map[string]interface{})
 	opts := gofastly.CreateSnippetInput{

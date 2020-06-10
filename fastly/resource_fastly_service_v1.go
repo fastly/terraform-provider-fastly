@@ -3193,39 +3193,6 @@ func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interfa
 	return l
 }
 
-func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
-	var GCSList []map[string]interface{}
-	for _, currentGCS := range gcsList {
-		// Convert gcs to a map for saving to state.
-		GCSMapString := map[string]interface{}{
-			"name":               currentGCS.Name,
-			"email":              currentGCS.User,
-			"bucket_name":        currentGCS.Bucket,
-			"secret_key":         currentGCS.SecretKey,
-			"path":               currentGCS.Path,
-			"period":             int(currentGCS.Period),
-			"gzip_level":         int(currentGCS.GzipLevel),
-			"response_condition": currentGCS.ResponseCondition,
-			"message_type":       currentGCS.MessageType,
-			"format":             currentGCS.Format,
-			"timestamp_format":   currentGCS.TimestampFormat,
-			"placement":          currentGCS.Placement,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range GCSMapString {
-			if v == "" {
-				delete(GCSMapString, k)
-			}
-		}
-
-		GCSList = append(GCSList, GCSMapString)
-	}
-
-	return GCSList
-}
-
-
 
 func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	var pl []map[string]interface{}

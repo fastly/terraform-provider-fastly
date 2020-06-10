@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -138,6 +139,27 @@ func processHeader(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+
+func readHeader(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
+	headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Headers for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	hl := flattenHeaders(headerList)
+
+	if err := d.Set("header", hl); err != nil {
+		log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
 	}
 
 	return nil

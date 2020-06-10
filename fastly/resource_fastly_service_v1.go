@@ -2266,20 +2266,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh headers
-		log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
-		headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Headers for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		hl := flattenHeaders(headerList)
-
-		if err := d.Set("header", hl); err != nil {
-			log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
+		if err := readHeader(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh gzips

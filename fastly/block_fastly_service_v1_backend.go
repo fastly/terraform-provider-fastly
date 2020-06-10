@@ -247,7 +247,6 @@ func processBackend(d *schema.ResourceData, conn *gofastly.Client, latestVersion
 	return nil
 }
 
-
 func readBackend(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
 	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
@@ -266,7 +265,6 @@ func readBackend(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Serv
 	}
 	return nil
 }
-
 
 func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 	var bl []map[string]interface{}

@@ -46,7 +46,6 @@ var cachesettingSchema = &schema.Schema{
 	},
 }
 
-
 func processCacheSetting(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	oc, nc := d.GetChange("cache_setting")
 	if oc == nil {
@@ -101,7 +100,6 @@ func processCacheSetting(d *schema.ResourceData, conn *gofastly.Client, latestVe
 	return nil
 }
 
-
 func readCacheSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
 	cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
@@ -119,7 +117,6 @@ func readCacheSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly
 	}
 	return nil
 }
-
 
 func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput, error) {
 	df := cacheMap.(map[string]interface{})
@@ -145,8 +142,6 @@ func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput,
 
 	return &opts, nil
 }
-
-
 
 func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]interface{} {
 	var csl []map[string]interface{}

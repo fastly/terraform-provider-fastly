@@ -6,10 +6,9 @@ import (
 
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
 )
 
-var  splunkSchema = &schema.Schema{
+var splunkSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
 	Elem: &schema.Resource{
@@ -72,7 +71,6 @@ var  splunkSchema = &schema.Schema{
 	},
 }
 
-
 func processSplunk(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("splunk")
 	if os == nil {
@@ -134,7 +132,6 @@ func processSplunk(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-
 func readSplunk(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
 	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
@@ -153,7 +150,6 @@ func readSplunk(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servi
 	}
 	return nil
 }
-
 
 func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 	var sl []map[string]interface{}

@@ -4426,27 +4426,6 @@ func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
 	return vl
 }
 
-func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
-	var al []map[string]interface{}
-	for _, acl := range aclList {
-		// Convert VCLs to a map for saving to state.
-		vclMap := map[string]interface{}{
-			"acl_id": acl.ID,
-			"name":   acl.Name,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range vclMap {
-			if v == "" {
-				delete(vclMap, k)
-			}
-		}
-
-		al = append(al, vclMap)
-	}
-
-	return al
-}
 
 func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
 	df := snippetMap.(map[string]interface{})

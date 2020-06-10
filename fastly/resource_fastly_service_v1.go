@@ -2549,33 +2549,6 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	return pl
 }
 
-func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]interface{} {
-	var LEList []map[string]interface{}
-	for _, currentLE := range logentriesList {
-		// Convert Logentries to a map for saving to state.
-		LEMapString := map[string]interface{}{
-			"name":               currentLE.Name,
-			"port":               currentLE.Port,
-			"use_tls":            currentLE.UseTLS,
-			"token":              currentLE.Token,
-			"format":             currentLE.Format,
-			"format_version":     currentLE.FormatVersion,
-			"response_condition": currentLE.ResponseCondition,
-			"placement":          currentLE.Placement,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range LEMapString {
-			if v == "" {
-				delete(LEMapString, k)
-			}
-		}
-
-		LEList = append(LEList, LEMapString)
-	}
-
-	return LEList
-}
 
 func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 	var sl []map[string]interface{}

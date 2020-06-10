@@ -2176,20 +2176,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Healthcheck
-		log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
-		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Healthcheck for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		hcl := flattenHealthchecks(healthcheckList)
-
-		if err := d.Set("healthcheck", hcl); err != nil {
-			log.Printf("[WARN] Error setting Healthcheck for (%s): %s", d.Id(), err)
+		if err := readHealthCheck(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh S3 Logging

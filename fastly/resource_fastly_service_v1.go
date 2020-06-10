@@ -1362,42 +1362,6 @@ func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput,
 
 
 
-func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
-	var pl []map[string]interface{}
-	for _, p := range syslogList {
-		// Convert Syslog to a map for saving to state.
-		ns := map[string]interface{}{
-			"name":               p.Name,
-			"address":            p.Address,
-			"port":               p.Port,
-			"format":             p.Format,
-			"format_version":     p.FormatVersion,
-			"token":              p.Token,
-			"use_tls":            p.UseTLS,
-			"tls_hostname":       p.TLSHostname,
-			"tls_ca_cert":        p.TLSCACert,
-			"tls_client_cert":    p.TLSClientCert,
-			"tls_client_key":     p.TLSClientKey,
-			"response_condition": p.ResponseCondition,
-			"message_type":       p.MessageType,
-			"placement":          p.Placement,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
-			if v == "" {
-				delete(ns, k)
-			}
-		}
-
-		pl = append(pl, ns)
-	}
-
-	return pl
-}
-
-
-
 func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]interface{} {
 	var csl []map[string]interface{}
 	for _, cl := range csList {

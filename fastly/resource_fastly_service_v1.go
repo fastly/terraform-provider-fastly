@@ -1991,7 +1991,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		
+
 		// refresh Sumologic Logging
 		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
@@ -2370,31 +2370,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 	return sl
 }
 
-func flattenPapertrails(papertrailList []*gofastly.Papertrail) []map[string]interface{} {
-	var pl []map[string]interface{}
-	for _, p := range papertrailList {
-		// Convert Papertrails to a map for saving to state.
-		ns := map[string]interface{}{
-			"name":               p.Name,
-			"address":            p.Address,
-			"port":               p.Port,
-			"format":             p.Format,
-			"response_condition": p.ResponseCondition,
-			"placement":          p.Placement,
-		}
 
-		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
-			if v == "" {
-				delete(ns, k)
-			}
-		}
-
-		pl = append(pl, ns)
-	}
-
-	return pl
-}
 
 func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interface{} {
 	var l []map[string]interface{}

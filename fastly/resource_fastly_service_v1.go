@@ -1968,22 +1968,11 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Papertrail Logging
-		log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
-		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Papertrail for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		if err := readPapertrail(conn, d, s); err != nil {
+			return err
 		}
 
-		pl := flattenPapertrails(papertrailList)
-
-		if err := d.Set("papertrail", pl); err != nil {
-			log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
-		}
-
+		
 		// refresh Sumologic Logging
 		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{

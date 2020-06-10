@@ -1,6 +1,10 @@
 package fastly
 
-import "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+import (
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
+)
 
 
 var blobstorageloggingSchema = &schema.Schema{
@@ -94,3 +98,71 @@ var blobstorageloggingSchema = &schema.Schema{
 		},
 	},
 }
+
+
+func processBlobStorageLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+	obsl, nbsl := d.GetChange("blobstoragelogging")
+	if obsl == nil {
+		obsl = new(schema.Set)
+	}
+	if nbsl == nil {
+		nbsl = new(schema.Set)
+	}
+
+	obsls := obsl.(*schema.Set)
+	nbsls := nbsl.(*schema.Set)
+
+	remove := obsls.Difference(nbsls).List()
+	add := nbsls.Difference(obsls).List()
+
+	// DELETE old Blob Storage logging configurations
+	for _, bslRaw := range remove {
+		bslf := bslRaw.(map[string]interface{})
+		opts := gofastly.DeleteBlobStorageInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Name:    bslf["name"].(string),
+		}
+
+		log.Printf("[DEBUG] Blob Storage logging removal opts: %#v", opts)
+		err := conn.DeleteBlobStorage(&opts)
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			if errRes.StatusCode != 404 {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// POST new/updated Blob Storage logging configurations
+	for _, bslRaw := range add {
+		bslf := bslRaw.(map[string]interface{})
+		opts := gofastly.CreateBlobStorageInput{
+			Service:           d.Id(),
+			Version:           latestVersion,
+			Name:              bslf["name"].(string),
+			Path:              bslf["path"].(string),
+			AccountName:       bslf["account_name"].(string),
+			Container:         bslf["container"].(string),
+			SASToken:          bslf["sas_token"].(string),
+			Period:            uint(bslf["period"].(int)),
+			TimestampFormat:   bslf["timestamp_format"].(string),
+			GzipLevel:         uint(bslf["gzip_level"].(int)),
+			PublicKey:         bslf["public_key"].(string),
+			Format:            bslf["format"].(string),
+			FormatVersion:     uint(bslf["format_version"].(int)),
+			MessageType:       bslf["message_type"].(string),
+			Placement:         bslf["placement"].(string),
+			ResponseCondition: bslf["response_condition"].(string),
+		}
+
+		log.Printf("[DEBUG] Blob Storage logging create opts: %#v", opts)
+		_, err := conn.CreateBlobStorage(&opts)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+

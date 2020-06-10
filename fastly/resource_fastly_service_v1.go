@@ -1598,19 +1598,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh VCL Snippets
-		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
-		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		vsl := flattenSnippets(snippetList)
-
-		if err := d.Set("snippet", vsl); err != nil {
-			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
+		if err := readSnippet(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Dynamic Snippets

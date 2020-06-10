@@ -206,6 +206,8 @@ Defined below.
 Defined below.
 * `httpslogging` - (Optional) An HTTPS endpoint to send streaming logs to.
 Defined below.
+* `logging_elasticsearch` - (optional) An Elasticsearch endpoint to send streaming logs to.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
@@ -511,6 +513,25 @@ The `httpslogging` block supports:
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
 * `message_type` - How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `blank`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+The `logging_elasticsearch` block supports:
+
+* `name` - (Required) The unique name of the Elasticsearch logging endpoint.
+* `url` - (Required) The Elasticsearch URL to stream logs to.
+* `index` - (Required) The name of the Elasticsearch index to send documents (logs) to.
+* `user` - (Optional) BasicAuth username for Elasticsearch.
+* `password` - (Optional) BasicAuth password for Elasticsearch.
+* `pipeline` - (Optional) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing.
+* `request_max_bytes` - (Optional) The maximum number of bytes sent in one request.
+* `request_max_entries` - (Optional) The maximum number of logs sent in one request.
+* `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format.
+* `tls_client_cert` - (Optional) The client certificate used to make authenticated requests. Must be in PEM format.
+* `tls_client_key` - (Optional) The client private key used to make authenticated requests. Must be in PEM format.
+* `tls_hostname` - (Optional) The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN).
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 

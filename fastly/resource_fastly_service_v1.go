@@ -1890,42 +1890,7 @@ func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput,
 	return &opts, nil
 }
 
-func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
-	var sl []map[string]interface{}
-	for _, s := range s3List {
-		// Convert S3s to a map for saving to state.
-		ns := map[string]interface{}{
-			"name":                              s.Name,
-			"bucket_name":                       s.BucketName,
-			"s3_access_key":                     s.AccessKey,
-			"s3_secret_key":                     s.SecretKey,
-			"path":                              s.Path,
-			"period":                            s.Period,
-			"domain":                            s.Domain,
-			"gzip_level":                        s.GzipLevel,
-			"format":                            s.Format,
-			"format_version":                    s.FormatVersion,
-			"timestamp_format":                  s.TimestampFormat,
-			"redundancy":                        s.Redundancy,
-			"response_condition":                s.ResponseCondition,
-			"message_type":                      s.MessageType,
-			"placement":                         s.Placement,
-			"server_side_encryption":            s.ServerSideEncryption,
-			"server_side_encryption_kms_key_id": s.ServerSideEncryptionKMSKeyID,
-		}
 
-		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
-			if v == "" {
-				delete(ns, k)
-			}
-		}
-
-		sl = append(sl, ns)
-	}
-
-	return sl
-}
 
 func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interface{} {
 	var l []map[string]interface{}

@@ -1874,7 +1874,6 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-
 		// refresh Sumologic Logging
 		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
@@ -1976,7 +1975,6 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readRequestSetting(conn, d, s); err != nil {
 			return err
 		}
-
 
 		// refresh VCLs
 		log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
@@ -2241,8 +2239,6 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 
 	return sl
 }
-
-
 
 func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interface{} {
 	var l []map[string]interface{}

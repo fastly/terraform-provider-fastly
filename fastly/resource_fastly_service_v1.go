@@ -88,12 +88,12 @@ func resourceServiceV1() *schema.Resource {
 				Optional: true,
 			},
 
-			"domain": 				domainSchema,
-			"backend": 				backendSchema,
-			"cache_setting": 		cachesettingSchema,
-			"condition":			conditionSchema,
-			"healthcheck":			healthcheckSchema,
-			"director":				directorSchema,
+			"domain":             domainSchema,
+			"backend":            backendSchema,
+			"cache_setting":      cachesettingSchema,
+			"condition":          conditionSchema,
+			"healthcheck":        healthcheckSchema,
+			"director":           directorSchema,
 			"gzip":               gzipSchema,
 			"header":             headerSchema,
 			"s3logging":          s3loggingSchema,
@@ -106,7 +106,7 @@ func resourceServiceV1() *schema.Resource {
 			"splunk":             splunkSchema,
 			"blobstoragelogging": blobstorageloggingSchema,
 
-			"httpslogging":       httpsloggingSchema,
+			"httpslogging":          httpsloggingSchema,
 			"logging_elasticsearch": elasticsearchSchema,
 			"logging_ftp":           ftpSchema,
 			"logging_sftp":          sftpSchema,
@@ -114,9 +114,9 @@ func resourceServiceV1() *schema.Resource {
 			"response_object":    responseobjectSchema,
 			"request_setting":    requestsettingSchema,
 
-			"vcl":					vclSchema,
+			"vcl": vclSchema,
 
-			"snippet": 		  snippetSchema,
+			"snippet":        snippetSchema,
 			"dynamicsnippet": dynamicsnippetSchema,
 			"acl":            aclSchema,
 			"dictionary":     dictionarySchema,
@@ -700,11 +700,3 @@ func findService(id string, meta interface{}) (*gofastly.Service, error) {
 
 	return nil, fastlyNoServiceFoundErr
 }
-
-
-
-
-
-
-
-

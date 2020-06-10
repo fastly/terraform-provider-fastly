@@ -84,7 +84,6 @@ func processDomain(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-
 func readDomain(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	// TODO: update go-fastly to support an ActiveVersion struct, which contains
 	// domain and backend info in the response. Here we do 2 additional queries
@@ -107,7 +106,6 @@ func readDomain(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servi
 	}
 	return nil
 }
-
 
 func flattenDomains(list []*gofastly.Domain) []map[string]interface{} {
 	dl := make([]map[string]interface{}, 0, len(list))

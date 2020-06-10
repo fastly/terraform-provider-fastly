@@ -2564,38 +2564,6 @@ func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput,
 }
 
 
-
-func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]interface{} {
-	var hl []map[string]interface{}
-	for _, h := range healthcheckList {
-		// Convert HealthChecks to a map for saving to state.
-		nh := map[string]interface{}{
-			"name":              h.Name,
-			"host":              h.Host,
-			"path":              h.Path,
-			"check_interval":    h.CheckInterval,
-			"expected_response": h.ExpectedResponse,
-			"http_version":      h.HTTPVersion,
-			"initial":           h.Initial,
-			"method":            h.Method,
-			"threshold":         h.Threshold,
-			"timeout":           h.Timeout,
-			"window":            h.Window,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range nh {
-			if v == "" {
-				delete(nh, k)
-			}
-		}
-
-		hl = append(hl, nh)
-	}
-
-	return hl
-}
-
 func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 	var sl []map[string]interface{}
 	for _, s := range s3List {

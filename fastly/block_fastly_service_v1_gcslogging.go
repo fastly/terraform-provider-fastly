@@ -88,7 +88,6 @@ var gcsloggingSchema = &schema.Schema{
 	},
 }
 
-
 func processGCSLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("gcslogging")
 	if os == nil {
@@ -152,7 +151,6 @@ func processGCSLogging(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-
 func readGCSLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
 	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
@@ -171,7 +169,6 @@ func readGCSLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 
 	return nil
 }
-
 
 func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 	var GCSList []map[string]interface{}

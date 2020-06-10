@@ -64,7 +64,6 @@ var directorSchema = &schema.Schema{
 	},
 }
 
-
 func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	od, nd := d.GetChange("director")
 	if od == nil {
@@ -153,7 +152,6 @@ func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersio
 	return nil
 }
 
-
 func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail, backendList []*gofastly.Backend) error {
 	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
@@ -190,7 +188,6 @@ func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Ser
 
 	return nil
 }
-
 
 func flattenDirectors(directorList []*gofastly.Director, directorBackendList []*gofastly.DirectorBackend) []map[string]interface{} {
 	var dl []map[string]interface{}

@@ -76,7 +76,6 @@ var bigqueryloggingSchema = &schema.Schema{
 	},
 }
 
-
 func processBigQueryLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("bigquerylogging")
 	if os == nil {
@@ -141,7 +140,6 @@ func processBigQueryLogging(d *schema.ResourceData, conn *gofastly.Client, lates
 	return nil
 }
 
-
 func readBigQueryLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
 	BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
@@ -160,7 +158,6 @@ func readBigQueryLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofas
 
 	return nil
 }
-
 
 func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
 	var BQList []map[string]interface{}

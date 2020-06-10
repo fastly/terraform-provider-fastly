@@ -39,7 +39,6 @@ var dynamicsnippetSchema = &schema.Schema{
 	},
 }
 
-
 func processDynamicSnippet(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
 	// endpoint to update a VCL dynamic snippet, we simply destroy it and create a new one.
@@ -97,7 +96,6 @@ func processDynamicSnippet(d *schema.ResourceData, conn *gofastly.Client, latest
 	return nil
 }
 
-
 func readDynamicSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
@@ -115,7 +113,6 @@ func readDynamicSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofast
 
 	return nil
 }
-
 
 func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
 	df := dynamicSnippetMap.(map[string]interface{})
@@ -153,7 +150,6 @@ func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippet
 
 	return &opts, nil
 }
-
 
 func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string]interface{} {
 	var sl []map[string]interface{}

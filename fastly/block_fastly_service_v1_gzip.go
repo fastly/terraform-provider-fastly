@@ -42,7 +42,6 @@ var gzipSchema = &schema.Schema{
 	},
 }
 
-
 func processGZIP(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	og, ng := d.GetChange("gzip")
 	if og == nil {
@@ -118,7 +117,6 @@ func processGZIP(d *schema.ResourceData, conn *gofastly.Client, latestVersion in
 	return nil
 }
 
-
 func readGZIP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
 	gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
@@ -138,7 +136,6 @@ func readGZIP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Service
 
 	return nil
 }
-
 
 func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]interface{} {
 	var gl []map[string]interface{}

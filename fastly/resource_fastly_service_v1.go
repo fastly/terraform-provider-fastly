@@ -313,7 +313,7 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
-			"gzip": gzipSchema,
+			"gzip":   gzipSchema,
 			"header": headerSchema,
 
 			"s3logging": {
@@ -525,7 +525,7 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
-			"gcslogging": gcsloggingSchema,
+			"gcslogging":      gcsloggingSchema,
 			"bigquerylogging": bigqueryloggingSchema,
 
 			"syslog": {
@@ -877,8 +877,8 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 			"dynamicsnippet": dynamicsnippetSchema,
-			"acl": aclSchema,
-			"dictionary": dictionarySchema,
+			"acl":            aclSchema,
+			"dictionary":     dictionarySchema,
 		},
 	}
 }
@@ -2421,11 +2421,6 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 	return bl
 }
 
-
-
-
-
-
 func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput, error) {
 	df := cacheMap.(map[string]interface{})
 	opts := gofastly.CreateCacheSettingInput{
@@ -2450,7 +2445,6 @@ func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput,
 
 	return &opts, nil
 }
-
 
 func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 	var sl []map[string]interface{}
@@ -2542,7 +2536,6 @@ func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interfa
 	return l
 }
 
-
 func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	var pl []map[string]interface{}
 	for _, p := range syslogList {
@@ -2577,7 +2570,6 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	return pl
 }
 
-
 func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 	var sl []map[string]interface{}
 	for _, s := range splunkList {
@@ -2607,7 +2599,6 @@ func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 	return sl
 }
 
-
 func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]interface{} {
 	var rol []map[string]interface{}
 	for _, ro := range responseObjectList {
@@ -2634,7 +2625,6 @@ func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map
 
 	return rol
 }
-
 
 func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]interface{} {
 	var rl []map[string]interface{}
@@ -2793,7 +2783,6 @@ func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) 
 	return &opts, nil
 }
 
-
 func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 	var sl []map[string]interface{}
 	for _, snippet := range snippetList {
@@ -2823,7 +2812,6 @@ func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 	return sl
 }
 
-
 func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
 	df := dictMap.(map[string]interface{})
 	opts := gofastly.CreateDictionaryInput{
@@ -2833,7 +2821,6 @@ func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, erro
 
 	return &opts, nil
 }
-
 
 func validateVCLs(d *schema.ResourceData) error {
 	// TODO: this would be nice to move into a resource/collection validation function, once that is available

@@ -2683,35 +2683,7 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 }
 
 
-func flattenHeaders(headerList []*gofastly.Header) []map[string]interface{} {
-	var hl []map[string]interface{}
-	for _, h := range headerList {
-		// Convert Header to a map for saving to state.
-		nh := map[string]interface{}{
-			"name":               h.Name,
-			"action":             h.Action,
-			"ignore_if_set":      h.IgnoreIfSet,
-			"type":               h.Type,
-			"destination":        h.Destination,
-			"source":             h.Source,
-			"regex":              h.Regex,
-			"substitution":       h.Substitution,
-			"priority":           int(h.Priority),
-			"request_condition":  h.RequestCondition,
-			"cache_condition":    h.CacheCondition,
-			"response_condition": h.ResponseCondition,
-		}
 
-		for k, v := range nh {
-			if v == "" {
-				delete(nh, k)
-			}
-		}
-
-		hl = append(hl, nh)
-	}
-	return hl
-}
 
 func buildHeader(headerMap interface{}) (*gofastly.CreateHeaderInput, error) {
 	df := headerMap.(map[string]interface{})

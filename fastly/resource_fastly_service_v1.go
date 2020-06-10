@@ -1398,55 +1398,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("header") {
-			oh, nh := d.GetChange("header")
-			if oh == nil {
-				oh = new(schema.Set)
-			}
-			if nh == nil {
-				nh = new(schema.Set)
-			}
-
-			ohs := oh.(*schema.Set)
-			nhs := nh.(*schema.Set)
-
-			remove := ohs.Difference(nhs).List()
-			add := nhs.Difference(ohs).List()
-
-			// Delete removed headers
-			for _, dRaw := range remove {
-				df := dRaw.(map[string]interface{})
-				opts := gofastly.DeleteHeaderInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    df["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Fastly Header removal opts: %#v", opts)
-				err := conn.DeleteHeader(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new Headers
-			for _, dRaw := range add {
-				opts, err := buildHeader(dRaw.(map[string]interface{}))
-				if err != nil {
-					log.Printf("[DEBUG] Error building Header: %s", err)
-					return err
-				}
-				opts.Service = d.Id()
-				opts.Version = latestVersion
-
-				log.Printf("[DEBUG] Fastly Header Addition opts: %#v", opts)
-				_, err = conn.CreateHeader(opts)
-				if err != nil {
-					return err
-				}
+			if err := processHeader(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

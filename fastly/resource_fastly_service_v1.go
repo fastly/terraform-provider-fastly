@@ -1843,64 +1843,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// find difference in gcslogging
 		if d.HasChange("gcslogging") {
-			os, ns := d.GetChange("gcslogging")
-			if os == nil {
-				os = new(schema.Set)
-			}
-			if ns == nil {
-				ns = new(schema.Set)
-			}
-
-			oss := os.(*schema.Set)
-			nss := ns.(*schema.Set)
-			removeGcslogging := oss.Difference(nss).List()
-			addGcslogging := nss.Difference(oss).List()
-
-			// DELETE old gcslogging configurations
-			for _, pRaw := range removeGcslogging {
-				sf := pRaw.(map[string]interface{})
-				opts := gofastly.DeleteGCSInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    sf["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Fastly gcslogging removal opts: %#v", opts)
-				err := conn.DeleteGCS(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new/updated gcslogging
-			for _, pRaw := range addGcslogging {
-				sf := pRaw.(map[string]interface{})
-				opts := gofastly.CreateGCSInput{
-					Service:           d.Id(),
-					Version:           latestVersion,
-					Name:              sf["name"].(string),
-					User:              sf["email"].(string),
-					Bucket:            sf["bucket_name"].(string),
-					SecretKey:         sf["secret_key"].(string),
-					Format:            sf["format"].(string),
-					Path:              sf["path"].(string),
-					Period:            uint(sf["period"].(int)),
-					GzipLevel:         uint8(sf["gzip_level"].(int)),
-					TimestampFormat:   sf["timestamp_format"].(string),
-					MessageType:       sf["message_type"].(string),
-					ResponseCondition: sf["response_condition"].(string),
-					Placement:         sf["placement"].(string),
-				}
-
-				log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
-				_, err := conn.CreateGCS(&opts)
-				if err != nil {
-					return err
-				}
+			if err := processGCSLogging(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

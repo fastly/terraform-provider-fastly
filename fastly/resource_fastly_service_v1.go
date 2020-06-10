@@ -2905,10 +2905,9 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
 		}
 
-		dynamicSnippets := flattenDynamicSnippets(snippetList)
-
-		if err := d.Set("dynamicsnippet", dynamicSnippets); err != nil {
-			log.Printf("[WARN] Error setting VCL Dynamic Snippets for (%s): %s", d.Id(), err)
+		// refresh Dynamic Snippets
+		if err := readDynamicSnippet(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Cache Settings

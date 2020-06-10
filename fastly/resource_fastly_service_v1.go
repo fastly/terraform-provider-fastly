@@ -775,55 +775,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// Find differences in Cache Settings
 		if d.HasChange("cache_setting") {
-			oc, nc := d.GetChange("cache_setting")
-			if oc == nil {
-				oc = new(schema.Set)
-			}
-			if nc == nil {
-				nc = new(schema.Set)
-			}
-
-			ocs := oc.(*schema.Set)
-			ncs := nc.(*schema.Set)
-
-			remove := ocs.Difference(ncs).List()
-			add := ncs.Difference(ocs).List()
-
-			// Delete removed Cache Settings
-			for _, dRaw := range remove {
-				df := dRaw.(map[string]interface{})
-				opts := gofastly.DeleteCacheSettingInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    df["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Fastly Cache Settings removal opts: %#v", opts)
-				err := conn.DeleteCacheSetting(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new Cache Settings
-			for _, dRaw := range add {
-				opts, err := buildCacheSetting(dRaw.(map[string]interface{}))
-				if err != nil {
-					log.Printf("[DEBUG] Error building Cache Setting: %s", err)
-					return err
-				}
-				opts.Service = d.Id()
-				opts.Version = latestVersion
-
-				log.Printf("[DEBUG] Fastly Cache Settings Addition opts: %#v", opts)
-				_, err = conn.CreateCacheSetting(opts)
-				if err != nil {
-					return err
-				}
+			if err := processCacheSetting(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

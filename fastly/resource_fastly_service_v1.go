@@ -823,59 +823,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// find difference in Sumologic
 		if d.HasChange("sumologic") {
-			os, ns := d.GetChange("sumologic")
-			if os == nil {
-				os = new(schema.Set)
-			}
-			if ns == nil {
-				ns = new(schema.Set)
-			}
-
-			oss := os.(*schema.Set)
-			nss := ns.(*schema.Set)
-			removeSumologic := oss.Difference(nss).List()
-			addSumologic := nss.Difference(oss).List()
-
-			// DELETE old sumologic configurations
-			for _, pRaw := range removeSumologic {
-				sf := pRaw.(map[string]interface{})
-				opts := gofastly.DeleteSumologicInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    sf["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Fastly Sumologic removal opts: %#v", opts)
-				err := conn.DeleteSumologic(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new/updated Sumologic
-			for _, pRaw := range addSumologic {
-				sf := pRaw.(map[string]interface{})
-				opts := gofastly.CreateSumologicInput{
-					Service:           d.Id(),
-					Version:           latestVersion,
-					Name:              sf["name"].(string),
-					URL:               sf["url"].(string),
-					Format:            sf["format"].(string),
-					FormatVersion:     sf["format_version"].(int),
-					ResponseCondition: sf["response_condition"].(string),
-					MessageType:       sf["message_type"].(string),
-					Placement:         sf["placement"].(string),
-				}
-
-				log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
-				_, err := conn.CreateSumologic(&opts)
-				if err != nil {
-					return err
-				}
+			if err := processSumologic(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

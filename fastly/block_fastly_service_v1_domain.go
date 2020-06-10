@@ -106,3 +106,17 @@ func readDomain(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servi
 	}
 	return nil
 }
+
+
+func flattenDomains(list []*gofastly.Domain) []map[string]interface{} {
+	dl := make([]map[string]interface{}, 0, len(list))
+
+	for _, d := range list {
+		dl = append(dl, map[string]interface{}{
+			"name":    d.Name,
+			"comment": d.Comment,
+		})
+	}
+
+	return dl
+}

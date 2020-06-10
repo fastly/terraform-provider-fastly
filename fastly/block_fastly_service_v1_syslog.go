@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -168,4 +169,25 @@ func processSyslog(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	}
 	return nil
 }
+
+
+func readSyslog(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
+	syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Syslog for (%s), version (%d): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	sll := flattenSyslogs(syslogList)
+
+	if err := d.Set("syslog", sll); err != nil {
+		log.Printf("[WARN] Error setting Syslog for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
 

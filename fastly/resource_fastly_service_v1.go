@@ -1019,62 +1019,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// find difference in Splunk logging configurations
 		if d.HasChange("splunk") {
-			os, ns := d.GetChange("splunk")
-			if os == nil {
-				os = new(schema.Set)
-			}
-			if ns == nil {
-				ns = new(schema.Set)
-			}
-
-			oss := os.(*schema.Set)
-			nss := ns.(*schema.Set)
-
-			remove := oss.Difference(nss).List()
-			add := nss.Difference(oss).List()
-
-			// DELETE old Splunk logging configurations
-			for _, sRaw := range remove {
-				sf := sRaw.(map[string]interface{})
-				opts := gofastly.DeleteSplunkInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    sf["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Splunk removal opts: %#v", opts)
-				err := conn.DeleteSplunk(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new/updated Splunk configurations
-			for _, sRaw := range add {
-				sf := sRaw.(map[string]interface{})
-				opts := gofastly.CreateSplunkInput{
-					Service:           d.Id(),
-					Version:           latestVersion,
-					Name:              sf["name"].(string),
-					URL:               sf["url"].(string),
-					Format:            sf["format"].(string),
-					FormatVersion:     uint(sf["format_version"].(int)),
-					ResponseCondition: sf["response_condition"].(string),
-					Placement:         sf["placement"].(string),
-					Token:             sf["token"].(string),
-					TLSHostname:       sf["tls_hostname"].(string),
-					TLSCACert:         sf["tls_ca_cert"].(string),
-				}
-
-				log.Printf("[DEBUG] Splunk create opts: %#v", opts)
-				_, err := conn.CreateSplunk(&opts)
-				if err != nil {
-					return err
-				}
+			if err := processSplunk(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

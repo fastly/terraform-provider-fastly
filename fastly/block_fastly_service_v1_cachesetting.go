@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -98,3 +99,21 @@ func processCacheSetting(d *schema.ResourceData, conn *gofastly.Client, latestVe
 	return nil
 }
 
+
+func readCacheSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
+	cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Cache Settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	csl := flattenCacheSettings(cslList)
+
+	if err := d.Set("cache_setting", csl); err != nil {
+		log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
+	}
+	return nil
+}

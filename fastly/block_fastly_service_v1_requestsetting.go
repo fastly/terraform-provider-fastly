@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -184,4 +185,45 @@ func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]inte
 	}
 
 	return rl
+}
+
+
+func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequestSettingInput, error) {
+	df := requestSettingMap.(map[string]interface{})
+	opts := gofastly.CreateRequestSettingInput{
+		Name:             df["name"].(string),
+		MaxStaleAge:      uint(df["max_stale_age"].(int)),
+		ForceMiss:        gofastly.CBool(df["force_miss"].(bool)),
+		ForceSSL:         gofastly.CBool(df["force_ssl"].(bool)),
+		BypassBusyWait:   gofastly.CBool(df["bypass_busy_wait"].(bool)),
+		HashKeys:         df["hash_keys"].(string),
+		TimerSupport:     gofastly.CBool(df["timer_support"].(bool)),
+		GeoHeaders:       gofastly.CBool(df["geo_headers"].(bool)),
+		DefaultHost:      df["default_host"].(string),
+		RequestCondition: df["request_condition"].(string),
+	}
+
+	act := strings.ToLower(df["action"].(string))
+	switch act {
+	case "lookup":
+		opts.Action = gofastly.RequestSettingActionLookup
+	case "pass":
+		opts.Action = gofastly.RequestSettingActionPass
+	}
+
+	xff := strings.ToLower(df["xff"].(string))
+	switch xff {
+	case "clear":
+		opts.XForwardedFor = gofastly.RequestSettingXFFClear
+	case "leave":
+		opts.XForwardedFor = gofastly.RequestSettingXFFLeave
+	case "append":
+		opts.XForwardedFor = gofastly.RequestSettingXFFAppend
+	case "append_all":
+		opts.XForwardedFor = gofastly.RequestSettingXFFAppendAll
+	case "overwrite":
+		opts.XForwardedFor = gofastly.RequestSettingXFFOverwrite
+	}
+
+	return &opts, nil
 }

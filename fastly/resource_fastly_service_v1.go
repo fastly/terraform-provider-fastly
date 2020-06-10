@@ -1504,7 +1504,9 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// find difference in request settings
 		if d.HasChange("request_setting") {
-
+			if err := processRequestSetting(d, conn, latestVersion); err != nil {
+				return err
+			}
 		}
 
 		// Find differences in VCLs
@@ -1971,21 +1973,10 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Request Settings
-		log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
-		rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Request Settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		if err := readRequestSetting(conn, d, s); err != nil {
+			return err
 		}
 
-		rl := flattenRequestSettings(rsList)
-
-		if err := d.Set("request_setting", rl); err != nil {
-			log.Printf("[WARN] Error setting Request Settings for (%s): %s", d.Id(), err)
-		}
 
 		// refresh VCLs
 		log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())

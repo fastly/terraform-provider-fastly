@@ -135,3 +135,22 @@ func processRequestSetting(d *schema.ResourceData, conn *gofastly.Client, latest
 
 	return nil
 }
+
+func readRequestSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
+	rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Request Settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	rl := flattenRequestSettings(rsList)
+
+	if err := d.Set("request_setting", rl); err != nil {
+		log.Printf("[WARN] Error setting Request Settings for (%s): %s", d.Id(), err)
+	}
+	return nil
+}

@@ -153,3 +153,35 @@ func readRequestSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofast
 	}
 	return nil
 }
+
+func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]interface{} {
+	var rl []map[string]interface{}
+	for _, r := range rsList {
+		// Convert Request Settings to a map for saving to state.
+		nrs := map[string]interface{}{
+			"name":              r.Name,
+			"max_stale_age":     r.MaxStaleAge,
+			"force_miss":        r.ForceMiss,
+			"force_ssl":         r.ForceSSL,
+			"action":            r.Action,
+			"bypass_busy_wait":  r.BypassBusyWait,
+			"hash_keys":         r.HashKeys,
+			"xff":               r.XForwardedFor,
+			"timer_support":     r.TimerSupport,
+			"geo_headers":       r.GeoHeaders,
+			"default_host":      r.DefaultHost,
+			"request_condition": r.RequestCondition,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range nrs {
+			if v == "" {
+				delete(nrs, k)
+			}
+		}
+
+		rl = append(rl, nrs)
+	}
+
+	return rl
+}

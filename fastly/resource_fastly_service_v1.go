@@ -4583,28 +4583,6 @@ func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, erro
 	return &opts, nil
 }
 
-func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
-	var dl []map[string]interface{}
-	for _, currentDict := range dictList {
-
-		dictMapString := map[string]interface{}{
-			"dictionary_id": currentDict.ID,
-			"name":          currentDict.Name,
-			"write_only":    currentDict.WriteOnly,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range dictMapString {
-			if v == "" {
-				delete(dictMapString, k)
-			}
-		}
-
-		dl = append(dl, dictMapString)
-	}
-
-	return dl
-}
 
 func validateVCLs(d *schema.ResourceData) error {
 	// TODO: this would be nice to move into a resource/collection validation function, once that is available

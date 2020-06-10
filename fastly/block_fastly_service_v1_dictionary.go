@@ -34,7 +34,6 @@ var dictionarySchema = &schema.Schema{
 	},
 }
 
-
 func processDictionary(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	oldDictVal, newDictVal := d.GetChange("dictionary")
 
@@ -90,7 +89,6 @@ func processDictionary(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-
 func readDictionary(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
 	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
@@ -108,7 +106,6 @@ func readDictionary(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 	}
 	return nil
 }
-
 
 func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
 	var dl []map[string]interface{}

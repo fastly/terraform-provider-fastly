@@ -7,7 +7,6 @@ import (
 	"log"
 )
 
-
 var aclSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -28,7 +27,6 @@ var aclSchema = &schema.Schema{
 		},
 	},
 }
-
 
 func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	oldACLVal, newACLVal := d.GetChange("acl")
@@ -84,7 +82,6 @@ func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 	return nil
 }
 
-
 func readACL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 
 	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
@@ -104,7 +101,6 @@ func readACL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceD
 
 	return nil
 }
-
 
 func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
 	var al []map[string]interface{}

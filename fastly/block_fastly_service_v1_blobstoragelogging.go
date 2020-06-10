@@ -7,7 +7,6 @@ import (
 	"log"
 )
 
-
 var blobstorageloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -100,7 +99,6 @@ var blobstorageloggingSchema = &schema.Schema{
 	},
 }
 
-
 func processBlobStorageLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	obsl, nbsl := d.GetChange("blobstoragelogging")
 	if obsl == nil {
@@ -167,7 +165,6 @@ func processBlobStorageLogging(d *schema.ResourceData, conn *gofastly.Client, la
 	return nil
 }
 
-
 func readBlobStorageLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
 	blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
@@ -186,7 +183,6 @@ func readBlobStorageLogging(conn *gofastly.Client, d *schema.ResourceData, s *go
 	}
 	return nil
 }
-
 
 func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]interface{} {
 	var bsl []map[string]interface{}

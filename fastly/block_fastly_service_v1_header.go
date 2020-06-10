@@ -89,7 +89,6 @@ var headerSchema = &schema.Schema{
 	},
 }
 
-
 func processHeader(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	oh, nh := d.GetChange("header")
 	if oh == nil {
@@ -145,7 +144,6 @@ func processHeader(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-
 func readHeader(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
 	headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
@@ -165,7 +163,6 @@ func readHeader(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servi
 
 	return nil
 }
-
 
 func flattenHeaders(headerList []*gofastly.Header) []map[string]interface{} {
 	var hl []map[string]interface{}
@@ -196,7 +193,6 @@ func flattenHeaders(headerList []*gofastly.Header) []map[string]interface{} {
 	}
 	return hl
 }
-
 
 func buildHeader(headerMap interface{}) (*gofastly.CreateHeaderInput, error) {
 	df := headerMap.(map[string]interface{})

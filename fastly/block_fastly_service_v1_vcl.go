@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -98,6 +99,25 @@ func processVCL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 			}
 
 		}
+	}
+	return nil
+}
+
+
+func readVCL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
+	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up VCLs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	vl := flattenVCLs(vclList)
+
+	if err := d.Set("vcl", vl); err != nil {
+		log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
 	}
 	return nil
 }

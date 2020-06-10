@@ -1254,57 +1254,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// Find differences in VCL snippets
 		if d.HasChange("snippet") {
-			// Note: as above with Gzip and S3 logging, we don't utilize the PUT
-			// endpoint to update a VCL snippet, we simply destroy it and create a new one.
-			oldSnippetVal, newSnippetVal := d.GetChange("snippet")
-			if oldSnippetVal == nil {
-				oldSnippetVal = new(schema.Set)
-			}
-			if newSnippetVal == nil {
-				newSnippetVal = new(schema.Set)
-			}
-
-			oldSnippetSet := oldSnippetVal.(*schema.Set)
-			newSnippetSet := newSnippetVal.(*schema.Set)
-
-			remove := oldSnippetSet.Difference(newSnippetSet).List()
-			add := newSnippetSet.Difference(oldSnippetSet).List()
-
-			// Delete removed VCL Snippet configurations
-			for _, dRaw := range remove {
-				df := dRaw.(map[string]interface{})
-				opts := gofastly.DeleteSnippetInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    df["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Fastly VCL Snippet Removal opts: %#v", opts)
-				err := conn.DeleteSnippet(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new VCL Snippet configurations
-			for _, dRaw := range add {
-				opts, err := buildSnippet(dRaw.(map[string]interface{}))
-				if err != nil {
-					log.Printf("[DEBUG] Error building VCL Snippet: %s", err)
-					return err
-				}
-				opts.Service = d.Id()
-				opts.Version = latestVersion
-
-				log.Printf("[DEBUG] Fastly VCL Snippet Addition opts: %#v", opts)
-				_, err = conn.CreateSnippet(opts)
-				if err != nil {
-					return err
-				}
+			if err := processSnippet(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

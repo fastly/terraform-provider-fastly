@@ -119,7 +119,6 @@ func processResponseObject(d *schema.ResourceData, conn *gofastly.Client, latest
 	return nil
 }
 
-
 func readResponseObject(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
 	responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
@@ -138,7 +137,6 @@ func readResponseObject(conn *gofastly.Client, d *schema.ResourceData, s *gofast
 	}
 	return nil
 }
-
 
 func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]interface{} {
 	var rol []map[string]interface{}

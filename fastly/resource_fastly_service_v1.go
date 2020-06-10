@@ -313,9 +313,9 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
-			"gzip":   gzipSchema,
-			"header": headerSchema,
-			"s3logging": s3loggingSchema,
+			"gzip":       gzipSchema,
+			"header":     headerSchema,
+			"s3logging":  s3loggingSchema,
 			"papertrail": papertrailSchema,
 
 			"sumologic": {
@@ -1860,8 +1860,6 @@ func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput,
 	return &opts, nil
 }
 
-
-
 func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interface{} {
 	var l []map[string]interface{}
 	for _, p := range sumologicList {
@@ -1951,12 +1949,6 @@ func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 
 	return sl
 }
-
-
-
-
-
-
 
 func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]interface{} {
 	var csl []map[string]interface{}
@@ -2071,8 +2063,6 @@ func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 
 	return sl
 }
-
-
 
 func validateVCLs(d *schema.ResourceData) error {
 	// TODO: this would be nice to move into a resource/collection validation function, once that is available

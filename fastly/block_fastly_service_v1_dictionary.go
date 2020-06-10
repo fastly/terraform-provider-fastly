@@ -131,7 +131,6 @@ func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface
 	return dl
 }
 
-
 func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
 	df := dictMap.(map[string]interface{})
 	opts := gofastly.CreateDictionaryInput{

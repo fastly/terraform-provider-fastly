@@ -81,7 +81,6 @@ var healthcheckSchema = &schema.Schema{
 	},
 }
 
-
 func processHealthCheck(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	oh, nh := d.GetChange("healthcheck")
 	if oh == nil {
@@ -146,7 +145,6 @@ func processHealthCheck(d *schema.ResourceData, conn *gofastly.Client, latestVer
 	return nil
 }
 
-
 func readHealthCheck(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
 	healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
@@ -166,7 +164,6 @@ func readHealthCheck(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.
 
 	return nil
 }
-
 
 func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]interface{} {
 	var hl []map[string]interface{}

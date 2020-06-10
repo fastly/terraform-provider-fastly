@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -241,6 +242,26 @@ func processBackend(d *schema.ResourceData, conn *gofastly.Client, latestVersion
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+
+func readBackend(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
+	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	bl := flattenBackends(backendList)
+
+	if err := d.Set("backend", bl); err != nil {
+		log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
 	}
 	return nil
 }

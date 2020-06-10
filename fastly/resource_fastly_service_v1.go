@@ -1487,7 +1487,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Conditions need to be updated first, as they can be referenced by other
-		// configuraiton objects (Backends, Request Headers, etc)
+		// configuration objects (Backends, Request Headers, etc)
 
 		// Find difference in Conditions
 		if d.HasChange("condition") {
@@ -3173,20 +3173,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Conditions
-		log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
-		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Conditions for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		cl := flattenConditions(conditionList)
-
-		if err := d.Set("condition", cl); err != nil {
-			log.Printf("[WARN] Error setting Conditions for (%s): %s", d.Id(), err)
+		if err := readCondition(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh Request Settings

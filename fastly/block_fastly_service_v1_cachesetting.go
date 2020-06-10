@@ -2,10 +2,11 @@ package fastly
 
 import (
 	"fmt"
-	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
+
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var cachesettingSchema = &schema.Schema{

@@ -137,3 +137,31 @@ func readSumologic(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Se
 	}
 	return nil
 }
+
+
+func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]interface{} {
+	var l []map[string]interface{}
+	for _, p := range sumologicList {
+		// Convert Sumologic to a map for saving to state.
+		ns := map[string]interface{}{
+			"name":               p.Name,
+			"url":                p.URL,
+			"format":             p.Format,
+			"response_condition": p.ResponseCondition,
+			"message_type":       p.MessageType,
+			"format_version":     int(p.FormatVersion),
+			"placement":          p.Placement,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range ns {
+			if v == "" {
+				delete(ns, k)
+			}
+		}
+
+		l = append(l, ns)
+	}
+
+	return l
+}

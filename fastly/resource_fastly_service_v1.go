@@ -227,7 +227,7 @@ func resourceServiceV1() *schema.Resource {
 						"auto_loadbalance": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Default:     true,
+							Default:     false,
 							Description: "Should this Backend be load balanced",
 						},
 						"between_bytes_timeout": {

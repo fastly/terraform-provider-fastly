@@ -224,7 +224,7 @@ The `backend` block supports:
 * `address` - (Required, string) An IPv4, hostname, or IPv6 address for the Backend.
 * `auto_loadbalance` - (Optional, boolean) Denotes if this Backend should be
 included in the pool of backends that requests are load balanced against.
-Default `true`.
+Default `false`.
 * `between_bytes_timeout` - (Optional) How long to wait between bytes in milliseconds. Default `10000`.
 * `connect_timeout` - (Optional) How long to wait for a timeout in milliseconds.
 Default `1000`

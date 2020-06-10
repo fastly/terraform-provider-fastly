@@ -1,6 +1,10 @@
 package fastly
 
-import "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+import (
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
+)
 
 var aclSchema = &schema.Schema{
 	Type:     schema.TypeSet,
@@ -21,4 +25,59 @@ var aclSchema = &schema.Schema{
 			},
 		},
 	},
+}
+
+
+func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+	oldACLVal, newACLVal := d.GetChange("acl")
+	if oldACLVal == nil {
+		oldACLVal = new(schema.Set)
+	}
+	if newACLVal == nil {
+		newACLVal = new(schema.Set)
+	}
+
+	oldACLSet := oldACLVal.(*schema.Set)
+	newACLSet := newACLVal.(*schema.Set)
+
+	remove := oldACLSet.Difference(newACLSet).List()
+	add := newACLSet.Difference(oldACLSet).List()
+
+	// Delete removed ACL configurations
+	for _, vRaw := range remove {
+		val := vRaw.(map[string]interface{})
+		opts := gofastly.DeleteACLInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Name:    val["name"].(string),
+		}
+
+		log.Printf("[DEBUG] Fastly ACL removal opts: %#v", opts)
+		err := conn.DeleteACL(&opts)
+
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			if errRes.StatusCode != 404 {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// POST new ACL configurations
+	for _, vRaw := range add {
+		val := vRaw.(map[string]interface{})
+		opts := gofastly.CreateACLInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Name:    val["name"].(string),
+		}
+
+		log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
+		_, err := conn.CreateACL(&opts)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

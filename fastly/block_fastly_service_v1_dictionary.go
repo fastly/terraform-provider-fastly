@@ -108,3 +108,27 @@ func readDictionary(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 	}
 	return nil
 }
+
+
+func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
+	var dl []map[string]interface{}
+	for _, currentDict := range dictList {
+
+		dictMapString := map[string]interface{}{
+			"dictionary_id": currentDict.ID,
+			"name":          currentDict.Name,
+			"write_only":    currentDict.WriteOnly,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range dictMapString {
+			if v == "" {
+				delete(dictMapString, k)
+			}
+		}
+
+		dl = append(dl, dictMapString)
+	}
+
+	return dl
+}

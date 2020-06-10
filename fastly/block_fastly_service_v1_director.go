@@ -153,7 +153,7 @@ func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersio
 	return nil
 }
 
-func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail, backendList []*gofastly.Backend) error {
+func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 		Service: d.Id(),
@@ -162,6 +162,16 @@ func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Ser
 
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
+	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
 
 	log.Printf("[DEBUG] Refreshing Director Backends for (%s)", d.Id())

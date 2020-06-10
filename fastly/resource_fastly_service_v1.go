@@ -89,8 +89,6 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
-			"condition": conditionSchema,
-
 			"default_ttl": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -104,8 +102,6 @@ func resourceServiceV1() *schema.Resource {
 				Computed:    true,
 				Description: "The default hostname for the version",
 			},
-
-			"healthcheck": healthcheckSchema,
 
 			"backend": {
 				Type:     schema.TypeSet,
@@ -269,8 +265,6 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
-			"director": directorSchema,
-
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -313,50 +307,28 @@ func resourceServiceV1() *schema.Resource {
 				},
 			},
 
-			"gzip":               gzipSchema,
-			"header":             headerSchema,
-			"s3logging":          s3loggingSchema,
-			"papertrail":         papertrailSchema,
-			"sumologic":          sumologicSchema,
-			"gcslogging":         gcsloggingSchema,
-			"bigquerylogging":    bigqueryloggingSchema,
-			"syslog":             syslogSchema,
-			"logentries":         logentriesSchema,
-			"splunk":             splunkSchema,
-			"blobstoragelogging": blobstorageloggingSchema,
-			"httpslogging":       httpsloggingSchema,
-			"response_object":    responseobjectSchema,
-			"request_setting":    requestsettingSchema,
-
-			"vcl": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "A name to refer to this VCL configuration",
-						},
-						"content": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The contents of this VCL configuration",
-						},
-						"main": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
-							Description: "Should this VCL configuration be the main configuration",
-						},
-					},
-				},
-			},
-
-			"snippet": 		  snippetSchema,
-			"dynamicsnippet": dynamicsnippetSchema,
-			"acl":            aclSchema,
-			"dictionary":     dictionarySchema,
+			"condition":			conditionSchema,
+			"healthcheck":			healthcheckSchema,
+			"director":				directorSchema,
+			"gzip":					gzipSchema,
+			"header":				headerSchema,
+			"s3logging":			s3loggingSchema,
+			"papertrail":			papertrailSchema,
+			"sumologic":			sumologicSchema,
+			"gcslogging":			gcsloggingSchema,
+			"bigquerylogging":		bigqueryloggingSchema,
+			"syslog":				syslogSchema,
+			"logentries":			logentriesSchema,
+			"splunk":				splunkSchema,
+			"blobstoragelogging":	blobstorageloggingSchema,
+			"httpslogging":			httpsloggingSchema,
+			"response_object":		responseobjectSchema,
+			"request_setting":		requestsettingSchema,
+			"vcl":					vclSchema,
+			"snippet":				snippetSchema,
+			"dynamicsnippet":		dynamicsnippetSchema,
+			"acl":					aclSchema,
+			"dictionary":			dictionarySchema,
 		},
 	}
 }

@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 )
 
 var responseobjectSchema = &schema.Schema{
@@ -54,4 +56,63 @@ var responseobjectSchema = &schema.Schema{
 			},
 		},
 	},
+}
+
+func processResponseObject(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+	or, nr := d.GetChange("response_object")
+	if or == nil {
+		or = new(schema.Set)
+	}
+	if nr == nil {
+		nr = new(schema.Set)
+	}
+
+	ors := or.(*schema.Set)
+	nrs := nr.(*schema.Set)
+	removeResponseObject := ors.Difference(nrs).List()
+	addResponseObject := nrs.Difference(ors).List()
+
+	// DELETE old response object configurations
+	for _, rRaw := range removeResponseObject {
+		rf := rRaw.(map[string]interface{})
+		opts := gofastly.DeleteResponseObjectInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Name:    rf["name"].(string),
+		}
+
+		log.Printf("[DEBUG] Fastly Response Object removal opts: %#v", opts)
+		err := conn.DeleteResponseObject(&opts)
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			if errRes.StatusCode != 404 {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// POST new/updated Response Object
+	for _, rRaw := range addResponseObject {
+		rf := rRaw.(map[string]interface{})
+
+		opts := gofastly.CreateResponseObjectInput{
+			Service:          d.Id(),
+			Version:          latestVersion,
+			Name:             rf["name"].(string),
+			Status:           uint(rf["status"].(int)),
+			Response:         rf["response"].(string),
+			Content:          rf["content"].(string),
+			ContentType:      rf["content_type"].(string),
+			RequestCondition: rf["request_condition"].(string),
+			CacheCondition:   rf["cache_condition"].(string),
+		}
+
+		log.Printf("[DEBUG] Create Response Object Opts: %#v", opts)
+		_, err := conn.CreateResponseObject(&opts)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

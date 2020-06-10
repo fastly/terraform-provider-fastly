@@ -891,42 +891,7 @@ func flattenDomains(list []*gofastly.Domain) []map[string]interface{} {
 	return dl
 }
 
-func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
-	var bl []map[string]interface{}
-	for _, b := range backendList {
-		// Convert Backend to a map for saving to state.
-		nb := map[string]interface{}{
-			"name":                  b.Name,
-			"address":               b.Address,
-			"auto_loadbalance":      b.AutoLoadbalance,
-			"between_bytes_timeout": int(b.BetweenBytesTimeout),
-			"connect_timeout":       int(b.ConnectTimeout),
-			"error_threshold":       int(b.ErrorThreshold),
-			"first_byte_timeout":    int(b.FirstByteTimeout),
-			"max_conn":              int(b.MaxConn),
-			"port":                  int(b.Port),
-			"override_host":         b.OverrideHost,
-			"shield":                b.Shield,
-			"ssl_check_cert":        b.SSLCheckCert,
-			"ssl_hostname":          b.SSLHostname,
-			"ssl_ca_cert":           b.SSLCACert,
-			"ssl_client_key":        b.SSLClientKey,
-			"ssl_client_cert":       b.SSLClientCert,
-			"max_tls_version":       b.MaxTLSVersion,
-			"min_tls_version":       b.MinTLSVersion,
-			"ssl_ciphers":           strings.Join(b.SSLCiphers, ","),
-			"use_ssl":               b.UseSSL,
-			"ssl_cert_hostname":     b.SSLCertHostname,
-			"ssl_sni_hostname":      b.SSLSNIHostname,
-			"weight":                int(b.Weight),
-			"request_condition":     b.RequestCondition,
-			"healthcheck":           b.HealthCheck,
-		}
 
-		bl = append(bl, nb)
-	}
-	return bl
-}
 
 
 

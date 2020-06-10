@@ -137,3 +137,31 @@ func readResponseObject(conn *gofastly.Client, d *schema.ResourceData, s *gofast
 	}
 	return nil
 }
+
+
+func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]interface{} {
+	var rol []map[string]interface{}
+	for _, ro := range responseObjectList {
+		// Convert ResponseObjects to a map for saving to state.
+		nro := map[string]interface{}{
+			"name":              ro.Name,
+			"status":            ro.Status,
+			"response":          ro.Response,
+			"content":           ro.Content,
+			"content_type":      ro.ContentType,
+			"request_condition": ro.RequestCondition,
+			"cache_condition":   ro.CacheCondition,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range nro {
+			if v == "" {
+				delete(nro, k)
+			}
+		}
+
+		rol = append(rol, nro)
+	}
+
+	return rol
+}

@@ -1,6 +1,10 @@
 package fastly
 
-import "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+import (
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
+)
 
 var logentriesSchema = &schema.Schema{
 	Type:     schema.TypeSet,
@@ -58,4 +62,66 @@ var logentriesSchema = &schema.Schema{
 			},
 		},
 	},
+}
+
+
+func processLogEntries(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+	os, ns := d.GetChange("logentries")
+	if os == nil {
+		os = new(schema.Set)
+	}
+	if ns == nil {
+		ns = new(schema.Set)
+	}
+
+	oss := os.(*schema.Set)
+	nss := ns.(*schema.Set)
+	removeLogentries := oss.Difference(nss).List()
+	addLogentries := nss.Difference(oss).List()
+
+	// DELETE old logentries configurations
+	for _, pRaw := range removeLogentries {
+		slf := pRaw.(map[string]interface{})
+		opts := gofastly.DeleteLogentriesInput{
+			Service: d.Id(),
+			Version: latestVersion,
+			Name:    slf["name"].(string),
+		}
+
+		log.Printf("[DEBUG] Fastly Logentries removal opts: %#v", opts)
+		err := conn.DeleteLogentries(&opts)
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			if errRes.StatusCode != 404 {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// POST new/updated Logentries
+	for _, pRaw := range addLogentries {
+		slf := pRaw.(map[string]interface{})
+
+		opts := gofastly.CreateLogentriesInput{
+			Service:           d.Id(),
+			Version:           latestVersion,
+			Name:              slf["name"].(string),
+			Port:              uint(slf["port"].(int)),
+			UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+			Token:             slf["token"].(string),
+			Format:            slf["format"].(string),
+			FormatVersion:     uint(slf["format_version"].(int)),
+			ResponseCondition: slf["response_condition"].(string),
+			Placement:         slf["placement"].(string),
+		}
+
+		log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
+		_, err := conn.CreateLogentries(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -51,7 +51,6 @@ var papertrailSchema = &schema.Schema{
 	},
 }
 
-
 func processPapertrail(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("papertrail")
 	if os == nil {
@@ -111,7 +110,6 @@ func processPapertrail(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-
 func readPapertrail(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
 	papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
@@ -131,7 +129,6 @@ func readPapertrail(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 
 	return nil
 }
-
 
 func flattenPapertrails(papertrailList []*gofastly.Papertrail) []map[string]interface{} {
 	var pl []map[string]interface{}

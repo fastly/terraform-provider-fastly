@@ -3171,19 +3171,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Dictionaries
-		log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
-		dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		dict := flattenDictionaries(dictList)
-
-		if err := d.Set("dictionary", dict); err != nil {
-			log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
+		if err := readDictionary(conn, d, s); err != nil {
+			return err
 		}
 
 	} else {

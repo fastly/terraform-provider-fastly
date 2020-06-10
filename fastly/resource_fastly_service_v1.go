@@ -639,24 +639,12 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Refresh Backends
-		log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
-		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		bl := flattenBackends(backendList)
-
-		if err := d.Set("backend", bl); err != nil {
-			log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
+		if err := readBackend(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh directors
-		if err := readDirector(conn, d, s, backendList); err != nil {
+		if err := readDirector(conn, d, s); err != nil {
 			return err
 		}
 

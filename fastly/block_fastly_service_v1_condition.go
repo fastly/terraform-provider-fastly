@@ -121,3 +121,28 @@ func readCondition(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Se
 	}
 	return nil
 }
+
+
+func flattenConditions(conditionList []*gofastly.Condition) []map[string]interface{} {
+	var cl []map[string]interface{}
+	for _, c := range conditionList {
+		// Convert Conditions to a map for saving to state.
+		nc := map[string]interface{}{
+			"name":      c.Name,
+			"statement": c.Statement,
+			"type":      c.Type,
+			"priority":  c.Priority,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range nc {
+			if v == "" {
+				delete(nc, k)
+			}
+		}
+
+		cl = append(cl, nc)
+	}
+
+	return cl
+}

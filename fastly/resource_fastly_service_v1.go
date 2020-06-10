@@ -2350,65 +2350,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 
 		// find difference in bigquerylogging
 		if d.HasChange("bigquerylogging") {
-			os, ns := d.GetChange("bigquerylogging")
-			if os == nil {
-				os = new(schema.Set)
-			}
-			if ns == nil {
-				ns = new(schema.Set)
-			}
-
-			oss := os.(*schema.Set)
-			nss := ns.(*schema.Set)
-			removeBigquerylogging := oss.Difference(nss).List()
-			addBigquerylogging := nss.Difference(oss).List()
-
-			// DELETE old bigquerylogging configurations
-			for _, pRaw := range removeBigquerylogging {
-				sf := pRaw.(map[string]interface{})
-				opts := gofastly.DeleteBigQueryInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Name:    sf["name"].(string),
-				}
-
-				log.Printf("[DEBUG] Fastly bigquerylogging removal opts: %#v", opts)
-				err := conn.DeleteBigQuery(&opts)
-				if errRes, ok := err.(*gofastly.HTTPError); ok {
-					if errRes.StatusCode != 404 {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-			}
-
-			// POST new/updated bigquerylogging
-			for _, pRaw := range addBigquerylogging {
-				sf := pRaw.(map[string]interface{})
-				opts := gofastly.CreateBigQueryInput{
-					Service:           d.Id(),
-					Version:           latestVersion,
-					Name:              sf["name"].(string),
-					ProjectID:         sf["project_id"].(string),
-					Dataset:           sf["dataset"].(string),
-					Table:             sf["table"].(string),
-					User:              sf["email"].(string),
-					SecretKey:         sf["secret_key"].(string),
-					ResponseCondition: sf["response_condition"].(string),
-					Template:          sf["template"].(string),
-					Placement:         sf["placement"].(string),
-				}
-
-				if sf["format"].(string) != "" {
-					opts.Format = sf["format"].(string)
-				}
-
-				log.Printf("[DEBUG] Create bigquerylogging opts: %#v", opts)
-				_, err := conn.CreateBigQuery(&opts)
-				if err != nil {
-					return err
-				}
+			if err := processBigQueryLogging(d, conn, latestVersion); err != nil {
+				return err
 			}
 		}
 

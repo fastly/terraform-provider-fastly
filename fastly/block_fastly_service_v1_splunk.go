@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
@@ -127,6 +128,26 @@ func processSplunk(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+
+func readSplunk(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
+	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Splunks for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	spl := flattenSplunks(splunkList)
+
+	if err := d.Set("splunk", spl); err != nil {
+		log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
 	}
 	return nil
 }

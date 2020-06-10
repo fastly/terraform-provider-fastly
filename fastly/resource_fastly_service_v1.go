@@ -3199,7 +3199,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh directors
-		if err := readDirector(conn, d, s); err != nil {
+		if err := readDirector(conn, d, s, backendList); err != nil {
 			return err
 		}
 

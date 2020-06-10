@@ -1725,34 +1725,7 @@ func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
 	return pl
 }
 
-func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
-	var sl []map[string]interface{}
-	for _, s := range splunkList {
-		// Convert Splunk to a map for saving to state.
-		nbs := map[string]interface{}{
-			"name":               s.Name,
-			"url":                s.URL,
-			"format":             s.Format,
-			"format_version":     s.FormatVersion,
-			"response_condition": s.ResponseCondition,
-			"placement":          s.Placement,
-			"token":              s.Token,
-			"tls_hostname":       s.TLSHostname,
-			"tls_ca_cert":        s.TLSCACert,
-		}
 
-		// prune any empty values that come from the default string value in structs
-		for k, v := range nbs {
-			if v == "" {
-				delete(nbs, k)
-			}
-		}
-
-		sl = append(sl, nbs)
-	}
-
-	return sl
-}
 
 func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]interface{} {
 	var csl []map[string]interface{}

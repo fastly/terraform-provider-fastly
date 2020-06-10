@@ -1,10 +1,12 @@
 package fastly
 
 import (
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 )
+
 
 var aclSchema = &schema.Schema{
 	Type:     schema.TypeSet,
@@ -79,5 +81,26 @@ func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 			return err
 		}
 	}
+	return nil
+}
+
+
+func readACL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+
+	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
+	aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up ACLs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	al := flattenACLs(aclList)
+
+	if err := d.Set("acl", al); err != nil {
+		log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
+	}
+
 	return nil
 }

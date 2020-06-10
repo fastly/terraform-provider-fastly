@@ -154,7 +154,7 @@ func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersio
 }
 
 
-func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail, backendList []*gofastly.Backend) error {
 	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 		Service: d.Id(),

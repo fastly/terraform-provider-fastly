@@ -81,7 +81,6 @@ var requestsettingSchema = &schema.Schema{
 	},
 }
 
-
 func processRequestSetting(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("request_setting")
 	if os == nil {

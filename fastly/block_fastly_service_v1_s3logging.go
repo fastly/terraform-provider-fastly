@@ -211,3 +211,23 @@ func processS3Logging(d *schema.ResourceData, conn *gofastly.Client, latestVersi
 	}
 	return nil
 }
+
+
+func readS3Logging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
+	s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up S3 Logging for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	sl := flattenS3s(s3List)
+
+	if err := d.Set("s3logging", sl); err != nil {
+		log.Printf("[WARN] Error setting S3 Logging for (%s): %s", d.Id(), err)
+	}
+	return nil
+}

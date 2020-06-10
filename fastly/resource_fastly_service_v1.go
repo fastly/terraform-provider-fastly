@@ -3221,20 +3221,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh Blob Storage Logging
-		log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
-		blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Blob Storages for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		bsl := flattenBlobStorages(blobStorageList)
-
-		if err := d.Set("blobstoragelogging", bsl); err != nil {
-			log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
+		if err := readBlobStorageLogging(conn, d, s); err != nil {
+			return err
 		}
 
 		// Refresh HTTPS

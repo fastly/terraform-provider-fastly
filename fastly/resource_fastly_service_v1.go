@@ -1085,19 +1085,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// refresh VCLs
-		log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
-		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		})
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up VCLs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
-
-		vl := flattenVCLs(vclList)
-
-		if err := d.Set("vcl", vl); err != nil {
-			log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
+		if err := readVCL(conn, d, s); err != nil {
+			return err
 		}
 
 		// refresh ACLs

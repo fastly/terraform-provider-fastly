@@ -8,6 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type DictionaryServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceDictionary() ServiceAttributeDefinition {
+	return &DictionaryServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: dictionarySchema,
+			key:    "dictionary",
+		},
+	}
+}
+
+
 var dictionarySchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -35,7 +50,7 @@ var dictionarySchema = &schema.Schema{
 	},
 }
 
-func processDictionary(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oldDictVal, newDictVal := d.GetChange("dictionary")
 
 	if oldDictVal == nil {
@@ -90,7 +105,7 @@ func processDictionary(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readDictionary(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
 	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
 		Service: d.Id(),

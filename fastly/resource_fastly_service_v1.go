@@ -28,6 +28,7 @@ var header 				= NewServiceHeader()
 var healthcheck 		= NewServiceHealthCheck()
 var httpslogging 		= NewServiceHTTPSLogging()
 var logentries	 		= NewServiceLogEntries()
+var papertrail	 		= NewServicePaperTrail()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -198,7 +199,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		gzip.GetKey(),
 		healthcheck.GetKey(),
 		"s3logging",
-		"papertrail",
+		papertrail.GetKey(),
 		gcslogging.GetKey(),
 		bigquerylogging.GetKey(),
 		"syslog",
@@ -369,8 +370,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("papertrail") {
-			if err := processPapertrail(d, conn, latestVersion); err != nil {
+		if d.HasChange(papertrail.GetKey()) {
+			if err := papertrail.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -607,7 +608,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readS3(conn, d, s); err != nil {
 			return err
 		}
-		if err := readPapertrail(conn, d, s); err != nil {
+		if err := papertrail.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readSumologic(conn, d, s); err != nil {

@@ -9,6 +9,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
+
+type HTTPSLoggingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceHTTPSLogging() ServiceAttributeDefinition {
+	return &HTTPSLoggingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: httpsloggingSchema,
+			key:    "httpslogging",
+		},
+	}
+}
+
+
 var httpsloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -146,7 +161,7 @@ var httpsloggingSchema = &schema.Schema{
 	},
 }
 
-func processHTTPS(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oh, nh := d.GetChange("httpslogging")
 
@@ -205,7 +220,7 @@ func processHTTPS(d *schema.ResourceData, conn *gofastly.Client, latestVersion i
 	return nil
 }
 
-func readHTTPS(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// refresh HTTPS
 	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
 	httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{

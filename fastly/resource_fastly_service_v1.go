@@ -26,6 +26,8 @@ var gcslogging 			= NewServiceGCSLogging()
 var gzip 				= NewServiceGZIP()
 var header 				= NewServiceHeader()
 var healthcheck 		= NewServiceHealthCheck()
+var httpslogging 		= NewServiceHTTPSLogging()
+
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -120,7 +122,7 @@ func resourceServiceV1() *schema.Resource {
 			"logentries":         logentriesSchema,
 			"splunk":             splunkSchema,
 			blobstoragelogging.GetKey(): blobstoragelogging.GetSchema(),
-			"httpslogging":          httpsloggingSchema,
+			httpslogging.GetKey():       httpslogging.GetSchema(),
 			"logging_elasticsearch": elasticsearchSchema,
 			"logging_ftp":           ftpSchema,
 			"logging_sftp":          sftpSchema,
@@ -204,7 +206,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"logentries",
 		"splunk",
 		blobstoragelogging.GetKey(),
-		"httpslogging",
+		httpslogging.GetKey(),
 		"logging_elasticsearch",
 		"logging_ftp",
 		"logging_sftp",
@@ -407,8 +409,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("httpslogging") {
-			if err := processHTTPS(d, conn, latestVersion); err != nil {
+		if d.HasChange(httpslogging.GetKey()) {
+			if err := httpslogging.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -629,7 +631,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := blobstoragelogging.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readHTTPS(conn, d, s); err != nil {
+		if err := httpslogging.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readElasticsearch(conn, d, s); err != nil {

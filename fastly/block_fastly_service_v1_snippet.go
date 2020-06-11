@@ -9,6 +9,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type SnippetServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceSnippet() ServiceAttributeDefinition {
+	return &SnippetServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: snippetSchema,
+			key:    "snippet",
+		},
+	}
+}
+
+
 var snippetSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -40,7 +55,7 @@ var snippetSchema = &schema.Schema{
 	},
 }
 
-func processSnippet(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
 	// endpoint to update a VCL snippet, we simply destroy it and create a new one.
 	oldSnippetVal, newSnippetVal := d.GetChange("snippet")
@@ -96,7 +111,7 @@ func processSnippet(d *schema.ResourceData, conn *gofastly.Client, latestVersion
 	return nil
 }
 
-func readSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *SnippetServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 		Service: d.Id(),

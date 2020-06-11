@@ -22,6 +22,8 @@ var dictionary 			= NewServiceDictionary()
 var director 			= NewServiceDirector()
 var domain 				= NewServiceDomain()
 var dynamicsnippet 		= NewServiceDynamicSnippet()
+var gcslogging 			= NewServiceGCSLogging()
+
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -110,7 +112,7 @@ func resourceServiceV1() *schema.Resource {
 			"s3logging":          s3loggingSchema,
 			"papertrail":         papertrailSchema,
 			"sumologic":          sumologicSchema,
-			"gcslogging":         gcsloggingSchema,
+			gcslogging.GetKey():         gcslogging.GetSchema(),
 			bigquerylogging.GetKey():    bigquerylogging.GetSchema(),
 			"syslog":             syslogSchema,
 			"logentries":         logentriesSchema,
@@ -193,7 +195,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"healthcheck",
 		"s3logging",
 		"papertrail",
-		"gcslogging",
+		gcslogging.GetKey(),
 		bigquerylogging.GetKey(),
 		"syslog",
 		"sumologic",
@@ -373,8 +375,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("gcslogging") {
-			if err := processGCSLogging(d, conn, latestVersion); err != nil {
+		if d.HasChange(gcslogging.GetKey()) {
+			if err := gcslogging.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -607,7 +609,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readSumologic(conn, d, s); err != nil {
 			return err
 		}
-		if err := readGCSLogging(conn, d, s); err != nil {
+		if err := gcslogging.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := bigquerylogging.Read(d, s, conn); err != nil {

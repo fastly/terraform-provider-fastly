@@ -19,6 +19,7 @@ var blobstoragelogging 	= NewServiceBlobStorageLogging()
 var cachesetting 		= NewServiceCacheSetting()
 var condition 			= NewServiceCondition()
 var dictionary 			= NewServiceDictionary()
+var director 			= NewServiceDirector()
 
 
 func resourceServiceV1() *schema.Resource {
@@ -102,7 +103,7 @@ func resourceServiceV1() *schema.Resource {
 			cachesetting.GetKey():      cachesetting.GetSchema(),
 			condition.GetKey():          condition.GetSchema(),
 			"healthcheck":        healthcheckSchema,
-			"director":           directorSchema,
+			director.GetKey():           director.GetSchema(),
 			"gzip":               gzipSchema,
 			"header":             headerSchema,
 			"s3logging":          s3loggingSchema,
@@ -185,7 +186,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"backend",
 		"default_host",
 		"default_ttl",
-		"director",
+		director.GetKey(),
 		"header",
 		"gzip",
 		"healthcheck",
@@ -341,8 +342,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("director") {
-			if err := processDirector(d, conn, latestVersion); err != nil {
+		if d.HasChange(director.GetKey()) {
+			if err := director.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -584,7 +585,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readBackend(conn, d, s); err != nil {
 			return err
 		}
-		if err := readDirector(conn, d, s); err != nil {
+		if err := director.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readHeader(conn, d, s); err != nil {

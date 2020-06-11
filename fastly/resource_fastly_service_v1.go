@@ -15,6 +15,8 @@ var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 var acl 			= NewServiceACL()
 var backend 		= NewServiceBackend()
 var bigquerylogging = NewServiceBigQueryLogging()
+var blobstoragelogging = NewServiceBlobStorageLogging()
+
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -108,8 +110,7 @@ func resourceServiceV1() *schema.Resource {
 			"syslog":             syslogSchema,
 			"logentries":         logentriesSchema,
 			"splunk":             splunkSchema,
-			"blobstoragelogging": blobstorageloggingSchema,
-
+			blobstoragelogging.GetKey(): blobstoragelogging.GetSchema(),
 			"httpslogging":          httpsloggingSchema,
 			"logging_elasticsearch": elasticsearchSchema,
 			"logging_ftp":           ftpSchema,
@@ -125,10 +126,9 @@ func resourceServiceV1() *schema.Resource {
 			"request_setting": requestsettingSchema,
 
 			"vcl": vclSchema,
-
 			"snippet":        snippetSchema,
 			"dynamicsnippet": dynamicsnippetSchema,
-			"acl":            aclSchema,
+			acl.GetKey():         acl.GetSchema(),
 			"dictionary":     dictionarySchema,
 		},
 	}
@@ -194,7 +194,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"sumologic",
 		"logentries",
 		"splunk",
-		"blobstoragelogging",
+		blobstoragelogging.GetKey(),
 		"httpslogging",
 		"logging_elasticsearch",
 		"logging_ftp",
@@ -393,8 +393,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("blobstoragelogging") {
-			if err := processBlobStorageLogging(d, conn, latestVersion); err != nil {
+		if d.HasChange(blobstoragelogging.GetKey()) {
+			if err := blobstoragelogging.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -617,7 +617,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readSplunk(conn, d, s); err != nil {
 			return err
 		}
-		if err := readBlobStorageLogging(conn, d, s); err != nil {
+		if err := blobstoragelogging.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readHTTPS(conn, d, s); err != nil {

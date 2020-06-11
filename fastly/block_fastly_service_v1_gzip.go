@@ -9,6 +9,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type GZIPServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceGZIP() ServiceAttributeDefinition {
+	return &GZIPServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: gzipSchema,
+			key:    "gzip",
+		},
+	}
+}
+
+
 var gzipSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -43,7 +58,7 @@ var gzipSchema = &schema.Schema{
 	},
 }
 
-func processGZIP(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *GZIPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	og, ng := d.GetChange("gzip")
 	if og == nil {
 		og = new(schema.Set)
@@ -118,7 +133,7 @@ func processGZIP(d *schema.ResourceData, conn *gofastly.Client, latestVersion in
 	return nil
 }
 
-func readGZIP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *GZIPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
 	gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
 		Service: d.Id(),

@@ -23,7 +23,7 @@ var director 			= NewServiceDirector()
 var domain 				= NewServiceDomain()
 var dynamicsnippet 		= NewServiceDynamicSnippet()
 var gcslogging 			= NewServiceGCSLogging()
-
+var gzip 				= NewServiceGZIP()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -107,7 +107,7 @@ func resourceServiceV1() *schema.Resource {
 			condition.GetKey():          condition.GetSchema(),
 			"healthcheck":        healthcheckSchema,
 			director.GetKey():           director.GetSchema(),
-			"gzip":               gzipSchema,
+			gzip.GetKey():               gzip.GetSchema(),
 			"header":             headerSchema,
 			"s3logging":          s3loggingSchema,
 			"papertrail":         papertrailSchema,
@@ -191,7 +191,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"default_ttl",
 		director.GetKey(),
 		"header",
-		"gzip",
+		gzip.GetKey(),
 		"healthcheck",
 		"s3logging",
 		"papertrail",
@@ -355,8 +355,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("gzip") {
-			if err := processGZIP(d, conn, latestVersion); err != nil {
+		if d.HasChange(gzip.GetKey()) {
+			if err := gzip.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -594,7 +594,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readHeader(conn, d, s); err != nil {
 			return err
 		}
-		if err := readGZIP(conn, d, s); err != nil {
+		if err := gzip.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readHealthCheck(conn, d, s); err != nil {

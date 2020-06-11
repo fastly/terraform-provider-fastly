@@ -15,30 +15,11 @@ type DomainServiceAttributeHandler struct {
 func NewServiceDomain() ServiceAttributeDefinition {
 	return &DomainServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: domainSchema,
 			key:    "domain",
 		},
 	}
 }
 
-var domainSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Required: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The domain that this Service will respond to",
-			},
-
-			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
-	},
-}
 
 func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	od, nd := d.GetChange("domain")
@@ -116,6 +97,28 @@ func (h *DomainServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	if err := d.Set("domain", dl); err != nil {
 		log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *DomainServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The domain that this Service will respond to",
+				},
+
+				"comment": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
 	}
 	return nil
 }

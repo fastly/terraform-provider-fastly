@@ -8,6 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type HealthCheckServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceHealthCheck() ServiceAttributeDefinition {
+	return &HealthCheckServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: healthcheckSchema,
+			key:    "healthcheck",
+		},
+	}
+}
+
+
 var healthcheckSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -82,7 +97,7 @@ var healthcheckSchema = &schema.Schema{
 	},
 }
 
-func processHealthCheck(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oh, nh := d.GetChange("healthcheck")
 	if oh == nil {
 		oh = new(schema.Set)
@@ -146,7 +161,7 @@ func processHealthCheck(d *schema.ResourceData, conn *gofastly.Client, latestVer
 	return nil
 }
 
-func readHealthCheck(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *HealthCheckServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
 	healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
 		Service: d.Id(),

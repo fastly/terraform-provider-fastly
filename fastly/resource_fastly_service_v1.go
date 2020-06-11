@@ -25,6 +25,7 @@ var dynamicsnippet 		= NewServiceDynamicSnippet()
 var gcslogging 			= NewServiceGCSLogging()
 var gzip 				= NewServiceGZIP()
 var header 				= NewServiceHeader()
+var healthcheck 		= NewServiceHealthCheck()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -106,7 +107,7 @@ func resourceServiceV1() *schema.Resource {
 			backend.GetKey():     backend.GetSchema(),
 			cachesetting.GetKey():      cachesetting.GetSchema(),
 			condition.GetKey():          condition.GetSchema(),
-			"healthcheck":        healthcheckSchema,
+			healthcheck.GetKey():        healthcheck.GetSchema(),
 			director.GetKey():           director.GetSchema(),
 			gzip.GetKey():               gzip.GetSchema(),
 			header.GetKey():             header.GetSchema(),
@@ -193,7 +194,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		director.GetKey(),
 		header.GetKey(),
 		gzip.GetKey(),
-		"healthcheck",
+		healthcheck.GetKey(),
 		"s3logging",
 		"papertrail",
 		gcslogging.GetKey(),
@@ -336,8 +337,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		// Healthchecks need to be updated BEFORE backends
-		if d.HasChange("healthcheck") {
-			if err := processHealthCheck(d, conn, latestVersion); err != nil {
+		if d.HasChange(healthcheck.GetKey()) {
+			if err := healthcheck.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -598,7 +599,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := gzip.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readHealthCheck(conn, d, s); err != nil {
+		if err := healthcheck.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readS3(conn, d, s); err != nil {

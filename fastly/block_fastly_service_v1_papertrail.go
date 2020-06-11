@@ -8,6 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type PaperTrailServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServicePaperTrail() ServiceAttributeDefinition {
+	return &PaperTrailServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: papertrailSchema,
+			key:    "papertrail",
+		},
+	}
+}
+
 var papertrailSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -52,7 +66,7 @@ var papertrailSchema = &schema.Schema{
 	},
 }
 
-func processPapertrail(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("papertrail")
 	if os == nil {
 		os = new(schema.Set)
@@ -111,7 +125,7 @@ func processPapertrail(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readPapertrail(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
 	papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 		Service: d.Id(),

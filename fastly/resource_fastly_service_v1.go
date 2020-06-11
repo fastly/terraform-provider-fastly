@@ -32,6 +32,7 @@ var papertrail	 		= NewServicePaperTrail()
 var requestsetting	 	= NewServiceRequestSetting()
 var responseobject	 	= NewServiceResponseObject()
 var s3logging		 	= NewServiceS3Logging()
+var snippet			 	= NewServiceSnippet()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -139,9 +140,8 @@ func resourceServiceV1() *schema.Resource {
 
 			responseobject.GetKey():    responseobject.GetSchema(),
 			requestsetting.GetKey():    requestsetting.GetSchema(),
-
-			"vcl": vclSchema,
-			"snippet":        snippetSchema,
+			"vcl":                vclSchema,
+			snippet.GetKey():            snippet.GetSchema(),
 			dynamicsnippet.GetKey():     dynamicsnippet.GetSchema(),
 			acl.GetKey():         acl.GetSchema(),
 			dictionary.GetKey():         dictionary.GetSchema(),
@@ -224,7 +224,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		condition.GetKey(),
 		requestsetting.GetKey(),
 		cachesetting.GetKey(),
-		"snippet",
+		snippet.GetKey(),
 		dynamicsnippet.GetKey(),
 		"vcl",
 		acl.GetKey(),
@@ -478,8 +478,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("snippet") {
-			if err := processSnippet(d, conn, latestVersion); err != nil {
+		if d.HasChange(snippet.GetKey()) {
+			if err := snippet.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -680,7 +680,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readACL(conn, d, s); err != nil {
 			return err
 		}
-		if err := readSnippet(conn, d, s); err != nil {
+		if err := snippet.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := dynamicsnippet.Read(d, s, conn); err != nil {

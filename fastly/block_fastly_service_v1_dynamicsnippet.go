@@ -16,42 +16,11 @@ type DynamicSnippetServiceAttributeHandler struct {
 func NewServiceDynamicSnippet() ServiceAttributeDefinition {
 	return &DynamicSnippetServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: dynamicsnippetSchema,
 			key:    "dynamicsnippet",
 		},
 	}
 }
 
-var dynamicsnippetSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A unique name to refer to this VCL snippet",
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
-				ValidateFunc: validateSnippetType(),
-			},
-			"priority": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     100,
-				Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
-			},
-			"snippet_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Generated VCL snippet Id",
-			},
-		},
-	},
-}
 
 func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
@@ -125,6 +94,40 @@ func (h *DynamicSnippetServiceAttributeHandler) Read(d *schema.ResourceData, s *
 		log.Printf("[WARN] Error setting VCL Dynamic Snippets for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *DynamicSnippetServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to refer to this VCL snippet",
+				},
+				"type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+					ValidateFunc: validateSnippetType(),
+				},
+				"priority": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     100,
+					Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
+				},
+				"snippet_id": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Generated VCL snippet Id",
+				},
+			},
+		},
+	}
 	return nil
 }
 

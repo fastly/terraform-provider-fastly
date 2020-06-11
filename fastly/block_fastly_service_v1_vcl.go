@@ -9,6 +9,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type VCLServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceVCL() ServiceAttributeDefinition {
+	return &VCLServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: vclSchema,
+			key:    "vcl",
+		},
+	}
+}
+
+
 var vclSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -34,7 +48,7 @@ var vclSchema = &schema.Schema{
 	},
 }
 
-func processVCL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
 	// endpoint to update a VCL, we simply destroy it and create a new one.
 	oldVCLVal, newVCLVal := d.GetChange("vcl")
@@ -104,7 +118,7 @@ func processVCL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 	return nil
 }
 
-func readVCL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *VCLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
 	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
 		Service: d.Id(),

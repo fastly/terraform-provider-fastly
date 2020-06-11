@@ -15,55 +15,11 @@ type PaperTrailServiceAttributeHandler struct {
 func NewServicePaperTrail() ServiceAttributeDefinition {
 	return &PaperTrailServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: papertrailSchema,
 			key:    "papertrail",
 		},
 	}
 }
 
-var papertrailSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this logging setup",
-			},
-			"address": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The address of the papertrail service",
-			},
-			"port": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The port of the papertrail service",
-			},
-			// Optional fields
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "%h %l %u %t %r %>s",
-				Description: "Apache-style string or VCL variables to use for log formatting",
-			},
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Name of a condition to apply this logging",
-			},
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-		},
-	},
-}
 
 func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("papertrail")
@@ -141,6 +97,53 @@ func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 		log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this logging setup",
+				},
+				"address": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The address of the papertrail service",
+				},
+				"port": {
+					Type:        schema.TypeInt,
+					Required:    true,
+					Description: "The port of the papertrail service",
+				},
+				// Optional fields
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%h %l %u %t %r %>s",
+					Description: "Apache-style string or VCL variables to use for log formatting",
+				},
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of a condition to apply this logging",
+				},
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+			},
+		},
+	}
 	return nil
 }
 

@@ -21,6 +21,7 @@ func NewServiceBlobStorageLogging() ServiceAttributeDefinition {
 	}
 }
 
+
 var blobstorageloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -112,6 +113,7 @@ var blobstorageloggingSchema = &schema.Schema{
 		},
 	},
 }
+
 
 func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	obsl, nbsl := d.GetChange("blobstoragelogging")

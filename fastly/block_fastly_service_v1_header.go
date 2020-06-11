@@ -9,6 +9,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type HeaderServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceHeader() ServiceAttributeDefinition {
+	return &HeaderServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: headerSchema,
+			key:    "header",
+		},
+	}
+}
+
+
 var headerSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -90,7 +105,7 @@ var headerSchema = &schema.Schema{
 	},
 }
 
-func processHeader(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oh, nh := d.GetChange("header")
 	if oh == nil {
 		oh = new(schema.Set)
@@ -145,7 +160,7 @@ func processHeader(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-func readHeader(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *HeaderServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
 	headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 		Service: d.Id(),

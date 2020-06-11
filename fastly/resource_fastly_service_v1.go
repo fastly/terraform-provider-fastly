@@ -24,6 +24,7 @@ var domain 				= NewServiceDomain()
 var dynamicsnippet 		= NewServiceDynamicSnippet()
 var gcslogging 			= NewServiceGCSLogging()
 var gzip 				= NewServiceGZIP()
+var header 				= NewServiceHeader()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -108,7 +109,7 @@ func resourceServiceV1() *schema.Resource {
 			"healthcheck":        healthcheckSchema,
 			director.GetKey():           director.GetSchema(),
 			gzip.GetKey():               gzip.GetSchema(),
-			"header":             headerSchema,
+			header.GetKey():             header.GetSchema(),
 			"s3logging":          s3loggingSchema,
 			"papertrail":         papertrailSchema,
 			"sumologic":          sumologicSchema,
@@ -190,7 +191,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"default_host",
 		"default_ttl",
 		director.GetKey(),
-		"header",
+		header.GetKey(),
 		gzip.GetKey(),
 		"healthcheck",
 		"s3logging",
@@ -350,8 +351,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("header") {
-			if err := processHeader(d, conn, latestVersion); err != nil {
+		if d.HasChange(header.GetKey()) {
+			if err := header.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -591,7 +592,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := director.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readHeader(conn, d, s); err != nil {
+		if err := header.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := gzip.Read(d, s, conn); err != nil {

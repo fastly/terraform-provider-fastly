@@ -8,6 +8,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type BigQueryLoggingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceBigQueryLogging() ServiceAttributeDefinition {
+	return &BigQueryLoggingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: bigqueryloggingSchema,
+			key:    "bigquerylogging",
+		},
+	}
+}
+
 var bigqueryloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -79,7 +92,7 @@ var bigqueryloggingSchema = &schema.Schema{
 	},
 }
 
-func processBigQueryLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("bigquerylogging")
 	if os == nil {
 		os = new(schema.Set)
@@ -158,7 +171,7 @@ func processBigQueryLogging(d *schema.ResourceData, conn *gofastly.Client, lates
 	return nil
 }
 
-func readBigQueryLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
 	BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 		Service: d.Id(),

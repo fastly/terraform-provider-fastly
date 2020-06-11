@@ -33,6 +33,8 @@ var requestsetting	 	= NewServiceRequestSetting()
 var responseobject	 	= NewServiceResponseObject()
 var s3logging		 	= NewServiceS3Logging()
 var snippet			 	= NewServiceSnippet()
+var splunk			 	= NewServiceSplunk()
+var sumologic			= NewServiceSumologic()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -120,12 +122,12 @@ func resourceServiceV1() *schema.Resource {
 			header.GetKey():             header.GetSchema(),
 			s3logging.GetKey():          s3logging.GetSchema(),
 			"papertrail":         papertrailSchema,
-			"sumologic":          sumologicSchema,
+			sumologic.GetKey():          sumologic.GetSchema(),
 			gcslogging.GetKey():         gcslogging.GetSchema(),
 			bigquerylogging.GetKey():    bigquerylogging.GetSchema(),
 			"syslog":             syslogSchema,
 			logentries.GetKey():         logentries.GetSchema(),
-			"splunk":             splunkSchema,
+			splunk.GetKey():             splunk.GetSchema(),
 			blobstoragelogging.GetKey(): blobstoragelogging.GetSchema(),
 			httpslogging.GetKey():       httpslogging.GetSchema(),
 			"logging_elasticsearch": elasticsearchSchema,
@@ -206,9 +208,9 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		gcslogging.GetKey(),
 		bigquerylogging.GetKey(),
 		"syslog",
-		"sumologic",
+		sumologic.GetKey(),
 		logentries.GetKey(),
-		"splunk",
+		splunk.GetKey(),
 		blobstoragelogging.GetKey(),
 		httpslogging.GetKey(),
 		responseobject.GetKey(),
@@ -378,8 +380,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("sumologic") {
-			if err := processSumologic(d, conn, latestVersion); err != nil {
+		if d.HasChange(sumologic.GetKey()) {
+			if err := sumologic.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -403,8 +405,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("splunk") {
-			if err := processSplunk(d, conn, latestVersion); err != nil {
+		if d.HasChange(splunk.GetKey()) {
+			if err := splunk.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -614,7 +616,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := papertrail.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readSumologic(conn, d, s); err != nil {
+		if err := sumologic.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := gcslogging.Read(d, s, conn); err != nil {
@@ -629,7 +631,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := logentries.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readSplunk(conn, d, s); err != nil {
+		if err := splunk.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := blobstoragelogging.Read(d, s, conn); err != nil {

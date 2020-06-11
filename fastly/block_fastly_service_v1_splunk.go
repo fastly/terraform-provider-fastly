@@ -8,6 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type SplunkServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceSplunk() ServiceAttributeDefinition {
+	return &SplunkServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: splunkSchema,
+			key:    "splunk",
+		},
+	}
+}
+
+
 var splunkSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -73,7 +88,7 @@ var splunkSchema = &schema.Schema{
 	},
 }
 
-func processSplunk(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("splunk")
 	if os == nil {
 		os = new(schema.Set)
@@ -149,7 +164,7 @@ func processSplunk(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-func readSplunk(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
 	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
 		Service: d.Id(),

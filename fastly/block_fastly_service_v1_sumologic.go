@@ -8,6 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type SumologicServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceSumologic() ServiceAttributeDefinition {
+	return &SumologicServiceAttributeHandlerServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: sumologicSchema,
+			key:    "sumologic",
+		},
+	}
+}
+
+
 var sumologicSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -61,7 +76,7 @@ var sumologicSchema = &schema.Schema{
 	},
 }
 
-func processSumologic(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("sumologic")
 	if os == nil {
 		os = new(schema.Set)
@@ -119,7 +134,7 @@ func processSumologic(d *schema.ResourceData, conn *gofastly.Client, latestVersi
 	return nil
 }
 
-func readSumologic(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
 		Service: d.Id(),

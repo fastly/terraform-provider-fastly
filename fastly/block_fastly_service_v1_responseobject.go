@@ -8,6 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type ResponseObjectServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceResponseObject() ServiceAttributeDefinition {
+	return &ResponseObjectServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: responseobjectSchema,
+			key:    "response_object",
+		},
+	}
+}
+
 var responseobjectSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -60,7 +74,7 @@ var responseobjectSchema = &schema.Schema{
 	},
 }
 
-func processResponseObject(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	or, nr := d.GetChange("response_object")
 	if or == nil {
 		or = new(schema.Set)
@@ -119,7 +133,7 @@ func processResponseObject(d *schema.ResourceData, conn *gofastly.Client, latest
 	return nil
 }
 
-func readResponseObject(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *ResponseObjectServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
 	responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
 		Service: d.Id(),

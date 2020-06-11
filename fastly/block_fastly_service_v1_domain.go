@@ -17,7 +17,7 @@ func NewServiceDomain() ServiceAttributeDefinition {
 	return &DomainServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			schema: domainSchema,
-			key:    "acl",
+			key:    "domain",
 		},
 	}
 }

@@ -8,6 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type SyslogServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceSyslog() ServiceAttributeDefinition {
+	return &SyslogServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: syslogSchema,
+			key:    "syslog",
+		},
+	}
+}
+
+
 var syslogSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -104,7 +119,7 @@ var syslogSchema = &schema.Schema{
 	},
 }
 
-func processSyslog(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("syslog")
 	if os == nil {
 		os = new(schema.Set)
@@ -170,7 +185,7 @@ func processSyslog(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-func readSyslog(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *SyslogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
 	syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
 		Service: d.Id(),

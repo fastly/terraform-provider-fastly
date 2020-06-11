@@ -35,6 +35,8 @@ var s3logging		 	= NewServiceS3Logging()
 var snippet			 	= NewServiceSnippet()
 var splunk			 	= NewServiceSplunk()
 var sumologic			= NewServiceSumologic()
+var syslog				= NewServiceSyslog()
+
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -125,7 +127,7 @@ func resourceServiceV1() *schema.Resource {
 			sumologic.GetKey():          sumologic.GetSchema(),
 			gcslogging.GetKey():         gcslogging.GetSchema(),
 			bigquerylogging.GetKey():    bigquerylogging.GetSchema(),
-			"syslog":             syslogSchema,
+			syslog.GetKey():             syslog.GetSchema(),
 			logentries.GetKey():         logentries.GetSchema(),
 			splunk.GetKey():             splunk.GetSchema(),
 			blobstoragelogging.GetKey(): blobstoragelogging.GetSchema(),
@@ -207,7 +209,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		papertrail.GetKey(),
 		gcslogging.GetKey(),
 		bigquerylogging.GetKey(),
-		"syslog",
+		syslog.GetKey(),
 		sumologic.GetKey(),
 		logentries.GetKey(),
 		splunk.GetKey(),
@@ -395,8 +397,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("syslog") {
-			if err := processSyslog(d, conn, latestVersion); err != nil {
+		if d.HasChange(syslog.GetKey()) {
+			if err := syslog.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -625,7 +627,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := bigquerylogging.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readSyslog(conn, d, s); err != nil {
+		if err := syslog.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := logentries.Read(d, s, conn); err != nil {

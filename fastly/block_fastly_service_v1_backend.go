@@ -9,6 +9,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type BackendServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceBackend() ServiceAttributeDefinition {
+	return &BackendServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: backendSchema,
+			key:    "backend",
+		},
+	}
+}
+
 var backendSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,

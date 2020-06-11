@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type SumologicServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -21,7 +20,6 @@ func NewServiceSumologic() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var sumologicSchema = &schema.Schema{
 	Type:     schema.TypeSet,

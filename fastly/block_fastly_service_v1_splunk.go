@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type SplunkServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -21,7 +20,6 @@ func NewServiceSplunk() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var splunkSchema = &schema.Schema{
 	Type:     schema.TypeSet,

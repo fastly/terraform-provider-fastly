@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type HeaderServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -22,7 +21,6 @@ func NewServiceHeader() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var headerSchema = &schema.Schema{
 	Type:     schema.TypeSet,

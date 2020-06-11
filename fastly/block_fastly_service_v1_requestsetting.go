@@ -22,7 +22,6 @@ func NewServiceRequestSetting() ServiceAttributeDefinition {
 	}
 }
 
-
 var requestsettingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,

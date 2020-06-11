@@ -22,7 +22,6 @@ func NewServiceDynamicSnippet() ServiceAttributeDefinition {
 	}
 }
 
-
 var dynamicsnippetSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,

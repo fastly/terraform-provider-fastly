@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type DictionaryServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -21,7 +20,6 @@ func NewServiceDictionary() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var dictionarySchema = &schema.Schema{
 	Type:     schema.TypeSet,

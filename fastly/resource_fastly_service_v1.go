@@ -12,31 +12,31 @@ import (
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
-var acl 				= NewServiceACL()
-var backend 			= NewServiceBackend()
-var bigquerylogging 	= NewServiceBigQueryLogging()
-var blobstoragelogging 	= NewServiceBlobStorageLogging()
-var cachesetting 		= NewServiceCacheSetting()
-var condition 			= NewServiceCondition()
-var dictionary 			= NewServiceDictionary()
-var director 			= NewServiceDirector()
-var domain 				= NewServiceDomain()
-var dynamicsnippet 		= NewServiceDynamicSnippet()
-var gcslogging 			= NewServiceGCSLogging()
-var gzip 				= NewServiceGZIP()
-var header 				= NewServiceHeader()
-var healthcheck 		= NewServiceHealthCheck()
-var httpslogging 		= NewServiceHTTPSLogging()
-var logentries	 		= NewServiceLogEntries()
-var papertrail	 		= NewServicePaperTrail()
-var requestsetting	 	= NewServiceRequestSetting()
-var responseobject	 	= NewServiceResponseObject()
-var s3logging		 	= NewServiceS3Logging()
-var snippet			 	= NewServiceSnippet()
-var splunk			 	= NewServiceSplunk()
-var sumologic			= NewServiceSumologic()
-var syslog				= NewServiceSyslog()
-var vcl					= NewServiceVCL()
+var acl = NewServiceACL()
+var backend = NewServiceBackend()
+var bigquerylogging = NewServiceBigQueryLogging()
+var blobstoragelogging = NewServiceBlobStorageLogging()
+var cachesetting = NewServiceCacheSetting()
+var condition = NewServiceCondition()
+var dictionary = NewServiceDictionary()
+var director = NewServiceDirector()
+var domain = NewServiceDomain()
+var dynamicsnippet = NewServiceDynamicSnippet()
+var gcslogging = NewServiceGCSLogging()
+var gzip = NewServiceGZIP()
+var header = NewServiceHeader()
+var healthcheck = NewServiceHealthCheck()
+var httpslogging = NewServiceHTTPSLogging()
+var logentries = NewServiceLogEntries()
+var papertrail = NewServicePaperTrail()
+var requestsetting = NewServiceRequestSetting()
+var responseobject = NewServiceResponseObject()
+var s3logging = NewServiceS3Logging()
+var snippet = NewServiceSnippet()
+var splunk = NewServiceSplunk()
+var sumologic = NewServiceSumologic()
+var syslog = NewServiceSyslog()
+var vcl = NewServiceVCL()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -115,15 +115,15 @@ func resourceServiceV1() *schema.Resource {
 			},
 
 			domain.GetKey():             domain.GetSchema(),
-			backend.GetKey():     backend.GetSchema(),
-			cachesetting.GetKey():      cachesetting.GetSchema(),
+			backend.GetKey():            backend.GetSchema(),
+			cachesetting.GetKey():       cachesetting.GetSchema(),
 			condition.GetKey():          condition.GetSchema(),
 			healthcheck.GetKey():        healthcheck.GetSchema(),
 			director.GetKey():           director.GetSchema(),
 			gzip.GetKey():               gzip.GetSchema(),
 			header.GetKey():             header.GetSchema(),
 			s3logging.GetKey():          s3logging.GetSchema(),
-			"papertrail":         papertrailSchema,
+			papertrail.GetKey():         papertrail.GetSchema(),
 			sumologic.GetKey():          sumologic.GetSchema(),
 			gcslogging.GetKey():         gcslogging.GetSchema(),
 			bigquerylogging.GetKey():    bigquerylogging.GetSchema(),
@@ -147,7 +147,7 @@ func resourceServiceV1() *schema.Resource {
 			vcl.GetKey():                vcl.GetSchema(),
 			snippet.GetKey():            snippet.GetSchema(),
 			dynamicsnippet.GetKey():     dynamicsnippet.GetSchema(),
-			acl.GetKey():         acl.GetSchema(),
+			acl.GetKey():                acl.GetSchema(),
 			dictionary.GetKey():         dictionary.GetSchema(),
 		},
 	}
@@ -472,7 +472,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("request_setting") {
+		if d.HasChange(requestsetting.GetKey()) {
 			if err := requestsetting.Process(d, latestVersion, conn); err != nil {
 				return err
 			}

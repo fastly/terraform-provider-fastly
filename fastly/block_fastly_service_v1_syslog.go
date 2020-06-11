@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type SyslogServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -21,7 +20,6 @@ func NewServiceSyslog() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var syslogSchema = &schema.Schema{
 	Type:     schema.TypeSet,

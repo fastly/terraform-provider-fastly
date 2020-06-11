@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type HealthCheckServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -21,7 +20,6 @@ func NewServiceHealthCheck() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var healthcheckSchema = &schema.Schema{
 	Type:     schema.TypeSet,

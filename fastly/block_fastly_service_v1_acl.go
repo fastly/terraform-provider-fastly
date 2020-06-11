@@ -8,6 +8,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type ACLServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceACL() ServiceAttributeDefinition {
+	return &ACLServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: aclSchema,
+			key:    "acl",
+		},
+	}
+}
+
 var aclSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,

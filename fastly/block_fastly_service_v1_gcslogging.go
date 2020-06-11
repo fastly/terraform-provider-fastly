@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type GCSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -21,7 +20,6 @@ func NewServiceGCSLogging() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var gcsloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,

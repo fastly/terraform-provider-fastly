@@ -8,6 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type BlobStorageLoggingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceBlobStorageLogging() ServiceAttributeDefinition {
+	return &BlobStorageLoggingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: blobstorageloggingSchema,
+			key:    "blobstoragelogging",
+		},
+	}
+}
+
+
 var blobstorageloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -100,7 +114,8 @@ var blobstorageloggingSchema = &schema.Schema{
 	},
 }
 
-func processBlobStorageLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+
+func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	obsl, nbsl := d.GetChange("blobstoragelogging")
 	if obsl == nil {
 		obsl = new(schema.Set)
@@ -166,7 +181,7 @@ func processBlobStorageLogging(d *schema.ResourceData, conn *gofastly.Client, la
 	return nil
 }
 
-func readBlobStorageLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
 	blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
 		Service: d.Id(),

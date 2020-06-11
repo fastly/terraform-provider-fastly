@@ -15,37 +15,9 @@ type DictionaryServiceAttributeHandler struct {
 func NewServiceDictionary() ServiceAttributeDefinition {
 	return &DictionaryServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: dictionarySchema,
 			key:    "dictionary",
 		},
 	}
-}
-
-var dictionarySchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this Dictionary",
-			},
-			// Optional fields
-			"dictionary_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Generated dictionary ID",
-			},
-			"write_only": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Determines if items in the dictionary are readable or not",
-			},
-		},
-	},
 }
 
 func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
@@ -117,6 +89,36 @@ func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	if err := d.Set("dictionary", dict); err != nil {
 		log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this Dictionary",
+				},
+				// Optional fields
+				"dictionary_id": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Generated dictionary ID",
+				},
+				"write_only": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Determines if items in the dictionary are readable or not",
+				},
+			},
+		},
 	}
 	return nil
 }

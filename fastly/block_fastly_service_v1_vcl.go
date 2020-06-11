@@ -16,36 +16,11 @@ type VCLServiceAttributeHandler struct {
 func NewServiceVCL() ServiceAttributeDefinition {
 	return &VCLServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: vclSchema,
 			key:    "vcl",
 		},
 	}
 }
 
-var vclSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A name to refer to this VCL configuration",
-			},
-			"content": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The contents of this VCL configuration",
-			},
-			"main": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Should this VCL configuration be the main configuration",
-			},
-		},
-	},
-}
 
 func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
@@ -131,6 +106,34 @@ func (h *VCLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 
 	if err := d.Set("vcl", vl); err != nil {
 		log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *VCLServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A name to refer to this VCL configuration",
+				},
+				"content": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The contents of this VCL configuration",
+				},
+				"main": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Should this VCL configuration be the main configuration",
+				},
+			},
+		},
 	}
 	return nil
 }

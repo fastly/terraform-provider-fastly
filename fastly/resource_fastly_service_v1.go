@@ -20,6 +20,7 @@ var cachesetting 		= NewServiceCacheSetting()
 var condition 			= NewServiceCondition()
 var dictionary 			= NewServiceDictionary()
 var director 			= NewServiceDirector()
+var domain 				= NewServiceDomain()
 
 
 func resourceServiceV1() *schema.Resource {
@@ -98,7 +99,7 @@ func resourceServiceV1() *schema.Resource {
 				Optional: true,
 			},
 
-			"domain":             domainSchema,
+			domain.GetKey():             domain.GetSchema(),
 			backend.GetKey():     backend.GetSchema(),
 			cachesetting.GetKey():      cachesetting.GetSchema(),
 			condition.GetKey():          condition.GetSchema(),
@@ -182,8 +183,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 	// Version. Loop these attributes and determine if we need to create a new version first
 	var needsChange bool
 	for _, v := range []string{
-		"domain",
-		"backend",
+		domain.GetKey(),
+		backend.GetKey(),
 		"default_host",
 		"default_ttl",
 		director.GetKey(),
@@ -326,8 +327,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("domain") {
-			if err := processDomain(d, conn, latestVersion); err != nil {
+		if d.HasChange(domain.GetKey()) {
+			if err := domain.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -579,7 +580,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Refresh Domains
-		if err := readDomain(conn, d, s); err != nil {
+		if err := domain.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readBackend(conn, d, s); err != nil {

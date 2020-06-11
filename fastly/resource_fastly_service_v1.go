@@ -36,7 +36,7 @@ var snippet			 	= NewServiceSnippet()
 var splunk			 	= NewServiceSplunk()
 var sumologic			= NewServiceSumologic()
 var syslog				= NewServiceSyslog()
-
+var vcl					= NewServiceVCL()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -144,7 +144,7 @@ func resourceServiceV1() *schema.Resource {
 
 			responseobject.GetKey():    responseobject.GetSchema(),
 			requestsetting.GetKey():    requestsetting.GetSchema(),
-			"vcl":                vclSchema,
+			vcl.GetKey():                vcl.GetSchema(),
 			snippet.GetKey():            snippet.GetSchema(),
 			dynamicsnippet.GetKey():     dynamicsnippet.GetSchema(),
 			acl.GetKey():         acl.GetSchema(),
@@ -230,7 +230,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		cachesetting.GetKey(),
 		snippet.GetKey(),
 		dynamicsnippet.GetKey(),
-		"vcl",
+		vcl.GetKey(),
 		acl.GetKey(),
 		dictionary.GetKey(),
 	} {
@@ -477,8 +477,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("vcl") {
-			if err := processVCL(d, conn, latestVersion); err != nil {
+		if d.HasChange(vcl.GetKey()) {
+			if err := vcl.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -678,7 +678,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := requestsetting.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readVCL(conn, d, s); err != nil {
+		if err := vcl.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readACL(conn, d, s); err != nil {

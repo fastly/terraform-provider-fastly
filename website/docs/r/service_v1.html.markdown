@@ -208,6 +208,8 @@ Defined below.
 Defined below.
 * `logging_elasticsearch` - (optional) An Elasticsearch endpoint to send streaming logs to.
 Defined below.
+* `logging_ftp` - (Optional) An FTP endpoint to send streaming logs to.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
@@ -534,6 +536,23 @@ The `logging_elasticsearch` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+The `logging_ftp` block supports:
+
+* `name` - (Required) The unique name of the FTP logging endpoint.
+* `address` - (Required) The FTP address to stream logs to.
+* `user` - (Required) The username for the server (can be `anonymous`).
+* `password` - (Required) The password for the server (for anonymous use an email address).
+* `path` - (Required) The path to upload log files to. If the path ends in `/` then it is treated as a directory.
+* `port` - (Optional) The port number. Default: `21`.
+* `gzip_level` - (Optional) Gzip Compression level. Default `0`.
+* `period` - (Optional) How frequently the logs should be transferred, in seconds (Default 3600).
+* `public_key` - (Optional) The PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `timestamp_format` - (Optional) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
+* `response_condition` - (Optional) The name of the condition to apply.
 
 The `response_object` block supports:
 

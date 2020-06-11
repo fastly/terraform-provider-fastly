@@ -15,68 +15,11 @@ type DirectorServiceAttributeHandler struct {
 func NewServiceDirector() ServiceAttributeDefinition {
 	return &DirectorServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: directorSchema,
 			key:    "director",
 		},
 	}
 }
 
-var directorSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A name to refer to this director",
-			},
-			"backends": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "List of backends associated with this director",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			// optional fields
-			"capacity": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     100,
-				Description: "Load balancing weight for the backends",
-			},
-			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"shield": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Selected POP to serve as a 'shield' for origin servers.",
-			},
-			"quorum": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      75,
-				Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
-				ValidateFunc: validateDirectorQuorum(),
-			},
-			"type": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				Description:  "Type of load balance group to use. Integer, 1 to 4. Values: 1 (random), 3 (hash), 4 (client)",
-				ValidateFunc: validateDirectorType(),
-			},
-			"retries": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     5,
-				Description: "How many backends to search if it fails",
-			},
-		},
-	},
-}
 
 func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	od, nd := d.GetChange("director")
@@ -212,6 +155,67 @@ func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 
 	return nil
 }
+
+func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A name to refer to this director",
+				},
+				"backends": {
+					Type:        schema.TypeSet,
+					Required:    true,
+					Description: "List of backends associated with this director",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				// optional fields
+				"capacity": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     100,
+					Description: "Load balancing weight for the backends",
+				},
+				"comment": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"shield": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Selected POP to serve as a 'shield' for origin servers.",
+				},
+				"quorum": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      75,
+					Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
+					ValidateFunc: validateDirectorQuorum(),
+				},
+				"type": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					Description:  "Type of load balance group to use. Integer, 1 to 4. Values: 1 (random), 3 (hash), 4 (client)",
+					ValidateFunc: validateDirectorType(),
+				},
+				"retries": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     5,
+					Description: "How many backends to search if it fails",
+				},
+			},
+		},
+	}
+	return nil
+}
+
 
 func flattenDirectors(directorList []*gofastly.Director, directorBackendList []*gofastly.DirectorBackend) []map[string]interface{} {
 	var dl []map[string]interface{}

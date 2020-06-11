@@ -166,8 +166,8 @@ The `entry` block supports:
 
 ## Attributes Reference
 
-* [fastly-acl](https://docs.fastly.com/api/config#acl)
-* [fastly-acl_entry](https://docs.fastly.com/api/config#acl_entry)
+* [fastly-acl](https://developer.fastly.com/reference/api/acls/acl/)
+* [fastly-acl_entry](https://developer.fastly.com/reference/api/acls/acl-entry/)
 
 ## Import
 

@@ -249,7 +249,7 @@ resource "fastly_service_v1" "foo" {
   }
 
   backend {
-    address = "docs.fastly.com"
+    address = "developer.fastly.com"
     name    = "origin old"
   }
 
@@ -274,7 +274,7 @@ resource "fastly_service_v1" "foo" {
   }
 
   backend {
-    address = "docs.fastly.com"
+    address = "developer.fastly.com"
     name    = "origin new"
   }
 

@@ -140,8 +140,8 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-* [fastly-vcl](https://docs.fastly.com/api/config#vcl)
-* [fastly-vcl-snippets](https://docs.fastly.com/api/config#snippet)
+* [fastly-vcl](https://developer.fastly.com/reference/api/vcl-services/vcl/)
+* [fastly-vcl-snippets](https://developer.fastly.com/reference/api/vcl-services/snippet/)
 
 ## Import
 

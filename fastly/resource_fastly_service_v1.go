@@ -31,6 +31,7 @@ var logentries	 		= NewServiceLogEntries()
 var papertrail	 		= NewServicePaperTrail()
 var requestsetting	 	= NewServiceRequestSetting()
 var responseobject	 	= NewServiceResponseObject()
+var s3logging		 	= NewServiceS3Logging()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -116,7 +117,7 @@ func resourceServiceV1() *schema.Resource {
 			director.GetKey():           director.GetSchema(),
 			gzip.GetKey():               gzip.GetSchema(),
 			header.GetKey():             header.GetSchema(),
-			"s3logging":          s3loggingSchema,
+			s3logging.GetKey():          s3logging.GetSchema(),
 			"papertrail":         papertrailSchema,
 			"sumologic":          sumologicSchema,
 			gcslogging.GetKey():         gcslogging.GetSchema(),
@@ -200,7 +201,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		header.GetKey(),
 		gzip.GetKey(),
 		healthcheck.GetKey(),
-		"s3logging",
+		s3logging.GetKey(),
 		papertrail.GetKey(),
 		gcslogging.GetKey(),
 		bigquerylogging.GetKey(),
@@ -367,8 +368,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-		if d.HasChange("s3logging") {
-			if err := processS3(d, conn, latestVersion); err != nil {
+		if d.HasChange(s3logging.GetKey()) {
+			if err := s3logging.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -607,7 +608,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := healthcheck.Read(d, s, conn); err != nil {
 			return err
 		}
-		if err := readS3(conn, d, s); err != nil {
+		if err := s3logging.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := papertrail.Read(d, s, conn); err != nil {

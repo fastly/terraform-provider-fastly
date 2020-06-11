@@ -8,6 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type DomainServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceDomain() ServiceAttributeDefinition {
+	return &DomainServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: domainSchema,
+			key:    "acl",
+		},
+	}
+}
+
 var domainSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Required: true,
@@ -27,7 +41,7 @@ var domainSchema = &schema.Schema{
 	},
 }
 
-func processDomain(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	od, nd := d.GetChange("domain")
 	if od == nil {
 		od = new(schema.Set)
@@ -84,7 +98,7 @@ func processDomain(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-func readDomain(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *DomainServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// TODO: update go-fastly to support an ActiveVersion struct, which contains
 	// domain and backend info in the response. Here we do 2 additional queries
 	// to find out that info

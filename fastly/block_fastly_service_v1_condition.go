@@ -16,40 +16,9 @@ type ConditionServiceAttributeHandler struct {
 func NewServiceCondition() ServiceAttributeDefinition {
 	return &ConditionServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: conditionSchema,
 			key:    "condition",
 		},
 	}
-}
-
-var conditionSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"statement": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The statement used to determine if the condition is met",
-			},
-			"priority": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     10,
-				Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
-				ValidateFunc: validateConditionType(),
-			},
-		},
-	},
 }
 
 func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
@@ -133,6 +102,40 @@ func (h *ConditionServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	}
 	return nil
 }
+
+func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"statement": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The statement used to determine if the condition is met",
+				},
+				"priority": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     10,
+					Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
+				},
+				"type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
+					ValidateFunc: validateConditionType(),
+				},
+			},
+		},
+	}
+	return nil
+}
+
 
 func flattenConditions(conditionList []*gofastly.Condition) []map[string]interface{} {
 	var cl []map[string]interface{}

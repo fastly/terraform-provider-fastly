@@ -9,6 +9,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type RequestSettingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceRequestSetting() ServiceAttributeDefinition {
+	return &RequestSettingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: requestsettingSchema,
+			key:    "request_setting",
+		},
+	}
+}
+
+
 var requestsettingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -82,7 +96,7 @@ var requestsettingSchema = &schema.Schema{
 	},
 }
 
-func processRequestSetting(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("request_setting")
 	if os == nil {
 		os = new(schema.Set)
@@ -136,7 +150,7 @@ func processRequestSetting(d *schema.ResourceData, conn *gofastly.Client, latest
 	return nil
 }
 
-func readRequestSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *RequestSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
 	rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
 		Service: d.Id(),

@@ -176,8 +176,8 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-* [fastly-dictionary](https://docs.fastly.com/api/config#dictionary)
-* [fastly-dictionary_item](https://docs.fastly.com/api/config#dictionary_item)
+* [fastly-dictionary](https://developer.fastly.com/reference/api/dictionaries/dictionary/)
+* [fastly-dictionary_item](https://developer.fastly.com/reference/api/dictionaries/dictionary-item/)
 
 ## Import
 

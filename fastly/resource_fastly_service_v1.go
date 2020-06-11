@@ -861,7 +861,7 @@ func resourceServiceV1() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Default:     "classic",
-							Description: "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
+							Description: "The log message type per the fastly docs: https://developer.fastly.com/reference/api/logging/gcs/",
 						},
 						"placement": {
 							Type:         schema.TypeString,

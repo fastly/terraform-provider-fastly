@@ -86,7 +86,7 @@ resource "aws_s3_bucket" "website" {
 ```
 
 Basic usage with [custom
-VCL](https://docs.fastly.com/guides/vcl/uploading-custom-vcl):
+VCL](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/):
 
 ```hcl
 resource "fastly_service_v1" "demo" {
@@ -118,7 +118,7 @@ resource "fastly_service_v1" "demo" {
 }
 ```
 
-Basic usage with [custom Director](https://docs.fastly.com/api/config#director):
+Basic usage with [custom Director](https://developer.fastly.com/reference/api/load-balancing/directors/director/):
 
 ```hcl
 resource "fastly_service_v1" "demo" {
@@ -209,7 +209,7 @@ Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
-* `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/guides/vcl/uploading-custom-vcl) for more information on using custom VCL.
+* `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
 * `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
 * `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
 
@@ -246,13 +246,13 @@ Default `200`.
 * `ssl_hostname` - (Optional, deprecated by Fastly) Used for both SNI during the TLS handshake and to validate the cert.
 * `ssl_cert_hostname` - (Optional) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all.
 * `ssl_sni_hostname` - (Optional) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all.
-* `shield` - (Optional) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the [`GET /datacenters`](https://docs.fastly.com/api/tools#datacenter) API response.
-* `weight` - (Optional) The [portion of traffic](https://docs.fastly.com/guides/performance-tuning/load-balancing-configuration.html#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives `weight / total` of the traffic. Default `100`.
+* `shield` - (Optional) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response.
+* `weight` - (Optional) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives `weight / total` of the traffic. Default `100`.
 * `healthcheck` - (Optional) Name of a defined `healthcheck` to assign to this backend.
 
 The `condition` block supports allows you to add logic to any basic configuration
 object in a service. See Fastly's documentation
-["About Conditions"](https://docs.fastly.com/guides/conditions/about-conditions)
+["About Conditions"](https://docs.fastly.com/en/guides/about-conditions)
 for more detailed information on using Conditions. The Condition `name` can be
 used in the `request_condition`, `response_condition`, or
 `cache_condition` attributes of other block settings.
@@ -269,7 +269,7 @@ The `director` block supports:
 * `name` - (Required) Unique name for this Director.
 * `backends` - (Required) Names of defined backends to map the director to. Example: `[ "origin1", "origin2" ]`
 * `comment` - (Optional) An optional comment about the Director.
-* `shield` - (Optional) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://docs.fastly.com/api/tools#datacenter) API response.
+* `shield` - (Optional) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response.
 * `capacity` - (Optional) Load balancing weight for the backends. Default `100`.
 * `quorum` - (Optional) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`.
 * `type` - (Optional) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client).  Default `1`.
@@ -279,7 +279,7 @@ The `cache_setting` block supports:
 
 * `name` - (Required) Unique name for this Cache Setting.
 * `action` - (Optional) One of `cache`, `pass`, or `restart`, as defined
-on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/guides/performance-tuning/controlling-caching#caching-action-descriptions).
+on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions).
 * `cache_condition` - (Optional) Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`.
 * `stale_ttl` - (Optional) Max "Time To Live" for stale (unreachable) objects.
 * `ttl` - (Optional) The Time-To-Live (TTL) for the object.
@@ -297,7 +297,7 @@ see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 The `header` block supports adding, removing, or modifying Request and Response
 headers. See Fastly's documentation on
-[Adding or modifying headers on HTTP requests and responses](https://docs.fastly.com/guides/basic-configuration/adding-or-modifying-headers-on-http-requests-and-responses#field-description-table) for more detailed information on any of the properties below.
+[Adding or modifying headers on HTTP requests and responses](https://docs.fastly.com/en/guides/adding-or-modifying-headers-on-http-requests-and-responses#field-description-table) for more detailed information on any of the properties below.
 
 * `name` - (Required) Unique name for this header attribute.
 * `action` - (Required) The Header manipulation action to take; must be one of
@@ -419,7 +419,7 @@ compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
-* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://docs.fastly.com/api/logging#logging_gcs)
+* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 The `bigquerylogging` block supports:
@@ -578,11 +578,11 @@ The `dictionary` block exports:
 
 * `dictionary_id` - The ID of the dictionary.
 
-[fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
-[fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records
-[fastly-conditionals]: https://docs.fastly.com/guides/conditions/using-conditions
-[fastly-sumologic]: https://docs.fastly.com/api/logging#logging_sumologic
-[fastly-gcs]: https://docs.fastly.com/api/logging#logging_gcs
+[fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
+[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
+[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
+[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
+[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
 
 ## Import
 

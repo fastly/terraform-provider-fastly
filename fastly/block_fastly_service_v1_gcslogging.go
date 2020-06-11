@@ -8,6 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type GCSLoggingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceGCSLogging() ServiceAttributeDefinition {
+	return &GCSLoggingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: gcsloggingSchema,
+			key:    "gcslogging",
+		},
+	}
+}
+
+
 var gcsloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -89,7 +104,7 @@ var gcsloggingSchema = &schema.Schema{
 	},
 }
 
-func processGCSLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("gcslogging")
 	if os == nil {
 		os = new(schema.Set)
@@ -152,7 +167,7 @@ func processGCSLogging(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readGCSLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
 	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 		Service: d.Id(),

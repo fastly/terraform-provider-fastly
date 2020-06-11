@@ -9,6 +9,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type CacheSettingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceCacheSetting() ServiceAttributeDefinition {
+	return &CacheSettingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: cachesettingSchema,
+			key:    "cache_setting",
+		},
+	}
+}
+
 var cachesettingSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -46,7 +60,7 @@ var cachesettingSchema = &schema.Schema{
 	},
 }
 
-func processCacheSetting(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oc, nc := d.GetChange("cache_setting")
 	if oc == nil {
 		oc = new(schema.Set)
@@ -100,7 +114,7 @@ func processCacheSetting(d *schema.ResourceData, conn *gofastly.Client, latestVe
 	return nil
 }
 
-func readCacheSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *CacheSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
 	cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 		Service: d.Id(),

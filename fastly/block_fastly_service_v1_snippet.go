@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type SnippetServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -22,7 +21,6 @@ func NewServiceSnippet() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var snippetSchema = &schema.Schema{
 	Type:     schema.TypeSet,

@@ -22,7 +22,6 @@ func NewServiceVCL() ServiceAttributeDefinition {
 	}
 }
 
-
 var vclSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type DomainServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }

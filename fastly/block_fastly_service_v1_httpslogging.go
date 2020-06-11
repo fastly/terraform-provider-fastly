@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-
 type HTTPSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -22,7 +21,6 @@ func NewServiceHTTPSLogging() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var httpsloggingSchema = &schema.Schema{
 	Type:     schema.TypeSet,

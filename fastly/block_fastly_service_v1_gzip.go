@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type GZIPServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -22,7 +21,6 @@ func NewServiceGZIP() ServiceAttributeDefinition {
 		},
 	}
 }
-
 
 var gzipSchema = &schema.Schema{
 	Type:     schema.TypeSet,

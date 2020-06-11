@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
 type S3LoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }

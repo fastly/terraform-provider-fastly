@@ -17,6 +17,7 @@ var backend 			= NewServiceBackend()
 var bigquerylogging 	= NewServiceBigQueryLogging()
 var blobstoragelogging 	= NewServiceBlobStorageLogging()
 var cachesetting 		= NewServiceCacheSetting()
+var condition 			= NewServiceCondition()
 
 func resourceServiceV1() *schema.Resource {
 	return &schema.Resource{
@@ -97,7 +98,7 @@ func resourceServiceV1() *schema.Resource {
 			"domain":             domainSchema,
 			backend.GetKey():     backend.GetSchema(),
 			cachesetting.GetKey():      cachesetting.GetSchema(),
-			"condition":          conditionSchema,
+			condition.GetKey():          condition.GetSchema(),
 			"healthcheck":        healthcheckSchema,
 			"director":           directorSchema,
 			"gzip":               gzipSchema,
@@ -206,7 +207,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"logging_googlepubsub",
 		"logging_kafka",
 		"response_object",
-		"condition",
+		condition.GetKey(),
 		"request_setting",
 		cachesetting.GetKey(),
 		"snippet",
@@ -317,8 +318,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		// Conditions need to be updated first, as they can be referenced by other
 		// configuration objects (Backends, Request Headers, etc)
 
-		if d.HasChange("condition") {
-			if err := processCondition(d, conn, latestVersion); err != nil {
+		if d.HasChange(condition.GetKey()) {
+			if err := condition.Process(d, latestVersion, conn); err != nil {
 				return err
 			}
 		}
@@ -653,7 +654,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readResponseObject(conn, d, s); err != nil {
 			return err
 		}
-		if err := readCondition(conn, d, s); err != nil {
+		if err := condition.Read(d, s, conn); err != nil {
 			return err
 		}
 		if err := readRequestSetting(conn, d, s); err != nil {

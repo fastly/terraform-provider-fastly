@@ -8,6 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+
+type DirectorServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceDirector() ServiceAttributeDefinition {
+	return &DirectorServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: directorSchema,
+			key:    "director",
+		},
+	}
+}
+
 var directorSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -65,7 +79,7 @@ var directorSchema = &schema.Schema{
 	},
 }
 
-func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	od, nd := d.GetChange("director")
 	if od == nil {
 		od = new(schema.Set)
@@ -153,7 +167,7 @@ func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersio
 	return nil
 }
 
-func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 		Service: d.Id(),

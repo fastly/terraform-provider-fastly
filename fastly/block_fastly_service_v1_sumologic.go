@@ -14,7 +14,7 @@ type SumologicServiceAttributeHandler struct {
 }
 
 func NewServiceSumologic() ServiceAttributeDefinition {
-	return &SumologicServiceAttributeHandlerServiceAttributeHandler{
+	return &SumologicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			schema: sumologicSchema,
 			key:    "sumologic",

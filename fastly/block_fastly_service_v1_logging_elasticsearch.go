@@ -208,6 +208,122 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 	return nil
 }
 
+func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the Elasticsearch logging endpoint.",
+				},
+
+				"url": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The Elasticsearch URL to stream logs to.",
+				},
+
+				"index": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The name of the Elasticsearch index to send documents (logs) to.",
+				},
+
+				// Optional fields
+				"pipeline": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing.",
+				},
+
+				"user": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "BasicAuth user.",
+				},
+
+				"password": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "BasicAuth password.",
+					Sensitive:   true,
+				},
+
+				"request_max_entries": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "The maximum number of logs sent in one request.",
+				},
+
+				"request_max_bytes": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "The maximum number of bytes sent in one request.",
+				},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache-style string or VCL variables to use for log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"tls_ca_cert": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+					Sensitive:   true,
+				},
+
+				"tls_client_cert": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+					Sensitive:   true,
+				},
+
+				"tls_client_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+					Sensitive:   true,
+				},
+
+				"tls_hostname": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN).",
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the condition to apply",
+				},
+			},
+		},
+	}
+	return nil
+}
+
 func createElasticsearch(conn *gofastly.Client, i *gofastly.CreateElasticsearchInput) error {
 	_, err := conn.CreateElasticsearch(i)
 	return err

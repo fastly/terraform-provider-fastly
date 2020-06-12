@@ -31,9 +31,3 @@ func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool 
 func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, initialVersion bool) bool {
 	return h.HasChange(d)
 }
-
-func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, initialVersion bool) bool {
-	return h.HasChange(d)
-}
-
-

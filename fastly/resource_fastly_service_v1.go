@@ -16,6 +16,7 @@ var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 // Conditions need to be updated first, as they can be referenced by other
 // configuration objects (Backends, Request Headers, etc)
 var serviceAttributes = []ServiceAttributeDefinition{
+	NewServiceSettings(),
 	NewServiceCondition(),
 	NewServiceDomain(),
 	NewServiceHealthCheck(),
@@ -104,20 +105,6 @@ func resourceServiceV1() *schema.Resource {
 				Optional:    true,
 			},
 
-			"default_ttl": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     3600,
-				Description: "The default Time-to-live (TTL) for the version",
-			},
-
-			"default_host": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The default hostname for the version",
-			},
-
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -125,8 +112,8 @@ func resourceServiceV1() *schema.Resource {
 		},
 	}
 
-	for _, a := range serviceAttributes {
-		s.Schema[a.GetKey()] = a.GetSchema()
+	for _, a := range serviceAttributes{
+		a.Register(s)  // Mutates s
 	}
 
 	return s
@@ -175,9 +162,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 	// DefaultTTL, a new Version must be created first, and updates posted to that
 	// Version. Loop these attributes and determine if we need to create a new version first
 	var needsChange bool
-
-	for _, a := range serviceAttributes {
-		if d.HasChange(a.GetKey()) {
+	for _, a := range serviceAttributes{
+		if a.HasChange(d) {
 			needsChange = true
 			break
 		}
@@ -251,34 +237,8 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		// update general settings
-
-		// If the requested default_ttl is 0, and this is the first
-		// version being created, HasChange will return false, but we need
-		// to set it anyway, so ensure we update the settings in that
-		// case.
-		if d.HasChange("default_host") || d.HasChange("default_ttl") || (d.Get("default_ttl") == 0 && initialVersion) {
-			opts := gofastly.UpdateSettingsInput{
-				Service: d.Id(),
-				Version: latestVersion,
-				// default_ttl has the same default value of 3600 that is provided by
-				// the Fastly API, so it's safe to include here
-				DefaultTTL: uint(d.Get("default_ttl").(int)),
-			}
-
-			if attr, ok := d.GetOk("default_host"); ok {
-				opts.DefaultHost = attr.(string)
-			}
-
-			log.Printf("[DEBUG] Update Settings opts: %#v", opts)
-			_, err := conn.UpdateSettings(&opts)
-			if err != nil {
-				return err
-			}
-		}
-
-		for _, a := range serviceAttributes {
-			if d.HasChange(a.GetKey()) {
+		for _, a := range serviceAttributes{
+			if a.MustProcess(d, initialVersion) {
 				if err := a.Process(d, latestVersion, conn); err != nil {
 					return err
 				}
@@ -359,19 +319,8 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 	// have an empty ActiveService version (no version is active, so we can't
 	// query for information on it)
 	if s.ActiveVersion.Number != 0 {
-		settingsOpts := gofastly.GetSettingsInput{
-			Service: d.Id(),
-			Version: s.ActiveVersion.Number,
-		}
-		if settings, err := conn.GetSettings(&settingsOpts); err == nil {
-			d.Set("default_host", settings.DefaultHost)
-			d.Set("default_ttl", settings.DefaultTTL)
-		} else {
-			return fmt.Errorf("[ERR] Error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-		}
 
-		// Refresh Domains
-		for _, a := range serviceAttributes {
+		for _, a := range serviceAttributes{
 			if err := a.Read(d, s, conn); err != nil {
 				return err
 			}

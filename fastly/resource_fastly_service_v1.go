@@ -12,7 +12,6 @@ import (
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
-
 // Ordering is important - stored is processing order
 // Conditions need to be updated first, as they can be referenced by other
 // configuration objects (Backends, Request Headers, etc)
@@ -42,8 +41,7 @@ var serviceAttributes = []ServiceAttributeDefinition{
 	NewServiceCacheSetting(),
 	NewServiceACL(),
 	NewServiceDictionary(),
-	}
-
+}
 
 func resourceServiceV1() *schema.Resource {
 
@@ -160,7 +158,7 @@ func resourceServiceV1() *schema.Resource {
 		},
 	}
 
-	for _, a := range serviceAttributes{
+	for _, a := range serviceAttributes {
 		s.Schema[a.GetKey()] = a.GetSchema()
 	}
 
@@ -254,13 +252,12 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	for _, a := range serviceAttributes{
+	for _, a := range serviceAttributes {
 		if d.HasChange(a.GetKey()) {
 			needsChange = true
 			break
 		}
 	}
-
 
 	// Update the active version's comment. No new version is required for this
 	if d.HasChange("version_comment") && !needsChange {
@@ -356,7 +353,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		for _, a := range serviceAttributes{
+		for _, a := range serviceAttributes {
 			if d.HasChange(a.GetKey()) {
 				if err := a.Process(d, latestVersion, conn); err != nil {
 					return err
@@ -450,7 +447,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// Refresh Domains
-		for _, a := range serviceAttributes{
+		for _, a := range serviceAttributes {
 			if err := a.Read(d, s, conn); err != nil {
 				return err
 			}

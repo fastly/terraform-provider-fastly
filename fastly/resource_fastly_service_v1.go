@@ -571,6 +571,12 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readBlobStorageLogging(conn, d, s); err != nil {
 			return err
 		}
+		if err := readElasticsearch(conn, d, s); err != nil {
+			return err
+		}
+		if err := readFTP(conn, d, s); err != nil {
+			return err
+		}
 		if err := readHTTPS(conn, d, s); err != nil {
 			return err
 		}

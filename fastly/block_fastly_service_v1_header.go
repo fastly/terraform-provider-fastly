@@ -16,11 +16,10 @@ type HeaderServiceAttributeHandler struct {
 func NewServiceHeader() ServiceAttributeDefinition {
 	return &HeaderServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "header",
+			key: "header",
 		},
 	}
 }
-
 
 func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oh, nh := d.GetChange("header")

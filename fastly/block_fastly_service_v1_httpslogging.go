@@ -21,23 +21,89 @@ func NewServiceHTTPSLogging() ServiceAttributeDefinition {
 	}
 }
 
-var httpsloggingSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the HTTPS logging endpoint",
-			},
-			"url": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "URL that log data will be sent to. Must use the https protocol.",
-				ValidateFunc: validateHTTPSURL(),
-			},
+func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	serviceID := d.Id()
+	oh, nh := d.GetChange("httpslogging")
+
+	if oh == nil {
+		oh = new(schema.Set)
+	}
+	if nh == nil {
+		nh = new(schema.Set)
+	}
+
+	ohs := oh.(*schema.Set)
+	nhs := nh.(*schema.Set)
+
+	removeHTTPSLogging := ohs.Difference(nhs).List()
+	addHTTPSLogging := nhs.Difference(ohs).List()
+
+	// DELETE old HTTPS logging endpoints
+	for _, oRaw := range removeHTTPSLogging {
+		of := oRaw.(map[string]interface{})
+		opts := buildDeleteHTTPS(of, serviceID, latestVersion)
+
+		log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
+
+		if err := deleteHTTPS(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	// POST new/updated HTTPS logging endponts
+	for _, nRaw := range addHTTPSLogging {
+		hf := nRaw.(map[string]interface{})
+		opts := buildCreateHTTPS(hf, serviceID, latestVersion)
+
+		log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
+
+		if err := createHTTPS(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	// refresh HTTPS
+	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
+	httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	hll := flattenHTTPS(httpsList)
+
+	if err := d.Set("httpslogging", hll); err != nil {
+		log.Printf("[WARN] Error setting HTTPS logging endpoints for (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the HTTPS logging endpoint",
+				},
+				"url": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "URL that log data will be sent to. Must use the https protocol.",
+					ValidateFunc: validateHTTPSURL(),
+				},
 
 				// Optional fields
 				"request_max_entries": {

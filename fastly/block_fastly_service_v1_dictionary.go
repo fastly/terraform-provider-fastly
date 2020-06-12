@@ -15,7 +15,7 @@ type DictionaryServiceAttributeHandler struct {
 func NewServiceDictionary() ServiceAttributeDefinition {
 	return &DictionaryServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "dictionary",
+			key: "dictionary",
 		},
 	}
 }

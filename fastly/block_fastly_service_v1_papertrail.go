@@ -15,11 +15,10 @@ type PaperTrailServiceAttributeHandler struct {
 func NewServicePaperTrail() ServiceAttributeDefinition {
 	return &PaperTrailServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "papertrail",
+			key: "papertrail",
 		},
 	}
 }
-
 
 func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("papertrail")

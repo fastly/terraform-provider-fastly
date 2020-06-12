@@ -16,7 +16,7 @@ type ConditionServiceAttributeHandler struct {
 func NewServiceCondition() ServiceAttributeDefinition {
 	return &ConditionServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "condition",
+			key: "condition",
 		},
 	}
 }
@@ -135,7 +135,6 @@ func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 	return nil
 }
-
 
 func flattenConditions(conditionList []*gofastly.Condition) []map[string]interface{} {
 	var cl []map[string]interface{}

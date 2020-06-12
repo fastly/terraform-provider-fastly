@@ -15,11 +15,10 @@ type BlobStorageLoggingServiceAttributeHandler struct {
 func NewServiceBlobStorageLogging() ServiceAttributeDefinition {
 	return &BlobStorageLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "blobstoragelogging",
+			key: "blobstoragelogging",
 		},
 	}
 }
-
 
 func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	obsl, nbsl := d.GetChange("blobstoragelogging")
@@ -200,8 +199,6 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 	}
 	return nil
 }
-
-
 
 func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]interface{} {
 	var bsl []map[string]interface{}

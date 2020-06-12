@@ -16,11 +16,10 @@ type CacheSettingServiceAttributeHandler struct {
 func NewServiceCacheSetting() ServiceAttributeDefinition {
 	return &CacheSettingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "cache_setting",
+			key: "cache_setting",
 		},
 	}
 }
-
 
 func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oc, nc := d.GetChange("cache_setting")
@@ -133,7 +132,6 @@ func (h *CacheSettingServiceAttributeHandler) Register(s *schema.Resource) error
 	}
 	return nil
 }
-
 
 func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput, error) {
 	df := cacheMap.(map[string]interface{})

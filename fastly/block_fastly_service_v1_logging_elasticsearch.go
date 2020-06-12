@@ -15,131 +15,9 @@ type ElasticSearchServiceAttributeHandler struct {
 func NewServiceElasticSearch() ServiceAttributeDefinition {
 	return &ElasticSearchServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: elasticsearchSchema,
-			key:    "logging_elasticsearch",
+			key: "logging_elasticsearch",
 		},
 	}
-}
-
-var elasticsearchSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the Elasticsearch logging endpoint.",
-			},
-
-			"url": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The Elasticsearch URL to stream logs to.",
-			},
-
-			"index": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The name of the Elasticsearch index to send documents (logs) to.",
-			},
-
-			// Optional fields
-			"pipeline": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing.",
-			},
-
-			"user": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "BasicAuth user.",
-			},
-
-			"password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "BasicAuth password.",
-				Sensitive:   true,
-			},
-
-			"request_max_entries": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "The maximum number of logs sent in one request.",
-			},
-
-			"request_max_bytes": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "The maximum number of bytes sent in one request.",
-			},
-
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Apache-style string or VCL variables to use for log formatting.",
-			},
-
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      2,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-
-			"tls_ca_cert": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
-
-			"tls_client_cert": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
-
-			"tls_client_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The client private key used to make authenticated requests. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
-
-			"tls_hostname": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN).",
-			},
-
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of the condition to apply",
-			},
-		},
-	},
 }
 
 func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
@@ -174,21 +52,6 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 	// POST new/updated Elasticsearch logging endpoints.
 	for _, nRaw := range addElasticsearchLogging {
 		ef := nRaw.(map[string]interface{})
-
-		// @HACK for a TF SDK Issue.
-		//
-		// This ensures that the required, `name`, field is present.
-		//
-		// If we have made it this far and `name` is not present, it is most-likely due
-		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
-		//
-		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
-		// properly handles setting state with the StateFunc, it returns extra entries
-		// during state Gets, specifically `GetChange("logging_elasticsearch")` in this case.
-		if v, ok := ef["name"]; !ok || v.(string) == "" {
-			continue
-		}
-
 		opts := buildCreateElasticsearch(ef, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Elasticsearch logging addition opts: %#v", opts)
@@ -217,6 +80,130 @@ func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *g
 
 	if err := d.Set("logging_elasticsearch", ell); err != nil {
 		log.Printf("[WARN] Error setting Elasticsearch logging endpoints for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the Elasticsearch logging endpoint.",
+				},
+
+				"url": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The Elasticsearch URL to stream logs to.",
+				},
+
+				"index": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The name of the Elasticsearch index to send documents (logs) to.",
+				},
+
+				// Optional fields
+				"pipeline": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing.",
+				},
+
+				"user": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "BasicAuth user.",
+				},
+
+				"password": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "BasicAuth password.",
+					Sensitive:   true,
+				},
+
+			"request_max_entries": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
+				Description: "The maximum number of logs sent in one request.",
+			},
+
+			"request_max_bytes": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
+				Description: "The maximum number of bytes sent in one request.",
+			},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache-style string or VCL variables to use for log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+			"tls_ca_cert": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
+			},
+
+			"tls_client_cert": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
+			},
+
+			"tls_client_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
+			},
+
+				"tls_hostname": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN).",
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the condition to apply",
+				},
+			},
+		},
 	}
 	return nil
 }

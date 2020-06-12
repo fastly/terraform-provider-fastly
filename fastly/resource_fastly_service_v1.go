@@ -112,8 +112,8 @@ func resourceServiceV1() *schema.Resource {
 		},
 	}
 
-	for _, a := range serviceAttributes{
-		a.Register(s)  // Mutates s
+	for _, a := range serviceAttributes {
+		a.Register(s) // Mutates s
 	}
 
 	return s
@@ -162,7 +162,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 	// DefaultTTL, a new Version must be created first, and updates posted to that
 	// Version. Loop these attributes and determine if we need to create a new version first
 	var needsChange bool
-	for _, a := range serviceAttributes{
+	for _, a := range serviceAttributes {
 		if a.HasChange(d) {
 			needsChange = true
 			break
@@ -237,7 +237,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		for _, a := range serviceAttributes{
+		for _, a := range serviceAttributes {
 			if a.MustProcess(d, initialVersion) {
 				if err := a.Process(d, latestVersion, conn); err != nil {
 					return err
@@ -320,7 +320,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 	// query for information on it)
 	if s.ActiveVersion.Number != 0 {
 
-		for _, a := range serviceAttributes{
+		for _, a := range serviceAttributes {
 			if err := a.Read(d, s, conn); err != nil {
 				return err
 			}

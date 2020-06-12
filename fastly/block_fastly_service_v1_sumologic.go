@@ -15,11 +15,10 @@ type SumologicServiceAttributeHandler struct {
 func NewServiceSumologic() ServiceAttributeDefinition {
 	return &SumologicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "sumologic",
+			key: "sumologic",
 		},
 	}
 }
-
 
 func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("sumologic")

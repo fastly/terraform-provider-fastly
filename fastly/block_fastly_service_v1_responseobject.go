@@ -15,11 +15,10 @@ type ResponseObjectServiceAttributeHandler struct {
 func NewServiceResponseObject() ServiceAttributeDefinition {
 	return &ResponseObjectServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "response_object",
+			key: "response_object",
 		},
 	}
 }
-
 
 func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	or, nr := d.GetChange("response_object")

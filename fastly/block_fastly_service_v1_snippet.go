@@ -16,11 +16,10 @@ type SnippetServiceAttributeHandler struct {
 func NewServiceSnippet() ServiceAttributeDefinition {
 	return &SnippetServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "snippet",
+			key: "snippet",
 		},
 	}
 }
-
 
 func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
@@ -95,7 +94,6 @@ func (h *SnippetServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 	}
 	return nil
 }
-
 
 func (h *SnippetServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{

@@ -16,11 +16,10 @@ type RequestSettingServiceAttributeHandler struct {
 func NewServiceRequestSetting() ServiceAttributeDefinition {
 	return &RequestSettingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "request_setting",
+			key: "request_setting",
 		},
 	}
 }
-
 
 func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("request_setting")

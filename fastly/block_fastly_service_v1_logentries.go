@@ -15,7 +15,7 @@ type LogentriesServiceAttributeHandler struct {
 func NewServiceLogentries() ServiceAttributeDefinition {
 	return &LogentriesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "logentries",
+			key: "logentries",
 		},
 	}
 }

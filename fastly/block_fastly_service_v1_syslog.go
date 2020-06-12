@@ -15,11 +15,10 @@ type SyslogServiceAttributeHandler struct {
 func NewServiceSyslog() ServiceAttributeDefinition {
 	return &SyslogServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "syslog",
+			key: "syslog",
 		},
 	}
 }
-
 
 func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("syslog")

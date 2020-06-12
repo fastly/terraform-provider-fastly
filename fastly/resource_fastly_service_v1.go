@@ -33,6 +33,8 @@ var serviceAttributes = []ServiceAttributeDefinition{
 	NewServiceSplunk(),
 	NewServiceBlobStorageLogging(),
 	NewServiceHTTPSLogging(),
+	NewServiceElasticSearch(),
+	NewServiceFTP(),
 	NewServiceResponseObject(),
 	NewServiceRequestSetting(),
 	NewServiceVCL(),

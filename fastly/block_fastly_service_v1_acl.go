@@ -42,7 +42,7 @@ var aclSchema = &schema.Schema{
 	},
 }
 
-func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oldACLVal, newACLVal := d.GetChange("acl")
 	if oldACLVal == nil {
 		oldACLVal = new(schema.Set)
@@ -96,7 +96,7 @@ func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 	return nil
 }
 
-func readACL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 
 	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
 	aclList, err := conn.ListACLs(&gofastly.ListACLsInput{

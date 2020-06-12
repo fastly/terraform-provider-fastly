@@ -1,12 +1,24 @@
 package fastly
 
 import (
-	"fmt"
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
+
+type FTPServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceFTP() ServiceAttributeDefinition {
+	return &FTPServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: ftpSchema,
+			key:    "logging_ftp",
+		},
+	}
+}
 
 var ftpSchema = &schema.Schema{
 	Type:     schema.TypeSet,
@@ -110,7 +122,7 @@ var ftpSchema = &schema.Schema{
 	},
 }
 
-func processFTP(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	of, nf := d.GetChange("logging_ftp")
 
@@ -154,7 +166,9 @@ func processFTP(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 	return nil
 }
 
-func readFTP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	/* COMMENTED OUT SINCE NOT PRESENTLY USED IN MASTER
+
 	// Refresh FTP.
 	log.Printf("[DEBUG] Refreshing FTP logging endpoints for (%s)", d.Id())
 	ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
@@ -171,7 +185,7 @@ func readFTP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceD
 	if err := d.Set("logging_ftp", ell); err != nil {
 		log.Printf("[WARN] Error setting FTP logging endpoints for (%s): %s", d.Id(), err)
 	}
-
+	*/
 	return nil
 }
 

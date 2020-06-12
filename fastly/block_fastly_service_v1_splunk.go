@@ -15,11 +15,10 @@ type SplunkServiceAttributeHandler struct {
 func NewServiceSplunk() ServiceAttributeDefinition {
 	return &SplunkServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "splunk",
+			key: "splunk",
 		},
 	}
 }
-
 
 func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("splunk")

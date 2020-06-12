@@ -16,11 +16,10 @@ type DynamicSnippetServiceAttributeHandler struct {
 func NewServiceDynamicSnippet() ServiceAttributeDefinition {
 	return &DynamicSnippetServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "dynamicsnippet",
+			key: "dynamicsnippet",
 		},
 	}
 }
-
 
 func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT

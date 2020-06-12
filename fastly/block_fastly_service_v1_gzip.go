@@ -16,11 +16,10 @@ type GZIPServiceAttributeHandler struct {
 func NewServiceGZIP() ServiceAttributeDefinition {
 	return &GZIPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "gzip",
+			key: "gzip",
 		},
 	}
 }
-
 
 func (h *GZIPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	og, ng := d.GetChange("gzip")

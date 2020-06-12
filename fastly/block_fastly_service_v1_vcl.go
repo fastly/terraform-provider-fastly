@@ -16,11 +16,10 @@ type VCLServiceAttributeHandler struct {
 func NewServiceVCL() ServiceAttributeDefinition {
 	return &VCLServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "vcl",
+			key: "vcl",
 		},
 	}
 }
-
 
 func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT

@@ -10,12 +10,9 @@ import (
 type SettingsServiceAttributeHandler struct {
 }
 
-
 func NewServiceSettings() ServiceAttributeDefinition {
-	return &SettingsServiceAttributeHandler{
-	}
+	return &SettingsServiceAttributeHandler{}
 }
-
 
 func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSettingsInput{
@@ -62,7 +59,6 @@ func (h *SettingsServiceAttributeHandler) MustProcess(d *schema.ResourceData, in
 	return d.HasChange("default_host") || d.HasChange("default_ttl") || (d.Get("default_ttl") == 0 && initialVersion)
 }
 
-
 func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema["default_ttl"] = &schema.Schema{
 		Type:        schema.TypeInt,
@@ -78,4 +74,3 @@ func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 	return nil
 }
-

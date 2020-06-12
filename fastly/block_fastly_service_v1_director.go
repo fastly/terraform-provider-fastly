@@ -15,11 +15,10 @@ type DirectorServiceAttributeHandler struct {
 func NewServiceDirector() ServiceAttributeDefinition {
 	return &DirectorServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "director",
+			key: "director",
 		},
 	}
 }
-
 
 func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	od, nd := d.GetChange("director")
@@ -215,7 +214,6 @@ func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 	return nil
 }
-
 
 func flattenDirectors(directorList []*gofastly.Director, directorBackendList []*gofastly.DirectorBackend) []map[string]interface{} {
 	var dl []map[string]interface{}

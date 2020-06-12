@@ -15,11 +15,10 @@ type DomainServiceAttributeHandler struct {
 func NewServiceDomain() ServiceAttributeDefinition {
 	return &DomainServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "domain",
+			key: "domain",
 		},
 	}
 }
-
 
 func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	od, nd := d.GetChange("domain")

@@ -15,11 +15,10 @@ type GCSLoggingServiceAttributeHandler struct {
 func NewServiceGCSLogging() ServiceAttributeDefinition {
 	return &GCSLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "gcslogging",
+			key: "gcslogging",
 		},
 	}
 }
-
 
 func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("gcslogging")

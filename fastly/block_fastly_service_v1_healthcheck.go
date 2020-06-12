@@ -15,11 +15,10 @@ type HealthCheckServiceAttributeHandler struct {
 func NewServiceHealthCheck() ServiceAttributeDefinition {
 	return &HealthCheckServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "healthcheck",
+			key: "healthcheck",
 		},
 	}
 }
-
 
 func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oh, nh := d.GetChange("healthcheck")
@@ -181,7 +180,6 @@ func (h *HealthCheckServiceAttributeHandler) Register(s *schema.Resource) error 
 	}
 	return nil
 }
-
 
 func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]interface{} {
 	var hl []map[string]interface{}

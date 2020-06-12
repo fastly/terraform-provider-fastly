@@ -16,11 +16,10 @@ type S3LoggingServiceAttributeHandler struct {
 func NewServiceS3Logging() ServiceAttributeDefinition {
 	return &S3LoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:    "s3logging",
+			key: "s3logging",
 		},
 	}
 }
-
 
 func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("s3logging")

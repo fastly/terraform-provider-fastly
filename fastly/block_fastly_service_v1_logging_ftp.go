@@ -189,6 +189,111 @@ func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
+func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the FTP logging endpoint.",
+				},
+
+				"address": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The FTP URL to stream logs to.",
+				},
+
+				"user": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The username for the server (can be anonymous).",
+				},
+
+				"password": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The password for the server (for anonymous use an email address).",
+					Sensitive:   true,
+				},
+
+				"path": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The path to upload log files to. If the path ends in / then it is treated as a directory.",
+				},
+
+				// Optional fields
+				"port": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     21,
+					Description: "The port number.",
+				},
+
+				"period": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     3600,
+					Description: "How frequently the logs should be transferred, in seconds (Default 3600).",
+				},
+
+				"public_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+				},
+
+				"gzip_level": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     0,
+					Description: "Gzip Compression level.",
+				},
+
+				"timestamp_format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%Y-%m-%dT%H:%M:%S.000",
+					Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+				},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache-style string or VCL variables to use for log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the condition to apply.",
+				},
+			},
+		},
+	}
+	return nil
+}
+
 func createFTP(conn *gofastly.Client, i *gofastly.CreateFTPInput) error {
 	_, err := conn.CreateFTP(i)
 	return err

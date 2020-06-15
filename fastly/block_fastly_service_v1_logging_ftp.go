@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
@@ -167,8 +168,6 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 }
 
 func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	/* COMMENTED OUT SINCE NOT PRESENTLY USED IN MASTER
-
 	// Refresh FTP.
 	log.Printf("[DEBUG] Refreshing FTP logging endpoints for (%s)", d.Id())
 	ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
@@ -185,7 +184,6 @@ func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 	if err := d.Set("logging_ftp", ell); err != nil {
 		log.Printf("[WARN] Error setting FTP logging endpoints for (%s): %s", d.Id(), err)
 	}
-	*/
 	return nil
 }
 

@@ -15,132 +15,9 @@ type SFTPServiceAttributeHandler struct {
 func NewServiceSFTP() ServiceAttributeDefinition {
 	return &SFTPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			schema: sftpSchema,
-			key:    "logging_sftp",
+			key: "logging_sftp",
 		},
 	}
-}
-
-var sftpSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the SFTP logging endpoint.",
-			},
-
-			"address": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The SFTP address to stream logs to.",
-			},
-
-			"user": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The username for the server.",
-			},
-
-			"path": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The path to upload log files to. If the path ends in / then it is treated as a directory.",
-			},
-
-			"ssh_known_hosts": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A list of host keys for all hosts we can connect to over SFTP.",
-			},
-
-			// Optional fields
-			"port": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     22,
-				Description: "The port the SFTP service listens on. (Default: 22).",
-			},
-
-			"password": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The password for the server. If both password and secret_key are passed, secret_key will be preferred.",
-				Sensitive:   true,
-			},
-
-			"secret_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
-				Sensitive:   true,
-			},
-
-			"public_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
-			},
-
-			"period": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     3600,
-				Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
-			},
-
-			"gzip_level": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
-			},
-
-			"timestamp_format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "%Y-%m-%dT%H:%M:%S.000",
-				Description: "The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
-			},
-
-			"message_type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "classic",
-				Description: "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
-			},
-
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Apache-style string or VCL variables to use for log formatting.",
-			},
-
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      2,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of the condition to apply.",
-			},
-		},
-	},
 }
 
 func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
@@ -210,6 +87,131 @@ func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 		log.Printf("[WARN] Error setting SFTP logging endpoints for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the SFTP logging endpoint.",
+				},
+
+				"address": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The SFTP address to stream logs to.",
+				},
+
+				"user": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The username for the server.",
+				},
+
+				"path": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The path to upload log files to. If the path ends in / then it is treated as a directory.",
+				},
+
+				"ssh_known_hosts": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A list of host keys for all hosts we can connect to over SFTP.",
+				},
+
+				// Optional fields
+				"port": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     22,
+					Description: "The port the SFTP service listens on. (Default: 22).",
+				},
+
+				"password": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The password for the server. If both password and secret_key are passed, secret_key will be preferred.",
+					Sensitive:   true,
+				},
+
+				"secret_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
+					Sensitive:   true,
+				},
+
+				"public_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+				},
+
+				"period": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     3600,
+					Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+				},
+
+				"gzip_level": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     0,
+					Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+				},
+
+				"timestamp_format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%Y-%m-%dT%H:%M:%S.000",
+					Description: "The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+				},
+
+				"message_type": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "classic",
+					Description: "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+				},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache-style string or VCL variables to use for log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the condition to apply.",
+				},
+			},
+		},
+	}
 	return nil
 }
 

@@ -12,21 +12,42 @@ import (
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
-// SERVICE ATTRIBUTE
+/*
+ServiceAttributeDefinition
+--------------------------
+Interface for service attributes.
+We compose a service resource out of attribute objects to allow us to construct both the VCL and WASM service
+resources from common components which provide for the following:
+	- Register: 	Add the attribute to the resource schema
+	- Read: 	 	Refresh the attribute state against the Fastly API
+	- Process:	 	Create or update the attribute against the Fastly API
+	- HasChange:	Whether the state of the attribute has changed against Terraform stored state
+    - MustProcess:	Whether we must Process the resource (usually HasChange==true but allowing exceptions)
+*/
 
 type ServiceAttributeDefinition interface {
+	Register(d *schema.Resource) error
 	Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error
 	Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error
-	Register(d *schema.Resource) error
 	HasChange(d *schema.ResourceData) bool
 	MustProcess(d *schema.ResourceData, initialVersion bool) bool
 }
+
+/*
+DefaultServiceAttributeHandler
+------------------------------
+Provides base implementation for ServiceAttributeDefinition
+	- HasChange, MustProcess defined
+    - Attribute definitions must provide their own Register, Read, Process
+*/
 
 type DefaultServiceAttributeHandler struct {
 	schema *schema.Schema
 	key    string
 }
 
+// GetKey is provided since most attributes will just use their private "key" for interacting with the service
+// resource and API. The Settings handler at present is the exception, working with 2 keys.
 func (h *DefaultServiceAttributeHandler) GetKey() string {
 	return h.key
 }
@@ -39,13 +60,26 @@ func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, ini
 	return h.HasChange(d)
 }
 
-// BASE SERVICE
+/*
+ServiceDefinition
+--------------------------
+Interface for service definitions.
+There are two types of service: VCL and WASM. This interface specifies the data object from which service resources
+are constructed. The interface thus provides for:
+	- GetType: 					Is this a VCL or WASM service?
+	- GetAttributeHandler: 	 	List of attributes supported by this service
+*/
 
 type ServiceDefinition interface {
 	GetType() string
 	GetAttributeHandler() []ServiceAttributeDefinition
 }
 
+/*
+BaseServiceDefinition
+--------------------------
+Fundamental implementation of the BaseServiceDefinition interface methods
+*/
 type BaseServiceDefinition struct {
 	Attributes []ServiceAttributeDefinition
 	Type       string
@@ -59,34 +93,11 @@ func (d *BaseServiceDefinition) GetAttributeHandler() []ServiceAttributeDefiniti
 	return d.Attributes
 }
 
-// CONSTRUCTORS
-
-func resourceCreate(serviceDef ServiceDefinition) schema.CreateFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceCreate(data, i, serviceDef)
-	}
-}
-
-func resourceRead(serviceDef ServiceDefinition) schema.ReadFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceRead(data, i, serviceDef)
-	}
-}
-
-func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceUpdate(data, i, serviceDef)
-	}
-}
-
-func resourceDelete(serviceDef ServiceDefinition) schema.DeleteFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceDelete(data, i, serviceDef)
-	}
-}
-
-// BASE SERVICE DEFINITION
-
+/*
+resourceService
+--------------------------
+Returns Terraform resource schema
+*/
 func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	s := &schema.Resource{
 		Create: resourceCreate(serviceDef),
@@ -158,6 +169,42 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	return s
 }
 
+/*
+resourceCreate/Read/Update/Delete
+---------------------------------
+Satisfy the Terraform resource schema CRUD "interface"
+while injecting the ServiceDefinition into the true CRUD functionality
+*/
+
+func resourceCreate(serviceDef ServiceDefinition) schema.CreateFunc {
+	return func(data *schema.ResourceData, i interface{}) error {
+		return resourceServiceCreate(data, i, serviceDef)
+	}
+}
+
+func resourceRead(serviceDef ServiceDefinition) schema.ReadFunc {
+	return func(data *schema.ResourceData, i interface{}) error {
+		return resourceServiceRead(data, i, serviceDef)
+	}
+}
+
+func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateFunc {
+	return func(data *schema.ResourceData, i interface{}) error {
+		return resourceServiceUpdate(data, i, serviceDef)
+	}
+}
+
+func resourceDelete(serviceDef ServiceDefinition) schema.DeleteFunc {
+	return func(data *schema.ResourceData, i interface{}) error {
+		return resourceServiceDelete(data, i, serviceDef)
+	}
+}
+
+/*
+resourceServiceCreate/Read/Update/Delete
+----------------------------------------
+Provides service resource CRUD functionality
+*/
 func resourceServiceCreate(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	if err := validateVCLs(d); err != nil {
 		return err

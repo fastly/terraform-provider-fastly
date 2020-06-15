@@ -8,13 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-
-type LogEntriesServiceAttributeHandler struct {
+type LogentriesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLogEntries() ServiceAttributeDefinition {
-	return &LogEntriesServiceAttributeHandler{
+func NewServiceLogentries() ServiceAttributeDefinition {
+	return &LogentriesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			schema: logentriesSchema,
 			key:    "logentries",
@@ -80,7 +79,7 @@ var logentriesSchema = &schema.Schema{
 	},
 }
 
-func (h *LogEntriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("logentries")
 	if os == nil {
 		os = new(schema.Set)
@@ -141,7 +140,7 @@ func (h *LogEntriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *LogEntriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
 	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 		Service: d.Id(),

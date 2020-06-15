@@ -8,6 +8,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+type SFTPServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceSFTP() ServiceAttributeDefinition {
+	return &SFTPServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			schema: sftpSchema,
+			key:    "logging_sftp",
+		},
+	}
+}
+
 var sftpSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
@@ -130,7 +143,7 @@ var sftpSchema = &schema.Schema{
 	},
 }
 
-func processSFTP(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	os, ns := d.GetChange("logging_sftp")
 
@@ -179,7 +192,7 @@ func processSFTP(d *schema.ResourceData, conn *gofastly.Client, latestVersion in
 	return nil
 }
 
-func readSFTP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh SFTP.
 	log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
 	sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{

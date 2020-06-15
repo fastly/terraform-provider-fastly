@@ -35,6 +35,7 @@ var serviceAttributes = []ServiceAttributeDefinition{
 	NewServiceHTTPSLogging(),
 	NewServiceElasticSearch(),
 	NewServiceFTP(),
+	NewServiceSFTP(),
 	NewServiceResponseObject(),
 	NewServiceRequestSetting(),
 	NewServiceVCL(),
@@ -121,42 +122,6 @@ func resourceServiceV1() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
-			domain.GetKey():             domain.GetSchema(),
-			backend.GetKey():            backend.GetSchema(),
-			cachesetting.GetKey():       cachesetting.GetSchema(),
-			condition.GetKey():          condition.GetSchema(),
-			healthcheck.GetKey():        healthcheck.GetSchema(),
-			director.GetKey():           director.GetSchema(),
-			gzip.GetKey():               gzip.GetSchema(),
-			header.GetKey():             header.GetSchema(),
-			s3logging.GetKey():          s3logging.GetSchema(),
-			papertrail.GetKey():         papertrail.GetSchema(),
-			sumologic.GetKey():          sumologic.GetSchema(),
-			gcslogging.GetKey():         gcslogging.GetSchema(),
-			bigquerylogging.GetKey():    bigquerylogging.GetSchema(),
-			syslog.GetKey():             syslog.GetSchema(),
-			logentries.GetKey():         logentries.GetSchema(),
-			splunk.GetKey():             splunk.GetSchema(),
-			blobstoragelogging.GetKey(): blobstoragelogging.GetSchema(),
-			httpslogging.GetKey():       httpslogging.GetSchema(),
-			"logging_elasticsearch": elasticsearchSchema,
-			"logging_ftp":           ftpSchema,
-			"logging_sftp":          sftpSchema,
-			"logging_datadog":       datadogSchema,
-			"logging_loggly":        logglySchema,
-			"logging_newrelic":      newrelicSchema,
-			"logging_scalyr":        scalyrloggingSchema,
-			"logging_googlepubsub":  googlepubsubloggingSchema,
-			"logging_kafka":         kafkaloggingSchema,
-
-			responseobject.GetKey():    responseobject.GetSchema(),
-			requestsetting.GetKey():    requestsetting.GetSchema(),
-			vcl.GetKey():                vcl.GetSchema(),
-			snippet.GetKey():            snippet.GetSchema(),
-			dynamicsnippet.GetKey():     dynamicsnippet.GetSchema(),
-			acl.GetKey():                acl.GetSchema(),
-			dictionary.GetKey():         dictionary.GetSchema(),
 		},
 	}
 
@@ -210,49 +175,6 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 	// DefaultTTL, a new Version must be created first, and updates posted to that
 	// Version. Loop these attributes and determine if we need to create a new version first
 	var needsChange bool
-	for _, v := range []string{
-		domain.GetKey(),
-		backend.GetKey(),
-		"default_host",
-		"default_ttl",
-		director.GetKey(),
-		header.GetKey(),
-		gzip.GetKey(),
-		healthcheck.GetKey(),
-		s3logging.GetKey(),
-		papertrail.GetKey(),
-		gcslogging.GetKey(),
-		bigquerylogging.GetKey(),
-		syslog.GetKey(),
-		sumologic.GetKey(),
-		logentries.GetKey(),
-		splunk.GetKey(),
-		blobstoragelogging.GetKey(),
-		httpslogging.GetKey(),
-		responseobject.GetKey(),
-		"logging_elasticsearch",
-		"logging_ftp",
-		"logging_sftp",
-		"logging_datadog",
-		"logging_loggly",
-		"logging_newrelic",
-		"logging_scalyr",
-		"logging_googlepubsub",
-		"logging_kafka",
-		condition.GetKey(),
-		requestsetting.GetKey(),
-		cachesetting.GetKey(),
-		snippet.GetKey(),
-		dynamicsnippet.GetKey(),
-		vcl.GetKey(),
-		acl.GetKey(),
-		dictionary.GetKey(),
-	} {
-		if d.HasChange(v) {
-			needsChange = true
-			break
-		}
-	}
 
 	for _, a := range serviceAttributes {
 		if d.HasChange(a.GetKey()) {

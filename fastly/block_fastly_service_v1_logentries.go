@@ -66,7 +66,7 @@ var logentriesSchema = &schema.Schema{
 	},
 }
 
-func processLogEntries(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func processLogentries(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("logentries")
 	if os == nil {
 		os = new(schema.Set)

@@ -111,8 +111,8 @@ func resourceServiceV1() *schema.Resource {
 			"logging_ftp":           ftpSchema,
 			"logging_sftp":          sftpSchema,
 
-			"response_object":    responseobjectSchema,
-			"request_setting":    requestsettingSchema,
+			"response_object": responseobjectSchema,
+			"request_setting": requestsettingSchema,
 
 			"vcl": vclSchema,
 
@@ -368,7 +368,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if d.HasChange("logentries") {
-			if err := processLogEntries(d, conn, latestVersion); err != nil {
+			if err := processLogentries(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
@@ -572,7 +572,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readSyslog(conn, d, s); err != nil {
 			return err
 		}
-		if err := readLogEntries(conn, d, s); err != nil {
+		if err := readLogentries(conn, d, s); err != nil {
 			return err
 		}
 		if err := readSplunk(conn, d, s); err != nil {

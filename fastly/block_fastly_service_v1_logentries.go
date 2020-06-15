@@ -66,7 +66,7 @@ var logentriesSchema = &schema.Schema{
 	},
 }
 
-func processLogEntries(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func processLogentries(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
 	os, ns := d.GetChange("logentries")
 	if os == nil {
 		os = new(schema.Set)
@@ -127,7 +127,7 @@ func processLogEntries(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readLogEntries(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func readLogentries(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
 	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
 	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 		Service: d.Id(),

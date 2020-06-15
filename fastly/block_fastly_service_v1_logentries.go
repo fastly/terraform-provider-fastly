@@ -8,19 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type LogentriesServiceAttributeHandler struct {
-	*DefaultServiceAttributeHandler
-}
-
-func NewServiceLogentries() ServiceAttributeDefinition {
-	return &LogentriesServiceAttributeHandler{
-		&DefaultServiceAttributeHandler{
-			schema: logentriesSchema,
-			key:    "logentries",
-		},
-	}
-}
-
 var logentriesSchema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,

@@ -29,7 +29,7 @@ var serviceAttributes = []ServiceAttributeDefinition{
 	NewServiceGCSLogging(),
 	NewServiceBigQueryLogging(),
 	NewServiceSyslog(),
-	NewServiceLogEntries(),
+	NewServiceLogentries(),
 	NewServiceSplunk(),
 	NewServiceBlobStorageLogging(),
 	NewServiceHTTPSLogging(),

@@ -20,7 +20,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceGCSLogging(),
 		NewServiceBigQueryLogging(),
 		NewServiceSyslog(),
-		NewServiceLogEntries(),
+		NewServiceLogentries(),
 		NewServiceSplunk(),
 		NewServiceBlobStorageLogging(),
 		NewServiceHTTPSLogging(),

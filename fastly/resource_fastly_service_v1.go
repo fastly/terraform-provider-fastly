@@ -342,7 +342,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		if d.HasChange("s3logging") {
-			if err := processS3Logging(d, conn, latestVersion); err != nil {
+			if err := processS3(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
@@ -561,7 +561,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		if err := readHealthCheck(conn, d, s); err != nil {
 			return err
 		}
-		if err := readS3Logging(conn, d, s); err != nil {
+		if err := readS3(conn, d, s); err != nil {
 			return err
 		}
 		if err := readPapertrail(conn, d, s); err != nil {

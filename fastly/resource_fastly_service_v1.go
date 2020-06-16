@@ -391,6 +391,21 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
+		if d.HasChange("logging_elasticsearch") {
+			if err := processElasticsearch(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
+		if d.HasChange("logging_ftp") {
+			if err := processFTP(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
+		if d.HasChange("logging_sftp") {
+			if err := processSFTP(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
 		if d.HasChange("logging_datadog") {
 			if err := processDatadog(d, conn, latestVersion); err != nil {
 				return err
@@ -401,28 +416,6 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-
-		// find differences in Elasticsearch logging configuration
-		if d.HasChange("logging_elasticsearch") {
-			if err := processElasticsearch(d, conn, latestVersion); err != nil {
-				return err
-			}
-		}
-
-		// find differences in FTP logging configuration
-		if d.HasChange("logging_ftp") {
-			if err := processFTP(d, conn, latestVersion); err != nil {
-				return err
-			}
-		}
-
-		// find differences in SFTP logging configurations
-		if d.HasChange("logging_sftp") {
-			if err := processSFTP(d, conn, latestVersion); err != nil {
-				return err
-			}
-		}
-
 		if d.HasChange("response_object") {
 			if err := processResponseObject(d, conn, latestVersion); err != nil {
 				return err
@@ -596,6 +589,15 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if err := readHTTPS(conn, d, s); err != nil {
+			return err
+		}
+		if err := readElasticsearch(conn, d, s); err != nil {
+			return err
+		}
+		if err := readFTP(conn, d, s); err != nil {
+			return err
+		}
+		if err := readSFTP(conn, d, s); err != nil {
 			return err
 		}
 		if err := readDatadog(conn, d, s); err != nil {

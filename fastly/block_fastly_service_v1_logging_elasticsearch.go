@@ -146,6 +146,7 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 				"format": {
 					Type:        schema.TypeString,
 					Optional:    true,
+					Default:     "%h %l %u %t \"%r\" %>s %b",
 					Description: "Apache-style string or VCL variables to use for log formatting.",
 				},
 

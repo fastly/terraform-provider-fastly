@@ -20,7 +20,6 @@ func NewServiceLogentries() ServiceAttributeDefinition {
 	}
 }
 
-
 func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange("logentries")
 	if os == nil {

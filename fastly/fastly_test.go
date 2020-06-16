@@ -1,5 +1,7 @@
 package fastly
 
+import "strings"
+
 // pgpPublicKey returns a PEM encoded PGP public key suitable for testing.
 func pgpPublicKey() string {
 	return `-----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -163,4 +165,25 @@ BgNVBAMTC0hlcm9uZyBZYW5nggEAMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEE
 BQADQQA/ugzBrjjK9jcWnDVfGHlk3icNRq0oV7Ri32z/+HQX67aRfgZu7KWdI+Ju
 Wm7DCfrPNGVwFWUQOmsPue9rZBgO
 -----END CERTIFICATE-----`
+}
+
+// escapePercentSign uses Terraform's escape syntax (i.e., repeating characters)
+// to properly escape percent signs (i.e., '%').
+//
+// There are two significant places where '%' can show up:
+// 1. Before a left curly brace (i.e., '{').
+// 2. Not before a left curly brace.
+//
+// In case #1, we have to double escape so that Terraform does not interpret Fastly's
+// configuration values as its own (e.g., https://docs.fastly.com/en/guides/custom-log-formats).
+//
+// In case #2, we only have to single escape.
+//
+// Refer to the Terraform documentation on string literals for more details:
+// https://www.terraform.io/docs/configuration/expressions.html#string-literals
+func escapePercentSign(s string) string {
+	escapeSign := strings.ReplaceAll(s, "%", "%%")
+	escapeTemplateSequence := strings.ReplaceAll(escapeSign, "%%{", "%%%%{")
+
+	return escapeTemplateSequence
 }

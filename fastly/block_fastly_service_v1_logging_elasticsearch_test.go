@@ -88,9 +88,9 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		User:              "user",
 		Password:          "password",
 		Pipeline:          "my-pipeline",
-		TLSCACert:         caCert() + "\n",      // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
-		TLSClientCert:     certificate() + "\n", // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
-		TLSClientKey:      privateKey() + "\n",  // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
+		TLSCACert:         appendNewLine(caCert()),
+		TLSClientCert:     appendNewLine(certificate()),
+		TLSClientKey:      appendNewLine(privateKey()),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Placement:         "none",
@@ -108,9 +108,9 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		User:              "newuser",
 		Password:          "newpassword",
 		Pipeline:          "my-new-pipeline",
-		TLSCACert:         caCert() + "\n",      // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
-		TLSClientCert:     certificate() + "\n", // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
-		TLSClientKey:      privateKey() + "\n",  // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
+		TLSCACert:         appendNewLine(caCert()),
+		TLSClientCert:     appendNewLine(certificate()),
+		TLSClientKey:      appendNewLine(privateKey()),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Placement:         "none",
@@ -128,9 +128,9 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		User:              "username",
 		Password:          "secret-password",
 		Pipeline:          "my-new-pipeline",
-		TLSCACert:         caCert() + "\n",      // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
-		TLSClientCert:     certificate() + "\n", // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
-		TLSClientKey:      privateKey() + "\n",  // The '\n' is necessary because of the heredocs (i.e., EOF) in the config below.
+		TLSCACert:         appendNewLine(caCert()),
+		TLSClientCert:     appendNewLine(certificate()),
+		TLSClientKey:      appendNewLine(privateKey()),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Placement:         "none",
@@ -333,4 +333,9 @@ EOF
   force_destroy = true
 }
 `, name, domain)
+}
+
+// appendNewLine appends a '\n' and is necessary because of the heredocs (i.e., EOF) in the TF config.
+func appendNewLine(s string) string {
+	return s + "\n"
 }

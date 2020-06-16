@@ -12,7 +12,7 @@ type ElasticSearchServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceElasticSearch() ServiceAttributeDefinition {
+func NewServiceLoggingElasticSearch() ServiceAttributeDefinition {
 	return &ElasticSearchServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			key: "logging_elasticsearch",

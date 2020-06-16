@@ -12,35 +12,27 @@ import (
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
-/*
-ServiceAttributeDefinition
---------------------------
-Interface for service attributes.
-We compose a service resource out of attribute objects to allow us to construct both the VCL and WASM service
-resources from common components which provide for the following:
-	- Register: 	Add the attribute to the resource schema
-	- Read: 	 	Refresh the attribute state against the Fastly API
-	- Process:	 	Create or update the attribute against the Fastly API
-	- HasChange:	Whether the state of the attribute has changed against Terraform stored state
-    - MustProcess:	Whether we must Process the resource (usually HasChange==true but allowing exceptions)
-*/
-
+// Interface for service attributes.
+// We compose a service resource out of attribute objects to allow us to construct both the VCL and WASM service
+// resources from common components which provide for the following:
 type ServiceAttributeDefinition interface {
+	// Add the attribute to the resource schema
 	Register(d *schema.Resource) error
+
+	// Refresh the attribute state against the Fastly API
 	Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error
+
+	// Create or update the attribute against the Fastly API
 	Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error
+
+	// Whether the state of the attribute has changed against Terraform stored state
 	HasChange(d *schema.ResourceData) bool
+
+	// Whether we must Process the resource (usually HasChange==true but allowing exceptions)
 	MustProcess(d *schema.ResourceData, initialVersion bool) bool
 }
 
-/*
-DefaultServiceAttributeHandler
-------------------------------
-Provides base implementation for ServiceAttributeDefinition
-	- HasChange, MustProcess defined
-    - Attribute definitions must provide their own Register, Read, Process
-*/
-
+// Provides base implementation for ServiceAttributeDefinition
 type DefaultServiceAttributeHandler struct {
 	schema *schema.Schema
 	key    string
@@ -52,34 +44,28 @@ func (h *DefaultServiceAttributeHandler) GetKey() string {
 	return h.key
 }
 
+// By default HasChange passes through to the ResourceData HasChange function for this key
 func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
 	return d.HasChange(h.key)
 }
 
+// By default MustProcess passes through to the ResourceData HasChange function for this key
 func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, initialVersion bool) bool {
 	return h.HasChange(d)
 }
 
-/*
-ServiceDefinition
---------------------------
-Interface for service definitions.
-There are two types of service: VCL and WASM. This interface specifies the data object from which service resources
-are constructed. The interface thus provides for:
-	- GetType: 					Is this a VCL or WASM service?
-	- GetAttributeHandler: 	 	List of attributes supported by this service
-*/
-
+// Interface for service definitions.
+// There are two types of service: VCL and WASM. This interface specifies the data object from which service resources
+// are constructed.
 type ServiceDefinition interface {
+	// Is this a VCL or WASM service?
 	GetType() string
+
+	// List of attributes supported by this service
 	GetAttributeHandler() []ServiceAttributeDefinition
 }
 
-/*
-BaseServiceDefinition
---------------------------
-Fundamental implementation of the BaseServiceDefinition interface methods
-*/
+// Fundamental implementation of the BaseServiceDefinition interface methods
 type BaseServiceDefinition struct {
 	Attributes []ServiceAttributeDefinition
 	Type       string
@@ -93,11 +79,7 @@ func (d *BaseServiceDefinition) GetAttributeHandler() []ServiceAttributeDefiniti
 	return d.Attributes
 }
 
-/*
-resourceService
---------------------------
-Returns Terraform resource schema
-*/
+// Returns Terraform resource schema
 func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	s := &schema.Resource{
 		Create: resourceCreate(serviceDef),
@@ -169,42 +151,39 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	return s
 }
 
-/*
-resourceCreate/Read/Update/Delete
----------------------------------
-Satisfy the Terraform resource schema CRUD "interface"
-while injecting the ServiceDefinition into the true CRUD functionality
-*/
-
+// Satisfy the Terraform resource schema Create "interface"
+// while injecting the ServiceDefinition into the true Create functionality
 func resourceCreate(serviceDef ServiceDefinition) schema.CreateFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceCreate(data, i, serviceDef)
 	}
 }
 
+// Satisfy the Terraform resource schema Read "interface"
+// while injecting the ServiceDefinition into the true Read functionality
 func resourceRead(serviceDef ServiceDefinition) schema.ReadFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceRead(data, i, serviceDef)
 	}
 }
 
+// Satisfy the Terraform resource schema Update "interface"
+// while injecting the ServiceDefinition into the true Update functionality
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceUpdate(data, i, serviceDef)
 	}
 }
 
+// Satisfy the Terraform resource schema Delete "interface"
+// while injecting the ServiceDefinition into the true Delete functionality
 func resourceDelete(serviceDef ServiceDefinition) schema.DeleteFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceDelete(data, i, serviceDef)
 	}
 }
 
-/*
-resourceServiceCreate/Read/Update/Delete
-----------------------------------------
-Provides service resource CRUD functionality
-*/
+// Provides service resource Create functionality
 func resourceServiceCreate(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	if err := validateVCLs(d); err != nil {
 		return err
@@ -225,6 +204,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}, serviceDef 
 	return resourceServiceUpdate(d, meta, serviceDef)
 }
 
+// Provides service resource Update functionality
 func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	if err := validateVCLs(d); err != nil {
 		return err
@@ -372,6 +352,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 	return resourceServiceRead(d, meta, serviceDef)
 }
 
+// Provides service resource Read functionality
 func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	conn := meta.(*FastlyClient).conn
 
@@ -420,6 +401,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 	return nil
 }
 
+// Provides service resource Delete functionality
 func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	conn := meta.(*FastlyClient).conn
 

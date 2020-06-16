@@ -111,6 +111,7 @@ func resourceServiceV1() *schema.Resource {
 			"logging_ftp":           ftpSchema,
 			"logging_sftp":          sftpSchema,
 			"logging_datadog":       datadogSchema,
+			"logging_loggly":        logglySchema,
 
 			"response_object": responseobjectSchema,
 			"request_setting": requestsettingSchema,
@@ -191,6 +192,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"logging_ftp",
 		"logging_sftp",
 		"logging_datadog",
+		"logging_loggly",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -389,10 +391,13 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
-
-		// find differences in Datadog logging configuration
 		if d.HasChange("logging_datadog") {
 			if err := processDatadog(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
+		if d.HasChange("logging_loggly") {
+			if err := processLoggly(d, conn, latestVersion); err != nil {
 				return err
 			}
 		}
@@ -594,6 +599,9 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if err := readDatadog(conn, d, s); err != nil {
+			return err
+		}
+		if err := readLoggly(conn, d, s); err != nil {
 			return err
 		}
 		if err := readResponseObject(conn, d, s); err != nil {

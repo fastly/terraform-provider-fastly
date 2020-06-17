@@ -37,74 +37,17 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	// DELETE old S3 Log configurations
 	for _, sRaw := range removeS3Logging {
-		sf := sRaw.(map[string]interface{})
-		opts := gofastly.DeleteS3Input{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    sf["name"].(string),
-		}
-
-		log.Printf("[DEBUG] Fastly S3 Logging removal opts: %#v", opts)
-		err := conn.DeleteS3(&opts)
-		if errRes, ok := err.(*gofastly.HTTPError); ok {
-			if errRes.StatusCode != 404 {
-				return err
-			}
-		} else if err != nil {
+		opts := buildDeleteS3(sRaw, d.Id(), latestVersion)
+		err := deleteS3(conn, opts)
+		if err != nil {
 			return err
 		}
 	}
 
 	// POST new/updated S3 Logging
 	for _, sRaw := range addS3Logging {
-		sf := sRaw.(map[string]interface{})
-
-		// Fastly API will not error if these are omitted, so we throw an error
-		// if any of these are empty
-		for _, sk := range []string{"s3_access_key", "s3_secret_key"} {
-			if sf[sk].(string) == "" {
-				return fmt.Errorf("[ERR] No %s found for S3 Log stream setup for Service (%s)", sk, d.Id())
-			}
-		}
-
-		opts := gofastly.CreateS3Input{
-			Service:                      d.Id(),
-			Version:                      latestVersion,
-			Name:                         sf["name"].(string),
-			BucketName:                   sf["bucket_name"].(string),
-			AccessKey:                    sf["s3_access_key"].(string),
-			SecretKey:                    sf["s3_secret_key"].(string),
-			Period:                       uint(sf["period"].(int)),
-			GzipLevel:                    uint(sf["gzip_level"].(int)),
-			Domain:                       sf["domain"].(string),
-			Path:                         sf["path"].(string),
-			Format:                       sf["format"].(string),
-			FormatVersion:                uint(sf["format_version"].(int)),
-			TimestampFormat:              sf["timestamp_format"].(string),
-			ResponseCondition:            sf["response_condition"].(string),
-			MessageType:                  sf["message_type"].(string),
-			Placement:                    sf["placement"].(string),
-			ServerSideEncryptionKMSKeyID: sf["server_side_encryption_kms_key_id"].(string),
-		}
-
-		redundancy := strings.ToLower(sf["redundancy"].(string))
-		switch redundancy {
-		case "standard":
-			opts.Redundancy = gofastly.S3RedundancyStandard
-		case "reduced_redundancy":
-			opts.Redundancy = gofastly.S3RedundancyReduced
-		}
-
-		encryption := sf["server_side_encryption"].(string)
-		switch encryption {
-		case string(gofastly.S3ServerSideEncryptionAES):
-			opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionAES
-		case string(gofastly.S3ServerSideEncryptionKMS):
-			opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionKMS
-		}
-
-		log.Printf("[DEBUG] Create S3 Logging Opts: %#v", opts)
-		_, err := conn.CreateS3(&opts)
+		opts, _ := buildCreateS3(sRaw, d.Id(), latestVersion)
+		err := createS3(conn, opts)
 		if err != nil {
 			return err
 		}
@@ -253,6 +196,8 @@ func createS3(conn *gofastly.Client, i *gofastly.CreateS3Input) error {
 }
 
 func deleteS3(conn *gofastly.Client, i *gofastly.DeleteS3Input) error {
+	log.Printf("[DEBUG] Fastly S3 Logging removal opts: %#v", i)
+
 	err := conn.DeleteS3(i)
 
 	errRes, ok := err.(*gofastly.HTTPError)

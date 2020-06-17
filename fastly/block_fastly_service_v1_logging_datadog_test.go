@@ -3,7 +3,6 @@ package fastly
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
@@ -267,12 +266,6 @@ resource "fastly_service_v1" "foo" {
 `, name, domain)
 }
 
-var (
-	// https://www.terraform.io/docs/configuration/expressions.html#string-literals
-	escapePercent          = strings.ReplaceAll(datadogDefaultFormat, "%", "%%")
-	escapeTemplateSequence = strings.ReplaceAll(escapePercent, "%%{", "%%%%{")
-)
-
 func testAccServiceV1DatadogConfig_update(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
@@ -299,7 +292,7 @@ resource "fastly_service_v1" "foo" {
     name  = "another-datadog-endpoint"
     token = "another-token"
 		format = <<EOF
-`+escapeTemplateSequence+`
+`+escapePercentSign(datadogDefaultFormat)+`
 EOF
   }
 

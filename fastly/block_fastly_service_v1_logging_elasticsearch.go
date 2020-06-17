@@ -22,7 +22,7 @@ func NewServiceLoggingElasticSearch() ServiceAttributeDefinition {
 
 func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	oe, ne := d.GetChange("logging_elasticsearch")
+	oe, ne := d.GetChange(h.GetKey())
 
 	if oe == nil {
 		oe = new(schema.Set)
@@ -78,7 +78,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *g
 
 	ell := flattenElasticsearch(elasticsearchList)
 
-	if err := d.Set("logging_elasticsearch", ell); err != nil {
+	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Elasticsearch logging endpoints for (%s): %s", d.Id(), err)
 	}
 	return nil

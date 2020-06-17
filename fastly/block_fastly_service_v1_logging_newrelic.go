@@ -8,57 +8,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var newrelicSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the New Relic logging endpoint",
-			},
-
-			"token": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Sensitive:   true,
-				Description: "The Insert API key from the Account page of your New Relic account.",
-			},
-
-			// Optional fields
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
-			},
-
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      2,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of the condition to apply.",
-			},
-		},
-	},
+type NewRelicServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processNewRelic(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceLoggingNewRelic() ServiceAttributeDefinition {
+	return &NewRelicServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "logging_newrelic",
+		},
+	}
+}
+
+func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	od, nd := d.GetChange("logging_newrelic")
 
@@ -102,7 +64,7 @@ func processNewRelic(d *schema.ResourceData, conn *gofastly.Client, latestVersio
 	return nil
 }
 
-func readNewRelic(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh NewRelic.
 	log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
 	newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
@@ -192,4 +154,57 @@ func buildDeleteNewRelic(newrelicMap interface{}, serviceID string, serviceVersi
 		Version: serviceVersion,
 		Name:    df["name"].(string),
 	}
+}
+
+func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the New Relic logging endpoint",
+				},
+
+				"token": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Sensitive:   true,
+					Description: "The Insert API key from the Account page of your New Relic account.",
+				},
+
+				// Optional fields
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the condition to apply.",
+				},
+			},
+		},
+	}
+	return nil
 }

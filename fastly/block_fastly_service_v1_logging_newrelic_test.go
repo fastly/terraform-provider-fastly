@@ -3,7 +3,6 @@ package fastly
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
@@ -45,8 +44,7 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 	}
 }
 
-var (
-	newrelicDefaultFormat = `{
+var newrelicDefaultFormat = `{
   "time_elapsed":%{time.elapsed.usec}V,
   "is_tls":%{if(req.is_ssl, "true", "false")}V,
   "client_ip":"%{req.http.Fastly-Client-IP}V",
@@ -61,10 +59,6 @@ var (
   "request_accept_charset":"%{json.escape(req.http.Accept-Charset)}V",
   "cache_status":"%{regsub(fastly_info.state, "^(HIT-(SYNTH)|(HITPASS|HIT|MISS|PASS|ERROR|PIPE)).*", "\2\3") }V"
 }`
-	// https://www.terraform.io/docs/configuration/expressions.html#string-literals
-	newrelicEscapePercent          = strings.ReplaceAll(newrelicDefaultFormat, "%", "%%")
-	newrelicEscapeTemplateSequence = strings.ReplaceAll(newrelicEscapePercent, "%%{", "%%%%{")
-)
 
 func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -226,7 +220,7 @@ resource "fastly_service_v1" "foo" {
     name  = "another-newrelic-endpoint"
     token = "another-token"
 		format = <<EOF
-`+newrelicEscapeTemplateSequence+`
+`+escapePercentSign(newrelicDefaultFormat)+`
 EOF
   }
 

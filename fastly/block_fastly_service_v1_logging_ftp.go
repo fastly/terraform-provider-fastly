@@ -22,7 +22,7 @@ func NewServiceLoggingFTP() ServiceAttributeDefinition {
 
 func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	of, nf := d.GetChange("logging_ftp")
+	of, nf := d.GetChange(h.GetKey())
 
 	if of == nil {
 		of = new(schema.Set)
@@ -78,7 +78,7 @@ func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 
 	ell := flattenFTP(ftpList)
 
-	if err := d.Set("logging_ftp", ell); err != nil {
+	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting FTP logging endpoints for (%s): %s", d.Id(), err)
 	}
 	return nil

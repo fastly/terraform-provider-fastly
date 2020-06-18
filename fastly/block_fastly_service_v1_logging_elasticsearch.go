@@ -55,12 +55,14 @@ var elasticsearchSchema = &schema.Schema{
 			"request_max_entries": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     0,
 				Description: "The maximum number of logs sent in one request.",
 			},
 
 			"request_max_bytes": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     0,
 				Description: "The maximum number of bytes sent in one request.",
 			},
 

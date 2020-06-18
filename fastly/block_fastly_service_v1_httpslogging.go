@@ -80,6 +80,8 @@ var httpsloggingSchema = &schema.Schema{
 				Optional:    true,
 				Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_client_cert": {
@@ -87,6 +89,8 @@ var httpsloggingSchema = &schema.Schema{
 				Optional:    true,
 				Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_client_key": {
@@ -94,6 +98,8 @@ var httpsloggingSchema = &schema.Schema{
 				Optional:    true,
 				Description: "The client private key used to make authenticated requests. Must be in PEM format.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_hostname": {
@@ -172,6 +178,21 @@ func processHTTPS(d *schema.ResourceData, conn *gofastly.Client, latestVersion i
 	// POST new/updated HTTPS logging endponts
 	for _, nRaw := range addHTTPSLogging {
 		hf := nRaw.(map[string]interface{})
+
+		// @HACK for a TF SDK Issue.
+		//
+		// This ensures that the required, `name`, field is present.
+		//
+		// If we have made it this far and `name` is not present, it is most-likely due
+		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
+		//
+		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
+		// properly handles setting state with the StateFunc, it returns extra entries
+		// during state Gets, specifically `GetChange("httpslogging")` in this case.
+		if v, ok := hf["name"]; !ok || v.(string) == "" {
+			continue
+		}
+
 		opts := buildCreateHTTPS(hf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)

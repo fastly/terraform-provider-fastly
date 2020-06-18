@@ -1,6 +1,9 @@
 package fastly
 
-import "strings"
+import (
+	"strings"
+	"testing"
+)
 
 // pgpPublicKey returns a PEM encoded PGP public key suitable for testing.
 func pgpPublicKey() string {
@@ -186,4 +189,41 @@ func escapePercentSign(s string) string {
 	escapeTemplateSequence := strings.ReplaceAll(escapeSign, "%%{", "%%%%{")
 
 	return escapeTemplateSequence
+}
+
+func TestEscapePercentSign(t *testing.T) {
+	for _, testcase := range []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "string no percent signs should change nothing",
+			input: "abc 123",
+			want:  "abc 123",
+		},
+		{
+			name:  "one percent sign should return two percent signs",
+			input: "%",
+			want:  "%%",
+		},
+		{
+			name:  "one percent sign mid-string should return two percent signs in the same place",
+			input: "abc%123",
+			want:  "abc%%123",
+		},
+		{
+			name:  "one percent sign before left curly brace should return four percent signs then curly brace",
+			input: "%{",
+			want:  "%%%%{",
+		},
+	} {
+		t.Run(testcase.name, func(t *testing.T) {
+			got := escapePercentSign(testcase.input)
+
+			if got != testcase.want {
+				t.Errorf("escapePercentSign(%q): \n\tgot: '%+v'\n\twant: '%+v'", testcase.input, got, testcase.want)
+			}
+		})
+	}
 }

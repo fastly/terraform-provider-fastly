@@ -307,34 +307,30 @@ EOF
   }
 
   logging_elasticsearch {
-    name              = "another-elasticsearch-endpoint"
-    index             = "#{%%F}"
-    url               = "https://es2.example.com"
-    user              = "username"
-    password          = "secret-password"
-    format            = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-    request_max_bytes = 1000
-		pipeline          = "my-new-pipeline"
-		tls_ca_cert        = <<EOF
+    name                = "another-elasticsearch-endpoint"
+    index               = "#{%%F}"
+    url                 = "https://es2.example.com"
+    user                = "username"
+    password            = "secret-password"
+    format              = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    request_max_bytes   = 1000
+		request_max_entries = 0
+		pipeline            = "my-new-pipeline"
+		tls_ca_cert         = <<EOF
 `+caCert()+`
 EOF
-		tls_client_cert    = <<EOF
+		tls_client_cert     = <<EOF
 `+certificate()+`
 EOF
-		tls_client_key     = <<EOF
+		tls_client_key      = <<EOF
 `+privateKey()+`
 EOF
-		tls_hostname       = "example.com"
-		response_condition = "response_condition_test"
-		placement          = "none"
+		tls_hostname        = "example.com"
+		response_condition  = "response_condition_test"
+		placement           = "none"
   }
 
   force_destroy = true
 }
 `, name, domain)
-}
-
-// appendNewLine appends a '\n' and is necessary because of the heredocs (i.e., EOF) in the TF config.
-func appendNewLine(s string) string {
-	return s + "\n"
 }

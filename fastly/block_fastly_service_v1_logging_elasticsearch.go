@@ -86,7 +86,7 @@ var elasticsearchSchema = &schema.Schema{
 				Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
 				Sensitive:   true,
 				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpace,
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_client_cert": {
@@ -95,7 +95,7 @@ var elasticsearchSchema = &schema.Schema{
 				Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
 				Sensitive:   true,
 				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpace,
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_client_key": {
@@ -104,7 +104,7 @@ var elasticsearchSchema = &schema.Schema{
 				Description: "The client private key used to make authenticated requests. Must be in PEM format.",
 				Sensitive:   true,
 				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpace,
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_hostname": {

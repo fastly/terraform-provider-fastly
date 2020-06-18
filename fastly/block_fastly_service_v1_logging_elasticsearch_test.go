@@ -3,7 +3,6 @@ package fastly
 import (
 	"fmt"
 	"log"
-	"reflect"
 	"testing"
 
 	fst "github.com/fastly/go-fastly/fastly"
@@ -65,8 +64,8 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 
 	for _, c := range cases {
 		out := flattenElasticsearch(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
 		}
 	}
 }

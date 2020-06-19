@@ -22,6 +22,8 @@ func NewServiceS3Logging() ServiceAttributeDefinition {
 }
 
 func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	serviceID := d.Id()
+
 	os, ns := d.GetChange("s3logging")
 	if os == nil {
 		os = new(schema.Set)
@@ -35,16 +37,16 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	removeS3Logging := oss.Difference(nss).List()
 	addS3Logging := nss.Difference(oss).List()
 
-	// DELETE old S3 Log configurations
+	// DELETE old S3 Log configurations.
 	for _, sRaw := range removeS3Logging {
-		opts := buildDeleteS3(sRaw, d.Id(), latestVersion)
-		err := deleteS3(conn, opts)
+		opts := buildDeleteS3(sRaw, serviceID, latestVersion)
+		err  := deleteS3(conn, opts)
 		if err != nil {
 			return err
 		}
 	}
 
-	// POST new/updated S3 Logging
+	// POST new/updated S3 Logging.
 	for _, sRaw := range addS3Logging {
 		opts, _ := buildCreateS3(sRaw, d.Id(), latestVersion)
 		err := createS3(conn, opts)
@@ -56,6 +58,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 }
 
 func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	// Refresh S3.
 	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
 	s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
 		Service: d.Id(),
@@ -84,18 +87,18 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name to refer to this logging setup",
+					Description: "The unique name of the S3 logging endpoint.",
 				},
 				"bucket_name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "S3 Bucket name to store logs in",
+					Description: "S3 Bucket name to store logs in.",
 				},
 				"s3_access_key": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
-					Description: "AWS Access Key",
+					Description: "AWS Access Key.",
 					Sensitive:   true,
 				},
 				"s3_secret_key": {
@@ -109,49 +112,54 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 				"path": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Path to store the files. Must end with a trailing slash",
+					Description: "Path to store the files. Must end with a trailing slash.",
 				},
 				"domain": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Bucket endpoint",
+					Description: "Bucket endpoint.",
 					Default:     "s3.amazonaws.com",
 				},
 				"gzip_level": {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     0,
-					Description: "Gzip Compression level",
+					Description: "Gzip Compression level.",
 				},
 				"period": {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     3600,
-					Description: "How frequently the logs should be transferred, in seconds (Default 3600)",
+					Description: "How frequently the logs should be transferred, in seconds (Default 3600).",
 				},
 				"format": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "%h %l %u %t %r %>s",
-					Description: "Apache-style string or VCL variables to use for log formatting",
+					Description: "Apache-style string or VCL variables to use for log formatting.",
 				},
 				"format_version": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      1,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).",
 					ValidateFunc: validateLoggingFormatVersion(),
 				},
 				"timestamp_format": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "%Y-%m-%dT%H:%M:%S.000",
-					Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+					Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
 				},
 				"redundancy": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "The S3 redundancy level.",
+				},
+				"public_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
 				},
 				"response_condition": {
 					Type:        schema.TypeString,
@@ -181,8 +189,9 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 				"server_side_encryption_kms_key_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`",
+					Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`.",
 				},
+
 			},
 		},
 	}

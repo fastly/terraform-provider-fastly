@@ -33,6 +33,8 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingSFTP(),
 		NewServiceLoggingDatadog(),
 		NewServiceLoggingLoggly(),
+		NewServiceLoggingGooglePubSub(),
+		NewServiceLoggingScalyr(),
 		NewServiceLoggingNewRelic(),
 		NewServiceResponseObject(),
 		NewServiceRequestSetting(),

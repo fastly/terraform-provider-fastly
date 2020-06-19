@@ -94,3 +94,7 @@ func TestEscapePercentSign(t *testing.T) {
 		})
 	}
 }
+
+func appendNewLine(s string) string {
+	return s + "\n"
+}

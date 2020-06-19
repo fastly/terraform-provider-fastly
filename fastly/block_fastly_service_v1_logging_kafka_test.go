@@ -232,15 +232,9 @@ resource "fastly_service_v1" "foo" {
 		compression_codec  = "snappy"
 		required_acks      = "-1"
 		use_tls            = true
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert        = file("fastly_test_cacert")
+		tls_client_cert    = file("fastly_test_certificate")
+		tls_client_key     = file("fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
@@ -282,15 +276,9 @@ resource "fastly_service_v1" "foo" {
 		compression_codec  = "lz4"
 		required_acks      = "0"
 		use_tls            = false
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert        = file("fastly_test_cacert")
+		tls_client_cert    = file("fastly_test_certificate")
+		tls_client_key     = file("fastly_test_privatekey")
 		tls_hostname       = "example2.com"
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
@@ -305,15 +293,9 @@ EOF
 		compression_codec  = "gzip"
 		required_acks      = "1"
 		use_tls            = true
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert        = file("fastly_test_cacert")
+		tls_client_cert    = file("fastly_test_certificate")
+		tls_client_key     = file("fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"

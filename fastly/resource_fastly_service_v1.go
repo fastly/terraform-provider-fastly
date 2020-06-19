@@ -115,6 +115,7 @@ func resourceServiceV1() *schema.Resource {
 			"logging_newrelic":      newrelicSchema,
 			"logging_scalyr":        scalyrloggingSchema,
 			"logging_googlepubsub":  googlepubsubloggingSchema,
+			"logging_kafka":         kafkaloggingSchema,
 
 			"response_object": responseobjectSchema,
 			"request_setting": requestsettingSchema,
@@ -199,6 +200,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"logging_newrelic",
 		"logging_scalyr",
 		"logging_googlepubsub",
+		"logging_kafka",
 		"response_object",
 		"condition",
 		"request_setting",
@@ -437,6 +439,11 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 				return err
 			}
 		}
+		if d.HasChange("logging_kafka") {
+			if err := processKafka(d, conn, latestVersion); err != nil {
+				return err
+			}
+		}
 		if d.HasChange("response_object") {
 			if err := processResponseObject(d, conn, latestVersion); err != nil {
 				return err
@@ -634,6 +641,9 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if err := readGooglePubSub(conn, d, s); err != nil {
+			return err
+		}
+		if err := readKafka(conn, d, s); err != nil {
 			return err
 		}
 		if err := readResponseObject(conn, d, s); err != nil {

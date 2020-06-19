@@ -8,7 +8,6 @@ import (
 // pgpPublicKey returns a PEM encoded PGP public key suitable for testing.
 func pgpPublicKey() string {
 	return `-----BEGIN PGP PUBLIC KEY BLOCK-----
-
 mQINBFtsXH8BEAC5kwHMmO2e8pVxM9md8jZK+EqvWpZRTbDel3vzJeMrm8Iq/QUU
 I/BpNN8stBR7Qz1ZNG9XV2RMRSfNWmilMUwNE1ng6nz7K94GWU/odgJTDRIw3fgS
 qtPqRVPDavmsiJ0xdV6eFxlF9BDvcAWf9j5/DQe9gzQhcVxLYigSjC38xhULS9wI

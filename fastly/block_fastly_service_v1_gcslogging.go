@@ -21,7 +21,7 @@ func NewServiceGCSLogging() ServiceAttributeDefinition {
 }
 
 func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("gcslogging")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -95,7 +95,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	}
 
 	gcsl := flattenGCS(GCSList)
-	if err := d.Set("gcslogging", gcsl); err != nil {
+	if err := d.Set(h.GetKey(), gcsl); err != nil {
 		log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
 	}
 

@@ -22,7 +22,7 @@ func NewServiceLoggingNewRelic() ServiceAttributeDefinition {
 
 func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	od, nd := d.GetChange("logging_newrelic")
+	od, nd := d.GetChange(h.GetKey())
 
 	if od == nil {
 		od = new(schema.Set)
@@ -78,7 +78,7 @@ func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 
 	dll := flattenNewRelic(newrelicList)
 
-	if err := d.Set("logging_newrelic", dll); err != nil {
+	if err := d.Set(h.GetKey(), dll); err != nil {
 		log.Printf("[WARN] Error setting New Relic logging endpoints for (%s): %s", d.Id(), err)
 	}
 

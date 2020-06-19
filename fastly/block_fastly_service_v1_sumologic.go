@@ -21,7 +21,7 @@ func NewServiceSumologic() ServiceAttributeDefinition {
 }
 
 func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("sumologic")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -90,7 +90,7 @@ func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	}
 
 	sul := flattenSumologics(sumologicList)
-	if err := d.Set("sumologic", sul); err != nil {
+	if err := d.Set(h.GetKey(), sul); err != nil {
 		log.Printf("[WARN] Error setting Sumologic for (%s): %s", d.Id(), err)
 	}
 	return nil

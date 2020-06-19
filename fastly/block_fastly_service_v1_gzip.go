@@ -22,7 +22,7 @@ func NewServiceGZIP() ServiceAttributeDefinition {
 }
 
 func (h *GZIPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	og, ng := d.GetChange("gzip")
+	og, ng := d.GetChange(h.GetKey())
 	if og == nil {
 		og = new(schema.Set)
 	}
@@ -109,7 +109,7 @@ func (h *GZIPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 
 	gl := flattenGzips(gzipsList)
 
-	if err := d.Set("gzip", gl); err != nil {
+	if err := d.Set(h.GetKey(), gl); err != nil {
 		log.Printf("[WARN] Error setting Gzips for (%s): %s", d.Id(), err)
 	}
 

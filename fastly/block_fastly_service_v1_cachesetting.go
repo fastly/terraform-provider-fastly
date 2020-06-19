@@ -22,7 +22,7 @@ func NewServiceCacheSetting() ServiceAttributeDefinition {
 }
 
 func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	oc, nc := d.GetChange("cache_setting")
+	oc, nc := d.GetChange(h.GetKey())
 	if oc == nil {
 		oc = new(schema.Set)
 	}
@@ -87,7 +87,7 @@ func (h *CacheSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 
 	csl := flattenCacheSettings(cslList)
 
-	if err := d.Set("cache_setting", csl); err != nil {
+	if err := d.Set(h.GetKey(), csl); err != nil {
 		log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
 	}
 	return nil

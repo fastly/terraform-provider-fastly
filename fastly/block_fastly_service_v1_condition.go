@@ -28,7 +28,7 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	// get the full diff not a partial set item diff. Because this is done
 	// on a new version of the Fastly Service configuration, this is considered safe
 
-	oc, nc := d.GetChange("condition")
+	oc, nc := d.GetChange(h.GetKey())
 	if oc == nil {
 		oc = new(schema.Set)
 	}
@@ -97,7 +97,7 @@ func (h *ConditionServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 
 	cl := flattenConditions(conditionList)
 
-	if err := d.Set("condition", cl); err != nil {
+	if err := d.Set(h.GetKey(), cl); err != nil {
 		log.Printf("[WARN] Error setting Conditions for (%s): %s", d.Id(), err)
 	}
 	return nil

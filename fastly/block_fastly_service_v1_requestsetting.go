@@ -22,7 +22,7 @@ func NewServiceRequestSetting() ServiceAttributeDefinition {
 }
 
 func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("request_setting")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -88,7 +88,7 @@ func (h *RequestSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *
 
 	rl := flattenRequestSettings(rsList)
 
-	if err := d.Set("request_setting", rl); err != nil {
+	if err := d.Set(h.GetKey(), rl); err != nil {
 		log.Printf("[WARN] Error setting Request Settings for (%s): %s", d.Id(), err)
 	}
 	return nil

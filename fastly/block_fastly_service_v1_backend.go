@@ -22,7 +22,7 @@ func NewServiceBackend() ServiceAttributeDefinition {
 }
 
 func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	ob, nb := d.GetChange("backend")
+	ob, nb := d.GetChange(h.GetKey())
 	if ob == nil {
 		ob = new(schema.Set)
 	}
@@ -110,7 +110,7 @@ func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 
 	bl := flattenBackends(backendList)
 
-	if err := d.Set("backend", bl); err != nil {
+	if err := d.Set(h.GetKey(), bl); err != nil {
 		log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
 	}
 	return nil

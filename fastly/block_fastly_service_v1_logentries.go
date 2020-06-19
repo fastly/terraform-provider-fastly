@@ -21,7 +21,7 @@ func NewServiceLogentries() ServiceAttributeDefinition {
 }
 
 func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("logentries")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -94,7 +94,7 @@ func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	lel := flattenLogentries(logentriesList)
 
-	if err := d.Set("logentries", lel); err != nil {
+	if err := d.Set(h.GetKey(), lel); err != nil {
 		log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
 	}
 

@@ -21,7 +21,7 @@ func NewServiceResponseObject() ServiceAttributeDefinition {
 }
 
 func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	or, nr := d.GetChange("response_object")
+	or, nr := d.GetChange(h.GetKey())
 	if or == nil {
 		or = new(schema.Set)
 	}
@@ -92,7 +92,7 @@ func (h *ResponseObjectServiceAttributeHandler) Read(d *schema.ResourceData, s *
 
 	rol := flattenResponseObjects(responseObjectList)
 
-	if err := d.Set("response_object", rol); err != nil {
+	if err := d.Set(h.GetKey(), rol); err != nil {
 		log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
 	}
 	return nil

@@ -21,7 +21,7 @@ func NewServiceBlobStorageLogging() ServiceAttributeDefinition {
 }
 
 func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	obsl, nbsl := d.GetChange("blobstoragelogging")
+	obsl, nbsl := d.GetChange(h.GetKey())
 	if obsl == nil {
 		obsl = new(schema.Set)
 	}
@@ -99,7 +99,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData,
 
 	bsl := flattenBlobStorages(blobStorageList)
 
-	if err := d.Set("blobstoragelogging", bsl); err != nil {
+	if err := d.Set(h.GetKey(), bsl); err != nil {
 		log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
 	}
 	return nil

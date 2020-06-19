@@ -21,7 +21,7 @@ func NewServiceHealthCheck() ServiceAttributeDefinition {
 }
 
 func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	oh, nh := d.GetChange("healthcheck")
+	oh, nh := d.GetChange(h.GetKey())
 	if oh == nil {
 		oh = new(schema.Set)
 	}
@@ -97,7 +97,7 @@ func (h *HealthCheckServiceAttributeHandler) Read(d *schema.ResourceData, s *gof
 
 	hcl := flattenHealthchecks(healthcheckList)
 
-	if err := d.Set("healthcheck", hcl); err != nil {
+	if err := d.Set(h.GetKey(), hcl); err != nil {
 		log.Printf("[WARN] Error setting Healthcheck for (%s): %s", d.Id(), err)
 	}
 

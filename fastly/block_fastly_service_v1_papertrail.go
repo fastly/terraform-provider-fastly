@@ -21,7 +21,7 @@ func NewServicePaperTrail() ServiceAttributeDefinition {
 }
 
 func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("papertrail")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -92,7 +92,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	pl := flattenPapertrails(papertrailList)
 
-	if err := d.Set("papertrail", pl); err != nil {
+	if err := d.Set(h.GetKey(), pl); err != nil {
 		log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
 	}
 

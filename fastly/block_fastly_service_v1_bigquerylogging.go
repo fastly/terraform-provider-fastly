@@ -21,7 +21,7 @@ func NewServiceBigQueryLogging() ServiceAttributeDefinition {
 }
 
 func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("bigquerylogging")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -111,7 +111,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s 
 	}
 
 	bql := flattenBigQuery(BQList)
-	if err := d.Set("bigquerylogging", bql); err != nil {
+	if err := d.Set(h.GetKey(), bql); err != nil {
 		log.Printf("[WARN] Error setting bigquerylogging for (%s): %s", d.Id(), err)
 	}
 

@@ -21,7 +21,7 @@ func NewServiceDictionary() ServiceAttributeDefinition {
 }
 
 func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	oldDictVal, newDictVal := d.GetChange("dictionary")
+	oldDictVal, newDictVal := d.GetChange(h.GetKey())
 
 	if oldDictVal == nil {
 		oldDictVal = new(schema.Set)
@@ -87,7 +87,7 @@ func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	dict := flattenDictionaries(dictList)
 
-	if err := d.Set("dictionary", dict); err != nil {
+	if err := d.Set(h.GetKey(), dict); err != nil {
 		log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
 	}
 	return nil

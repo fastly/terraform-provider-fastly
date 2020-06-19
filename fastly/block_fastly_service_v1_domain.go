@@ -21,7 +21,7 @@ func NewServiceDomain() ServiceAttributeDefinition {
 }
 
 func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	od, nd := d.GetChange("domain")
+	od, nd := d.GetChange(h.GetKey())
 	if od == nil {
 		od = new(schema.Set)
 	}
@@ -94,7 +94,7 @@ func (h *DomainServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	// Refresh Domains
 	dl := flattenDomains(domainList)
 
-	if err := d.Set("domain", dl); err != nil {
+	if err := d.Set(h.GetKey(), dl); err != nil {
 		log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
 	}
 	return nil

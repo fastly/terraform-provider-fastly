@@ -399,7 +399,7 @@ resource "fastly_service_v1" "foo" {
     s3_access_key      = "%s"
     s3_secret_key      = "%s"
     response_condition = "response_condition_test"
-    public_key         = file("fastly_test_publickey")
+    public_key         = file("test_fixtures/fastly_test_publickey")
   }
 
   force_destroy = true
@@ -436,7 +436,7 @@ resource "fastly_service_v1" "foo" {
     s3_secret_key      = "%s"
     response_condition = "response_condition_test"
     message_type       = "blank"
-    public_key         = file("fastly_test_publickey")
+    public_key         = file("test_fixtures/fastly_test_publickey")
     redundancy         = "reduced_redundancy"
   }
 

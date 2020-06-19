@@ -268,7 +268,7 @@ resource "fastly_service_v1" "foo" {
 		address					= "sftp.example.com"
 		user						= "username"
 		password				= "password"
-		public_key      = file("fastly_test_publickey")
+		public_key      = file("test_fixtures/fastly_test_publickey")
 		path						   = "/"
 		ssh_known_hosts    = "sftp.example.com"
 		message_type       = "classic"
@@ -308,8 +308,8 @@ resource "fastly_service_v1" "foo" {
 		address					= "sftp.example.com"
 		port						= 2600
 		user						= "user"
-		public_key      = file("fastly_test_publickey")
-		secret_key      = file("fastly_test_privatekey")
+		public_key      = file("test_fixtures/fastly_test_publickey")
+		secret_key      = file("test_fixtures/fastly_test_privatekey")
 		path						   = "/logs/"
 		ssh_known_hosts    = "sftp.example.com"
 		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
@@ -322,8 +322,8 @@ resource "fastly_service_v1" "foo" {
 		name						= "another-sftp-endpoint"
 		address					= "sftp2.example.com"
 		user						= "user"
-		public_key      = file("fastly_test_publickey")
-		secret_key      = file("fastly_test_privatekey")
+		public_key      = file("test_fixtures/fastly_test_publickey")
+		secret_key      = file("test_fixtures/fastly_test_privatekey")
 		path						   = "/dir/"
 		ssh_known_hosts    = "sftp2.example.com"
 		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b"

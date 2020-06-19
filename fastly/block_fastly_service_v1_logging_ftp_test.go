@@ -217,7 +217,7 @@ resource "fastly_service_v1" "foo" {
     name       = "ftp-endpoint"
     address    = "ftp.example.com"
     user       = "user"
-	public_key = file("fastly_test_publickey")
+	public_key = file("test_fixtures/fastly_test_publickey")
     password         = "p@ssw0rd"
     path             = "/path"
     port             = 27
@@ -252,7 +252,7 @@ resource "fastly_service_v1" "foo" {
     address    = "ftp2.example.com"
     user       = "user"
     password   = "p@ssw0rd2"
-    public_key = file("fastly_test_publickey")
+    public_key = file("test_fixtures/fastly_test_publickey")
     path             = "/path"
     format           = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
     gzip_level       = 4
@@ -265,7 +265,7 @@ resource "fastly_service_v1" "foo" {
     address    = "ftp.example.com"
     user       = "user"
     password   = "p@ssw0rd"
-    public_key = file("fastly_test_publickey")
+    public_key = file("test_fixtures/fastly_test_publickey")
     path             = "/"
     period           = 360
     format           = "%%h %%l %%u %%t \"%%r\" %%>s %%b"

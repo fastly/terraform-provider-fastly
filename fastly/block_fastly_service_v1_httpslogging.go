@@ -23,7 +23,7 @@ func NewServiceHTTPSLogging() ServiceAttributeDefinition {
 
 func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	oh, nh := d.GetChange("httpslogging")
+	oh, nh := d.GetChange(h.GetKey())
 
 	if oh == nil {
 		oh = new(schema.Set)
@@ -79,7 +79,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 
 	hll := flattenHTTPS(httpsList)
 
-	if err := d.Set("httpslogging", hll); err != nil {
+	if err := d.Set(h.GetKey(), hll); err != nil {
 		log.Printf("[WARN] Error setting HTTPS logging endpoints for (%s): %s", d.Id(), err)
 	}
 

@@ -21,7 +21,7 @@ func NewServiceDirector() ServiceAttributeDefinition {
 }
 
 func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	od, nd := d.GetChange("director")
+	od, nd := d.GetChange(h.GetKey())
 	if od == nil {
 		od = new(schema.Set)
 	}
@@ -148,7 +148,7 @@ func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 
 	dirl := flattenDirectors(directorList, directorBackendList)
 
-	if err := d.Set("director", dirl); err != nil {
+	if err := d.Set(h.GetKey(), dirl); err != nil {
 		log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
 	}
 

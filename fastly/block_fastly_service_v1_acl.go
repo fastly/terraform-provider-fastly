@@ -21,7 +21,7 @@ func NewServiceACL() ServiceAttributeDefinition {
 }
 
 func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	oldACLVal, newACLVal := d.GetChange("acl")
+	oldACLVal, newACLVal := d.GetChange(h.GetKey())
 	if oldACLVal == nil {
 		oldACLVal = new(schema.Set)
 	}
@@ -87,7 +87,7 @@ func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 
 	al := flattenACLs(aclList)
 
-	if err := d.Set("acl", al); err != nil {
+	if err := d.Set(h.GetKey(), al); err != nil {
 		log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
 	}
 

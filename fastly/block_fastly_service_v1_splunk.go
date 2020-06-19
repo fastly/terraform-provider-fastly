@@ -21,7 +21,7 @@ func NewServiceSplunk() ServiceAttributeDefinition {
 }
 
 func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("splunk")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -109,7 +109,7 @@ func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	spl := flattenSplunks(splunkList)
 
-	if err := d.Set("splunk", spl); err != nil {
+	if err := d.Set(h.GetKey(), spl); err != nil {
 		log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
 	}
 	return nil

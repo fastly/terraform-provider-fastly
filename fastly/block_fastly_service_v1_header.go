@@ -22,7 +22,7 @@ func NewServiceHeader() ServiceAttributeDefinition {
 }
 
 func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	oh, nh := d.GetChange("header")
+	oh, nh := d.GetChange(h.GetKey())
 	if oh == nil {
 		oh = new(schema.Set)
 	}
@@ -89,7 +89,7 @@ func (h *HeaderServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	hl := flattenHeaders(headerList)
 
-	if err := d.Set("header", hl); err != nil {
+	if err := d.Set(h.GetKey(), hl); err != nil {
 		log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
 	}
 

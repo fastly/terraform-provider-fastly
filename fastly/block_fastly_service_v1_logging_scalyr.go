@@ -138,7 +138,7 @@ func (h *ScalyrServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	scalyrLogList := flattenScalyr(scalyrList)
 
-	if err := d.Set("logging_scalyr", scalyrLogList); err != nil {
+	if err := d.Set(h.GetKey(), scalyrLogList); err != nil {
 		log.Printf("[WARN] Error setting Scalyr logging endpoints for (%s): %s", d.Id(), err)
 	}
 

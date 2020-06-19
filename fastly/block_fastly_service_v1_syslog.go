@@ -21,7 +21,7 @@ func NewServiceSyslog() ServiceAttributeDefinition {
 }
 
 func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	os, ns := d.GetChange("syslog")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -99,7 +99,7 @@ func (h *SyslogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	sll := flattenSyslogs(syslogList)
 
-	if err := d.Set("syslog", sll); err != nil {
+	if err := d.Set(h.GetKey(), sll); err != nil {
 		log.Printf("[WARN] Error setting Syslog for (%s): %s", d.Id(), err)
 	}
 	return nil

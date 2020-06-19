@@ -24,7 +24,7 @@ func NewServiceS3Logging() ServiceAttributeDefinition {
 func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
-	os, ns := d.GetChange("s3logging")
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -71,7 +71,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 
 	sl := flattenS3s(s3List)
 
-	if err := d.Set("s3logging", sl); err != nil {
+	if err := d.Set(h.GetKey(), sl); err != nil {
 		log.Printf("[WARN] Error setting S3 Logging for (%s): %s", d.Id(), err)
 	}
 	return nil

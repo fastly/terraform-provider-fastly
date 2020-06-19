@@ -204,7 +204,7 @@ func (h *KafkaServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.
 
 	kafkaLogList := flattenKafka(kafkaList)
 
-	if err := d.Set("logging_kafka", kafkaLogList); err != nil {
+	if err := d.Set(h.GetKey(), kafkaLogList); err != nil {
 		log.Printf("[WARN] Error setting Kafka logging endpoints for (%s): %s", d.Id(), err)
 	}
 

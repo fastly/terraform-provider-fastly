@@ -288,7 +288,7 @@ resource "fastly_service_v1" "foo" {
 
 	logging_kafka {
 		name               = "kafkalogger2"
-	  topic  						 = "topicb"
+	  	topic  			   = "topicb"
 		brokers            = "127.0.0.3,127.0.0.4"
 		compression_codec  = "gzip"
 		required_acks      = "1"

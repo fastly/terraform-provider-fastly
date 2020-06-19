@@ -36,6 +36,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingGooglePubSub(),
 		NewServiceLoggingScalyr(),
 		NewServiceLoggingNewRelic(),
+		NewServiceLoggingKafka(),
 		NewServiceResponseObject(),
 		NewServiceRequestSetting(),
 		NewServiceVCL(),

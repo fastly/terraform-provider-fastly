@@ -129,19 +129,19 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 					Sensitive:   true,
 				},
 
-			"request_max_entries": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "The maximum number of logs sent in one request.",
-			},
+				"request_max_entries": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     0,
+					Description: "The maximum number of logs sent in one request.",
+				},
 
-			"request_max_bytes": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "The maximum number of bytes sent in one request.",
-			},
+				"request_max_bytes": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     0,
+					Description: "The maximum number of bytes sent in one request.",
+				},
 
 				"format": {
 					Type:        schema.TypeString,
@@ -158,32 +158,32 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 					ValidateFunc: validateLoggingFormatVersion(),
 				},
 
-			"tls_ca_cert": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
+				"tls_ca_cert": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+					Sensitive:   true,
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
 
-			"tls_client_cert": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
+				"tls_client_cert": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+					Sensitive:   true,
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
 
-			"tls_client_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The client private key used to make authenticated requests. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
+				"tls_client_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+					Sensitive:   true,
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
 
 				"tls_hostname": {
 					Type:        schema.TypeString,

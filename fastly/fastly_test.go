@@ -10,29 +10,29 @@ import (
 )
 
 // pgpPublicKey returns a PEM encoded PGP public key suitable for testing.
-func pgpPublicKey() string {
-	return readTestFile("./test_fixtures/fastly_test_publickey")
+func pgpPublicKey(t *testing.T) string {
+	return readTestFile("./test_fixtures/fastly_test_publickey", t)
 }
 
 // privatekey returns a ASN.1 DER encoded key suitable for testing.
-func privateKey() string {
-	return readTestFile("./test_fixtures/fastly_test_privatekey")
+func privateKey(t *testing.T) string {
+	return readTestFile("./test_fixtures/fastly_test_privatekey", t)
 }
 
 // certificate returns a ASN.1 DER encoded certificate for the private key suitable for testing.
-func certificate() string {
-	return readTestFile("./test_fixtures/fastly_test_certificate")
+func certificate(t *testing.T) string {
+	return readTestFile("./test_fixtures/fastly_test_certificate", t)
 }
 
 // caCert returns a CA certificate suitable for testing
-func caCert() string {
-	return readTestFile("./test_fixtures/fastly_test_cacert")
+func caCert(t *testing.T) string {
+	return readTestFile("./test_fixtures/fastly_test_cacert", t)
 }
 
-func readTestFile(filename string) string {
+func readTestFile(filename string, t *testing.T) string {
 	contents, err := ioutil.ReadFile(filename)
 	if err != nil {
-		panic(err)
+		t.Fatal("Cannot load key file: %s", filename)
 	}
 	return string(contents)
 }

@@ -55,12 +55,14 @@ var elasticsearchSchema = &schema.Schema{
 			"request_max_entries": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     0,
 				Description: "The maximum number of logs sent in one request.",
 			},
 
 			"request_max_bytes": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     0,
 				Description: "The maximum number of bytes sent in one request.",
 			},
 
@@ -83,6 +85,8 @@ var elasticsearchSchema = &schema.Schema{
 				Optional:    true,
 				Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_client_cert": {
@@ -90,6 +94,8 @@ var elasticsearchSchema = &schema.Schema{
 				Optional:    true,
 				Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_client_key": {
@@ -97,6 +103,8 @@ var elasticsearchSchema = &schema.Schema{
 				Optional:    true,
 				Description: "The client private key used to make authenticated requests. Must be in PEM format.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"tls_hostname": {
@@ -153,6 +161,21 @@ func processElasticsearch(d *schema.ResourceData, conn *gofastly.Client, latestV
 	// POST new/updated Elasticsearch logging endpoints.
 	for _, nRaw := range addElasticsearchLogging {
 		ef := nRaw.(map[string]interface{})
+
+		// @HACK for a TF SDK Issue.
+		//
+		// This ensures that the required, `name`, field is present.
+		//
+		// If we have made it this far and `name` is not present, it is most-likely due
+		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
+		//
+		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
+		// properly handles setting state with the StateFunc, it returns extra entries
+		// during state Gets, specifically `GetChange("logging_elasticsearch")` in this case.
+		if v, ok := ef["name"]; !ok || v.(string) == "" {
+			continue
+		}
+
 		opts := buildCreateElasticsearch(ef, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Elasticsearch logging addition opts: %#v", opts)

@@ -66,6 +66,8 @@ var splunkSchema = &schema.Schema{
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
 				Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.",
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 		},
 	},
@@ -109,6 +111,21 @@ func processSplunk(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	// POST new/updated Splunk configurations
 	for _, sRaw := range add {
 		sf := sRaw.(map[string]interface{})
+
+		// @HACK for a TF SDK Issue.
+		//
+		// This ensures that the required, `name`, field is present.
+		//
+		// If we have made it this far and `name` is not present, it is most-likely due
+		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
+		//
+		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
+		// properly handles setting state with the StateFunc, it returns extra entries
+		// during state Gets, specifically `GetChange("splunk")` in this case.
+		if v, ok := sf["name"]; !ok || v.(string) == "" {
+			continue
+		}
+
 		opts := gofastly.CreateSplunkInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

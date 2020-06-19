@@ -170,6 +170,10 @@ Wm7DCfrPNGVwFWUQOmsPue9rZBgO
 -----END CERTIFICATE-----`
 }
 
+func appendNewLine(s string) string {
+	return s + "\n"
+}
+
 // escapePercentSign uses Terraform's escape syntax (i.e., repeating characters)
 // to properly escape percent signs (i.e., '%').
 //

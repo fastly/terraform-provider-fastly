@@ -32,7 +32,7 @@ func caCert(t *testing.T) string {
 func readTestFile(filename string, t *testing.T) string {
 	contents, err := ioutil.ReadFile(filename)
 	if err != nil {
-		t.Fatal("Cannot load key file: %s", filename)
+		t.Fatalf("Cannot load key file: %s", filename)
 	}
 	return string(contents)
 }

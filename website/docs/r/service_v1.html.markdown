@@ -539,8 +539,8 @@ The `logging_elasticsearch` block supports:
 * `user` - (Optional) BasicAuth username for Elasticsearch.
 * `password` - (Optional) BasicAuth password for Elasticsearch.
 * `pipeline` - (Optional) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing.
-* `request_max_bytes` - (Optional) The maximum number of bytes sent in one request.
-* `request_max_entries` - (Optional) The maximum number of logs sent in one request.
+* `request_max_bytes` - (Optional) The maximum number of bytes sent in one request. Defaults to `0` for unbounded.
+* `request_max_entries` - (Optional) The maximum number of logs sent in one request. Defaults to `0` for unbounded.
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format.
 * `tls_client_cert` - (Optional) The client certificate used to make authenticated requests. Must be in PEM format.
 * `tls_client_key` - (Optional) The client private key used to make authenticated requests. Must be in PEM format.

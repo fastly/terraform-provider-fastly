@@ -9,74 +9,89 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var googlepubsubloggingSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the Google Cloud Pub/Sub logging endpoint.",
-			},
-
-			"user": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Your Google Cloud Platform service account email address. The client_email field in your service account authentication JSON. ",
-			},
-
-			"secret_key": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Your Google Cloud Platform account secret key. The private_key field in your service account authentication JSON.",
-			},
-
-			"project_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The ID of your Google Cloud Platform project.",
-			},
-
-			"topic": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The Google Cloud Pub/Sub topic to which logs will be published.",
-			},
-
-			// Optional
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Apache style log formatting.",
-			},
-
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      2,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-			},
-		},
-	},
+type GooglePubSubServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processGooglePubSub(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceLoggingGooglePubSub() ServiceAttributeDefinition {
+	return &GooglePubSubServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "logging_googlepubsub",
+		},
+	}
+}
+
+func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the Google Cloud Pub/Sub logging endpoint.",
+				},
+
+				"user": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Your Google Cloud Platform service account email address. The client_email field in your service account authentication JSON. ",
+				},
+
+				"secret_key": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Your Google Cloud Platform account secret key. The private_key field in your service account authentication JSON.",
+				},
+
+				"project_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The ID of your Google Cloud Platform project.",
+				},
+
+				"topic": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The Google Cloud Pub/Sub topic to which logs will be published.",
+				},
+
+				// Optional
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache style log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+				},
+			},
+		},
+	}
+	return nil
+}
+
+func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldLogCfg, newLogCfg := d.GetChange("logging_googlepubsub")
 
@@ -120,7 +135,7 @@ func processGooglePubSub(d *schema.ResourceData, conn *gofastly.Client, latestVe
 	return nil
 }
 
-func readGooglePubSub(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *GooglePubSubServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Google Cloud Pub/Sub logging endpoints.
 	log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
 	googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{

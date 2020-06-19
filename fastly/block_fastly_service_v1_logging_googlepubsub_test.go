@@ -205,7 +205,7 @@ resource "fastly_service_v1" "foo" {
 	logging_googlepubsub {
 		name               = "googlepubsublogger"
 		user               = "user"
-		secret_key         = file("fastly_test_privatekey")
+		secret_key         = file("test_fixtures/fastly_test_privatekey")
 		project_id         = "project-id"
 	  topic  						 = "topic"
 		response_condition = "response_condition_test"
@@ -244,7 +244,7 @@ resource "fastly_service_v1" "foo" {
 	logging_googlepubsub {
 		name               = "googlepubsublogger"
 		user               = "newuser"
-		secret_key         = file("fastly_test_privatekey")
+		secret_key         = file("test_fixtures/fastly_test_privatekey")
 		project_id         = "new-project-id"
 	  topic  						 = "newtopic"
 		response_condition = "response_condition_test"
@@ -256,7 +256,7 @@ resource "fastly_service_v1" "foo" {
 	logging_googlepubsub {
 		name               = "googlepubsublogger2"
 		user               = "user2"
-		secret_key         = file("fastly_test_privatekey")
+		secret_key         = file("test_fixtures/fastly_test_privatekey")
 		project_id         = "project-id"
 	  topic  						 = "topicb"
 		response_condition = "response_condition_test"

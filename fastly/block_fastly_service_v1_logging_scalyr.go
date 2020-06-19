@@ -9,63 +9,78 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var scalyrloggingSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the Scalyr logging endpoint.",
-			},
-
-			"token": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The token to use for authentication (https://www.scalyr.com/keys).",
-			},
-
-			// Optional
-			"region": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "US",
-				Description: "The region that log data will be sent to. One of US or EU. Defaults to US if undefined.",
-			},
-
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Apache style log formatting.",
-			},
-
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      2,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-			},
-		},
-	},
+type ScalyrServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processScalyr(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceLoggingScalyr() ServiceAttributeDefinition {
+	return &ScalyrServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "logging_scalyr",
+		},
+	}
+}
+
+func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the Scalyr logging endpoint.",
+				},
+
+				"token": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The token to use for authentication (https://www.scalyr.com/keys).",
+				},
+
+				// Optional
+				"region": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "US",
+					Description: "The region that log data will be sent to. One of US or EU. Defaults to US if undefined.",
+				},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache style log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+				},
+			},
+		},
+	}
+	return nil
+}
+
+func (h *ScalyrServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldLogCfg, newLogCfg := d.GetChange("logging_scalyr")
 
@@ -109,7 +124,7 @@ func processScalyr(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-func readScalyr(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *ScalyrServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Scalyr.
 	log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
 	scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{

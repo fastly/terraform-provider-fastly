@@ -40,7 +40,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	// DELETE old S3 Log configurations.
 	for _, sRaw := range removeS3Logging {
 		opts := buildDeleteS3(sRaw, serviceID, latestVersion)
-		err  := deleteS3(conn, opts)
+		err := deleteS3(conn, opts)
 		if err != nil {
 			return err
 		}
@@ -191,7 +191,6 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 					Optional:    true,
 					Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`.",
 				},
-
 			},
 		},
 	}

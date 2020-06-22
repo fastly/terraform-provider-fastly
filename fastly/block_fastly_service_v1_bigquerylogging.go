@@ -48,6 +48,8 @@ var bigqueryloggingSchema = &schema.Schema{
 				DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
 				Description: "The secret key associated with the target BigQuery dataset on your account.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 			"format": {
 				Type:        schema.TypeString,
@@ -114,6 +116,21 @@ func processBigQueryLogging(d *schema.ResourceData, conn *gofastly.Client, lates
 	// POST new/updated bigquerylogging
 	for _, pRaw := range addBigquerylogging {
 		sf := pRaw.(map[string]interface{})
+
+		// @HACK for a TF SDK Issue.
+		//
+		// This ensures that the required, `name`, field is present.
+		//
+		// If we have made it this far and `name` is not present, it is most-likely due
+		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
+		//
+		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
+		// properly handles setting state with the StateFunc, it returns extra entries
+		// during state Gets, specifically `GetChange("bigquerylogging")` in this case.
+		if v, ok := sf["name"]; !ok || v.(string) == "" {
+			continue
+		}
+
 		opts := gofastly.CreateBigQueryInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

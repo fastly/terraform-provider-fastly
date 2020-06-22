@@ -86,7 +86,7 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Address:           "sftp.example.com",
 		User:              "username",
 		Password:          "password",
-		PublicKey:         pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		PublicKey:         pgpPublicKey(),
 		Path:              "/",
 		SSHKnownHosts:     "sftp.example.com",
 		Placement:         "none",
@@ -107,8 +107,8 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Name:              "sftp-endpoint",
 		Address:           "sftp.example.com",
 		User:              "user",
-		PublicKey:         pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
-		SecretKey:         privateKey() + "\n",   // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		PublicKey:         pgpPublicKey(),
+		SecretKey:         privateKey(),
 		Path:              "/logs/",
 		SSHKnownHosts:     "sftp.example.com",
 		MessageType:       "blank",
@@ -130,8 +130,8 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Address:           "sftp2.example.com",
 		User:              "user",
 		Path:              "/dir/",
-		PublicKey:         pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
-		SecretKey:         privateKey() + "\n",   // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		PublicKey:         pgpPublicKey(),
+		SecretKey:         privateKey(),
 		SSHKnownHosts:     "sftp2.example.com",
 		ResponseCondition: "response_condition_test",
 		MessageType:       "loggly",
@@ -274,6 +274,7 @@ EOF
 		path						   = "/"
 		ssh_known_hosts    = "sftp.example.com"
 		message_type       = "classic"
+		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
 		placement          = "none"
 		response_condition = "response_condition_test"
 	}
@@ -335,6 +336,7 @@ EOF
 EOF
 		path						   = "/dir/"
 		ssh_known_hosts    = "sftp2.example.com"
+		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
 		message_type       = "loggly"
 		response_condition = "response_condition_test"
 		placement          = "none"

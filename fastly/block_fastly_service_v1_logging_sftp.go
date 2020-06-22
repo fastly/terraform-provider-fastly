@@ -64,12 +64,16 @@ var sftpSchema = &schema.Schema{
 				Optional:    true,
 				Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
 				Sensitive:   true,
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"public_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+				StateFunc: trimSpaceStateFunc,
 			},
 
 			"period": {
@@ -162,6 +166,20 @@ func processSFTP(d *schema.ResourceData, conn *gofastly.Client, latestVersion in
 	// POST new/updated SFTP logging endpoints.
 	for _, nRaw := range addSFTPLogging {
 		sf := nRaw.(map[string]interface{})
+
+		// @HACK for a TF SDK Issue.
+		//
+		// This ensures that the required, `name`, field is present.
+		//
+		// If we have made it this far and `name` is not present, it is most-likely due
+		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
+		//
+		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
+		// properly handles setting state with the StateFunc, it returns extra entries
+		// during state Gets, specifically `GetChange("logging_sftp")` in this case.
+		if v, ok := sf["name"]; !ok || v.(string) == "" {
+			continue
+		}
 
 		opts := buildCreateSFTP(sf, serviceID, latestVersion)
 

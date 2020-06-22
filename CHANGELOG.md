@@ -1,4 +1,30 @@
-## 0.17.0 (Unreleased)
+## 0.18.0 (Unreleased)
+
+## 0.17.0 (June 22, 2020)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1/logging_googlepubsub: Add Google Cloud Pub/Sub logging support ([#258](https://github.com/terraform-providers/terraform-provider-fastly/pull/258))
+* resource/fastly_service_v1/logging_kafka: Add Kafka logging support ([#254](https://github.com/terraform-providers/terraform-provider-fastly/pull/254))
+* resource/fastly_service_v1/logging_scalyr: Add Scalyr logging support ([#252](https://github.com/terraform-providers/terraform-provider-fastly/pull/252))
+* resource/fastly_service_v1/s3logging: Add support for public key field ([#249](https://github.com/terraform-providers/terraform-provider-fastly/pull/249))
+* resource/fastly_service_v1/logging_newrelic: Add New Relic logging support ([#243](https://github.com/terraform-providers/terraform-provider-fastly/pull/243))
+* resource/fastly_service_v1/logging_datadog: Add Datadog logging support ([#242](https://github.com/terraform-providers/terraform-provider-fastly/pull/242))
+* resource/fastly_service_v1/logging_loggly: Add Loggly logging support ([#241](https://github.com/terraform-providers/terraform-provider-fastly/pull/241))
+* resource/fastly_service_v1/logging_sftp: Add SFTP logging support ([#236](https://github.com/terraform-providers/terraform-provider-fastly/pull/236))
+* resource/fastly_service_v1/logging_ftp: Add FTP logging support ([#235](https://github.com/terraform-providers/terraform-provider-fastly/pull/235))
+* resource/fastly_service_v1/logging_elasticsearch: Add Elasticsearch logging support ([#234](https://github.com/terraform-providers/terraform-provider-fastly/pull/234))
+
+NOTES:
+
+* resource/fastly_service_v1/sftp: Use `trimSpaceStateFunc` to trim leading and trailing whitespace from the `public_key` and `secret_key` fields ([#268](https://github.com/terraform-providers/terraform-provider-fastly/pull/268))
+* resource/fastly_service_v1/bigquerylogging: Use `trimSpaceStateFunc` to trim leading and trailing whitespace from the `secret_key` field ([#268](https://github.com/terraform-providers/terraform-provider-fastly/pull/268))
+* resource/fastly_service_v1/httpslogging: Use `trimSpaceStateFunc` to trim leading and trailing whitespace from the `tls_ca_cert`, `tls_client_cert` and `tls_client_key` fields ([#264](https://github.com/terraform-providers/terraform-provider-fastly/pull/264))
+* resource/fastly_service_v1/splunk: Use `trimSpaceStateFunc` to trim leading and trailing whitespace from the `tls_ca_cert` field ([#264](https://github.com/terraform-providers/terraform-provider-fastly/pull/264))
+* resource/fastly_service_v1/\*: Migrate schemas to block separate block files ([#262](https://github.com/terraform-providers/terraform-provider-fastly/pull/262))
+* resource/fastly_service_v1/acl: Migrated to block file ([#253](https://github.com/terraform-providers/terraform-provider-fastly/pull/253))
+* provider: Update `go-fastly` client to v1.5.0 ([#248](https://github.com/terraform-providers/terraform-provider-fastly/pull/248))
+
 ## 0.16.1 (June 03, 2020)
 
 BUG FIXES:

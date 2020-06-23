@@ -14,31 +14,31 @@ var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
 // ServiceAttributeDefinition provides an interface for service attributes.
 // We compose a service resource out of attribute objects to allow us to construct both the VCL and Wasm service
-// resources from common components
+// resources from common components.
 type ServiceAttributeDefinition interface {
-	// Register add the attribute to the resource schema
+	// Register add the attribute to the resource schema.
 	Register(d *schema.Resource) error
 
-	// Read refreshes the attribute state against the Fastly API
+	// Read refreshes the attribute state against the Fastly API.
 	Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error
 
-	// Process creates or updates the attribute against the Fastly API
+	// Process creates or updates the attribute against the Fastly API.
 	Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error
 
-	// HasChange returns whether the state of the attribute has changed against Terraform stored state
+	// HasChange returns whether the state of the attribute has changed against Terraform stored state.
 	HasChange(d *schema.ResourceData) bool
 
-	// MustProcess returns whether we must Process the resource (usually HasChange==true but allowing exceptions)
+	// MustProcess returns whether we must process the resource (usually HasChange==true but allowing exceptions).
 	MustProcess(d *schema.ResourceData, initialVersion bool) bool
 }
 
-// DefaultServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition
+// DefaultServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DefaultServiceAttributeHandler struct {
 	schema *schema.Schema
 	key    string
 }
 
-// GetKey is provided since most attributes will just use their private "key" for interacting with the service
+// GetKey is provided since most attributes will just use their private "key" for interacting with the service.
 func (h *DefaultServiceAttributeHandler) GetKey() string {
 	return h.key
 }
@@ -55,14 +55,14 @@ func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, ini
 // There are two types of service: VCL and Wasm. This interface specifies the data object from which service resources
 // are constructed.
 type ServiceDefinition interface {
-	// GetType returns whether this is a VCL or Wasm service?
+	// GetType returns whether this is a VCL or Wasm service.
 	GetType() string
 
-	// GetAttributeHandler returns the list of attributes/handlers supported by this service
+	// GetAttributeHandler returns the list of attributes/handlers supported by this service.
 	GetAttributeHandler() []ServiceAttributeDefinition
 }
 
-// BaseServiceDefinition is the base implementation of the BaseServiceDefinition interface
+// BaseServiceDefinition is the base implementation of the BaseServiceDefinition interface.
 type BaseServiceDefinition struct {
 	Attributes []ServiceAttributeDefinition
 	Type       string
@@ -76,7 +76,7 @@ func (d *BaseServiceDefinition) GetAttributeHandler() []ServiceAttributeDefiniti
 	return d.Attributes
 }
 
-// resourceService returns a Terraform resource schema for VCL or Wasm
+// resourceService returns a Terraform resource schema for VCL or Wasm.
 func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	s := &schema.Resource{
 		Create: resourceCreate(serviceDef),
@@ -142,14 +142,14 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	}
 
 	for _, a := range serviceDef.GetAttributeHandler() {
-		a.Register(s) // Mutates s, adding handler-specific schema items to the list
+		a.Register(s) // Mutates s, adding handler-specific schema items to the list.
 	}
 
 	return s
 }
 
 // resourceCreate satisfies the Terraform resource schema Create "interface"
-// while injecting the ServiceDefinition into the true Create functionality
+// while injecting the ServiceDefinition into the true Create functionality.
 func resourceCreate(serviceDef ServiceDefinition) schema.CreateFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceCreate(data, i, serviceDef)
@@ -157,7 +157,7 @@ func resourceCreate(serviceDef ServiceDefinition) schema.CreateFunc {
 }
 
 // resourceRead satisfies the Terraform resource schema Read "interface"
-// while injecting the ServiceDefinition into the true Read functionality
+// while injecting the ServiceDefinition into the true Read functionality.
 func resourceRead(serviceDef ServiceDefinition) schema.ReadFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceRead(data, i, serviceDef)
@@ -165,7 +165,7 @@ func resourceRead(serviceDef ServiceDefinition) schema.ReadFunc {
 }
 
 // resourceUpdate satisfies the Terraform resource schema Update "interface"
-// while injecting the ServiceDefinition into the true Update functionality
+// while injecting the ServiceDefinition into the true Update functionality.
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceUpdate(data, i, serviceDef)
@@ -173,14 +173,14 @@ func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateFunc {
 }
 
 // resourceDelete satisfies the Terraform resource schema Delete "interface"
-// while injecting the ServiceDefinition into the true Delete functionality
+// while injecting the ServiceDefinition into the true Delete functionality.
 func resourceDelete(serviceDef ServiceDefinition) schema.DeleteFunc {
 	return func(data *schema.ResourceData, i interface{}) error {
 		return resourceServiceDelete(data, i, serviceDef)
 	}
 }
 
-// resourceServiceCreate provides service resource Create functionality
+// resourceServiceCreate provides service resource Create functionality.
 func resourceServiceCreate(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	if err := validateVCLs(d); err != nil {
 		return err
@@ -201,7 +201,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}, serviceDef 
 	return resourceServiceUpdate(d, meta, serviceDef)
 }
 
-// resourceServiceUpdate provides service resource Update functionality
+// resourceServiceUpdate provides service resource Update functionality.
 func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	if err := validateVCLs(d); err != nil {
 		return err
@@ -209,7 +209,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 
 	conn := meta.(*FastlyClient).conn
 
-	// Update Name and/or Comment. No new verions is required for this
+	// Update Name and/or Comment. No new version is required for this.
 	if d.HasChange("name") || d.HasChange("comment") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ID:      d.Id(),
@@ -224,7 +224,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 	// Once activated, Versions are locked and become immutable. This is true for
 	// versions that are no longer active. For Domains, Backends, DefaultHost and
 	// DefaultTTL, a new Version must be created first, and updates posted to that
-	// Version. Loop these attributes and determine if we need to create a new version first
+	// Version. Loop these attributes and determine if we need to create a new version first.
 	var needsChange bool
 	for _, a := range serviceDef.GetAttributeHandler() {
 		if a.HasChange(d) {
@@ -233,12 +233,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		}
 	}
 
-	// Update the active version's comment. No new version is required for this
+	// Update the active version's comment. No new version is required for this.
 	if d.HasChange("version_comment") && !needsChange {
 		latestVersion := d.Get("active_version").(int)
 		if latestVersion == 0 {
 			// If the service was just created, there is an empty Version 1 available
-			// that is unlocked and can be updated
+			// that is unlocked and can be updated.
 			latestVersion = 1
 		}
 
@@ -262,10 +262,10 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		if latestVersion == 0 {
 			initialVersion = true
 			// If the service was just created, there is an empty Version 1 available
-			// that is unlocked and can be updated
+			// that is unlocked and can be updated.
 			latestVersion = 1
 		} else {
-			// Clone the latest version, giving us an unlocked version we can modify
+			// Clone the latest version, giving us an unlocked version we can modify.
 			log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
 			newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
 				Service: d.Id(),
@@ -275,17 +275,17 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 				return err
 			}
 
-			// The new version number is named "Number", but it's actually a string
+			// The new version number is named "Number", but it's actually a string.
 			latestVersion = newVersion.Number
 			d.Set("cloned_version", latestVersion)
 
 			// New versions are not immediately found in the API, or are not
 			// immediately mutable, so we need to sleep a few and let Fastly ready
-			// itself. Typically, 7 seconds is enough
+			// itself. Typically, 7 seconds is enough.
 			log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
 			time.Sleep(7 * time.Second)
 
-			// Update the cloned version's comment
+			// Update the cloned version's comment.
 			if d.Get("version_comment").(string) != "" {
 				opts := gofastly.UpdateVersionInput{
 					Service: d.Id(),
@@ -309,7 +309,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 			}
 		}
 
-		// validate version
+		// Validate version.
 		log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
 		valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
 			Service: d.Id(),
@@ -336,7 +336,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 			}
 
 			// Only if the version is valid and activated do we set the active_version.
-			// This prevents us from getting stuck in cloning an invalid version
+			// This prevents us from getting stuck in cloning an invalid version.
 			d.Set("active_version", latestVersion)
 		} else {
 			log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
@@ -349,12 +349,12 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 	return resourceServiceRead(d, meta, serviceDef)
 }
 
-// resourceServiceRead provides service resource Read functionality
+// resourceServiceRead provides service resource Read functionality.
 func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	conn := meta.(*FastlyClient).conn
 
 	// Find the Service. Discard the service because we need the ServiceDetails,
-	// not just a Service record
+	// not just a Service record.
 	_, err := findService(d.Id(), meta)
 	if err != nil {
 		switch err {
@@ -382,7 +382,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll
 	// have an empty ActiveService version (no version is active, so we can't
-	// query for information on it)
+	// query for information on it).
 	if s.ActiveVersion.Number != 0 {
 
 		for _, a := range serviceDef.GetAttributeHandler() {
@@ -398,13 +398,13 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 	return nil
 }
 
-// resourceServiceDelete provides service resource Delete functionality
+// resourceServiceDelete provides service resource Delete functionality.
 func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
 	conn := meta.(*FastlyClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.
 	// If `force_destroy` is given, we deactivate the active version and then send
-	// the DELETE call
+	// the DELETE call.
 	if d.Get("force_destroy").(bool) {
 		s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 			ID: d.Id(),
@@ -436,7 +436,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef 
 	_, err = findService(d.Id(), meta)
 	if err != nil {
 		switch err {
-		// we expect no records to be found here
+		// We expect no records to be found here.
 		case fastlyNoServiceFoundErr:
 			d.SetId("")
 			return nil
@@ -445,7 +445,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef 
 		}
 	}
 
-	// findService above returned something and nil error, but shouldn't have
+	// findService above returned something and nil error, but shouldn't have.
 	return fmt.Errorf("[WARN] Tried deleting Service (%s), but was still found", d.Id())
 
 }
@@ -459,7 +459,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef 
 // (days, in my testing). In order to determine if a Service is deleted, we
 // need to hit /service and loop the returned Services, searching for the one
 // in question. This endpoint only returns active or "alive" services. If the
-// Service is not included, then it's "gone"
+// Service is not included, then it's "gone".
 //
 // Returns a fastlyNoServiceFoundErr error if the Service is not found in the
 // ListServices response.

@@ -29,6 +29,8 @@ type ServiceAttributeDefinition interface {
 	HasChange(d *schema.ResourceData) bool
 
 	// MustProcess returns whether we must process the resource (usually HasChange==true but allowing exceptions).
+	// For example: at present, the settings attributeHandler (block_fastly_service_v1_settings.go) must process when
+	// default_ttl==0 and it is the initialVersion - as well as when default_ttl or default_host have changed.
 	MustProcess(d *schema.ResourceData, initialVersion bool) bool
 }
 
@@ -43,10 +45,12 @@ func (h *DefaultServiceAttributeHandler) GetKey() string {
 	return h.key
 }
 
+// See interface definition for comments.
 func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
 	return d.HasChange(h.key)
 }
 
+// See interface definition for comments.
 func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, initialVersion bool) bool {
 	return h.HasChange(d)
 }

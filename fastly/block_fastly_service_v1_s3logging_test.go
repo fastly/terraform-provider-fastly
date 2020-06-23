@@ -40,7 +40,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					MessageType:                  "classic",
 					TimestampFormat:              "%Y-%m-%dT%H:%M:%S.000",
 					Placement:                    "none",
-					PublicKey:                    pgpPublicKey(),
+					PublicKey:                    pgpPublicKey(t),
 					Redundancy:                   "reduced_redundancy",
 					ServerSideEncryptionKMSKeyID: "kmskey",
 					ServerSideEncryption:         gofastly.S3ServerSideEncryptionAES,
@@ -62,7 +62,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"message_type":                      "classic",
 					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
 					"placement":                         "none",
-					"public_key":                        pgpPublicKey(),
+					"public_key":                        pgpPublicKey(t),
 					"redundancy":                        gofastly.S3RedundancyReduced,
 					"server_side_encryption":            gofastly.S3ServerSideEncryptionAES,
 					"server_side_encryption_kms_key_id": "kmskey",
@@ -92,7 +92,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		AccessKey:         testAwsPrimaryAccessKey,
 		SecretKey:         testAwsPrimarySecretKey,
 		Period:            uint(3600),
-		PublicKey:         pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.,
+		PublicKey:         pgpPublicKey(t),
 		GzipLevel:         uint(0),
 		Format:            "%h %l %u %t %r %>s",
 		FormatVersion:     1,
@@ -109,7 +109,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		AccessKey:         testAwsPrimaryAccessKey,
 		SecretKey:         testAwsPrimarySecretKey,
 		Period:            uint(3600),
-		PublicKey:         pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.,
+		PublicKey:         pgpPublicKey(t),
 		GzipLevel:         uint(0),
 		Format:            "%h %l %u %t %r %>s",
 		FormatVersion:     1,
@@ -399,9 +399,7 @@ resource "fastly_service_v1" "foo" {
     s3_access_key      = "%s"
     s3_secret_key      = "%s"
     response_condition = "response_condition_test"
-    public_key         = <<EOF
-`+pgpPublicKey()+`
-EOF
+    public_key         = file("test_fixtures/fastly_test_publickey")
   }
 
   force_destroy = true
@@ -438,9 +436,7 @@ resource "fastly_service_v1" "foo" {
     s3_secret_key      = "%s"
     response_condition = "response_condition_test"
     message_type       = "blank"
-    public_key         = <<EOF
-`+pgpPublicKey()+`
-EOF
+    public_key         = file("test_fixtures/fastly_test_publickey")
     redundancy         = "reduced_redundancy"
   }
 

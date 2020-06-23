@@ -9,35 +9,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var vclSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A name to refer to this VCL configuration",
-			},
-			"content": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The contents of this VCL configuration",
-			},
-			"main": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Should this VCL configuration be the main configuration",
-			},
-		},
-	},
+type VCLServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processVCL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceVCL() ServiceAttributeDefinition {
+	return &VCLServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "vcl",
+		},
+	}
+}
+
+func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
 	// endpoint to update a VCL, we simply destroy it and create a new one.
-	oldVCLVal, newVCLVal := d.GetChange("vcl")
+	oldVCLVal, newVCLVal := d.GetChange(h.GetKey())
 	if oldVCLVal == nil {
 		oldVCLVal = new(schema.Set)
 	}
@@ -104,7 +91,7 @@ func processVCL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 	return nil
 }
 
-func readVCL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *VCLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
 	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
 		Service: d.Id(),
@@ -116,8 +103,36 @@ func readVCL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceD
 
 	vl := flattenVCLs(vclList)
 
-	if err := d.Set("vcl", vl); err != nil {
+	if err := d.Set(h.GetKey(), vl); err != nil {
 		log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *VCLServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A name to refer to this VCL configuration",
+				},
+				"content": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The contents of this VCL configuration",
+				},
+				"main": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Should this VCL configuration be the main configuration",
+				},
+			},
+		},
 	}
 	return nil
 }

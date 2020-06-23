@@ -9,44 +9,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var conditionSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"statement": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The statement used to determine if the condition is met",
-			},
-			"priority": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     10,
-				Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
-				ValidateFunc: validateConditionType(),
-			},
-		},
-	},
+type ConditionServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processCondition(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceCondition() ServiceAttributeDefinition {
+	return &ConditionServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "condition",
+		},
+	}
+}
+
+func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: we don't utilize the PUT endpoint to update these objects, we simply
 	// destroy any that have changed, and create new ones with the updated
 	// values. This is how Terraform works with nested sub resources, we only
 	// get the full diff not a partial set item diff. Because this is done
 	// on a new version of the Fastly Service configuration, this is considered safe
 
-	oc, nc := d.GetChange("condition")
+	oc, nc := d.GetChange(h.GetKey())
 	if oc == nil {
 		oc = new(schema.Set)
 	}
@@ -102,7 +84,7 @@ func processCondition(d *schema.ResourceData, conn *gofastly.Client, latestVersi
 	return nil
 }
 
-func readCondition(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *ConditionServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
 	conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
 		Service: d.Id(),
@@ -115,8 +97,41 @@ func readCondition(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Se
 
 	cl := flattenConditions(conditionList)
 
-	if err := d.Set("condition", cl); err != nil {
+	if err := d.Set(h.GetKey(), cl); err != nil {
 		log.Printf("[WARN] Error setting Conditions for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"statement": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The statement used to determine if the condition is met",
+				},
+				"priority": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     10,
+					Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
+				},
+				"type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
+					ValidateFunc: validateConditionType(),
+				},
+			},
+		},
 	}
 	return nil
 }

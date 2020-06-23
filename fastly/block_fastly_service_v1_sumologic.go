@@ -8,61 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var sumologicSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this logging setup",
-			},
-			"url": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The URL to POST to.",
-			},
-			// Optional fields
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "%h %l %u %t %r %>s",
-				Description: "Apache-style string or VCL variables to use for log formatting",
-			},
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Name of a condition to apply this logging.",
-			},
-			"message_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "classic",
-				Description:  "How the message should be formatted.",
-				ValidateFunc: validateLoggingMessageType(),
-			},
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-		},
-	},
+type SumologicServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processSumologic(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	os, ns := d.GetChange("sumologic")
+func NewServiceSumologic() ServiceAttributeDefinition {
+	return &SumologicServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "sumologic",
+		},
+	}
+}
+
+func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -119,7 +78,7 @@ func processSumologic(d *schema.ResourceData, conn *gofastly.Client, latestVersi
 	return nil
 }
 
-func readSumologic(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
 		Service: d.Id(),
@@ -131,8 +90,64 @@ func readSumologic(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Se
 	}
 
 	sul := flattenSumologics(sumologicList)
-	if err := d.Set("sumologic", sul); err != nil {
+	if err := d.Set(h.GetKey(), sul); err != nil {
 		log.Printf("[WARN] Error setting Sumologic for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this logging setup",
+				},
+				"url": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The URL to POST to.",
+				},
+				// Optional fields
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%h %l %u %t %r %>s",
+					Description: "Apache-style string or VCL variables to use for log formatting",
+				},
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of a condition to apply this logging.",
+				},
+				"message_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "classic",
+					Description:  "How the message should be formatted.",
+					ValidateFunc: validateLoggingMessageType(),
+				},
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+			},
+		},
 	}
 	return nil
 }

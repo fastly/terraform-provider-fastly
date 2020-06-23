@@ -8,65 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var directorSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A name to refer to this director",
-			},
-			"backends": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "List of backends associated with this director",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			// optional fields
-			"capacity": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     100,
-				Description: "Load balancing weight for the backends",
-			},
-			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"shield": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Selected POP to serve as a 'shield' for origin servers.",
-			},
-			"quorum": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      75,
-				Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
-				ValidateFunc: validateDirectorQuorum(),
-			},
-			"type": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				Description:  "Type of load balance group to use. Integer, 1 to 4. Values: 1 (random), 3 (hash), 4 (client)",
-				ValidateFunc: validateDirectorType(),
-			},
-			"retries": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     5,
-				Description: "How many backends to search if it fails",
-			},
-		},
-	},
+type DirectorServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	od, nd := d.GetChange("director")
+func NewServiceDirector() ServiceAttributeDefinition {
+	return &DirectorServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "director",
+		},
+	}
+}
+
+func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	od, nd := d.GetChange(h.GetKey())
 	if od == nil {
 		od = new(schema.Set)
 	}
@@ -153,7 +108,7 @@ func processDirector(d *schema.ResourceData, conn *gofastly.Client, latestVersio
 	return nil
 }
 
-func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 		Service: d.Id(),
@@ -193,10 +148,70 @@ func readDirector(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Ser
 
 	dirl := flattenDirectors(directorList, directorBackendList)
 
-	if err := d.Set("director", dirl); err != nil {
+	if err := d.Set(h.GetKey(), dirl); err != nil {
 		log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A name to refer to this director",
+				},
+				"backends": {
+					Type:        schema.TypeSet,
+					Required:    true,
+					Description: "List of backends associated with this director",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				// optional fields
+				"capacity": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     100,
+					Description: "Load balancing weight for the backends",
+				},
+				"comment": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"shield": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Selected POP to serve as a 'shield' for origin servers.",
+				},
+				"quorum": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      75,
+					Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
+					ValidateFunc: validateDirectorQuorum(),
+				},
+				"type": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					Description:  "Type of load balance group to use. Integer, 1 to 4. Values: 1 (random), 3 (hash), 4 (client)",
+					ValidateFunc: validateDirectorType(),
+				},
+				"retries": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     5,
+					Description: "How many backends to search if it fails",
+				},
+			},
+		},
+	}
 	return nil
 }
 

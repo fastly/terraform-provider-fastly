@@ -9,41 +9,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var snippetSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A unique name to refer to this VCL snippet",
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
-				ValidateFunc: validateSnippetType(),
-			},
-			"content": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The contents of the VCL snippet",
-			},
-			"priority": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     100,
-				Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
-			},
-		},
-	},
+type SnippetServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processSnippet(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceSnippet() ServiceAttributeDefinition {
+	return &SnippetServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "snippet",
+		},
+	}
+}
+
+func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
 	// endpoint to update a VCL snippet, we simply destroy it and create a new one.
-	oldSnippetVal, newSnippetVal := d.GetChange("snippet")
+	oldSnippetVal, newSnippetVal := d.GetChange(h.GetKey())
 	if oldSnippetVal == nil {
 		oldSnippetVal = new(schema.Set)
 	}
@@ -96,7 +77,7 @@ func processSnippet(d *schema.ResourceData, conn *gofastly.Client, latestVersion
 	return nil
 }
 
-func readSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *SnippetServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 		Service: d.Id(),
@@ -108,8 +89,42 @@ func readSnippet(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Serv
 
 	vsl := flattenSnippets(snippetList)
 
-	if err := d.Set("snippet", vsl); err != nil {
+	if err := d.Set(h.GetKey(), vsl); err != nil {
 		log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *SnippetServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to refer to this VCL snippet",
+				},
+				"type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+					ValidateFunc: validateSnippetType(),
+				},
+				"content": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The contents of the VCL snippet",
+				},
+				"priority": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     100,
+					Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
+				},
+			},
+		},
 	}
 	return nil
 }

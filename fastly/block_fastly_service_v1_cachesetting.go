@@ -9,45 +9,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var cachesettingSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A name to refer to this Cache Setting",
-			},
-			"action": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Action to take",
-			},
-			// optional
-			"cache_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Name of a condition to check if this Cache Setting applies",
-			},
-			"stale_ttl": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Max 'Time To Live' for stale (unreachable) objects.",
-			},
-			"ttl": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The 'Time To Live' for the object",
-			},
-		},
-	},
+type CacheSettingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processCacheSetting(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	oc, nc := d.GetChange("cache_setting")
+func NewServiceCacheSetting() ServiceAttributeDefinition {
+	return &CacheSettingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "cache_setting",
+		},
+	}
+}
+
+func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	oc, nc := d.GetChange(h.GetKey())
 	if oc == nil {
 		oc = new(schema.Set)
 	}
@@ -100,7 +75,7 @@ func processCacheSetting(d *schema.ResourceData, conn *gofastly.Client, latestVe
 	return nil
 }
 
-func readCacheSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *CacheSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
 	cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 		Service: d.Id(),
@@ -112,8 +87,48 @@ func readCacheSetting(conn *gofastly.Client, d *schema.ResourceData, s *gofastly
 
 	csl := flattenCacheSettings(cslList)
 
-	if err := d.Set("cache_setting", csl); err != nil {
+	if err := d.Set(h.GetKey(), csl); err != nil {
 		log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *CacheSettingServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A name to refer to this Cache Setting",
+				},
+				"action": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Action to take",
+				},
+				// optional
+				"cache_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of a condition to check if this Cache Setting applies",
+				},
+				"stale_ttl": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "Max 'Time To Live' for stale (unreachable) objects.",
+				},
+				"ttl": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "The 'Time To Live' for the object",
+				},
+			},
+		},
 	}
 	return nil
 }

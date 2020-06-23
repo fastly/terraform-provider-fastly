@@ -8,52 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var papertrailSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this logging setup",
-			},
-			"address": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The address of the papertrail service",
-			},
-			"port": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The port of the papertrail service",
-			},
-			// Optional fields
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "%h %l %u %t %r %>s",
-				Description: "Apache-style string or VCL variables to use for log formatting",
-			},
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Name of a condition to apply this logging",
-			},
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-		},
-	},
+type PaperTrailServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processPapertrail(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	os, ns := d.GetChange("papertrail")
+func NewServicePaperTrail() ServiceAttributeDefinition {
+	return &PaperTrailServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "papertrail",
+		},
+	}
+}
+
+func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -111,7 +79,7 @@ func processPapertrail(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readPapertrail(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
 	papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 		Service: d.Id(),
@@ -124,10 +92,57 @@ func readPapertrail(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 
 	pl := flattenPapertrails(papertrailList)
 
-	if err := d.Set("papertrail", pl); err != nil {
+	if err := d.Set(h.GetKey(), pl); err != nil {
 		log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this logging setup",
+				},
+				"address": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The address of the papertrail service",
+				},
+				"port": {
+					Type:        schema.TypeInt,
+					Required:    true,
+					Description: "The port of the papertrail service",
+				},
+				// Optional fields
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%h %l %u %t %r %>s",
+					Description: "Apache-style string or VCL variables to use for log formatting",
+				},
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of a condition to apply this logging",
+				},
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+			},
+		},
+	}
 	return nil
 }
 

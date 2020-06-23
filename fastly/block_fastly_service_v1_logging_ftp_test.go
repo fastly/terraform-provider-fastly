@@ -25,7 +25,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					Address:         "ftp.example.com",
 					Username:        "username",
 					Password:        "password",
-					PublicKey:       pgpPublicKey(),
+					PublicKey:       pgpPublicKey(t),
 					Path:            "/path",
 					Port:            21,
 					Period:          3600,
@@ -42,7 +42,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					"address":          "ftp.example.com",
 					"user":             "username",
 					"password":         "password",
-					"public_key":       pgpPublicKey(),
+					"public_key":       pgpPublicKey(t),
 					"path":             "/path",
 					"period":           uint(3600),
 					"port":             uint(21),
@@ -75,7 +75,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		Address:         "ftp.example.com",
 		Username:        "user",
 		Password:        "p@ssw0rd",
-		PublicKey:       pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		PublicKey:       pgpPublicKey(t),
 		Path:            "/path",
 		Port:            27,
 		GzipLevel:       3,
@@ -92,7 +92,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		Address:         "ftp2.example.com",
 		Username:        "user",
 		Password:        "p@ssw0rd2",
-		PublicKey:       pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		PublicKey:       pgpPublicKey(t),
 		Path:            "/path",
 		GzipLevel:       4,
 		Port:            21,
@@ -110,7 +110,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		Username:        "user",
 		Password:        "p@ssw0rd",
 		Path:            "/",
-		PublicKey:       pgpPublicKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		PublicKey:       pgpPublicKey(t),
 		Port:            21,
 		GzipLevel:       3,
 		Period:          360,
@@ -217,9 +217,7 @@ resource "fastly_service_v1" "foo" {
     name       = "ftp-endpoint"
     address    = "ftp.example.com"
     user       = "user"
-		public_key = <<EOF
-`+pgpPublicKey()+`
-EOF
+	public_key = file("test_fixtures/fastly_test_publickey")
     password         = "p@ssw0rd"
     path             = "/path"
     port             = 27
@@ -254,9 +252,7 @@ resource "fastly_service_v1" "foo" {
     address    = "ftp2.example.com"
     user       = "user"
     password   = "p@ssw0rd2"
-    public_key = <<EOF
-`+pgpPublicKey()+`
-EOF
+    public_key = file("test_fixtures/fastly_test_publickey")
     path             = "/path"
     format           = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
     gzip_level       = 4
@@ -269,9 +265,7 @@ EOF
     address    = "ftp.example.com"
     user       = "user"
     password   = "p@ssw0rd"
-    public_key = <<EOF
-`+pgpPublicKey()+`
-EOF
+    public_key = file("test_fixtures/fastly_test_publickey")
     path             = "/"
     period           = 360
     format           = "%%h %%l %%u %%t \"%%r\" %%>s %%b"

@@ -8,59 +8,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var logglySchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the Loggly logging endpoint.",
-			},
-
-			"token": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Sensitive:   true,
-				Description: "The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).",
-			},
-
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Apache-style string or VCL variables to use for log formatting.",
-			},
-
-			// Optional fields
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      2,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-			},
-		},
-	},
+type LogglyServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processLoggly(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceLoggingLoggly() ServiceAttributeDefinition {
+	return &LogglyServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "logging_loggly",
+		},
+	}
+}
+
+func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	ol, nl := d.GetChange("logging_loggly")
+	ol, nl := d.GetChange(h.GetKey())
 
 	if ol == nil {
 		ol = new(schema.Set)
@@ -102,7 +64,7 @@ func processLoggly(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-func readLoggly(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *LogglyServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Loggly.
 	log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
 	logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
@@ -116,7 +78,7 @@ func readLoggly(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servi
 
 	ell := flattenLoggly(logglyList)
 
-	if err := d.Set("logging_loggly", ell); err != nil {
+	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Loggly logging endpoints for (%s): %s", d.Id(), err)
 	}
 
@@ -194,4 +156,57 @@ func buildDeleteLoggly(logglyMap interface{}, serviceID string, serviceVersion i
 		Version: serviceVersion,
 		Name:    df["name"].(string),
 	}
+}
+
+func (h *LogglyServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the Loggly logging endpoint.",
+				},
+
+				"token": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Sensitive:   true,
+					Description: "The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).",
+				},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache-style string or VCL variables to use for log formatting.",
+				},
+
+				// Optional fields
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+				},
+			},
+		},
+	}
+	return nil
 }

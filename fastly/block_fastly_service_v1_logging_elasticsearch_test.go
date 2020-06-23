@@ -29,9 +29,9 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 					RequestMaxBytes:   10,
 					User:              "user",
 					Password:          "password",
-					TLSCACert:         caCert(),
-					TLSClientCert:     certificate(),
-					TLSClientKey:      privateKey(),
+					TLSCACert:         caCert(t),
+					TLSClientCert:     certificate(t),
+					TLSClientKey:      privateKey(t),
 					TLSHostname:       "example.com",
 					ResponseCondition: "response_condition",
 					Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
@@ -47,9 +47,9 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 					"pipeline":            "my-pipeline-id",
 					"user":                "user",
 					"password":            "password",
-					"tls_ca_cert":         caCert(),
-					"tls_client_cert":     certificate(),
-					"tls_client_key":      privateKey(),
+					"tls_ca_cert":         caCert(t),
+					"tls_client_cert":     certificate(t),
+					"tls_client_key":      privateKey(t),
 					"tls_hostname":        "example.com",
 					"response_condition":  "response_condition",
 					"format":              `%a %l %u %t %m %U%q %H %>s %b %T`,
@@ -87,9 +87,9 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		User:              "user",
 		Password:          "password",
 		Pipeline:          "my-pipeline",
-		TLSCACert:         caCert(),
-		TLSClientCert:     certificate(),
-		TLSClientKey:      privateKey(),
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Placement:         "none",
@@ -107,9 +107,9 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		User:              "newuser",
 		Password:          "newpassword",
 		Pipeline:          "my-new-pipeline",
-		TLSCACert:         caCert(),
-		TLSClientCert:     certificate(),
-		TLSClientKey:      privateKey(),
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Placement:         "none",
@@ -127,9 +127,9 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		User:              "username",
 		Password:          "secret-password",
 		Pipeline:          "my-new-pipeline",
-		TLSCACert:         caCert(),
-		TLSClientCert:     certificate(),
-		TLSClientKey:      privateKey(),
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Placement:         "none",
@@ -243,15 +243,9 @@ resource "fastly_service_v1" "foo" {
 		user     = "user"
 		password = "password"
     format   = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert       = file("test_fixtures/fastly_test_cacert")
+		tls_client_cert   = file("test_fixtures/fastly_test_certificate")
+		tls_client_key    = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
 		placement          = "none"
@@ -292,42 +286,29 @@ resource "fastly_service_v1" "foo" {
 		pipeline = "my-new-pipeline"
 		user     = "newuser"
 		password = "newpassword"
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert       = file("test_fixtures/fastly_test_cacert")
+		tls_client_cert   = file("test_fixtures/fastly_test_certificate")
+		tls_client_key    = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
 		placement          = "none"
   }
 
   logging_elasticsearch {
-    name                = "another-elasticsearch-endpoint"
-    index               = "#{%%F}"
-    url                 = "https://es2.example.com"
-    user                = "username"
-    password            = "secret-password"
-    format              = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-    request_max_bytes   = 1000
-		request_max_entries = 0
-		pipeline            = "my-new-pipeline"
-		tls_ca_cert         = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert     = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key      = <<EOF
-`+privateKey()+`
-EOF
-		tls_hostname        = "example.com"
-		response_condition  = "response_condition_test"
-		placement           = "none"
+    name              = "another-elasticsearch-endpoint"
+    index             = "#{%%F}"
+    url               = "https://es2.example.com"
+    user              = "username"
+    password          = "secret-password"
+    format            = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    request_max_bytes = 1000
+		pipeline          = "my-new-pipeline"
+		tls_ca_cert       = file("test_fixtures/fastly_test_cacert")
+		tls_client_cert   = file("test_fixtures/fastly_test_certificate")
+		tls_client_key    = file("test_fixtures/fastly_test_privatekey")
+		tls_hostname       = "example.com"
+		response_condition = "response_condition_test"
+		placement          = "none"
   }
 
   force_destroy = true

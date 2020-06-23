@@ -9,146 +9,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-var httpsloggingSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name of the HTTPS logging endpoint",
-			},
-			"url": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "URL that log data will be sent to. Must use the https protocol.",
-				ValidateFunc: validateHTTPSURL(),
-			},
-
-			// Optional fields
-			"request_max_entries": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The maximum number of logs sent in one request.",
-			},
-
-			"request_max_bytes": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The maximum number of bytes sent in one request.",
-			},
-
-			"content_type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Content-Type header sent with the request.",
-			},
-
-			"header_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Custom header sent with the request.",
-			},
-
-			"header_value": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Value of the custom header sent with the request.",
-			},
-
-			"method": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "POST",
-				Description:  "HTTP method used for request.",
-				ValidateFunc: validation.StringInSlice([]string{"POST", "PUT"}, false),
-			},
-
-			// NOTE: The `json_format` field's documented type is string, but it should likely be an integer.
-			"json_format": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "0",
-				Description:  "Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`).",
-				ValidateFunc: validation.StringInSlice([]string{"0", "1", "2"}, false),
-			},
-
-			"tls_ca_cert": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
-
-			"tls_client_cert": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
-
-			"tls_client_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The client private key used to make authenticated requests. Must be in PEM format.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
-
-			"tls_hostname": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN).",
-			},
-
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Apache-style string or VCL variables to use for log formatting.",
-			},
-
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      2,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-
-			"message_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "blank",
-				Description:  "How the message should be formatted",
-				ValidateFunc: validateLoggingMessageType(),
-			},
-
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of the condition to apply",
-			},
-		},
-	},
+type HTTPSLoggingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processHTTPS(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
+func NewServiceHTTPSLogging() ServiceAttributeDefinition {
+	return &HTTPSLoggingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "httpslogging",
+		},
+	}
+}
+
+func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	oh, nh := d.GetChange("httpslogging")
+	oh, nh := d.GetChange(h.GetKey())
 
 	if oh == nil {
 		oh = new(schema.Set)
@@ -178,21 +53,6 @@ func processHTTPS(d *schema.ResourceData, conn *gofastly.Client, latestVersion i
 	// POST new/updated HTTPS logging endponts
 	for _, nRaw := range addHTTPSLogging {
 		hf := nRaw.(map[string]interface{})
-
-		// @HACK for a TF SDK Issue.
-		//
-		// This ensures that the required, `name`, field is present.
-		//
-		// If we have made it this far and `name` is not present, it is most-likely due
-		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
-		//
-		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
-		// properly handles setting state with the StateFunc, it returns extra entries
-		// during state Gets, specifically `GetChange("httpslogging")` in this case.
-		if v, ok := hf["name"]; !ok || v.(string) == "" {
-			continue
-		}
-
 		opts := buildCreateHTTPS(hf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
@@ -205,7 +65,7 @@ func processHTTPS(d *schema.ResourceData, conn *gofastly.Client, latestVersion i
 	return nil
 }
 
-func readHTTPS(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// refresh HTTPS
 	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
 	httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
@@ -219,10 +79,150 @@ func readHTTPS(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servic
 
 	hll := flattenHTTPS(httpsList)
 
-	if err := d.Set("httpslogging", hll); err != nil {
+	if err := d.Set(h.GetKey(), hll); err != nil {
 		log.Printf("[WARN] Error setting HTTPS logging endpoints for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the HTTPS logging endpoint",
+				},
+				"url": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "URL that log data will be sent to. Must use the https protocol.",
+					ValidateFunc: validateHTTPSURL(),
+				},
+
+				// Optional fields
+				"request_max_entries": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "The maximum number of logs sent in one request.",
+				},
+
+				"request_max_bytes": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "The maximum number of bytes sent in one request.",
+				},
+
+				"content_type": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Content-Type header sent with the request.",
+				},
+
+				"header_name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Custom header sent with the request.",
+				},
+
+				"header_value": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Value of the custom header sent with the request.",
+				},
+
+				"method": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "POST",
+					Description:  "HTTP method used for request.",
+					ValidateFunc: validation.StringInSlice([]string{"POST", "PUT"}, false),
+				},
+
+				// NOTE: The `json_format` field's documented type is string, but it should likely be an integer.
+				"json_format": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "0",
+					Description:  "Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`).",
+					ValidateFunc: validation.StringInSlice([]string{"0", "1", "2"}, false),
+				},
+
+				"tls_ca_cert": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+					Sensitive:   true,
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
+
+				"tls_client_cert": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+					Sensitive:   true,
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
+
+				"tls_client_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+					Sensitive:   true,
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
+
+				"tls_hostname": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN).",
+				},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache-style string or VCL variables to use for log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"message_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "blank",
+					Description:  "How the message should be formatted",
+					ValidateFunc: validateLoggingMessageType(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the condition to apply",
+				},
+			},
+		},
+	}
 	return nil
 }
 

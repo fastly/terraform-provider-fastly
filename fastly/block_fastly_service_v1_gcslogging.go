@@ -8,89 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var gcsloggingSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this logging setup",
-			},
-			"email": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_EMAIL", ""),
-				Description: "The email address associated with the target GCS bucket on your account.",
-			},
-			"bucket_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The name of the bucket in which to store the logs.",
-			},
-			"secret_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_SECRET_KEY", ""),
-				Description: "The secret key associated with the target gcs bucket on your account.",
-				Sensitive:   true,
-			},
-			// Optional fields
-			"path": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Path to store the files. Must end with a trailing slash",
-			},
-			"gzip_level": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "Gzip Compression level",
-			},
-			"period": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     3600,
-				Description: "How frequently the logs should be transferred, in seconds (Default 3600)",
-			},
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "%h %l %u %t %r %>s",
-				Description: "Apache-style string or VCL variables to use for log formatting",
-			},
-			"timestamp_format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "%Y-%m-%dT%H:%M:%S.000",
-				Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
-			},
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Name of a condition to apply this logging.",
-			},
-			"message_type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "classic",
-				Description: "The log message type per the fastly docs: https://developer.fastly.com/reference/api/logging/gcs/",
-			},
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-		},
-	},
+type GCSLoggingServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processGCSLogging(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	os, ns := d.GetChange("gcslogging")
+func NewServiceGCSLogging() ServiceAttributeDefinition {
+	return &GCSLoggingServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "gcslogging",
+		},
+	}
+}
+
+func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -152,7 +83,7 @@ func processGCSLogging(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readGCSLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
 	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 		Service: d.Id(),
@@ -164,10 +95,94 @@ func readGCSLogging(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 	}
 
 	gcsl := flattenGCS(GCSList)
-	if err := d.Set("gcslogging", gcsl); err != nil {
+	if err := d.Set(h.GetKey(), gcsl); err != nil {
 		log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this logging setup",
+				},
+				"email": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_EMAIL", ""),
+					Description: "The email address associated with the target GCS bucket on your account.",
+				},
+				"bucket_name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The name of the bucket in which to store the logs.",
+				},
+				"secret_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_SECRET_KEY", ""),
+					Description: "The secret key associated with the target gcs bucket on your account.",
+					Sensitive:   true,
+				},
+				// Optional fields
+				"path": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Path to store the files. Must end with a trailing slash",
+				},
+				"gzip_level": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     0,
+					Description: "Gzip Compression level",
+				},
+				"period": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     3600,
+					Description: "How frequently the logs should be transferred, in seconds (Default 3600)",
+				},
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%h %l %u %t %r %>s",
+					Description: "Apache-style string or VCL variables to use for log formatting",
+				},
+				"timestamp_format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%Y-%m-%dT%H:%M:%S.000",
+					Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+				},
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of a condition to apply this logging.",
+				},
+				"message_type": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "classic",
+					Description: "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
+				},
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+			},
+		},
+	}
 	return nil
 }
 

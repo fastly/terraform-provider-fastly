@@ -24,7 +24,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 					Version:           1,
 					Name:              "googlepubsub-endpoint",
 					User:              "user",
-					SecretKey:         privateKey(),
+					SecretKey:         privateKey(t),
 					ProjectID:         "project-id",
 					Topic:             "topic",
 					ResponseCondition: "response_condition",
@@ -37,7 +37,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 				{
 					"name":               "googlepubsub-endpoint",
 					"user":               "user",
-					"secret_key":         privateKey(),
+					"secret_key":         privateKey(t),
 					"project_id":         "project-id",
 					"topic":              "topic",
 					"response_condition": "response_condition",
@@ -67,7 +67,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 		Version:           1,
 		Name:              "googlepubsublogger",
 		User:              "user",
-		SecretKey:         privateKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		SecretKey:         privateKey(t),
 		ProjectID:         "project-id",
 		Topic:             "topic",
 		ResponseCondition: "response_condition_test",
@@ -80,7 +80,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 		Version:           1,
 		Name:              "googlepubsublogger",
 		User:              "newuser",
-		SecretKey:         privateKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		SecretKey:         privateKey(t),
 		ProjectID:         "new-project-id",
 		Topic:             "newtopic",
 		ResponseCondition: "response_condition_test",
@@ -93,7 +93,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 		Version:           1,
 		Name:              "googlepubsublogger2",
 		User:              "user2",
-		SecretKey:         privateKey() + "\n", // The '\n' is necessary becaue of the heredocs (i.e., EOF) in the config below.
+		SecretKey:         privateKey(t),
 		ProjectID:         "project-id",
 		Topic:             "topicb",
 		ResponseCondition: "response_condition_test",
@@ -205,9 +205,7 @@ resource "fastly_service_v1" "foo" {
 	logging_googlepubsub {
 		name               = "googlepubsublogger"
 		user               = "user"
-		secret_key         = <<EOF
-`+privateKey()+`
-EOF
+		secret_key         = file("test_fixtures/fastly_test_privatekey")
 		project_id         = "project-id"
 	  topic  						 = "topic"
 		response_condition = "response_condition_test"
@@ -246,9 +244,7 @@ resource "fastly_service_v1" "foo" {
 	logging_googlepubsub {
 		name               = "googlepubsublogger"
 		user               = "newuser"
-		secret_key         = <<EOF
-`+privateKey()+`
-EOF
+		secret_key         = file("test_fixtures/fastly_test_privatekey")
 		project_id         = "new-project-id"
 	  topic  						 = "newtopic"
 		response_condition = "response_condition_test"
@@ -260,9 +256,7 @@ EOF
 	logging_googlepubsub {
 		name               = "googlepubsublogger2"
 		user               = "user2"
-		secret_key         = <<EOF
-`+privateKey()+`
-EOF
+		secret_key         = file("test_fixtures/fastly_test_privatekey")
 		project_id         = "project-id"
 	  topic  						 = "topicb"
 		response_condition = "response_condition_test"

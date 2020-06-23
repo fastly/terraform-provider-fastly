@@ -8,35 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var dictionarySchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this Dictionary",
-			},
-			// Optional fields
-			"dictionary_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Generated dictionary ID",
-			},
-			"write_only": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Determines if items in the dictionary are readable or not",
-			},
-		},
-	},
+type DictionaryServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processDictionary(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	oldDictVal, newDictVal := d.GetChange("dictionary")
+func NewServiceDictionary() ServiceAttributeDefinition {
+	return &DictionaryServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "dictionary",
+		},
+	}
+}
+
+func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	oldDictVal, newDictVal := d.GetChange(h.GetKey())
 
 	if oldDictVal == nil {
 		oldDictVal = new(schema.Set)
@@ -90,7 +75,7 @@ func processDictionary(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readDictionary(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
 	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
 		Service: d.Id(),
@@ -102,8 +87,38 @@ func readDictionary(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 
 	dict := flattenDictionaries(dictList)
 
-	if err := d.Set("dictionary", dict); err != nil {
+	if err := d.Set(h.GetKey(), dict); err != nil {
 		log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this Dictionary",
+				},
+				// Optional fields
+				"dictionary_id": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Generated dictionary ID",
+				},
+				"write_only": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Determines if items in the dictionary are readable or not",
+				},
+			},
+		},
 	}
 	return nil
 }

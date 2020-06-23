@@ -26,8 +26,8 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					Address:           "sftp.example.com",
 					User:              "user",
 					Path:              "/",
-					PublicKey:         pgpPublicKey(),
-					SecretKey:         privateKey(),
+					PublicKey:         pgpPublicKey(t),
+					SecretKey:         privateKey(t),
 					SSHKnownHosts:     "sftp.example.com",
 					Format:            "%h %l %u %t \"%r\" %>s %b",
 					Password:          "password",
@@ -48,8 +48,8 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					"user":               "user",
 					"path":               "/",
 					"ssh_known_hosts":    "sftp.example.com",
-					"public_key":         pgpPublicKey(),
-					"secret_key":         privateKey(),
+					"public_key":         pgpPublicKey(t),
+					"secret_key":         privateKey(t),
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"password":           "password",
 					"message_type":       "classic",
@@ -86,7 +86,7 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Address:           "sftp.example.com",
 		User:              "username",
 		Password:          "password",
-		PublicKey:         pgpPublicKey(),
+		PublicKey:         pgpPublicKey(t),
 		Path:              "/",
 		SSHKnownHosts:     "sftp.example.com",
 		Placement:         "none",
@@ -107,8 +107,8 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Name:              "sftp-endpoint",
 		Address:           "sftp.example.com",
 		User:              "user",
-		PublicKey:         pgpPublicKey(),
-		SecretKey:         privateKey(),
+		PublicKey:         pgpPublicKey(t),
+		SecretKey:         privateKey(t),
 		Path:              "/logs/",
 		SSHKnownHosts:     "sftp.example.com",
 		MessageType:       "blank",
@@ -130,8 +130,8 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Address:           "sftp2.example.com",
 		User:              "user",
 		Path:              "/dir/",
-		PublicKey:         pgpPublicKey(),
-		SecretKey:         privateKey(),
+		PublicKey:         pgpPublicKey(t),
+		SecretKey:         privateKey(t),
 		SSHKnownHosts:     "sftp2.example.com",
 		ResponseCondition: "response_condition_test",
 		MessageType:       "loggly",
@@ -268,9 +268,7 @@ resource "fastly_service_v1" "foo" {
 		address					= "sftp.example.com"
 		user						= "username"
 		password				= "password"
-		public_key      = <<EOF
-`+pgpPublicKey()+`
-EOF
+		public_key      = file("test_fixtures/fastly_test_publickey")
 		path						   = "/"
 		ssh_known_hosts    = "sftp.example.com"
 		message_type       = "classic"
@@ -310,12 +308,8 @@ resource "fastly_service_v1" "foo" {
 		address					= "sftp.example.com"
 		port						= 2600
 		user						= "user"
-		public_key      = <<EOF
-`+pgpPublicKey()+`
-EOF
-		secret_key      = <<EOF
-`+privateKey()+`
-EOF
+		public_key      = file("test_fixtures/fastly_test_publickey")
+		secret_key      = file("test_fixtures/fastly_test_privatekey")
 		path						   = "/logs/"
 		ssh_known_hosts    = "sftp.example.com"
 		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
@@ -328,12 +322,8 @@ EOF
 		name						= "another-sftp-endpoint"
 		address					= "sftp2.example.com"
 		user						= "user"
-		public_key      = <<EOF
-`+pgpPublicKey()+`
-EOF
-		secret_key      = <<EOF
-`+privateKey()+`
-EOF
+		public_key      = file("test_fixtures/fastly_test_publickey")
+		secret_key      = file("test_fixtures/fastly_test_privatekey")
 		path						   = "/dir/"
 		ssh_known_hosts    = "sftp2.example.com"
 		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b"

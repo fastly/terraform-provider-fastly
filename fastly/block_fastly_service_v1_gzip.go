@@ -9,42 +9,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var gzipSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "A name to refer to this gzip condition",
-			},
-			// optional fields
-			"content_types": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Content types to apply automatic gzip to",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"extensions": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "File extensions to apply automatic gzip to. Do not include '.'",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"cache_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Name of a condition controlling when this gzip configuration applies.",
-			},
-		},
-	},
+type GZIPServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processGZIP(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	og, ng := d.GetChange("gzip")
+func NewServiceGZIP() ServiceAttributeDefinition {
+	return &GZIPServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "gzip",
+		},
+	}
+}
+
+func (h *GZIPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	og, ng := d.GetChange(h.GetKey())
 	if og == nil {
 		og = new(schema.Set)
 	}
@@ -118,7 +96,7 @@ func processGZIP(d *schema.ResourceData, conn *gofastly.Client, latestVersion in
 	return nil
 }
 
-func readGZIP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *GZIPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
 	gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
 		Service: d.Id(),
@@ -131,10 +109,47 @@ func readGZIP(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Service
 
 	gl := flattenGzips(gzipsList)
 
-	if err := d.Set("gzip", gl); err != nil {
+	if err := d.Set(h.GetKey(), gl); err != nil {
 		log.Printf("[WARN] Error setting Gzips for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *GZIPServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A name to refer to this gzip condition",
+				},
+				// optional fields
+				"content_types": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Content types to apply automatic gzip to",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				"extensions": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "File extensions to apply automatic gzip to. Do not include '.'",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				"cache_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of a condition controlling when this gzip configuration applies.",
+				},
+			},
+		},
+	}
 	return nil
 }
 

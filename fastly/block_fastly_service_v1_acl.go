@@ -8,29 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var aclSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this ACL",
-			},
-			// Optional fields
-			"acl_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Generated acl id",
-			},
-		},
-	},
+type ACLServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	oldACLVal, newACLVal := d.GetChange("acl")
+func NewServiceACL() ServiceAttributeDefinition {
+	return &ACLServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "acl",
+		},
+	}
+}
+
+func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	oldACLVal, newACLVal := d.GetChange(h.GetKey())
 	if oldACLVal == nil {
 		oldACLVal = new(schema.Set)
 	}
@@ -83,7 +74,7 @@ func processACL(d *schema.ResourceData, conn *gofastly.Client, latestVersion int
 	return nil
 }
 
-func readACL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 
 	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
 	aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
@@ -96,10 +87,34 @@ func readACL(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceD
 
 	al := flattenACLs(aclList)
 
-	if err := d.Set("acl", al); err != nil {
+	if err := d.Set(h.GetKey(), al); err != nil {
 		log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this ACL",
+				},
+				// Optional fields
+				"acl_id": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Generated acl id",
+				},
+			},
+		},
+	}
 	return nil
 }
 

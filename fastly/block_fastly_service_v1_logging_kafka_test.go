@@ -27,9 +27,9 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					CompressionCodec:  "snappy",
 					RequiredACKs:      "-1",
 					UseTLS:            true,
-					TLSCACert:         caCert(),
-					TLSClientCert:     certificate(),
-					TLSClientKey:      privateKey(),
+					TLSCACert:         caCert(t),
+					TLSClientCert:     certificate(t),
+					TLSClientKey:      privateKey(t),
 					TLSHostname:       "example.com",
 					ResponseCondition: "response_condition",
 					Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
@@ -45,9 +45,9 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					"compression_codec":  "snappy",
 					"required_acks":      "-1",
 					"use_tls":            true,
-					"tls_ca_cert":        caCert(),
-					"tls_client_cert":    certificate(),
-					"tls_client_key":     privateKey(),
+					"tls_ca_cert":        caCert(t),
+					"tls_client_cert":    certificate(t),
+					"tls_client_key":     privateKey(t),
 					"tls_hostname":       "example.com",
 					"response_condition": "response_condition",
 					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
@@ -79,9 +79,9 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		CompressionCodec:  "snappy",
 		RequiredACKs:      "-1",
 		UseTLS:            true,
-		TLSCACert:         caCert(),
-		TLSClientCert:     certificate(),
-		TLSClientKey:      privateKey(),
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
@@ -97,9 +97,9 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		CompressionCodec:  "lz4",
 		RequiredACKs:      "0",
 		UseTLS:            false,
-		TLSCACert:         caCert(),
-		TLSClientCert:     certificate(),
-		TLSClientKey:      privateKey(),
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
 		TLSHostname:       "example2.com",
 		ResponseCondition: "response_condition_test",
 		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
@@ -115,9 +115,9 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		CompressionCodec:  "gzip",
 		RequiredACKs:      "1",
 		UseTLS:            true,
-		TLSCACert:         caCert(),
-		TLSClientCert:     certificate(),
-		TLSClientKey:      privateKey(),
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
 		TLSHostname:       "example.com",
 		ResponseCondition: "response_condition_test",
 		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
@@ -232,15 +232,9 @@ resource "fastly_service_v1" "foo" {
 		compression_codec  = "snappy"
 		required_acks      = "-1"
 		use_tls            = true
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert        = file("test_fixtures/fastly_test_cacert")
+		tls_client_cert    = file("test_fixtures/fastly_test_certificate")
+		tls_client_key     = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
@@ -282,15 +276,9 @@ resource "fastly_service_v1" "foo" {
 		compression_codec  = "lz4"
 		required_acks      = "0"
 		use_tls            = false
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert        = file("test_fixtures/fastly_test_cacert")
+		tls_client_cert    = file("test_fixtures/fastly_test_certificate")
+		tls_client_key     = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example2.com"
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
@@ -300,20 +288,14 @@ EOF
 
 	logging_kafka {
 		name               = "kafkalogger2"
-	  topic  						 = "topicb"
+	  	topic  			   = "topicb"
 		brokers            = "127.0.0.3,127.0.0.4"
 		compression_codec  = "gzip"
 		required_acks      = "1"
 		use_tls            = true
-		tls_ca_cert        = <<EOF
-`+caCert()+`
-EOF
-		tls_client_cert    = <<EOF
-`+certificate()+`
-EOF
-		tls_client_key     = <<EOF
-`+privateKey()+`
-EOF
+		tls_ca_cert        = file("test_fixtures/fastly_test_cacert")
+		tls_client_cert    = file("test_fixtures/fastly_test_certificate")
+		tls_client_key     = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"

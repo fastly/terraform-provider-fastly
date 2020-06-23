@@ -8,66 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var logentriesSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Optional: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			// Required fields
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Unique name to refer to this logging setup",
-			},
-			"token": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
-			},
-			// Optional
-			"port": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     20000,
-				Description: "The port number configured in Logentries",
-			},
-			"use_tls": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether to use TLS for secure logging",
-			},
-			"format": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "%h %l %u %t %r %>s",
-				Description: "Apache-style string or VCL variables to use for log formatting",
-			},
-			"format_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-				ValidateFunc: validateLoggingFormatVersion(),
-			},
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Name of a condition to apply this logging.",
-			},
-			"placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Where in the generated VCL the logging call should be placed.",
-				ValidateFunc: validateLoggingPlacement(),
-			},
-		},
-	},
+type LogentriesServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processLogentries(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	os, ns := d.GetChange("logentries")
+func NewServiceLogentries() ServiceAttributeDefinition {
+	return &LogentriesServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "logentries",
+		},
+	}
+}
+
+func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
 	}
@@ -127,7 +81,7 @@ func processLogentries(d *schema.ResourceData, conn *gofastly.Client, latestVers
 	return nil
 }
 
-func readLogentries(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
 	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 		Service: d.Id(),
@@ -140,10 +94,71 @@ func readLogentries(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.S
 
 	lel := flattenLogentries(logentriesList)
 
-	if err := d.Set("logentries", lel); err != nil {
+	if err := d.Set(h.GetKey(), lel); err != nil {
 		log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this logging setup",
+				},
+				"token": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
+				},
+				// Optional
+				"port": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     20000,
+					Description: "The port number configured in Logentries",
+				},
+				"use_tls": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     true,
+					Description: "Whether to use TLS for secure logging",
+				},
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%h %l %u %t %r %>s",
+					Description: "Apache-style string or VCL variables to use for log formatting",
+				},
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of a condition to apply this logging.",
+				},
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+			},
+		},
+	}
 	return nil
 }
 

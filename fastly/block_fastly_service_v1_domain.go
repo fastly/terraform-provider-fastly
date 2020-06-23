@@ -8,27 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var domainSchema = &schema.Schema{
-	Type:     schema.TypeSet,
-	Required: true,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The domain that this Service will respond to",
-			},
-
-			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
-	},
+type DomainServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processDomain(d *schema.ResourceData, conn *gofastly.Client, latestVersion int) error {
-	od, nd := d.GetChange("domain")
+func NewServiceDomain() ServiceAttributeDefinition {
+	return &DomainServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "domain",
+		},
+	}
+}
+
+func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	od, nd := d.GetChange(h.GetKey())
 	if od == nil {
 		od = new(schema.Set)
 	}
@@ -84,7 +77,7 @@ func processDomain(d *schema.ResourceData, conn *gofastly.Client, latestVersion 
 	return nil
 }
 
-func readDomain(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *DomainServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// TODO: update go-fastly to support an ActiveVersion struct, which contains
 	// domain and backend info in the response. Here we do 2 additional queries
 	// to find out that info
@@ -101,8 +94,30 @@ func readDomain(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.Servi
 	// Refresh Domains
 	dl := flattenDomains(domainList)
 
-	if err := d.Set("domain", dl); err != nil {
+	if err := d.Set(h.GetKey(), dl); err != nil {
 		log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
+	}
+	return nil
+}
+
+func (h *DomainServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The domain that this Service will respond to",
+				},
+
+				"comment": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
 	}
 	return nil
 }

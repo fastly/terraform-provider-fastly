@@ -72,22 +72,22 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 					Sensitive:   true,
 				},
 
-			"secret_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
-				Sensitive:   true,
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
+				"secret_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
+					Sensitive:   true,
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
 
-			"public_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
-				// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-				StateFunc: trimSpaceStateFunc,
-			},
+				"public_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
 
 				"period": {
 					Type:        schema.TypeInt,
@@ -139,13 +139,15 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 					ValidateFunc: validateLoggingPlacement(),
 				},
 
-			"response_condition": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of the condition to apply.",
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of the condition to apply.",
+				},
 			},
 		},
-	},
+	}
+	return nil
 }
 
 func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {

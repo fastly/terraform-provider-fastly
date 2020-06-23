@@ -13,7 +13,7 @@ import (
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
 // ServiceAttributeDefinition provides an interface for service attributes.
-// We compose a service resource out of attribute objects to allow us to construct both the VCL and WASM service
+// We compose a service resource out of attribute objects to allow us to construct both the VCL and Wasm service
 // resources from common components
 type ServiceAttributeDefinition interface {
 	// Register add the attribute to the resource schema
@@ -52,10 +52,10 @@ func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, ini
 }
 
 // ServiceDefinition defines the data model for service definitions
-// There are two types of service: VCL and WASM. This interface specifies the data object from which service resources
+// There are two types of service: VCL and Wasm. This interface specifies the data object from which service resources
 // are constructed.
 type ServiceDefinition interface {
-	// GetType returns whether this is a VCL or WASM service?
+	// GetType returns whether this is a VCL or Wasm service?
 	GetType() string
 
 	// GetAttributeHandler returns the list of attributes/handlers supported by this service
@@ -76,7 +76,7 @@ func (d *BaseServiceDefinition) GetAttributeHandler() []ServiceAttributeDefiniti
 	return d.Attributes
 }
 
-// resourceService returns a Terraform resource schema for VCL or WASM
+// resourceService returns a Terraform resource schema for VCL or Wasm
 func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	s := &schema.Resource{
 		Create: resourceCreate(serviceDef),

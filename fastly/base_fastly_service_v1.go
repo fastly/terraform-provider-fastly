@@ -145,6 +145,9 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		},
 	}
 
+	// This loops over all the attribute handlers in the service definition and calls Register.
+	// Register adds schema attributes to the overall schema for the resource. This allows each AttributeHandler to
+	// define it's own attributes while allowing the overall set to be composed.
 	for _, a := range serviceDef.GetAttributeHandler() {
 		a.Register(s) // Mutates s, adding handler-specific schema items to the list.
 	}
@@ -225,10 +228,11 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		}
 	}
 
-	// Once activated, Versions are locked and become immutable. This is true for
-	// versions that are no longer active. For Domains, Backends, DefaultHost and
-	// DefaultTTL, a new Version must be created first, and updates posted to that
-	// Version. Loop these attributes and determine if we need to create a new version first.
+	// Once activated, Versions are locked and become immutable.
+	// This loops over all AttributeHandlers calling HasChange. In this way each attribute handler can contribute
+	// whether their current state and proposed changes mean a new version must be created.
+	// So where changes are required, a new version must be created first, and updates posted to that
+	// version. We only need one change to trigger this, so a break is OK.
 	var needsChange bool
 	for _, a := range serviceDef.GetAttributeHandler() {
 		if a.HasChange(d) {
@@ -305,6 +309,8 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 			}
 		}
 
+		// This delegates the bulk of processing to attribute handlers which manage state
+		// for their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
 			if a.MustProcess(d, initialVersion) {
 				if err := a.Process(d, latestVersion, conn); err != nil {
@@ -389,6 +395,8 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 	// query for information on it).
 	if s.ActiveVersion.Number != 0 {
 
+		// This delegates read to all the attribute handlers which can then manage reading state for
+		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
 			if err := a.Read(d, s, conn); err != nil {
 				return err

@@ -152,7 +152,7 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 
 func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	os, ns := d.GetChange("logging_sftp")
+	os, ns := d.GetChange(h.GetKey())
 
 	if os == nil {
 		os = new(schema.Set)
@@ -227,7 +227,7 @@ func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 
 	ell := flattenSFTP(sftpList)
 
-	if err := d.Set("logging_sftp", ell); err != nil {
+	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting SFTP logging endpoints for (%s): %s", d.Id(), err)
 	}
 

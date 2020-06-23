@@ -93,7 +93,7 @@ func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource) error
 
 func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	oldLogCfg, newLogCfg := d.GetChange("logging_googlepubsub")
+	oldLogCfg, newLogCfg := d.GetChange(h.GetKey())
 
 	if oldLogCfg == nil {
 		oldLogCfg = new(schema.Set)

@@ -226,6 +226,8 @@ Defined below.
 Defined below.
 * `logging_heroku` - (Optional) A Heroku endpoint to send streaming logs to.
 Defined below.
+* `logging_honeycomb` - (Optional) A Honeycomb endpoint to send streaming logs to.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
@@ -664,6 +666,16 @@ The `logging_heroku` block supports:
 * `token` - (Required) The token to use for authentication (https://devcenter.heroku.com/articles/add-on-partner-log-integration).
 * `url` - (Required) The url to stream logs to.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
+The `logging_honeycomb` block supports:
+
+* `name` - (Required) The unique name of the Honeycomb logging endpoint.
+* `dataset` - (Required) The Honeycomb Dataset you want to log to.
+* `token` - (Required) The Write Key from the Account page of your Honeycomb account.
+* `format` - (Optional) Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.

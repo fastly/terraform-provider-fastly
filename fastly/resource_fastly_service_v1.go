@@ -41,6 +41,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingHoneycomb(),
 		NewServiceLoggingLogshuttle(),
 		NewServiceLoggingOpenstack(),
+		NewServiceLoggingDigitalOcean(),
 		NewServiceResponseObject(),
 		NewServiceRequestSetting(),
 		NewServiceVCL(),

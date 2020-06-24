@@ -1,0 +1,306 @@
+package fastly
+
+import (
+	"fmt"
+	"log"
+
+	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+)
+
+type OpenstackServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
+}
+
+func NewServiceLoggingOpenstack() ServiceAttributeDefinition {
+	return &OpenstackServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "logging_openstack",
+		},
+	}
+}
+
+func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	serviceID := d.Id()
+	ol, nl := d.GetChange(h.GetKey())
+
+	if ol == nil {
+		ol = new(schema.Set)
+	}
+	if nl == nil {
+		nl = new(schema.Set)
+	}
+
+	ols := ol.(*schema.Set)
+	nls := nl.(*schema.Set)
+
+	removeOpenstackLogging := ols.Difference(nls).List()
+	addOpenstackLogging := nls.Difference(ols).List()
+
+	// DELETE old OpenStack logging endpoints.
+	for _, oRaw := range removeOpenstackLogging {
+		of := oRaw.(map[string]interface{})
+		opts := buildDeleteOpenstack(of, serviceID, latestVersion)
+
+		log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
+
+		if err := deleteOpenstack(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	// POST new/updated OpenStack logging endpoints.
+	for _, nRaw := range addOpenstackLogging {
+		lf := nRaw.(map[string]interface{})
+
+		// @HACK for a TF SDK Issue.
+		//
+		// This ensures that the required, `name`, field is present.
+		//
+		// If we have made it this far and `name` is not present, it is most-likely due
+		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
+		//
+		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
+		// properly handles setting state with the StateFunc, it returns extra entries
+		// during state Gets, specifically `GetChange("logging_openstack")` in this case.
+		if v, ok := lf["name"]; !ok || v.(string) == "" {
+			continue
+		}
+
+		opts := buildCreateOpenstack(lf, serviceID, latestVersion)
+
+		log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
+
+		if err := createOpenstack(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (h *OpenstackServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	// Refresh OpenStack.
+	log.Printf("[DEBUG] Refreshing OpenStack logging endpoints for (%s)", d.Id())
+	openstackList, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
+		Service: d.Id(),
+		Version: s.ActiveVersion.Number,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up OpenStack logging endpoints for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	}
+
+	ell := flattenOpenstack(openstackList)
+
+	if err := d.Set(h.GetKey(), ell); err != nil {
+		log.Printf("[WARN] Error setting OpenStack logging endpoints for (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func createOpenstack(conn *gofastly.Client, i *gofastly.CreateOpenstackInput) error {
+	_, err := conn.CreateOpenstack(i)
+	return err
+}
+
+func deleteOpenstack(conn *gofastly.Client, i *gofastly.DeleteOpenstackInput) error {
+	err := conn.DeleteOpenstack(i)
+
+	errRes, ok := err.(*gofastly.HTTPError)
+	if !ok {
+		return err
+	}
+
+	// 404 response codes don't result in an error propagating because a 404 could
+	// indicate that a resource was deleted elsewhere.
+	if !errRes.IsNotFound() {
+		return err
+	}
+
+	return nil
+}
+
+func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]interface{} {
+	var lsl []map[string]interface{}
+	for _, ll := range openstackList {
+		// Convert OpenStack logging to a map for saving to state.
+		nll := map[string]interface{}{
+			"name":               ll.Name,
+			"url":                ll.URL,
+			"user":               ll.User,
+			"bucket_name":        ll.BucketName,
+			"access_key":         ll.AccessKey,
+			"public_key":         ll.PublicKey,
+			"gzip_level":         ll.GzipLevel,
+			"message_type":       ll.MessageType,
+			"path":               ll.Path,
+			"period":             ll.Period,
+			"timestamp_format":   ll.TimestampFormat,
+			"format":             ll.Format,
+			"format_version":     ll.FormatVersion,
+			"placement":          ll.Placement,
+			"response_condition": ll.ResponseCondition,
+		}
+
+		// Prune any empty values that come from the default string value in structs.
+		for k, v := range nll {
+			if v == "" {
+				delete(nll, k)
+			}
+		}
+
+		lsl = append(lsl, nll)
+	}
+
+	return lsl
+}
+
+func buildCreateOpenstack(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
+	df := openstackMap.(map[string]interface{})
+
+	return &gofastly.CreateOpenstackInput{
+		Service:           serviceID,
+		Version:           serviceVersion,
+		Name:              gofastly.NullString(df["name"].(string)),
+		URL:               gofastly.NullString(df["url"].(string)),
+		User:              gofastly.NullString(df["user"].(string)),
+		BucketName:        gofastly.NullString(df["bucket_name"].(string)),
+		AccessKey:         gofastly.NullString(df["access_key"].(string)),
+		PublicKey:         gofastly.NullString(df["public_key"].(string)),
+		GzipLevel:         gofastly.Uint(uint(df["gzip_level"].(int))),
+		MessageType:       gofastly.NullString(df["message_type"].(string)),
+		Path:              gofastly.NullString(df["path"].(string)),
+		Period:            gofastly.Uint(uint(df["period"].(int))),
+		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
+		Format:            gofastly.NullString(df["format"].(string)),
+		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
+		Placement:         gofastly.NullString(df["placement"].(string)),
+		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+	}
+}
+
+func buildDeleteOpenstack(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteOpenstackInput {
+	df := openstackMap.(map[string]interface{})
+
+	return &gofastly.DeleteOpenstackInput{
+		Service: serviceID,
+		Version: serviceVersion,
+		Name:    df["name"].(string),
+	}
+}
+
+func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Required fields
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name of the OpenStack logging endpoint.",
+				},
+
+				"url": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Your OpenStack auth url.",
+				},
+
+				"user": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The username for your OpenStack account.",
+				},
+
+				"bucket_name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The name of your OpenStack container.",
+				},
+
+				"access_key": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Sensitive:   true,
+					Description: "Your OpenStack account access key.",
+				},
+
+				// Optional fields
+				"public_key": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+					StateFunc: trimSpaceStateFunc,
+				},
+
+				"gzip_level": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     0,
+					Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+				},
+
+				"period": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     3600,
+					Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+				},
+
+				"path": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The path to upload logs to.",
+				},
+
+				"message_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "classic",
+					Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+					ValidateFunc: validateLoggingMessageType(),
+				},
+
+				"timestamp_format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "%Y-%m-%dT%H:%M:%S.000",
+					Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+				},
+
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Apache style log formatting.",
+				},
+
+				"format_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      2,
+					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+					ValidateFunc: validateLoggingFormatVersion(),
+				},
+
+				"placement": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+					ValidateFunc: validateLoggingPlacement(),
+				},
+
+				"response_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+				},
+			},
+		},
+	}
+	return nil
+}

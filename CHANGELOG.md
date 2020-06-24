@@ -1,4 +1,9 @@
-## 0.18.0 (Unreleased)
+## 0.17.1 (Unreleased)
+
+NOTES:
+
+* resource/fastly_service_v1/\*: Migrates service resources to implement the `ServiceAttributeDefinition` `interface` ([#269](https://github.com/terraform-providers/terraform-provider-fastly/pull/269))
+
 ## 0.17.0 (June 22, 2020)
 
 ENHANCEMENTS:

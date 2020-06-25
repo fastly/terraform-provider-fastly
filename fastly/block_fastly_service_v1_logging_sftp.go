@@ -111,10 +111,11 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 				},
 
 				"message_type": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "classic",
-					Description: "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "classic",
+					Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+					ValidateFunc: validateLoggingMessageType(),
 				},
 
 				"format": {

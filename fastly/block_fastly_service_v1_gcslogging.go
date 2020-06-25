@@ -169,10 +169,11 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 					Description: "Name of a condition to apply this logging.",
 				},
 				"message_type": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "classic",
-					Description: "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "classic",
+					Description:  "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
+					ValidateFunc: validateLoggingMessageType(),
 				},
 				"placement": {
 					Type:         schema.TypeString,

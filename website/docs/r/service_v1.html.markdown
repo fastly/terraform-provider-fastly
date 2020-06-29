@@ -232,6 +232,8 @@ Defined below.
 Defined below.
 * `logging_openstack` - (Optional) An OpenStack endpoint to send streaming logs to.
 Defined below.
+* `logging_digitalocean` - (Optional) A DigitalOcean Spaces endpoint to send streaming logs to.
+Defined below.
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
@@ -713,6 +715,24 @@ seconds. Default `3600`.
 * `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
+
+The `logging_digitalocean` block supports:
+
+* `name` - (Required) The unique name of the DigitalOcean Spaces logging endpoint.
+* `bucket_name` - (Required) The name of the DigitalOcean Space.
+* `access_key` - (Required) Your DigitalOcean Spaces account access key.
+* `secret_key` - (Required) Your DigitalOcean Spaces account secret key.
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `domain` - (Optional) The domain of the DigitalOcean Spaces endpoint (default "nyc3.digitaloceanspaces.com").
+* `path` - (Optional) The path to upload logs to.
+* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default 3600).
+* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `gzip_level` - (Optional) What level of GZIP encoding to have when dumping logs (default 0, no compression).
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 The `response_object` block supports:
 

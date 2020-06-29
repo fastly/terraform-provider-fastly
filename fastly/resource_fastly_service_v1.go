@@ -37,6 +37,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingScalyr(),
 		NewServiceLoggingNewRelic(),
 		NewServiceLoggingKafka(),
+		NewServiceLoggingHeroku(),
 		NewServiceResponseObject(),
 		NewServiceRequestSetting(),
 		NewServiceVCL(),

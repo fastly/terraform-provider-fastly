@@ -242,7 +242,7 @@ func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     0,
-					Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+					Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
 				},
 
 				"period": {

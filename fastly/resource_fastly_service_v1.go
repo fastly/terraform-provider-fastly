@@ -40,6 +40,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingHeroku(),
 		NewServiceLoggingHoneycomb(),
 		NewServiceLoggingLogshuttle(),
+		NewServiceLoggingOpenstack(),
 		NewServiceResponseObject(),
 		NewServiceRequestSetting(),
 		NewServiceVCL(),

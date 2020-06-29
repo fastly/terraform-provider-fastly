@@ -38,6 +38,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingNewRelic(),
 		NewServiceLoggingKafka(),
 		NewServiceLoggingHeroku(),
+		NewServiceLoggingHoneycomb(),
 		NewServiceResponseObject(),
 		NewServiceRequestSetting(),
 		NewServiceVCL(),

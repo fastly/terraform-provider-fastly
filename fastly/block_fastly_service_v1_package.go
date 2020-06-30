@@ -40,6 +40,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 				},
 				"source_code_size": {
 					Type:     schema.TypeInt,
+					Optional: true,
 					Computed: true,
 				},
 			},

@@ -261,7 +261,7 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 				"gzip_level": {
 					Type:        schema.TypeInt,
 					Optional:    true,
-					Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+					Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
 				},
 
 				"format": {

@@ -403,7 +403,7 @@ then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws
 * `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
 * `period` - (Optional) How frequently the logs should be transferred, in
 seconds. Default `3600`.
-* `gzip_level` - (Optional) Level of GZIP compression, from `0-9`. `0` is no
+* `gzip_level` - (Optional) Level of Gzip compression, from `0-9`. `0` is no
 compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`).
@@ -445,7 +445,7 @@ The `gcslogging` block supports:
 If this field is left empty, the files will be saved in the bucket's root path.
 * `period` - (Optional) How frequently the logs should be transferred, in
 seconds. Default `3600`.
-* `gzip_level` - (Optional) Level of GZIP compression, from `0-9`. `0` is no
+* `gzip_level` - (Optional) Level of Gzip compression, from `0-9`. `0` is no
 compression. `1` is fastest and least compressed, `9` is slowest and most
 compressed. Default `0`.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
@@ -516,7 +516,7 @@ The `blobstoragelogging` block supports:
 * `path` - (Optional) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path.
 * `period` - (Optional) How frequently the logs should be transferred in seconds. Default `3600`.
 * `timestamp_format` - (Optional) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`.
-* `gzip_level` - (Optional) Level of GZIP compression from `0`to `9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`.
+* `gzip_level` - (Optional) Level of Gzip compression from `0`to `9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`.
 * `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Default `%h %l %u %t \"%r\" %>s %b`.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
@@ -591,7 +591,7 @@ The `logging_sftp` block supports:
 * `port` - (Optional) The port the SFTP service listens on. (Default: `22`).
 * `password` - (Optional) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
 * `secret_key` - (Optional) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
-* `gzip_level` - (Optional) What level of GZIP encoding to have when dumping logs (default 0, no compression).
+* `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
 * `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
@@ -710,7 +710,7 @@ The `logging_openstack` block supports:
 If this field is left empty, the files will be saved in the bucket's root path.
 * `period` - (Optional) How frequently the logs should be transferred, in
 seconds. Default `3600`.
-* `gzip_level` - (Optional) What level of GZIP encoding to have when dumping logs (default 0, no compression).
+* `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
 * `format` - (Optional) Apache style log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
@@ -729,7 +729,7 @@ The `logging_digitalocean` block supports:
 * `path` - (Optional) The path to upload logs to.
 * `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default 3600).
 * `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
-* `gzip_level` - (Optional) What level of GZIP encoding to have when dumping logs (default 0, no compression).
+* `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.

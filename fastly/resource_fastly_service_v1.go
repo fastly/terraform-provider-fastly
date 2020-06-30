@@ -17,7 +17,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceBackend(),
 		NewServiceDirector(),
 		NewServiceHeader(),
-		NewServiceGZIP(),
+		NewServiceGzip(),
 		NewServiceS3Logging(),
 		NewServicePaperTrail(),
 		NewServiceSumologic(),

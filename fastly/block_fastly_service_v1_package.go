@@ -30,7 +30,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 			Schema: map[string]*schema.Schema{
 				"filename": {
 					Type:     schema.TypeString,
-					Optional: true,
+					Required: true,
 				},
 				// sha512 hash of the file
 				"source_code_hash": {

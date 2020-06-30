@@ -34,12 +34,12 @@ func TestAccFastlyServiceV1_package_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1PackageConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm_v1.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
 					testAccCheckFastlyServiceV1PackageAttributes(&service, &wp1),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm_v1.foo", "name", name),
+						"fastly_service_wasm.foo", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm_v1.foo", "package.#", "1"),
+						"fastly_service_wasm.foo", "package.#", "1"),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func testAccCheckFastlyServiceV1PackageAttributes(service *gofastly.ServiceDetai
 
 func testAccServiceV1PackageConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm_v1" "foo" {
+resource "fastly_service_wasm" "foo" {
   name = "%s"
   domain {
     name    = "%s"

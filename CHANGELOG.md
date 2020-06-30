@@ -1,4 +1,24 @@
-## 0.18.0 (Unreleased)
+## 0.19.0 (Unreleased)
+## 0.18.0 (July 01, 2020)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1/logging_digitalocean: Add DigitalOcean Spaces logging support ([#276](https://github.com/terraform-providers/terraform-provider-fastly/pull/276))
+* resource/fastly_service_v1/logging_cloudfiles: Add Rackspace Cloud Files logging support ([#275](https://github.com/terraform-providers/terraform-provider-fastly/pull/275))
+* resource/fastly_service_v1/logging_openstack: Add OpenStack logging support ([#273](https://github.com/terraform-providers/terraform-provider-fastly/pull/274))
+* resource/fastly_service_v1/logging_logshuttle: Add Log Shuttle logging support ([#273](https://github.com/terraform-providers/terraform-provider-fastly/pull/273))
+* resource/fastly_service_v1/logging_honeycomb: Add Honeycomb logging support ([#272](https://github.com/terraform-providers/terraform-provider-fastly/pull/272))
+* resource/fastly_service_v1/logging_heroku: Add Heroku logging support ([#271](https://github.com/terraform-providers/terraform-provider-fastly/pull/271))
+
+NOTES:
+
+* resource/fastly_service_v1/\*: "GZIP" -> "Gzip" ([#279](https://github.com/terraform-providers/terraform-provider-fastly/pull/279))
+* resource/fastly_service_v1/logging_sftp: Update SFTP logging to use `ValidateFunc` for validating the `message_type` field ([#278](https://github.com/terraform-providers/terraform-provider-fastly/pull/278))
+* resource/fastly_service_v1/gcslogging: Update GCS logging to use `ValidateFunc` for validating the `message_type` field ([#278](https://github.com/terraform-providers/terraform-provider-fastly/pull/278))
+* resource/fastly_service_v1/blobstoragelogging: Update Azure Blob Storage logging to use a custom `StateFunc` for trimming whitespace from the `public_key` field ([#277](https://github.com/terraform-providers/terraform-provider-fastly/pull/277))
+* resource/fastly_service_v1/logging_ftp: Update FTP logging to use a custom `StateFunc` for trimming whitespace from the `public_key` field ([#277](https://github.com/terraform-providers/terraform-provider-fastly/pull/277))
+* resource/fastly_service_v1/s3logging: Update S3 logging to use a custom `StateFunc` for trimming whitespace from the `public_key` field ([#277](https://github.com/terraform-providers/terraform-provider-fastly/pull/277))
+
 ## 0.17.1 (June 24, 2020)
 
 NOTES:

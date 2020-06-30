@@ -9,46 +9,59 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-// wafSchema the WAF block schema
-var wafSchema = &schema.Schema{
-	Type:     schema.TypeList,
-	Optional: true,
-	MaxItems: 1,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"response_object": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The Web Application Firewall's (WAF) response object",
-			},
-			"prefetch_condition": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The Web Application Firewall's (WAF) prefetch condition",
-			},
-			"waf_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The Web Application Firewall (WAF) ID",
-			},
-			"disabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "A flag used to completely disable a Web Application Firewall. This is intended to be used as an emergency.",
-			},
-		},
-	},
+type WAFServiceAttributeHandler struct {
+	*DefaultServiceAttributeHandler
 }
 
-func processWAF(d *schema.ResourceData, conn *gofastly.Client, v int) error {
+func NewServiceWAF() ServiceAttributeDefinition {
+	return &WAFServiceAttributeHandler{
+		&DefaultServiceAttributeHandler{
+			key: "waf",
+		},
+	}
+}
 
+func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
+	s.Schema[h.GetKey()] = &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"response_object": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The Web Application Firewall's (WAF) response object",
+				},
+				"prefetch_condition": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The Web Application Firewall's (WAF) prefetch condition",
+				},
+				"waf_id": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "The Web Application Firewall (WAF) ID",
+				},
+				"disabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "A flag used to completely disable a Web Application Firewall. This is intended to be used as an emergency.",
+				},
+			},
+		},
+	}
+
+	return nil
+}
+
+func (h *WAFServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	serviceVersion := strconv.Itoa(v)
-	oldWAFVal, newWAFVal := d.GetChange("waf")
+	serviceVersion := strconv.Itoa(latestVersion)
+	oldWAFVal, newWAFVal := d.GetChange(h.GetKey())
 
 	if len(newWAFVal.([]interface{})) > 0 {
-
 		wf := newWAFVal.([]interface{})[0].(map[string]interface{})
 
 		var err error
@@ -87,7 +100,7 @@ func processWAF(d *schema.ResourceData, conn *gofastly.Client, v int) error {
 	return nil
 }
 
-func readWAF(conn *gofastly.Client, d *schema.ResourceData, s *gofastly.ServiceDetail) error {
+func (h *WAFServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// refresh WAFs
 	log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
 	wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{

@@ -9,19 +9,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type GzipServiceAttributeHandler struct {
+type GZIPServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceGzip() ServiceAttributeDefinition {
-	return &GzipServiceAttributeHandler{
+func NewServiceGZIP() ServiceAttributeDefinition {
+	return &GZIPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			key: "gzip",
 		},
 	}
 }
 
-func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *GZIPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	og, ng := d.GetChange(h.GetKey())
 	if og == nil {
 		og = new(schema.Set)
@@ -96,7 +96,7 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	return nil
 }
 
-func (h *GzipServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *GZIPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
 	gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
 		Service: d.Id(),
@@ -116,7 +116,7 @@ func (h *GzipServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 	return nil
 }
 
-func (h *GzipServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *GZIPServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

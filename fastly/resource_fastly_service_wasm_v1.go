@@ -15,6 +15,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceBackend(),
 		NewServicePackage(),
 		NewServiceBigQueryLogging(),
+		NewServiceBlobStorageLogging(),
 	},
 }
 

@@ -56,7 +56,19 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	log1Wasm := gofastly.Logentries{
+		Version:           1,
+		Name:              "somelogentriesname",
+		Port:              uint(20000),
+		UseTLS:            true,
+		Token:             "token",
+		Format:            "%h %l %u %t %r %>s",
+		FormatVersion:     1,
+		ResponseCondition: "response_condition_test",
+	}
 
 	log1 := gofastly.Logentries{
 		Version:           1,
@@ -86,22 +98,32 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1LogentriesWasmConfig(nameWasm, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "logentries.#", "1"),
+				),
+			},
+			{
 				Config: testAccServiceV1LogentriesConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1}),
+					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "logentries.#", "1"),
 				),
 			},
-
 			{
 				Config: testAccServiceV1LogentriesConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1, &log2}),
+					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -112,7 +134,7 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1LogentriesAttributes(service *gofastly.ServiceDetail, logentriess []*gofastly.Logentries) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1LogentriesAttributes(service *gofastly.ServiceDetail, logentriess []*gofastly.Logentries, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -142,6 +164,15 @@ func testAccCheckFastlyServiceV1LogentriesAttributes(service *gofastly.ServiceDe
 					// these ahead of time
 					ls.CreatedAt = nil
 					ls.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						ls.FormatVersion = s.FormatVersion
+						ls.Format = s.Format
+						ls.ResponseCondition = s.ResponseCondition
+						ls.Placement = s.Placement
+					}
+
 					if !reflect.DeepEqual(s, ls) {
 						return fmt.Errorf("Bad match Logentries logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
 					}
@@ -183,7 +214,7 @@ func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
 				Config: testAccServiceV1LogentriesConfig_formatVersion(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1}),
+					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -192,6 +223,33 @@ func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccServiceV1LogentriesWasmConfig(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_wasm" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logentries {
+    name               = "somelogentriesname"
+    token              = "token"
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+
+  force_destroy = true
+}`, name, domain)
 }
 
 func testAccServiceV1LogentriesConfig(name, domain string) string {

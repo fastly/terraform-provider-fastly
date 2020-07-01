@@ -19,6 +19,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceGCSLogging(),
 		NewServiceHTTPSLogging(),
 		NewServiceLogentries(),
+		NewServiceLoggingCloudfiles(),
 	},
 }
 

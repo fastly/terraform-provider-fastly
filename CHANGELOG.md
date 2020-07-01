@@ -1,4 +1,4 @@
-## 0.18.0 (Unreleased)
+## 0.18.0 (July 01, 2020)
 
 ENHANCEMENTS:
 

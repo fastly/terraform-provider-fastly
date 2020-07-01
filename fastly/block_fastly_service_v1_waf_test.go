@@ -176,7 +176,7 @@ func TestAccFastlyServiceV1WAFUpdateCondition(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1WAFDisableEnable(t *testing.T) {
+func TestAccFastlyServiceV1WAFEnableDisable(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafEnabled := composeWAF(condition, response, false)
@@ -208,6 +208,51 @@ func TestAccFastlyServiceV1WAFDisableEnable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists(serviceRef, &service),
 					testAccCheckFastlyServiceV1DisableEnableWAF(&service, true),
+				),
+			},
+			{
+				Config: testAccServiceV1WAF(name, "", wafEnabled, wafConfig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckFastlyServiceV1DisableEnableWAF(&service, false),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1WAFDisableEnable(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	wafEnabled := composeWAF(condition, response, false)
+	wafDisabled := composeWAF(condition, response, true)
+
+	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+	rulesTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules([]gofastly.WAFActiveRule{
+		{
+			ModSecID: 2029719,
+			Status:   "block",
+			Revision: 1,
+		},
+	})
+	wafConfig := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF1)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1WAF(name, "", wafDisabled, wafConfig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckFastlyServiceV1DisableEnableWAF(&service, true),
+				),
+			},
+			{
+				Config: testAccServiceV1WAF(name, "", wafEnabled, wafConfig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckFastlyServiceV1DisableEnableWAF(&service, false),
 				),
 			},
 			{

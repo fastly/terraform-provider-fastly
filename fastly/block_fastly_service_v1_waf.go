@@ -65,21 +65,28 @@ func (h *WAFServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		wf := newWAFVal.([]interface{})[0].(map[string]interface{})
 
 		var err error
-		var waf *gofastly.WAF
 		if wafExists(conn, serviceID, serviceVersion, wf["waf_id"].(string)) {
 			opts := buildUpdateWAF(wf, serviceID, serviceVersion)
 			log.Printf("[DEBUG] Fastly WAF update opts: %#v", opts)
-			waf, err = conn.UpdateWAF(opts)
+			_, err = conn.UpdateWAF(opts)
 		} else {
 			opts := buildCreateWAF(wf, serviceID, serviceVersion)
 			log.Printf("[DEBUG] Fastly WAF Addition opts: %#v", opts)
+
+			var waf *gofastly.WAF
 			waf, err = conn.CreateWAF(opts)
+
+			// Handle the case where a user has specified `disabled`
+			// in their configuration which is not supported during
+			// WAF creation.
+			if err == nil && (waf.Disabled != wf["disabled"].(bool)) {
+				_, err = conn.UpdateWAF(&gofastly.UpdateWAFInput{
+					ID:       waf.ID,
+					Disabled: gofastly.Bool(wf["disabled"].(bool)),
+				})
+			}
 		}
 		if err != nil {
-			return err
-		}
-
-		if err = processDisabledField(conn, wf, waf); err != nil {
 			return err
 		}
 	} else if len(oldWAFVal.([]interface{})) > 0 {
@@ -156,29 +163,6 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
 	return append(wl, WAFMapString)
 }
 
-func processDisabledField(conn *gofastly.Client, wf map[string]interface{}, waf *gofastly.WAF) error {
-
-	if wf["disabled"].(bool) == waf.Disabled {
-		return nil
-	}
-
-	var err error
-	if wf["disabled"].(bool) {
-		opts := buildDisableWAF(wf)
-		log.Printf("[DEBUG] Fastly WAF disable opts: %#v", opts)
-		_, err = conn.DisableWAF(opts)
-
-	} else {
-		opts := buildEnableWAF(wf)
-		log.Printf("[DEBUG] Fastly WAF enable opts: %#v", opts)
-		_, err = conn.EnableWAF(opts)
-	}
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func buildCreateWAF(WAFMap interface{}, serviceID string, ServiceVersion string) *gofastly.CreateWAFInput {
 	df := WAFMap.(map[string]interface{})
 	opts := gofastly.CreateWAFInput{
@@ -208,22 +192,7 @@ func buildUpdateWAF(wafMap interface{}, serviceID string, ServiceVersion string)
 		ID:                df["waf_id"].(string),
 		PrefetchCondition: df["prefetch_condition"].(string),
 		Response:          df["response_object"].(string),
-	}
-	return &opts
-}
-
-func buildDisableWAF(wafMap interface{}) *gofastly.DisableWAFInput {
-	df := wafMap.(map[string]interface{})
-	opts := gofastly.DisableWAFInput{
-		ID: df["waf_id"].(string),
-	}
-	return &opts
-}
-
-func buildEnableWAF(wafMap interface{}) *gofastly.EnableWAFInput {
-	df := wafMap.(map[string]interface{})
-	opts := gofastly.EnableWAFInput{
-		ID: df["waf_id"].(string),
+		Disabled:          gofastly.Bool(df["disabled"].(bool)),
 	}
 	return &opts
 }

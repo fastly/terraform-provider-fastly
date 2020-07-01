@@ -62,6 +62,26 @@ func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, ini
 	return h.HasChange(d)
 }
 
+
+type VCLLoggingAttributes struct {
+	format            string
+	formatVersion     uint
+	placement         string
+	responseCondition string
+}
+
+// NewVCLLoggingAttributes provides default values to Wasm services for VCL only logging attributes
+func NewVCLLoggingAttributes() VCLLoggingAttributes {
+	vla := VCLLoggingAttributes{}
+	vla.format = ""
+	vla.formatVersion = 0
+	vla.placement = "none"
+	vla.responseCondition = ""
+	return vla
+}
+
+
+
 // ServiceDefinition defines the data model for service definitions
 // There are two types of service: VCL and Compute. This interface specifies the data object from which service resources
 // are constructed.

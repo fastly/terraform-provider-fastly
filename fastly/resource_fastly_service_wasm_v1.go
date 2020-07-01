@@ -14,6 +14,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceHealthCheck(),
 		NewServiceBackend(),
 		NewServicePackage(),
+		NewServiceBigQueryLogging(),
 	},
 }
 

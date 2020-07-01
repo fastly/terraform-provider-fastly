@@ -66,7 +66,7 @@ func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, late
 		if v, ok := lf["name"]; !ok || v.(string) == "" {
 			continue
 		}
-		opts := buildCreateCloudfiles(lf, serviceID, latestVersion)
+		opts := buildCreateCloudfiles(lf, serviceID, latestVersion, serviceType)
 
 		log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
 
@@ -156,8 +156,16 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]inter
 	return lsl
 }
 
-func buildCreateCloudfiles(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
+func buildCreateCloudfiles(cloudfilesMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateCloudfilesInput {
 	df := cloudfilesMap.(map[string]interface{})
+
+	var vla = NewVCLLoggingAttributes()
+	if serviceType == ServiceTypeVCL {
+		vla.format = df["format"].(string)
+		vla.formatVersion = uint(df["format_version"].(int))
+		vla.placement = df["placement"].(string)
+		vla.responseCondition = df["response_condition"].(string)
+	}
 
 	return &gofastly.CreateCloudfilesInput{
 		Service:           serviceID,
@@ -173,10 +181,10 @@ func buildCreateCloudfiles(cloudfilesMap interface{}, serviceID string, serviceV
 		Region:            gofastly.NullString(df["region"].(string)),
 		Period:            gofastly.Uint(uint(df["period"].(int))),
 		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
@@ -191,115 +199,118 @@ func buildDeleteCloudfiles(cloudfilesMap interface{}, serviceID string, serviceV
 }
 
 func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+	var a = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Cloud Files logging endpoint.",
+		},
+
+		"bucket_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of your Cloud Files container.",
+		},
+
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for your Cloudfile account.",
+		},
+
+		"access_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Your Cloudfile account access key.",
+		},
+
+		// Optional fields
+		"public_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"gzip_level": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+		},
+
+		"message_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "classic",
+			Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+			ValidateFunc: validateLoggingMessageType(),
+		},
+
+		"path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The path to upload logs to.",
+		},
+
+		"region": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Description: "The region to stream logs to. One of: DFW	(Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong).",
+		},
+
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+		},
+
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: "The specified format of the log's timestamp (default `%Y-%m-%dT%H:%M:%S.000`).",
+		},
+	}
+
+
+	if serviceType == ServiceTypeVCL {
+		a["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting.",
+		}
+		a["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		a["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+		a["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Cloud Files logging endpoint.",
-				},
-
-				"bucket_name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The name of your Cloud Files container.",
-				},
-
-				"user": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The username for your Cloudfile account.",
-				},
-
-				"access_key": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "Your Cloudfile account access key.",
-				},
-
-				// Optional fields
-				"public_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"gzip_level": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     0,
-					Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
-				},
-
-				"message_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      "classic",
-					Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
-					ValidateFunc: validateLoggingMessageType(),
-				},
-
-				"path": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The path to upload logs to.",
-				},
-
-				"region": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Description: "The region to stream logs to. One of: DFW	(Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong).",
-				},
-
-				"period": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     3600,
-					Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
-				},
-
-				"timestamp_format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%Y-%m-%dT%H:%M:%S.000",
-					Description: "The specified format of the log's timestamp (default `%Y-%m-%dT%H:%M:%S.000`).",
-				},
-
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache style log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: a,
 		},
 	}
+
 	return nil
 }

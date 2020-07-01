@@ -21,7 +21,7 @@ func NewServiceRequestSetting() ServiceAttributeDefinition {
 	}
 }
 
-func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -75,7 +75,7 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 	return nil
 }
 
-func (h *RequestSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
 	rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
 		Service: d.Id(),
@@ -94,7 +94,7 @@ func (h *RequestSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *
 	return nil
 }
 
-func (h *RequestSettingServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *RequestSettingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

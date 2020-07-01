@@ -20,7 +20,7 @@ func NewServiceBlobStorageLogging() ServiceAttributeDefinition {
 	}
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	obsl, nbsl := d.GetChange(h.GetKey())
 	if obsl == nil {
 		obsl = new(schema.Set)
@@ -101,7 +101,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 	return nil
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
 	blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
 		Service: d.Id(),
@@ -120,7 +120,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData,
 	return nil
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

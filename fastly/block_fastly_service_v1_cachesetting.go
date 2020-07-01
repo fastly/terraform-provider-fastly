@@ -21,7 +21,7 @@ func NewServiceCacheSetting() ServiceAttributeDefinition {
 	}
 }
 
-func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	oc, nc := d.GetChange(h.GetKey())
 	if oc == nil {
 		oc = new(schema.Set)
@@ -75,7 +75,7 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	return nil
 }
 
-func (h *CacheSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
 	cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 		Service: d.Id(),
@@ -93,7 +93,7 @@ func (h *CacheSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 	return nil
 }
 
-func (h *CacheSettingServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *CacheSettingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

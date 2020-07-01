@@ -20,7 +20,7 @@ func NewServiceDirector() ServiceAttributeDefinition {
 	}
 }
 
-func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	od, nd := d.GetChange(h.GetKey())
 	if od == nil {
 		od = new(schema.Set)
@@ -108,7 +108,7 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	return nil
 }
 
-func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 		Service: d.Id(),
@@ -155,7 +155,7 @@ func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 	return nil
 }
 
-func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

@@ -20,7 +20,7 @@ func NewServiceHealthCheck() ServiceAttributeDefinition {
 	}
 }
 
-func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	oh, nh := d.GetChange(h.GetKey())
 	if oh == nil {
 		oh = new(schema.Set)
@@ -84,7 +84,7 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 	return nil
 }
 
-func (h *HealthCheckServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
 	healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
 		Service: d.Id(),
@@ -104,7 +104,7 @@ func (h *HealthCheckServiceAttributeHandler) Read(d *schema.ResourceData, s *gof
 	return nil
 }
 
-func (h *HealthCheckServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *HealthCheckServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

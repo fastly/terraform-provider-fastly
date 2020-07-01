@@ -20,7 +20,7 @@ func NewServiceLoggingSFTP() ServiceAttributeDefinition {
 	}
 }
 
-func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -151,7 +151,7 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	os, ns := d.GetChange(h.GetKey())
 
@@ -214,7 +214,7 @@ func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	return nil
 }
 
-func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh SFTP.
 	log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
 	sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{

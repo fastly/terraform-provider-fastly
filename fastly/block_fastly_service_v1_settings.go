@@ -14,7 +14,7 @@ func NewServiceSettings() ServiceAttributeDefinition {
 	return &SettingsServiceAttributeHandler{}
 }
 
-func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	opts := gofastly.UpdateSettingsInput{
 		Service: d.Id(),
 		Version: latestVersion,
@@ -33,7 +33,7 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	return err
 }
 
-func (h *SettingsServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *SettingsServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	settingsOpts := gofastly.GetSettingsInput{
 		Service: d.Id(),
 		Version: s.ActiveVersion.Number,
@@ -59,7 +59,7 @@ func (h *SettingsServiceAttributeHandler) MustProcess(d *schema.ResourceData, in
 	return d.HasChange("default_host") || d.HasChange("default_ttl") || (d.Get("default_ttl") == 0 && initialVersion)
 }
 
-func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema["default_ttl"] = &schema.Schema{
 		Type:        schema.TypeInt,
 		Optional:    true,

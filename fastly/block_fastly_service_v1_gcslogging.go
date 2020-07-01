@@ -20,7 +20,7 @@ func NewServiceGCSLogging() ServiceAttributeDefinition {
 	}
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -83,7 +83,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
 	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 		Service: d.Id(),
@@ -102,7 +102,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

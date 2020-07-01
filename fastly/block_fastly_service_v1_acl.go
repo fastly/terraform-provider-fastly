@@ -20,7 +20,7 @@ func NewServiceACL() ServiceAttributeDefinition {
 	}
 }
 
-func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	oldACLVal, newACLVal := d.GetChange(h.GetKey())
 	if oldACLVal == nil {
 		oldACLVal = new(schema.Set)
@@ -74,7 +74,7 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	return nil
 }
 
-func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 
 	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
 	aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
@@ -94,7 +94,7 @@ func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 	return nil
 }
 
-func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *ACLServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

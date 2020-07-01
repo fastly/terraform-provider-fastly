@@ -21,7 +21,7 @@ func NewServiceCondition() ServiceAttributeDefinition {
 	}
 }
 
-func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	// Note: we don't utilize the PUT endpoint to update these objects, we simply
 	// destroy any that have changed, and create new ones with the updated
 	// values. This is how Terraform works with nested sub resources, we only
@@ -84,7 +84,7 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *ConditionServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
 	conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
 		Service: d.Id(),
@@ -103,7 +103,7 @@ func (h *ConditionServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	return nil
 }
 
-func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

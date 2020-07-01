@@ -20,7 +20,7 @@ func NewServiceLoggingFTP() ServiceAttributeDefinition {
 	}
 }
 
-func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	of, nf := d.GetChange(h.GetKey())
 
@@ -79,7 +79,7 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	return nil
 }
 
-func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh FTP.
 	log.Printf("[DEBUG] Refreshing FTP logging endpoints for (%s)", d.Id())
 	ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
@@ -99,7 +99,7 @@ func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 	return nil
 }
 
-func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *FTPServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

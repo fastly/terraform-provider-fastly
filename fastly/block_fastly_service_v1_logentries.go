@@ -20,7 +20,7 @@ func NewServiceLogentries() ServiceAttributeDefinition {
 	}
 }
 
-func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -81,7 +81,7 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
 	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 		Service: d.Id(),
@@ -101,7 +101,7 @@ func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

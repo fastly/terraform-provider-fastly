@@ -21,7 +21,7 @@ func NewServiceS3Logging() ServiceAttributeDefinition {
 	}
 }
 
-func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 
 	os, ns := d.GetChange(h.GetKey())
@@ -72,7 +72,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh S3.
 	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
 	s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
@@ -92,7 +92,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	return nil
 }
 
-func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

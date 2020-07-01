@@ -20,7 +20,7 @@ func NewServicePackage() ServiceAttributeDefinition {
 	}
 }
 
-func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *PackageServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -44,7 +44,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *PackageServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		// Schema guarantees one package block.
@@ -64,7 +64,7 @@ func (h *PackageServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	return nil
 }
 
-func (h *PackageServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
 	Package, err := conn.GetPackage(&gofastly.GetPackageInput{
 		Service: d.Id(),

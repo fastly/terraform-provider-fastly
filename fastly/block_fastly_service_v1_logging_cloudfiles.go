@@ -20,7 +20,7 @@ func NewServiceLoggingCloudfiles() ServiceAttributeDefinition {
 	}
 }
 
-func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -78,7 +78,7 @@ func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *CloudfilesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh Cloud Files.
 	log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
 	cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
@@ -190,7 +190,7 @@ func buildDeleteCloudfiles(cloudfilesMap interface{}, serviceID string, serviceV
 	}
 }
 
-func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

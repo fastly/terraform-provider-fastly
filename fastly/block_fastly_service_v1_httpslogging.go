@@ -21,7 +21,7 @@ func NewServiceHTTPSLogging() ServiceAttributeDefinition {
 	}
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	oh, nh := d.GetChange(h.GetKey())
 
@@ -65,7 +65,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	return nil
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// refresh HTTPS
 	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
 	httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
@@ -86,7 +86,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 	return nil
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

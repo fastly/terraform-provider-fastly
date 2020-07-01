@@ -20,7 +20,7 @@ func NewServiceLoggingDigitalOcean() ServiceAttributeDefinition {
 	}
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -79,7 +79,7 @@ func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, la
 	return nil
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh DigitalOcean Spaces.
 	log.Printf("[DEBUG] Refreshing DigitalOcean Spaces logging endpoints for (%s)", d.Id())
 	digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
@@ -191,7 +191,7 @@ func buildDeleteDigitalOcean(digitaloceanMap interface{}, serviceID string, serv
 	}
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

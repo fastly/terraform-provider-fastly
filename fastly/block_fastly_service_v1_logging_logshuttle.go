@@ -20,7 +20,7 @@ func NewServiceLoggingLogshuttle() ServiceAttributeDefinition {
 	}
 }
 
-func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -64,7 +64,7 @@ func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *LogshuttleServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh Log Shuttle.
 	log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
 	logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
@@ -160,7 +160,7 @@ func buildDeleteLogshuttle(logshuttleMap interface{}, serviceID string, serviceV
 	}
 }
 
-func (h *LogshuttleServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *LogshuttleServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

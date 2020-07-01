@@ -20,7 +20,7 @@ func NewServiceSumologic() ServiceAttributeDefinition {
 	}
 }
 
-func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -78,7 +78,7 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
 		Service: d.Id(),
@@ -96,7 +96,7 @@ func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	return nil
 }
 
-func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

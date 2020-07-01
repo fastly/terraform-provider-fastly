@@ -21,7 +21,7 @@ func NewServiceLoggingGooglePubSub() ServiceAttributeDefinition {
 	}
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -91,7 +91,7 @@ func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource) error
 	return nil
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	oldLogCfg, newLogCfg := d.GetChange(h.GetKey())
 
@@ -135,7 +135,7 @@ func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, la
 	return nil
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh Google Cloud Pub/Sub logging endpoints.
 	log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
 	googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{

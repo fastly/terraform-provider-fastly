@@ -20,7 +20,7 @@ func NewServiceLoggingNewRelic() ServiceAttributeDefinition {
 	}
 }
 
-func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	od, nd := d.GetChange(h.GetKey())
 
@@ -64,7 +64,7 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	return nil
 }
 
-func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh NewRelic.
 	log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
 	newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
@@ -156,7 +156,7 @@ func buildDeleteNewRelic(newrelicMap interface{}, serviceID string, serviceVersi
 	}
 }
 
-func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

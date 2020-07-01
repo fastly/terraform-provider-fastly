@@ -20,7 +20,7 @@ func NewServiceLoggingOpenstack() ServiceAttributeDefinition {
 	}
 }
 
-func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -79,7 +79,7 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *OpenstackServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh OpenStack.
 	log.Printf("[DEBUG] Refreshing OpenStack logging endpoints for (%s)", d.Id())
 	openstackList, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
@@ -191,7 +191,7 @@ func buildDeleteOpenstack(openstackMap interface{}, serviceID string, serviceVer
 	}
 }
 
-func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

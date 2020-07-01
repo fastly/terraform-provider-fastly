@@ -20,7 +20,7 @@ func NewServiceResponseObject() ServiceAttributeDefinition {
 	}
 }
 
-func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	or, nr := d.GetChange(h.GetKey())
 	if or == nil {
 		or = new(schema.Set)
@@ -79,7 +79,7 @@ func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, 
 	return nil
 }
 
-func (h *ResponseObjectServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *ResponseObjectServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
 	responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
 		Service: d.Id(),
@@ -98,7 +98,7 @@ func (h *ResponseObjectServiceAttributeHandler) Read(d *schema.ResourceData, s *
 	return nil
 }
 
-func (h *ResponseObjectServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *ResponseObjectServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

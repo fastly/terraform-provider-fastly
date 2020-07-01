@@ -20,7 +20,7 @@ func NewServiceDictionary() ServiceAttributeDefinition {
 	}
 }
 
-func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	oldDictVal, newDictVal := d.GetChange(h.GetKey())
 
 	if oldDictVal == nil {
@@ -75,7 +75,7 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
 	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
 		Service: d.Id(),
@@ -93,7 +93,7 @@ func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

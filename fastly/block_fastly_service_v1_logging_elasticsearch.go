@@ -20,7 +20,7 @@ func NewServiceLoggingElasticSearch() ServiceAttributeDefinition {
 	}
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	oe, ne := d.GetChange(h.GetKey())
 
@@ -64,7 +64,7 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 	return nil
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh Elasticsearch.
 	log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
 	elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
@@ -84,7 +84,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *g
 	return nil
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

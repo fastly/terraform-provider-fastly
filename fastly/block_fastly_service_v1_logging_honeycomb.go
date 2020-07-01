@@ -20,7 +20,7 @@ func NewServiceLoggingHoneycomb() ServiceAttributeDefinition {
 	}
 }
 
-func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -64,7 +64,7 @@ func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *HoneycombServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh Honeycomb.
 	log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
 	honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
@@ -160,7 +160,7 @@ func buildDeleteHoneycomb(honeycombMap interface{}, serviceID string, serviceVer
 	}
 }
 
-func (h *HoneycombServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *HoneycombServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

@@ -20,7 +20,7 @@ func NewServiceSplunk() ServiceAttributeDefinition {
 	}
 }
 
-func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -96,7 +96,7 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
 	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
 		Service: d.Id(),
@@ -115,7 +115,7 @@ func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	return nil
 }
 
-func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

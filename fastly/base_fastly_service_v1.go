@@ -12,18 +12,26 @@ import (
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
+const (
+	// ServiceTypeVCL is the type for VCL services.
+	ServiceTypeVCL = "vcl"
+	// ServiceTypeWasm is the type for Wasm services.
+	ServiceTypeWasm = "wasm"
+)
+
+
 // ServiceAttributeDefinition provides an interface for service attributes.
 // We compose a service resource out of attribute objects to allow us to construct both the VCL and Compute service
 // resources from common components.
 type ServiceAttributeDefinition interface {
 	// Register add the attribute to the resource schema.
-	Register(d *schema.Resource) error
+	Register(s *schema.Resource, serviceType string) error
 
 	// Read refreshes the attribute state against the Fastly API.
-	Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error
+	Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error
 
 	// Process creates or updates the attribute against the Fastly API.
-	Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error
+	Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error
 
 	// HasChange returns whether the state of the attribute has changed against Terraform stored state.
 	HasChange(d *schema.ResourceData) bool
@@ -36,7 +44,6 @@ type ServiceAttributeDefinition interface {
 
 // DefaultServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DefaultServiceAttributeHandler struct {
-	schema *schema.Schema
 	key    string
 }
 
@@ -149,7 +156,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	// Register adds schema attributes to the overall schema for the resource. This allows each AttributeHandler to
 	// define it's own attributes while allowing the overall set to be composed.
 	for _, a := range serviceDef.GetAttributeHandler() {
-		a.Register(s) // Mutates s, adding handler-specific schema items to the list.
+		a.Register(s, serviceDef.GetType()) // Mutates s, adding handler-specific schema items to the list.
 	}
 
 	return s
@@ -313,7 +320,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		// for their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
 			if a.MustProcess(d, initialVersion) {
-				if err := a.Process(d, latestVersion, conn); err != nil {
+				if err := a.Process(d, latestVersion, conn, serviceDef.GetType()); err != nil {
 					return err
 				}
 			}
@@ -398,7 +405,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 		// This delegates read to all the attribute handlers which can then manage reading state for
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
-			if err := a.Read(d, s, conn); err != nil {
+			if err := a.Read(d, s, conn, serviceDef.GetType()); err != nil {
 				return err
 			}
 		}

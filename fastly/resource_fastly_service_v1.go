@@ -8,7 +8,7 @@ import (
 // Conditions need to be updated first, as they can be referenced by other
 // configuration objects (Backends, Request Headers, etc)
 var vclService = &BaseServiceDefinition{
-	Type: "vcl",
+	Type: ServiceTypeVCL,
 	Attributes: []ServiceAttributeDefinition{
 		NewServiceSettings(),
 		NewServiceCondition(),

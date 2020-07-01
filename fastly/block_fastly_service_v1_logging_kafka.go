@@ -21,7 +21,7 @@ func NewServiceLoggingKafka() ServiceAttributeDefinition {
 	}
 }
 
-func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -131,7 +131,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	oldLogCfg, newLogCfg := d.GetChange(h.GetKey())
 
@@ -190,7 +190,7 @@ func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVer
 	return nil
 }
 
-func (h *KafkaServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// refresh Kafka
 	log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
 	kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{

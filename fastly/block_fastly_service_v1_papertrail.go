@@ -20,7 +20,7 @@ func NewServicePaperTrail() ServiceAttributeDefinition {
 	}
 }
 
-func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -79,7 +79,7 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
 	papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 		Service: d.Id(),
@@ -99,7 +99,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

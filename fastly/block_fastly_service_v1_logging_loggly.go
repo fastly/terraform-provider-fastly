@@ -20,7 +20,7 @@ func NewServiceLoggingLoggly() ServiceAttributeDefinition {
 	}
 }
 
-func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -64,7 +64,7 @@ func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *LogglyServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh Loggly.
 	log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
 	logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
@@ -158,7 +158,7 @@ func buildDeleteLoggly(logglyMap interface{}, serviceID string, serviceVersion i
 	}
 }
 
-func (h *LogglyServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *LogglyServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

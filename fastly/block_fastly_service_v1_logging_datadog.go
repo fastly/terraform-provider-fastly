@@ -20,7 +20,7 @@ func NewServiceLoggingDatadog() ServiceAttributeDefinition {
 	}
 }
 
-func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
 	serviceID := d.Id()
 	od, nd := d.GetChange(h.GetKey())
 
@@ -64,7 +64,7 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	return nil
 }
 
-func (h *DatadogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
 	// Refresh Datadog.
 	log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
 	datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
@@ -107,7 +107,7 @@ func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error 
 	return nil
 }
 
-func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

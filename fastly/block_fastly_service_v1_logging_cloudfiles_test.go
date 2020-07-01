@@ -162,25 +162,24 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 	})
 }
 
-
 func TestAccFastlyServiceV1_logging_cloudfiles_basicWasm(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1Wasm := gofastly.Cloudfiles{
-		Version:           1,
-		Name:              "cloudfiles-endpoint",
-		BucketName:        "bucket",
-		User:              "user",
-		AccessKey:         "secret",
-		PublicKey:         pgpPublicKey(t),
-		GzipLevel:         0,
-		MessageType:       "classic",
-		Path:              "/",
-		Region:            "ORD",
-		Period:            3600,
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
+		Version:         1,
+		Name:            "cloudfiles-endpoint",
+		BucketName:      "bucket",
+		User:            "user",
+		AccessKey:       "secret",
+		PublicKey:       pgpPublicKey(t),
+		GzipLevel:       0,
+		MessageType:     "classic",
+		Path:            "/",
+		Region:          "ORD",
+		Period:          3600,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -202,7 +201,6 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basicWasm(t *testing.T) {
 		},
 	})
 }
-
 
 func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDetail, cloudfiles []*gofastly.Cloudfiles, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

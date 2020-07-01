@@ -19,7 +19,6 @@ const (
 	ServiceTypeWasm = "wasm"
 )
 
-
 // ServiceAttributeDefinition provides an interface for service attributes.
 // We compose a service resource out of attribute objects to allow us to construct both the VCL and Compute service
 // resources from common components.
@@ -44,7 +43,7 @@ type ServiceAttributeDefinition interface {
 
 // DefaultServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DefaultServiceAttributeHandler struct {
-	key    string
+	key string
 }
 
 // GetKey is provided since most attributes will just use their private "key" for interacting with the service.
@@ -62,7 +61,6 @@ func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, ini
 	return h.HasChange(d)
 }
 
-
 type VCLLoggingAttributes struct {
 	format            string
 	formatVersion     uint
@@ -79,8 +77,6 @@ func NewVCLLoggingAttributes() VCLLoggingAttributes {
 	vla.responseCondition = ""
 	return vla
 }
-
-
 
 // ServiceDefinition defines the data model for service definitions
 // There are two types of service: VCL and Compute. This interface specifies the data object from which service resources

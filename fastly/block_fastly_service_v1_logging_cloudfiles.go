@@ -277,7 +277,6 @@ func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource, service
 		},
 	}
 
-
 	if serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,

@@ -87,7 +87,7 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 			HealthCheck:         df["healthcheck"].(string),
 		}
 
-		if serviceType==ServiceTypeVCL {
+		if serviceType == ServiceTypeVCL {
 			opts.RequestCondition = df["request_condition"].(string)
 		}
 

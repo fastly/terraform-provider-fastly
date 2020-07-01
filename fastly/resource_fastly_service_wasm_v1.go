@@ -20,6 +20,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceHTTPSLogging(),
 		NewServiceLogentries(),
 		NewServiceLoggingCloudfiles(),
+		NewServiceLoggingDatadog(),
 	},
 }
 

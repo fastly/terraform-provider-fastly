@@ -61,7 +61,17 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1Wasm := gofastly.Pubsub{
+		Version:   1,
+		Name:      "googlepubsublogger",
+		User:      "user",
+		SecretKey: privateKey(t),
+		ProjectID: "project-id",
+		Topic:     "topic",
+	}
 
 	log1 := gofastly.Pubsub{
 		Version:           1,
@@ -108,10 +118,22 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1GooglePubSubWasmConfig(nameWasm, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckFastlyServiceV1GooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "logging_googlepubsub.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1GooglePubSubConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1GooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1}),
+					testAccCheckFastlyServiceV1GooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -123,7 +145,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 				Config: testAccServiceV1GooglePubSubConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1GooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1GooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -134,7 +156,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.ServiceDetail, googlepubsub []*gofastly.Pubsub) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.ServiceDetail, googlepubsub []*gofastly.Pubsub, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -164,6 +186,15 @@ func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.Service
 					// these ahead of time
 					sl.CreatedAt = nil
 					sl.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						sl.FormatVersion = s.FormatVersion
+						sl.Format = s.Format
+						sl.ResponseCondition = s.ResponseCondition
+						sl.Placement = s.Placement
+					}
+
 					if diff := cmp.Diff(s, sl); diff != "" {
 						return fmt.Errorf("Bad match Google Cloud Pub/Sub logging match: %s", diff)
 					}
@@ -178,6 +209,39 @@ func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.Service
 
 		return nil
 	}
+}
+
+func testAccServiceV1GooglePubSubWasmConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_wasm" "foo" {
+	name = "%s"
+
+	domain {
+		name    = "%s"
+		comment = "tf-googlepubsub-logging"
+	}
+
+	backend {
+		address = "aws.amazon.com"
+		name    = "amazon docs"
+	}
+
+	logging_googlepubsub {
+		name               = "googlepubsublogger"
+		user               = "user"
+		secret_key         = file("test_fixtures/fastly_test_privatekey")
+		project_id         = "project-id"
+	  topic  						 = "topic"
+	}
+	
+	package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+	force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1GooglePubSubConfig(name string, domain string) string {

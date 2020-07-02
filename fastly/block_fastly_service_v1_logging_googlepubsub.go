@@ -22,70 +22,70 @@ func NewServiceLoggingGooglePubSub() ServiceAttributeDefinition {
 }
 
 func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+	var a = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Google Cloud Pub/Sub logging endpoint.",
+		},
+
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Your Google Cloud Platform service account email address. The client_email field in your service account authentication JSON. ",
+		},
+
+		"secret_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Your Google Cloud Platform account secret key. The private_key field in your service account authentication JSON.",
+		},
+
+		"project_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your Google Cloud Platform project.",
+		},
+
+		"topic": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Google Cloud Pub/Sub topic to which logs will be published.",
+		},
+	}
+
+	if serviceType == ServiceTypeVCL {
+		a["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting.",
+		}
+		a["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		a["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		a["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Google Cloud Pub/Sub logging endpoint.",
-				},
-
-				"user": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Your Google Cloud Platform service account email address. The client_email field in your service account authentication JSON. ",
-				},
-
-				"secret_key": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Your Google Cloud Platform account secret key. The private_key field in your service account authentication JSON.",
-				},
-
-				"project_id": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The ID of your Google Cloud Platform project.",
-				},
-
-				"topic": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The Google Cloud Pub/Sub topic to which logs will be published.",
-				},
-
-				// Optional
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache style log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: a,
 		},
 	}
 	return nil
@@ -123,7 +123,7 @@ func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, la
 	// POST new/updated Google Cloud Pub/Sub logging endponts.
 	for _, nRaw := range addGooglePubSubLogging {
 		cfg := nRaw.(map[string]interface{})
-		opts := buildCreateGooglePubSub(cfg, serviceID, latestVersion)
+		opts := buildCreateGooglePubSub(cfg, serviceID, latestVersion, serviceType)
 
 		log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging addition opts: %#v", opts)
 
@@ -207,8 +207,16 @@ func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]inter
 	return flattened
 }
 
-func buildCreateGooglePubSub(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
+func buildCreateGooglePubSub(googlepubsubMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreatePubsubInput {
 	df := googlepubsubMap.(map[string]interface{})
+
+	var vla = NewVCLLoggingAttributes()
+	if serviceType == ServiceTypeVCL {
+		vla.format = df["format"].(string)
+		vla.formatVersion = uint(df["format_version"].(int))
+		vla.placement = df["placement"].(string)
+		vla.responseCondition = df["response_condition"].(string)
+	}
 
 	return &gofastly.CreatePubsubInput{
 		Service:           serviceID,
@@ -218,10 +226,10 @@ func buildCreateGooglePubSub(googlepubsubMap interface{}, serviceID string, serv
 		SecretKey:         fastly.NullString(df["secret_key"].(string)),
 		ProjectID:         fastly.NullString(df["project_id"].(string)),
 		Topic:             fastly.NullString(df["topic"].(string)),
-		Format:            fastly.NullString(df["format"].(string)),
-		FormatVersion:     fastly.Uint(uint(df["format_version"].(int))),
-		ResponseCondition: fastly.NullString(df["response_condition"].(string)),
-		Placement:         fastly.NullString(df["placement"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 

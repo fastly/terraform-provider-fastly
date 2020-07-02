@@ -63,7 +63,16 @@ var newrelicDefaultFormat = `{
 func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1Wasm := gofastly.NewRelic{
+		Version:       1,
+		Name:          "newrelic-endpoint",
+		Token:         "token",
+		FormatVersion: 2,
+		Format:        "%h %l %u %t \"%r\" %>s %b",
+	}
 
 	log1 := gofastly.NewRelic{
 		Version:       1,
@@ -95,10 +104,22 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1NewRelicWasmConfig(nameWasm, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "logging_newrelic.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1NewRelicConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1}),
+					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -110,7 +131,7 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 				Config: testAccServiceV1NewRelicConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -122,7 +143,7 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDetail, newrelic []*gofastly.NewRelic) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDetail, newrelic []*gofastly.NewRelic, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -153,6 +174,14 @@ func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDeta
 					dl.CreatedAt = nil
 					dl.UpdatedAt = nil
 
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						dl.FormatVersion = d.FormatVersion
+						dl.Format = d.Format
+						dl.ResponseCondition = d.ResponseCondition
+						dl.Placement = d.Placement
+					}
+
 					if diff := cmp.Diff(d, dl); diff != "" {
 						return fmt.Errorf("Bad match NewRelic logging match: %s", diff)
 					}
@@ -167,6 +196,36 @@ func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDeta
 
 		return nil
 	}
+}
+
+func testAccServiceV1NewRelicWasmConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_wasm" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-newrelic-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_newrelic {
+    name   = "newrelic-endpoint"
+    token  = "token"
+  }
+
+  package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+  force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1NewRelicConfig(name string, domain string) string {

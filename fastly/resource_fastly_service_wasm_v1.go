@@ -30,6 +30,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLoggingKafka(),
 		NewServiceLoggingLoggly(),
 		NewServiceLoggingLogshuttle(),
+		NewServiceLoggingNewRelic(),
 	},
 }
 

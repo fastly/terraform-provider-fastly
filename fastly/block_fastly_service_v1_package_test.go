@@ -12,11 +12,10 @@ import (
 
 func TestAccFastlyServiceV1_package_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
-	name01     := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain01   := fmt.Sprintf("fastly-test.%s.com", name01)
-	name02     := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain02   := fmt.Sprintf("fastly-test.%s.com", name02)
-
+	name01 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain01 := fmt.Sprintf("fastly-test.%s.com", name01)
+	name02 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain02 := fmt.Sprintf("fastly-test.%s.com", name02)
 
 	wp1 := gofastly.Package{
 		Metadata: gofastly.PackageMetadata{

@@ -138,7 +138,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 				Config: testAccServiceV1OpenstackConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1OpenstackAttributes(&service, []*gofastly.Openstack{&log1}),
+					testAccCheckFastlyServiceV1OpenstackAttributes(&service, []*gofastly.Openstack{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -150,7 +150,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 				Config: testAccServiceV1OpenstackConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1OpenstackAttributes(&service, []*gofastly.Openstack{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1OpenstackAttributes(&service, []*gofastly.Openstack{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -161,7 +161,49 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1OpenstackAttributes(service *gofastly.ServiceDetail, openstack []*gofastly.Openstack) resource.TestCheckFunc {
+
+func TestAccFastlyServiceV1_logging_openstack_basicWasm(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.Openstack{
+		Version:           1,
+		Name:              "openstack-endpoint",
+		URL:               "https://auth.example.com/v1", // /v1, /v2 or /v3 are required to be in the path.
+		User:              "user",
+		BucketName:        "bucket",
+		AccessKey:         "s3cr3t",
+		PublicKey:         pgpPublicKey(t),
+		MessageType:       "classic",
+		Path:              "/",
+		TimestampFormat:   `%Y-%m-%dT%H:%M:%S.000`,
+		Period:            3600,
+		GzipLevel:         0,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1OpenstackWasmConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1OpenstackAttributes(&service, []*gofastly.Openstack{&log1}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_openstack.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+
+func testAccCheckFastlyServiceV1OpenstackAttributes(service *gofastly.ServiceDetail, openstack []*gofastly.Openstack, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -190,6 +232,15 @@ func testAccCheckFastlyServiceV1OpenstackAttributes(service *gofastly.ServiceDet
 					// these ahead of time
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						el.FormatVersion = e.FormatVersion
+						el.Format = e.Format
+						el.ResponseCondition = e.ResponseCondition
+						el.Placement = e.Placement
+					}
+
 					if diff := cmp.Diff(e, el); diff != "" {
 						return fmt.Errorf("Bad match OpenStack logging match: %s", diff)
 					}
@@ -293,6 +344,42 @@ resource "fastly_service_v1" "foo" {
     placement = "none"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
+  }
+
+  force_destroy = true
+}
+`, name, domain)
+}
+
+func testAccServiceV1OpenstackWasmConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-openstack-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_openstack {
+    name   = "openstack-endpoint"
+    url    = "https://auth.example.com/v1"
+    user   = "user"
+    bucket_name = "bucket"
+    access_key = "s3cr3t"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    path = "/"
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+  }
+
+  package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true

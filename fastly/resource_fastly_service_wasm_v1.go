@@ -34,6 +34,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLoggingOpenstack(),
 		NewServiceLoggingScalyr(),
 		NewServiceLoggingSFTP(),
+		NewServicePaperTrail(),
 	},
 }
 

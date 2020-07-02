@@ -52,7 +52,15 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	log1Wasm := gofastly.Papertrail{
+		Version: 1,
+		Name:    "papertrailtesting",
+		Address: "test1.papertrailapp.com",
+		Port:    uint(3600),
+	}
 
 	log1 := gofastly.Papertrail{
 		Version:           1,
@@ -77,10 +85,22 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1PapertrailWasmConfig(nameWasm, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "papertrail.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1PapertrailConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1}),
+					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -92,7 +112,7 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 				Config: testAccServiceV1PapertrailConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1, &log2}),
+					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -103,7 +123,7 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDetail, papertrails []*gofastly.Papertrail) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDetail, papertrails []*gofastly.Papertrail, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -133,6 +153,14 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 					// these ahead of time
 					lp.CreatedAt = nil
 					lp.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						lp.Format = p.Format
+						lp.ResponseCondition = p.ResponseCondition
+						lp.Placement = p.Placement
+					}
+
 					if !reflect.DeepEqual(p, lp) {
 						return fmt.Errorf("Bad match Papertrail match, expected (%#v), got (%#v)", p, lp)
 					}
@@ -147,6 +175,36 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 
 		return nil
 	}
+}
+
+func testAccServiceV1PapertrailWasmConfig(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  papertrail {
+    name               = "papertrailtesting"
+    address            = "test1.papertrailapp.com"
+    port               = 3600
+  }
+
+  package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+  force_destroy = true
+}`, name, domain)
 }
 
 func testAccServiceV1PapertrailConfig(name, domain string) string {

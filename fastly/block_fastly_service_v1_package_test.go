@@ -12,8 +12,11 @@ import (
 
 func TestAccFastlyServiceV1_package_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domain := fmt.Sprintf("fastly-test.%s.com", name)
+	name01     := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain01   := fmt.Sprintf("fastly-test.%s.com", name01)
+	name02     := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain02   := fmt.Sprintf("fastly-test.%s.com", name02)
+
 
 	wp1 := gofastly.Package{
 		Metadata: gofastly.PackageMetadata{
@@ -26,20 +29,57 @@ func TestAccFastlyServiceV1_package_basic(t *testing.T) {
 		},
 	}
 
+	wp2 := gofastly.Package{
+		Metadata: gofastly.PackageMetadata{
+			Name:        "edge-compute-test",
+			Description: "Test Package",
+			Authors:     []string{"fastly@fastly.com"},
+			Language:    "rust",
+			Size:        2158517,
+			HashSum:     "ef62109f363007037d678120459008efb17b4cba5af2188d2eb0c6c6a69113b1925c44f5cbc7792b4421cad6f307bf3dd59adf0a73387291e0b854d3c25f2e48",
+		},
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1PackageConfig(name, domain),
+				Config: testAccServiceV1PackageConfig(name01, domain01),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1PackageAttributes(&service, &wp1),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
+						"fastly_service_compute.foo", "name", name01),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "package.#", "1"),
+				),
+			},
+			{
+				Config: testAccServiceV1PackageConfig(name02, domain02),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1PackageAttributes(&service, &wp1),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name02),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "active_version", "2"),
+				),
+			},
+			{
+				Config: testAccServiceV1PackageConfig_New(name02, domain02),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1PackageAttributes(&service, &wp2),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name02),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "active_version", "3"),
 				),
 			},
 		},
@@ -94,6 +134,27 @@ resource "fastly_service_compute" "foo" {
   package {
     filename = "test_fixtures/package/valid.tar.gz"
 	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+  force_destroy = true
+}
+`, name, domain)
+}
+
+func testAccServiceV1PackageConfig_New(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-package-test"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+  package {
+    filename = "test_fixtures/package/valid2.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid2.tar.gz")
   }
   force_destroy = true
 }

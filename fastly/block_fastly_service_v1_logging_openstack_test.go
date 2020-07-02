@@ -161,25 +161,24 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 	})
 }
 
-
 func TestAccFastlyServiceV1_logging_openstack_basicWasm(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Openstack{
-		Version:           1,
-		Name:              "openstack-endpoint",
-		URL:               "https://auth.example.com/v1", // /v1, /v2 or /v3 are required to be in the path.
-		User:              "user",
-		BucketName:        "bucket",
-		AccessKey:         "s3cr3t",
-		PublicKey:         pgpPublicKey(t),
-		MessageType:       "classic",
-		Path:              "/",
-		TimestampFormat:   `%Y-%m-%dT%H:%M:%S.000`,
-		Period:            3600,
-		GzipLevel:         0,
+		Version:         1,
+		Name:            "openstack-endpoint",
+		URL:             "https://auth.example.com/v1", // /v1, /v2 or /v3 are required to be in the path.
+		User:            "user",
+		BucketName:      "bucket",
+		AccessKey:       "s3cr3t",
+		PublicKey:       pgpPublicKey(t),
+		MessageType:     "classic",
+		Path:            "/",
+		TimestampFormat: `%Y-%m-%dT%H:%M:%S.000`,
+		Period:          3600,
+		GzipLevel:       0,
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -201,7 +200,6 @@ func TestAccFastlyServiceV1_logging_openstack_basicWasm(t *testing.T) {
 		},
 	})
 }
-
 
 func testAccCheckFastlyServiceV1OpenstackAttributes(service *gofastly.ServiceDetail, openstack []*gofastly.Openstack, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

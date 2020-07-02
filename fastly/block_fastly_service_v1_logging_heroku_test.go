@@ -124,10 +124,10 @@ func TestAccFastlyServiceV1_logging_heroku_basicWasm(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		Version:       1,
-		Name:          "heroku-endpoint",
-		URL:           "https://example.com",
-		Token:         "s3cr3t",
+		Version: 1,
+		Name:    "heroku-endpoint",
+		URL:     "https://example.com",
+		Token:   "s3cr3t",
 	}
 
 	resource.Test(t, resource.TestCase{

@@ -168,18 +168,18 @@ func TestAccFastlyServiceV1_logging_digitalocean_basicWasm(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.DigitalOcean{
-		Version:           1,
-		Name:              "digitalocean-endpoint",
-		BucketName:        "bucket",
-		AccessKey:         "access",
-		SecretKey:         "secret",
-		Domain:            "nyc3.digitaloceanspaces.com",
-		PublicKey:         pgpPublicKey(t),
-		Path:              "/",
-		Period:            3600,
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         0,
-		MessageType:       "classic",
+		Version:         1,
+		Name:            "digitalocean-endpoint",
+		BucketName:      "bucket",
+		AccessKey:       "access",
+		SecretKey:       "secret",
+		Domain:          "nyc3.digitaloceanspaces.com",
+		PublicKey:       pgpPublicKey(t),
+		Path:            "/",
+		Period:          3600,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		GzipLevel:       0,
+		MessageType:     "classic",
 	}
 
 	resource.Test(t, resource.TestCase{

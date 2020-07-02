@@ -124,10 +124,10 @@ func TestAccFastlyServiceV1_logging_logshuttle_basicWasm(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		Version:       1,
-		Name:          "logshuttle-endpoint",
-		Token:         "s3cr3t",
-		URL:           "https://example.com",
+		Version: 1,
+		Name:    "logshuttle-endpoint",
+		Token:   "s3cr3t",
+		URL:     "https://example.com",
 	}
 
 	resource.Test(t, resource.TestCase{

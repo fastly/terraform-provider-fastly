@@ -157,10 +157,10 @@ func TestAccFastlyServiceV1_logging_honeycomb_basicWasm(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		Version:       1,
-		Name:          "honeycomb-endpoint",
-		Token:         "s3cr3t",
-		Dataset:       "dataset",
+		Version: 1,
+		Name:    "honeycomb-endpoint",
+		Token:   "s3cr3t",
+		Dataset: "dataset",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -179,7 +179,6 @@ func TestAccFastlyServiceV1_logging_honeycomb_basicWasm(t *testing.T) {
 						"fastly_service_compute.foo", "logging_honeycomb.#", "1"),
 				),
 			},
-
 		},
 	})
 }

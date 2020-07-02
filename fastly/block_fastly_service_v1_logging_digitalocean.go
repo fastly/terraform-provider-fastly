@@ -290,7 +290,7 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource, servi
 			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
 			ValidateFunc: validateLoggingFormatVersion(),
 		}
-		a["response_condition"] = &schema.Schema {
+		a["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",

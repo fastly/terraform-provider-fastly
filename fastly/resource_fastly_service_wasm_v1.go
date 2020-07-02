@@ -32,6 +32,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLoggingLogshuttle(),
 		NewServiceLoggingNewRelic(),
 		NewServiceLoggingOpenstack(),
+		NewServiceLoggingScalyr(),
 	},
 }
 

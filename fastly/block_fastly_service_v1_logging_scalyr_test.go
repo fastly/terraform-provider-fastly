@@ -56,7 +56,15 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1Wasm := gofastly.Scalyr{
+		Version: 1,
+		Name:    "scalyrlogger",
+		Token:   "tkn",
+		Region:  "US",
+	}
 
 	log1 := gofastly.Scalyr{
 		Version:           1,
@@ -99,10 +107,22 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1ScalyrWasmConfig(nameWasm, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_scalyr.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1ScalyrConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1}),
+					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -114,7 +134,7 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 				Config: testAccServiceV1ScalyrConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -125,7 +145,7 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -155,6 +175,15 @@ func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail
 					// these ahead of time
 					sl.CreatedAt = nil
 					sl.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						sl.FormatVersion = s.FormatVersion
+						sl.Format = s.Format
+						sl.ResponseCondition = s.ResponseCondition
+						sl.Placement = s.Placement
+					}
+
 					if diff := cmp.Diff(s, sl); diff != "" {
 						return fmt.Errorf("Bad match Scalyr logging match: %s", diff)
 					}
@@ -169,6 +198,37 @@ func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail
 
 		return nil
 	}
+}
+
+func testAccServiceV1ScalyrWasmConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+	name = "%s"
+
+	domain {
+		name    = "%s"
+		comment = "tf-scalyr-logging"
+	}
+
+	backend {
+		address = "aws.amazon.com"
+		name    = "amazon docs"
+	}
+
+	logging_scalyr {
+		name               = "scalyrlogger"
+		region             = "US"
+		token              = "tkn"
+	}
+
+   package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+	force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1ScalyrConfig(name string, domain string) string {

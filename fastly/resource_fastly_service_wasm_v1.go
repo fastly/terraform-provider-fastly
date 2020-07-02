@@ -21,6 +21,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLogentries(),
 		NewServiceLoggingCloudfiles(),
 		NewServiceLoggingDatadog(),
+		NewServiceLoggingDigitalOcean(),
 	},
 }
 

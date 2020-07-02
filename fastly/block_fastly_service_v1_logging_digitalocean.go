@@ -67,7 +67,7 @@ func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, la
 			continue
 		}
 
-		opts := buildCreateDigitalOcean(lf, serviceID, latestVersion)
+		opts := buildCreateDigitalOcean(lf, serviceID, latestVersion, serviceType)
 
 		log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
 
@@ -157,8 +157,16 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string
 	return lsl
 }
 
-func buildCreateDigitalOcean(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDigitalOceanInput {
+func buildCreateDigitalOcean(digitaloceanMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateDigitalOceanInput {
 	df := digitaloceanMap.(map[string]interface{})
+
+	var vla = NewVCLLoggingAttributes()
+	if serviceType == ServiceTypeVCL {
+		vla.format = df["format"].(string)
+		vla.formatVersion = uint(df["format_version"].(int))
+		vla.placement = df["placement"].(string)
+		vla.responseCondition = df["response_condition"].(string)
+	}
 
 	return &gofastly.CreateDigitalOceanInput{
 		Service:           serviceID,
@@ -172,12 +180,12 @@ func buildCreateDigitalOcean(digitaloceanMap interface{}, serviceID string, serv
 		Path:              gofastly.NullString(df["path"].(string)),
 		Period:            gofastly.Uint(uint(df["period"].(int))),
 		GzipLevel:         gofastly.Uint(uint(df["gzip_level"].(int))),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
 		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
 		MessageType:       gofastly.NullString(df["message_type"].(string)),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
@@ -192,113 +200,114 @@ func buildDeleteDigitalOcean(digitaloceanMap interface{}, serviceID string, serv
 }
 
 func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+	var a = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the DigitalOcean Spaces logging endpoint.",
+		},
+
+		"bucket_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of the DigitalOcean Space.",
+		},
+
+		"access_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Your DigitalOcean Spaces account access key.",
+		},
+
+		"secret_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Your DigitalOcean Spaces account secret key.",
+		},
+
+		// Optional fields
+		"domain": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The domain of the DigitalOcean Spaces endpoint (default: nyc3.digitaloceanspaces.com).",
+			Default:     "nyc3.digitaloceanspaces.com",
+		},
+
+		"public_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The path to upload logs to.",
+		},
+
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+		},
+
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+		},
+
+		"gzip_level": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
+		},
+
+		"message_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "classic",
+			Description:  "How the message should be formatted.",
+			ValidateFunc: validateLoggingMessageType(),
+		},
+	}
+
+	if serviceType == ServiceTypeVCL {
+		a["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting.",
+		}
+		a["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		a["response_condition"] = &schema.Schema {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+		a["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the DigitalOcean Spaces logging endpoint.",
-				},
-
-				"bucket_name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The name of the DigitalOcean Space.",
-				},
-
-				"access_key": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "Your DigitalOcean Spaces account access key.",
-				},
-
-				"secret_key": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "Your DigitalOcean Spaces account secret key.",
-				},
-
-				// Optional fields
-				"domain": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The domain of the DigitalOcean Spaces endpoint (default: nyc3.digitaloceanspaces.com).",
-					Default:     "nyc3.digitaloceanspaces.com",
-				},
-
-				"public_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"path": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The path to upload logs to.",
-				},
-
-				"period": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
-				},
-
-				"timestamp_format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
-				},
-
-				"gzip_level": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
-				},
-
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache style log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"message_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      "classic",
-					Description:  "How the message should be formatted.",
-					ValidateFunc: validateLoggingMessageType(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: a,
 		},
 	}
 	return nil

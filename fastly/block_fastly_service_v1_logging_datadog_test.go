@@ -169,7 +169,7 @@ func TestAccFastlyServiceV1_logging_datadog_basic(t *testing.T) {
 				Config: testAccServiceV1DatadogConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1}),
+					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -181,7 +181,7 @@ func TestAccFastlyServiceV1_logging_datadog_basic(t *testing.T) {
 				Config: testAccServiceV1DatadogConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -192,7 +192,39 @@ func TestAccFastlyServiceV1_logging_datadog_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1DatadogAttributes(service *gofastly.ServiceDetail, datadog []*gofastly.Datadog) resource.TestCheckFunc {
+func TestAccFastlyServiceV1_logging_datadog_basicWasm(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.Datadog{
+		Version: 1,
+		Name:    "datadog-endpoint",
+		Token:   "token",
+		Region:  "US",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1DatadogWasmConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "logging_datadog.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceV1DatadogAttributes(service *gofastly.ServiceDetail, datadog []*gofastly.Datadog, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -222,6 +254,14 @@ func testAccCheckFastlyServiceV1DatadogAttributes(service *gofastly.ServiceDetai
 					// these ahead of time
 					dl.CreatedAt = nil
 					dl.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						dl.FormatVersion = d.FormatVersion
+						dl.Format = d.Format
+						dl.ResponseCondition = d.ResponseCondition
+						dl.Placement = d.Placement
+					}
 
 					if diff := cmp.Diff(d, dl); diff != "" {
 						return fmt.Errorf("Bad match Datadog logging match: %s", diff)
@@ -294,6 +334,37 @@ resource "fastly_service_v1" "foo" {
 		format = <<EOF
 `+escapePercentSign(datadogDefaultFormat)+`
 EOF
+  }
+
+  force_destroy = true
+}
+`, name, domain)
+}
+
+func testAccServiceV1DatadogWasmConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_wasm" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-datadog-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_datadog {
+    name   = "datadog-endpoint"
+    token  = "token"
+    region = "US"
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true

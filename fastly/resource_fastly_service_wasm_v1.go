@@ -29,6 +29,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLoggingHoneycomb(),
 		NewServiceLoggingKafka(),
 		NewServiceLoggingLoggly(),
+		NewServiceLoggingLogshuttle(),
 	},
 }
 

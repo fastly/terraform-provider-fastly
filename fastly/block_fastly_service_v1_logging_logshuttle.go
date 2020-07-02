@@ -52,7 +52,7 @@ func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, late
 	// POST new/updated Log Shuttle logging endpoints.
 	for _, nRaw := range addLogshuttleLogging {
 		lf := nRaw.(map[string]interface{})
-		opts := buildCreateLogshuttle(lf, serviceID, latestVersion)
+		opts := buildCreateLogshuttle(lf, serviceID, latestVersion, serviceType)
 
 		log.Printf("[DEBUG] Fastly Log Shuttle logging addition opts: %#v", opts)
 
@@ -134,8 +134,16 @@ func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]inter
 	return lsl
 }
 
-func buildCreateLogshuttle(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {
+func buildCreateLogshuttle(logshuttleMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateLogshuttleInput {
 	df := logshuttleMap.(map[string]interface{})
+
+	var vla = NewVCLLoggingAttributes()
+	if serviceType == ServiceTypeVCL {
+		vla.format = df["format"].(string)
+		vla.formatVersion = uint(df["format_version"].(int))
+		vla.placement = df["placement"].(string)
+		vla.responseCondition = df["response_condition"].(string)
+	}
 
 	return &gofastly.CreateLogshuttleInput{
 		Service:           serviceID,
@@ -143,10 +151,10 @@ func buildCreateLogshuttle(logshuttleMap interface{}, serviceID string, serviceV
 		Name:              gofastly.NullString(df["name"].(string)),
 		Token:             gofastly.NullString(df["token"].(string)),
 		URL:               gofastly.NullString(df["url"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
@@ -161,59 +169,59 @@ func buildDeleteLogshuttle(logshuttleMap interface{}, serviceID string, serviceV
 }
 
 func (h *LogshuttleServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+	var a = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Log Shuttle logging endpoint.",
+		},
+
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The data authentication token associated with this endpoint.",
+		},
+
+		"url": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Your Log Shuttle endpoint url.",
+		},
+	}
+
+	if serviceType == ServiceTypeVCL {
+		a["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting.",
+		}
+		a["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		a["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		a["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Log Shuttle logging endpoint.",
-				},
-
-				"token": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "The data authentication token associated with this endpoint.",
-				},
-
-				"url": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Your Log Shuttle endpoint url.",
-				},
-
-				// Optional fields
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache style log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: a,
 		},
 	}
 	return nil

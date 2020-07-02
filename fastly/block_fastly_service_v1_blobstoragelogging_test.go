@@ -142,12 +142,12 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1BlobStorageLoggingConfig_completeWasm(serviceNameWasm),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneWasm}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", serviceNameWasm),
+						"fastly_service_compute.foo", "name", serviceNameWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "blobstoragelogging.#", "1"),
+						"fastly_service_compute.foo", "blobstoragelogging.#", "1"),
 				),
 			},
 
@@ -359,7 +359,7 @@ func testAccServiceV1BlobStorageLoggingConfig_completeWasm(serviceName string) s
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

@@ -138,12 +138,12 @@ func TestAccFastlyServiceV1_logging_heroku_basicWasm(t *testing.T) {
 			{
 				Config: testAccServiceV1HerokuWasmConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1HerokuAttributes(&service, []*gofastly.Heroku{&log1}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", name),
+						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_heroku.#", "1"),
+						"fastly_service_compute.foo", "logging_heroku.#", "1"),
 				),
 			},
 		},
@@ -271,7 +271,7 @@ resource "fastly_service_v1" "foo" {
 
 func testAccServiceV1HerokuWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

@@ -160,12 +160,12 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1ElasticsearchWasmConfig(nameWasm, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1Wasm}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_elasticsearch.#", "1"),
+						"fastly_service_compute.foo", "logging_elasticsearch.#", "1"),
 				),
 			},
 
@@ -253,7 +253,7 @@ func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDeta
 
 func testAccServiceV1ElasticsearchWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

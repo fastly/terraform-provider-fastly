@@ -100,12 +100,12 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1LogentriesWasmConfig(nameWasm, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1Wasm}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logentries.#", "1"),
+						"fastly_service_compute.foo", "logentries.#", "1"),
 				),
 			},
 			{
@@ -227,7 +227,7 @@ func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
 
 func testAccServiceV1LogentriesWasmConfig(name, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
   domain {
     name    = "%s"

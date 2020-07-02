@@ -39,7 +39,7 @@ func TestAccFastlyServiceV1BigQueryLogging(t *testing.T) {
 			{
 				Config: testAccServiceV1Config_bigquery_wasm(name_wasm, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_bq(&service, name_wasm, bqName),
 				),
 			},
@@ -141,7 +141,7 @@ func testAccServiceV1Config_bigquery_wasm(name, gcsName, secretKey string) strin
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

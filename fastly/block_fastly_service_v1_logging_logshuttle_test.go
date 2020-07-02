@@ -138,12 +138,12 @@ func TestAccFastlyServiceV1_logging_logshuttle_basicWasm(t *testing.T) {
 			{
 				Config: testAccServiceV1LogshuttleWasmConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1LogshuttleAttributes(&service, []*gofastly.Logshuttle{&log1}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", name),
+						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_logshuttle.#", "1"),
+						"fastly_service_compute.foo", "logging_logshuttle.#", "1"),
 				),
 			},
 		},
@@ -271,7 +271,7 @@ resource "fastly_service_v1" "foo" {
 
 func testAccServiceV1LogshuttleWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

@@ -81,7 +81,7 @@ func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 			{
 				Config: testAccServiceV1Config_wasm_gcs(name_wasm, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_gcs(&service, name_wasm, gcsName),
 				),
 			},
@@ -183,7 +183,7 @@ func testAccServiceV1Config_wasm_gcs(name, gcsName, secretKey string) string {
 	domainName := fmt.Sprintf("fastly-test-wasm.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

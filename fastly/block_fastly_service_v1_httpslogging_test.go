@@ -132,12 +132,12 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1HTTPSWasmConfig(name_wasm, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1HTTPSAttributes(&service, []*gofastly.HTTPS{&logWasm1}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", name_wasm),
+						"fastly_service_compute.foo", "name", name_wasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "httpslogging.#", "1"),
+						"fastly_service_compute.foo", "httpslogging.#", "1"),
 				),
 			},
 
@@ -238,7 +238,7 @@ resource "fastly_service_v1" "foo" {
 }
 func testAccServiceV1HTTPSWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
 	name = "%s"
 	domain {
 		name    = "%s"

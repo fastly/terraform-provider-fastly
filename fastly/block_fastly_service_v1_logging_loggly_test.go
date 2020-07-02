@@ -88,12 +88,12 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1LogglyWasmConfig(nameWasm, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1Wasm}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_loggly.#", "1"),
+						"fastly_service_compute.foo", "logging_loggly.#", "1"),
 				),
 			},
 
@@ -181,7 +181,7 @@ func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail
 
 func testAccServiceV1LogglyWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

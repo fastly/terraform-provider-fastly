@@ -190,12 +190,12 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basicWasm(t *testing.T) {
 			{
 				Config: testAccServiceV1WasmCloudfilesConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.none", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.none", &service),
 					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1Wasm}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.none", "name", name),
+						"fastly_service_compute.none", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.none", "logging_cloudfiles.#", "1"),
+						"fastly_service_compute.none", "logging_cloudfiles.#", "1"),
 				),
 			},
 		},
@@ -253,7 +253,7 @@ func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDe
 
 func testAccServiceV1WasmCloudfilesConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "none" {
+resource "fastly_service_compute" "none" {
   name = "%s"
 
   domain {

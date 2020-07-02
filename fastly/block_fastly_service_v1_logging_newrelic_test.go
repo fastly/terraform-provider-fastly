@@ -106,12 +106,12 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1NewRelicWasmConfig(nameWasm, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1Wasm}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_newrelic.#", "1"),
+						"fastly_service_compute.foo", "logging_newrelic.#", "1"),
 				),
 			},
 
@@ -200,7 +200,7 @@ func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDeta
 
 func testAccServiceV1NewRelicWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

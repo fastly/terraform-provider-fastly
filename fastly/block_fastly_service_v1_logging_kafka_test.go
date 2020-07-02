@@ -148,12 +148,12 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1KafkaWasmConfig(nameWasm, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1KafkaAttributes(&service, []*gofastly.Kafka{&log1Wasm}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_kafka.#", "1"),
+						"fastly_service_compute.foo", "logging_kafka.#", "1"),
 				),
 			},
 
@@ -241,7 +241,7 @@ func testAccCheckFastlyServiceV1KafkaAttributes(service *gofastly.ServiceDetail,
 
 func testAccServiceV1KafkaWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
 	name = "%s"
 
 	domain {

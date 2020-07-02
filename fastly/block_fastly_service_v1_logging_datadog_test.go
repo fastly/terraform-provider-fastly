@@ -212,12 +212,12 @@ func TestAccFastlyServiceV1_logging_datadog_basicWasm(t *testing.T) {
 			{
 				Config: testAccServiceV1DatadogWasmConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", name),
+						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_datadog.#", "1"),
+						"fastly_service_compute.foo", "logging_datadog.#", "1"),
 				),
 			},
 		},
@@ -343,7 +343,7 @@ EOF
 
 func testAccServiceV1DatadogWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

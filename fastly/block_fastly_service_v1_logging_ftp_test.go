@@ -143,12 +143,12 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 			{
 				Config: testAccServiceV1FTPWasmConfig(nameWasm, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&logWasm1}, ServiceTypeWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameWasm),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "logging_ftp.#", "1"),
+						"fastly_service_compute.foo", "logging_ftp.#", "1"),
 				),
 			},
 
@@ -236,7 +236,7 @@ func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, f
 
 func testAccServiceV1FTPWasmConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {

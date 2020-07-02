@@ -38,6 +38,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceS3Logging(),
 		NewServiceSplunk(),
 		NewServiceSumologic(),
+		NewServiceSyslog(),
 	},
 }
 

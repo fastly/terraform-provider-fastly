@@ -75,7 +75,17 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	log1Wasm := gofastly.Syslog{
+		Version:     1,
+		Name:        "somesyslogname",
+		Address:     "127.0.0.1",
+		IPV4:        "127.0.0.1",
+		Port:        uint(514),
+		MessageType: "classic",
+	}
 
 	log1 := gofastly.Syslog{
 		Version:           1,
@@ -118,10 +128,22 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1SyslogWasmConfig(nameWasm, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "syslog.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1SyslogConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -133,7 +155,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 				Config: testAccServiceV1SyslogConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -169,7 +191,7 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 				Config: testAccServiceV1SyslogConfig_formatVersion(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -218,7 +240,7 @@ func TestAccFastlyServiceV1_syslog_useTls(t *testing.T) {
 				Config: testAccServiceV1SyslogConfig_useTls(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -229,7 +251,7 @@ func TestAccFastlyServiceV1_syslog_useTls(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail, syslogs []*gofastly.Syslog) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail, syslogs []*gofastly.Syslog, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -259,6 +281,15 @@ func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail
 					// these ahead of time
 					ls.CreatedAt = nil
 					ls.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						ls.FormatVersion = s.FormatVersion
+						ls.Format = s.Format
+						ls.ResponseCondition = s.ResponseCondition
+						ls.Placement = s.Placement
+					}
+
 					if !reflect.DeepEqual(s, ls) {
 						return fmt.Errorf("Bad match Syslog logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
 					}
@@ -273,6 +304,30 @@ func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail
 
 		return nil
 	}
+}
+
+func testAccServiceV1SyslogWasmConfig(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+  syslog {
+    name               = "somesyslogname"
+    address            = "127.0.0.1"
+  }
+  package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+  force_destroy = true
+}`, name, domain)
 }
 
 func testAccServiceV1SyslogConfig(name, domain string) string {

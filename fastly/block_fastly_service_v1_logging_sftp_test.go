@@ -76,7 +76,28 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1Wasm := gofastly.SFTP{
+		Version: 1,
+
+		// Configured
+		Name:          "sftp-endpoint",
+		Address:       "sftp.example.com",
+		User:          "username",
+		Password:      "password",
+		PublicKey:     pgpPublicKey(t),
+		Path:          "/",
+		SSHKnownHosts: "sftp.example.com",
+
+		// Defaults
+		Port:            22,
+		Period:          3600,
+		MessageType:     "classic",
+		GzipLevel:       0,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+	}
 
 	log1 := gofastly.SFTP{
 		Version: 1,
@@ -152,10 +173,22 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1SFTPWasmConfig(nameWasm, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1SFTPAttributes(&service, []*gofastly.SFTP{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_sftp.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1SFTPConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SFTPAttributes(&service, []*gofastly.SFTP{&log1}),
+					testAccCheckFastlyServiceV1SFTPAttributes(&service, []*gofastly.SFTP{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -167,7 +200,7 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 				Config: testAccServiceV1SFTPConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SFTPAttributes(&service, []*gofastly.SFTP{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1SFTPAttributes(&service, []*gofastly.SFTP{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -195,7 +228,7 @@ func TestAccFastlyServiceV1_logging_sftp_password_secret_key(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1SFTPAttributes(service *gofastly.ServiceDetail, sftps []*gofastly.SFTP) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1SFTPAttributes(service *gofastly.ServiceDetail, sftps []*gofastly.SFTP, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -225,6 +258,15 @@ func testAccCheckFastlyServiceV1SFTPAttributes(service *gofastly.ServiceDetail, 
 					// these ahead of time
 					sl.CreatedAt = nil
 					sl.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						sl.FormatVersion = s.FormatVersion
+						sl.Format = s.Format
+						sl.ResponseCondition = s.ResponseCondition
+						sl.Placement = s.Placement
+					}
+
 					if diff := cmp.Diff(s, sl); diff != "" {
 						return fmt.Errorf("Bad match SFTP logging match: %s", diff)
 					}
@@ -239,6 +281,42 @@ func testAccCheckFastlyServiceV1SFTPAttributes(service *gofastly.ServiceDetail, 
 
 		return nil
 	}
+}
+
+func testAccServiceV1SFTPWasmConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+	name = "%s"
+
+	domain {
+		name		= "%s"
+		comment = "tf-sftp-logging"
+	}
+
+	backend {
+		address = "aws.amazon.com"
+		name		= "amazon docs"
+	}
+
+	logging_sftp {
+		name						= "sftp-endpoint"
+		address					= "sftp.example.com"
+		user						= "username"
+		password				= "password"
+		public_key      = file("test_fixtures/fastly_test_publickey")
+		path						   = "/"
+		ssh_known_hosts    = "sftp.example.com"
+		message_type       = "classic"
+	}
+
+	package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+	force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1SFTPConfig(name string, domain string) string {

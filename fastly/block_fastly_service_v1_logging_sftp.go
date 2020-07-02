@@ -21,131 +21,132 @@ func NewServiceLoggingSFTP() ServiceAttributeDefinition {
 }
 
 func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+	var a = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the SFTP logging endpoint.",
+		},
+
+		"address": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The SFTP address to stream logs to.",
+		},
+
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for the server.",
+		},
+
+		"path": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The path to upload log files to. If the path ends in / then it is treated as a directory.",
+		},
+
+		"ssh_known_hosts": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A list of host keys for all hosts we can connect to over SFTP.",
+		},
+
+		// Optional fields
+		"port": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     22,
+			Description: "The port the SFTP service listens on. (Default: 22).",
+		},
+
+		"password": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The password for the server. If both password and secret_key are passed, secret_key will be preferred.",
+			Sensitive:   true,
+		},
+
+		"secret_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
+			Sensitive:   true,
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"public_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+		},
+
+		"gzip_level": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+		},
+
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: "The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+		},
+
+		"message_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "classic",
+			Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+			ValidateFunc: validateLoggingMessageType(),
+		},
+	}
+
+	if serviceType == ServiceTypeVCL {
+		a["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%h %l %u %t \"%r\" %>s %b",
+			Description: "Apache-style string or VCL variables to use for log formatting.",
+		}
+		a["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		a["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		a["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the condition to apply.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the SFTP logging endpoint.",
-				},
-
-				"address": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The SFTP address to stream logs to.",
-				},
-
-				"user": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The username for the server.",
-				},
-
-				"path": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The path to upload log files to. If the path ends in / then it is treated as a directory.",
-				},
-
-				"ssh_known_hosts": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A list of host keys for all hosts we can connect to over SFTP.",
-				},
-
-				// Optional fields
-				"port": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     22,
-					Description: "The port the SFTP service listens on. (Default: 22).",
-				},
-
-				"password": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The password for the server. If both password and secret_key are passed, secret_key will be preferred.",
-					Sensitive:   true,
-				},
-
-				"secret_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
-					Sensitive:   true,
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"public_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"period": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     3600,
-					Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
-				},
-
-				"gzip_level": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     0,
-					Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
-				},
-
-				"timestamp_format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%Y-%m-%dT%H:%M:%S.000",
-					Description: "The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
-				},
-
-				"message_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      "classic",
-					Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
-					ValidateFunc: validateLoggingMessageType(),
-				},
-
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%h %l %u %t \"%r\" %>s %b",
-					Description: "Apache-style string or VCL variables to use for log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of the condition to apply.",
-				},
-			},
+			Schema: a,
 		},
 	}
 	return nil
@@ -198,7 +199,7 @@ func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 			continue
 		}
 
-		opts := buildCreateSFTP(sf, serviceID, latestVersion)
+		opts := buildCreateSFTP(sf, serviceID, latestVersion, serviceType)
 
 		if opts.Password == nil && opts.SecretKey == nil {
 			return fmt.Errorf("[ERR] Either password or secret_key must be set")
@@ -294,8 +295,16 @@ func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
 	return ssl
 }
 
-func buildCreateSFTP(sftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
+func buildCreateSFTP(sftpMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateSFTPInput {
 	df := sftpMap.(map[string]interface{})
+
+	var vla = NewVCLLoggingAttributes()
+	if serviceType == ServiceTypeVCL {
+		vla.format = df["format"].(string)
+		vla.formatVersion = uint(df["format_version"].(int))
+		vla.placement = df["placement"].(string)
+		vla.responseCondition = df["response_condition"].(string)
+	}
 
 	return &gofastly.CreateSFTPInput{
 		Service:           serviceID,
@@ -312,10 +321,10 @@ func buildCreateSFTP(sftpMap interface{}, serviceID string, serviceVersion int) 
 		GzipLevel:         gofastly.Uint(uint(df["gzip_level"].(int))),
 		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
 		MessageType:       gofastly.NullString(df["message_type"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
-		Placement:         gofastly.NullString(df["placement"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 

@@ -28,6 +28,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLoggingHeroku(),
 		NewServiceLoggingHoneycomb(),
 		NewServiceLoggingKafka(),
+		NewServiceLoggingLoggly(),
 	},
 }
 

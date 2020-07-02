@@ -23,21 +23,21 @@ func TestAccFastlyServiceWASMV1_basic(t *testing.T) {
 			{
 				Config: testAccServiceWASMV1Config(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "name", name),
+						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "comment", "Managed by Terraform"),
+						"fastly_service_compute.foo", "comment", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "version_comment", ""),
+						"fastly_service_compute.foo", "version_comment", ""),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "active_version", "0"),
+						"fastly_service_compute.foo", "active_version", "0"),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "domain.#", "1"),
+						"fastly_service_compute.foo", "domain.#", "1"),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "backend.#", "1"),
+						"fastly_service_compute.foo", "backend.#", "1"),
 					resource.TestCheckResourceAttr(
-						"fastly_service_wasm.foo", "package.#", "1"),
+						"fastly_service_compute.foo", "package.#", "1"),
 				),
 			},
 		},
@@ -46,7 +46,7 @@ func TestAccFastlyServiceWASMV1_basic(t *testing.T) {
 
 func testAccCheckServiceWASMV1Destroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_service_wasm" {
+		if rs.Type != "fastly_service_compute" {
 			continue
 		}
 
@@ -68,7 +68,7 @@ func testAccCheckServiceWASMV1Destroy(s *terraform.State) error {
 
 func testAccServiceWASMV1Config(name, domain string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_wasm" "foo" {
+resource "fastly_service_compute" "foo" {
   name = "%s"
   domain {
     name    = "%s"

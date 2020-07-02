@@ -25,6 +25,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLoggingElasticSearch(),
 		NewServiceLoggingFTP(),
 		NewServiceLoggingGooglePubSub(),
+		NewServiceLoggingHeroku(),
 	},
 }
 

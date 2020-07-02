@@ -63,6 +63,13 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	serviceNameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	splunkLogOneWasm := gofastly.Splunk{
+		Name:  "test-splunk-1",
+		URL:   "https://mysplunkendpoint.example.com/services/collector/event",
+		Token: "test-token",
+	}
 
 	splunkLogOne := gofastly.Splunk{
 		Name:              "test-splunk-1",
@@ -103,7 +110,7 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 				Config: testAccServiceV1SplunkConfig_basic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -112,10 +119,22 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 			},
 
 			{
+				Config: testAccServiceV1SplunkConfigWasm_basic(serviceNameWasm),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneWasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", serviceNameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "splunk.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1SplunkConfig_update(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -147,7 +166,7 @@ func TestAccFastlyServiceV1_splunk_default(t *testing.T) {
 				Config: testAccServiceV1SplunkConfig_default(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -212,7 +231,7 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 				Config: testAccServiceV1SplunkConfig_useTLS(serviceName, cert),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -224,7 +243,7 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 				Config: testAccServiceV1SplunkConfig_updateUseTLS(serviceName, cert),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -266,7 +285,7 @@ func TestAccFastlyServiceV1_splunk_env(t *testing.T) {
 				Config: testAccServiceV1SplunkConfig_env(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -277,7 +296,7 @@ func TestAccFastlyServiceV1_splunk_env(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail, localSplunkList []*gofastly.Splunk) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail, localSplunkList []*gofastly.Splunk, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -305,6 +324,15 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 					// these ahead of time
 					rs.CreatedAt = nil
 					rs.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						rs.FormatVersion = ls.FormatVersion
+						rs.Format = ls.Format
+						rs.ResponseCondition = ls.ResponseCondition
+						rs.Placement = ls.Placement
+					}
+
 					if !reflect.DeepEqual(ls, rs) {
 						return fmt.Errorf("Bad match Splunk logging match, expected (%#v), got (%#v)", ls, rs)
 					}
@@ -319,6 +347,39 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 
 		return nil
 	}
+}
+
+func testAccServiceV1SplunkConfigWasm_basic(serviceName string) string {
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = %q
+
+  domain {
+    name    = %q
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "tf-test-backend"
+  }
+
+  splunk {
+    name               = "test-splunk-1"
+    url                = "https://mysplunkendpoint.example.com/services/collector/event"
+    token              = "test-token"
+  }
+
+  package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+
+  force_destroy = true
+}`, serviceName, domainName)
 }
 
 func testAccServiceV1SplunkConfig_basic(serviceName string) string {

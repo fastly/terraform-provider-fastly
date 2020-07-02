@@ -36,6 +36,7 @@ var wasmService = &BaseServiceDefinition{
 		NewServiceLoggingSFTP(),
 		NewServicePaperTrail(),
 		NewServiceS3Logging(),
+		NewServiceSplunk(),
 	},
 }
 

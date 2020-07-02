@@ -73,18 +73,26 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			continue
 		}
 
+		var vla = NewVCLLoggingAttributes()
+		if serviceType == ServiceTypeVCL {
+			vla.format = sf["format"].(string)
+			vla.formatVersion = uint(sf["format_version"].(int))
+			vla.placement = sf["placement"].(string)
+			vla.responseCondition = sf["response_condition"].(string)
+		}
+
 		opts := gofastly.CreateSplunkInput{
 			Service:           d.Id(),
 			Version:           latestVersion,
 			Name:              sf["name"].(string),
 			URL:               sf["url"].(string),
-			Format:            sf["format"].(string),
-			FormatVersion:     uint(sf["format_version"].(int)),
-			ResponseCondition: sf["response_condition"].(string),
-			Placement:         sf["placement"].(string),
 			Token:             sf["token"].(string),
 			TLSHostname:       sf["tls_hostname"].(string),
 			TLSCACert:         sf["tls_ca_cert"].(string),
+			Format:            vla.format,
+			FormatVersion:     vla.formatVersion,
+			ResponseCondition: vla.responseCondition,
+			Placement:         vla.placement,
 		}
 
 		log.Printf("[DEBUG] Splunk create opts: %#v", opts)
@@ -116,66 +124,71 @@ func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 }
 
 func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+	var a = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Splunk logging endpoint",
+		},
+		"url": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Splunk URL to stream logs to",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", ""),
+			Description: "The Splunk token to be used for authentication",
+			Sensitive:   true,
+		},
+		// Optional fields
+		"tls_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
+		},
+		"tls_ca_cert": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
+			Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.",
+		},
+	}
+
+	if serviceType == ServiceTypeVCL {
+		a["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%h %l %u %t \"%r\" %>s %b",
+			Description: "Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t \"%r\" %>s %b`)",
+		}
+		a["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		a["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		a["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the condition to apply",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Splunk logging endpoint",
-				},
-				"url": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The Splunk URL to stream logs to",
-				},
-				"token": {
-					Type:        schema.TypeString,
-					Required:    true,
-					DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", ""),
-					Description: "The Splunk token to be used for authentication",
-					Sensitive:   true,
-				},
-				// Optional fields
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%h %l %u %t \"%r\" %>s %b",
-					Description: "Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t \"%r\" %>s %b`)",
-				},
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of the condition to apply",
-				},
-				"tls_hostname": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
-				},
-				"tls_ca_cert": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
-					Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.",
-				},
-			},
+			Schema: a,
 		},
 	}
 	return nil

@@ -73,7 +73,24 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 	var service fst.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1Wasm := fst.Elasticsearch{
+		Version:           1,
+		Name:              "elasticsearch-endpoint",
+		Index:             "#{%F}",
+		URL:               "https://es.example.com",
+		RequestMaxBytes:   0,
+		RequestMaxEntries: 0,
+		User:              "user",
+		Password:          "password",
+		Pipeline:          "my-pipeline",
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
+		TLSHostname:       "example.com",
+	}
 
 	log1 := fst.Elasticsearch{
 		Version:           1,
@@ -141,10 +158,22 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccServiceV1ElasticsearchWasmConfig(nameWasm, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_wasm.foo", &service),
+					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1Wasm}, ServiceTypeWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "name", nameWasm),
+					resource.TestCheckResourceAttr(
+						"fastly_service_wasm.foo", "logging_elasticsearch.#", "1"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1ElasticsearchConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1}),
+					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -156,7 +185,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 				Config: testAccServiceV1ElasticsearchConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -167,7 +196,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDetail, elasticsearch []*fst.Elasticsearch) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDetail, elasticsearch []*fst.Elasticsearch, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -197,6 +226,15 @@ func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDeta
 					// these ahead of time.
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
+
+					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
+					if serviceType == ServiceTypeWasm {
+						el.FormatVersion = e.FormatVersion
+						el.Format = e.Format
+						el.ResponseCondition = e.ResponseCondition
+						el.Placement = e.Placement
+					}
+
 					if diff := cmp.Diff(e, el); diff != "" {
 						return fmt.Errorf("Bad match Elasticsearch logging match: %s", diff)
 					}
@@ -211,6 +249,44 @@ func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDeta
 
 		return nil
 	}
+}
+
+func testAccServiceV1ElasticsearchWasmConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_wasm" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-elasticsearch-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_elasticsearch {
+    name     = "elasticsearch-endpoint"
+    index    = "#{%%F}"
+    url      = "https://es.example.com"
+	pipeline = "my-pipeline"
+	user     = "user"
+	password = "password"
+	tls_ca_cert       = file("test_fixtures/fastly_test_cacert")
+	tls_client_cert   = file("test_fixtures/fastly_test_certificate")
+	tls_client_key    = file("test_fixtures/fastly_test_privatekey")
+	tls_hostname       = "example.com"
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+
+  force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1ElasticsearchConfig(name string, domain string) string {

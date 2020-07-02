@@ -22,110 +22,111 @@ func NewServiceLoggingKafka() ServiceAttributeDefinition {
 }
 
 func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+	var a = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Kafka logging endpoint.",
+		},
+
+		"topic": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Kafka topic to send logs to.",
+		},
+
+		"brokers": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A comma-separated list of IP addresses or hostnames of Kafka brokers.",
+		},
+
+		// Optional
+		"compression_codec": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The codec used for compression of your logs. One of: gzip, snappy, lz4.",
+		},
+
+		"required_acks": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Description: "The Number of acknowledgements a leader must receive before a write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
+		},
+
+		"use_tls": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Whether to use TLS for secure logging. Can be either true or false.",
+		},
+
+		"tls_ca_cert": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+			Sensitive:   true,
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"tls_client_cert": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+			Sensitive:   true,
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"tls_client_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+			Sensitive:   true,
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"tls_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
+		},
+	}
+
+	if serviceType == ServiceTypeVCL {
+		a["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting.",
+		}
+		a["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		a["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		a["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Kafka logging endpoint.",
-				},
-
-				"topic": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The Kafka topic to send logs to.",
-				},
-
-				"brokers": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A comma-separated list of IP addresses or hostnames of Kafka brokers.",
-				},
-
-				// Optional
-				"compression_codec": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The codec used for compression of your logs. One of: gzip, snappy, lz4.",
-				},
-
-				"required_acks": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Description: "The Number of acknowledgements a leader must receive before a write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
-				},
-
-				"use_tls": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Default:     false,
-					Description: "Whether to use TLS for secure logging. Can be either true or false.",
-				},
-
-				"tls_ca_cert": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
-					Sensitive:   true,
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"tls_client_cert": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
-					Sensitive:   true,
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"tls_client_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The client private key used to make authenticated requests. Must be in PEM format.",
-					Sensitive:   true,
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"tls_hostname": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
-				},
-
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache style log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: a,
 		},
 	}
 	return nil
@@ -178,7 +179,7 @@ func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVer
 			continue
 		}
 
-		opts := buildCreateKafka(cfg, serviceID, latestVersion)
+		opts := buildCreateKafka(cfg, serviceID, latestVersion, serviceType)
 
 		log.Printf("[DEBUG] Fastly Kafka logging addition opts: %#v", opts)
 
@@ -264,8 +265,16 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 	return flattened
 }
 
-func buildCreateKafka(kafkaMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateKafkaInput {
+func buildCreateKafka(kafkaMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateKafkaInput {
 	df := kafkaMap.(map[string]interface{})
+
+	var vla = NewVCLLoggingAttributes()
+	if serviceType == ServiceTypeVCL {
+		vla.format = df["format"].(string)
+		vla.formatVersion = uint(df["format_version"].(int))
+		vla.placement = df["placement"].(string)
+		vla.responseCondition = df["response_condition"].(string)
+	}
 
 	return &gofastly.CreateKafkaInput{
 		Service:           serviceID,
@@ -280,10 +289,10 @@ func buildCreateKafka(kafkaMap interface{}, serviceID string, serviceVersion int
 		TLSClientCert:     fastly.NullString(df["tls_client_cert"].(string)),
 		TLSClientKey:      fastly.NullString(df["tls_client_key"].(string)),
 		TLSHostname:       fastly.NullString(df["tls_hostname"].(string)),
-		Format:            fastly.NullString(df["format"].(string)),
-		FormatVersion:     fastly.Uint(uint(df["format_version"].(int))),
-		ResponseCondition: fastly.NullString(df["response_condition"].(string)),
-		Placement:         fastly.NullString(df["placement"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 

@@ -19,5 +19,4 @@ The `logging_elasticsearch` block supports:
 {{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
-* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
-{{end}}{{end}}
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.{{end}}{{end}}

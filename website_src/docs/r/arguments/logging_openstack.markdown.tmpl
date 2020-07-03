@@ -20,5 +20,4 @@ seconds. Default `3600`.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
 * `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
-{{end}}{{end}}
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.{{end}}{{end}}

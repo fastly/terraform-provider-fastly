@@ -116,7 +116,6 @@ The `domain` block supports:
 * `name` - (Required) The domain to which this Service will respond.
 * `comment` - (Optional) An optional comment about the Domain.
 
-
 The `backend` block supports:
 
 * `name` - (Required, string) Name for this Backend. Must be unique to this Service.
@@ -163,7 +162,6 @@ The `healthcheck` block supports:
 * `threshold` - (Optional) How many Healthchecks must succeed to be considered healthy. Default `3`.
 * `timeout` - (Optional) Timeout in milliseconds. Default `500`.
 * `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
-
 
 The `package` block supports uploading or modifying Wasm packages for use in a Fastly compute service. See Fastly's documentation on
 [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
@@ -272,7 +270,6 @@ The `splunk` block supports:
 * `token` - (Required) The Splunk token to be used for authentication.
 * `tls_hostname` - (Optional) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.
-
 
 The `sumologic` block supports:
 
@@ -452,7 +449,6 @@ In addition to the arguments listed above, the following attributes are exported
 * `id` – The ID of the Service.
 * `active_version` – The currently active version of your Fastly Service.
 * `cloned_version` - The latest cloned version by the provider. The value gets only set after running `terraform apply`.
-
 [fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
 [fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
 [fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
@@ -466,4 +462,3 @@ Fastly Service can be imported using their service ID, e.g.
 ```
 $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 ```
-

@@ -10,5 +10,4 @@ The `logging_logshuttle` block supports:
 {{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache style log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
-* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-{{end}}{{end}}
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.{{end}}{{end}}

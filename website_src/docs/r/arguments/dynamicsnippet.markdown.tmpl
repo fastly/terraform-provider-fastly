@@ -5,11 +5,9 @@ The `dynamicsnippet` block supports:
 
 * `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
 * `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
-* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
-{{end}}
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.{{end}}
 
 {{define "dynamicsnippet_export"}}
 The `dynamicsnippet` block exports:
 
-* `snippet_id` - The ID of the dynamic snippet.
-{{end}}
+* `snippet_id` - The ID of the dynamic snippet.{{end}}

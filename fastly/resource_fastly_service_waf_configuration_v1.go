@@ -233,6 +233,16 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 		return err
 	}
 
+	statusCheck := &WAFDeploymentChecker{
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      WAFStatusCheckDelay,
+		MinTimeout: WAFStatusCheckMinTimeout,
+		Check:      DefaultWAFDeploymentChecker(conn),
+	}
+	err = statusCheck.waitForDeployment(wafID, latestVersion)
+	if err != nil {
+		return err
+	}
 	return resourceServiceWAFConfigurationV1Read(d, meta)
 }
 
@@ -276,6 +286,17 @@ func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interf
 	})
 	if err != nil {
 		return err
+	}
+
+	statusCheck := &WAFDeploymentChecker{
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      WAFStatusCheckDelay,
+		MinTimeout: WAFStatusCheckMinTimeout,
+		Check:      DefaultWAFDeploymentChecker(conn),
+	}
+	err = statusCheck.waitForDeployment(wafID, emptyVersion)
+	if err != nil {
+		return fmt.Errorf("Error waiting for WAF Version (%s) to be deleted: %s", d.Id(), err)
 	}
 	d.SetId("")
 	return nil

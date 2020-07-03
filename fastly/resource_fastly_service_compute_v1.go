@@ -7,7 +7,7 @@ import (
 // Ordering is important - stored is processing order
 // Some objects may need to be updated first, as they can be referenced by other
 // configuration objects (Backends, Request Headers, etc).
-var wasmService = &BaseServiceDefinition{
+var computeService = &BaseServiceDefinition{
 	Type: "wasm",
 	Attributes: []ServiceAttributeDefinition{
 		NewServiceDomain(),
@@ -17,6 +17,6 @@ var wasmService = &BaseServiceDefinition{
 	},
 }
 
-func resourceServiceWasmV1() *schema.Resource {
-	return resourceService(wasmService)
+func resourceServiceComputeV1() *schema.Resource {
+	return resourceService(computeService)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccFastlyServiceWASMV1_basic(t *testing.T) {
+func TestAccFastlyServiceCompute1_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test1.tf-%s.com", acctest.RandString(10))
@@ -18,10 +18,10 @@ func TestAccFastlyServiceWASMV1_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceWASMV1Destroy,
+		CheckDestroy: testAccCheckServiceComputeV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceWASMV1Config(name, domainName1),
+				Config: testAccServiceComputeV1Config(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					resource.TestCheckResourceAttr(
@@ -44,7 +44,7 @@ func TestAccFastlyServiceWASMV1_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceWASMV1Destroy(s *terraform.State) error {
+func testAccCheckServiceComputeV1Destroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "fastly_service_compute" {
 			continue
@@ -66,7 +66,7 @@ func testAccCheckServiceWASMV1Destroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccServiceWASMV1Config(name, domain string) string {
+func testAccServiceComputeV1Config(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

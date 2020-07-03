@@ -19,7 +19,7 @@ func TestAccFastlyServiceV1_package_basic(t *testing.T) {
 
 	wp1 := gofastly.Package{
 		Metadata: gofastly.PackageMetadata{
-			Name:        "wasm-test",
+			Name:        "compute-test",
 			Description: "Test Package",
 			Authors:     []string{"fastly@fastly.com"},
 			Language:    "rust",
@@ -85,7 +85,7 @@ func TestAccFastlyServiceV1_package_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1PackageAttributes(service *gofastly.ServiceDetail, wasmPackage *gofastly.Package) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1PackageAttributes(service *gofastly.ServiceDetail, computePackage *gofastly.Package) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -98,20 +98,20 @@ func testAccCheckFastlyServiceV1PackageAttributes(service *gofastly.ServiceDetai
 			return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		if wasmPackage.Metadata.Size != wp.Metadata.Size {
-			return fmt.Errorf("Package size mismatch, expected: %v, got: %v", wasmPackage.Metadata.Size, wp.Metadata.Size)
+		if computePackage.Metadata.Size != wp.Metadata.Size {
+			return fmt.Errorf("Package size mismatch, expected: %v, got: %v", computePackage.Metadata.Size, wp.Metadata.Size)
 		}
 
-		if wasmPackage.Metadata.HashSum != wp.Metadata.HashSum {
-			return fmt.Errorf("Package hashsum mismatch, expected: %v, got: %v", wasmPackage.Metadata.HashSum, wp.Metadata.HashSum)
+		if computePackage.Metadata.HashSum != wp.Metadata.HashSum {
+			return fmt.Errorf("Package hashsum mismatch, expected: %v, got: %v", computePackage.Metadata.HashSum, wp.Metadata.HashSum)
 		}
 
-		if wasmPackage.Metadata.Language != wp.Metadata.Language {
-			return fmt.Errorf("Package language mismatch, expected: %v, got: %v", wasmPackage.Metadata.Language, wp.Metadata.Language)
+		if computePackage.Metadata.Language != wp.Metadata.Language {
+			return fmt.Errorf("Package language mismatch, expected: %v, got: %v", computePackage.Metadata.Language, wp.Metadata.Language)
 		}
 
-		if wasmPackage.Metadata.Name != wp.Metadata.Name {
-			return fmt.Errorf("Package name mismatch, expected: %v, got: %v", wasmPackage.Metadata.Name, wp.Metadata.Name)
+		if computePackage.Metadata.Name != wp.Metadata.Name {
+			return fmt.Errorf("Package name mismatch, expected: %v, got: %v", computePackage.Metadata.Name, wp.Metadata.Name)
 		}
 
 		return nil

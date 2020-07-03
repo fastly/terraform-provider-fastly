@@ -165,6 +165,13 @@ The `healthcheck` block supports:
 * `timeout` - (Optional) Timeout in milliseconds. Default `500`.
 * `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
 
+The `package` block supports uploading or modifying Wasm packages for use in a Fastly compute service. See Fastly's documentation on
+[Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
+
+* `filename` - (Required) The path to the Wasm deployment package within your local filesystem.
+* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("file.zip") (Terraform 0.11.12 and later) or filesha512(file("file.zip")) (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the Wasm deployment package.
+
+
 The `s3logging` block supports:
 
 * `name` - (Required) The unique name of the S3 logging endpoint.

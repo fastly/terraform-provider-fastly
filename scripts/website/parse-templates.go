@@ -50,12 +50,12 @@ func main() {
 			},
 		},
 		{
-			name: "service_acl_entries_v1",
-			path: docsDir + "docs/r/service_acl_entries_v1.html.markdown",
-		},
-		{
 			name: "service_dictionary_items_v1",
 			path: docsDir + "docs/r/service_dictionary_items_v1.html.markdown",
+		},
+		{
+			name: "service_acl_entries_v1",
+			path: docsDir + "docs/r/service_acl_entries_v1.html.markdown",
 		},
 		{
 			name: "service_dynamic_snippet_content_v1",

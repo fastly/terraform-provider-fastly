@@ -295,7 +295,6 @@ used in the `request_condition`, `response_condition`, or
 * `priority` - (Optional) A number used to determine the order in which multiple
 conditions execute. Lower numbers execute first. Default `10`.
 
-
 The `director` block supports:
 
 * `name` - (Required) Unique name for this Director.
@@ -737,7 +736,6 @@ The `logging_digitalocean` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-
 
 The `logging_cloudfiles` block supports:
 

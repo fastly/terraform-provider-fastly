@@ -193,4 +193,4 @@ The following is an example of the Terraform state command to remove the resourc
 
 ```
 $ terraform state rm fastly_service_dictionary_items_v1.items
-```
+``` 

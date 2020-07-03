@@ -9,7 +9,7 @@ The `logging_heroku` block supports:
 * `name` - (Required) The unique name of the Heroku logging endpoint.
 * `token` - (Required) The token to use for authentication (https://devcenter.heroku.com/articles/add-on-partner-log-integration).
 * `url` - (Required) The url to stream logs to.
-{{ if eq .ServiceType "vcl"}}* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+{{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.

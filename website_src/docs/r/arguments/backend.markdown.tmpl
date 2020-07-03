@@ -20,7 +20,7 @@ Default `1000`
 Default `200`.
 * `port` - (Optional) The port number on which the Backend responds. Default `80`.
 * `override_host` - (Optional) The hostname to override the Host header.
-{{ if eq .ServiceType "vcl"}}* `request_condition` - (Optional, string) Name of already defined `condition`, which if met, will select this backend during a request.{{end}}
+{{ if eq .Data.ServiceType "vcl"}}* `request_condition` - (Optional, string) Name of already defined `condition`, which if met, will select this backend during a request.{{end}}
 * `use_ssl` - (Optional) Whether or not to use SSL to reach the backend. Default `false`.
 * `max_tls_version` - (Optional) Maximum allowed TLS version on SSL connections to this backend.
 * `min_tls_version` - (Optional) Minimum allowed TLS version on SSL connections to this backend.

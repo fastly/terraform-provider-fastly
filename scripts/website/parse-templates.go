@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,40 +14,79 @@ import (
 type Page struct {
 	name string
 	path string
-	data PageData
+	Data PageData
+	Menu []MenuItem
 }
 
 type PageData struct {
 	ServiceType string
 }
 
-
-
+type MenuItem struct {
+	Lookup string
+	Link   string
+	Title  string
+}
 
 
 func main() {
 	baseDir := getBaseDir()
-	tmplDir := baseDir + "/website_src/docs/r/"
-	docsDir := baseDir + "/website/docs/"
+	tmplDir := baseDir + "/website_src/"
+	docsDir := baseDir + "/website/"
 
-	var pages = []Page{
+	var resourcePages = []Page{
 		{
 			name: "service_v1",
-			path: docsDir + "r/service_v1.html.markdown",
-			data: PageData{
+			path: docsDir + "docs/r/service_v1.html.markdown",
+			Data: PageData{
 				"vcl",
 			},
 		},
 		{
 			name: "service_compute",
-			path: docsDir + "r/service_compute.html.markdown",
-			data: PageData{
+			path: docsDir + "docs/r/service_compute.html.markdown",
+			Data: PageData{
 				"wasm",
 			},
 		},
+		{
+			name: "service_acl_entries_v1",
+			path: docsDir + "docs/r/service_acl_entries_v1.html.markdown",
+		},
+		{
+			name: "service_dictionary_items_v1",
+			path: docsDir + "docs/r/service_dictionary_items_v1.html.markdown",
+		},
+		{
+			name: "service_dynamic_snippet_content_v1",
+			path: docsDir + "docs/r/service_dynamic_snippet_content_v1.html.markdown",
+		},
+		{
+			name: "user_v1",
+			path: docsDir + "docs/r/user_v1.html.markdown",
+		},
 	}
 
+	var pages = append(resourcePages, Page{
+		name: "fastly_erb",
+		path: docsDir + "fastly.erb",
+		Menu: generateMenuItems(resourcePages),
+	})
+
 	renderPages(getTemplate(tmplDir), pages)
+}
+
+
+func generateMenuItems(resourcePages []Page) []MenuItem{
+	var menuItems []MenuItem
+	for _, p := range resourcePages {
+		menuItems = append(menuItems, MenuItem{
+			Lookup: fmt.Sprintf("docs-fastly-resource-%s", strings.ReplaceAll(p.name, "_", "-")),
+			Link:   fmt.Sprintf("/docs/providers/fastly/r/%s.html", p.name),
+			Title:  fmt.Sprintf("fastly_%s", p.name),
+		})
+	}
+	return menuItems
 }
 
 
@@ -62,7 +102,7 @@ func renderPage(t *template.Template, p Page) {
 		panic(err)
 	}
 	defer f.Close()
-	err = t.ExecuteTemplate(f, p.name, p.data)
+	err = t.ExecuteTemplate(f, p.name, p)
 	if err != nil {
 		panic(err)
 	}

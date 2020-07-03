@@ -3,7 +3,7 @@ layout: "fastly"
 page_title: "Fastly: service_v1"
 sidebar_current: "docs-fastly-resource-service-v1"
 description: |-
-Provides an Fastly Service
+  Provides an Fastly Service
 ---
 
 # fastly_service_v1
@@ -247,37 +247,37 @@ The following arguments are supported:
 {{ template "dictionary_block" . }}
 
 
-        ## Attributes Reference
+## Attributes Reference
 
-        In addition to the arguments listed above, the following attributes are exported:
+In addition to the arguments listed above, the following attributes are exported:
 
-        * `id` – The ID of the Service.
-        * `active_version` – The currently active version of your Fastly Service.
-        * `cloned_version` - The latest cloned version by the provider. The value gets only set after running `terraform apply`.
+* `id` – The ID of the Service.
+* `active_version` – The currently active version of your Fastly Service.
+* `cloned_version` - The latest cloned version by the provider. The value gets only set after running `terraform apply`.
 
-        The `dynamicsnippet` block exports:
+The `dynamicsnippet` block exports:
 
-        * `snippet_id` - The ID of the dynamic snippet.
+* `snippet_id` - The ID of the dynamic snippet.
 
-        The `acl` block exports:
+The `acl` block exports:
 
-        * `acl_id` - The ID of the ACL.
+* `acl_id` - The ID of the ACL.
 
-        The `dictionary` block exports:
+The `dictionary` block exports:
 
-        * `dictionary_id` - The ID of the dictionary.
+* `dictionary_id` - The ID of the dictionary.
 
-        [fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
-        [fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
-        [fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
-        [fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
-        [fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
+[fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
+[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
+[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
+[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
+[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
 
-        ## Import
+## Import
 
-        Fastly Service can be imported using their service ID, e.g.
+Fastly Service can be imported using their service ID, e.g.
 
-        ```
-        $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
-        ```
+```
+$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
+```
 {{end}}

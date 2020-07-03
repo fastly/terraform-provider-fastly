@@ -1,4 +1,4 @@
----
+{{define "service_dictionary_items_v1"}}---
 layout: "fastly"
 page_title: "Fastly: service_dictionary_items_v1"
 sidebar_current: "docs-fastly-resource-service-dictionary-items-v1"
@@ -49,7 +49,7 @@ resource "fastly_service_v1" "myservice" {
 
 resource "fastly_service_dictionary_items_v1" "items" {
     service_id = "${fastly_service_v1.myservice.id}"
-    dictionary_id = "${{for s in fastly_service_v1.myservice.dictionary : s.name => s.dictionary_id}[var.mydict_name]}"
+    dictionary_id = "${{"{{"}}for s in fastly_service_v1.myservice.dictionary : s.name => s.dictionary_id}[var.mydict_name]}"
     items = {
         key1: "value1"
         key2: "value2"
@@ -152,7 +152,7 @@ items in a dictionary.  If, after your first deploy, the Fastly API or UI is to 
 
 resource "fastly_service_dictionary_items_v1" "items" {
     service_id = "${fastly_service_v1.myservice.id}"
-    dictionary_id = "${{for s in fastly_service_v1.myservice.dictionary : s.name => s.dictionary_id}[var.mydict_name]}"
+    dictionary_id = "${{"{{"}}for s in fastly_service_v1.myservice.dictionary : s.name => s.dictionary_id}[var.mydict_name]}"
     items = {
         key1: "value1"
         key2: "value2"
@@ -194,3 +194,4 @@ The following is an example of the Terraform state command to remove the resourc
 ```
 $ terraform state rm fastly_service_dictionary_items_v1.items
 ```
+{{end}}

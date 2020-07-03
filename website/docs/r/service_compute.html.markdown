@@ -47,130 +47,68 @@ force_destroy = true
 ## Argument Reference
 
 The following arguments are supported:
-
 * `name` - (Required) The unique name for the Service to create.
-
-
 * `comment` - (Optional) Description field for the service. Default `Managed by Terraform`.
-
-
 * `version_comment` - (Optional) Description field for the version.
-
-
 * `activate` - (Optional) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to false. Default true.
-
-
 * `force_destroy` - (Optional) Services that are active cannot be destroyed. In
 order to destroy the Service, set `force_destroy` to `true`. Default `false`.
 
-
-
-* `domain` - (Required) A set of Domain names to serve as entry points for your Service. Defined below.
-
-
+* `domain` - (Required) A set of Domain names to serve as entry points for your
+Service. Defined below.
 * `backend` - (Optional) A set of Backends to service requests from your Domains.
-Defined below. Backends must be defined in this argument, or defined in the `vcl` argument below
-
-
+Defined below. Backends must be defined in this argument, or defined in the
+`vcl` argument below
 * `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
-
-
 * `package` - (Optional) A Wasm deployment package to upload. Defined below.
-
-
 
 * `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
 Defined below.
-
-
 * `blobstoragelogging` - (Optional) An Azure Blob Storage endpoint to send streaming logs too.
 Defined below.
-
-
 * `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
 Defined below.
-
-
 * `httpslogging` - (Optional) An HTTPS endpoint to send streaming logs to.
 Defined below.
-
-
 * `papertrail` - (Optional) A Papertrail endpoint to send streaming logs too.
 Defined below.
-
-
 * `s3logging` - (Optional) A set of S3 Buckets to send streaming logs too.
 Defined below.
-
-
 * `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
 Defined below.
-
-
 * `sumologic` - (Optional) A Sumologic endpoint to send streaming logs too.
 Defined below.
 
-
-
 * `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_datadog` - (Optional) A Datadog endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_digitalocean` - (Optional) A DigitalOcean Spaces endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_elasticsearch` - (optional) An Elasticsearch endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_ftp` - (Optional) An FTP endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_googlepubsub` - (Optional) A Google Cloud Pub/Sub endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_honeycomb` - (Optional) A Honeycomb endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_heroku` - (Optional) A Heroku endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_kafka` - (Optional) A Kafka endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_loggly` - (Optional) A Loggly endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_logshuttle` - (Optional) A Log Shuttle endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_openstack` - (Optional) An OpenStack endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
 Defined below.
-
 
 
 The `domain` block supports:

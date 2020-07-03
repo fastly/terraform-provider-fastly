@@ -160,176 +160,87 @@ Fastly documentation on [Amazon S3][fastly-s3].
 ## Argument Reference
 
 The following arguments are supported:
-
 * `activate` - (Optional) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to false. Default true.
-
-
 * `name` - (Required) The unique name for the Service to create.
-
-
 * `comment` - (Optional) Description field for the service. Default `Managed by Terraform`.
-
-
 * `version_comment` - (Optional) Description field for the version.
-
-
-* `domain` - (Required) A set of Domain names to serve as entry points for your Service. Defined below.
-
-
+* `domain` - (Required) A set of Domain names to serve as entry points for your
+Service. Defined below.
 * `backend` - (Optional) A set of Backends to service requests from your Domains.
-Defined below. Backends must be defined in this argument, or defined in the `vcl` argument below
-
-
-* `condition` - (Optional) A set of conditions to add logic to any basic configuration object in this service. Defined below.
-
-
+Defined below. Backends must be defined in this argument, or defined in the
+`vcl` argument below
+* `condition` - (Optional) A set of conditions to add logic to any basic
+configuration object in this service. Defined below.
 * `cache_setting` - (Optional) A set of Cache Settings, allowing you to override
-
-
 * `director` - (Optional) A director to allow more control over balancing traffic over backends.
 when an item is not to be cached based on an above `condition`. Defined below
-
-
 * `gzip` - (Required) A set of gzip rules to control automatic gzipping of
 content. Defined below.
-
-
-* `header` - (Optional) A set of Headers to manipulate for each request. Defined below.
-
-
+* `header` - (Optional) A set of Headers to manipulate for each request. Defined
+below.
 * `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
-
-
 * `default_host` - (Optional) The default hostname.
-
-
-* `default_ttl` - (Optional) The default Time-to-live (TTL) for requests.
-
-
+* `default_ttl` - (Optional) The default Time-to-live (TTL) for
+requests.
 * `force_destroy` - (Optional) Services that are active cannot be destroyed. In
 order to destroy the Service, set `force_destroy` to `true`. Default `false`.
-
-
 * `request_setting` - (Optional) A set of Request modifiers. Defined below
-
-
 * `s3logging` - (Optional) A set of S3 Buckets to send streaming logs too.
 Defined below.
-
-
 * `papertrail` - (Optional) A Papertrail endpoint to send streaming logs too.
 Defined below.
-
-
 * `sumologic` - (Optional) A Sumologic endpoint to send streaming logs too.
 Defined below.
-
-
 * `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
 Defined below.
-
-
 * `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
 Defined below.
-
-
 * `syslog` - (Optional) A syslog endpoint to send streaming logs too.
 Defined below.
-
-
 * `logentries` - (Optional) A logentries endpoint to send streaming logs too.
 Defined below.
-
-
 * `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
 Defined below.
-
-
 * `blobstoragelogging` - (Optional) An Azure Blob Storage endpoint to send streaming logs too.
 Defined below.
-
-
 * `httpslogging` - (Optional) An HTTPS endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_elasticsearch` - (optional) An Elasticsearch endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_ftp` - (Optional) An FTP endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_datadog` - (Optional) A Datadog endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_loggly` - (Optional) A Loggly endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_googlepubsub` - (Optional) A Google Cloud Pub/Sub endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_kafka` - (Optional) A Kafka endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_heroku` - (Optional) A Heroku endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_honeycomb` - (Optional) A Honeycomb endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_logshuttle` - (Optional) A Log Shuttle endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_openstack` - (Optional) An OpenStack endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_digitalocean` - (Optional) A DigitalOcean Spaces endpoint to send streaming logs to.
 Defined below.
-
-
 * `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
 Defined below.
-
-
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
-
-
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
-
-
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
-
-
 * `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
-
-
 * `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
-
-
 * `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
-
 
 
 The `domain` block supports:

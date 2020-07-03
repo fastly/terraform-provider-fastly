@@ -3,7 +3,7 @@ layout: "fastly"
 page_title: "Fastly: service_compute"
 sidebar_current: "docs-fastly-resource-service-compute"
 description: |-
-  Provides an Fastly Service
+  Provides an Fastly Compute Service
 ---
 
 # fastly_service_compute
@@ -188,6 +188,9 @@ Defined below. Backends must be defined in this argument, or defined in the `vcl
 * `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
 
 
+* `package` - (Optional) A Wasm deployment package to upload. Defined below.
+
+
 
 * `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
 Defined below.
@@ -335,6 +338,13 @@ The `healthcheck` block supports:
 * `threshold` - (Optional) How many Healthchecks must succeed to be considered healthy. Default `3`.
 * `timeout` - (Optional) Timeout in milliseconds. Default `500`.
 * `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
+
+
+The `package` block supports uploading or modifying Wasm packages for use in Fastly compute service. See Fastly's documentation on
+[Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
+
+* `filename` - (Required) The path to the Wasm deployment package within your local filesystem.
+* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("file.zip") (Terraform 0.11.12 and later) or filesha512(file("file.zip")) (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the Wasm deployment package.
 
 
 

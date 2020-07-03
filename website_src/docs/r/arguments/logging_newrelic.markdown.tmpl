@@ -1,0 +1,15 @@
+{{define "logging_newrelic"}}
+* `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
+Defined below.
+{{end}}
+
+{{define "logging_newrelic_block"}}
+The `logging_newrelic` block supports:
+
+* `name` - (Required) The unique name of the New Relic logging endpoint.
+* `token` - (Required) The Insert API key from the Account page of your New Relic account.
+{{ if eq .ServiceType "vcl"}}* `format` - (Optional) Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
+* `response_condition` - (Optional) The name of the condition to apply.
+{{end}}{{end}}

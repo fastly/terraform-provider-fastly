@@ -1,0 +1,13 @@
+{{define "vcl"}}
+* `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
+{{end}}
+
+{{define "vcl_block"}}
+The `vcl` block supports:
+
+* `name` - (Required) A unique name for this configuration block.
+* `content` - (Required) The custom VCL code to upload.
+* `main` - (Optional) If `true`, use this block as the main configuration. If
+`false`, use this block as an includable library. Only a single VCL block can be
+marked as the main block. Default is `false`.
+{{end}}

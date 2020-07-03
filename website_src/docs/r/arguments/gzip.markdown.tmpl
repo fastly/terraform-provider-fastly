@@ -1,0 +1,13 @@
+{{define "gzip"}}
+* `gzip` - (Required) A set of gzip rules to control automatic gzipping of
+content. Defined below.
+{{end}}
+
+{{define "gzip_block"}}
+The `gzip` block supports:
+
+* `name` - (Required) A unique name.
+* `content_types` - (Optional) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`.
+* `extensions` - (Optional) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`.
+* `cache_condition` - (Optional) Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+{{end}}

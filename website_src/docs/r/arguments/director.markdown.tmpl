@@ -1,0 +1,17 @@
+{{define "director"}}
+* `director` - (Optional) A director to allow more control over balancing traffic over backends.
+when an item is not to be cached based on an above `condition`. Defined below
+{{end}}
+
+{{define "director_block"}}
+The `director` block supports:
+
+* `name` - (Required) Unique name for this Director.
+* `backends` - (Required) Names of defined backends to map the director to. Example: `[ "origin1", "origin2" ]`
+* `comment` - (Optional) An optional comment about the Director.
+* `shield` - (Optional) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response.
+* `capacity` - (Optional) Load balancing weight for the backends. Default `100`.
+* `quorum` - (Optional) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`.
+* `type` - (Optional) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client).  Default `1`.
+* `retries` - (Optional) How many backends to search if it fails. Default `5`.
+{{end}}

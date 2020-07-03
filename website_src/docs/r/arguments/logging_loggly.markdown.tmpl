@@ -1,0 +1,15 @@
+{{define "logging_loggly"}}
+* `logging_loggly` - (Optional) A Loggly endpoint to send streaming logs to.
+Defined below.
+{{end}}
+
+{{define "logging_loggly_block"}}
+The `logging_loggly` block supports:
+
+* `name` - (Required) The unique name of the Loggly logging endpoint.
+* `token` - (Required) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
+{{ if eq .ServiceType "vcl"}}* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+{{end}}{{end}}

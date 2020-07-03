@@ -1,0 +1,26 @@
+{{define "logging_openstack"}}
+* `logging_openstack` - (Optional) An OpenStack endpoint to send streaming logs to.
+Defined below.
+{{end}}
+
+{{define "logging_openstack_block"}}
+The `logging_openstack` block supports:
+
+* `name` - (Required) The unique name of the OpenStack logging endpoint.
+* `bucket_name` - (Required) The name of your OpenStack container.
+* `url` - (Required) Your OpenStack auth url.
+* `user` - (Required) The username for your OpenStack account.
+* `access_key` - (Required) Your OpenStack account access key.
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `path` - (Optional) Path to store the files. Must end with a trailing slash.
+If this field is left empty, the files will be saved in the bucket's root path.
+* `period` - (Optional) How frequently the logs should be transferred, in
+seconds. Default `3600`.
+* `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
+* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
+{{ if eq .ServiceType "vcl"}}* `format` - (Optional) Apache style log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
+{{end}}{{end}}

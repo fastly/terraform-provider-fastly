@@ -22,20 +22,20 @@ Basic usage:
 
 ```hcl
 resource "fastly_service_v1" "demo" {
-name = "demofastly"
+  name = "demofastly"
 
-domain {
-name    = "demo.notexample.com"
-comment = "demo"
-}
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
 
-backend {
-address = "127.0.0.1"
-name    = "localhost"
-port    = 80
-}
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+    port    = 80
+  }
 
-force_destroy = true
+  force_destroy = true
 }
 ```
 
@@ -43,45 +43,45 @@ Basic usage with an Amazon S3 Website and that removes the `x-amz-request-id` he
 
 ```hcl
 resource "fastly_service_v1" "demo" {
-name = "demofastly"
+  name = "demofastly"
 
-domain {
-name    = "demo.notexample.com"
-comment = "demo"
-}
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
 
-backend {
-address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-name    = "AWS S3 hosting"
-port    = 80
-}
+  backend {
+    address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
+    name    = "AWS S3 hosting"
+    port    = 80
+  }
 
-header {
-destination = "http.x-amz-request-id"
-type        = "cache"
-action      = "delete"
-name        = "remove x-amz-request-id"
-}
+  header {
+    destination = "http.x-amz-request-id"
+    type        = "cache"
+    action      = "delete"
+    name        = "remove x-amz-request-id"
+  }
 
-gzip {
-name          = "file extensions and content types"
-extensions    = ["css", "js"]
-content_types = ["text/html", "text/css"]
-}
+  gzip {
+    name          = "file extensions and content types"
+    extensions    = ["css", "js"]
+    content_types = ["text/html", "text/css"]
+  }
 
-default_host = "${aws_s3_bucket.website.name}.s3-website-us-west-2.amazonaws.com"
+  default_host = "${aws_s3_bucket.website.name}.s3-website-us-west-2.amazonaws.com"
 
-force_destroy = true
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "website" {
-bucket = "demo.notexample.com"
-acl    = "public-read"
+  bucket = "demo.notexample.com"
+  acl    = "public-read"
 
-website {
-index_document = "index.html"
-error_document = "error.html"
-}
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
 }
 ```
 
@@ -90,31 +90,31 @@ VCL](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/):
 
 ```hcl
 resource "fastly_service_v1" "demo" {
-name = "demofastly"
+  name = "demofastly"
 
-domain {
-name    = "demo.notexample.com"
-comment = "demo"
-}
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
 
-backend {
-address = "127.0.0.1"
-name    = "localhost"
-port    = 80
-}
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+    port    = 80
+  }
 
-force_destroy = true
+  force_destroy = true
 
-vcl {
-name    = "my_custom_main_vcl"
-content = "${file("${path.module}/my_custom_main.vcl")}"
-main    = true
-}
+  vcl {
+    name    = "my_custom_main_vcl"
+    content = "${file("${path.module}/my_custom_main.vcl")}"
+    main    = true
+  }
 
-vcl {
-name    = "my_custom_library_vcl"
-content = "${file("${path.module}/my_custom_library.vcl")}"
-}
+  vcl {
+    name    = "my_custom_library_vcl"
+    content = "${file("${path.module}/my_custom_library.vcl")}"
+  }
 }
 ```
 
@@ -122,40 +122,40 @@ Basic usage with [custom Director](https://developer.fastly.com/reference/api/lo
 
 ```hcl
 resource "fastly_service_v1" "demo" {
-name = "demofastly"
+  name = "demofastly"
 
-domain {
-name    = "demo.notexample.com"
-comment = "demo"
-}
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
 
-backend {
-address = "127.0.0.1"
-name    = "origin1"
-port    = 80
-}
+  backend {
+    address = "127.0.0.1"
+    name    = "origin1"
+    port    = 80
+  }
 
-backend {
-address = "127.0.0.2"
-name    = "origin2"
-port    = 80
-}
+  backend {
+    address = "127.0.0.2"
+    name    = "origin2"
+    port    = 80
+  }
 
-director {
-name = "mydirector"
-quorum = 0
-type = 3
-backends = [ "origin1", "origin2" ]
-}
+  director {
+    name = "mydirector"
+    quorum = 0
+    type = 3
+    backends = [ "origin1", "origin2" ]
+  }
 
-force_destroy = true
+  force_destroy = true
 }
 ```
 
 -> **Note:** For an AWS S3 Bucket, the Backend address is
 `<domain>.s3-website-<region>.amazonaws.com`. The `default_host` attribute
-    should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
-        Fastly documentation on [Amazon S3][fastly-s3].
+should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
+Fastly documentation on [Amazon S3][fastly-s3].
 
 ## Argument Reference
 

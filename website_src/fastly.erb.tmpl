@@ -23,10 +23,10 @@
                     <a href="#">Resources</a>
 
                     <ul class="nav nav-visible">
-                       {{range .Menu}}<li<%= sidebar_current("{{.Lookup}}") %>>
+                        {{range .Menu}}<li<%= sidebar_current("{{.Lookup}}") %>>
                             <a href="{{.Link}}">{{.Title}}</a>
-                       </li>
-                       {{end}}
+                        </li>
+                        {{end}}
                     </ul>
 
                 </li>

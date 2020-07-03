@@ -161,9 +161,6 @@ force_destroy = true
 
 The following arguments are supported:
 
-* `activate` - (Optional) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to false. Default true.
-
-
 * `name` - (Required) The unique name for the Service to create.
 
 
@@ -173,27 +170,12 @@ The following arguments are supported:
 * `version_comment` - (Optional) Description field for the version.
 
 
-* `domain` - (Required) A set of Domain names to serve as entry points for your Service. Defined below.
+* `activate` - (Optional) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to false. Default true.
 
 
-* `backend` - (Optional) A set of Backends to service requests from your Domains.
-Defined below. Backends must be defined in this argument, or defined in the `vcl` argument below
+* `force_destroy` - (Optional) Services that are active cannot be destroyed. In
+order to destroy the Service, set `force_destroy` to `true`. Default `false`.
 
-
-* `condition` - (Optional) A set of conditions to add logic to any basic configuration object in this service. Defined below.
-
-
-* `cache_setting` - (Optional) A set of Cache Settings, allowing you to override
-
-
-* `director` - (Optional) A director to allow more control over balancing traffic over backends.
-when an item is not to be cached based on an above `condition`. Defined below
-
-
-* `header` - (Optional) A set of Headers to manipulate for each request. Defined below.
-
-
-* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
 
 
 * `default_host` - (Optional) The default hostname.
@@ -202,42 +184,55 @@ when an item is not to be cached based on an above `condition`. Defined below
 * `default_ttl` - (Optional) The default Time-to-live (TTL) for requests.
 
 
-* `force_destroy` - (Optional) Services that are active cannot be destroyed. In
-order to destroy the Service, set `force_destroy` to `true`. Default `false`.
+
+* `domain` - (Required) A set of Domain names to serve as entry points for your Service. Defined below.
+
+
+* `backend` - (Optional) A set of Backends to service requests from your Domains.
+Defined below. Backends must be defined in this argument, or defined in the `vcl` argument below
+
+
+* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
+
+
+
+* `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
+
+
+* `cache_setting` - (Optional) A set of Cache Settings, allowing you to override
+
+
+* `condition` - (Optional) A set of conditions to add logic to any basic configuration object in this service. Defined below.
+
+
+* `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
+
+
+* `director` - (Optional) A director to allow more control over balancing traffic over backends.
+when an item is not to be cached based on an above `condition`. Defined below
+
+
+* `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
+
+
+* `gzip` - (Required) A set of gzip rules to control automatic gzipping of
+content. Defined below.
 
 
 * `request_setting` - (Optional) A set of Request modifiers. Defined below
 
 
-* `s3logging` - (Optional) A set of S3 Buckets to send streaming logs too.
-Defined below.
+* `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 
 
-* `papertrail` - (Optional) A Papertrail endpoint to send streaming logs too.
-Defined below.
+* `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
 
 
-* `sumologic` - (Optional) A Sumologic endpoint to send streaming logs too.
-Defined below.
+* `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
 
-
-* `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
-Defined below.
 
 
 * `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
-Defined below.
-
-
-* `syslog` - (Optional) A syslog endpoint to send streaming logs too.
-Defined below.
-
-
-* `logentries` - (Optional) A logentries endpoint to send streaming logs too.
-Defined below.
-
-
-* `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
 Defined below.
 
 
@@ -245,7 +240,40 @@ Defined below.
 Defined below.
 
 
+* `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
+Defined below.
+
+
 * `httpslogging` - (Optional) An HTTPS endpoint to send streaming logs to.
+Defined below.
+
+
+* `papertrail` - (Optional) A Papertrail endpoint to send streaming logs too.
+Defined below.
+
+
+* `s3logging` - (Optional) A set of S3 Buckets to send streaming logs too.
+Defined below.
+
+
+* `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
+Defined below.
+
+
+* `sumologic` - (Optional) A Sumologic endpoint to send streaming logs too.
+Defined below.
+
+
+
+* `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
+Defined below.
+
+
+* `logging_datadog` - (Optional) A Datadog endpoint to send streaming logs to.
+Defined below.
+
+
+* `logging_digitalocean` - (Optional) A DigitalOcean Spaces endpoint to send streaming logs to.
 Defined below.
 
 
@@ -257,35 +285,7 @@ Defined below.
 Defined below.
 
 
-* `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
-Defined below.
-
-
-* `logging_datadog` - (Optional) A Datadog endpoint to send streaming logs to.
-Defined below.
-
-
-* `logging_loggly` - (Optional) A Loggly endpoint to send streaming logs to.
-Defined below.
-
-
-* `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
-Defined below.
-
-
-* `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
-Defined below.
-
-
 * `logging_googlepubsub` - (Optional) A Google Cloud Pub/Sub endpoint to send streaming logs to.
-Defined below.
-
-
-* `logging_kafka` - (Optional) A Kafka endpoint to send streaming logs to.
-Defined below.
-
-
-* `logging_heroku` - (Optional) A Heroku endpoint to send streaming logs to.
 Defined below.
 
 
@@ -293,7 +293,23 @@ Defined below.
 Defined below.
 
 
+* `logging_heroku` - (Optional) A Heroku endpoint to send streaming logs to.
+Defined below.
+
+
+* `logging_kafka` - (Optional) A Kafka endpoint to send streaming logs to.
+Defined below.
+
+
+* `logging_loggly` - (Optional) A Loggly endpoint to send streaming logs to.
+Defined below.
+
+
 * `logging_logshuttle` - (Optional) A Log Shuttle endpoint to send streaming logs to.
+Defined below.
+
+
+* `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
 Defined below.
 
 
@@ -301,30 +317,13 @@ Defined below.
 Defined below.
 
 
-* `logging_digitalocean` - (Optional) A DigitalOcean Spaces endpoint to send streaming logs to.
+* `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
 Defined below.
 
 
-* `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
+* `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
 Defined below.
 
-
-* `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
-
-
-* `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.  Defined below.
-
-
-* `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.  Defined below.
-
-
-* `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
-
-
-* `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
-
-
-* `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
 
 
 
@@ -368,6 +367,36 @@ Default `200`.
 * `healthcheck` - (Optional) Name of a defined `healthcheck` to assign to this backend.
 
 
+The `healthcheck` block supports:
+
+* `name` - (Required) A unique name to identify this Healthcheck.
+* `host` - (Required) The Host header to send for this Healthcheck.
+* `path` - (Required) The path to check.
+* `check_interval` - (Optional) How often to run the Healthcheck in milliseconds. Default `5000`.
+* `expected_response` - (Optional) The status code expected from the host. Default `200`.
+* `http_version` - (Optional) Whether to use version 1.0 or 1.1 HTTP. Default `1.1`.
+* `initial` - (Optional) When loading a config, the initial number of probes to be seen as OK. Default `2`.
+* `method` - (Optional) Which HTTP method to use. Default `HEAD`.
+* `threshold` - (Optional) How many Healthchecks must succeed to be considered healthy. Default `3`.
+* `timeout` - (Optional) Timeout in milliseconds. Default `500`.
+* `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
+
+
+
+The `acl` block supports:
+
+* `name` - (Required) A unique name to identify this ACL.
+
+
+The `cache_setting` block supports:
+
+* `name` - (Required) Unique name for this Cache Setting.
+* `action` - (Optional) One of `cache`, `pass`, or `restart`, as defined on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions).
+* `cache_condition` - (Optional) Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`.
+* `stale_ttl` - (Optional) Max "Time To Live" for stale (unreachable) objects.
+* `ttl` - (Optional) The Time-To-Live (TTL) for the object.
+
+
 The `condition` block supports allows you to add logic to any basic configuration object in a service. See Fastly's documentation
 ["About Conditions"](https://docs.fastly.com/en/guides/about-conditions)
 for more detailed information on using Conditions. The Condition `name` can be
@@ -377,6 +406,15 @@ used in the `request_condition`, `response_condition`, or `cache_condition` attr
 * `statement` - (Required) The statement used to determine if the condition is met.
 * `type` - (Required) Type of condition, either `REQUEST` (req), `RESPONSE` (req, resp), or `CACHE` (req, beresp).
 * `priority` - (Optional) A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`.
+
+
+The `dictionary` block supports:
+
+* `name` - (Required) A unique name to identify this dictionary.
+* `write_only` - (Optional) If `true`, the dictionary is a private dictionary, and items are not readable in the UI or
+via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the
+dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if
+the items are managed outside of Terraform.
 
 
 The `director` block supports:
@@ -391,13 +429,11 @@ The `director` block supports:
 * `retries` - (Optional) How many backends to search if it fails. Default `5`.
 
 
-The `cache_setting` block supports:
+The `dynamicsnippet` block supports:
 
-* `name` - (Required) Unique name for this Cache Setting.
-* `action` - (Optional) One of `cache`, `pass`, or `restart`, as defined on Fastly's documentation under ["Caching action descriptions"](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions).
-* `cache_condition` - (Optional) Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`.
-* `stale_ttl` - (Optional) Max "Time To Live" for stale (unreachable) objects.
-* `ttl` - (Optional) The Time-To-Live (TTL) for the object.
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
+* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
 
 The `gzip` block supports:
@@ -406,21 +442,6 @@ The `gzip` block supports:
 * `content_types` - (Optional) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`.
 * `extensions` - (Optional) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`.
 * `cache_condition` - (Optional) Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
-
-
-The `healthcheck` block supports:
-
-* `name` - (Required) A unique name to identify this Healthcheck.
-* `host` - (Required) The Host header to send for this Healthcheck.
-* `path` - (Required) The path to check.
-* `check_interval` - (Optional) How often to run the Healthcheck in milliseconds. Default `5000`.
-* `expected_response` - (Optional) The status code expected from the host. Default `200`.
-* `http_version` - (Optional) Whether to use version 1.0 or 1.1 HTTP. Default `1.1`.
-* `initial` - (Optional) When loading a config, the initial number of probes to be seen as OK. Default `2`.
-* `method` - (Optional) Which HTTP method to use. Default `HEAD`.
-* `threshold` - (Optional) How many Healthchecks must succeed to be considered healthy. Default `3`.
-* `timeout` - (Optional) Timeout in milliseconds. Default `500`.
-* `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
 
 
 The `request_setting` block allow you to customize Fastly's request handling, by
@@ -438,6 +459,120 @@ defining behavior that should change based on a predefined `condition`:
 * `timer_support` - (Optional) Injects the X-Timer info into the request for viewing origin fetch durations.
 * `geo_headers` - (Optional) Injects Fastly-Geo-Country, Fastly-Geo-City, and Fastly-Geo-Region into the request headers.
 * `default_host` - (Optional) Sets the host header.
+
+
+The `response_object` block supports:
+
+* `name` - (Required) A unique name to identify this Response Object.
+* `status` - (Optional) The HTTP Status Code. Default `200`.
+* `response` - (Optional) The HTTP Response. Default `Ok`.
+* `content` - (Optional) The content to deliver for the response object.
+* `content_type` - (Optional) The MIME type of the content.
+* `request_condition` - (Optional) Name of already defined `condition` to be checked during the request phase. If the condition passes then this object will be delivered. This `condition` must be of type `REQUEST`.
+* `cache_condition` - (Optional) Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals,
+see [Fastly's Documentation on Conditionals][fastly-conditionals].
+
+
+The `snippet` block supports:
+
+* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
+* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
+* `content` (Required) The VCL code that specifies exactly what the snippet does.
+* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
+
+
+The `vcl` block supports:
+
+* `name` - (Required) A unique name for this configuration block.
+* `content` - (Required) The custom VCL code to upload.
+* `main` - (Optional) If `true`, use this block as the main configuration. If
+`false`, use this block as an includable library. Only a single VCL block can be
+marked as the main block. Default is `false`.
+
+
+
+The `bigquerylogging` block supports:
+
+* `name` - (Required) A unique name to identify this BigQuery logging endpoint.
+* `project_id` - (Required) The ID of your GCP project.
+* `dataset` - (Required) The ID of your BigQuery dataset.
+* `table` - (Required) The ID of your BigQuery table.
+* `email` - (Optional) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable.
+* `secret_key` - (Optional) The secret key associated with the sservice account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines.
+* `format` - (Optional) Apache style log formatting. Must produce JSON that matches the schema of your BigQuery table.
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `template` - (Optional) Big query table name suffix template. If set will be interpreted as a strftime compatible string and used as the [Template Suffix for your table](https://cloud.google.com/bigquery/streaming-data-into-bigquery#template-tables).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
+
+
+The `blobstoragelogging` block supports:
+
+* `name` - (Required) A unique name to identify the Azure Blob Storage endpoint.
+* `account_name` - (Required) The unique Azure Blob Storage namespace in which your data objects are stored.
+* `container` - (Required) The name of the Azure Blob Storage container in which to store logs.
+* `sas_token` - (Required) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work.
+* `path` - (Optional) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path.
+* `period` - (Optional) How frequently the logs should be transferred in seconds. Default `3600`.
+* `timestamp_format` - (Optional) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`.
+* `gzip_level` - (Optional) Level of Gzip compression from `0`to `9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`.
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `message_type` - (Optional) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Default `%h %l %u %t \"%r\" %>s %b`.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed, overriding any `format_version` default. Can be either `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+
+The `gcslogging` block supports:
+
+* `name` - (Required) A unique name to identify this GCS endpoint.
+* `email` - (Required) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`.
+* `bucket_name` - (Required) The name of the bucket in which to store the logs.
+* `secret_key` - (Required) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required.
+* `path` - (Optional) Path to store the files. Must end with a trailing slash.
+If this field is left empty, the files will be saved in the bucket's root path.
+* `period` - (Optional) How frequently the logs should be transferred, in
+seconds. Default `3600`.
+* `gzip_level` - (Optional) Level of Gzip compression, from `0-9`. `0` is no
+compression. `1` is fastest and least compressed, `9` is slowest and most
+compressed. Default `0`.
+* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
+
+
+The `httpslogging` block supports:
+
+* `name` - (Required) The unique name of the HTTPS logging endpoint.
+* `url` - (Required) URL that log data will be sent to. Must use the https protocol.
+* `request_max_entries` - (Optional) The maximum number of logs sent in one request.
+* `request_max_bytes` - (Optional) The maximum number of bytes sent in one request.
+* `content_type` - (Optional) Value of the `Content-Type` header sent with the request.
+* `header_name` - (Optional) Custom header sent with the request.
+* `header_value` - (Optional) Value of the custom header sent with the request.
+* `method` - (Optional) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`.
+* `json_format` - Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`).
+* `tls_hostname` - (Optional) Used during the TLS handshake to validate the certificate.
+* `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format.
+* `tls_client_cert` - (Optional) The client certificate used to make authenticated requests. Must be in PEM format.
+* `tls_client_key` - (Optional) The client private key used to make authenticated requests. Must be in PEM format.
+* `message_type` - How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `blank`.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+
+The `papertrail` block supports:
+
+* `name` - (Required) A unique name to identify this Papertrail endpoint.
+* `address` - (Required) The address of the Papertrail endpoint.
+* `port` - (Required) The port associated with the address where the Papertrail endpoint can be accessed.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
+see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 
 The `s3logging` block supports:
@@ -472,61 +607,6 @@ see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 
-The `papertrail` block supports:
-
-* `name` - (Required) A unique name to identify this Papertrail endpoint.
-* `address` - (Required) The address of the Papertrail endpoint.
-* `port` - (Required) The port associated with the address where the Papertrail endpoint can be accessed.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
-* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
-see [Fastly's Documentation on Conditionals][fastly-conditionals].
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
-
-
-The `sumologic` block supports:
-
-* `name` - (Required) A unique name to identify this Sumologic endpoint.
-* `url` - (Required) The URL to Sumologic collector endpoint
-* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic][fastly-sumologic]
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
-* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
-
-
-The `gcslogging` block supports:
-
-* `name` - (Required) A unique name to identify this GCS endpoint.
-* `email` - (Required) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`.
-* `bucket_name` - (Required) The name of the bucket in which to store the logs.
-* `secret_key` - (Required) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required.
-* `path` - (Optional) Path to store the files. Must end with a trailing slash.
-If this field is left empty, the files will be saved in the bucket's root path.
-* `period` - (Optional) How frequently the logs should be transferred, in
-seconds. Default `3600`.
-* `gzip_level` - (Optional) Level of Gzip compression, from `0-9`. `0` is no
-compression. `1` is fastest and least compressed, `9` is slowest and most
-compressed. Default `0`.
-* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
-* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
-
-
-The `bigquerylogging` block supports:
-
-* `name` - (Required) A unique name to identify this BigQuery logging endpoint.
-* `project_id` - (Required) The ID of your GCP project.
-* `dataset` - (Required) The ID of your BigQuery dataset.
-* `table` - (Required) The ID of your BigQuery table.
-* `email` - (Optional) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable.
-* `secret_key` - (Optional) The secret key associated with the sservice account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines.
-* `format` - (Optional) Apache style log formatting. Must produce JSON that matches the schema of your BigQuery table.
-* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
-* `template` - (Optional) Big query table name suffix template. If set will be interpreted as a strftime compatible string and used as the [Template Suffix for your table](https://cloud.google.com/bigquery/streaming-data-into-bigquery#template-tables).
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
-
-
 The `splunk` block supports:
 
 * `name` - (Required) A unique name to identify the Splunk endpoint.
@@ -540,44 +620,65 @@ The `splunk` block supports:
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
 
-The `httpslogging` block supports:
+The `sumologic` block supports:
 
-* `name` - (Required) The unique name of the HTTPS logging endpoint.
-* `url` - (Required) URL that log data will be sent to. Must use the https protocol.
-* `request_max_entries` - (Optional) The maximum number of logs sent in one request.
-* `request_max_bytes` - (Optional) The maximum number of bytes sent in one request.
-* `content_type` - (Optional) Value of the `Content-Type` header sent with the request.
-* `header_name` - (Optional) Custom header sent with the request.
-* `header_value` - (Optional) Value of the custom header sent with the request.
-* `method` - (Optional) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`.
-* `json_format` - Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`).
-* `tls_hostname` - (Optional) Used during the TLS handshake to validate the certificate.
-* `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format.
-* `tls_client_cert` - (Optional) The client certificate used to make authenticated requests. Must be in PEM format.
-* `tls_client_key` - (Optional) The client private key used to make authenticated requests. Must be in PEM format.
-* `message_type` - How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `blank`.
+* `name` - (Required) A unique name to identify this Sumologic endpoint.
+* `url` - (Required) The URL to Sumologic collector endpoint
+* `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic][fastly-sumologic]
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Defaults to Apache Common Log format (`%h %l %u %t %r %>s`)
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either 1 (the default, version 1 log format) or 2 (the version 2 log format).
+* `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
+
+
+
+The `logging_cloudfiles` block supports:
+
+* `name` - (Required) The unique name of the Rackspace Cloud Files logging endpoint.
+* `user` - (Required) The username for your Cloud Files account.
+* `bucket_name` - (Required) The name of your Cloud Files container.
+* `access_key` - (Required) Your Cloud File account access key.
+* `public_key` - (Optional) The PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `gzip_level` - (Optional) What level of GZIP encoding to have when dumping logs (default 0, no compression).
+* `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
+* `path` - (Optional) The path to upload logs to.
+* `region` - (Optional) The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong).
+* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default 3600).
+* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `format` - (Optional) Apache style log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
+
+The `logging_datadog` block supports:
+
+* `name` - (Required) The unique name of the Datadog logging endpoint.
+* `token` - (Required) The API key from your Datadog account.
+* `region` - (Optional) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
-* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+* `response_condition` - (Optional) The name of the condition to apply.
 
 
-The `blobstoragelogging` block supports:
+The `logging_digitalocean` block supports:
 
-* `name` - (Required) A unique name to identify the Azure Blob Storage endpoint.
-* `account_name` - (Required) The unique Azure Blob Storage namespace in which your data objects are stored.
-* `container` - (Required) The name of the Azure Blob Storage container in which to store logs.
-* `sas_token` - (Required) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work.
-* `path` - (Optional) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path.
-* `period` - (Optional) How frequently the logs should be transferred in seconds. Default `3600`.
-* `timestamp_format` - (Optional) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`.
-* `gzip_level` - (Optional) Level of Gzip compression from `0`to `9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`.
+* `name` - (Required) The unique name of the DigitalOcean Spaces logging endpoint.
+* `bucket_name` - (Required) The name of the DigitalOcean Space.
+* `access_key` - (Required) Your DigitalOcean Spaces account access key.
+* `secret_key` - (Required) Your DigitalOcean Spaces account secret key.
 * `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
-* `message_type` - (Optional) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Default `%h %l %u %t \"%r\" %>s %b`.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed, overriding any `format_version` default. Can be either `none` or `waf_debug`.
-* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+* `domain` - (Optional) The domain of the DigitalOcean Spaces endpoint (default "nyc3.digitaloceanspaces.com").
+* `path` - (Optional) The path to upload logs to.
+* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default 3600).
+* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
+* `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 
 The `logging_elasticsearch` block supports:
@@ -618,69 +719,6 @@ The `logging_ftp` block supports:
 * `response_condition` - (Optional) The name of the condition to apply.
 
 
-The `logging_sftp` block supports:
-
-* `name` - (Required) The unique name of the SFTP logging endpoint.
-* `address` - (Required) The SFTP address to stream logs to.
-* `path` - (Required) The path to upload log files to. If the path ends in / then it is treated as a directory.
-* `ssh_known_hosts` - (Required) A list of host keys for all hosts we can connect to over SFTP.
-* `user` - (Required) The username for the server.
-* `port` - (Optional) The port the SFTP service listens on. (Default: `22`).
-* `password` - (Optional) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
-* `secret_key` - (Optional) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
-* `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
-* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`).
-* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
-* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
-* `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-* `response_condition` - (Optional) The name of the condition to apply.
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
-
-
-The `logging_datadog` block supports:
-
-* `name` - (Required) The unique name of the Datadog logging endpoint.
-* `token` - (Required) The API key from your Datadog account.
-* `region` - (Optional) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
-* `response_condition` - (Optional) The name of the condition to apply.
-
-
-The `logging_loggly` block supports:
-
-* `name` - (Required) The unique name of the Loggly logging endpoint.
-* `token` - (Required) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
-* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-
-
-The `logging_newrelic` block supports:
-
-* `name` - (Required) The unique name of the New Relic logging endpoint.
-* `token` - (Required) The Insert API key from the Account page of your New Relic account.
-* `format` - (Optional) Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
-* `response_condition` - (Optional) The name of the condition to apply.
-
-
-The `logging_scalyr` block supports:
-
-* `name` - (Required) The unique name of the Scalyr logging endpoint.
-* `token` - (Required) The token to use for authentication (https://www.scalyr.com/keys).
-* `region` - (Optional) The region that log data will be sent to. One of US or EU. Defaults to US if undefined.
-* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
-* `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
-
-
 The `logging_googlepubsub` block supports:
 
 * `name` - (Required) The unique name of the Google Cloud Pub/Sub logging endpoint.
@@ -692,6 +730,28 @@ The `logging_googlepubsub` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
 * `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+
+The `logging_honeycomb` block supports:
+
+* `name` - (Required) The unique name of the Honeycomb logging endpoint.
+* `dataset` - (Required) The Honeycomb Dataset you want to log to.
+* `token` - (Required) The Write Key from the Account page of your Honeycomb account.
+* `format` - (Optional) Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
+
+The `logging_heroku` block supports:
+
+* `name` - (Required) The unique name of the Heroku logging endpoint.
+* `token` - (Required) The token to use for authentication (https://devcenter.heroku.com/articles/add-on-partner-log-integration).
+* `url` - (Required) The url to stream logs to.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 
 The `logging_kafka` block supports:
@@ -712,23 +772,11 @@ The `logging_kafka` block supports:
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
 
-The `logging_heroku` block supports:
+The `logging_loggly` block supports:
 
-* `name` - (Required) The unique name of the Heroku logging endpoint.
-* `token` - (Required) The token to use for authentication (https://devcenter.heroku.com/articles/add-on-partner-log-integration).
-* `url` - (Required) The url to stream logs to.
+* `name` - (Required) The unique name of the Loggly logging endpoint.
+* `token` - (Required) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
-* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-
-
-The `logging_honeycomb` block supports:
-
-* `name` - (Required) The unique name of the Honeycomb logging endpoint.
-* `dataset` - (Required) The Honeycomb Dataset you want to log to.
-* `token` - (Required) The Write Key from the Account page of your Honeycomb account.
-* `format` - (Optional) Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
@@ -743,6 +791,16 @@ The `logging_logshuttle` block supports:
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
+
+The `logging_newrelic` block supports:
+
+* `name` - (Required) The unique name of the New Relic logging endpoint.
+* `token` - (Required) The Insert API key from the Account page of your New Relic account.
+* `format` - (Optional) Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
+* `response_condition` - (Optional) The name of the condition to apply.
 
 
 The `logging_openstack` block supports:
@@ -766,93 +824,36 @@ seconds. Default `3600`.
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
 
-The `logging_digitalocean` block supports:
+The `logging_scalyr` block supports:
 
-* `name` - (Required) The unique name of the DigitalOcean Spaces logging endpoint.
-* `bucket_name` - (Required) The name of the DigitalOcean Space.
-* `access_key` - (Required) Your DigitalOcean Spaces account access key.
-* `secret_key` - (Required) Your DigitalOcean Spaces account secret key.
-* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
-* `domain` - (Optional) The domain of the DigitalOcean Spaces endpoint (default "nyc3.digitaloceanspaces.com").
-* `path` - (Optional) The path to upload logs to.
-* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default 3600).
-* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `name` - (Required) The unique name of the Scalyr logging endpoint.
+* `token` - (Required) The token to use for authentication (https://www.scalyr.com/keys).
+* `region` - (Optional) The region that log data will be sent to. One of US or EU. Defaults to US if undefined.
+* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
+
+
+The `logging_sftp` block supports:
+
+* `name` - (Required) The unique name of the SFTP logging endpoint.
+* `address` - (Required) The SFTP address to stream logs to.
+* `path` - (Required) The path to upload log files to. If the path ends in / then it is treated as a directory.
+* `ssh_known_hosts` - (Required) A list of host keys for all hosts we can connect to over SFTP.
+* `user` - (Required) The username for the server.
+* `port` - (Optional) The port the SFTP service listens on. (Default: `22`).
+* `password` - (Optional) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
+* `secret_key` - (Optional) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
 * `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
+* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`).
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
 * `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
 * `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
 * `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
-* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-
-
-The `logging_cloudfiles` block supports:
-
-* `name` - (Required) The unique name of the Rackspace Cloud Files logging endpoint.
-* `user` - (Required) The username for your Cloud Files account.
-* `bucket_name` - (Required) The name of your Cloud Files container.
-* `access_key` - (Required) Your Cloud File account access key.
-* `public_key` - (Optional) The PGP public key that Fastly will use to encrypt your log files before writing them to disk.
-* `gzip_level` - (Optional) What level of GZIP encoding to have when dumping logs (default 0, no compression).
-* `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
-* `path` - (Optional) The path to upload logs to.
-* `region` - (Optional) The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong).
-* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default 3600).
-* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
-* `format` - (Optional) Apache style log formatting.
-* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
-* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-
-
-The `response_object` block supports:
-
-* `name` - (Required) A unique name to identify this Response Object.
-* `status` - (Optional) The HTTP Status Code. Default `200`.
-* `response` - (Optional) The HTTP Response. Default `Ok`.
-* `content` - (Optional) The content to deliver for the response object.
-* `content_type` - (Optional) The MIME type of the content.
-* `request_condition` - (Optional) Name of already defined `condition` to be checked during the request phase. If the condition passes then this object will be delivered. This `condition` must be of type `REQUEST`.
-* `cache_condition` - (Optional) Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals,
-see [Fastly's Documentation on Conditionals][fastly-conditionals].
-
-
-The `snippet` block supports:
-
-* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
-* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
-* `content` (Required) The VCL code that specifies exactly what the snippet does.
-* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
-
-
-The `dynamicsnippet` block supports:
-
-* `name` - (Required) A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks.
-* `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
-* `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
-
-
-The `vcl` block supports:
-
-* `name` - (Required) A unique name for this configuration block.
-* `content` - (Required) The custom VCL code to upload.
-* `main` - (Optional) If `true`, use this block as the main configuration. If
-`false`, use this block as an includable library. Only a single VCL block can be
-marked as the main block. Default is `false`.
-
-
-The `acl` block supports:
-
-* `name` - (Required) A unique name to identify this ACL.
-
-
-The `dictionary` block supports:
-
-* `name` - (Required) A unique name to identify this dictionary.
-* `write_only` - (Optional) If `true`, the dictionary is a private dictionary, and items are not readable in the UI or
-via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the
-dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if
-the items are managed outside of Terraform.
-
+* `response_condition` - (Optional) The name of the condition to apply.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 
 
 ## Attributes Reference
@@ -863,17 +864,21 @@ In addition to the arguments listed above, the following attributes are exported
 * `active_version` – The currently active version of your Fastly Service.
 * `cloned_version` - The latest cloned version by the provider. The value gets only set after running `terraform apply`.
 
+
 The `dynamicsnippet` block exports:
 
 * `snippet_id` - The ID of the dynamic snippet.
+
 
 The `acl` block exports:
 
 * `acl_id` - The ID of the ACL.
 
+
 The `dictionary` block exports:
 
 * `dictionary_id` - The ID of the dictionary.
+
 
 [fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
 [fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
@@ -888,3 +893,4 @@ Fastly Service can be imported using their service ID, e.g.
 ```
 $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 ```
+

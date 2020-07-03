@@ -3,7 +3,7 @@ layout: "fastly"
 page_title: "Fastly: service_compute"
 sidebar_current: "docs-fastly-resource-service-compute"
 description: |-
-  Provides an Fastly Service
+  Provides an Fastly Compute Service
 ---
 
 # fastly_service_compute
@@ -165,95 +165,65 @@ The following arguments are supported:
 {{ template "version_comment" . }}
 {{ template "activate" . }}
 {{ template "force_destroy" . }}
+
 {{ template "domain" . }}
 {{ template "backend" . }}
 {{ template "healthcheck" . }}
-{{ template "s3logging" . }}
-{{ template "papertrail" . }}
-{{ template "sumologic" . }}
-{{ template "gcslogging" . }}
+
 {{ template "bigquerylogging" . }}
-{{ template "syslog" . }}
-{{ template "logentries" . }}
-{{ template "splunk" . }}
 {{ template "blobstoragelogging" . }}
+{{ template "gcslogging" . }}
 {{ template "httpslogging" . }}
+{{ template "papertrail" . }}
+{{ template "s3logging" . }}
+{{ template "splunk" . }}
+{{ template "sumologic" . }}
+
+{{ template "logging_cloudfiles" . }}
+{{ template "logging_datadog" . }}
+{{ template "logging_digitalocean" . }}
 {{ template "logging_elasticsearch" . }}
 {{ template "logging_ftp" . }}
-{{ template "logging_sftp" . }}
-{{ template "logging_datadog" . }}
-{{ template "logging_loggly" . }}
-{{ template "logging_newrelic" . }}
-{{ template "logging_scalyr" . }}
 {{ template "logging_googlepubsub" . }}
-{{ template "logging_kafka" . }}
-{{ template "logging_heroku" . }}
 {{ template "logging_honeycomb" . }}
+{{ template "logging_heroku" . }}
+{{ template "logging_kafka" . }}
+{{ template "logging_loggly" . }}
 {{ template "logging_logshuttle" . }}
+{{ template "logging_newrelic" . }}
 {{ template "logging_openstack" . }}
-{{ template "logging_digitalocean" . }}
-{{ template "logging_cloudfiles" . }}
-
+{{ template "logging_scalyr" . }}
+{{ template "logging_sftp" . }}
 
 {{ template "domain_block" . }}
 {{ template "backend_block" . }}
 {{ template "healthcheck_block" . }}
-{{ template "s3logging_block" . }}
-{{ template "papertrail_block" . }}
-{{ template "sumologic_block" . }}
-{{ template "gcslogging_block" . }}
+
 {{ template "bigquerylogging_block" . }}
-{{ template "splunk_block" . }}
-{{ template "httpslogging_block" . }}
 {{ template "blobstoragelogging_block" . }}
+{{ template "gcslogging_block" . }}
+{{ template "httpslogging_block" . }}
+{{ template "papertrail_block" . }}
+{{ template "s3logging_block" . }}
+{{ template "splunk_block" . }}
+{{ template "sumologic_block" . }}
+
+{{ template "logging_cloudfiles_block" . }}
+{{ template "logging_datadog_block" . }}
+{{ template "logging_digitalocean_block" . }}
 {{ template "logging_elasticsearch_block" . }}
 {{ template "logging_ftp_block" . }}
-{{ template "logging_sftp_block" . }}
-{{ template "logging_datadog_block" . }}
-{{ template "logging_loggly_block" . }}
-{{ template "logging_newrelic_block" . }}
-{{ template "logging_scalyr_block" . }}
 {{ template "logging_googlepubsub_block" . }}
-{{ template "logging_kafka_block" . }}
-{{ template "logging_heroku_block" . }}
 {{ template "logging_honeycomb_block" . }}
+{{ template "logging_heroku_block" . }}
+{{ template "logging_kafka_block" . }}
+{{ template "logging_loggly_block" . }}
 {{ template "logging_logshuttle_block" . }}
+{{ template "logging_newrelic_block" . }}
 {{ template "logging_openstack_block" . }}
-{{ template "logging_digitalocean_block" . }}
-{{ template "logging_cloudfiles_block" . }}
+{{ template "logging_scalyr_block" . }}
+{{ template "logging_sftp_block" . }}
 
-
-## Attributes Reference
-
-In addition to the arguments listed above, the following attributes are exported:
-
-* `id` – The ID of the Service.
-* `active_version` – The currently active version of your Fastly Service.
-* `cloned_version` - The latest cloned version by the provider. The value gets only set after running `terraform apply`.
-
-The `dynamicsnippet` block exports:
-
-* `snippet_id` - The ID of the dynamic snippet.
-
-The `acl` block exports:
-
-* `acl_id` - The ID of the ACL.
-
-The `dictionary` block exports:
-
-* `dictionary_id` - The ID of the dictionary.
-
-[fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
-[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
-[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
-[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
-[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
-
-## Import
-
-Fastly Service can be imported using their service ID, e.g.
-
-```
-$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
-```
+{{ template "export_intro" .}}
+{{ template "footer" .}}
 {{end}}

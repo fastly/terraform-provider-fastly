@@ -11,3 +11,9 @@ via API. Default is `false`. It is important to note that changing this attribut
 dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if
 the items are managed outside of Terraform.
 {{end}}
+
+{{define "dictionary_export"}}
+The `dictionary` block exports:
+
+* `dictionary_id` - The ID of the dictionary.
+{{end}}

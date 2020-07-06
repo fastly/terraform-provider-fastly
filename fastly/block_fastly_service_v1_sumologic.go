@@ -59,14 +59,7 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	for _, pRaw := range addSumologic {
 		sf := pRaw.(map[string]interface{})
 
-		var vla = NewVCLLoggingAttributes()
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			vla.format = sf["format"].(string)
-			vla.formatVersion = uint(sf["format_version"].(int))
-			vla.placement = sf["placement"].(string)
-			vla.responseCondition = sf["response_condition"].(string)
-		}
-
+		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateSumologicInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

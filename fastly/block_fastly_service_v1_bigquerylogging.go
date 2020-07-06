@@ -73,13 +73,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 			continue
 		}
 
-		var vla = NewVCLLoggingAttributes()
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			vla.format = sf["format"].(string)
-			vla.placement = sf["placement"].(string)
-			vla.responseCondition = sf["response_condition"].(string)
-		}
-
+		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateBigQueryInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

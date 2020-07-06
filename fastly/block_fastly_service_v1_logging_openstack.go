@@ -161,14 +161,7 @@ func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]interfac
 func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
 	df := openstackMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateOpenstackInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

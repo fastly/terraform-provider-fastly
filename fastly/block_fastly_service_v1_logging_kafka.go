@@ -269,14 +269,7 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateKafkaInput {
 	df := kafkaMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateKafkaInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

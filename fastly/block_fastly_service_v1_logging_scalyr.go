@@ -197,14 +197,7 @@ func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]interface{} {
 func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {
 	df := scalyrMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateScalyrInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

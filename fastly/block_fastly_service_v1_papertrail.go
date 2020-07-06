@@ -59,13 +59,7 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range addPapertrail {
 		pf := pRaw.(map[string]interface{})
 
-		var vla = NewVCLLoggingAttributes()
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			vla.format = pf["format"].(string)
-			vla.placement = pf["placement"].(string)
-			vla.responseCondition = pf["response_condition"].(string)
-		}
-
+		var vla = h.getVCLLoggingAttributes(pf)
 		opts := gofastly.CreatePapertrailInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

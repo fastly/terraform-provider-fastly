@@ -80,10 +80,25 @@ type VCLLoggingAttributes struct {
 }
 
 // NewVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
-func NewVCLLoggingAttributes() VCLLoggingAttributes {
-	return VCLLoggingAttributes{
+func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]interface{}) VCLLoggingAttributes {
+	var vla = VCLLoggingAttributes{
 		placement: "none",
 	}
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+		if val, ok := data["format"]; ok {
+			vla.format = val.(string)
+		}
+		if val, ok := data["format_version"]; ok {
+			vla.formatVersion = uint(val.(int))
+		}
+		if val, ok := data["placement"]; ok {
+			vla.placement = val.(string)
+		}
+		if val, ok := data["response_condition"]; ok {
+			vla.responseCondition = val.(string)
+		}
+	}
+	return vla
 }
 
 // ServiceDefinition defines the data model for service definitions

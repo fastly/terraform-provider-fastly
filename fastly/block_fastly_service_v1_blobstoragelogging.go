@@ -74,14 +74,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 			continue
 		}
 
-		var vla = NewVCLLoggingAttributes()
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			vla.format = bslf["format"].(string)
-			vla.formatVersion = uint(bslf["format_version"].(int))
-			vla.placement = bslf["placement"].(string)
-			vla.responseCondition = bslf["response_condition"].(string)
-		}
-
+		var vla = h.getVCLLoggingAttributes(bslf)
 		opts := gofastly.CreateBlobStorageInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

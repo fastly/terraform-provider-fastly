@@ -138,14 +138,7 @@ func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]inter
 func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {
 	df := logshuttleMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateLogshuttleInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

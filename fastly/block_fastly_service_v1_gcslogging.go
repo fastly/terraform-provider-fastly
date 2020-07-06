@@ -58,13 +58,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 	// POST new/updated gcslogging
 	for _, pRaw := range addGcslogging {
 		sf := pRaw.(map[string]interface{})
-		var vla = NewVCLLoggingAttributes()
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			vla.format = sf["format"].(string)
-			vla.placement = sf["placement"].(string)
-			vla.responseCondition = sf["response_condition"].(string)
-		}
-
+		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateGCSInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

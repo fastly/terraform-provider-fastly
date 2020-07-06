@@ -291,14 +291,7 @@ func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]interface{} {
 func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
 	df := httpsMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateHTTPSInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

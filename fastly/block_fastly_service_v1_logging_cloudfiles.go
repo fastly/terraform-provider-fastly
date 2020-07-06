@@ -160,14 +160,7 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]inter
 func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
 	df := cloudfilesMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateCloudfilesInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

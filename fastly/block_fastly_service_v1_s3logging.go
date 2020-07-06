@@ -293,14 +293,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, servic
 		}
 	}
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateS3Input{
 		Service:                      serviceID,
 		Version:                      serviceVersion,

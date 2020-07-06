@@ -138,14 +138,7 @@ func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]interface{} {
 func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
 	df := herokuMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHerokuInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

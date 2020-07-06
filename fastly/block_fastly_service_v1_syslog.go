@@ -59,14 +59,7 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	for _, pRaw := range addSyslog {
 		slf := pRaw.(map[string]interface{})
 
-		var vla = NewVCLLoggingAttributes()
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			vla.format = slf["format"].(string)
-			vla.formatVersion = uint(slf["format_version"].(int))
-			vla.placement = slf["placement"].(string)
-			vla.responseCondition = slf["response_condition"].(string)
-		}
-
+		var vla = h.getVCLLoggingAttributes(slf)
 		opts := gofastly.CreateSyslogInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

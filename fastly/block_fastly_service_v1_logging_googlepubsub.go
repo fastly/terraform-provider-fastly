@@ -211,14 +211,7 @@ func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]inter
 func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
 	df := googlepubsubMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreatePubsubInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

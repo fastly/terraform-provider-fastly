@@ -266,14 +266,7 @@ func flattenFTP(ftpList []*gofastly.FTP) []map[string]interface{} {
 func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {
 	df := ftpMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateFTPInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

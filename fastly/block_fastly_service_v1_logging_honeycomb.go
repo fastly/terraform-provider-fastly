@@ -138,14 +138,7 @@ func flattenHoneycomb(honeycombList []*gofastly.Honeycomb) []map[string]interfac
 func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHoneycombInput {
 	df := honeycombMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHoneycombInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

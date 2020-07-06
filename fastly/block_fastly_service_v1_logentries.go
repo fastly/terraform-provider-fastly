@@ -59,14 +59,7 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range addLogentries {
 		slf := pRaw.(map[string]interface{})
 
-		var vla = NewVCLLoggingAttributes()
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			vla.format = slf["format"].(string)
-			vla.formatVersion = uint(slf["format_version"].(int))
-			vla.placement = slf["placement"].(string)
-			vla.responseCondition = slf["response_condition"].(string)
-		}
-
+		var vla = h.getVCLLoggingAttributes(slf)
 		opts := gofastly.CreateLogentriesInput{
 			Service:           d.Id(),
 			Version:           latestVersion,

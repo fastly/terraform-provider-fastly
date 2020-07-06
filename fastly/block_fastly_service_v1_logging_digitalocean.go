@@ -161,14 +161,7 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string
 func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDigitalOceanInput {
 	df := digitaloceanMap.(map[string]interface{})
 
-	var vla = NewVCLLoggingAttributes()
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		vla.format = df["format"].(string)
-		vla.formatVersion = uint(df["format_version"].(int))
-		vla.placement = df["placement"].(string)
-		vla.responseCondition = df["response_condition"].(string)
-	}
-
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateDigitalOceanInput{
 		Service:           serviceID,
 		Version:           serviceVersion,

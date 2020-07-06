@@ -12,15 +12,16 @@ type SplunkServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceSplunk() ServiceAttributeDefinition {
+func NewServiceSplunk(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &SplunkServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "splunk",
+			key:               "splunk",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -74,7 +75,7 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = sf["format"].(string)
 			vla.formatVersion = uint(sf["format_version"].(int))
 			vla.placement = sf["placement"].(string)
@@ -104,7 +105,7 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
 	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
 		Service: d.Id(),
@@ -123,7 +124,7 @@ func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	return nil
 }
 
-func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -157,7 +158,7 @@ func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource, serviceType
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

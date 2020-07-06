@@ -13,15 +13,16 @@ type S3LoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceS3Logging() ServiceAttributeDefinition {
+func NewServiceS3Logging(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &S3LoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "s3logging",
+			key:               "s3logging",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
 	os, ns := d.GetChange(h.GetKey())
@@ -39,7 +40,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	// DELETE old S3 Log configurations.
 	for _, sRaw := range removeS3Logging {
-		opts := buildDeleteS3(sRaw, serviceID, latestVersion)
+		opts := h.buildDelete(sRaw, serviceID, latestVersion)
 		err := deleteS3(conn, opts)
 		if err != nil {
 			return err
@@ -48,7 +49,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	// POST new/updated S3 Logging.
 	for _, sRaw := range addS3Logging {
-		opts, _ := buildCreateS3(sRaw, d.Id(), latestVersion, serviceType)
+		opts, _ := h.buildCreate(sRaw, d.Id(), latestVersion)
 
 		// @HACK for a TF SDK Issue.
 		//
@@ -72,7 +73,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh S3.
 	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
 	s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
@@ -92,7 +93,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	return nil
 }
 
-func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -181,7 +182,7 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource, serviceT
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -282,7 +283,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 	return sl
 }
 
-func buildCreateS3(s3Map interface{}, serviceID string, serviceVersion int, serviceType string) (*gofastly.CreateS3Input, error) {
+func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
 	df := s3Map.(map[string]interface{})
 	// The Fastly API will not error if these are omitted, so we throw an error
 	// if any of these are empty.
@@ -293,7 +294,7 @@ func buildCreateS3(s3Map interface{}, serviceID string, serviceVersion int, serv
 	}
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -340,7 +341,7 @@ func buildCreateS3(s3Map interface{}, serviceID string, serviceVersion int, serv
 	return &opts, nil
 }
 
-func buildDeleteS3(s3Map interface{}, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {
+func (h *S3LoggingServiceAttributeHandler) buildDelete(s3Map interface{}, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {
 	df := s3Map.(map[string]interface{})
 
 	return &gofastly.DeleteS3Input{

@@ -13,15 +13,16 @@ type HeaderServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceHeader() ServiceAttributeDefinition {
+func NewServiceHeader(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &HeaderServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "header",
+			key:               "header",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oh, nh := d.GetChange(h.GetKey())
 	if oh == nil {
 		oh = new(schema.Set)
@@ -76,7 +77,7 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *HeaderServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *HeaderServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
 	headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 		Service: d.Id(),
@@ -96,7 +97,7 @@ func (h *HeaderServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	return nil
 }
 
-func (h *HeaderServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *HeaderServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

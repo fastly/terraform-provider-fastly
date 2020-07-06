@@ -12,15 +12,16 @@ type BlobStorageLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceBlobStorageLogging() ServiceAttributeDefinition {
+func NewServiceBlobStorageLogging(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &BlobStorageLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "blobstoragelogging",
+			key:               "blobstoragelogging",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	obsl, nbsl := d.GetChange(h.GetKey())
 	if obsl == nil {
 		obsl = new(schema.Set)
@@ -74,7 +75,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 		}
 
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = bslf["format"].(string)
 			vla.formatVersion = uint(bslf["format_version"].(int))
 			vla.placement = bslf["placement"].(string)
@@ -109,7 +110,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 	return nil
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
 	blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
 		Service: d.Id(),
@@ -128,7 +129,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData,
 	return nil
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -193,7 +194,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource,
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

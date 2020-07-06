@@ -12,15 +12,16 @@ type DictionaryServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceDictionary() ServiceAttributeDefinition {
+func NewServiceDictionary(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &DictionaryServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "dictionary",
+			key:               "dictionary",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	oldDictVal, newDictVal := d.GetChange(h.GetKey())
 
 	if oldDictVal == nil {
@@ -75,7 +76,7 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
 	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
 		Service: d.Id(),
@@ -93,7 +94,7 @@ func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

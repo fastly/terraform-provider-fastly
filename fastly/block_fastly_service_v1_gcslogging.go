@@ -12,15 +12,16 @@ type GCSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceGCSLogging() ServiceAttributeDefinition {
+func NewServiceGCSLogging(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &GCSLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "gcslogging",
+			key:               "gcslogging",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -58,7 +59,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range addGcslogging {
 		sf := pRaw.(map[string]interface{})
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = sf["format"].(string)
 			vla.placement = sf["placement"].(string)
 			vla.responseCondition = sf["response_condition"].(string)
@@ -90,7 +91,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
 	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 		Service: d.Id(),
@@ -109,7 +110,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -168,7 +169,7 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource, service
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

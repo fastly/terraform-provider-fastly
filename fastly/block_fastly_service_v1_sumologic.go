@@ -12,15 +12,16 @@ type SumologicServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceSumologic() ServiceAttributeDefinition {
+func NewServiceSumologic(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &SumologicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "sumologic",
+			key:               "sumologic",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -59,7 +60,7 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		sf := pRaw.(map[string]interface{})
 
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = sf["format"].(string)
 			vla.formatVersion = uint(sf["format_version"].(int))
 			vla.placement = sf["placement"].(string)
@@ -87,7 +88,7 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
 		Service: d.Id(),
@@ -105,7 +106,7 @@ func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	return nil
 }
 
-func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -128,7 +129,7 @@ func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource, serviceT
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

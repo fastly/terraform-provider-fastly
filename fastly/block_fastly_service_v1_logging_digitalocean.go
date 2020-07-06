@@ -12,15 +12,16 @@ type DigitalOceanServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingDigitalOcean() ServiceAttributeDefinition {
+func NewServiceLoggingDigitalOcean(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &DigitalOceanServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_digitalocean",
+			key:               "logging_digitalocean",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, la
 	// DELETE old DigitalOcean Spaces logging endpoints.
 	for _, oRaw := range removeDigitalOceanLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteDigitalOcean(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging endpoint removal opts: %#v", opts)
 
@@ -67,7 +68,7 @@ func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, la
 			continue
 		}
 
-		opts := buildCreateDigitalOcean(lf, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
 
@@ -79,7 +80,7 @@ func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, la
 	return nil
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh DigitalOcean Spaces.
 	log.Printf("[DEBUG] Refreshing DigitalOcean Spaces logging endpoints for (%s)", d.Id())
 	digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
@@ -157,11 +158,11 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string
 	return lsl
 }
 
-func buildCreateDigitalOcean(digitaloceanMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateDigitalOceanInput {
+func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDigitalOceanInput {
 	df := digitaloceanMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -189,7 +190,7 @@ func buildCreateDigitalOcean(digitaloceanMap interface{}, serviceID string, serv
 	}
 }
 
-func buildDeleteDigitalOcean(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDigitalOceanInput {
+func (h *DigitalOceanServiceAttributeHandler) buildDelete(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDigitalOceanInput {
 	df := digitaloceanMap.(map[string]interface{})
 
 	return &gofastly.DeleteDigitalOceanInput{
@@ -199,7 +200,7 @@ func buildDeleteDigitalOcean(digitaloceanMap interface{}, serviceID string, serv
 	}
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -277,7 +278,7 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource, servi
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

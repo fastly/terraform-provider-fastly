@@ -12,15 +12,16 @@ type HoneycombServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingHoneycomb() ServiceAttributeDefinition {
+func NewServiceLoggingHoneycomb(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &HoneycombServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_honeycomb",
+			key:               "logging_honeycomb",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	// DELETE old Honeycomb logging endpoints.
 	for _, oRaw := range removeHoneycombLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteHoneycomb(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Honeycomb logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	// POST new/updated Honeycomb logging endpoints.
 	for _, nRaw := range addHoneycombLogging {
 		lf := nRaw.(map[string]interface{})
-		opts := buildCreateHoneycomb(lf, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Honeycomb logging addition opts: %#v", opts)
 
@@ -64,7 +65,7 @@ func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	return nil
 }
 
-func (h *HoneycombServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *HoneycombServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Honeycomb.
 	log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
 	honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
@@ -134,11 +135,11 @@ func flattenHoneycomb(honeycombList []*gofastly.Honeycomb) []map[string]interfac
 	return lsl
 }
 
-func buildCreateHoneycomb(honeycombMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateHoneycombInput {
+func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHoneycombInput {
 	df := honeycombMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -158,7 +159,7 @@ func buildCreateHoneycomb(honeycombMap interface{}, serviceID string, serviceVer
 	}
 }
 
-func buildDeleteHoneycomb(honeycombMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHoneycombInput {
+func (h *HoneycombServiceAttributeHandler) buildDelete(honeycombMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHoneycombInput {
 	df := honeycombMap.(map[string]interface{})
 
 	return &gofastly.DeleteHoneycombInput{
@@ -168,7 +169,7 @@ func buildDeleteHoneycomb(honeycombMap interface{}, serviceID string, serviceVer
 	}
 }
 
-func (h *HoneycombServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *HoneycombServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -191,7 +192,7 @@ func (h *HoneycombServiceAttributeHandler) Register(s *schema.Resource, serviceT
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

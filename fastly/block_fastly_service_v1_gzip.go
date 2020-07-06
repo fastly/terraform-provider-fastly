@@ -13,15 +13,16 @@ type GzipServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceGzip() ServiceAttributeDefinition {
+func NewServiceGzip(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &GzipServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "gzip",
+			key:               "gzip",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	og, ng := d.GetChange(h.GetKey())
 	if og == nil {
 		og = new(schema.Set)
@@ -96,7 +97,7 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	return nil
 }
 
-func (h *GzipServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *GzipServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
 	gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
 		Service: d.Id(),
@@ -116,7 +117,7 @@ func (h *GzipServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 	return nil
 }
 
-func (h *GzipServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *GzipServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

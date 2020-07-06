@@ -12,15 +12,16 @@ type BigQueryLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceBigQueryLogging() ServiceAttributeDefinition {
+func NewServiceBigQueryLogging(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &BigQueryLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "bigquerylogging",
+			key:               "bigquerylogging",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -73,7 +74,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 		}
 
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = sf["format"].(string)
 			vla.placement = sf["placement"].(string)
 			vla.responseCondition = sf["response_condition"].(string)
@@ -106,7 +107,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 	return nil
 }
 
-func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
 	BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 		Service: d.Id(),
@@ -125,7 +126,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s 
 	return nil
 }
 
-func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -173,7 +174,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource, se
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

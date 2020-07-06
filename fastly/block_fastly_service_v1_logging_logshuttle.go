@@ -12,15 +12,16 @@ type LogshuttleServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingLogshuttle() ServiceAttributeDefinition {
+func NewServiceLoggingLogshuttle(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &LogshuttleServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_logshuttle",
+			key:               "logging_logshuttle",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, late
 	// DELETE old Log Shuttle logging endpoints.
 	for _, oRaw := range removeLogshuttleLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteLogshuttle(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Log Shuttle logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, late
 	// POST new/updated Log Shuttle logging endpoints.
 	for _, nRaw := range addLogshuttleLogging {
 		lf := nRaw.(map[string]interface{})
-		opts := buildCreateLogshuttle(lf, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Log Shuttle logging addition opts: %#v", opts)
 
@@ -64,7 +65,7 @@ func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *LogshuttleServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *LogshuttleServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Log Shuttle.
 	log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
 	logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
@@ -134,11 +135,11 @@ func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]inter
 	return lsl
 }
 
-func buildCreateLogshuttle(logshuttleMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateLogshuttleInput {
+func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {
 	df := logshuttleMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -158,7 +159,7 @@ func buildCreateLogshuttle(logshuttleMap interface{}, serviceID string, serviceV
 	}
 }
 
-func buildDeleteLogshuttle(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteLogshuttleInput {
+func (h *LogshuttleServiceAttributeHandler) buildDelete(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteLogshuttleInput {
 	df := logshuttleMap.(map[string]interface{})
 
 	return &gofastly.DeleteLogshuttleInput{
@@ -168,7 +169,7 @@ func buildDeleteLogshuttle(logshuttleMap interface{}, serviceID string, serviceV
 	}
 }
 
-func (h *LogshuttleServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *LogshuttleServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -191,7 +192,7 @@ func (h *LogshuttleServiceAttributeHandler) Register(s *schema.Resource, service
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

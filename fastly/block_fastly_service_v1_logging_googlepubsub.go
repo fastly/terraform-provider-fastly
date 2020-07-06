@@ -13,15 +13,16 @@ type GooglePubSubServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingGooglePubSub() ServiceAttributeDefinition {
+func NewServiceLoggingGooglePubSub(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &GooglePubSubServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_googlepubsub",
+			key:               "logging_googlepubsub",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -55,7 +56,7 @@ func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource, servi
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -91,7 +92,7 @@ func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource, servi
 	return nil
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldLogCfg, newLogCfg := d.GetChange(h.GetKey())
 
@@ -111,7 +112,7 @@ func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, la
 	// DELETE old Google Cloud Pub/Sub logging endpoints.
 	for _, oRaw := range removeGooglePubSubLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteGooglePubSub(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging endpoint removal opts: %#v", opts)
 
@@ -123,7 +124,7 @@ func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, la
 	// POST new/updated Google Cloud Pub/Sub logging endponts.
 	for _, nRaw := range addGooglePubSubLogging {
 		cfg := nRaw.(map[string]interface{})
-		opts := buildCreateGooglePubSub(cfg, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(cfg, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging addition opts: %#v", opts)
 
@@ -135,7 +136,7 @@ func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, la
 	return nil
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *GooglePubSubServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Google Cloud Pub/Sub logging endpoints.
 	log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
 	googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
@@ -207,11 +208,11 @@ func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]inter
 	return flattened
 }
 
-func buildCreateGooglePubSub(googlepubsubMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreatePubsubInput {
+func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
 	df := googlepubsubMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -233,7 +234,7 @@ func buildCreateGooglePubSub(googlepubsubMap interface{}, serviceID string, serv
 	}
 }
 
-func buildDeleteGooglePubSub(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.DeletePubsubInput {
+func (h *GooglePubSubServiceAttributeHandler) buildDelete(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.DeletePubsubInput {
 	df := googlepubsubMap.(map[string]interface{})
 
 	return &gofastly.DeletePubsubInput{

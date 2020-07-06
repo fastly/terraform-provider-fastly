@@ -13,15 +13,16 @@ type BackendServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceBackend() ServiceAttributeDefinition {
+func NewServiceBackend(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &BackendServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "backend",
+			key:               "backend",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	ob, nb := d.GetChange(h.GetKey())
 	if ob == nil {
 		ob = new(schema.Set)
@@ -87,7 +88,7 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 			HealthCheck:         df["healthcheck"].(string),
 		}
 
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			opts.RequestCondition = df["request_condition"].(string)
 		}
 
@@ -100,7 +101,7 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	return nil
 }
 
-func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
 	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
 		Service: d.Id(),
@@ -119,7 +120,7 @@ func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 	return nil
 }
 
-func (h *BackendServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// required fields
 		"name": {
@@ -270,7 +271,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource, serviceTyp
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

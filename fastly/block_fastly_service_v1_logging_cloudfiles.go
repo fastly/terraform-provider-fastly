@@ -12,15 +12,16 @@ type CloudfilesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingCloudfiles() ServiceAttributeDefinition {
+func NewServiceLoggingCloudfiles(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &CloudfilesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_cloudfiles",
+			key:               "logging_cloudfiles",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	// DELETE old Cloud Files logging endpoints.
 	for _, oRaw := range removeCloudfilesLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteCloudfiles(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Cloud Files logging endpoint removal opts: %#v", opts)
 
@@ -66,7 +67,7 @@ func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, late
 		if v, ok := lf["name"]; !ok || v.(string) == "" {
 			continue
 		}
-		opts := buildCreateCloudfiles(lf, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
 
@@ -78,7 +79,7 @@ func (h *CloudfilesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *CloudfilesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *CloudfilesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Cloud Files.
 	log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
 	cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
@@ -156,11 +157,11 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]inter
 	return lsl
 }
 
-func buildCreateCloudfiles(cloudfilesMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateCloudfilesInput {
+func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
 	df := cloudfilesMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -188,7 +189,7 @@ func buildCreateCloudfiles(cloudfilesMap interface{}, serviceID string, serviceV
 	}
 }
 
-func buildDeleteCloudfiles(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteCloudfilesInput {
+func (h *CloudfilesServiceAttributeHandler) buildDelete(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteCloudfilesInput {
 	df := cloudfilesMap.(map[string]interface{})
 
 	return &gofastly.DeleteCloudfilesInput{
@@ -198,7 +199,7 @@ func buildDeleteCloudfiles(cloudfilesMap interface{}, serviceID string, serviceV
 	}
 }
 
-func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -277,7 +278,7 @@ func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource, service
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

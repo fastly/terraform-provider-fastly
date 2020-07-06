@@ -12,15 +12,16 @@ type SyslogServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceSyslog() ServiceAttributeDefinition {
+func NewServiceSyslog(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &SyslogServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "syslog",
+			key:               "syslog",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -59,7 +60,7 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		slf := pRaw.(map[string]interface{})
 
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = slf["format"].(string)
 			vla.formatVersion = uint(slf["format_version"].(int))
 			vla.placement = slf["placement"].(string)
@@ -94,7 +95,7 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *SyslogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *SyslogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
 	syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
 		Service: d.Id(),
@@ -113,7 +114,7 @@ func (h *SyslogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	return nil
 }
 
-func (h *SyslogServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *SyslogServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -179,7 +180,7 @@ func (h *SyslogServiceAttributeHandler) Register(s *schema.Resource, serviceType
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

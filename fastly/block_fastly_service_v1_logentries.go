@@ -12,15 +12,16 @@ type LogentriesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLogentries() ServiceAttributeDefinition {
+func NewServiceLogentries(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &LogentriesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logentries",
+			key:               "logentries",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -59,7 +60,7 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 		slf := pRaw.(map[string]interface{})
 
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = slf["format"].(string)
 			vla.formatVersion = uint(slf["format_version"].(int))
 			vla.placement = slf["placement"].(string)
@@ -89,7 +90,7 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
 	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 		Service: d.Id(),
@@ -109,7 +110,7 @@ func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -137,7 +138,7 @@ func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource, service
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

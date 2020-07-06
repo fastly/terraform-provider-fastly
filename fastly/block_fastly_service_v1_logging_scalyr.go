@@ -13,15 +13,16 @@ type ScalyrServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingScalyr() ServiceAttributeDefinition {
+func NewServiceLoggingScalyr(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &ScalyrServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_scalyr",
+			key:               "logging_scalyr",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -45,7 +46,7 @@ func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource, serviceType
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -81,7 +82,7 @@ func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource, serviceType
 	return nil
 }
 
-func (h *ScalyrServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *ScalyrServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldLogCfg, newLogCfg := d.GetChange(h.GetKey())
 
@@ -101,7 +102,7 @@ func (h *ScalyrServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// DELETE old Scalyr logging endpoints.
 	for _, oRaw := range removeScalyrLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteScalyr(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Scalyr logging endpoint removal opts: %#v", opts)
 
@@ -113,7 +114,7 @@ func (h *ScalyrServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// POST new/updated Scalyr logging endponts.
 	for _, nRaw := range addScalyrLogging {
 		cfg := nRaw.(map[string]interface{})
-		opts := buildCreateScalyr(cfg, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(cfg, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Scalyr logging addition opts: %#v", opts)
 
@@ -125,7 +126,7 @@ func (h *ScalyrServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *ScalyrServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *ScalyrServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Scalyr.
 	log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
 	scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
@@ -193,11 +194,11 @@ func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]interface{} {
 	return flattened
 }
 
-func buildCreateScalyr(scalyrMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateScalyrInput {
+func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {
 	df := scalyrMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -217,7 +218,7 @@ func buildCreateScalyr(scalyrMap interface{}, serviceID string, serviceVersion i
 	}
 }
 
-func buildDeleteScalyr(scalyrMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteScalyrInput {
+func (h *ScalyrServiceAttributeHandler) buildDelete(scalyrMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteScalyrInput {
 	df := scalyrMap.(map[string]interface{})
 
 	return &gofastly.DeleteScalyrInput{

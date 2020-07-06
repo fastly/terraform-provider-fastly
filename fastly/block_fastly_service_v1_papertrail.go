@@ -12,15 +12,16 @@ type PaperTrailServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServicePaperTrail() ServiceAttributeDefinition {
+func NewServicePaperTrail(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &PaperTrailServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "papertrail",
+			key:               "papertrail",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	os, ns := d.GetChange(h.GetKey())
 	if os == nil {
 		os = new(schema.Set)
@@ -59,7 +60,7 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 		pf := pRaw.(map[string]interface{})
 
 		var vla = NewVCLLoggingAttributes()
-		if serviceType == ServiceTypeVCL {
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 			vla.format = pf["format"].(string)
 			vla.placement = pf["placement"].(string)
 			vla.responseCondition = pf["response_condition"].(string)
@@ -86,7 +87,7 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 	return nil
 }
 
-func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
 	papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 		Service: d.Id(),
@@ -106,7 +107,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	return nil
 }
 
-func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -126,7 +127,7 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource, service
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

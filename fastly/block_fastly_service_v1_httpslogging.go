@@ -13,15 +13,16 @@ type HTTPSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceHTTPSLogging() ServiceAttributeDefinition {
+func NewServiceHTTPSLogging(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &HTTPSLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "httpslogging",
+			key:               "httpslogging",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oh, nh := d.GetChange(h.GetKey())
 
@@ -41,7 +42,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	// DELETE old HTTPS logging endpoints
 	for _, oRaw := range removeHTTPSLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteHTTPS(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
 
@@ -53,7 +54,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	// POST new/updated HTTPS logging endponts
 	for _, nRaw := range addHTTPSLogging {
 		hf := nRaw.(map[string]interface{})
-		opts := buildCreateHTTPS(hf, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(hf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
 
@@ -65,7 +66,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	return nil
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// refresh HTTPS
 	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
 	httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
@@ -86,7 +87,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 	return nil
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -191,7 +192,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource, servi
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -287,11 +288,11 @@ func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]interface{} {
 	return hsl
 }
 
-func buildCreateHTTPS(httpsMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateHTTPSInput {
+func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
 	df := httpsMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -324,7 +325,7 @@ func buildCreateHTTPS(httpsMap interface{}, serviceID string, serviceVersion int
 	return &opts
 }
 
-func buildDeleteHTTPS(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
+func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
 	df := httpsMap.(map[string]interface{})
 
 	opts := gofastly.DeleteHTTPSInput{

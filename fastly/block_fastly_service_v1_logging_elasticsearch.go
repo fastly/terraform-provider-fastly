@@ -12,15 +12,16 @@ type ElasticSearchServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingElasticSearch() ServiceAttributeDefinition {
+func NewServiceLoggingElasticSearch(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &ElasticSearchServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_elasticsearch",
+			key:               "logging_elasticsearch",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oe, ne := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 	// DELETE old Elasticsearch logging endpoints.
 	for _, oRaw := range removeElasticsearchLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteElasticsearch(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Elasticsearch logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 	// POST new/updated Elasticsearch logging endpoints.
 	for _, nRaw := range addElasticsearchLogging {
 		ef := nRaw.(map[string]interface{})
-		opts := buildCreateElasticsearch(ef, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(ef, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Elasticsearch logging addition opts: %#v", opts)
 
@@ -64,7 +65,7 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 	return nil
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Elasticsearch.
 	log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
 	elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
@@ -84,7 +85,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *g
 	return nil
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -173,7 +174,7 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource, serv
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -264,11 +265,11 @@ func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[str
 	return esl
 }
 
-func buildCreateElasticsearch(elasticsearchMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateElasticsearchInput {
+func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateElasticsearchInput {
 	df := elasticsearchMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -297,7 +298,7 @@ func buildCreateElasticsearch(elasticsearchMap interface{}, serviceID string, se
 	}
 }
 
-func buildDeleteElasticsearch(elasticsearchMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteElasticsearchInput {
+func (h *ElasticSearchServiceAttributeHandler) buildDelete(elasticsearchMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteElasticsearchInput {
 	df := elasticsearchMap.(map[string]interface{})
 
 	return &gofastly.DeleteElasticsearchInput{

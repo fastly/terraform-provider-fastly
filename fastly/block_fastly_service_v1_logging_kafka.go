@@ -13,15 +13,16 @@ type KafkaServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingKafka() ServiceAttributeDefinition {
+func NewServiceLoggingKafka(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &KafkaServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_kafka",
+			key:               "logging_kafka",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -96,7 +97,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource, serviceType 
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -132,7 +133,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource, serviceType 
 	return nil
 }
 
-func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldLogCfg, newLogCfg := d.GetChange(h.GetKey())
 
@@ -152,7 +153,7 @@ func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVer
 	// DELETE old Kafka logging endpoints
 	for _, oRaw := range removeKafkaLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteKafka(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Kafka logging endpoint removal opts: %#v", opts)
 
@@ -179,7 +180,7 @@ func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVer
 			continue
 		}
 
-		opts := buildCreateKafka(cfg, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(cfg, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Kafka logging addition opts: %#v", opts)
 
@@ -191,7 +192,7 @@ func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVer
 	return nil
 }
 
-func (h *KafkaServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *KafkaServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// refresh Kafka
 	log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
 	kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
@@ -265,11 +266,11 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 	return flattened
 }
 
-func buildCreateKafka(kafkaMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateKafkaInput {
+func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateKafkaInput {
 	df := kafkaMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -296,7 +297,7 @@ func buildCreateKafka(kafkaMap interface{}, serviceID string, serviceVersion int
 	}
 }
 
-func buildDeleteKafka(kafkaMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteKafkaInput {
+func (h *KafkaServiceAttributeHandler) buildDelete(kafkaMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteKafkaInput {
 	df := kafkaMap.(map[string]interface{})
 
 	return &gofastly.DeleteKafkaInput{

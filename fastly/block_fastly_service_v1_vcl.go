@@ -13,15 +13,16 @@ type VCLServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceVCL() ServiceAttributeDefinition {
+func NewServiceVCL(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &VCLServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "vcl",
+			key:               "vcl",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// Note: as above with Gzip and S3 logging, we don't utilize the PUT
 	// endpoint to update a VCL, we simply destroy it and create a new one.
 	oldVCLVal, newVCLVal := d.GetChange(h.GetKey())
@@ -91,7 +92,7 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	return nil
 }
 
-func (h *VCLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *VCLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
 	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
 		Service: d.Id(),
@@ -109,7 +110,7 @@ func (h *VCLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 	return nil
 }
 
-func (h *VCLServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *VCLServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

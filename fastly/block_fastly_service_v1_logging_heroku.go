@@ -12,15 +12,16 @@ type HerokuServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingHeroku() ServiceAttributeDefinition {
+func NewServiceLoggingHeroku(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &HerokuServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_heroku",
+			key:               "logging_heroku",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *HerokuServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *HerokuServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *HerokuServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// DELETE old Heroku logging endpoints.
 	for _, oRaw := range removeHerokuLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteHeroku(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Heroku logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *HerokuServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// POST new/updated Heroku logging endpoints.
 	for _, nRaw := range addHerokuLogging {
 		lf := nRaw.(map[string]interface{})
-		opts := buildCreateHeroku(lf, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Heroku logging addition opts: %#v", opts)
 
@@ -64,7 +65,7 @@ func (h *HerokuServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *HerokuServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *HerokuServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Heroku.
 	log.Printf("[DEBUG] Refreshing Heroku logging endpoints for (%s)", d.Id())
 	herokuList, err := conn.ListHerokus(&gofastly.ListHerokusInput{
@@ -134,11 +135,11 @@ func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]interface{} {
 	return res
 }
 
-func buildCreateHeroku(herokuMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateHerokuInput {
+func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
 	df := herokuMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -158,7 +159,7 @@ func buildCreateHeroku(herokuMap interface{}, serviceID string, serviceVersion i
 	}
 }
 
-func buildDeleteHeroku(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
+func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
 	df := herokuMap.(map[string]interface{})
 
 	return &gofastly.DeleteHerokuInput{
@@ -168,7 +169,7 @@ func buildDeleteHeroku(herokuMap interface{}, serviceID string, serviceVersion i
 	}
 }
 
-func (h *HerokuServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *HerokuServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -191,7 +192,7 @@ func (h *HerokuServiceAttributeHandler) Register(s *schema.Resource, serviceType
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

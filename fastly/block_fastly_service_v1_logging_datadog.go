@@ -12,15 +12,16 @@ type DatadogServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingDatadog() ServiceAttributeDefinition {
+func NewServiceLoggingDatadog(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &DatadogServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_datadog",
+			key:               "logging_datadog",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	od, nd := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	// DELETE old Datadog logging endpoints.
 	for _, oRaw := range removeDatadogLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteDatadog(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Datadog logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	// POST new/updated Datadog logging endpoints.
 	for _, nRaw := range addDatadogLogging {
 		df := nRaw.(map[string]interface{})
-		opts := buildCreateDatadog(df, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(df, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Datadog logging addition opts: %#v", opts)
 
@@ -64,7 +65,7 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	return nil
 }
 
-func (h *DatadogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *DatadogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Datadog.
 	log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
 	datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
@@ -107,7 +108,7 @@ func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error 
 	return nil
 }
 
-func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -132,7 +133,7 @@ func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource, serviceTyp
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -195,11 +196,11 @@ func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]interface{} {
 	return dsl
 }
 
-func buildCreateDatadog(datadogMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateDatadogInput {
+func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {
 	df := datadogMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -219,7 +220,7 @@ func buildCreateDatadog(datadogMap interface{}, serviceID string, serviceVersion
 	}
 }
 
-func buildDeleteDatadog(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
+func (h *DatadogServiceAttributeHandler) buildDelete(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
 	df := datadogMap.(map[string]interface{})
 
 	return &gofastly.DeleteDatadogInput{

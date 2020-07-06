@@ -12,15 +12,16 @@ type NewRelicServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingNewRelic() ServiceAttributeDefinition {
+func NewServiceLoggingNewRelic(sa ServiceAttributes) ServiceAttributeDefinition {
 	return &NewRelicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_newrelic",
+			key:               "logging_newrelic",
+			serviceAttributes: sa,
 		},
 	}
 }
 
-func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client, serviceType string) error {
+func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	od, nd := d.GetChange(h.GetKey())
 
@@ -40,7 +41,7 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	// DELETE old NewRelic logging endpoints.
 	for _, oRaw := range removeNewRelicLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteNewRelic(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly New Relic logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	// POST new/updated NewRelic logging endpoints.
 	for _, nRaw := range addNewRelicLogging {
 		df := nRaw.(map[string]interface{})
-		opts := buildCreateNewRelic(df, serviceID, latestVersion, serviceType)
+		opts := h.buildCreate(df, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly New Relic logging addition opts: %#v", opts)
 
@@ -64,7 +65,7 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	return nil
 }
 
-func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client, serviceType string) error {
+func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh NewRelic.
 	log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
 	newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
@@ -131,11 +132,11 @@ func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]interface{}
 	return dsl
 }
 
-func buildCreateNewRelic(newrelicMap interface{}, serviceID string, serviceVersion int, serviceType string) *gofastly.CreateNewRelicInput {
+func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
 	df := newrelicMap.(map[string]interface{})
 
 	var vla = NewVCLLoggingAttributes()
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		vla.format = df["format"].(string)
 		vla.formatVersion = uint(df["format_version"].(int))
 		vla.placement = df["placement"].(string)
@@ -154,7 +155,7 @@ func buildCreateNewRelic(newrelicMap interface{}, serviceID string, serviceVersi
 	}
 }
 
-func buildDeleteNewRelic(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
+func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
 	df := newrelicMap.(map[string]interface{})
 
 	return &gofastly.DeleteNewRelicInput{
@@ -164,7 +165,7 @@ func buildDeleteNewRelic(newrelicMap interface{}, serviceID string, serviceVersi
 	}
 }
 
-func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource, serviceType string) error {
+func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
 	var a = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -181,7 +182,7 @@ func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource, serviceTy
 		},
 	}
 
-	if serviceType == ServiceTypeVCL {
+	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
 		a["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

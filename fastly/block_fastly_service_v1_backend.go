@@ -121,7 +121,7 @@ func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 }
 
 func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
-	var a = map[string]*schema.Schema{
+	var blockAttributes = map[string]*schema.Schema{
 		// required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -272,7 +272,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 
 	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		a["request_condition"] = &schema.Schema{
+		blockAttributes["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
@@ -284,7 +284,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: a,
+			Schema: blockAttributes,
 		},
 	}
 

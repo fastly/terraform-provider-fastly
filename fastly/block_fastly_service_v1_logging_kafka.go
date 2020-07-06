@@ -23,7 +23,7 @@ func NewServiceLoggingKafka(sa ServiceAttributes) ServiceAttributeDefinition {
 }
 
 func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
-	var a = map[string]*schema.Schema{
+	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -53,7 +53,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 		"required_acks": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Description: "The Number of acknowledgements a leader must receive before a write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
+			Description: "The Number of acknowledgements blockAttributes leader must receive before blockAttributes write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
 		},
 
 		"use_tls": {
@@ -93,30 +93,30 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or blockAttributes Subject Alternative Name (SAN).",
 		},
 	}
 
 	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		a["format"] = &schema.Schema{
+		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Apache style log formatting.",
 		}
-		a["format_version"] = &schema.Schema{
+		blockAttributes["format_version"] = &schema.Schema{
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      2,
 			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
 			ValidateFunc: validateLoggingFormatVersion(),
 		}
-		a["placement"] = &schema.Schema{
+		blockAttributes["placement"] = &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "Where in the generated VCL the logging call should be placed.",
 			ValidateFunc: validateLoggingPlacement(),
 		}
-		a["response_condition"] = &schema.Schema{
+		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
@@ -127,7 +127,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: a,
+			Schema: blockAttributes,
 		},
 	}
 	return nil

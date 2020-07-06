@@ -121,7 +121,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s 
 }
 
 func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
-	var a = map[string]*schema.Schema{
+	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -169,19 +169,19 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 	}
 
 	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		a["format"] = &schema.Schema{
+		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The logging format desired.",
 			Default:     "%h %l %u %t \"%r\" %>s %b",
 		}
-		a["response_condition"] = &schema.Schema{
+		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
 			Description: "Name of a condition to apply this logging.",
 		}
-		a["placement"] = &schema.Schema{
+		blockAttributes["placement"] = &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "Where in the generated VCL the logging call should be placed.",
@@ -193,7 +193,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: a,
+			Schema: blockAttributes,
 		},
 	}
 	return nil

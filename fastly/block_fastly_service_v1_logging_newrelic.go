@@ -159,7 +159,7 @@ func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap interface{}, s
 }
 
 func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
-	var a = map[string]*schema.Schema{
+	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -176,25 +176,25 @@ func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 
 	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		a["format"] = &schema.Schema{
+		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
 		}
-		a["format_version"] = &schema.Schema{
+		blockAttributes["format_version"] = &schema.Schema{
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      2,
 			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
 			ValidateFunc: validateLoggingFormatVersion(),
 		}
-		a["placement"] = &schema.Schema{
+		blockAttributes["placement"] = &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "Where in the generated VCL the logging call should be placed.",
 			ValidateFunc: validateLoggingPlacement(),
 		}
-		a["response_condition"] = &schema.Schema{
+		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The name of the condition to apply.",
@@ -205,7 +205,7 @@ func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: a,
+			Schema: blockAttributes,
 		},
 	}
 	return nil

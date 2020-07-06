@@ -100,7 +100,7 @@ func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 }
 
 func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
-	var a = map[string]*schema.Schema{
+	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -123,26 +123,26 @@ func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 
 	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		a["format"] = &schema.Schema{
+		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%h %l %u %t %r %>s",
 			Description: "Apache-style string or VCL variables to use for log formatting",
 		}
-		a["format_version"] = &schema.Schema{
+		blockAttributes["format_version"] = &schema.Schema{
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      1,
 			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
 			ValidateFunc: validateLoggingFormatVersion(),
 		}
-		a["response_condition"] = &schema.Schema{
+		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Name of a condition to apply this logging.",
+			Description: "Name of blockAttributes condition to apply this logging.",
 		}
-		a["placement"] = &schema.Schema{
+		blockAttributes["placement"] = &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "Where in the generated VCL the logging call should be placed.",
@@ -154,7 +154,7 @@ func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: a,
+			Schema: blockAttributes,
 		},
 	}
 	return nil

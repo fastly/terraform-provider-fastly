@@ -102,7 +102,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 }
 
 func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
-	var a = map[string]*schema.Schema{
+	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -122,19 +122,19 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 
 	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		a["format"] = &schema.Schema{
+		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%h %l %u %t %r %>s",
 			Description: "Apache-style string or VCL variables to use for log formatting",
 		}
-		a["response_condition"] = &schema.Schema{
+		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Name of a condition to apply this logging",
+			Description: "Name of blockAttributes condition to apply this logging",
 		}
-		a["placement"] = &schema.Schema{
+		blockAttributes["placement"] = &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "Where in the generated VCL the logging call should be placed.",
@@ -146,7 +146,7 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: a,
+			Schema: blockAttributes,
 		},
 	}
 	return nil

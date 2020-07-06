@@ -22,7 +22,7 @@ func NewServiceLoggingSFTP(sa ServiceAttributes) ServiceAttributeDefinition {
 }
 
 func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
-	var a = map[string]*schema.Schema{
+	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -45,7 +45,7 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		"path": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The path to upload log files to. If the path ends in / then it is treated as a directory.",
+			Description: "The path to upload log files to. If the path ends in / then it is treated as blockAttributes directory.",
 		},
 
 		"ssh_known_hosts": {
@@ -117,26 +117,26 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 	}
 
 	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-		a["format"] = &schema.Schema{
+		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%h %l %u %t \"%r\" %>s %b",
 			Description: "Apache-style string or VCL variables to use for log formatting.",
 		}
-		a["format_version"] = &schema.Schema{
+		blockAttributes["format_version"] = &schema.Schema{
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      2,
 			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).",
 			ValidateFunc: validateLoggingFormatVersion(),
 		}
-		a["placement"] = &schema.Schema{
+		blockAttributes["placement"] = &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "Where in the generated VCL the logging call should be placed.",
 			ValidateFunc: validateLoggingPlacement(),
 		}
-		a["response_condition"] = &schema.Schema{
+		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The name of the condition to apply.",
@@ -147,7 +147,7 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: a,
+			Schema: blockAttributes,
 		},
 	}
 	return nil

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"reflect"
 	"sort"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
@@ -32,149 +31,177 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 			"allowed_http_versions": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Allowed HTTP versions (default HTTP/1.0 HTTP/1.1 HTTP/2).",
 			},
 			"allowed_methods": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "A space-separated list of HTTP method names (default GET HEAD POST OPTIONS PUT PATCH DELETE).",
 			},
 			"allowed_request_content_type": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Allowed request content types (default application/x-www-form-urlencoded|multipart/form-data|text/xml|application/xml|application/x-amf|application/json|text/plain).",
 			},
 			"allowed_request_content_type_charset": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Allowed request content type charset (default utf-8|iso-8859-1|iso-8859-15|windows-1252).",
 			},
 			"arg_length": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The maximum number of arguments allowed (default 400).",
 			},
 			"arg_name_length": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The maximum allowed argument name length (default 100).",
 			},
 			"combined_file_sizes": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The maximum allowed size of all files (in bytes, default 10000000).",
 			},
 			"critical_anomaly_score": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Score value to add for critical anomalies (default 6).",
 			},
 			"crs_validate_utf8_encoding": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "CRS validate UTF8 encoding.",
 			},
 			"error_anomaly_score": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Score value to add for error anomalies (default 5).",
 			},
 			"high_risk_country_codes": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "A space-separated list of country codes in ISO 3166-1 (two-letter) format.",
 			},
 			"http_violation_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "HTTP violation threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"inbound_anomaly_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "Inbound anomaly threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"lfi_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "Local file inclusion attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"max_file_size": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The maximum allowed file size, in bytes (default 10000000).",
 			},
 			"max_num_args": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The maximum number of arguments allowed (default 255).",
 			},
 			"notice_anomaly_score": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Score value to add for notice anomalies (default 4).",
 			},
 			"paranoia_level": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The configured paranoia level (default 1).",
 			},
 			"php_injection_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "PHP injection threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"rce_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "Remote code execution threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"restricted_extensions": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "A space-separated list of allowed file extensions (default .asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .resources/ .resx/ .sql/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx).",
 			},
 			"restricted_headers": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "A space-separated list of allowed header names (default /proxy/ /lock-token/ /content-range/ /translate/ /if/).",
 			},
 			"rfi_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "Remote file inclusion attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"session_fixation_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "Session fixation attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"sql_injection_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "SQL injection attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"total_arg_length": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The maximum size of argument names and values (default 6400).",
 			},
 			"warning_anomaly_score": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Score value to add for warning anomalies.",
 			},
 			"xss_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				Description:  "XSS attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
@@ -426,60 +453,34 @@ func buildUpdateInput(d *schema.ResourceData, id string, number int) *gofastly.U
 }
 
 func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) {
-
-	pairings := composePairings(version)
-	for k, v := range pairings {
-		var ok bool
-		switch t := reflect.TypeOf(v).String(); t {
-		case "string":
-			if _, ok := d.GetOk(k); !ok || v.(string) == "" {
-				continue
-			}
-		case "int":
-			if _, ok := d.GetOk(k); !ok || v.(int) == 0 {
-				continue
-			}
-		case "bool":
-			if _, ok := d.GetOkExists(k); !ok {
-				continue
-			}
-		}
-		d.Set(k, v)
-		log.Printf("[DEBUG] GetOk for %v is %v \n", k, ok)
-	}
-}
-
-func composePairings(version *gofastly.WAFVersion) map[string]interface{} {
-	return map[string]interface{}{
-		"allowed_http_versions":                version.AllowedHTTPVersions,
-		"allowed_methods":                      version.AllowedMethods,
-		"allowed_request_content_type":         version.AllowedRequestContentType,
-		"allowed_request_content_type_charset": version.AllowedRequestContentTypeCharset,
-		"arg_length":                           version.ArgLength,
-		"arg_name_length":                      version.ArgNameLength,
-		"combined_file_sizes":                  version.CombinedFileSizes,
-		"critical_anomaly_score":               version.CriticalAnomalyScore,
-		"crs_validate_utf8_encoding":           version.CRSValidateUTF8Encoding,
-		"error_anomaly_score":                  version.ErrorAnomalyScore,
-		"high_risk_country_codes":              version.HighRiskCountryCodes,
-		"http_violation_score_threshold":       version.HTTPViolationScoreThreshold,
-		"inbound_anomaly_score_threshold":      version.InboundAnomalyScoreThreshold,
-		"lfi_score_threshold":                  version.LFIScoreThreshold,
-		"max_file_size":                        version.MaxFileSize,
-		"max_num_args":                         version.MaxNumArgs,
-		"notice_anomaly_score":                 version.NoticeAnomalyScore,
-		"paranoia_level":                       version.ParanoiaLevel,
-		"php_injection_score_threshold":        version.PHPInjectionScoreThreshold,
-		"rce_score_threshold":                  version.RCEScoreThreshold,
-		"restricted_extensions":                version.RestrictedExtensions,
-		"restricted_headers":                   version.RestrictedHeaders,
-		"rfi_score_threshold":                  version.RFIScoreThreshold,
-		"session_fixation_score_threshold":     version.SessionFixationScoreThreshold,
-		"sql_injection_score_threshold":        version.SQLInjectionScoreThreshold,
-		"total_arg_length":                     version.TotalArgLength,
-		"warning_anomaly_score":                version.WarningAnomalyScore,
-		"xss_score_threshold":                  version.XSSScoreThreshold,
-	}
+	d.Set("allowed_http_versions", version.AllowedHTTPVersions)
+	d.Set("allowed_methods", version.AllowedMethods)
+	d.Set("allowed_request_content_type", version.AllowedRequestContentType)
+	d.Set("allowed_request_content_type_charset", version.AllowedRequestContentTypeCharset)
+	d.Set("arg_length", version.ArgLength)
+	d.Set("arg_name_length", version.ArgNameLength)
+	d.Set("combined_file_sizes", version.CombinedFileSizes)
+	d.Set("critical_anomaly_score", version.CriticalAnomalyScore)
+	d.Set("crs_validate_utf8_encoding", version.CRSValidateUTF8Encoding)
+	d.Set("error_anomaly_score", version.ErrorAnomalyScore)
+	d.Set("high_risk_country_codes", version.HighRiskCountryCodes)
+	d.Set("http_violation_score_threshold", version.HTTPViolationScoreThreshold)
+	d.Set("inbound_anomaly_score_threshold", version.InboundAnomalyScoreThreshold)
+	d.Set("lfi_score_threshold", version.LFIScoreThreshold)
+	d.Set("max_file_size", version.MaxFileSize)
+	d.Set("max_num_args", version.MaxNumArgs)
+	d.Set("notice_anomaly_score", version.NoticeAnomalyScore)
+	d.Set("paranoia_level", version.ParanoiaLevel)
+	d.Set("php_injection_score_threshold", version.PHPInjectionScoreThreshold)
+	d.Set("rce_score_threshold", version.RCEScoreThreshold)
+	d.Set("restricted_extensions", version.RestrictedExtensions)
+	d.Set("restricted_headers", version.RestrictedHeaders)
+	d.Set("rfi_score_threshold", version.RFIScoreThreshold)
+	d.Set("session_fixation_score_threshold", version.SessionFixationScoreThreshold)
+	d.Set("sql_injection_score_threshold", version.SQLInjectionScoreThreshold)
+	d.Set("total_arg_length", version.TotalArgLength)
+	d.Set("warning_anomaly_score", version.WarningAnomalyScore)
+	d.Set("xss_score_threshold", version.XSSScoreThreshold)
 }
 
 func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersion, error) {

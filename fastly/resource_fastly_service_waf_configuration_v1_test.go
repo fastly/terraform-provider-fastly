@@ -180,7 +180,11 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(nil, "")
+	extraHCLMap := map[string]interface{}{
+		"http_violation_score_threshold": 10,
+	}
+
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(extraHCLMap, "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -63,13 +63,6 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	serviceNameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-
-	splunkLogOneCompute := gofastly.Splunk{
-		Name:  "test-splunk-1",
-		URL:   "https://mysplunkendpoint.example.com/services/collector/event",
-		Token: "test-token",
-	}
 
 	splunkLogOne := gofastly.Splunk{
 		Name:              "test-splunk-1",
@@ -119,18 +112,6 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1SplunkConfigCompute_basic(serviceNameCompute),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneCompute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", serviceNameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "splunk.#", "1"),
-				),
-			},
-
-			{
 				Config: testAccServiceV1SplunkConfig_update(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -139,6 +120,36 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "splunk.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_splunk_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	splunkLogOne := gofastly.Splunk{
+		Name:  "test-splunk-1",
+		URL:   "https://mysplunkendpoint.example.com/services/collector/event",
+		Token: "test-token",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1SplunkConfigCompute_basic(serviceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", serviceName),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "splunk.#", "1"),
 				),
 			},
 		},

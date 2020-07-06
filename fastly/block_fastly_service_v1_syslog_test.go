@@ -75,17 +75,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	log1Compute := gofastly.Syslog{
-		Version:     1,
-		Name:        "somesyslogname",
-		Address:     "127.0.0.1",
-		IPV4:        "127.0.0.1",
-		Port:        uint(514),
-		MessageType: "classic",
-	}
 
 	log1 := gofastly.Syslog{
 		Version:           1,
@@ -127,17 +117,6 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1SyslogComputeConfig(nameCompute, domainName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "syslog.#", "1"),
-				),
-			},
 
 			{
 				Config: testAccServiceV1SyslogConfig(name, domainName1),
@@ -160,6 +139,40 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "syslog.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_syslog_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	log1 := gofastly.Syslog{
+		Version:     1,
+		Name:        "somesyslogname",
+		Address:     "127.0.0.1",
+		IPV4:        "127.0.0.1",
+		Port:        uint(514),
+		MessageType: "classic",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1SyslogComputeConfig(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1SyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "syslog.#", "1"),
 				),
 			},
 		},

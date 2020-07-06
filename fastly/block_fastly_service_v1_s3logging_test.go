@@ -82,22 +82,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	log1Compute := gofastly.S3{
-		Version:         1,
-		Name:            "somebucketlog",
-		BucketName:      "fastlytestlogging",
-		Domain:          "s3-us-west-2.amazonaws.com",
-		AccessKey:       testAwsPrimaryAccessKey,
-		SecretKey:       testAwsPrimarySecretKey,
-		Period:          uint(3600),
-		PublicKey:       pgpPublicKey(t),
-		GzipLevel:       uint(0),
-		MessageType:     "classic",
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-	}
 
 	log1 := gofastly.S3{
 		Version:           1,
@@ -154,17 +139,6 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1S3LoggingComputeConfig(nameCompute, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "s3logging.#", "1"),
-				),
-			},
 
 			{
 				Config: testAccServiceV1S3LoggingConfig(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
@@ -187,6 +161,45 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "s3logging.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_s3logging_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	log1 := gofastly.S3{
+		Version:         1,
+		Name:            "somebucketlog",
+		BucketName:      "fastlytestlogging",
+		Domain:          "s3-us-west-2.amazonaws.com",
+		AccessKey:       testAwsPrimaryAccessKey,
+		SecretKey:       testAwsPrimarySecretKey,
+		Period:          uint(3600),
+		PublicKey:       pgpPublicKey(t),
+		GzipLevel:       uint(0),
+		MessageType:     "classic",
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1S3LoggingComputeConfig(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "s3logging.#", "1"),
 				),
 			},
 		},

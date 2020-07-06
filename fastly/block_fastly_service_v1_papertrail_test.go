@@ -52,15 +52,7 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	log1Compute := gofastly.Papertrail{
-		Version: 1,
-		Name:    "papertrailtesting",
-		Address: "test1.papertrailapp.com",
-		Port:    uint(3600),
-	}
 
 	log1 := gofastly.Papertrail{
 		Version:           1,
@@ -84,17 +76,6 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1PapertrailComputeConfig(nameCompute, domainName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "papertrail.#", "1"),
-				),
-			},
 
 			{
 				Config: testAccServiceV1PapertrailConfig(name, domainName1),
@@ -117,6 +98,38 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "papertrail.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_papertrail_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	log1 := gofastly.Papertrail{
+		Version: 1,
+		Name:    "papertrailtesting",
+		Address: "test1.papertrailapp.com",
+		Port:    uint(3600),
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1PapertrailComputeConfig(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "papertrail.#", "1"),
 				),
 			},
 		},

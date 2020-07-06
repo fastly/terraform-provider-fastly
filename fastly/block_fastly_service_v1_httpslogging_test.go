@@ -56,7 +56,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	name_wasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.HTTPS{
@@ -73,7 +73,7 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 		JSONFormat:        "0",
 	}
 
-	logWasm1 := gofastly.HTTPS{
+	logCompute := gofastly.HTTPS{
 		Version:           1,
 		Name:              "httpslogger",
 		URL:               "https://example.com/logs/1",
@@ -130,12 +130,12 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1HTTPSWasmConfig(name_wasm, domain),
+				Config: testAccServiceV1HTTPSComputeConfig(nameCompute, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1HTTPSAttributes(&service, []*gofastly.HTTPS{&logWasm1}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1HTTPSAttributes(&service, []*gofastly.HTTPS{&logCompute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name_wasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "httpslogging.#", "1"),
 				),
@@ -183,8 +183,8 @@ func testAccCheckFastlyServiceV1HTTPSAttributes(service *gofastly.ServiceDetail,
 					h.ServiceID = service.ID
 					h.Version = service.ActiveVersion.Number
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						h.Placement = hl.Placement
 						h.Format = hl.Format
 						h.FormatVersion = hl.FormatVersion
@@ -236,7 +236,7 @@ resource "fastly_service_v1" "foo" {
 }
 `, name, domain)
 }
-func testAccServiceV1HTTPSWasmConfig(name string, domain string) string {
+func testAccServiceV1HTTPSComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
 	name = "%s"

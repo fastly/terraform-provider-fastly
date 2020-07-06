@@ -162,7 +162,7 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_logging_digitalocean_basicWasm(t *testing.T) {
+func TestAccFastlyServiceV1_logging_digitalocean_basicCompute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -188,10 +188,10 @@ func TestAccFastlyServiceV1_logging_digitalocean_basicWasm(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1DigitalOceanWasmConfig(name, domain),
+				Config: testAccServiceV1DigitalOceanComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1DigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1DigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -232,8 +232,8 @@ func testAccCheckFastlyServiceV1DigitalOceanAttributes(service *gofastly.Service
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						el.FormatVersion = e.FormatVersion
 						el.Format = e.Format
 						el.ResponseCondition = e.ResponseCondition
@@ -356,7 +356,7 @@ resource "fastly_service_v1" "foo" {
 `, name, domain)
 }
 
-func testAccServiceV1DigitalOceanWasmConfig(name string, domain string) string {
+func testAccServiceV1DigitalOceanComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

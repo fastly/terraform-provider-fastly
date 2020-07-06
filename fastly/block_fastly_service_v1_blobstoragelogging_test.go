@@ -68,7 +68,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	serviceNameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	serviceNameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	blobStorageLogOne := gofastly.BlobStorage{
 		Name:              "test-blobstorage-1",
@@ -87,7 +87,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		ResponseCondition: "error_response_5XX",
 	}
 
-	blobStorageLogOneWasm := gofastly.BlobStorage{
+	blobStorageLogOneCompute := gofastly.BlobStorage{
 		Name:            "test-blobstorage-1",
 		Path:            "/5XX/",
 		AccountName:     "test",
@@ -140,12 +140,12 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1BlobStorageLoggingConfig_completeWasm(serviceNameWasm),
+				Config: testAccServiceV1BlobStorageLoggingConfig_completeCompute(serviceNameCompute),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneWasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneCompute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", serviceNameWasm),
+						"fastly_service_compute.foo", "name", serviceNameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "blobstoragelogging.#", "1"),
 				),
@@ -281,8 +281,8 @@ func testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(service *gofastly.S
 					lbs.ServiceID = service.ID
 					lbs.Version = service.ActiveVersion.Number
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						lbs.FormatVersion = rbs.FormatVersion
 						lbs.Format = rbs.Format
 						lbs.ResponseCondition = rbs.ResponseCondition
@@ -355,7 +355,7 @@ resource "fastly_service_v1" "foo" {
 }`, serviceName, domainName, format)
 }
 
-func testAccServiceV1BlobStorageLoggingConfig_completeWasm(serviceName string) string {
+func testAccServiceV1BlobStorageLoggingConfig_completeCompute(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`

@@ -69,10 +69,10 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1Wasm := gofastly.Kafka{
+	log1Compute := gofastly.Kafka{
 		Version:          1,
 		Name:             "kafkalogger",
 		Topic:            "topic",
@@ -146,12 +146,12 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1KafkaWasmConfig(nameWasm, domain),
+				Config: testAccServiceV1KafkaComputeConfig(nameCompute, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1KafkaAttributes(&service, []*gofastly.Kafka{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1KafkaAttributes(&service, []*gofastly.Kafka{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "logging_kafka.#", "1"),
 				),
@@ -215,8 +215,8 @@ func testAccCheckFastlyServiceV1KafkaAttributes(service *gofastly.ServiceDetail,
 					sl.CreatedAt = nil
 					sl.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						sl.FormatVersion = s.FormatVersion
 						sl.Format = s.Format
 						sl.ResponseCondition = s.ResponseCondition
@@ -239,7 +239,7 @@ func testAccCheckFastlyServiceV1KafkaAttributes(service *gofastly.ServiceDetail,
 	}
 }
 
-func testAccServiceV1KafkaWasmConfig(name string, domain string) string {
+func testAccServiceV1KafkaComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
 	name = "%s"

@@ -162,12 +162,12 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_logging_cloudfiles_basicWasm(t *testing.T) {
+func TestAccFastlyServiceV1_logging_cloudfiles_basicCompute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1Wasm := gofastly.Cloudfiles{
+	log1Compute := gofastly.Cloudfiles{
 		Version:         1,
 		Name:            "cloudfiles-endpoint",
 		BucketName:      "bucket",
@@ -188,10 +188,10 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basicWasm(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1WasmCloudfilesConfig(name, domain),
+				Config: testAccServiceV1ComputeCloudfilesConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.none", &service),
-					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.none", "name", name),
 					resource.TestCheckResourceAttr(
@@ -232,8 +232,8 @@ func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDe
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						el.FormatVersion = e.FormatVersion
 						el.Format = e.Format
 						el.ResponseCondition = e.ResponseCondition
@@ -251,7 +251,7 @@ func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDe
 	}
 }
 
-func testAccServiceV1WasmCloudfilesConfig(name string, domain string) string {
+func testAccServiceV1ComputeCloudfilesConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "none" {
   name = "%s"

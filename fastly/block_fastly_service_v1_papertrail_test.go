@@ -52,10 +52,10 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	log1Wasm := gofastly.Papertrail{
+	log1Compute := gofastly.Papertrail{
 		Version: 1,
 		Name:    "papertrailtesting",
 		Address: "test1.papertrailapp.com",
@@ -85,12 +85,12 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1PapertrailWasmConfig(nameWasm, domainName1),
+				Config: testAccServiceV1PapertrailComputeConfig(nameCompute, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1PapertrailAttributes(&service, []*gofastly.Papertrail{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "papertrail.#", "1"),
 				),
@@ -154,8 +154,8 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 					lp.CreatedAt = nil
 					lp.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						lp.Format = p.Format
 						lp.ResponseCondition = p.ResponseCondition
 						lp.Placement = p.Placement
@@ -177,7 +177,7 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 	}
 }
 
-func testAccServiceV1PapertrailWasmConfig(name, domain string) string {
+func testAccServiceV1PapertrailComputeConfig(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

@@ -82,10 +82,10 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	log1Wasm := gofastly.S3{
+	log1Compute := gofastly.S3{
 		Version:         1,
 		Name:            "somebucketlog",
 		BucketName:      "fastlytestlogging",
@@ -155,12 +155,12 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1S3LoggingWasmConfig(nameWasm, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
+				Config: testAccServiceV1S3LoggingComputeConfig(nameCompute, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "s3logging.#", "1"),
 				),
@@ -348,8 +348,8 @@ func testAccCheckFastlyServiceV1S3LoggingAttributes(service *gofastly.ServiceDet
 					ls.CreatedAt = nil
 					ls.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						ls.FormatVersion = s.FormatVersion
 						ls.Format = s.Format
 						ls.ResponseCondition = s.ResponseCondition
@@ -406,7 +406,7 @@ resource "fastly_service_v1" "foo" {
 }`, name, domain, testAwsPrimaryAccessKey, testAwsPrimarySecretKey)
 }
 
-func testAccServiceV1S3LoggingWasmConfig(name, domain, key, secret string) string {
+func testAccServiceV1S3LoggingComputeConfig(name, domain, key, secret string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

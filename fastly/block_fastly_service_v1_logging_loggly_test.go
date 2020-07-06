@@ -47,10 +47,10 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1Wasm := gofastly.Loggly{
+	log1Compute := gofastly.Loggly{
 		Version: 1,
 		Name:    "loggly-endpoint",
 		Token:   "s3cr3t",
@@ -86,12 +86,12 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1LogglyWasmConfig(nameWasm, domain),
+				Config: testAccServiceV1LogglyComputeConfig(nameCompute, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "logging_loggly.#", "1"),
 				),
@@ -155,8 +155,8 @@ func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						el.FormatVersion = e.FormatVersion
 						el.Format = e.Format
 						el.ResponseCondition = e.ResponseCondition
@@ -179,7 +179,7 @@ func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail
 	}
 }
 
-func testAccServiceV1LogglyWasmConfig(name string, domain string) string {
+func testAccServiceV1LogglyComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

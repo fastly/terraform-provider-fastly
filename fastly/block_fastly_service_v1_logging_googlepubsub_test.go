@@ -61,10 +61,10 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1Wasm := gofastly.Pubsub{
+	log1Compute := gofastly.Pubsub{
 		Version:   1,
 		Name:      "googlepubsublogger",
 		User:      "user",
@@ -118,12 +118,12 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1GooglePubSubWasmConfig(nameWasm, domain),
+				Config: testAccServiceV1GooglePubSubComputeConfig(nameCompute, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1GooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1GooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "logging_googlepubsub.#", "1"),
 				),
@@ -187,8 +187,8 @@ func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.Service
 					sl.CreatedAt = nil
 					sl.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						sl.FormatVersion = s.FormatVersion
 						sl.Format = s.Format
 						sl.ResponseCondition = s.ResponseCondition
@@ -211,7 +211,7 @@ func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.Service
 	}
 }
 
-func testAccServiceV1GooglePubSubWasmConfig(name string, domain string) string {
+func testAccServiceV1GooglePubSubComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
 	name = "%s"

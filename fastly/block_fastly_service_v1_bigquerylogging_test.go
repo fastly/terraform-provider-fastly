@@ -16,7 +16,7 @@ func TestAccFastlyServiceV1BigQueryLogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	name_wasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
 
 	secretKey, err := generateKey()
@@ -37,10 +37,10 @@ func TestAccFastlyServiceV1BigQueryLogging(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceV1Config_bigquery_wasm(name_wasm, bqName, secretKey),
+				Config: testAccServiceV1Config_bigquery_compute(nameCompute, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_bq(&service, name_wasm, bqName),
+					testAccCheckFastlyServiceV1Attributes_bq(&service, nameCompute, bqName),
 				),
 			},
 		},
@@ -137,7 +137,7 @@ resource "fastly_service_v1" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceV1Config_bigquery_wasm(name, gcsName, secretKey string) string {
+func testAccServiceV1Config_bigquery_compute(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`

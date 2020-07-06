@@ -63,9 +63,9 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	serviceNameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	serviceNameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
-	splunkLogOneWasm := gofastly.Splunk{
+	splunkLogOneCompute := gofastly.Splunk{
 		Name:  "test-splunk-1",
 		URL:   "https://mysplunkendpoint.example.com/services/collector/event",
 		Token: "test-token",
@@ -119,12 +119,12 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1SplunkConfigWasm_basic(serviceNameWasm),
+				Config: testAccServiceV1SplunkConfigCompute_basic(serviceNameCompute),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneWasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneCompute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", serviceNameWasm),
+						"fastly_service_compute.foo", "name", serviceNameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "splunk.#", "1"),
 				),
@@ -325,8 +325,8 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 					rs.CreatedAt = nil
 					rs.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						rs.FormatVersion = ls.FormatVersion
 						rs.Format = ls.Format
 						rs.ResponseCondition = ls.ResponseCondition
@@ -349,7 +349,7 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 	}
 }
 
-func testAccServiceV1SplunkConfigWasm_basic(serviceName string) string {
+func testAccServiceV1SplunkConfigCompute_basic(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`

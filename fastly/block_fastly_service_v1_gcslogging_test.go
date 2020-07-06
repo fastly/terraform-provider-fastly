@@ -59,7 +59,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	name_wasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
 	secretKey, err := generateKey()
 	if err != nil {
@@ -79,10 +79,10 @@ func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceV1Config_wasm_gcs(name_wasm, gcsName, secretKey),
+				Config: testAccServiceV1Config_compute_gcs(nameCompute, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_gcs(&service, name_wasm, gcsName),
+					testAccCheckFastlyServiceV1Attributes_gcs(&service, nameCompute, gcsName),
 				),
 			},
 		},
@@ -178,9 +178,9 @@ resource "fastly_service_v1" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceV1Config_wasm_gcs(name, gcsName, secretKey string) string {
+func testAccServiceV1Config_compute_gcs(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test-wasm.tf-%s.com", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test-compute.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {

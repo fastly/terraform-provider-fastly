@@ -63,10 +63,10 @@ var newrelicDefaultFormat = `{
 func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1Wasm := gofastly.NewRelic{
+	log1Compute := gofastly.NewRelic{
 		Version:       1,
 		Name:          "newrelic-endpoint",
 		Token:         "token",
@@ -104,12 +104,12 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1NewRelicWasmConfig(nameWasm, domain),
+				Config: testAccServiceV1NewRelicComputeConfig(nameCompute, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "logging_newrelic.#", "1"),
 				),
@@ -174,8 +174,8 @@ func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDeta
 					dl.CreatedAt = nil
 					dl.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						dl.FormatVersion = d.FormatVersion
 						dl.Format = d.Format
 						dl.ResponseCondition = d.ResponseCondition
@@ -198,7 +198,7 @@ func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDeta
 	}
 }
 
-func testAccServiceV1NewRelicWasmConfig(name string, domain string) string {
+func testAccServiceV1NewRelicComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

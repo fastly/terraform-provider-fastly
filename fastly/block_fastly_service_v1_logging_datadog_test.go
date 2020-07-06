@@ -192,7 +192,7 @@ func TestAccFastlyServiceV1_logging_datadog_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_logging_datadog_basicWasm(t *testing.T) {
+func TestAccFastlyServiceV1_logging_datadog_basicCompute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -210,10 +210,10 @@ func TestAccFastlyServiceV1_logging_datadog_basicWasm(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1DatadogWasmConfig(name, domain),
+				Config: testAccServiceV1DatadogComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1DatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -255,8 +255,8 @@ func testAccCheckFastlyServiceV1DatadogAttributes(service *gofastly.ServiceDetai
 					dl.CreatedAt = nil
 					dl.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						dl.FormatVersion = d.FormatVersion
 						dl.Format = d.Format
 						dl.ResponseCondition = d.ResponseCondition
@@ -341,7 +341,7 @@ EOF
 `, name, domain)
 }
 
-func testAccServiceV1DatadogWasmConfig(name string, domain string) string {
+func testAccServiceV1DatadogComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

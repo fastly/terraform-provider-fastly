@@ -15,8 +15,8 @@ var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 const (
 	// ServiceTypeVCL is the type for VCL services.
 	ServiceTypeVCL = "vcl"
-	// ServiceTypeWasm is the type for Wasm services.
-	ServiceTypeWasm = "wasm"
+	// ServiceTypeCompute is the type for Compute services.
+	ServiceTypeCompute = "wasm"
 )
 
 // ServiceAttributeDefinition provides an interface for service attributes.
@@ -68,7 +68,7 @@ type VCLLoggingAttributes struct {
 	responseCondition string
 }
 
-// NewVCLLoggingAttributes provides default values to Wasm services for VCL only logging attributes
+// NewVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
 func NewVCLLoggingAttributes() VCLLoggingAttributes {
 	vla := VCLLoggingAttributes{}
 	vla.format = ""

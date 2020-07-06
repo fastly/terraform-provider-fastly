@@ -73,10 +73,10 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 	var service fst.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1Wasm := fst.Elasticsearch{
+	log1Compute := fst.Elasticsearch{
 		Version:           1,
 		Name:              "elasticsearch-endpoint",
 		Index:             "#{%F}",
@@ -158,12 +158,12 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1ElasticsearchWasmConfig(nameWasm, domain),
+				Config: testAccServiceV1ElasticsearchComputeConfig(nameCompute, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "logging_elasticsearch.#", "1"),
 				),
@@ -227,8 +227,8 @@ func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDeta
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						el.FormatVersion = e.FormatVersion
 						el.Format = e.Format
 						el.ResponseCondition = e.ResponseCondition
@@ -251,7 +251,7 @@ func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDeta
 	}
 }
 
-func testAccServiceV1ElasticsearchWasmConfig(name string, domain string) string {
+func testAccServiceV1ElasticsearchComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

@@ -8,7 +8,7 @@ import (
 // Some objects may need to be updated first, as they can be referenced by other
 // configuration objects (Backends, Request Headers, etc).
 var computeService = &BaseServiceDefinition{
-	Type: "wasm",
+	Type: ServiceTypeCompute,
 	Attributes: []ServiceAttributeDefinition{
 		NewServiceDomain(),
 		NewServiceHealthCheck(),

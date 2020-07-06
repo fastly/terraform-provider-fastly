@@ -56,10 +56,10 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameWasm := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	log1Wasm := gofastly.Logentries{
+	log1Compute := gofastly.Logentries{
 		Version:           1,
 		Name:              "somelogentriesname",
 		Port:              uint(20000),
@@ -98,12 +98,12 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1LogentriesWasmConfig(nameWasm, domainName1),
+				Config: testAccServiceV1LogentriesComputeConfig(nameCompute, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1Wasm}, ServiceTypeWasm),
+					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameWasm),
+						"fastly_service_compute.foo", "name", nameCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "logentries.#", "1"),
 				),
@@ -165,8 +165,8 @@ func testAccCheckFastlyServiceV1LogentriesAttributes(service *gofastly.ServiceDe
 					ls.CreatedAt = nil
 					ls.UpdatedAt = nil
 
-					// Ignore VCL attributes for Wasm and set to whatever is returned from the API.
-					if serviceType == ServiceTypeWasm {
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
 						ls.FormatVersion = s.FormatVersion
 						ls.Format = s.Format
 						ls.ResponseCondition = s.ResponseCondition
@@ -225,7 +225,7 @@ func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
 	})
 }
 
-func testAccServiceV1LogentriesWasmConfig(name, domain string) string {
+func testAccServiceV1LogentriesComputeConfig(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

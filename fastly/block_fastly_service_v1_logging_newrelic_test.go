@@ -63,16 +63,7 @@ var newrelicDefaultFormat = `{
 func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
-
-	log1Compute := gofastly.NewRelic{
-		Version:       1,
-		Name:          "newrelic-endpoint",
-		Token:         "token",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
-	}
 
 	log1 := gofastly.NewRelic{
 		Version:       1,
@@ -104,18 +95,6 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1NewRelicComputeConfig(nameCompute, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_newrelic.#", "1"),
-				),
-			},
-
-			{
 				Config: testAccServiceV1NewRelicConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -138,6 +117,39 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 						"fastly_service_v1.foo", "logging_newrelic.#", "2"),
 				),
 				PreventDiskCleanup: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_logging_newrelic_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.NewRelic{
+		Version:       1,
+		Name:          "newrelic-endpoint",
+		Token:         "token",
+		FormatVersion: 2,
+		Format:        "%h %l %u %t \"%r\" %>s %b",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1NewRelicComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1NewRelicAttributes(&service, []*gofastly.NewRelic{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_newrelic.#", "1"),
+				),
 			},
 		},
 	})

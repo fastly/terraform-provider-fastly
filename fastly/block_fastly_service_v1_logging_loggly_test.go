@@ -47,14 +47,7 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
-
-	log1Compute := gofastly.Loggly{
-		Version: 1,
-		Name:    "loggly-endpoint",
-		Token:   "s3cr3t",
-	}
 
 	log1 := gofastly.Loggly{
 		Version:       1,
@@ -85,17 +78,6 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1LogglyComputeConfig(nameCompute, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_loggly.#", "1"),
-				),
-			},
 
 			{
 				Config: testAccServiceV1LogglyConfig(name, domain),
@@ -118,6 +100,37 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "logging_loggly.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_logging_loggly_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.Loggly{
+		Version: 1,
+		Name:    "loggly-endpoint",
+		Token:   "s3cr3t",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1LogglyComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_loggly.#", "1"),
 				),
 			},
 		},

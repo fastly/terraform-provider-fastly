@@ -67,22 +67,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
-
-	logCompute1 := gofastly.FTP{
-		Version:         1,
-		Name:            "ftp-endpoint",
-		Address:         "ftp.example.com",
-		Username:        "user",
-		Password:        "p@ssw0rd",
-		PublicKey:       pgpPublicKey(t),
-		Path:            "/path",
-		Port:            27,
-		GzipLevel:       3,
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-	}
 
 	log1 := gofastly.FTP{
 		Version:         1,
@@ -141,18 +126,6 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1FTPComputeConfig(nameCompute, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&logCompute1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_ftp.#", "1"),
-				),
-			},
-
-			{
 				Config: testAccServiceV1FTPConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -173,6 +146,45 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "logging_ftp.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_logging_ftp_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.FTP{
+		Version:         1,
+		Name:            "ftp-endpoint",
+		Address:         "ftp.example.com",
+		Username:        "user",
+		Password:        "p@ssw0rd",
+		PublicKey:       pgpPublicKey(t),
+		Path:            "/path",
+		Port:            27,
+		GzipLevel:       3,
+		Period:          3600,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1FTPComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_ftp.#", "1"),
 				),
 			},
 		},

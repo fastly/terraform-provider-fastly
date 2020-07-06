@@ -76,28 +76,7 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
-
-	log1Compute := gofastly.SFTP{
-		Version: 1,
-
-		// Configured
-		Name:          "sftp-endpoint",
-		Address:       "sftp.example.com",
-		User:          "username",
-		Password:      "password",
-		PublicKey:     pgpPublicKey(t),
-		Path:          "/",
-		SSHKnownHosts: "sftp.example.com",
-
-		// Defaults
-		Port:            22,
-		Period:          3600,
-		MessageType:     "classic",
-		GzipLevel:       0,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-	}
 
 	log1 := gofastly.SFTP{
 		Version: 1,
@@ -172,17 +151,6 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1SFTPComputeConfig(nameCompute, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1SFTPAttributes(&service, []*gofastly.SFTP{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_sftp.#", "1"),
-				),
-			},
 
 			{
 				Config: testAccServiceV1SFTPConfig(name, domain),
@@ -205,6 +173,51 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "logging_sftp.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_logging_sftp_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.SFTP{
+		Version: 1,
+
+		// Configured
+		Name:          "sftp-endpoint",
+		Address:       "sftp.example.com",
+		User:          "username",
+		Password:      "password",
+		PublicKey:     pgpPublicKey(t),
+		Path:          "/",
+		SSHKnownHosts: "sftp.example.com",
+
+		// Defaults
+		Port:            22,
+		Period:          3600,
+		MessageType:     "classic",
+		GzipLevel:       0,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1SFTPComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1SFTPAttributes(&service, []*gofastly.SFTP{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_sftp.#", "1"),
 				),
 			},
 		},

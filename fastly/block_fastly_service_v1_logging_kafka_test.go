@@ -69,22 +69,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
-
-	log1Compute := gofastly.Kafka{
-		Version:          1,
-		Name:             "kafkalogger",
-		Topic:            "topic",
-		Brokers:          "127.0.0.1,127.0.0.2",
-		CompressionCodec: "snappy",
-		RequiredACKs:     "-1",
-		UseTLS:           true,
-		TLSCACert:        caCert(t),
-		TLSClientCert:    certificate(t),
-		TLSClientKey:     privateKey(t),
-		TLSHostname:      "example.com",
-	}
 
 	log1 := gofastly.Kafka{
 		Version:           1,
@@ -145,17 +130,6 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1KafkaComputeConfig(nameCompute, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1KafkaAttributes(&service, []*gofastly.Kafka{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_kafka.#", "1"),
-				),
-			},
 
 			{
 				Config: testAccServiceV1KafkaConfig(name, domain),
@@ -178,6 +152,45 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "logging_kafka.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_kafkalogging_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.Kafka{
+		Version:          1,
+		Name:             "kafkalogger",
+		Topic:            "topic",
+		Brokers:          "127.0.0.1,127.0.0.2",
+		CompressionCodec: "snappy",
+		RequiredACKs:     "-1",
+		UseTLS:           true,
+		TLSCACert:        caCert(t),
+		TLSClientCert:    certificate(t),
+		TLSClientKey:     privateKey(t),
+		TLSHostname:      "example.com",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1KafkaComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1KafkaAttributes(&service, []*gofastly.Kafka{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_kafka.#", "1"),
 				),
 			},
 		},

@@ -28,7 +28,6 @@ type MenuItem struct {
 	Title  string
 }
 
-
 func main() {
 	baseDir := getBaseDir()
 	tmplDir := baseDir + "/website_src/"
@@ -76,8 +75,7 @@ func main() {
 	renderPages(getTemplate(tmplDir), pages)
 }
 
-
-func generateMenuItems(resourcePages []Page) []MenuItem{
+func generateMenuItems(resourcePages []Page) []MenuItem {
 	var menuItems []MenuItem
 	for _, p := range resourcePages {
 		menuItems = append(menuItems, MenuItem{
@@ -88,7 +86,6 @@ func generateMenuItems(resourcePages []Page) []MenuItem{
 	}
 	return menuItems
 }
-
 
 func renderPages(t *template.Template, pages []Page) {
 	for _, p := range pages {
@@ -119,7 +116,6 @@ func getTemplate(tmplDir string) *template.Template {
 	return template.Must(template.ParseFiles(templateFiles...))
 }
 
-
 func getBaseDir() string {
 	_, scriptPath, _, ok := runtime.Caller(0)
 	if !ok {
@@ -134,4 +130,3 @@ func getBaseDir() string {
 	}
 	return tpgDir
 }
-

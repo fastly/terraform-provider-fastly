@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccFastlyServiceV1BigQueryLogging(t *testing.T) {
+func TestAccFastlyServiceV1_bigquerylogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

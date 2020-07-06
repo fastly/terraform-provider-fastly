@@ -185,6 +185,7 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 	}
 
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(extraHCLMap, "")
+	wafSvcCfg := testAccFastlyServiceWAFVersionV1(name, wafVer)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -192,7 +193,7 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
+				Config: wafSvcCfg,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists(serviceRef, &service),
 				),
@@ -201,6 +202,10 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 				ResourceName:      "fastly_service_waf_configuration_v1.waf",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config:   wafSvcCfg,
+				PlanOnly: true,
 			},
 		},
 	})

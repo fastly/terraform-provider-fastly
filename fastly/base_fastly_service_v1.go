@@ -70,12 +70,9 @@ type VCLLoggingAttributes struct {
 
 // NewVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
 func NewVCLLoggingAttributes() VCLLoggingAttributes {
-	vla := VCLLoggingAttributes{}
-	vla.format = ""
-	vla.formatVersion = 0
-	vla.placement = "none"
-	vla.responseCondition = ""
-	return vla
+	return VCLLoggingAttributes{
+		placement: "none",
+	}
 }
 
 // ServiceDefinition defines the data model for service definitions

@@ -68,7 +68,6 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	serviceNameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	blobStorageLogOne := gofastly.BlobStorage{
 		Name:              "test-blobstorage-1",
@@ -85,19 +84,6 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		MessageType:       "blank",
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
-	}
-
-	blobStorageLogOneCompute := gofastly.BlobStorage{
-		Name:            "test-blobstorage-1",
-		Path:            "/5XX/",
-		AccountName:     "test",
-		Container:       "fastly",
-		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:          12,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:       9,
-		PublicKey:       pgpPublicKey(t),
-		MessageType:     "blank",
 	}
 
 	blobStorageLogOneUpdated := gofastly.BlobStorage{
@@ -140,18 +126,6 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1BlobStorageLoggingConfig_completeCompute(serviceNameCompute),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneCompute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", serviceNameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "blobstoragelogging.#", "1"),
-				),
-			},
-
-			{
 				Config: testAccServiceV1BlobStorageLoggingConfig_complete(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -172,6 +146,43 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "blobstoragelogging.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_blobstoragelogging_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	blobStorageLogOne := gofastly.BlobStorage{
+		Name:            "test-blobstorage-1",
+		Path:            "/5XX/",
+		AccountName:     "test",
+		Container:       "fastly",
+		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
+		Period:          12,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		GzipLevel:       9,
+		PublicKey:       pgpPublicKey(t),
+		MessageType:     "blank",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1BlobStorageLoggingConfig_complete_compute(serviceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", serviceName),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "blobstoragelogging.#", "1"),
 				),
 			},
 		},
@@ -355,7 +366,7 @@ resource "fastly_service_v1" "foo" {
 }`, serviceName, domainName, format)
 }
 
-func testAccServiceV1BlobStorageLoggingConfig_completeCompute(serviceName string) string {
+func testAccServiceV1BlobStorageLoggingConfig_complete_compute(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`

@@ -73,24 +73,7 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 	var service fst.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
-
-	log1Compute := fst.Elasticsearch{
-		Version:           1,
-		Name:              "elasticsearch-endpoint",
-		Index:             "#{%F}",
-		URL:               "https://es.example.com",
-		RequestMaxBytes:   0,
-		RequestMaxEntries: 0,
-		User:              "user",
-		Password:          "password",
-		Pipeline:          "my-pipeline",
-		TLSCACert:         caCert(t),
-		TLSClientCert:     certificate(t),
-		TLSClientKey:      privateKey(t),
-		TLSHostname:       "example.com",
-	}
 
 	log1 := fst.Elasticsearch{
 		Version:           1,
@@ -157,17 +140,6 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1ElasticsearchComputeConfig(nameCompute, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_elasticsearch.#", "1"),
-				),
-			},
 
 			{
 				Config: testAccServiceV1ElasticsearchConfig(name, domain),
@@ -190,6 +162,47 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "logging_elasticsearch.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_logging_elasticsearch_basic_compute(t *testing.T) {
+	var service fst.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := fst.Elasticsearch{
+		Version:           1,
+		Name:              "elasticsearch-endpoint",
+		Index:             "#{%F}",
+		URL:               "https://es.example.com",
+		RequestMaxBytes:   0,
+		RequestMaxEntries: 0,
+		User:              "user",
+		Password:          "password",
+		Pipeline:          "my-pipeline",
+		TLSCACert:         caCert(t),
+		TLSClientCert:     certificate(t),
+		TLSClientKey:      privateKey(t),
+		TLSHostname:       "example.com",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1ElasticsearchComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1ElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_elasticsearch.#", "1"),
 				),
 			},
 		},

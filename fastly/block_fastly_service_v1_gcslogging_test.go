@@ -59,7 +59,6 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
 	secretKey, err := generateKey()
 	if err != nil {
@@ -78,11 +77,29 @@ func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 					testAccCheckFastlyServiceV1Attributes_gcs(&service, name, gcsName),
 				),
 			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_gcslogging_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1Config_compute_gcs(nameCompute, gcsName, secretKey),
+				Config: testAccServiceV1Config_compute_gcs(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_gcs(&service, nameCompute, gcsName),
+					testAccCheckFastlyServiceV1Attributes_gcs(&service, name, gcsName),
 				),
 			},
 		},

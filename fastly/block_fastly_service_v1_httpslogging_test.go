@@ -56,7 +56,6 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.HTTPS{
@@ -70,17 +69,6 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 		RequestMaxBytes:   0,
 		MessageType:       "blank",
 		FormatVersion:     2,
-		JSONFormat:        "0",
-	}
-
-	logCompute := gofastly.HTTPS{
-		Version:           1,
-		Name:              "httpslogger",
-		URL:               "https://example.com/logs/1",
-		Method:            "PUT",
-		RequestMaxEntries: 0,
-		RequestMaxBytes:   0,
-		MessageType:       "blank",
 		JSONFormat:        "0",
 	}
 
@@ -130,18 +118,6 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1HTTPSComputeConfig(nameCompute, domain),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1HTTPSAttributes(&service, []*gofastly.HTTPS{&logCompute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "httpslogging.#", "1"),
-				),
-			},
-
-			{
 				Config: testAccServiceV1HTTPSConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -150,6 +126,42 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "httpslogging.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_httpslogging_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log := gofastly.HTTPS{
+		Version:           1,
+		Name:              "httpslogger",
+		URL:               "https://example.com/logs/1",
+		Method:            "PUT",
+		RequestMaxEntries: 0,
+		RequestMaxBytes:   0,
+		MessageType:       "blank",
+		JSONFormat:        "0",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1HTTPSComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1HTTPSAttributes(&service, []*gofastly.HTTPS{&log}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "httpslogging.#", "1"),
 				),
 			},
 		},

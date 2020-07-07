@@ -59,17 +59,6 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 	nameCompute := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	log1Compute := gofastly.Logentries{
-		Version:           1,
-		Name:              "somelogentriesname",
-		Port:              uint(20000),
-		UseTLS:            true,
-		Token:             "token",
-		Format:            "%h %l %u %t %r %>s",
-		FormatVersion:     1,
-		ResponseCondition: "response_condition_test",
-	}
-
 	log1 := gofastly.Logentries{
 		Version:           1,
 		Name:              "somelogentriesname",
@@ -97,17 +86,6 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1LogentriesComputeConfig(nameCompute, domainName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceV1LogentriesAttributes(&service, []*gofastly.Logentries{&log1Compute}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", nameCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logentries.#", "1"),
-				),
-			},
 			{
 				Config: testAccServiceV1LogentriesConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(

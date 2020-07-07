@@ -438,9 +438,13 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 		ID: d.Id(),
 	})
-
 	if err != nil {
 		return err
+	}
+
+	// Check for service type mismatch (i.e. when importing)
+	if s.Type != serviceDef.GetType() {
+		return fmt.Errorf("[ERR] Service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
 	}
 
 	d.Set("name", s.Name)

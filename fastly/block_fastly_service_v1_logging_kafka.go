@@ -13,11 +13,11 @@ type KafkaServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingKafka(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingKafka(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &KafkaServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_kafka",
-			serviceAttributes: sa,
+			key:             "logging_kafka",
+			serviceMetadata: sa,
 		},
 	}
 }

@@ -12,11 +12,11 @@ type FTPServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingFTP(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &FTPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_ftp",
-			serviceAttributes: sa,
+			key:             "logging_ftp",
+			serviceMetadata: sa,
 		},
 	}
 }

@@ -12,11 +12,11 @@ type LogglyServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingLoggly(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingLoggly(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &LogglyServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_loggly",
-			serviceAttributes: sa,
+			key:             "logging_loggly",
+			serviceMetadata: sa,
 		},
 	}
 }

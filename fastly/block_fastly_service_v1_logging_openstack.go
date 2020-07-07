@@ -12,11 +12,11 @@ type OpenstackServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingOpenstack(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingOpenstack(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &OpenstackServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_openstack",
-			serviceAttributes: sa,
+			key:             "logging_openstack",
+			serviceMetadata: sa,
 		},
 	}
 }

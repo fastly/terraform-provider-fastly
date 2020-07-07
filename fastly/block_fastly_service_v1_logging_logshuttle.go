@@ -12,11 +12,11 @@ type LogshuttleServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingLogshuttle(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingLogshuttle(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &LogshuttleServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_logshuttle",
-			serviceAttributes: sa,
+			key:             "logging_logshuttle",
+			serviceMetadata: sa,
 		},
 	}
 }

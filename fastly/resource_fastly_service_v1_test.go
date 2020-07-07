@@ -56,10 +56,14 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 
 func TestResourceFastlyFlattenBackend(t *testing.T) {
 	cases := []struct {
-		remote []*gofastly.Backend
-		local  []map[string]interface{}
+		remote            []*gofastly.Backend
+		local             []map[string]interface{}
+		serviceAttributes ServiceMetadata
 	}{
 		{
+			serviceAttributes: ServiceMetadata{
+				serviceType: ServiceTypeVCL,
+			},
 			remote: []*gofastly.Backend{
 				{
 					Name:                "test.notexample.com",
@@ -122,7 +126,8 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenBackends(c.remote)
+		ah := NewServiceBackend(c.serviceAttributes)
+		out := ah.Flatten(c.remote)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
 		}

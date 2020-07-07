@@ -13,11 +13,11 @@ type ConditionServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceCondition(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceCondition(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &ConditionServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "condition",
-			serviceAttributes: sa,
+			key:             "condition",
+			serviceMetadata: sa,
 		},
 	}
 }

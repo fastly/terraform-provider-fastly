@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-var vclAttributes = ServiceAttributes{
+var vclAttributes = ServiceMetadata{
 	ServiceTypeVCL,
 }
 

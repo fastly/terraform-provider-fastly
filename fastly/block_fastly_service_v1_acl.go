@@ -12,11 +12,11 @@ type ACLServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceACL(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceACL(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &ACLServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "acl",
-			serviceAttributes: sa,
+			key:             "acl",
+			serviceMetadata: sa,
 		},
 	}
 }

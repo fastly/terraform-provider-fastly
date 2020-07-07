@@ -12,11 +12,11 @@ type DatadogServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingDatadog(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingDatadog(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &DatadogServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_datadog",
-			serviceAttributes: sa,
+			key:             "logging_datadog",
+			serviceMetadata: sa,
 		},
 	}
 }

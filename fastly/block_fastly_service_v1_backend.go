@@ -13,11 +13,11 @@ type BackendServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceBackend(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceBackend(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &BackendServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "backend",
-			serviceAttributes: sa,
+			key:             "backend",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -112,7 +112,7 @@ func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
 
-	bl := flattenBackends(backendList)
+	bl := h.flatten(backendList)
 
 	if err := d.Set(h.GetKey(), bl); err != nil {
 		log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
@@ -291,7 +291,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
+func (h *BackendServiceAttributeHandler) flatten(backendList []*gofastly.Backend) []map[string]interface{} {
 	var bl []map[string]interface{}
 	for _, b := range backendList {
 		// Convert Backend to a map for saving to state.
@@ -319,8 +319,11 @@ func flattenBackends(backendList []*gofastly.Backend) []map[string]interface{} {
 			"ssl_cert_hostname":     b.SSLCertHostname,
 			"ssl_sni_hostname":      b.SSLSNIHostname,
 			"weight":                int(b.Weight),
-			"request_condition":     b.RequestCondition,
 			"healthcheck":           b.HealthCheck,
+		}
+
+		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+			nb["request_condition"] = b.RequestCondition
 		}
 
 		bl = append(bl, nb)

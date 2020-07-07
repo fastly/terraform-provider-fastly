@@ -13,11 +13,11 @@ type HeaderServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceHeader(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceHeader(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &HeaderServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "header",
-			serviceAttributes: sa,
+			key:             "header",
+			serviceMetadata: sa,
 		},
 	}
 }

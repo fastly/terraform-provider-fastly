@@ -12,11 +12,11 @@ type BigQueryLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceBigQueryLogging(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceBigQueryLogging(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &BigQueryLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "bigquerylogging",
-			serviceAttributes: sa,
+			key:             "bigquerylogging",
+			serviceMetadata: sa,
 		},
 	}
 }

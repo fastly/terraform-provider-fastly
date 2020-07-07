@@ -12,11 +12,11 @@ type GCSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceGCSLogging(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceGCSLogging(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &GCSLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "gcslogging",
-			serviceAttributes: sa,
+			key:             "gcslogging",
+			serviceMetadata: sa,
 		},
 	}
 }

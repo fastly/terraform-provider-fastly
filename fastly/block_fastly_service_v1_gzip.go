@@ -13,11 +13,11 @@ type GzipServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceGzip(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceGzip(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &GzipServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "gzip",
-			serviceAttributes: sa,
+			key:             "gzip",
+			serviceMetadata: sa,
 		},
 	}
 }

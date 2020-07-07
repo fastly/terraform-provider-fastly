@@ -13,11 +13,11 @@ type CacheSettingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceCacheSetting(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceCacheSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &CacheSettingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "cache_setting",
-			serviceAttributes: sa,
+			key:             "cache_setting",
+			serviceMetadata: sa,
 		},
 	}
 }

@@ -12,11 +12,11 @@ type CloudfilesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingCloudfiles(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingCloudfiles(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &CloudfilesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_cloudfiles",
-			serviceAttributes: sa,
+			key:             "logging_cloudfiles",
+			serviceMetadata: sa,
 		},
 	}
 }

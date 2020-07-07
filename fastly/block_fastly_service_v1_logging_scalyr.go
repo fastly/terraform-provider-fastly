@@ -13,11 +13,11 @@ type ScalyrServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingScalyr(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingScalyr(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &ScalyrServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_scalyr",
-			serviceAttributes: sa,
+			key:             "logging_scalyr",
+			serviceMetadata: sa,
 		},
 	}
 }

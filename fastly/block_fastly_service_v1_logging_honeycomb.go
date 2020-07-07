@@ -12,11 +12,11 @@ type HoneycombServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingHoneycomb(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingHoneycomb(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &HoneycombServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_honeycomb",
-			serviceAttributes: sa,
+			key:             "logging_honeycomb",
+			serviceMetadata: sa,
 		},
 	}
 }

@@ -41,15 +41,15 @@ type ServiceAttributeDefinition interface {
 	MustProcess(d *schema.ResourceData, initialVersion bool) bool
 }
 
-// ServiceAttributes provides a container to pass service attributes into an Attribute handler.
-type ServiceAttributes struct {
+// ServiceMetadata provides a container to pass service attributes into an Attribute handler.
+type ServiceMetadata struct {
 	serviceType string
 }
 
 // DefaultServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DefaultServiceAttributeHandler struct {
-	key               string
-	serviceAttributes ServiceAttributes
+	key             string
+	serviceMetadata ServiceMetadata
 }
 
 // GetKey is provided since most attributes will just use their private "key" for interacting with the service.
@@ -58,8 +58,8 @@ func (h *DefaultServiceAttributeHandler) GetKey() string {
 }
 
 // GetServiceType is provided to allow internal methods to get the service Type
-func (h *DefaultServiceAttributeHandler) GetServiceAttributes() ServiceAttributes {
-	return h.serviceAttributes
+func (h *DefaultServiceAttributeHandler) GetServiceAttributes() ServiceMetadata {
+	return h.serviceMetadata
 }
 
 // See interface definition for comments.

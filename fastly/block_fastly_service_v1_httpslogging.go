@@ -13,11 +13,11 @@ type HTTPSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceHTTPSLogging(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceHTTPSLogging(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &HTTPSLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "httpslogging",
-			serviceAttributes: sa,
+			key:             "httpslogging",
+			serviceMetadata: sa,
 		},
 	}
 }

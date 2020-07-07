@@ -12,11 +12,11 @@ type SplunkServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceSplunk(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceSplunk(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &SplunkServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "splunk",
-			serviceAttributes: sa,
+			key:             "splunk",
+			serviceMetadata: sa,
 		},
 	}
 }

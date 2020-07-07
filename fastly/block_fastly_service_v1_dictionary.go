@@ -12,11 +12,11 @@ type DictionaryServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceDictionary(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceDictionary(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &DictionaryServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "dictionary",
-			serviceAttributes: sa,
+			key:             "dictionary",
+			serviceMetadata: sa,
 		},
 	}
 }

@@ -12,11 +12,11 @@ type ResponseObjectServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceResponseObject(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceResponseObject(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &ResponseObjectServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "response_object",
-			serviceAttributes: sa,
+			key:             "response_object",
+			serviceMetadata: sa,
 		},
 	}
 }

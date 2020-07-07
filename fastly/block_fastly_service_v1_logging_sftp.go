@@ -12,11 +12,11 @@ type SFTPServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingSFTP(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &SFTPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_sftp",
-			serviceAttributes: sa,
+			key:             "logging_sftp",
+			serviceMetadata: sa,
 		},
 	}
 }

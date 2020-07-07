@@ -12,11 +12,11 @@ type HerokuServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingHeroku(sa ServiceAttributes) ServiceAttributeDefinition {
+func NewServiceLoggingHeroku(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &HerokuServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:               "logging_heroku",
-			serviceAttributes: sa,
+			key:             "logging_heroku",
+			serviceMetadata: sa,
 		},
 	}
 }

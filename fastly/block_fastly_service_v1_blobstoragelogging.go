@@ -187,7 +187,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 		},
 	}
 
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

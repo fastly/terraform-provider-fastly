@@ -88,7 +88,7 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 			HealthCheck:         df["healthcheck"].(string),
 		}
 
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 			opts.RequestCondition = df["request_condition"].(string)
 		}
 
@@ -112,8 +112,7 @@ func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
 
-	bl := h.flatten(backendList)
-
+	bl := flattenBackend(backendList, h.GetServiceMetadata())
 	if err := d.Set(h.GetKey(), bl); err != nil {
 		log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
 	}
@@ -271,7 +270,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 		},
 	}
 
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -291,11 +290,12 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *BackendServiceAttributeHandler) flatten(backendList []*gofastly.Backend) []map[string]interface{} {
-	var bl []map[string]interface{}
+func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[string]interface{} {
+	bl := make([]map[string]interface{}, 0, len(backendList))
+
 	for _, b := range backendList {
-		// Convert Backend to a map for saving to state.
-		nb := map[string]interface{}{
+
+		backend := map[string]interface{}{
 			"name":                  b.Name,
 			"address":               b.Address,
 			"auto_loadbalance":      b.AutoLoadbalance,
@@ -322,11 +322,11 @@ func (h *BackendServiceAttributeHandler) flatten(backendList []*gofastly.Backend
 			"healthcheck":           b.HealthCheck,
 		}
 
-		if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
-			nb["request_condition"] = b.RequestCondition
+		if sa.serviceType == ServiceTypeVCL {
+			backend["request_condition"] = b.RequestCondition
 		}
 
-		bl = append(bl, nb)
+		bl = append(bl, backend)
 	}
 	return bl
 }

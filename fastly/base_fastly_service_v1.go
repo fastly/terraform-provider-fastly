@@ -58,7 +58,7 @@ func (h *DefaultServiceAttributeHandler) GetKey() string {
 }
 
 // GetServiceType is provided to allow internal methods to get the service Type
-func (h *DefaultServiceAttributeHandler) GetServiceAttributes() ServiceMetadata {
+func (h *DefaultServiceAttributeHandler) GetServiceMetadata() ServiceMetadata {
 	return h.serviceMetadata
 }
 
@@ -84,7 +84,7 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 	var vla = VCLLoggingAttributes{
 		placement: "none",
 	}
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		if val, ok := data["format"]; ok {
 			vla.format = val.(string)
 		}

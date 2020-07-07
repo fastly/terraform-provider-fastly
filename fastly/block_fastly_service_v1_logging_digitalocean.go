@@ -271,7 +271,7 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 		},
 	}
 
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

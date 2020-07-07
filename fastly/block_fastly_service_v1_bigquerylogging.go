@@ -168,7 +168,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 		},
 	}
 
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

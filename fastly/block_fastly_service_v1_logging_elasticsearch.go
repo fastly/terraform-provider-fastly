@@ -174,7 +174,7 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 		},
 	}
 
-	if h.GetServiceAttributes().serviceType == ServiceTypeVCL {
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

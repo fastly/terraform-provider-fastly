@@ -74,3 +74,18 @@ The following example uses a regular expression to execute a grouping of basic a
 ```sh
 $ make testacc TESTARGS='-run=TestAccFastlyServiceV1_.*_basic'
 ```
+
+Building The Documentation
+--------------------------
+
+The documentation is built from components (go templates) stored in the `website_src` folder.
+Building the documentation copies the full markdown into the `website` folder, ready for deployment to Hashicorp.
+
+With the repository cloned to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-fastly`:
+
+* To explicitly build the documentation:  
+`go run scripts/website/parse-templates.go `  
+
+* To build and preview the documentation online:  
+`make website`
+

@@ -19,7 +19,7 @@ func TestAccFastlyServiceV1_package_basic(t *testing.T) {
 
 	wp1 := gofastly.Package{
 		Metadata: gofastly.PackageMetadata{
-			Name:        "compute-test",
+			Name:        "wasm-test",
 			Description: "Test Package",
 			Authors:     []string{"fastly@fastly.com"},
 			Language:    "rust",

@@ -577,19 +577,18 @@ func TestAccFastlyServiceV1_import(t *testing.T) {
 				Config: testAccServiceV1_import(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					),
+				),
 			},
 			{
-				ResourceName:      "fastly_service_v1.foo",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "fastly_service_v1.foo",
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"activate", "force_destroy"},
 			},
 		},
 	})
 
 }
-
 
 func testAccServiceV1Config(name, domain string) string {
 	return fmt.Sprintf(`

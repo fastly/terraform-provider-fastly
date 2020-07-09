@@ -158,16 +158,15 @@ func TestAccFastlyServiceComputeV1_import(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "fastly_service_compute.foo",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "fastly_service_compute.foo",
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename"},
 			},
 		},
 	})
 
 }
-
 
 func testAccServiceComputeV1Config(name, domain string) string {
 	return fmt.Sprintf(`
@@ -216,10 +215,10 @@ resource "fastly_service_compute" "foo" {
   }
   force_destroy = true
   activate = false
-}`, 	acctest.RandString(10), // name
-		acctest.RandString(5), // domain01
-		acctest.RandString(5), // domain02
+}`, acctest.RandString(10), // name
+		acctest.RandString(5),                        // domain01
+		acctest.RandString(5),                        // domain02
 		acctest.RandString(8), acctest.RandString(8), // backend01
 		acctest.RandString(8), acctest.RandString(8), // backend02
-		)
+	)
 }

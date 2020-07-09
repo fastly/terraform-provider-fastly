@@ -57,7 +57,7 @@ func (h *DefaultServiceAttributeHandler) GetKey() string {
 	return h.key
 }
 
-// GetServiceType is provided to allow internal methods to get the service Type
+// GetServiceMetadata is provided to allow internal methods to get the service Metadata
 func (h *DefaultServiceAttributeHandler) GetServiceMetadata() ServiceMetadata {
 	return h.serviceMetadata
 }

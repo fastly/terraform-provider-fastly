@@ -79,7 +79,7 @@ type VCLLoggingAttributes struct {
 	responseCondition string
 }
 
-// NewVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
+// getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
 func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]interface{}) VCLLoggingAttributes {
 	var vla = VCLLoggingAttributes{
 		placement: "none",

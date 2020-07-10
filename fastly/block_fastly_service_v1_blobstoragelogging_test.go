@@ -129,7 +129,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 				Config: testAccServiceV1BlobStorageLoggingConfig_complete(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}),
+					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -141,11 +141,48 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 				Config: testAccServiceV1BlobStorageLoggingConfig_update(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneUpdated, &blobStorageLogTwo}),
+					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneUpdated, &blobStorageLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "blobstoragelogging.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_blobstoragelogging_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	blobStorageLogOne := gofastly.BlobStorage{
+		Name:            "test-blobstorage-1",
+		Path:            "/5XX/",
+		AccountName:     "test",
+		Container:       "fastly",
+		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
+		Period:          12,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		GzipLevel:       9,
+		PublicKey:       pgpPublicKey(t),
+		MessageType:     "blank",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1BlobStorageLoggingConfig_complete_compute(serviceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", serviceName),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "blobstoragelogging.#", "1"),
 				),
 			},
 		},
@@ -178,7 +215,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_default(t *testing.T) {
 				Config: testAccServiceV1BlobStorageLoggingConfig_default(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLog}),
+					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLog}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -219,7 +256,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_env(t *testing.T) {
 				Config: testAccServiceV1BlobStorageLoggingConfig_env(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLog}),
+					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLog}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", serviceName),
 					resource.TestCheckResourceAttr(
@@ -230,7 +267,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_env(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(service *gofastly.ServiceDetail, localBlobStorageList []*gofastly.BlobStorage) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(service *gofastly.ServiceDetail, localBlobStorageList []*gofastly.BlobStorage, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -254,6 +291,15 @@ func testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(service *gofastly.S
 					// we don't know these things ahead of time, so populate them now
 					lbs.ServiceID = service.ID
 					lbs.Version = service.ActiveVersion.Number
+
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
+						lbs.FormatVersion = rbs.FormatVersion
+						lbs.Format = rbs.Format
+						lbs.ResponseCondition = rbs.ResponseCondition
+						lbs.Placement = rbs.Placement
+					}
+
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					rbs.CreatedAt = nil
@@ -318,6 +364,45 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, serviceName, domainName, format)
+}
+
+func testAccServiceV1BlobStorageLoggingConfig_complete_compute(serviceName string) string {
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "tf-test-backend"
+  }
+
+  blobstoragelogging {
+    name               = "test-blobstorage-1"
+    path               = "/5XX/"
+    account_name       = "test"
+    container          = "fastly"
+    sas_token          = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    period             = 12
+    timestamp_format   = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    gzip_level         = 9
+    public_key         = file("test_fixtures/fastly_test_publickey")
+    message_type       = "blank"
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+
+  force_destroy = true
+}`, serviceName, domainName)
 }
 
 func testAccServiceV1BlobStorageLoggingConfig_update(serviceName string) string {

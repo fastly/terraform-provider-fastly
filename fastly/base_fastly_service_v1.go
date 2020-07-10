@@ -12,12 +12,19 @@ import (
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
 
+const (
+	// ServiceTypeVCL is the type for VCL services.
+	ServiceTypeVCL = "vcl"
+	// ServiceTypeCompute is the type for Compute services.
+	ServiceTypeCompute = "wasm"
+)
+
 // ServiceAttributeDefinition provides an interface for service attributes.
 // We compose a service resource out of attribute objects to allow us to construct both the VCL and Compute service
 // resources from common components.
 type ServiceAttributeDefinition interface {
 	// Register add the attribute to the resource schema.
-	Register(d *schema.Resource) error
+	Register(s *schema.Resource) error
 
 	// Read refreshes the attribute state against the Fastly API.
 	Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error
@@ -34,15 +41,25 @@ type ServiceAttributeDefinition interface {
 	MustProcess(d *schema.ResourceData, initialVersion bool) bool
 }
 
+// ServiceMetadata provides a container to pass service attributes into an Attribute handler.
+type ServiceMetadata struct {
+	serviceType string
+}
+
 // DefaultServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DefaultServiceAttributeHandler struct {
-	schema *schema.Schema
-	key    string
+	key             string
+	serviceMetadata ServiceMetadata
 }
 
 // GetKey is provided since most attributes will just use their private "key" for interacting with the service.
 func (h *DefaultServiceAttributeHandler) GetKey() string {
 	return h.key
+}
+
+// GetServiceMetadata is provided to allow internal methods to get the service Metadata
+func (h *DefaultServiceAttributeHandler) GetServiceMetadata() ServiceMetadata {
+	return h.serviceMetadata
 }
 
 // See interface definition for comments.
@@ -53,6 +70,35 @@ func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool 
 // See interface definition for comments.
 func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, initialVersion bool) bool {
 	return h.HasChange(d)
+}
+
+type VCLLoggingAttributes struct {
+	format            string
+	formatVersion     uint
+	placement         string
+	responseCondition string
+}
+
+// getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
+func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]interface{}) VCLLoggingAttributes {
+	var vla = VCLLoggingAttributes{
+		placement: "none",
+	}
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		if val, ok := data["format"]; ok {
+			vla.format = val.(string)
+		}
+		if val, ok := data["format_version"]; ok {
+			vla.formatVersion = uint(val.(int))
+		}
+		if val, ok := data["placement"]; ok {
+			vla.placement = val.(string)
+		}
+		if val, ok := data["response_condition"]; ok {
+			vla.responseCondition = val.(string)
+		}
+	}
+	return vla
 }
 
 // ServiceDefinition defines the data model for service definitions

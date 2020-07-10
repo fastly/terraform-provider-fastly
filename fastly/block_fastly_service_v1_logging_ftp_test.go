@@ -129,7 +129,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 				Config: testAccServiceV1FTPConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&log1}),
+					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -141,7 +141,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 				Config: testAccServiceV1FTPConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -152,7 +152,46 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, ftps []*gofastly.FTP) resource.TestCheckFunc {
+func TestAccFastlyServiceV1_logging_ftp_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.FTP{
+		Version:         1,
+		Name:            "ftp-endpoint",
+		Address:         "ftp.example.com",
+		Username:        "user",
+		Password:        "p@ssw0rd",
+		PublicKey:       pgpPublicKey(t),
+		Path:            "/path",
+		Port:            27,
+		GzipLevel:       3,
+		Period:          3600,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1FTPComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1FTPAttributes(&service, []*gofastly.FTP{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_ftp.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, ftps []*gofastly.FTP, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -182,6 +221,15 @@ func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, f
 					// these ahead of time
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
+
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
+						el.FormatVersion = e.FormatVersion
+						el.Format = e.Format
+						el.ResponseCondition = e.ResponseCondition
+						el.Placement = e.Placement
+					}
+
 					if diff := cmp.Diff(e, el); diff != "" {
 						return fmt.Errorf("Bad match FTP logging match: %s", diff)
 					}
@@ -196,6 +244,43 @@ func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, f
 
 		return nil
 	}
+}
+
+func testAccServiceV1FTPComputeConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-ftp-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_ftp {
+    name       = "ftp-endpoint"
+    address    = "ftp.example.com"
+    user       = "user"
+	public_key = file("test_fixtures/fastly_test_publickey")
+    password         = "p@ssw0rd"
+    path             = "/path"
+    port             = 27
+    gzip_level       = 3
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+
+  force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1FTPConfig(name string, domain string) string {

@@ -12,10 +12,11 @@ type SumologicServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceSumologic() ServiceAttributeDefinition {
+func NewServiceSumologic(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &SumologicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "sumologic",
+			key:             "sumologic",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -57,16 +58,18 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	// POST new/updated Sumologic
 	for _, pRaw := range addSumologic {
 		sf := pRaw.(map[string]interface{})
+
+		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateSumologicInput{
 			Service:           d.Id(),
 			Version:           latestVersion,
 			Name:              sf["name"].(string),
 			URL:               sf["url"].(string),
-			Format:            sf["format"].(string),
-			FormatVersion:     sf["format_version"].(int),
-			ResponseCondition: sf["response_condition"].(string),
 			MessageType:       sf["message_type"].(string),
-			Placement:         sf["placement"].(string),
+			Format:            vla.format,
+			FormatVersion:     int(vla.formatVersion),
+			ResponseCondition: vla.responseCondition,
+			Placement:         vla.placement,
 		}
 
 		log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
@@ -97,56 +100,61 @@ func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 }
 
 func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Unique name to refer to this logging setup",
+		},
+		"url": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The URL to POST to.",
+		},
+		// Optional fields
+		"message_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "classic",
+			Description:  "How the message should be formatted.",
+			ValidateFunc: validateLoggingMessageType(),
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%h %l %u %t %r %>s",
+			Description: "Apache-style string or VCL variables to use for log formatting",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      1,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of blockAttributes condition to apply this logging.",
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name to refer to this logging setup",
-				},
-				"url": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The URL to POST to.",
-				},
-				// Optional fields
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%h %l %u %t %r %>s",
-					Description: "Apache-style string or VCL variables to use for log formatting",
-				},
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      1,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Name of a condition to apply this logging.",
-				},
-				"message_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      "classic",
-					Description:  "How the message should be formatted.",
-					ValidateFunc: validateLoggingMessageType(),
-				},
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

@@ -13,10 +13,11 @@ type RequestSettingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceRequestSetting() ServiceAttributeDefinition {
+func NewServiceRequestSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &RequestSettingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "request_setting",
+			key:             "request_setting",
+			serviceMetadata: sa,
 		},
 	}
 }

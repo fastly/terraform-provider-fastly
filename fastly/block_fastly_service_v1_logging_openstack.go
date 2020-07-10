@@ -12,10 +12,11 @@ type OpenstackServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingOpenstack() ServiceAttributeDefinition {
+func NewServiceLoggingOpenstack(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &OpenstackServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_openstack",
+			key:             "logging_openstack",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -40,7 +41,7 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	// DELETE old OpenStack logging endpoints.
 	for _, oRaw := range removeOpenstackLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteOpenstack(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
 
@@ -67,7 +68,7 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 			continue
 		}
 
-		opts := buildCreateOpenstack(lf, serviceID, latestVersion)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
 
@@ -157,9 +158,10 @@ func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]interfac
 	return lsl
 }
 
-func buildCreateOpenstack(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
+func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
 	df := openstackMap.(map[string]interface{})
 
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateOpenstackInput{
 		Service:           serviceID,
 		Version:           serviceVersion,
@@ -174,14 +176,14 @@ func buildCreateOpenstack(openstackMap interface{}, serviceID string, serviceVer
 		Path:              gofastly.NullString(df["path"].(string)),
 		Period:            gofastly.Uint(uint(df["period"].(int))),
 		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
-func buildDeleteOpenstack(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteOpenstackInput {
+func (h *OpenstackServiceAttributeHandler) buildDelete(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteOpenstackInput {
 	df := openstackMap.(map[string]interface{})
 
 	return &gofastly.DeleteOpenstackInput{
@@ -192,114 +194,115 @@ func buildDeleteOpenstack(openstackMap interface{}, serviceID string, serviceVer
 }
 
 func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the OpenStack logging endpoint.",
+		},
+
+		"url": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Your OpenStack auth url.",
+		},
+
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for your OpenStack account.",
+		},
+
+		"bucket_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of your OpenStack container.",
+		},
+
+		"access_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Your OpenStack account access key.",
+		},
+
+		// Optional fields
+		"public_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+
+		"gzip_level": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
+		},
+
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+		},
+
+		"path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The path to upload logs to.",
+		},
+
+		"message_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "classic",
+			Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+			ValidateFunc: validateLoggingMessageType(),
+		},
+
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting.",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the OpenStack logging endpoint.",
-				},
-
-				"url": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Your OpenStack auth url.",
-				},
-
-				"user": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The username for your OpenStack account.",
-				},
-
-				"bucket_name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The name of your OpenStack container.",
-				},
-
-				"access_key": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "Your OpenStack account access key.",
-				},
-
-				// Optional fields
-				"public_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-
-				"gzip_level": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     0,
-					Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
-				},
-
-				"period": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     3600,
-					Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
-				},
-
-				"path": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The path to upload logs to.",
-				},
-
-				"message_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      "classic",
-					Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
-					ValidateFunc: validateLoggingMessageType(),
-				},
-
-				"timestamp_format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%Y-%m-%dT%H:%M:%S.000",
-					Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
-				},
-
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache style log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

@@ -12,10 +12,11 @@ type BigQueryLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceBigQueryLogging() ServiceAttributeDefinition {
+func NewServiceBigQueryLogging(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &BigQueryLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "bigquerylogging",
+			key:             "bigquerylogging",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -72,6 +73,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 			continue
 		}
 
+		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateBigQueryInput{
 			Service:           d.Id(),
 			Version:           latestVersion,
@@ -81,13 +83,13 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 			Table:             sf["table"].(string),
 			User:              sf["email"].(string),
 			SecretKey:         sf["secret_key"].(string),
-			ResponseCondition: sf["response_condition"].(string),
 			Template:          sf["template"].(string),
-			Placement:         sf["placement"].(string),
+			ResponseCondition: vla.responseCondition,
+			Placement:         vla.placement,
 		}
 
-		if sf["format"].(string) != "" {
-			opts.Format = sf["format"].(string)
+		if vla.format != "" {
+			opts.Format = vla.format
 		}
 
 		log.Printf("[DEBUG] Create bigquerylogging opts: %#v", opts)
@@ -119,74 +121,79 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s 
 }
 
 func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Unique name to refer to this logging setup",
+		},
+		"project_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your GCP project",
+		},
+		"dataset": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your BigQuery dataset",
+		},
+		"table": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your BigQuery table",
+		},
+		// Optional fields
+		"email": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
+			Description: "The email address associated with the target BigQuery dataset on your account.",
+			Sensitive:   true,
+		},
+		"secret_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
+			Description: "The secret key associated with the target BigQuery dataset on your account.",
+			Sensitive:   true,
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+		"template": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Big query table name suffix template",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The logging format desired.",
+			Default:     "%h %l %u %t \"%r\" %>s %b",
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of a condition to apply this logging.",
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name to refer to this logging setup",
-				},
-				"project_id": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The ID of your GCP project",
-				},
-				"dataset": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The ID of your BigQuery dataset",
-				},
-				"table": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The ID of your BigQuery table",
-				},
-				// Optional fields
-				"email": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
-					Description: "The email address associated with the target BigQuery dataset on your account.",
-					Sensitive:   true,
-				},
-				"secret_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
-					Description: "The secret key associated with the target BigQuery dataset on your account.",
-					Sensitive:   true,
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The logging format desired.",
-					Default:     "%h %l %u %t \"%r\" %>s %b",
-				},
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Name of a condition to apply this logging.",
-				},
-				"template": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Big query table name suffix template",
-				},
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

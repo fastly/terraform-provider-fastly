@@ -12,10 +12,11 @@ type LogentriesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLogentries() ServiceAttributeDefinition {
+func NewServiceLogentries(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &LogentriesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logentries",
+			key:             "logentries",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -58,6 +59,7 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range addLogentries {
 		slf := pRaw.(map[string]interface{})
 
+		var vla = h.getVCLLoggingAttributes(slf)
 		opts := gofastly.CreateLogentriesInput{
 			Service:           d.Id(),
 			Version:           latestVersion,
@@ -65,10 +67,10 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 			Port:              uint(slf["port"].(int)),
 			UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
 			Token:             slf["token"].(string),
-			Format:            slf["format"].(string),
-			FormatVersion:     uint(slf["format_version"].(int)),
-			ResponseCondition: slf["response_condition"].(string),
-			Placement:         slf["placement"].(string),
+			Format:            vla.format,
+			FormatVersion:     vla.formatVersion,
+			Placement:         vla.placement,
+			ResponseCondition: vla.responseCondition,
 		}
 
 		log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
@@ -102,61 +104,66 @@ func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 }
 
 func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Unique name to refer to this logging setup",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
+		},
+		// Optional
+		"port": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     20000,
+			Description: "The port number configured in Logentries",
+		},
+		"use_tls": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Whether to use TLS for secure logging",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%h %l %u %t %r %>s",
+			Description: "Apache-style string or VCL variables to use for log formatting",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      1,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of blockAttributes condition to apply this logging.",
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name to refer to this logging setup",
-				},
-				"token": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
-				},
-				// Optional
-				"port": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     20000,
-					Description: "The port number configured in Logentries",
-				},
-				"use_tls": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Default:     true,
-					Description: "Whether to use TLS for secure logging",
-				},
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%h %l %u %t %r %>s",
-					Description: "Apache-style string or VCL variables to use for log formatting",
-				},
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      1,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Name of a condition to apply this logging.",
-				},
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

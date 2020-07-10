@@ -139,7 +139,7 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic(t *testing.T) {
 				Config: testAccServiceV1DigitalOceanConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1DigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}),
+					testAccCheckFastlyServiceV1DigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -151,7 +151,7 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic(t *testing.T) {
 				Config: testAccServiceV1DigitalOceanConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1DigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1DigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -162,7 +162,47 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1DigitalOceanAttributes(service *gofastly.ServiceDetail, digitalocean []*gofastly.DigitalOcean) resource.TestCheckFunc {
+func TestAccFastlyServiceV1_logging_digitalocean_basicCompute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.DigitalOcean{
+		Version:         1,
+		Name:            "digitalocean-endpoint",
+		BucketName:      "bucket",
+		AccessKey:       "access",
+		SecretKey:       "secret",
+		Domain:          "nyc3.digitaloceanspaces.com",
+		PublicKey:       pgpPublicKey(t),
+		Path:            "/",
+		Period:          3600,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		GzipLevel:       0,
+		MessageType:     "classic",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1DigitalOceanComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1DigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_digitalocean.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceV1DigitalOceanAttributes(service *gofastly.ServiceDetail, digitalocean []*gofastly.DigitalOcean, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -191,6 +231,15 @@ func testAccCheckFastlyServiceV1DigitalOceanAttributes(service *gofastly.Service
 					// these ahead of time
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
+
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
+						el.FormatVersion = e.FormatVersion
+						el.Format = e.Format
+						el.ResponseCondition = e.ResponseCondition
+						el.Placement = e.Placement
+					}
+
 					if diff := cmp.Diff(e, el); diff != "" {
 						return fmt.Errorf("Bad match DigitalOcean Spaces logging match: %s", diff)
 					}
@@ -300,6 +349,45 @@ resource "fastly_service_v1" "foo" {
     message_type = "classic"
     placement = "none"
     response_condition = "response_condition_test"
+  }
+
+  force_destroy = true
+}
+`, name, domain)
+}
+
+func testAccServiceV1DigitalOceanComputeConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-digitalocean-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_digitalocean {
+    name   = "digitalocean-endpoint"
+    bucket_name = "bucket"
+    access_key = "access"
+    secret_key = "secret"
+    domain = "nyc3.digitaloceanspaces.com"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    path = "/"
+    period = 3600
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    gzip_level = 0
+    message_type = "classic"
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true

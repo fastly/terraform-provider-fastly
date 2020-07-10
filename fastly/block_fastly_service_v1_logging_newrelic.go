@@ -12,10 +12,11 @@ type NewRelicServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingNewRelic() ServiceAttributeDefinition {
+func NewServiceLoggingNewRelic(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &NewRelicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_newrelic",
+			key:             "logging_newrelic",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -40,7 +41,7 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	// DELETE old NewRelic logging endpoints.
 	for _, oRaw := range removeNewRelicLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteNewRelic(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly New Relic logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	// POST new/updated NewRelic logging endpoints.
 	for _, nRaw := range addNewRelicLogging {
 		df := nRaw.(map[string]interface{})
-		opts := buildCreateNewRelic(df, serviceID, latestVersion)
+		opts := h.buildCreate(df, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly New Relic logging addition opts: %#v", opts)
 
@@ -131,22 +132,23 @@ func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]interface{}
 	return dsl
 }
 
-func buildCreateNewRelic(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
+func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
 	df := newrelicMap.(map[string]interface{})
 
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateNewRelicInput{
 		Service:           serviceID,
 		Version:           serviceVersion,
 		Name:              gofastly.NullString(df["name"].(string)),
 		Token:             gofastly.NullString(df["token"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
-func buildDeleteNewRelic(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
+func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
 	df := newrelicMap.(map[string]interface{})
 
 	return &gofastly.DeleteNewRelicInput{
@@ -157,53 +159,53 @@ func buildDeleteNewRelic(newrelicMap interface{}, serviceID string, serviceVersi
 }
 
 func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the New Relic logging endpoint",
+		},
+
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The Insert API key from the Account page of your New Relic account.",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the condition to apply.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the New Relic logging endpoint",
-				},
-
-				"token": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "The Insert API key from the Account page of your New Relic account.",
-				},
-
-				// Optional fields
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of the condition to apply.",
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

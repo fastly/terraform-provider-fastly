@@ -12,10 +12,11 @@ type LogglyServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingLoggly() ServiceAttributeDefinition {
+func NewServiceLoggingLoggly(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &LogglyServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_loggly",
+			key:             "logging_loggly",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -40,7 +41,7 @@ func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// DELETE old Loggly logging endpoints.
 	for _, oRaw := range removeLogglyLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteLoggly(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Loggly logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// POST new/updated Loggly logging endpoints.
 	for _, nRaw := range addLogglyLogging {
 		lf := nRaw.(map[string]interface{})
-		opts := buildCreateLoggly(lf, serviceID, latestVersion)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Loggly logging addition opts: %#v", opts)
 
@@ -133,22 +134,23 @@ func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]interface{} {
 	return lsl
 }
 
-func buildCreateLoggly(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogglyInput {
+func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogglyInput {
 	df := logglyMap.(map[string]interface{})
 
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateLogglyInput{
 		Service:           serviceID,
 		Version:           serviceVersion,
 		Name:              gofastly.NullString(df["name"].(string)),
 		Token:             gofastly.NullString(df["token"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
-func buildDeleteLoggly(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteLogglyInput {
+func (h *LogglyServiceAttributeHandler) buildDelete(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteLogglyInput {
 	df := logglyMap.(map[string]interface{})
 
 	return &gofastly.DeleteLogglyInput{
@@ -159,53 +161,53 @@ func buildDeleteLoggly(logglyMap interface{}, serviceID string, serviceVersion i
 }
 
 func (h *LogglyServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Loggly logging endpoint.",
+		},
+
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache-style string or VCL variables to use for log formatting.",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Loggly logging endpoint.",
-				},
-
-				"token": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).",
-				},
-
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache-style string or VCL variables to use for log formatting.",
-				},
-
-				// Optional fields
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

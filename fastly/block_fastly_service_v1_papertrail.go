@@ -12,10 +12,11 @@ type PaperTrailServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServicePaperTrail() ServiceAttributeDefinition {
+func NewServicePaperTrail(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &PaperTrailServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "papertrail",
+			key:             "papertrail",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -58,15 +59,16 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range addPapertrail {
 		pf := pRaw.(map[string]interface{})
 
+		var vla = h.getVCLLoggingAttributes(pf)
 		opts := gofastly.CreatePapertrailInput{
 			Service:           d.Id(),
 			Version:           latestVersion,
 			Name:              pf["name"].(string),
 			Address:           pf["address"].(string),
 			Port:              uint(pf["port"].(int)),
-			Format:            pf["format"].(string),
-			ResponseCondition: pf["response_condition"].(string),
-			Placement:         pf["placement"].(string),
+			Format:            vla.format,
+			ResponseCondition: vla.responseCondition,
+			Placement:         vla.placement,
 		}
 
 		log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -100,47 +102,51 @@ func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 }
 
 func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Unique name to refer to this logging setup",
+		},
+		"address": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The address of the papertrail service",
+		},
+		"port": {
+			Type:        schema.TypeInt,
+			Required:    true,
+			Description: "The port of the papertrail service",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%h %l %u %t %r %>s",
+			Description: "Apache-style string or VCL variables to use for log formatting",
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of blockAttributes condition to apply this logging",
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name to refer to this logging setup",
-				},
-				"address": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The address of the papertrail service",
-				},
-				"port": {
-					Type:        schema.TypeInt,
-					Required:    true,
-					Description: "The port of the papertrail service",
-				},
-				// Optional fields
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%h %l %u %t %r %>s",
-					Description: "Apache-style string or VCL variables to use for log formatting",
-				},
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Name of a condition to apply this logging",
-				},
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

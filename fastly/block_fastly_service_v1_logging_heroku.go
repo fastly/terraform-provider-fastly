@@ -12,10 +12,11 @@ type HerokuServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingHeroku() ServiceAttributeDefinition {
+func NewServiceLoggingHeroku(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &HerokuServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_heroku",
+			key:             "logging_heroku",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -40,7 +41,7 @@ func (h *HerokuServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// DELETE old Heroku logging endpoints.
 	for _, oRaw := range removeHerokuLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteHeroku(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Heroku logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *HerokuServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// POST new/updated Heroku logging endpoints.
 	for _, nRaw := range addHerokuLogging {
 		lf := nRaw.(map[string]interface{})
-		opts := buildCreateHeroku(lf, serviceID, latestVersion)
+		opts := h.buildCreate(lf, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Heroku logging addition opts: %#v", opts)
 
@@ -134,23 +135,24 @@ func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]interface{} {
 	return res
 }
 
-func buildCreateHeroku(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
+func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
 	df := herokuMap.(map[string]interface{})
 
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHerokuInput{
 		Service:           serviceID,
 		Version:           serviceVersion,
 		Name:              gofastly.NullString(df["name"].(string)),
 		Token:             gofastly.NullString(df["token"].(string)),
 		URL:               gofastly.NullString(df["url"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
-func buildDeleteHeroku(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
+func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
 	df := herokuMap.(map[string]interface{})
 
 	return &gofastly.DeleteHerokuInput{
@@ -161,59 +163,59 @@ func buildDeleteHeroku(herokuMap interface{}, serviceID string, serviceVersion i
 }
 
 func (h *HerokuServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Heroku logging endpoint.",
+		},
+
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/).",
+		},
+
+		"url": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The url to stream logs to.",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache-style string or VCL variables to use for log formatting.",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Heroku logging endpoint.",
-				},
-
-				"token": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/).",
-				},
-
-				"url": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The url to stream logs to.",
-				},
-
-				// Optional fields
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache-style string or VCL variables to use for log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil

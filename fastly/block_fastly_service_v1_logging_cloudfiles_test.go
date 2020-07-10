@@ -139,7 +139,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 				Config: testAccServiceV1CloudfilesConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.none", &service),
-					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1}),
+					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.none", "name", name),
 					resource.TestCheckResourceAttr(
@@ -151,7 +151,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 				Config: testAccServiceV1CloudfilesConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.none", &service),
-					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.none", "name", name),
 					resource.TestCheckResourceAttr(
@@ -162,7 +162,47 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDetail, cloudfiles []*gofastly.Cloudfiles) resource.TestCheckFunc {
+func TestAccFastlyServiceV1_logging_cloudfiles_basicCompute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1Compute := gofastly.Cloudfiles{
+		Version:         1,
+		Name:            "cloudfiles-endpoint",
+		BucketName:      "bucket",
+		User:            "user",
+		AccessKey:       "secret",
+		PublicKey:       pgpPublicKey(t),
+		GzipLevel:       0,
+		MessageType:     "classic",
+		Path:            "/",
+		Region:          "ORD",
+		Period:          3600,
+		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1ComputeCloudfilesConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.none", &service),
+					testAccCheckFastlyServiceV1CloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1Compute}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.none", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.none", "logging_cloudfiles.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDetail, cloudfiles []*gofastly.Cloudfiles, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -191,6 +231,15 @@ func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDe
 					// these ahead of time
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
+
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
+						el.FormatVersion = e.FormatVersion
+						el.Format = e.Format
+						el.ResponseCondition = e.ResponseCondition
+						el.Placement = e.Placement
+					}
+
 					if diff := cmp.Diff(e, el); diff != "" {
 						return fmt.Errorf("Bad match Cloud Files logging match: %s", diff)
 					}
@@ -200,6 +249,45 @@ func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDe
 
 		return nil
 	}
+}
+
+func testAccServiceV1ComputeCloudfilesConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "none" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-cloudfiles-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_cloudfiles {
+    name   = "cloudfiles-endpoint"
+    bucket_name = "bucket"
+    user = "user"
+    access_key = "secret"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    message_type = "classic"
+	path = "/"
+	region = "ORD"
+	period = 3600
+	gzip_level = 0
+	timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+  }
+ 
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+
+  force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1CloudfilesConfig(name string, domain string) string {

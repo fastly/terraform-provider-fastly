@@ -78,11 +78,12 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
+
 			{
 				Config: testAccServiceV1LogglyConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1}),
+					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -94,7 +95,7 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 				Config: testAccServiceV1LogglyConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -105,7 +106,38 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail, loggly []*gofastly.Loggly) resource.TestCheckFunc {
+func TestAccFastlyServiceV1_logging_loggly_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.Loggly{
+		Version: 1,
+		Name:    "loggly-endpoint",
+		Token:   "s3cr3t",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1LogglyComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1LogglyAttributes(&service, []*gofastly.Loggly{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_loggly.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail, loggly []*gofastly.Loggly, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -135,6 +167,15 @@ func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail
 					// these ahead of time
 					el.CreatedAt = nil
 					el.UpdatedAt = nil
+
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
+						el.FormatVersion = e.FormatVersion
+						el.Format = e.Format
+						el.ResponseCondition = e.ResponseCondition
+						el.Placement = e.Placement
+					}
+
 					if diff := cmp.Diff(e, el); diff != "" {
 						return fmt.Errorf("Bad match Loggly logging match: %s", diff)
 					}
@@ -149,6 +190,36 @@ func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail
 
 		return nil
 	}
+}
+
+func testAccServiceV1LogglyComputeConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-loggly-logging"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_loggly {
+    name   = "loggly-endpoint"
+    token  = "s3cr3t"
+  }
+
+  package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+  force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1LogglyConfig(name string, domain string) string {

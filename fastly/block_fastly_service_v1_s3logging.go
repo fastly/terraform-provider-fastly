@@ -13,10 +13,11 @@ type S3LoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceS3Logging() ServiceAttributeDefinition {
+func NewServiceS3Logging(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &S3LoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "s3logging",
+			key:             "s3logging",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -39,7 +40,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	// DELETE old S3 Log configurations.
 	for _, sRaw := range removeS3Logging {
-		opts := buildDeleteS3(sRaw, serviceID, latestVersion)
+		opts := h.buildDelete(sRaw, serviceID, latestVersion)
 		err := deleteS3(conn, opts)
 		if err != nil {
 			return err
@@ -48,7 +49,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	// POST new/updated S3 Logging.
 	for _, sRaw := range addS3Logging {
-		opts, _ := buildCreateS3(sRaw, d.Id(), latestVersion)
+		opts, _ := h.buildCreate(sRaw, d.Id(), latestVersion)
 
 		// @HACK for a TF SDK Issue.
 		//
@@ -93,122 +94,127 @@ func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 }
 
 func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the S3 logging endpoint.",
+		},
+		"bucket_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "S3 Bucket name to store logs in.",
+		},
+		"s3_access_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
+			Description: "AWS Access Key.",
+			Sensitive:   true,
+		},
+		"s3_secret_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
+			Description: "AWS Secret Key",
+			Sensitive:   true,
+		},
+		// Optional fields
+		"path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Path to store the files. Must end with blockAttributes trailing slash.",
+		},
+		"domain": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Bucket endpoint.",
+			Default:     "s3.amazonaws.com",
+		},
+		"gzip_level": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "Gzip Compression level.",
+		},
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently the logs should be transferred, in seconds (Default 3600).",
+		},
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+		},
+		"redundancy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The S3 redundancy level.",
+		},
+		"public_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
+			StateFunc: trimSpaceStateFunc,
+		},
+		"message_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "classic",
+			Description:  "How the message should be formatted.",
+			ValidateFunc: validateLoggingMessageType(),
+		},
+		"server_side_encryption": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`.",
+			ValidateFunc: validateLoggingServerSideEncryption(),
+		},
+		"server_side_encryption_kms_key_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`.",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%h %l %u %t %r %>s",
+			Description: "Apache-style string or VCL variables to use for log formatting.",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      1,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of blockAttributes condition to apply this logging.",
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the S3 logging endpoint.",
-				},
-				"bucket_name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "S3 Bucket name to store logs in.",
-				},
-				"s3_access_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
-					Description: "AWS Access Key.",
-					Sensitive:   true,
-				},
-				"s3_secret_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
-					Description: "AWS Secret Key",
-					Sensitive:   true,
-				},
-				// Optional fields
-				"path": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Path to store the files. Must end with a trailing slash.",
-				},
-				"domain": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Bucket endpoint.",
-					Default:     "s3.amazonaws.com",
-				},
-				"gzip_level": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     0,
-					Description: "Gzip Compression level.",
-				},
-				"period": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     3600,
-					Description: "How frequently the logs should be transferred, in seconds (Default 3600).",
-				},
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%h %l %u %t %r %>s",
-					Description: "Apache-style string or VCL variables to use for log formatting.",
-				},
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      1,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-				"timestamp_format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "%Y-%m-%dT%H:%M:%S.000",
-					Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
-				},
-				"redundancy": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The S3 redundancy level.",
-				},
-				"public_key": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
-					// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-					StateFunc: trimSpaceStateFunc,
-				},
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Name of a condition to apply this logging.",
-				},
-				"message_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      "classic",
-					Description:  "How the message should be formatted.",
-					ValidateFunc: validateLoggingMessageType(),
-				},
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-				"server_side_encryption": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`.",
-					ValidateFunc: validateLoggingServerSideEncryption(),
-				},
-				"server_side_encryption_kms_key_id": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`.",
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 
@@ -277,7 +283,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 	return sl
 }
 
-func buildCreateS3(s3Map interface{}, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
+func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
 	df := s3Map.(map[string]interface{})
 	// The Fastly API will not error if these are omitted, so we throw an error
 	// if any of these are empty.
@@ -287,6 +293,7 @@ func buildCreateS3(s3Map interface{}, serviceID string, serviceVersion int) (*go
 		}
 	}
 
+	var vla = h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateS3Input{
 		Service:                      serviceID,
 		Version:                      serviceVersion,
@@ -298,14 +305,14 @@ func buildCreateS3(s3Map interface{}, serviceID string, serviceVersion int) (*go
 		GzipLevel:                    uint(df["gzip_level"].(int)),
 		Domain:                       df["domain"].(string),
 		Path:                         df["path"].(string),
-		Format:                       df["format"].(string),
-		FormatVersion:                uint(df["format_version"].(int)),
 		TimestampFormat:              df["timestamp_format"].(string),
-		ResponseCondition:            df["response_condition"].(string),
 		MessageType:                  df["message_type"].(string),
 		PublicKey:                    df["public_key"].(string),
-		Placement:                    df["placement"].(string),
 		ServerSideEncryptionKMSKeyID: df["server_side_encryption_kms_key_id"].(string),
+		Format:                       vla.format,
+		FormatVersion:                vla.formatVersion,
+		ResponseCondition:            vla.responseCondition,
+		Placement:                    vla.placement,
 	}
 
 	redundancy := strings.ToLower(df["redundancy"].(string))
@@ -327,7 +334,7 @@ func buildCreateS3(s3Map interface{}, serviceID string, serviceVersion int) (*go
 	return &opts, nil
 }
 
-func buildDeleteS3(s3Map interface{}, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {
+func (h *S3LoggingServiceAttributeHandler) buildDelete(s3Map interface{}, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {
 	df := s3Map.(map[string]interface{})
 
 	return &gofastly.DeleteS3Input{

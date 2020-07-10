@@ -81,6 +81,31 @@ func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_gcslogging_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_compute_gcs(name, gcsName, secretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_gcs(&service, name, gcsName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceV1_gcslogging_env(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -165,6 +190,40 @@ resource "fastly_service_v1" "foo" {
 		format = "log format"
 		response_condition = ""
 	}
+
+  force_destroy = true
+}`, name, domainName, backendName, gcsName, secretKey)
+}
+
+func testAccServiceV1Config_compute_gcs(name, gcsName, secretKey string) string {
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test-compute.tf-%s.com", acctest.RandString(10))
+
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+	gcslogging {
+	  name =  "%s"
+		email = "email@example.com"
+		bucket_name = "bucketname"
+		secret_key = %q
+	}
+
+ package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName, secretKey)

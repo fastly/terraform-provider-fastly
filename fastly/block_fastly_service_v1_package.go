@@ -12,10 +12,11 @@ type PackageServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServicePackage() ServiceAttributeDefinition {
+func NewServicePackage(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &PackageServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "package",
+			key:             "package",
+			serviceMetadata: sa,
 		},
 	}
 }

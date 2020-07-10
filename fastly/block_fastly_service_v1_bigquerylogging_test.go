@@ -12,52 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestResourceFastlyFlattenBigQuery(t *testing.T) {
-	secretKey, err := generateKey()
-	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
-	}
-
-	cases := []struct {
-		remote []*gofastly.BigQuery
-		local  []map[string]interface{}
-	}{
-		{
-			remote: []*gofastly.BigQuery{
-				{
-					Name:      "bigquery-example",
-					User:      "email@example.com",
-					ProjectID: "example-gcp-project",
-					Dataset:   "example_bq_dataset",
-					Table:     "example_bq_table",
-					SecretKey: secretKey,
-				},
-			},
-			local: []map[string]interface{}{
-				{
-					"name":       "bigquery-example",
-					"email":      "email@example.com",
-					"project_id": "example-gcp-project",
-					"dataset":    "example_bq_dataset",
-					"table":      "example_bq_table",
-					"secret_key": secretKey,
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenBigQuery(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
-	}
-}
-
 func TestAccFastlyServiceV1_bigquerylogging(t *testing.T) {
 	var service gofastly.ServiceDetail
+
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
+
 	secretKey, err := generateKey()
 	if err != nil {
 		t.Errorf("Failed to generate key: %s", err)
@@ -72,6 +32,33 @@ func TestAccFastlyServiceV1_bigquerylogging(t *testing.T) {
 				Config: testAccServiceV1Config_bigquery(name, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_bq(&service, name, bqName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceV1_bigquerylogging_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
+
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_bigquery_compute(name, bqName, secretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_bq(&service, name, bqName),
 				),
 			},
@@ -140,7 +127,6 @@ func testAccCheckFastlyServiceV1Attributes_bq(service *gofastly.ServiceDetail, n
 func testAccServiceV1Config_bigquery(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -162,6 +148,43 @@ resource "fastly_service_v1" "foo" {
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
+	format     = "%%h %%l %%u %%t %%r %%>s"
+	placement  = "waf_debug"
+  }
+
+  force_destroy = true
+}`, name, domainName, backendName, gcsName, secretKey)
+}
+
+func testAccServiceV1Config_bigquery_compute(name, gcsName, secretKey string) string {
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+	}
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  bigquerylogging {
+    name       = "%s"
+    email      = "email@example.com"
+    secret_key = %q
+    project_id = "example-gcp-project"
+    dataset    = "example_bq_dataset"
+    table      = "example_bq_table"
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
@@ -171,7 +194,6 @@ resource "fastly_service_v1" "foo" {
 func testAccServiceV1Config_bigquery_env(name, gcsName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -229,5 +251,77 @@ func getBQEnv() *currentBQEnv {
 	return &currentBQEnv{
 		Key:    os.Getenv("FASTLY_BQ_SECRET_KEY"),
 		Secret: os.Getenv("FASTLY_BQ_SECRET_KEY"),
+	}
+}
+
+// TestResourceFastlyFlattenBigQuery tests the flattenBigQuery function
+func TestResourceFastlyFlattenBigQuery(t *testing.T) {
+
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("Failed to generate key: %s", err)
+	}
+
+	cases := []struct {
+		remote []*gofastly.BigQuery
+		local  []map[string]interface{}
+	}{
+		{
+			remote: []*gofastly.BigQuery{
+				{
+					Name:      "bigquery-example",
+					User:      "email@example.com",
+					ProjectID: "example-gcp-project",
+					Dataset:   "example_bq_dataset",
+					Table:     "example_bq_table",
+					SecretKey: secretKey,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":       "bigquery-example",
+					"email":      "email@example.com",
+					"project_id": "example-gcp-project",
+					"dataset":    "example_bq_dataset",
+					"table":      "example_bq_table",
+					"secret_key": secretKey,
+				},
+			},
+		},
+		{
+			remote: []*gofastly.BigQuery{
+				{
+					Name:              "bigquery-example",
+					User:              "email@example.com",
+					ProjectID:         "example-gcp-project",
+					Dataset:           "example_bq_dataset",
+					Table:             "example_bq_table",
+					Format:            "%h %l %u %t \"%r\" %>s %b",
+					Placement:         "waf_debug",
+					ResponseCondition: "error_response",
+					SecretKey:         secretKey,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":               "bigquery-example",
+					"email":              "email@example.com",
+					"project_id":         "example-gcp-project",
+					"dataset":            "example_bq_dataset",
+					"table":              "example_bq_table",
+					"secret_key":         secretKey,
+					"format":             "%h %l %u %t \"%r\" %>s %b",
+					"placement":          "waf_debug",
+					"response_condition": "error_response",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenBigQuery(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
+		}
 	}
 }

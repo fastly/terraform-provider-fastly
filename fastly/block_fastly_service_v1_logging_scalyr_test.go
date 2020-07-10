@@ -98,11 +98,12 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
+
 			{
 				Config: testAccServiceV1ScalyrConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1}),
+					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -114,7 +115,7 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 				Config: testAccServiceV1ScalyrConfig_update(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1_after_update, &log2}),
+					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1_after_update, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -125,7 +126,39 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr) resource.TestCheckFunc {
+func TestAccFastlyServiceV1_scalyrlogging_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	log1 := gofastly.Scalyr{
+		Version: 1,
+		Name:    "scalyrlogger",
+		Token:   "tkn",
+		Region:  "US",
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1ScalyrComputeConfig(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1ScalyrAttributes(&service, []*gofastly.Scalyr{&log1}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "logging_scalyr.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr, serviceType string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -155,6 +188,15 @@ func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail
 					// these ahead of time
 					sl.CreatedAt = nil
 					sl.UpdatedAt = nil
+
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
+						sl.FormatVersion = s.FormatVersion
+						sl.Format = s.Format
+						sl.ResponseCondition = s.ResponseCondition
+						sl.Placement = s.Placement
+					}
+
 					if diff := cmp.Diff(s, sl); diff != "" {
 						return fmt.Errorf("Bad match Scalyr logging match: %s", diff)
 					}
@@ -169,6 +211,37 @@ func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail
 
 		return nil
 	}
+}
+
+func testAccServiceV1ScalyrComputeConfig(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+	name = "%s"
+
+	domain {
+		name    = "%s"
+		comment = "tf-scalyr-logging"
+	}
+
+	backend {
+		address = "aws.amazon.com"
+		name    = "amazon docs"
+	}
+
+	logging_scalyr {
+		name               = "scalyrlogger"
+		region             = "US"
+		token              = "tkn"
+	}
+
+   package {
+      	filename = "test_fixtures/package/valid.tar.gz"
+	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+   	}
+
+	force_destroy = true
+}
+`, name, domain)
 }
 
 func testAccServiceV1ScalyrConfig(name string, domain string) string {

@@ -12,10 +12,11 @@ type DirectorServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceDirector() ServiceAttributeDefinition {
+func NewServiceDirector(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &DirectorServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "director",
+			key:             "director",
+			serviceMetadata: sa,
 		},
 	}
 }

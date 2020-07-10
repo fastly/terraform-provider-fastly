@@ -12,10 +12,11 @@ type DatadogServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingDatadog() ServiceAttributeDefinition {
+func NewServiceLoggingDatadog(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &DatadogServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "logging_datadog",
+			key:             "logging_datadog",
+			serviceMetadata: sa,
 		},
 	}
 }
@@ -40,7 +41,7 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	// DELETE old Datadog logging endpoints.
 	for _, oRaw := range removeDatadogLogging {
 		of := oRaw.(map[string]interface{})
-		opts := buildDeleteDatadog(of, serviceID, latestVersion)
+		opts := h.buildDelete(of, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Datadog logging endpoint removal opts: %#v", opts)
 
@@ -52,7 +53,7 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	// POST new/updated Datadog logging endpoints.
 	for _, nRaw := range addDatadogLogging {
 		df := nRaw.(map[string]interface{})
-		opts := buildCreateDatadog(df, serviceID, latestVersion)
+		opts := h.buildCreate(df, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Datadog logging addition opts: %#v", opts)
 
@@ -108,60 +109,61 @@ func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error 
 }
 
 func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource) error {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Datadog logging endpoint.",
+		},
+
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The API key from your Datadog account.",
+		},
+
+		// Optional fields
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "US",
+			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined.",
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache-style string or VCL variables to use for log formatting.",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      2,
+			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the condition to apply.",
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "Where in the generated VCL the logging call should be placed.",
+			ValidateFunc: validateLoggingPlacement(),
+		}
+	}
+
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The unique name of the Datadog logging endpoint.",
-				},
-
-				"token": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Sensitive:   true,
-					Description: "The API key from your Datadog account.",
-				},
-
-				// Optional fields
-				"region": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "US",
-					Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined.",
-				},
-
-				"format": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Apache-style string or VCL variables to use for log formatting.",
-				},
-
-				"format_version": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      2,
-					Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-					ValidateFunc: validateLoggingFormatVersion(),
-				},
-
-				"placement": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "Where in the generated VCL the logging call should be placed.",
-					ValidateFunc: validateLoggingPlacement(),
-				},
-
-				"response_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of the condition to apply.",
-				},
-			},
+			Schema: blockAttributes,
 		},
 	}
 	return nil
@@ -194,23 +196,24 @@ func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]interface{} {
 	return dsl
 }
 
-func buildCreateDatadog(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {
+func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {
 	df := datadogMap.(map[string]interface{})
 
+	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateDatadogInput{
 		Service:           serviceID,
 		Version:           serviceVersion,
 		Name:              gofastly.NullString(df["name"].(string)),
 		Token:             gofastly.NullString(df["token"].(string)),
 		Region:            gofastly.NullString(df["region"].(string)),
-		Format:            gofastly.NullString(df["format"].(string)),
-		FormatVersion:     gofastly.Uint(uint(df["format_version"].(int))),
-		Placement:         gofastly.NullString(df["placement"].(string)),
-		ResponseCondition: gofastly.NullString(df["response_condition"].(string)),
+		Format:            gofastly.NullString(vla.format),
+		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		Placement:         gofastly.NullString(vla.placement),
+		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}
 }
 
-func buildDeleteDatadog(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
+func (h *DatadogServiceAttributeHandler) buildDelete(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
 	df := datadogMap.(map[string]interface{})
 
 	return &gofastly.DeleteDatadogInput{

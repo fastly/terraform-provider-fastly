@@ -40,7 +40,6 @@ func TestResourceFastlyFlattenWAF(t *testing.T) {
 					ID:                "test1",
 					PrefetchCondition: "prefetch",
 					Response:          "response",
-					Disabled:          true,
 				},
 			},
 			local: []map[string]interface{}{
@@ -48,7 +47,6 @@ func TestResourceFastlyFlattenWAF(t *testing.T) {
 					"waf_id":             "test1",
 					"prefetch_condition": "prefetch",
 					"response_object":    "response",
-					"disabled":           true,
 				},
 			},
 		},
@@ -64,7 +62,7 @@ func TestResourceFastlyFlattenWAF(t *testing.T) {
 func TestAccFastlyServiceV1WAFAdd(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	waf := composeWAF(condition, response, false)
+	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -85,7 +83,7 @@ func TestAccFastlyServiceV1WAFAdd(t *testing.T) {
 func TestAccFastlyServiceV1WAFAddAndRemove(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	waf := composeWAF(condition, response, false)
+	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -120,8 +118,8 @@ func TestAccFastlyServiceV1WAFUpdateResponse(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	updateResponse := "UpdatedResponse"
-	waf := composeWAF(condition, response, false)
-	updatedWaf := composeWAF(condition, updateResponse, false)
+	waf := composeWAF(condition, response)
+	updatedWaf := composeWAF(condition, updateResponse)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -150,8 +148,8 @@ func TestAccFastlyServiceV1WAFUpdateCondition(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	updatedCondition := "UpdatedPrefetch"
-	waf := composeWAF(condition, response, false)
-	updatedWaf := composeWAF(updatedCondition, response, false)
+	waf := composeWAF(condition, response)
+	updatedWaf := composeWAF(updatedCondition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -170,96 +168,6 @@ func TestAccFastlyServiceV1WAFUpdateCondition(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists(serviceRef, &service),
 					testAccCheckFastlyServiceV1AttributesWAF(&service, response, updatedCondition),
-				),
-			},
-		},
-	})
-}
-
-func TestAccFastlyServiceV1WAFEnableDisable(t *testing.T) {
-	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	wafEnabled := composeWAF(condition, response, false)
-	wafDisabled := composeWAF(condition, response, true)
-
-	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	rulesTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules([]gofastly.WAFActiveRule{
-		{
-			ModSecID: 2029718,
-			Status:   "block",
-			Revision: 1,
-		},
-	})
-	wafConfig := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF1)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1WAF(name, "", wafEnabled, wafConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
-					testAccCheckFastlyServiceV1DisableEnableWAF(&service, false),
-				),
-			},
-			{
-				Config: testAccServiceV1WAF(name, "", wafDisabled, wafConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
-					testAccCheckFastlyServiceV1DisableEnableWAF(&service, true),
-				),
-			},
-			{
-				Config: testAccServiceV1WAF(name, "", wafEnabled, wafConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
-					testAccCheckFastlyServiceV1DisableEnableWAF(&service, false),
-				),
-			},
-		},
-	})
-}
-
-func TestAccFastlyServiceV1WAFDisableEnable(t *testing.T) {
-	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	wafEnabled := composeWAF(condition, response, false)
-	wafDisabled := composeWAF(condition, response, true)
-
-	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	rulesTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules([]gofastly.WAFActiveRule{
-		{
-			ModSecID: 2029719,
-			Status:   "block",
-			Revision: 1,
-		},
-	})
-	wafConfig := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF1)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1WAF(name, "", wafDisabled, wafConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
-					testAccCheckFastlyServiceV1DisableEnableWAF(&service, true),
-				),
-			},
-			{
-				Config: testAccServiceV1WAF(name, "", wafEnabled, wafConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
-					testAccCheckFastlyServiceV1DisableEnableWAF(&service, false),
-				),
-			},
-			{
-				Config: testAccServiceV1WAF(name, "", wafEnabled, wafConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
-					testAccCheckFastlyServiceV1DisableEnableWAF(&service, false),
 				),
 			},
 		},
@@ -314,37 +222,12 @@ func testAccCheckFastlyServiceV1AttributesWAF(service *gofastly.ServiceDetail, r
 	}
 }
 
-func testAccCheckFastlyServiceV1DisableEnableWAF(service *gofastly.ServiceDetail, disable bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		conn := testAccProvider.Meta().(*FastlyClient).conn
-		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: service.ID,
-			FilterVersion: service.ActiveVersion.Number,
-		})
-
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
-		}
-
-		if len(resp.Items) != 1 {
-			return fmt.Errorf("[ERR] Expected result size (%d), got (%d)", 1, len(resp.Items))
-		}
-
-		if resp.Items[0].Disabled != disable {
-			return fmt.Errorf("[ERR] WAF disabled mismatch, expected: %v, got: %v", disable, resp.Items[0].Disabled)
-		}
-		return nil
-	}
-}
-
-func composeWAF(condition, response string, disabled bool) string {
+func composeWAF(condition, response string) string {
 	return fmt.Sprintf(`
 		waf { 
 			prefetch_condition = "%s" 
 			response_object    = "%s"
-            disabled           = %v 
-		}`, condition, response, disabled)
+		}`, condition, response)
 }
 
 func testAccServiceV1WAF(name, extraHCL, waf, config string) string {

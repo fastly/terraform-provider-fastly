@@ -43,12 +43,6 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 					Computed:    true,
 					Description: "The Web Application Firewall (WAF) ID",
 				},
-				"disabled": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Default:     false,
-					Description: "A flag used to completely disable a Web Application Firewall. This is intended to be used as an emergency.",
-				},
 			},
 		},
 	}
@@ -73,18 +67,7 @@ func (h *WAFServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 			opts := buildCreateWAF(wf, serviceID, serviceVersion)
 			log.Printf("[DEBUG] Fastly WAF Addition opts: %#v", opts)
 
-			var waf *gofastly.WAF
-			waf, err = conn.CreateWAF(opts)
-
-			// Handle the case where a user has specified `disabled`
-			// in their configuration which is not supported during
-			// WAF creation.
-			if err == nil && (waf.Disabled != wf["disabled"].(bool)) {
-				_, err = conn.UpdateWAF(&gofastly.UpdateWAFInput{
-					ID:       waf.ID,
-					Disabled: gofastly.Bool(wf["disabled"].(bool)),
-				})
-			}
+			_, err = conn.CreateWAF(opts)
 		}
 		if err != nil {
 			return err
@@ -151,7 +134,6 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
 		"waf_id":             w.ID,
 		"response_object":    w.Response,
 		"prefetch_condition": w.PrefetchCondition,
-		"disabled":           w.Disabled,
 	}
 
 	// prune any empty values that come from the default string value in structs
@@ -192,7 +174,6 @@ func buildUpdateWAF(wafMap interface{}, serviceID string, ServiceVersion string)
 		ID:                df["waf_id"].(string),
 		PrefetchCondition: df["prefetch_condition"].(string),
 		Response:          df["response_object"].(string),
-		Disabled:          gofastly.Bool(df["disabled"].(bool)),
 	}
 	return &opts
 }

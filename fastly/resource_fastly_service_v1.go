@@ -218,7 +218,7 @@ func resourceServiceV1() *schema.Resource {
 							Required:    true,
 							Description: "A name for this Pool",
 						},
-						"id": {
+						"pool_id": {
 							Type:        schema.TypeString,
 							Description: "",
 							Computed:    true,
@@ -268,9 +268,9 @@ func resourceServiceV1() *schema.Resource {
 							Description: "Whether or not to use TLS to reach any server in the pool. Optional. Defaults to 0.",
 						},
 						"tls_ca_cert": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "",
+							Type:     schema.TypeString,
+							Optional: true,
+							//Default:     "",
 							Description: "CA certificate attached to origin. Optional.",
 						},
 						"tls_ciphers": {
@@ -280,21 +280,21 @@ func resourceServiceV1() *schema.Resource {
 							Description: "List of OpenSSL ciphers (see OpenSSL docs for details). Optional.",
 						},
 						"tls_client_key": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "",
+							Type:     schema.TypeString,
+							Optional: true,
+							// Default:     "",
 							Description: "Client key attached to server. Optional.",
 						},
 						"tls_client_cert": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
+							Type:     schema.TypeString,
+							Optional: true,
+							// Default:     "",
 							Description: "Client certificate attached to server. Optional.",
 						},
 						"tls_sni_hostname": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "",
+							Type:     schema.TypeString,
+							Optional: true,
+							//Default:     "",
 							Description: "SNI hostname. Optional.",
 						},
 						"tls_check_cert": {
@@ -304,9 +304,9 @@ func resourceServiceV1() *schema.Resource {
 							Description: "Be strict on checking TLS certs. Optional.",
 						},
 						"tls_cert_hostname": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "",
+							Type:     schema.TypeString,
+							Optional: true,
+							// Default:     "",
 							Description: "TLS cert hostname. Optional.",
 						},
 						// Fastly API states that this should be an int. how to specify a version number with an int?
@@ -2027,30 +2027,93 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 			for _, pRaw := range addPool {
 				pf := pRaw.(map[string]interface{})
 
+				// opts contains the baseline configuration for the pool
 				opts := gofastly.CreatePoolInput{
-					Service:          d.Id(),
-					Version:          latestVersion,
-					Name:             pf["name"].(string),
-					Shield:           pf["shield"].(*string),
-					OverrideHost:     pf["override_host"].(*string),
-					UseTLS:           pf["use_tls"].(*gofastly.Compatibool),
-					Type:             pf["type"].(gofastly.PoolType),
-					RequestCondition: pf["request_condition"].(*string),
-					MaxConnDefault:   pf["max_conn_default"].(*uint),
-					ConnectTimeout:   pf["connect_timeout"].(*uint),
-					FirstByteTimeout: pf["first_byte_timeout"].(*uint),
-					Quorum:           pf["quorum"].(*uint),
-					TLSCACert:        pf["tls_ca_cert"].(*string),
-					TLSCiphers:       pf["tls_ciphers"].(*string),
-					TLSClientKey:     pf["tls_client_key"].(*string),
-					TLSClientCert:    pf["tls_client_cert"].(*string),
-					TLSSNIHostname:   pf["tls_sni_hostname"].(*string),
-					TLSCheckCert:     pf["tls_check_cert"].(*gofastly.Compatibool),
-					TLSCertHostname:  pf["tls_cert_hostname"].(*string),
-					MinTLSVersion:    pf["min_tls_version"].(*string),
-					MaxTLSVersion:    pf["max_tls_version"].(*string),
-					Healthcheck:      pf["healthcheck"].(*string),
-					Comment:          pf["comment"].(*string),
+					Service: d.Id(),
+					Version: latestVersion,
+					Name:    pf["name"].(string),
+				}
+
+				// go-fastly helpers in use go-fastly/fastly/fastly.go
+				// Comment for the Pool resource
+				if pf["comment"].(string) != "" {
+					opts.Comment = gofastly.String(pf["comment"].(string))
+				}
+
+				// Pool Shield setting
+				if pf["shield"].(string) != "" {
+					opts.Shield = gofastly.String(pf["shield"].(string))
+				}
+
+				// Pool Override Host
+				if pf["override_host"].(string) != "" {
+					opts.OverrideHost = gofastly.String(pf["override_host"].(string))
+				}
+
+				// Pool Request Condition
+				if pf["request_condition"].(string) != "" {
+					opts.RequestCondition = gofastly.String(pf["request_condition"].(string))
+				}
+
+				// Pool Healthcheck
+				if pf["healthcheck"].(string) != "" {
+					opts.Healthcheck = gofastly.String(pf["healthcheck"].(string))
+				}
+
+				// Pool connection settings will use default values if not set
+				opts.MaxConnDefault = gofastly.Uint(uint(pf["max_conn_default"].(int)))
+				opts.ConnectTimeout = gofastly.Uint(uint(pf["connect_timeout"].(int)))
+				opts.FirstByteTimeout = gofastly.Uint(uint(pf["first_byte_timeout"].(int)))
+				opts.Quorum = gofastly.Uint(uint(pf["quorum"].(int)))
+
+				// these have default values if not set
+				opts.TLSCheckCert = gofastly.CBool(pf["tls_check_cert"].(bool))
+				opts.UseTLS = gofastly.CBool(pf["use_tls"].(bool))
+
+				// Setting an empty string "" is not helpful and causes Fastly server side validation to fail
+				// As having tls_client_cert = "" is not a valid PEM format!
+				// By not setting these configuration options means configuraiton validation works as expect
+				if pf["tls_client_key"].(string) != "" {
+					opts.TLSClientKey = gofastly.String(pf["tls_client_key"].(string))
+				}
+
+				if pf["tls_client_cert"].(string) != "" {
+					opts.TLSClientCert = gofastly.String(pf["tls_client_cert"].(string))
+				}
+
+				if pf["tls_ca_cert"].(string) != "" {
+					opts.TLSCACert = gofastly.String(pf["tls_ca_cert"].(string))
+				}
+
+				if pf["tls_ciphers"].(string) != "" {
+					opts.TLSCiphers = gofastly.String(pf["tls_ciphers"].(string))
+				}
+
+				if pf["tls_sni_hostname"].(string) != "" {
+					opts.TLSSNIHostname = gofastly.String(pf["tls_sni_hostname"].(string))
+				}
+
+				if pf["tls_cert_hostname"].(string) != "" {
+					opts.TLSCertHostname = gofastly.String(pf["tls_cert_hostname"].(string))
+				}
+
+				if pf["min_tls_version"].(string) != "" {
+					opts.MinTLSVersion = gofastly.String(pf["min_tls_version"].(string))
+				}
+
+				if pf["max_tls_version"].(string) != "" {
+					opts.MaxTLSVersion = gofastly.String(pf["max_tls_version"].(string))
+				}
+
+				if pf["type"].(string) != "" {
+					switch pf["type"].(string) {
+					case "random":
+						opts.Type = gofastly.PoolTypeRandom
+					case "hash":
+						opts.Type = gofastly.PoolTypeHash
+					case "client":
+						opts.Type = gofastly.PoolTypeClient
+					}
 				}
 
 				log.Printf("[DEBUG] Create Pool Opts: %#v", opts)

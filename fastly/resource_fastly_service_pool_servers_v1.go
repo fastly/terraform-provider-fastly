@@ -93,20 +93,32 @@ func resourceServicePoolServersV1Create(d *schema.ResourceData, meta interface{}
 	poolID := d.Get("pool_id").(string)
 	servers := d.Get("server").(*schema.Set)
 
+	fmt.Printf("server===> %v", servers)
+
 	for _, vRaw := range servers.List() {
 		val := vRaw.(map[string]interface{})
 
-		_, err := conn.CreateServer(&gofastly.CreateServerInput{
+		weight := uint(val["weight"].(int))
+		fmt.Printf("%v", weight)
+		max_conn := uint(val["max_conn"].(int))
+		port := uint(val["port"].(int))
+		comment := val["comment"].(string)
+		disabled := val["disabled"].(bool)
+		override_host := val["override_host"].(string)
+
+		opts := gofastly.CreateServerInput{
 			Service:      serviceID,
 			Pool:         poolID,
-			Weight:       val["weight"].(*uint),
-			MaxConn:      val["max_conn"].(*uint),
-			Port:         val["port"].(*uint),
+			Weight:       &weight,
+			MaxConn:      &max_conn,
+			Port:         &port,
 			Address:      val["address"].(string),
-			Comment:      val["comment"].(*string),
-			Disabled:     val["disabled"].(*bool),
-			OverrideHost: val["override_host"].(*string),
-		})
+			Comment:      &comment,
+			Disabled:     &disabled,
+			OverrideHost: &override_host,
+		}
+
+		_, err := conn.CreateServer(&opts)
 		if err != nil {
 			return fmt.Errorf("Error creating Pool servers: service %s, Pool %s, %s", serviceID, poolID, err)
 		}
@@ -175,17 +187,26 @@ func resourceServicePoolServersV1Update(d *schema.ResourceData, meta interface{}
 		for _, vRaw := range addServers {
 			val := vRaw.(map[string]interface{})
 
-			_, err := conn.CreateServer(&gofastly.CreateServerInput{
+			weight := uint(val["weight"].(int))
+			max_conn := uint(val["max_conn"].(int))
+			port := uint(val["port"].(int))
+			comment := val["comment"].(string)
+			disabled := val["disabled"].(bool)
+			override_host := val["override_host"].(string)
+
+			opts := gofastly.CreateServerInput{
 				Service:      serviceID,
 				Pool:         poolID,
-				Weight:       val["weight"].(*uint),
-				MaxConn:      val["max_conn"].(*uint),
-				Port:         val["port"].(*uint),
+				Weight:       &weight,
+				MaxConn:      &max_conn,
+				Port:         &port,
 				Address:      val["address"].(string),
-				Comment:      val["comment"].(*string),
-				Disabled:     val["disabled"].(*bool),
-				OverrideHost: val["override_host"].(*string),
-			})
+				Comment:      &comment,
+				Disabled:     &disabled,
+				OverrideHost: &override_host,
+			}
+
+			_, err := conn.CreateServer(&opts)
 			if err != nil {
 				return fmt.Errorf("Error creating Pool servers: service %s, Pool %s, %s", serviceID, poolID, err)
 			}

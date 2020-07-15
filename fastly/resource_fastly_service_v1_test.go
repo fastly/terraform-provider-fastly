@@ -564,6 +564,33 @@ func testAccCheckServiceV1Destroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccFastlyServiceV1_import(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1_import(serviceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+				),
+			},
+			{
+				ResourceName:      "fastly_service_v1.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+				// These attributes are not stored on the Fastly API and must be ignored.
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy"},
+			},
+		},
+	})
+
+}
+
 func testAccServiceV1Config(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
@@ -692,4 +719,39 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, name, ttl, domain, backend, backend2)
+}
+
+func testAccServiceV1_import(serviceName string) string {
+	backendName01 := fmt.Sprintf("%s.%s.com", acctest.RandString(3), acctest.RandString(12))
+	domainName01 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName02 := fmt.Sprintf("%s.%s.com", acctest.RandString(3), acctest.RandString(12))
+	domainName02 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain01"
+	}
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain02"
+	}
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend 01"
+  }
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend 02"
+  }
+
+  force_destroy = true
+}
+
+`, serviceName, domainName01, backendName01, domainName02, backendName02)
 }

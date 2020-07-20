@@ -170,6 +170,14 @@ func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
 			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
 		},
+
+		"message_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "classic",
+			Description:  "How the message should be formatted (default: `classic`)",
+			ValidateFunc: validateLoggingMessageType(),
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -246,6 +254,7 @@ func flattenFTP(ftpList []*gofastly.FTP) []map[string]interface{} {
 			"timestamp_format":   fl.TimestampFormat,
 			"format":             fl.Format,
 			"format_version":     fl.FormatVersion,
+			"message_type":       fl.MessageType,
 			"placement":          fl.Placement,
 			"response_condition": fl.ResponseCondition,
 		}
@@ -280,6 +289,7 @@ func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID s
 		PublicKey:         df["public_key"].(string),
 		GzipLevel:         uint8(df["gzip_level"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
+		MessageType:       df["message_type"].(string),
 		Format:            vla.format,
 		FormatVersion:     vla.formatVersion,
 		Placement:         vla.placement,

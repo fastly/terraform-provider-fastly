@@ -34,6 +34,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					FormatVersion:   2,
 					TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 					Placement:       "none",
+					MessageType:     "classic",
 				},
 			},
 			local: []map[string]interface{}{
@@ -51,6 +52,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					"format":           "%h %l %u %t \"%r\" %>s %b",
 					"timestamp_format": "%Y-%m-%dT%H:%M:%S.000",
 					"placement":        "none",
+					"message_type":     "classic",
 				},
 			},
 		},
@@ -84,6 +86,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		Format:          "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion:   2,
 		Placement:       "none",
+		MessageType:     "classic",
 	}
 
 	log1_after_update := gofastly.FTP{
@@ -228,6 +231,7 @@ func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, f
 						el.Format = e.Format
 						el.ResponseCondition = e.ResponseCondition
 						el.Placement = e.Placement
+						el.MessageType = e.MessageType
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
@@ -265,17 +269,18 @@ resource "fastly_service_compute" "foo" {
     name       = "ftp-endpoint"
     address    = "ftp.example.com"
     user       = "user"
-	public_key = file("test_fixtures/fastly_test_publickey")
+    public_key = file("test_fixtures/fastly_test_publickey")
     password         = "p@ssw0rd"
     path             = "/path"
     port             = 27
     gzip_level       = 3
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    message_type     = "classic"
   }
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
@@ -302,7 +307,7 @@ resource "fastly_service_v1" "foo" {
     name       = "ftp-endpoint"
     address    = "ftp.example.com"
     user       = "user"
-	public_key = file("test_fixtures/fastly_test_publickey")
+    public_key = file("test_fixtures/fastly_test_publickey")
     password         = "p@ssw0rd"
     path             = "/path"
     port             = 27

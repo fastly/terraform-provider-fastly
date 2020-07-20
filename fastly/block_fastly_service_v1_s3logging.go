@@ -49,7 +49,10 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	// POST new/updated S3 Logging.
 	for _, sRaw := range addS3Logging {
-		opts, _ := h.buildCreate(sRaw, d.Id(), latestVersion)
+		opts, err := h.buildCreate(sRaw, d.Id(), latestVersion)
+		if err != nil {
+			return err
+		}
 
 		// @HACK for a TF SDK Issue.
 		//
@@ -65,7 +68,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 			continue
 		}
 
-		err := createS3(conn, opts)
+		err = createS3(conn, opts)
 		if err != nil {
 			return err
 		}

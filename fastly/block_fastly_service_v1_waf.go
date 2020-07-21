@@ -13,10 +13,11 @@ type WAFServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceWAF() ServiceAttributeDefinition {
+func NewServiceWAF(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &WAFServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key: "waf",
+			key:             "waf",
+			serviceMetadata: sa,
 		},
 	}
 }

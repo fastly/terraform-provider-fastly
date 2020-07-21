@@ -104,6 +104,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		Format:          "%h %l %u %t \"%r\" %>s %b %T",
 		FormatVersion:   2,
 		Placement:       "waf_debug",
+		MessageType:     "classic",
 	}
 
 	log2 := gofastly.FTP{
@@ -121,6 +122,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		Format:          "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion:   2,
 		Placement:       "none",
+		MessageType:     "classic",
 	}
 
 	resource.Test(t, resource.TestCase{

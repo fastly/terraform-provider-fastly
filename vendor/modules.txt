@@ -209,6 +209,8 @@ github.com/mitchellh/mapstructure
 github.com/mitchellh/reflectwalk
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/posener/complete v1.2.1
 github.com/posener/complete
 github.com/posener/complete/cmd
@@ -217,6 +219,9 @@ github.com/posener/complete/match
 # github.com/spf13/afero v1.2.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
+# github.com/stretchr/testify v1.3.0
+## explicit
+github.com/stretchr/testify/assert
 # github.com/ulikunitz/xz v0.5.5
 github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/hash

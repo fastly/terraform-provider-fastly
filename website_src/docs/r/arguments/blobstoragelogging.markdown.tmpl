@@ -1,0 +1,20 @@
+{{define "blobstoragelogging"}}* `blobstoragelogging` - (Optional) An Azure Blob Storage endpoint to send streaming logs too.
+Defined below.{{end}}
+
+{{define "blobstoragelogging_block"}}
+The `blobstoragelogging` block supports:
+
+* `name` - (Required) A unique name to identify the Azure Blob Storage endpoint.
+* `account_name` - (Required) The unique Azure Blob Storage namespace in which your data objects are stored.
+* `container` - (Required) The name of the Azure Blob Storage container in which to store logs.
+* `sas_token` - (Required) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work.
+* `path` - (Optional) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path.
+* `period` - (Optional) How frequently the logs should be transferred in seconds. Default `3600`.
+* `timestamp_format` - (Optional) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`.
+* `gzip_level` - (Optional) Level of Gzip compression from `0`to `9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`.
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `message_type` - (Optional) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
+{{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache-style string or VCL variables to use for log formatting. Default `%h %l %u %t \"%r\" %>s %b`.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed, overriding any `format_version` default. Can be either `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.{{end}}{{end}}

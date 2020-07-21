@@ -1,0 +1,23 @@
+{{define "logging_sftp"}}* `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
+Defined below.{{end}}
+
+{{define "logging_sftp_block"}}
+The `logging_sftp` block supports:
+
+* `name` - (Required) The unique name of the SFTP logging endpoint.
+* `address` - (Required) The SFTP address to stream logs to.
+* `path` - (Required) The path to upload log files to. If the path ends in / then it is treated as a directory.
+* `ssh_known_hosts` - (Required) A list of host keys for all hosts we can connect to over SFTP.
+* `user` - (Required) The username for the server.
+* `port` - (Optional) The port the SFTP service listens on. (Default: `22`).
+* `password` - (Optional) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
+* `secret_key` - (Optional) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred.
+* `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
+* `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`).
+* `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
+* `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+* `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
+{{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `response_condition` - (Optional) The name of the condition to apply.
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed.{{end}}{{end}}

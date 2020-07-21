@@ -1,0 +1,13 @@
+{{define "logging_scalyr"}}* `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
+Defined below.{{end}}
+
+{{define "logging_scalyr_block"}}
+The `logging_scalyr` block supports:
+
+* `name` - (Required) The unique name of the Scalyr logging endpoint.
+* `token` - (Required) The token to use for authentication (https://www.scalyr.com/keys).
+* `region` - (Optional) The region that log data will be sent to. One of US or EU. Defaults to US if undefined.
+{{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache-style string or VCL variables to use for log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`. Default `2`.
+* `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+* `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.{{end}}{{end}}

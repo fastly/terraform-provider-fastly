@@ -1,0 +1,13 @@
+{{define "logging_logshuttle"}}* `logging_logshuttle` - (Optional) A Log Shuttle endpoint to send streaming logs to.
+Defined below.{{end}}
+
+{{define "logging_logshuttle_block"}}
+The `logging_logshuttle` block supports:
+
+* `name` - (Required) The unique name of the Logshuttle logging endpoint.
+* `token` - (Required) The data authentication token associated with this endpoint.
+* `url` - (Required) Your Log Shuttle endpoint url.
+{{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache style log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.{{end}}{{end}}

@@ -1,4 +1,9 @@
-## 0.20.0 (Unreleased)
+## 0.19.1 (Unreleased)
+
+NOTES:
+
+* resource/fastly_service_compute: Update website documentation for compute resource to include correct terminology ([#294](https://github.com/terraform-providers/terraform-provider-fastly/pull/294))
+
 ## 0.19.0 (July 22, 2020)
 
 FEATURES:

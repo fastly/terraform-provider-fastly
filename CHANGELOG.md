@@ -1,4 +1,4 @@
-## 0.19.2 (Unreleased)
+## 0.19.2 (July 22, 2020)
 
 NOTES:
 

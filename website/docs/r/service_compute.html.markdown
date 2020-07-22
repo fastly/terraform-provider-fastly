@@ -3,14 +3,12 @@ layout: "fastly"
 page_title: "Fastly: service_compute"
 sidebar_current: "docs-fastly-resource-service-compute"
 description: |-
-  Provides an Fastly Compute Service
+  Provides an Fastly Compute@Edge service
 ---
 
 # fastly_service_compute
 
-Provides a Fastly Compute Service, representing the Wasm edge compute package which manages the configuration for a website, app,
-API, or anything else to be served through Fastly at the edge. A Service encompasses Domains
-and Backends.
+Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/), which is ran at the edge using [Lucet](https://github.com/bytecodealliance/lucet), an open-source WebAssembly runtime created by Fastly. A compute service encompasses Domains and Backends.
 
 The Service resource requires a domain name that is correctly set up to direct
 traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]
@@ -165,11 +163,11 @@ The `healthcheck` block supports:
 * `timeout` - (Optional) Timeout in milliseconds. Default `500`.
 * `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
 
-The `package` block supports uploading or modifying Wasm packages for use in a Fastly compute service. See Fastly's documentation on
+The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
 [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
 
 * `filename` - (Required) The path to the Wasm deployment package within your local filesystem.
-* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("file.zip") (Terraform 0.11.12 and later) or filesha512(file("file.zip")) (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the Wasm deployment package.
+* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package.
 
 
 The `s3logging` block supports:

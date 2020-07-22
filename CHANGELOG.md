@@ -1,4 +1,4 @@
-## 0.19.0 (Unreleased)
+## 0.19.0 (July 22, 2020)
 
 FEATURES:
 

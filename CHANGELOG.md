@@ -1,4 +1,24 @@
 ## 0.19.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `fastly_service_compute` ([#281](https://github.com/terraform-providers/terraform-provider-fastly/pull/281))
+
+ENHANCEMENTS:
+
+* resource/fastly_service_compute: Add support for all logging providers ([#285](https://github.com/terraform-providers/terraform-provider-fastly/pull/285))
+* resource/fastly_service_compute: Add support for importing compute services ([#286](https://github.com/terraform-providers/terraform-provider-fastly/pull/286))
+* resource/fastly_service_v1/ftp_logging: Add support for `message_type` field to FTP logging endpoint ([#288](https://github.com/terraform-providers/terraform-provider-fastly/pull/288))
+
+BUG FIXES:
+
+* resource/fastly_service_v1/s3logging: Fix error check which was causing a runtime panic with s3logging ([#290](https://github.com/terraform-providers/terraform-provider-fastly/pull/290))
+
+NOTES:
+
+* provider: Update `go-fastly` client to v1.16.2 ([#288](https://github.com/terraform-providers/terraform-provider-fastly/pull/288))
+* provider: Refactor documentation templating and compilation ([#283](https://github.com/terraform-providers/terraform-provider-fastly/pull/283))
+
 ## 0.18.0 (July 01, 2020)
 
 ENHANCEMENTS:

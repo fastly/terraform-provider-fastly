@@ -1,4 +1,9 @@
-## 0.20.0 (Unreleased)
+## 0.19.2 (Unreleased)
+
+NOTES:
+
+* resource/fastly_service_compute: Fixes resource references in website documentation ([#296](https://github.com/terraform-providers/terraform-provider-fastly/pull/296))
+
 ## 0.19.1 (July 22, 2020)
 
 NOTES:

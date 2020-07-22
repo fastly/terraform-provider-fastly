@@ -19,26 +19,26 @@ on their documentation site for guidance.
 Basic usage:
 
 ```hcl
-resource "fastly_service_v1" "demo" {
-name = "demofastly"
+resource "fastly_service_compute" "demo" {
+    name = "demofastly"
 
-domain {
-  name    = "demo.notexample.com"
-  comment = "demo"
-}
+    domain {
+      name    = "demo.notexample.com"
+      comment = "demo"
+    }
 
-backend {
-  address = "127.0.0.1"
-  name    = "localhost"
-  port    = 80
-}
+    backend {
+      address = "127.0.0.1"
+      name    = "localhost"
+      port    = 80
+    }
 
-package {
-  filename = "package.tar.gz"
-  source_code_hash = filesha512("package.tar.gz")
-}
+    package {
+      filename = "package.tar.gz"
+      source_code_hash = filesha512("package.tar.gz")
+    }
 
-force_destroy = true
+    force_destroy = true
 }
 ```
 
@@ -479,6 +479,7 @@ In addition to the arguments listed above, the following attributes are exported
 
 Fastly Service can be imported using their service ID, e.g.
 
+
 ```
-$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
+$ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 ```

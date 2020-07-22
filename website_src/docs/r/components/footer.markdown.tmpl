@@ -8,6 +8,9 @@
 
 Fastly Service can be imported using their service ID, e.g.
 
-```
+{{ if eq .Data.ServiceType "vcl"}}```
 $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 ```{{end}}
+{{ if eq .Data.ServiceType "wasm"}}```
+$ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
+```{{end}}{{end}}

@@ -20,26 +20,25 @@ Basic usage:
 
 ```hcl
 resource "fastly_service_compute" "demo" {
-name = "demofastly"
+    name = "demofastly"
 
-domain {
-  name    = "demo.notexample.com"
-  comment = "demo"
-}
+    domain {
+      name    = "demo.notexample.com"
+      comment = "demo"
+    }
 
-backend {
-  address = "127.0.0.1"
-  name    = "localhost"
-  port    = 80
-}
+    backend {
+      address = "127.0.0.1"
+      name    = "localhost"
+      port    = 80
+    }
 
-package {
-  filename = "package.tar.gz"
-  source_code_hash = filesha512("package.tar.gz")
-}
+    package {
+      filename = "package.tar.gz"
+      source_code_hash = filesha512("package.tar.gz")
+    }
 
-force_destroy = true
-
+    force_destroy = true
 }
 ```
 

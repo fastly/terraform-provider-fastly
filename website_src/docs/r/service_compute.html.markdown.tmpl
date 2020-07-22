@@ -19,7 +19,7 @@ on their documentation site for guidance.
 Basic usage:
 
 ```hcl
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_compute" "demo" {
 name = "demofastly"
 
 domain {
@@ -39,6 +39,7 @@ package {
 }
 
 force_destroy = true
+
 }
 ```
 

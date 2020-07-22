@@ -19,7 +19,7 @@ on their documentation site for guidance.
 Basic usage:
 
 ```hcl
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_compute" "demo" {
 name = "demofastly"
 
 domain {
@@ -39,6 +39,7 @@ package {
 }
 
 force_destroy = true
+
 }
 ```
 
@@ -479,6 +480,7 @@ In addition to the arguments listed above, the following attributes are exported
 
 Fastly Service can be imported using their service ID, e.g.
 
+
 ```
-$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
+$ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 ```

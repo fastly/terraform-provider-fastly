@@ -8,10 +8,10 @@ VERSION=$(shell git describe --tags --always)
 
 default: build
 
-build: fmtcheck
+build:
 	go install -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(VERSION)"
 
-test: fmtcheck
+test:
 	go test -i $(TEST) || exit 1
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4

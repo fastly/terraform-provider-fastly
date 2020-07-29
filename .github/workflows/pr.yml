@@ -1,0 +1,74 @@
+on: pull_request
+name: Pull request
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14.x
+    - name: Restore cache
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-
+    - name: Fmt
+      run: make fmt
+    - name: Vet
+      run: make vet
+  test:
+    strategy:
+      matrix:
+        go-version: [1.14.x]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Restore cache
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-
+    - name: Test
+      run: make test
+  website:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14.x
+    - name: Set Go variables for backwards compatibility
+      run: |
+        echo "::set-env name=GOPATH::$GITHUB_WORKSPACE/go"
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        path: go/src/github.com/${{ github.repository }}
+    - name: Restore cache
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-
+    - name: Run website-test
+      run: |
+        cd $GOPATH/src/github.com/${{ github.repository }}
+        make website-test
+    - name: Check diff
+      run: |
+        cd $GOPATH/src/github.com/${{ github.repository }}
+        git diff-files --ignore-all-space --name-only --exit-code

@@ -1,4 +1,10 @@
 ## 0.20.0 (Unreleased)
+## 0.19.3 (July 30, 2020)
+
+NOTES:
+
+* provider: Initial release to the [Terraform Registry](https://registry.terraform.io/)
+
 ## 0.19.2 (July 22, 2020)
 
 NOTES:

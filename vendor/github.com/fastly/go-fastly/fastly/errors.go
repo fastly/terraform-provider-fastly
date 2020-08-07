@@ -101,9 +101,21 @@ var ErrMissingCustomerID = errors.New("missing required field 'CustomerID'")
 // requires a "EventID" key, but one was not set
 var ErrMissingEventID = errors.New("missing required field 'EventID'")
 
-// ErrMissingWafID is an error that is returned was an input struct
-// requires a "WafID" key, but one was not set
+// ErrMissingWAFID is an error that is returned when an input struct
+// requires a "WAFID" key, but one was not set.
 var ErrMissingWAFID = errors.New("missing required field 'WAFID'")
+
+// ErrMissingWAFVersionNumber is an error that is returned when an input struct
+// requires a "WAFVersionNumber" key, but one was not set.
+var ErrMissingWAFVersionNumber = errors.New("missing required field 'WAFVersionNumber'")
+
+// ErrMissingWAFVersionID is an error that is returned when an input struct
+// requires a "WAFVersionID" key, but one was not set.
+var ErrMissingWAFVersionID = errors.New("missing required field 'WAFVersionID'")
+
+// ErrMissingWAFActiveRuleList is an error that is returned when an input struct
+// requires a list of WAF active rules, but it is empty.
+var ErrMissingWAFActiveRuleList = errors.New("WAF active rules slice is empty")
 
 // ErrMissingOWASPID is an error that is returned was an input struct
 // requires a "OWASPID" key, but one was not set

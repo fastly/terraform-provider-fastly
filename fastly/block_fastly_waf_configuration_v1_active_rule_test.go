@@ -284,7 +284,7 @@ func TestAccFastlyServiceWAFVersionV1ImportWithRules(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "fastly_service_waf_configuration_v1.waf",
+				ResourceName:      "fastly_service_waf_configuration.waf",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

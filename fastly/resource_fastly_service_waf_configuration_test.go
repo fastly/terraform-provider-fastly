@@ -199,7 +199,7 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "fastly_service_waf_configuration_v1.waf",
+				ResourceName:      "fastly_service_waf_configuration.waf",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -314,7 +314,7 @@ func testAccFastlyServiceWAFVersionV1GetVersionNumber(versions []*gofastly.WAFVe
 func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface{}, rules string) string {
 
 	hcl := `
-        resource "fastly_service_waf_configuration_v1" "waf" {
+        resource "fastly_service_waf_configuration" "waf" {
           waf_id = fastly_service_v1.foo.waf[0].waf_id
          `
 	for k, v := range m {
@@ -367,8 +367,8 @@ resource "fastly_service_v1" "foo" {
 	content = "content"
   }
 
-  waf { 
-	prefetch_condition = "prefetch" 
+  waf {
+	prefetch_condition = "prefetch"
 	response_object = "response"
   }
 

@@ -34,7 +34,7 @@ func Provider() terraform.ResourceProvider {
 			"fastly_service_dictionary_items_v1":        resourceServiceDictionaryItemsV1(),
 			"fastly_service_dynamic_snippet_content_v1": resourceServiceDynamicSnippetContentV1(),
 			"fastly_user_v1":                            resourceUserV1(),
-			"fastly_service_waf_configuration_v1":       resourceServiceWAFConfigurationV1(),
+			"fastly_service_waf_configuration":          resourceServiceWAFConfigurationV1(),
 		},
 	}
 

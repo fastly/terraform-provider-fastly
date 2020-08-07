@@ -12,17 +12,17 @@
 
                 <li<%= sidebar_current("docs-fastly-datasource") %>>
                 <a href="#">Data Sources</a>
-                    <ul class="nav nav-visible">
-                        <li<%= sidebar_current("docs-fastly-datasource-ip_ranges") %>>
-                            <a href="/docs/providers/fastly/d/ip_ranges.html">fastly_ip_ranges</a>
-                        </li>
+                    <ul class="nav nav-visible">{{range .DataMenu}}
+                        <li<%= sidebar_current("{{.Lookup}}") %>>
+                            <a href="{{.Link}}">{{.Title}}</a>
+                        </li>{{end}}
                     </ul>
                 </li>
 
                 <li<%= sidebar_current("docs-fastly-resource") %>>
                     <a href="#">Resources</a>
 
-                    <ul class="nav nav-visible">{{range .Menu}}
+                    <ul class="nav nav-visible">{{range .ResourceMenu}}
                         <li<%= sidebar_current("{{.Lookup}}") %>>
                             <a href="{{.Link}}">{{.Title}}</a>
                         </li>{{end}}

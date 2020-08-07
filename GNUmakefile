@@ -2,7 +2,7 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=fastly
-FULL_PKG_NAME=github.com/terraform-providers/terraform-provider-fastly
+FULL_PKG_NAME=github.com/fastly/terraform-provider-fastly
 VERSION_PLACEHOLDER=version.ProviderVersion
 VERSION=$(shell git describe --tags --always)
 
@@ -59,7 +59,7 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
 	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
 endif
-	go run scripts/website/parse-templates.go
+	go run "scripts/website/parse-templates.go"
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test

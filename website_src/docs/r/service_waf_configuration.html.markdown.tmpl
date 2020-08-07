@@ -1,19 +1,19 @@
----
+{{define "service_waf_configuration"}}---
 layout: "fastly"
-page_title: "Fastly: service_waf_configuration_v1"
-sidebar_current: "docs-fastly-resource-service-waf-configuration-v1"
+page_title: "Fastly: service_waf_configuration"
+sidebar_current: "docs-fastly-resource-service-waf-configuration"
 description: |-
-  Provides a Web Application Firewall configuration and rules that can be applied to a service. 
+  Provides a Web Application Firewall configuration and rules that can be applied to a service.
 ---
 
--> **Note:** This resource is only available from x.x.x of the Fastly terraform provider.
+-> **Note:** This resource is only available from 0.20.0 of the Fastly terraform provider.
 
-# fastly_service_waf_configuration_v1
+# fastly_service_waf_configuration
 
 Defines a set of Web Application Firewall configuration options that can be used to populate a service WAF. This resource will configure rules, thresholds and other settings for a WAF.
 
 
-~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.    
+~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.
 
 
 ## Example Usage
@@ -67,7 +67,7 @@ resource "fastly_service_v1" "demo" {
   force_destroy = true
 }
 
-resource "fastly_service_waf_configuration_v1" "waf" {
+resource "fastly_service_waf_configuration" "waf" {
   waf_id                          = fastly_service_v1.demo.waf[0].waf_id
   http_violation_score_threshold  = 100
 }
@@ -122,7 +122,7 @@ resource "fastly_service_v1" "demo" {
   force_destroy = true
 }
 
-resource "fastly_service_waf_configuration_v1" "waf" {
+resource "fastly_service_waf_configuration" "waf" {
   waf_id                          = fastly_service_v1.demo.waf[0].waf_id
   http_violation_score_threshold  = 100
 
@@ -195,7 +195,7 @@ data "fastly_waf_rules" "owasp" {
   publishers = ["owasp"]
 }
 
-resource "fastly_service_waf_configuration_v1" "waf" {
+resource "fastly_service_waf_configuration" "waf" {
   waf_id                          = fastly_service_v1.demo.waf[0].waf_id
   http_violation_score_threshold  = 100
 
@@ -280,7 +280,7 @@ data "fastly_waf_rules" "owasp" {
   publishers = ["owasp"]
 }
 
-resource "fastly_service_waf_configuration_v1" "waf" {
+resource "fastly_service_waf_configuration" "waf" {
   waf_id                          = fastly_service_v1.demo.waf[0].waf_id
   http_violation_score_threshold  = 202
 
@@ -368,7 +368,7 @@ data "fastly_waf_rules" "owasp" {
   publishers = ["owasp"]
 }
 
-resource "fastly_service_waf_configuration_v1" "waf" {
+resource "fastly_service_waf_configuration" "waf" {
   waf_id                          = fastly_service_v1.demo.waf[0].waf_id
   http_violation_score_threshold  = 202
 
@@ -453,7 +453,7 @@ data "fastly_waf_rules" "owasp" {
   publishers = ["owasp"]
 }
 
-resource "fastly_service_waf_configuration_v1" "waf" {
+resource "fastly_service_waf_configuration" "waf" {
   waf_id                          = fastly_service_v1.demo.waf[0].waf_id
   http_violation_score_threshold  = 202
 
@@ -468,7 +468,7 @@ resource "fastly_service_waf_configuration_v1" "waf" {
 }
 # This output contains the WAF's active rules set. This can be useful for identifying which revision is active for each WAF rule.
 output "rules" {
-  value = fastly_service_waf_configuration_v1.waf.rule
+  value = fastly_service_waf_configuration.waf.rule
 }
 ```
 
@@ -517,18 +517,17 @@ The `rule` block supports:
 
 ## Import
 
-This is an example of the import command being applied to the resource named `fastly_service_waf_configuration_v1.waf`
+This is an example of the import command being applied to the resource named `fastly_service_waf_configuration.waf`
 The resource ID should be the WAF ID.
 
 ```
-$ terraform import fastly_service_waf_configuration_v1.waf xxxxxxxxxxxxxxxxxxxx
+$ terraform import fastly_service_waf_configuration.waf xxxxxxxxxxxxxxxxxxxx
 ```
 
-If Terraform is already managing a remote WAF configurations against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
-The following is an example of the Terraform state command to remove the resource named `fastly_service_waf_configuration_v1.waf` from the Terraform state file.
+If Terraform is already managing a remote WAF configurations against a resource being imported then the user will be asked to remove it from the existing Terraform state.
+The following is an example of the Terraform state command to remove the resource named `fastly_service_waf_configuration.waf` from the Terraform state file.
 
 ```
-$ terraform state rm fastly_service_waf_configuration_v1.waf
-``` 
-
- 
+$ terraform state rm fastly_service_waf_configuration.waf
+```
+{{end}}

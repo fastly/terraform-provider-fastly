@@ -152,9 +152,9 @@ resource "fastly_service_v1" "demo" {
 }
 ```
 
--> **Note:** The following example is only available from x.x.x of the Fastly terraform provider.
+-> **Note:** The following example is only available from 0.20.0 of the Fastly Terraform provider.
 
-Basic usage with [Web Application Firewall](https://docs.fastly.com/en/guides/web-application-firewall):
+Basic usage with [Web Application Firewall](https://developer.fastly.com/reference/api/waf/):
 
 ```hcl
 resource "fastly_service_v1" "demo" {
@@ -294,6 +294,7 @@ Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
 * `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
 * `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
+* `waf` - (Optional) A WAF configuration block.  Defined below.
 
 The `domain` block supports:
 
@@ -872,19 +873,19 @@ The `acl` block exports:
 
 * `acl_id` - The ID of the ACL.
 
-The `dictionary` block exports:
-
-* `dictionary_id` - The ID of the dictionary.
-
 The `waf` block exports:
 
 * `waf_id` - The ID of the WAF.
 
-[fastly-s3]: https://docs.fastly.com/guides/integrations/amazon-s3
-[fastly-cname]: https://docs.fastly.com/guides/basic-setup/adding-cname-records
-[fastly-conditionals]: https://docs.fastly.com/guides/conditions/using-conditions
-[fastly-sumologic]: https://docs.fastly.com/api/logging#logging_sumologic
-[fastly-gcs]: https://docs.fastly.com/api/logging#logging_gcs
+The `dictionary` block exports:
+
+* `dictionary_id` - The ID of the dictionary.
+
+[fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
+[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
+[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
+[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
+[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
 
 ## Import
 

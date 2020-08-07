@@ -152,6 +152,58 @@ resource "fastly_service_v1" "demo" {
 }
 ```
 
+-> **Note:** The following example is only available from 0.20.0 of the Fastly Terraform provider.
+
+Basic usage with [Web Application Firewall](https://developer.fastly.com/reference/api/waf/):
+
+```hcl
+resource "fastly_service_v1" "demo" {
+  name = "demofastly"
+
+  domain {
+    name    = "example.com"
+    comment = "demo"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "origin1"
+    port    = 80
+  }
+
+  condition {
+    name      = "WAF_Prefetch"
+    type      = "PREFETCH"
+    statement = "req.backend.is_origin"
+  }
+
+  # This condition will always be false
+  # adding it to the response object created below
+  # prevents Fastly from returning a 403 on all of your traffic.
+  condition {
+    name      = "WAF_always_false"
+    statement = "false"
+    type      = "REQUEST"
+  }
+
+  response_object {
+    name              = "WAF_Response"
+    status            = "403"
+    response          = "Forbidden"
+    content_type      = "text/html"
+    content           = "<html><body>Forbidden</body></html>"
+    request_condition = "WAF_always_false"
+  }
+
+  waf {
+    prefetch_condition = "WAF_Prefetch"
+    response_object    = "WAF_Response"
+  }
+
+  force_destroy = true
+}
+```
+
 -> **Note:** For an AWS S3 Bucket, the Backend address is
 `<domain>.s3-website-<region>.amazonaws.com`. The `default_host` attribute
 should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
@@ -208,6 +260,7 @@ The following arguments are supported:
 {{ template "vcl" . }}
 {{ template "acl" . }}
 {{ template "dictionary" . }}
+{{ template "waf" . }}
 {{ template "domain_block" . }}
 {{ template "backend_block" . }}
 {{ template "condition_block" . }}
@@ -248,10 +301,12 @@ The following arguments are supported:
 {{ template "vcl_block" . }}
 {{ template "acl_block" . }}
 {{ template "dictionary_block" . }}
+{{ template "waf_block" . }}
 
 {{ template "export_intro" .}}
 {{ template "dynamicsnippet_export" .}}
 {{ template "acl_export" .}}
+{{ template "waf_export" .}}
 {{ template "dictionary_export" .}}
 
 {{ template "footer" .}}

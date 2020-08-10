@@ -1,4 +1,16 @@
-## 0.20.0 (Unreleased)
+## 0.21.0 (Unreleased)
+
+## 0.20.0 (August 10, 2020)
+
+FEATURES:
+
+* **New Data Source:** `fastly_waf_rules` Use this data source to fetch Fastly WAF rules and pass to a `fastly_service_waf_configuration`. ([#291](https://github.com/terraform-providers/terraform-provider-fastly/pull/291))
+* **New Resource:** `fastly_service_waf_configuration` Provides a Web Application Firewall configuration and rules that can be applied to a service. ([#291](https://github.com/terraform-providers/terraform-provider-fastly/pull/291))
+
+ENHANCEMENTS:
+
+* resource/fastly_service_v1/waf: Add `waf` block to enable and configure a Web Application Firewall on a service. ([#285](https://github.com/terraform-providers/terraform-provider-fastly/pull/285))
+
 ## 0.19.3 (July 30, 2020)
 
 NOTES:

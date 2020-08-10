@@ -54,6 +54,7 @@ resource "fastly_service_v1" "demo" {
     address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
     name    = "AWS S3 hosting"
     port    = 80
+    override_host = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
   }
 
   header {
@@ -68,8 +69,6 @@ resource "fastly_service_v1" "demo" {
     extensions    = ["css", "js"]
     content_types = ["text/html", "text/css"]
   }
-
-  default_host = "${aws_s3_bucket.website.name}.s3-website-us-west-2.amazonaws.com"
 
   force_destroy = true
 }
@@ -205,8 +204,8 @@ resource "fastly_service_v1" "demo" {
 ```
 
 -> **Note:** For an AWS S3 Bucket, the Backend address is
-`<domain>.s3-website-<region>.amazonaws.com`. The `default_host` attribute
-should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
+`<domain>.s3-website-<region>.amazonaws.com`. The `override_host` attribute
+should be set to `<bucket_name>.s3-website-<region>.amazonaws.com` in the `backend` block. See the
 Fastly documentation on [Amazon S3][fastly-s3].
 
 ## Argument Reference

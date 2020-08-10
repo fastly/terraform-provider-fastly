@@ -12,10 +12,11 @@ import (
 )
 
 type Page struct {
-	name string
-	path string
-	Data PageData
-	Menu []MenuItem
+	name         string
+	path         string
+	Data         PageData
+	DataMenu     []MenuItem
+	ResourceMenu []MenuItem
 }
 
 type PageData struct {
@@ -32,6 +33,17 @@ func main() {
 	baseDir := getBaseDir()
 	tmplDir := baseDir + "/website_src/"
 	docsDir := baseDir + "/website/"
+
+	var dataPages = []Page{
+		{
+			name: "ip_ranges",
+			path: docsDir + "docs/d/ip_ranges.html.markdown",
+		},
+		{
+			name: "waf_rules",
+			path: docsDir + "docs/d/waf_rules.html.markdown",
+		},
+	}
 
 	var resourcePages = []Page{
 		{
@@ -61,26 +73,31 @@ func main() {
 			path: docsDir + "docs/r/service_dynamic_snippet_content_v1.html.markdown",
 		},
 		{
+			name: "service_waf_configuration",
+			path: docsDir + "docs/r/service_waf_configuration.html.markdown",
+		},
+		{
 			name: "user_v1",
 			path: docsDir + "docs/r/user_v1.html.markdown",
 		},
 	}
 
 	var pages = append(resourcePages, Page{
-		name: "fastly_erb",
-		path: docsDir + "fastly.erb",
-		Menu: generateMenuItems(resourcePages),
+		name:         "fastly_erb",
+		path:         docsDir + "fastly.erb",
+		DataMenu:     generateMenuItems("d", dataPages),
+		ResourceMenu: generateMenuItems("r", resourcePages),
 	})
 
 	renderPages(getTemplate(tmplDir), pages)
 }
 
-func generateMenuItems(resourcePages []Page) []MenuItem {
+func generateMenuItems(pageType string, pages []Page) []MenuItem {
 	var menuItems []MenuItem
-	for _, p := range resourcePages {
+	for _, p := range pages {
 		menuItems = append(menuItems, MenuItem{
 			Lookup: fmt.Sprintf("docs-fastly-resource-%s", strings.ReplaceAll(p.name, "_", "-")),
-			Link:   fmt.Sprintf("/docs/providers/fastly/r/%s.html", p.name),
+			Link:   fmt.Sprintf("/docs/providers/fastly/%s/%s.html", pageType, p.name),
 			Title:  fmt.Sprintf("fastly_%s", p.name),
 		})
 	}

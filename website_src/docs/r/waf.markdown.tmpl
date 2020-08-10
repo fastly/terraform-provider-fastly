@@ -1,0 +1,13 @@
+{{define "waf"}}* `waf` - (Optional) A WAF configuration block.  Defined below.{{end}}
+
+{{define "waf_block"}}
+The `waf` block supports:
+
+* `response_object` - (Required) The name of the [response object](#response_object) used by the Web Application Firewall.
+* `prefetch_condition` - (Optional) The `condition` to determine which requests will be run past your Fastly WAF. This `condition` must be of type `PREFETCH`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].{{end}}
+
+{{define "waf_export"}}
+The `waf` block exports:
+
+* `waf_id` - The ID of the WAF.{{end}}
+

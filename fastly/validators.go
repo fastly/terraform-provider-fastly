@@ -88,6 +88,14 @@ func validateSnippetType() schema.SchemaValidateFunc {
 	}, false)
 }
 
+func validateRuleStatusType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"log",
+		"score",
+		"block",
+	}, false)
+}
+
 func validateDictionaryItems() schema.SchemaValidateFunc {
 
 	max := gofastly.MaximumDictionarySize

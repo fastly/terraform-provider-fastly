@@ -152,6 +152,58 @@ resource "fastly_service_v1" "demo" {
 }
 ```
 
+-> **Note:** The following example is only available from 0.20.0 of the Fastly Terraform provider.
+
+Basic usage with [Web Application Firewall](https://developer.fastly.com/reference/api/waf/):
+
+```hcl
+resource "fastly_service_v1" "demo" {
+  name = "demofastly"
+
+  domain {
+    name    = "example.com"
+    comment = "demo"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "origin1"
+    port    = 80
+  }
+
+  condition {
+    name      = "WAF_Prefetch"
+    type      = "PREFETCH"
+    statement = "req.backend.is_origin"
+  }
+
+  # This condition will always be false
+  # adding it to the response object created below
+  # prevents Fastly from returning a 403 on all of your traffic.
+  condition {
+    name      = "WAF_always_false"
+    statement = "false"
+    type      = "REQUEST"
+  }
+
+  response_object {
+    name              = "WAF_Response"
+    status            = "403"
+    response          = "Forbidden"
+    content_type      = "text/html"
+    content           = "<html><body>Forbidden</body></html>"
+    request_condition = "WAF_always_false"
+  }
+
+  waf {
+    prefetch_condition = "WAF_Prefetch"
+    response_object    = "WAF_Response"
+  }
+
+  force_destroy = true
+}
+```
+
 -> **Note:** For an AWS S3 Bucket, the Backend address is
 `<domain>.s3-website-<region>.amazonaws.com`. The `default_host` attribute
 should be set to `<bucket_name>.s3-website-<region>.amazonaws.com`. See the
@@ -242,6 +294,7 @@ Defined below.
 * `vcl` - (Optional) A set of custom VCL configuration blocks. See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
 * `acl` - (Optional) A set of ACL configuration blocks.  Defined below.
 * `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions. Defined below.
+* `waf` - (Optional) A WAF configuration block.  Defined below.
 
 The `domain` block supports:
 
@@ -799,6 +852,11 @@ via API. Default is `false`. It is important to note that changing this attribut
 dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if
 the items are managed outside of Terraform.
 
+The `waf` block supports:
+
+* `response_object` - (Required) The name of the [response object](#response_object) used by the Web Application Firewall.
+* `prefetch_condition` - (Optional) The `condition` to determine which requests will be run past your Fastly WAF. This `condition` must be of type `PREFETCH`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
+
 ## Attributes Reference
 
 In addition to the arguments listed above, the following attributes are exported:
@@ -814,6 +872,10 @@ The `dynamicsnippet` block exports:
 The `acl` block exports:
 
 * `acl_id` - The ID of the ACL.
+
+The `waf` block exports:
+
+* `waf_id` - The ID of the WAF.
 
 The `dictionary` block exports:
 

@@ -25,6 +25,7 @@ func Provider() terraform.ResourceProvider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"fastly_ip_ranges": dataSourceFastlyIPRanges(),
+			"fastly_waf_rules": dataSourceFastlyWAFRules(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"fastly_service_v1":                         resourceServiceV1(),
@@ -33,6 +34,7 @@ func Provider() terraform.ResourceProvider {
 			"fastly_service_dictionary_items_v1":        resourceServiceDictionaryItemsV1(),
 			"fastly_service_dynamic_snippet_content_v1": resourceServiceDynamicSnippetContentV1(),
 			"fastly_user_v1":                            resourceUserV1(),
+			"fastly_service_waf_configuration":          resourceServiceWAFConfigurationV1(),
 		},
 	}
 

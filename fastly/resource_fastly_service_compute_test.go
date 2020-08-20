@@ -88,7 +88,7 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceCompute1_basic(t *testing.T) {
+func TestAccFastlyServiceCompute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test1.tf-%s.com", acctest.RandString(10))
@@ -96,10 +96,10 @@ func TestAccFastlyServiceCompute1_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceComputeV1Destroy,
+		CheckDestroy: testAccCheckServiceComputeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceComputeV1Config(name, domainName1),
+				Config: testAccServiceComputeConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					resource.TestCheckResourceAttr(
@@ -122,7 +122,7 @@ func TestAccFastlyServiceCompute1_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceComputeV1Destroy(s *terraform.State) error {
+func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "fastly_service_compute" {
 			continue
@@ -144,7 +144,7 @@ func testAccCheckServiceComputeV1Destroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccFastlyServiceComputeV1_import(t *testing.T) {
+func TestAccFastlyServiceCompute_import(t *testing.T) {
 	var service gofastly.ServiceDetail
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -152,7 +152,7 @@ func TestAccFastlyServiceComputeV1_import(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceComputeV1ImportConfig(),
+				Config: testAccServiceComputeImportConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 				),
@@ -169,7 +169,7 @@ func TestAccFastlyServiceComputeV1_import(t *testing.T) {
 
 }
 
-func testAccServiceComputeV1Config(name, domain string) string {
+func testAccServiceComputeConfig(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"
@@ -190,7 +190,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceComputeV1ImportConfig() string {
+func testAccServiceComputeImportConfig() string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "tf-test-%s"

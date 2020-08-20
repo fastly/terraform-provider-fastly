@@ -74,7 +74,7 @@ func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, ini
 
 type VCLLoggingAttributes struct {
 	format            string
-	formatVersion     uint
+	formatVersion     *uint
 	placement         string
 	responseCondition string
 }
@@ -89,7 +89,7 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 			vla.format = val.(string)
 		}
 		if val, ok := data["format_version"]; ok {
-			vla.formatVersion = uint(val.(int))
+			vla.formatVersion = gofastly.Uint(uint(val.(int)))
 		}
 		if val, ok := data["placement"]; ok {
 			vla.placement = val.(string)

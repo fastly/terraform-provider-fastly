@@ -89,7 +89,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 			PublicKey:         bslf["public_key"].(string),
 			MessageType:       bslf["message_type"].(string),
 			Format:            vla.format,
-			FormatVersion:     vla.formatVersion,
+			FormatVersion:     uintOrDefault(vla.formatVersion),
 			Placement:         vla.placement,
 			ResponseCondition: vla.responseCondition,
 		}

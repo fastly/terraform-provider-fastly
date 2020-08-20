@@ -20,3 +20,12 @@ func TestBoolPtr(t *testing.T) {
 	v := true
 	assert.Equal(t, v, *boolToPtr(v))
 }
+
+func TestDefaultUintToZero(t *testing.T) {
+	assert.Equal(t, uint(0), uintOrDefault(nil))
+}
+
+func TestDefaultUint(t *testing.T) {
+	v := uint(10)
+	assert.Equal(t, v, uintOrDefault(&v))
+}

@@ -221,7 +221,7 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interf
 		ProjectID:         fastly.NullString(df["project_id"].(string)),
 		Topic:             fastly.NullString(df["topic"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

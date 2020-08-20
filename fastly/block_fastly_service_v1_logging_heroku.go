@@ -146,7 +146,7 @@ func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, servi
 		Token:             gofastly.NullString(df["token"].(string)),
 		URL:               gofastly.NullString(df["url"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

@@ -84,7 +84,7 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			TLSHostname:       sf["tls_hostname"].(string),
 			TLSCACert:         sf["tls_ca_cert"].(string),
 			Format:            vla.format,
-			FormatVersion:     vla.formatVersion,
+			FormatVersion:     uintOrDefault(vla.formatVersion),
 			ResponseCondition: vla.responseCondition,
 			Placement:         vla.placement,
 		}

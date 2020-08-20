@@ -284,7 +284,7 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 		TLSClientKey:      fastly.NullString(df["tls_client_key"].(string)),
 		TLSHostname:       fastly.NullString(df["tls_hostname"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

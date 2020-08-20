@@ -68,7 +68,7 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 			UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
 			Token:             slf["token"].(string),
 			Format:            vla.format,
-			FormatVersion:     vla.formatVersion,
+			FormatVersion:     uintOrDefault(vla.formatVersion),
 			Placement:         vla.placement,
 			ResponseCondition: vla.responseCondition,
 		}

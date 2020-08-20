@@ -177,7 +177,7 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{},
 		Period:            gofastly.Uint(uint(df["period"].(int))),
 		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

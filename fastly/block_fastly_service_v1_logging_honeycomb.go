@@ -146,7 +146,7 @@ func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap interface{},
 		Token:             gofastly.NullString(df["token"].(string)),
 		Dataset:           gofastly.NullString(df["dataset"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

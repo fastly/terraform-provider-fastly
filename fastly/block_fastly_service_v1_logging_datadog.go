@@ -207,7 +207,7 @@ func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap interface{}, ser
 		Token:             gofastly.NullString(df["token"].(string)),
 		Region:            gofastly.NullString(df["region"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

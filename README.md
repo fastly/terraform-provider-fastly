@@ -48,6 +48,8 @@ $ $GOPATH/bin/terraform-provider-fastly
 ...
 ```
 
+## Testing
+
 In order to test the provider, you can simply run `make test`.
 
 ```sh
@@ -56,7 +58,7 @@ $ make test
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
 
-*Note:* Acceptance tests create real resources, and often cost money to run.
+*Note:* Acceptance tests create real resources, and often cost money to run. You should expect that the full acceptance test suite will take hours to run.
 
 ```sh
 $ make testacc
@@ -83,9 +85,13 @@ Building the documentation copies the full markdown into the `website` folder, r
 
 With the repository cloned to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-fastly`:
 
-* To explicitly build the documentation:  
-`go run scripts/website/parse-templates.go `  
+* To build the documentation:
+`go run scripts/website/parse-templates.go `
 
-* To build and preview the documentation online:  
+* To build and preview the documentation online:
 `make website`
 
+Contributing
+--------------------------
+
+Refer to [CONTRIBUTING.md](./CONTRIBUTING.md)

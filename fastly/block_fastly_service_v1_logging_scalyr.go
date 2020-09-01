@@ -205,7 +205,7 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, servi
 		Region:            fastly.NullString(df["region"].(string)),
 		Token:             fastly.NullString(df["token"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

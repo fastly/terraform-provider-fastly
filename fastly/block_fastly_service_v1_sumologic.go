@@ -67,7 +67,7 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 			URL:               sf["url"].(string),
 			MessageType:       sf["message_type"].(string),
 			Format:            vla.format,
-			FormatVersion:     int(vla.formatVersion),
+			FormatVersion:     int(uintOrDefault(vla.formatVersion)),
 			ResponseCondition: vla.responseCondition,
 			Placement:         vla.placement,
 		}

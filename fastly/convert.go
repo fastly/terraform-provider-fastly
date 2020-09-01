@@ -14,3 +14,10 @@ func intToPtr(i int) *int {
 func boolToPtr(i bool) *bool {
 	return &i
 }
+
+func uintOrDefault(int *uint) uint {
+	if int == nil {
+		return 0
+	}
+	return *int
+}

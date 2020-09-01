@@ -313,7 +313,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, servic
 		PublicKey:                    df["public_key"].(string),
 		ServerSideEncryptionKMSKeyID: df["server_side_encryption_kms_key_id"].(string),
 		Format:                       vla.format,
-		FormatVersion:                vla.formatVersion,
+		FormatVersion:                uintOrDefault(vla.formatVersion),
 		ResponseCondition:            vla.responseCondition,
 		Placement:                    vla.placement,
 	}

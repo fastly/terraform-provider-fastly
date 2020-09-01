@@ -74,7 +74,7 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			TLSClientKey:      slf["tls_client_key"].(string),
 			MessageType:       slf["message_type"].(string),
 			Format:            vla.format,
-			FormatVersion:     vla.formatVersion,
+			FormatVersion:     uintOrDefault(vla.formatVersion),
 			ResponseCondition: vla.responseCondition,
 			Placement:         vla.placement,
 		}

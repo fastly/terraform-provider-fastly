@@ -118,7 +118,7 @@ func TestAccFastlyServiceV1_logging_heroku_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_logging_heroku_basicCompute(t *testing.T) {
+func TestAccFastlyServiceV1_logging_heroku_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

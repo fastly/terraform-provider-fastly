@@ -316,7 +316,7 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID
 		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
 		MessageType:       gofastly.NullString(df["message_type"].(string)),
 		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     gofastly.Uint(vla.formatVersion),
+		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 	}

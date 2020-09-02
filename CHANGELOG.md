@@ -1,5 +1,16 @@
 ## 0.21.0 (Unreleased)
 
+## 0.20.1 (September 2, 2020)
+
+BUG FIXES:
+
+* resource/fastly_service_v1/backend: Ensure changes to backend fields result in updates instead of destroy and recreate. ([#304](https://github.com/terraform-providers/terraform-provider-fastly/pull/304))
+* resource/fastly_service_v1/logging_*: Fix logging acceptance tests by ensuring formatVersion in VCLLoggingAttributes is a *uint. ([#307](https://github.com/terraform-providers/terraform-provider-fastly/pull/307))
+
+NOTES:
+
+* provider: Add a [CONTRIBUTING.md](https://github.com/fastly/terraform-provider-fastly/blob/master/CONTRIBUTING.md) containing contributing guidlines and documentation. ([#305](https://github.com/terraform-providers/terraform-provider-fastly/pull/307))
+
 ## 0.20.0 (August 10, 2020)
 
 FEATURES:

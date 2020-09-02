@@ -33,17 +33,21 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 
 	obs := ob.(*schema.Set)
 	nbs := nb.(*schema.Set)
-	removeBackends := obs.Difference(nbs).List()
-	addBackends := nbs.Difference(obs).List()
+
+	setDiff := NewSetDiff(func(backend interface{}) (interface{}, error) {
+		// Use the backend name as key
+		return backend.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(obs, nbs)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Backends
-	for _, bRaw := range removeBackends {
+	for _, bRaw := range diffResult.Deleted {
 		bf := bRaw.(map[string]interface{})
-		opts := gofastly.DeleteBackendInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    bf["name"].(string),
-		}
+		opts := h.createDeleteBackendInput(d.Id(), latestVersion, bf)
 
 		log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
 		err := conn.DeleteBackend(&opts)
@@ -56,41 +60,10 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		}
 	}
 
-	// Find and post new Backends
-	for _, dRaw := range addBackends {
+	// ADD new Backends
+	for _, dRaw := range diffResult.Added {
 		df := dRaw.(map[string]interface{})
-		opts := gofastly.CreateBackendInput{
-			Service:             d.Id(),
-			Version:             latestVersion,
-			Name:                df["name"].(string),
-			Address:             df["address"].(string),
-			OverrideHost:        df["override_host"].(string),
-			AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
-			SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
-			SSLHostname:         df["ssl_hostname"].(string),
-			SSLCACert:           df["ssl_ca_cert"].(string),
-			SSLCertHostname:     df["ssl_cert_hostname"].(string),
-			SSLSNIHostname:      df["ssl_sni_hostname"].(string),
-			UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
-			SSLClientKey:        df["ssl_client_key"].(string),
-			SSLClientCert:       df["ssl_client_cert"].(string),
-			MaxTLSVersion:       df["max_tls_version"].(string),
-			MinTLSVersion:       df["min_tls_version"].(string),
-			SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
-			Shield:              df["shield"].(string),
-			Port:                uint(df["port"].(int)),
-			BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
-			ConnectTimeout:      uint(df["connect_timeout"].(int)),
-			ErrorThreshold:      uint(df["error_threshold"].(int)),
-			FirstByteTimeout:    uint(df["first_byte_timeout"].(int)),
-			MaxConn:             uint(df["max_conn"].(int)),
-			Weight:              uint(df["weight"].(int)),
-			HealthCheck:         df["healthcheck"].(string),
-		}
-
-		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			opts.RequestCondition = df["request_condition"].(string)
-		}
+		opts := h.buildCreateBackendInput(d.Id(), latestVersion, df)
 
 		log.Printf("[DEBUG] Create Backend Opts: %#v", opts)
 		_, err := conn.CreateBackend(&opts)
@@ -98,7 +71,100 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 			return err
 		}
 	}
+
+	// UPDATE existing backends
+	for _, dRaw := range diffResult.Modified {
+		df := dRaw.(map[string]interface{})
+		opts := h.buildUpdateBackendInput(d.Id(), latestVersion, df)
+
+		log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
+		_, err := conn.UpdateBackend(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string, latestVersion int, bf map[string]interface{}) gofastly.DeleteBackendInput {
+	return gofastly.DeleteBackendInput{
+		Service: service,
+		Version: latestVersion,
+		Name:    bf["name"].(string),
+	}
+}
+
+func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, df map[string]interface{}) gofastly.CreateBackendInput {
+	opts := gofastly.CreateBackendInput{
+		Service:             service,
+		Version:             latestVersion,
+		Name:                df["name"].(string),
+		Address:             df["address"].(string),
+		OverrideHost:        df["override_host"].(string),
+		AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
+		SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
+		SSLHostname:         df["ssl_hostname"].(string),
+		SSLCACert:           df["ssl_ca_cert"].(string),
+		SSLCertHostname:     df["ssl_cert_hostname"].(string),
+		SSLSNIHostname:      df["ssl_sni_hostname"].(string),
+		UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
+		SSLClientKey:        df["ssl_client_key"].(string),
+		SSLClientCert:       df["ssl_client_cert"].(string),
+		MaxTLSVersion:       df["max_tls_version"].(string),
+		MinTLSVersion:       df["min_tls_version"].(string),
+		SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
+		Shield:              df["shield"].(string),
+		Port:                uint(df["port"].(int)),
+		BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
+		ConnectTimeout:      uint(df["connect_timeout"].(int)),
+		ErrorThreshold:      uint(df["error_threshold"].(int)),
+		FirstByteTimeout:    uint(df["first_byte_timeout"].(int)),
+		MaxConn:             uint(df["max_conn"].(int)),
+		Weight:              uint(df["weight"].(int)),
+		HealthCheck:         df["healthcheck"].(string),
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		opts.RequestCondition = df["request_condition"].(string)
+	}
+	return opts
+}
+
+func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(service string, latestVersion int, df map[string]interface{}) gofastly.UpdateBackendInput {
+	opts := gofastly.UpdateBackendInput{
+		Service:             service,
+		Version:             latestVersion,
+		Name:                df["name"].(string),
+		Address:             df["address"].(string),
+		OverrideHost:        df["override_host"].(string),
+		AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
+		SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
+		SSLHostname:         df["ssl_hostname"].(string),
+		SSLCACert:           df["ssl_ca_cert"].(string),
+		SSLCertHostname:     df["ssl_cert_hostname"].(string),
+		SSLSNIHostname:      df["ssl_sni_hostname"].(string),
+		UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
+		SSLClientKey:        df["ssl_client_key"].(string),
+		SSLClientCert:       df["ssl_client_cert"].(string),
+		MaxTLSVersion:       df["max_tls_version"].(string),
+		MinTLSVersion:       df["min_tls_version"].(string),
+		SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
+		Shield:              df["shield"].(string),
+		Port:                uint(df["port"].(int)),
+		BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
+		ConnectTimeout:      uint(df["connect_timeout"].(int)),
+		ErrorThreshold:      uint(df["error_threshold"].(int)),
+		FirstByteTimeout:    uint(df["first_byte_timeout"].(int)),
+		MaxConn:             uint(df["max_conn"].(int)),
+		Weight:              uint(df["weight"].(int)),
+		HealthCheck:         df["healthcheck"].(string),
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		opts.RequestCondition = df["request_condition"].(string)
+	}
+	return opts
 }
 
 func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {

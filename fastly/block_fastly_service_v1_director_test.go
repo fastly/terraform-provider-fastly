@@ -121,7 +121,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	dir1 := gofastly.Director{
+	createdDir1 := gofastly.Director{
 		Version:  1,
 		Name:     "mydirector",
 		Type:     3,
@@ -129,12 +129,12 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Capacity: 100,
 		Retries:  5,
 	}
-	db1 := gofastly.DirectorBackend{
+	createdDb1 := gofastly.DirectorBackend{
 		Director: "mydirector",
 		Backend:  "origin old",
 	}
 
-	dir2 := gofastly.Director{
+	updatedDir1 := gofastly.Director{
 		Version:  1,
 		Name:     "mydirector",
 		Type:     4,
@@ -142,12 +142,29 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Capacity: 25,
 		Retries:  10,
 	}
-	db2 := gofastly.DirectorBackend{
+	updatedDb1 := gofastly.DirectorBackend{
 		Director: "mydirector",
 		Backend:  "origin new",
 	}
 
-	dir3 := gofastly.Director{
+	createdDir2 := gofastly.Director{
+		Version:  1,
+		Name:     "unchangeddirector",
+		Type:     3,
+		Quorum:   75,
+		Capacity: 100,
+		Retries:  5,
+	}
+	createdDb2 := gofastly.DirectorBackend{
+		Director: "unchangeddirector",
+		Backend:  "origin apps",
+	}
+
+	// Updated director should be the same as the created ones
+	updatedDir2 := createdDir2
+	updatedDb2 := createdDb2
+
+	updatedDir3 := gofastly.Director{
 		Version:  1,
 		Name:     "myotherdirector",
 		Type:     3,
@@ -155,11 +172,11 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Capacity: 100,
 		Retries:  5,
 	}
-	db3x := gofastly.DirectorBackend{
+	updatedDb3x := gofastly.DirectorBackend{
 		Director: "myotherdirector",
 		Backend:  "origin x",
 	}
-	db3y := gofastly.DirectorBackend{
+	updatedDb3y := gofastly.DirectorBackend{
 		Director: "myotherdirector",
 		Backend:  "origin y",
 	}
@@ -173,11 +190,14 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 				Config: testAccServiceV1DirectorsConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1DirectorsAttributes(&service, []*gofastly.Director{&dir1}, []*gofastly.DirectorBackend{&db1}),
+					testAccCheckFastlyServiceV1DirectorsAttributes(
+						&service,
+						[]*gofastly.Director{&createdDir1, &createdDir2},
+						[]*gofastly.DirectorBackend{&createdDb1, &createdDb2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "director.#", "1"),
+						"fastly_service_v1.foo", "director.#", "2"),
 				),
 			},
 
@@ -185,11 +205,14 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 				Config: testAccServiceV1DirectorsConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1DirectorsAttributes(&service, []*gofastly.Director{&dir2, &dir3}, []*gofastly.DirectorBackend{&db2, &db3x, &db3y}),
+					testAccCheckFastlyServiceV1DirectorsAttributes(
+						&service,
+						[]*gofastly.Director{&updatedDir1, &updatedDir2, &updatedDir3},
+						[]*gofastly.DirectorBackend{&updatedDb1, &updatedDb2, &updatedDb3x, &updatedDb3y}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "director.#", "2"),
+						"fastly_service_v1.foo", "director.#", "3"),
 				),
 			},
 		},
@@ -253,10 +276,22 @@ resource "fastly_service_v1" "foo" {
     name    = "origin old"
   }
 
+  backend {
+    address = "apps.fastly.com"
+    name    = "origin apps"
+    weight  = 1
+  }
+
   director {
     name = "mydirector"
     type = 3
     backends = [ "origin old" ]
+  }
+
+  director {
+    name = "unchangeddirector"
+    type = 3
+    backends = [ "origin apps" ]
   }
 
   force_destroy = true
@@ -279,6 +314,12 @@ resource "fastly_service_v1" "foo" {
   }
 
   backend {
+    address = "apps.fastly.com"
+    name    = "origin apps"
+    weight  = 9
+  }
+
+  backend {
     address = "www.fastly.com"
     name    = "origin x"
   }
@@ -295,6 +336,12 @@ resource "fastly_service_v1" "foo" {
     retries = 10
     capacity = 25
     backends = [ "origin new" ]
+  }
+
+  director {
+    name = "unchangeddirector"
+    type = 3
+    backends = [ "origin apps" ]
   }
 
   director {

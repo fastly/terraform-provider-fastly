@@ -323,15 +323,9 @@ func TestAccFastlyServiceV1_disappears(t *testing.T) {
 		}
 
 		// delete service
-		err = conn.DeleteService(&gofastly.DeleteServiceInput{
+		return conn.DeleteService(&gofastly.DeleteServiceInput{
 			ID: service.ID,
 		})
-
-		if err != nil {
-			return err
-		}
-
-		return nil
 	}
 
 	resource.Test(t, resource.TestCase{

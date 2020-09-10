@@ -421,25 +421,23 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isImport bool) error {
 	conn := meta.(*FastlyClient).conn
 
-	// Find the Service. Discard the service because we need the ServiceDetails,
-	// not just a Service record.
-	_, err := findService(d.Id(), meta)
-	if err != nil {
-		switch err {
-		case fastlyNoServiceFoundErr:
-			log.Printf("[WARN] %s for ID (%s)", err, d.Id())
-			d.SetId("")
-			return nil
-		default:
-			return err
-		}
-	}
-
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 		ID: d.Id(),
 	})
 	if err != nil {
+		// Check if not found, if so, clear ID field and exit early.
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
+			log.Printf("[WARN] %s for ID (%s)", fastlyNoServiceFoundErr, d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
+	}
+	// Check if deleted, if so, clear ID field and exit early.
+	if s.DeletedAt != nil {
+		log.Printf("[WARN] Service ID (%s) has been deleted", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	// Check for service type mismatch (i.e. when importing)
@@ -502,58 +500,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef 
 		}
 	}
 
-	err := conn.DeleteService(&gofastly.DeleteServiceInput{
+	return conn.DeleteService(&gofastly.DeleteServiceInput{
 		ID: d.Id(),
 	})
-
-	if err != nil {
-		return err
-	}
-
-	_, err = findService(d.Id(), meta)
-	if err != nil {
-		switch err {
-		// We expect no records to be found here.
-		case fastlyNoServiceFoundErr:
-			d.SetId("")
-			return nil
-		default:
-			return err
-		}
-	}
-
-	// findService above returned something and nil error, but shouldn't have.
-	return fmt.Errorf("[WARN] Tried deleting Service (%s), but was still found", d.Id())
-
-}
-
-// findService finds a Fastly Service via the ListServices endpoint, returning
-// the Service if found.
-//
-// Fastly API does not include any "deleted_at" type parameter to indicate
-// that a Service has been deleted. GET requests to a deleted Service will
-// return 200 OK and have the full output of the Service for an unknown time
-// (days, in my testing). In order to determine if a Service is deleted, we
-// need to hit /service and loop the returned Services, searching for the one
-// in question. This endpoint only returns active or "alive" services. If the
-// Service is not included, then it's "gone".
-//
-// Returns a fastlyNoServiceFoundErr error if the Service is not found in the
-// ListServices response.
-func findService(id string, meta interface{}) (*gofastly.Service, error) {
-	conn := meta.(*FastlyClient).conn
-
-	l, err := conn.ListServices(&gofastly.ListServicesInput{})
-	if err != nil {
-		return nil, fmt.Errorf("[WARN] Error listing services (%s): %s", id, err)
-	}
-
-	for _, s := range l {
-		if s.ID == id {
-			log.Printf("[DEBUG] Found Service (%s)", id)
-			return s, nil
-		}
-	}
-
-	return nil, fastlyNoServiceFoundErr
 }

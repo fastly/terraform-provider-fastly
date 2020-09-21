@@ -35,6 +35,7 @@ func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The token to use for authentication (https://www.scalyr.com/keys).",
+			Sensitive:   true,
 		},
 
 		// Optional

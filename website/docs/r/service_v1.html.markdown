@@ -467,8 +467,6 @@ compressed. Default `0`.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
-* `server_side_encryption` - (Optional) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`.
-* `server_side_encryption_kms_key_id` - (Optional) Server-side KMS Key Id. Must be set if `server_side_encryption` is set to `aws:kms`.
 
 The `papertrail` block supports:
 

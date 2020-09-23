@@ -4,12 +4,12 @@
 
 BUG FIXES:
 
-* resource/fastly_service_v1: Improve performance of service read and delete logic. ([#311](https://github.com/terraform-providers/terraform-provider-fastly/pull/311))
-* resource/fastly_service_v1/logging_scalyr: Ensure `token` field is `sensitive` and thus hidden from plan. ([#310](https://github.com/terraform-providers/terraform-provider-fastly/pull/310))
+* resource/fastly_service_v1: Improve performance of service read and delete logic. ([#311](https://github.com/fastly/terraform-provider-fastly/pull/311))
+* resource/fastly_service_v1/logging_scalyr: Ensure `token` field is `sensitive` and thus hidden from plan. ([#310](https://github.com/fastly/terraform-provider-fastly/pull/310))
 
 NOTES:
 
-* resource/fastly_service_v1/s3logging: Document `server_side_encryption` and `server_side_encryption_kms_key_id` fields. ([#317](https://github.com/terraform-providers/terraform-provider-fastly/pull/310))
+* resource/fastly_service_v1/s3logging: Document `server_side_encryption` and `server_side_encryption_kms_key_id` fields. ([#317](https://github.com/fastly/terraform-provider-fastly/pull/310))
 
 ## 0.20.1 (September 2, 2020)
 

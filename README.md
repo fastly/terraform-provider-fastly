@@ -16,17 +16,17 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-fastly`
+Clone repository to: `$GOPATH/src/github.com/fastly/terraform-provider-fastly`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone git@github.com:terraform-providers/terraform-provider-fastly
+$ mkdir -p $GOPATH/src/github.com/fastly; cd $GOPATH/src/github.com/fastly
+$ git clone git@github.com:fastly/terraform-provider-fastly
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-fastly
+$ cd $GOPATH/src/github.com/fastly/terraform-provider-fastly
 $ make build
 ```
 
@@ -83,7 +83,7 @@ Building The Documentation
 The documentation is built from components (go templates) stored in the `website_src` folder.
 Building the documentation copies the full markdown into the `website` folder, ready for deployment to Hashicorp.
 
-With the repository cloned to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-fastly`:
+With the repository cloned to: `$GOPATH/src/github.com/fastly/terraform-provider-fastly`:
 
 * To build the documentation:
 `go run scripts/website/parse-templates.go `

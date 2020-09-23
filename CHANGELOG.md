@@ -4,7 +4,7 @@
 
 BUG FIXES:
 
-* resource/fastly_service_v1/bigquerylogging: Ensure BigQuery logging `email`, `secret_key` fields are required and not optional. ([#319](https://github.com/terraform-providers/terraform-provider-fastly/pull/319))
+* resource/fastly_service_v1/bigquerylogging: Ensure BigQuery logging `email`, `secret_key` fields are required and not optional. ([#319](https://github.com/fastly/terraform-provider-fastly/pull/319))
 
 ## 0.20.2 (September 22, 2020)
 

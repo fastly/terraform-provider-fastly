@@ -143,23 +143,23 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 			Required:    true,
 			Description: "The ID of your BigQuery table",
 		},
-		// Optional fields
 		"email": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
 			Description: "The email address associated with the target BigQuery dataset on your account.",
 			Sensitive:   true,
 		},
 		"secret_key": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
 			Description: "The secret key associated with the target BigQuery dataset on your account.",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
 		},
+		// Optional fields
 		"template": {
 			Type:        schema.TypeString,
 			Optional:    true,

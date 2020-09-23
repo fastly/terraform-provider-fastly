@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
+	"github.com/fastly/terraform-provider-fastly/version"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/httpclient"
-	"github.com/terraform-providers/terraform-provider-fastly/version"
 )
 
 const TerraformProviderProductUserAgent = "terraform-provider-fastly"

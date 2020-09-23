@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/fastly"
-	"github.com/terraform-providers/terraform-provider-fastly/version"
+	"github.com/fastly/terraform-provider-fastly/version"
 )
 
 func TestUserAgentContainsProviderVersion(t *testing.T) {

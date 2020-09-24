@@ -480,7 +480,7 @@ The following arguments are supported:
 * `allowed_http_versions` - (Optional) Allowed HTTP versions.
 * `allowed_methods` - (Optional) A space-separated list of HTTP method names.
 * `allowed_request_content_type` - (Optional) Allowed request content types.
-* `allowed_request_content_type_charset` - (Required) Allowed request content type charset.
+* `allowed_request_content_type_charset` - (Optional) Allowed request content type charset.
 * `arg_length` - (Optional) The maximum number of arguments allowed.
 * `arg_name_length` - (Optional) The maximum allowed argument name length.
 * `combined_file_sizes` - (Optional) The maximum allowed size of all files.

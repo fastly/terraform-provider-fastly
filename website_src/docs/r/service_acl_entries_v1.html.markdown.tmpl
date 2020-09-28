@@ -15,7 +15,7 @@ Defines a set of Fastly ACL entries that can be used to populate a service ACL. 
 If Terraform is being used to populate the initial content of an ACL which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
 
 
-## Example Usage
+## Example Usage (Terraform >= 0.12.6)
 
 Basic usage:
 
@@ -47,8 +47,11 @@ resource "fastly_service_v1" "myservice" {
 }
 
 resource "fastly_service_acl_entries_v1" "entries" {
+  for_each = {
+    for d in fastly_service_v1.myservice.acl : d.name => d if d.name == var.myacl_name
+  }
   service_id = fastly_service_v1.myservice.id
-  acl_id = {for d in fastly_service_v1.myservice.acl : d.name => d.acl_id}[var.myacl_name]
+  acl_id = each.value.acl_id
   entry {
     ip = "127.0.0.1"
     subnet = "24"
@@ -103,8 +106,11 @@ resource "fastly_service_v1" "myservice" {
 }
 
 resource "fastly_service_acl_entries_v1" "entries" {
+  for_each = {
+    for d in fastly_service_v1.myservice.acl : d.name => d if d.name == local.acl_name
+  }
   service_id = fastly_service_v1.myservice.id
-  acl_id     = { for d in fastly_service_v1.myservice.acl : d.name => d.acl_id }[local.acl_name]
+  acl_id = each.value.acl_id
   dynamic "entry" {
     for_each = [for e in local.acl_entries : {
       ip      = e.ip
@@ -121,6 +127,50 @@ resource "fastly_service_acl_entries_v1" "entries" {
 }
 ```
 
+## Example Usage (Terraform >= 0.12.0 && < 0.12.6)
+
+`for_each` attributes were not available in Terraform before 0.12.6, however, users can still use `for` expressions to achieve
+similar behaviour as seen in the example below.
+
+~> **Warning:** Terraform might not properly calculate implicit dependencies on computed attributes when using `for` expressions
+
+For scenarios such as adding an ACL to a service and at the same time, creating the ACL entries (`fastly_service_acl_entries_v1`)
+resource, Terraform will not calculate implicit dependencies correctly on `for` expressions. This will result in index lookup
+problems and the execution will fail.
+
+For those scenarios, it's recommended to split the changes into two distinct steps:
+
+1. Add the `acl` block to the `fastly_service_v1` and apply the changes
+2. Add the `fastly_service_acl_entries_v1` resource with the `for` expressions to the HCL and apply the changes
+
+Usage:
+
+```hcl
+variable "myacl_name" {
+	type = string
+	default = "My ACL"
+}
+
+resource "fastly_service_v1" "myservice" {
+  ...
+  acl {
+	name = var.myacl_name
+  }
+  ...
+}
+
+resource "fastly_service_acl_entries_v1" "entries" {
+  service_id = fastly_service_v1.myservice.id
+  acl_id = {for d in fastly_service_v1.myservice.acl : d.name => d.acl_id}[var.myacl_name]
+  entry {
+    ip = "127.0.0.1"
+    subnet = "24"
+    negated = false
+    comment = "ALC Entry 1"
+  }
+}
+```
+
 ### Supporting API and UI ACL updates with ignore_changes
 
 The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
@@ -130,8 +180,11 @@ entries in an ACL.  If, after your first deploy, the Fastly API or UI is to be u
 ...
 
 resource "fastly_service_acl_entries_v1" "entries" {
+  for_each = {
+    for d in fastly_service_v1.myservice.acl : d.name => d if d.name == var.myacl_name
+  }
   service_id = fastly_service_v1.myservice.id
-  acl_id = {for d in fastly_service_v1.myservice.acl : d.name => d.acl_id}[var.myacl_name]
+  acl_id = each.value.acl_id
   entry {
     ip = "127.0.0.1"
     subnet = "24"

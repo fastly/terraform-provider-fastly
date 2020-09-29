@@ -472,6 +472,20 @@ output "rules" {
 }
 ```
 
+## Adding a WAF to an existing service
+
+~> **Warning:** A two-phase change is required when adding a WAF to an existing service
+
+When adding a `waf` to an existing `fastly_service_v1` and at the same time adding a `fastly_service_waf_configuration`
+resource with `waf_id = fastly_service_v1.demo.waf[0].waf_id` might result with the in the following error:
+
+> fastly_service_v1.demo.waf is empty list of object
+
+For this scenario, it's recommended to split the changes into two distinct steps:
+
+1. Add the `waf` block to the `fastly_service_v1` and apply the changes
+2. Add the `fastly_service_waf_configuration` to the HCL and apply the changes
+
 ## Argument Reference
 
 The following arguments are supported:

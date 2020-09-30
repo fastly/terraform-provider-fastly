@@ -1,5 +1,14 @@
 ## 0.21.0 (Unreleased)
 
+## 0.20.4 (September 30, 2020)
+
+NOTES:
+
+* resource/fastly_service_acl_entries_v1: Change ACL documentation examples to use `for_each` attributes instead of `for` expressions. ([#324](https://github.com/fastly/terraform-provider-fastly/pull/324))
+* resource/fastly_service_dictionary_items_v1: Change Dictionary documentation examples to use `for_each` attributes instead of `for` expressions. ([#324](https://github.com/fastly/terraform-provider-fastly/pull/324))
+* resource/fastly_service_dynamic_snippet_content_v1: Change Dynamic Snippet documentation examples to use `for_each` attributes instead of `for` expressions. ([#324](https://github.com/fastly/terraform-provider-fastly/pull/324))
+* resource/fastly_service_waf_configuration: Correctly mark `allowed_request_content_type_charset` as optional in documentation. ([#324](https://github.com/fastly/terraform-provider-fastly/pull/322))
+
 ## 0.20.3 (September 23, 2020)
 
 BUG FIXES:

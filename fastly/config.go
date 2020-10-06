@@ -3,7 +3,7 @@ package fastly
 import (
 	"fmt"
 
-	gofastly "github.com/fastly/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/fastly/terraform-provider-fastly/version"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/httpclient"

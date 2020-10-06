@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"

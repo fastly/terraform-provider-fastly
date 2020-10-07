@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"io/ioutil"
+	"reflect"
 )
 
 import (
@@ -97,4 +99,29 @@ func TestEscapePercentSign(t *testing.T) {
 
 func appendNewLine(s string) string {
 	return s + "\n"
+}
+
+// assertEqualsSliceOfMaps compares a slice of maps even if they include schema.Set values
+func assertEqualsSliceOfMaps(t *testing.T, actualSlice []map[string]interface{}, expectedSlice []map[string]interface{}) {
+	for i, actualMap := range actualSlice {
+		var keysToBeRemoved []string
+		for key, value := range actualMap {
+			switch value.(type) {
+			case *schema.Set:
+				expected := expectedSlice[i][key]
+				keysToBeRemoved = append(keysToBeRemoved, key)
+				if !value.(*schema.Set).Equal(expected) {
+					t.Errorf("Expected sets %s to be equal: %#v\n     got: %#v", key, expected, actualSlice)
+				}
+			}
+		}
+		for _, key := range keysToBeRemoved {
+			delete(actualMap, key)
+			delete(expectedSlice[i], key)
+		}
+	}
+
+	if !reflect.DeepEqual(actualSlice, expectedSlice) {
+		t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", expectedSlice, actualSlice)
+	}
 }

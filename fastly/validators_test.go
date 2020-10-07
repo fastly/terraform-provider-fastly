@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/v2/fastly"
 )
 
 func TestValidateLoggingFormatVersion(t *testing.T) {

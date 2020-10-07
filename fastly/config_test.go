@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/fastly/terraform-provider-fastly/version"
 )
 

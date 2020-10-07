@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/fastly"
+	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )

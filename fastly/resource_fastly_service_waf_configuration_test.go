@@ -197,10 +197,10 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 		},
 	}
 
-	exclusions := []gofastly.WAFExclusion{
+	exclusions := []gofastly.WAFRuleExclusion{
 		{
 			Name:          strToPtr("index page"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 			Condition:     strToPtr("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
@@ -213,7 +213,7 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 		},
 		{
 			Name:          strToPtr("index php"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 			Condition:     strToPtr("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
@@ -223,13 +223,13 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 		},
 		{
 			Name:          strToPtr("index asp"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeWAF),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
 			Condition:     strToPtr("req.url.basename == \"index.asp\""),
 		},
 	}
 
 	rulesTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules)
-	exclusionsTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFExclusions(exclusions)
+	exclusionsTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(extraHCLMap, rulesTF, exclusionsTF)
 	wafSvcCfg := testAccFastlyServiceWAFVersionV1(name, wafVer)
 

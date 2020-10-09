@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-var wafExclusion = &schema.Schema{
+var wafRuleExclusion = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
 	Elem: &schema.Resource{
@@ -45,11 +45,11 @@ var wafExclusion = &schema.Schema{
 	},
 }
 
-func readWAFExclusions(meta interface{}, d *schema.ResourceData, wafVersionNumber int) error {
+func readWAFRuleExclusions(meta interface{}, d *schema.ResourceData, wafVersionNumber int) error {
 	conn := meta.(*FastlyClient).conn
 	wafID := d.Get("waf_id").(string)
 
-	resp, e := conn.ListAllWAFExclusions(&gofastly.ListAllWAFExclusionsInput{
+	resp, e := conn.ListAllWAFRuleExclusions(&gofastly.ListAllWAFRuleExclusionsInput{
 		WAFID:            wafID,
 		WAFVersionNumber: wafVersionNumber,
 		Include:          strToPtr("waf_rules"),
@@ -59,16 +59,16 @@ func readWAFExclusions(meta interface{}, d *schema.ResourceData, wafVersionNumbe
 		return e
 	}
 
-	err := d.Set("exclusion", flattenWAFExclusions(resp.Items))
+	err := d.Set("rule_exclusion", flattenWAFRuleExclusions(resp.Items))
 
 	if err != nil {
-		log.Printf("[WARN] Error setting WAF exclusions for (%s): %s", d.Id(), err)
+		log.Printf("[WARN] Error setting WAF rule exclusions for (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func flattenWAFExclusions(exclusions []*gofastly.WAFExclusion) []map[string]interface{} {
+func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[string]interface{} {
 	var result []map[string]interface{}
 
 	for _, exclusion := range exclusions {
@@ -100,9 +100,9 @@ func flattenWAFExclusions(exclusions []*gofastly.WAFExclusion) []map[string]inte
 	return result
 }
 
-func updateWAFExclusions(d *schema.ResourceData, meta interface{}, wafID string, wafVersionNumber int) error {
+func updateWAFRuleExclusions(d *schema.ResourceData, meta interface{}, wafID string, wafVersionNumber int) error {
 
-	os, ns := d.GetChange("exclusion")
+	os, ns := d.GetChange("rule_exclusion")
 
 	if os == nil {
 		os = new(schema.Set)
@@ -119,12 +119,12 @@ func updateWAFExclusions(d *schema.ResourceData, meta interface{}, wafID string,
 
 	var err error
 
-	err = deleteWAFExclusion(remove, meta, wafID, wafVersionNumber)
+	err = deleteWAFRuleExclusion(remove, meta, wafID, wafVersionNumber)
 	if err != nil {
 		return err
 	}
 
-	err = createWAFExclusion(add, meta, wafID, wafVersionNumber)
+	err = createWAFRuleExclusion(add, meta, wafID, wafVersionNumber)
 	if err != nil {
 		return err
 	}
@@ -132,13 +132,13 @@ func updateWAFExclusions(d *schema.ResourceData, meta interface{}, wafID string,
 	return nil
 }
 
-func deleteWAFExclusion(remove []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
+func deleteWAFRuleExclusion(remove []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
 	conn := meta.(*FastlyClient).conn
 
 	for _, aRaw := range remove {
 		a := aRaw.(map[string]interface{})
 
-		err := conn.DeleteWAFExclusion(&gofastly.DeleteWAFExclusionInput{
+		err := conn.DeleteWAFRuleExclusion(&gofastly.DeleteWAFRuleExclusionInput{
 			Number:           a["number"].(int),
 			WAFID:            wafID,
 			WAFVersionNumber: wafVersionNumber,
@@ -152,14 +152,14 @@ func deleteWAFExclusion(remove []interface{}, meta interface{}, wafID string, wa
 	return nil
 }
 
-func createWAFExclusion(add []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
+func createWAFRuleExclusion(add []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
 	conn := meta.(*FastlyClient).conn
 
 	for _, aRaw := range add {
 		a := aRaw.(map[string]interface{})
 
 		var rules []*gofastly.WAFRule
-		if a["exclusion_type"] == gofastly.WAFExclusionTypeRule {
+		if a["exclusion_type"] == gofastly.WAFRuleExclusionTypeRule {
 			for _, ruleId := range a["modsec_rule_ids"].(*schema.Set).List() {
 				rules = append(rules, &gofastly.WAFRule{
 					ID: strconv.Itoa(ruleId.(int)),
@@ -169,10 +169,10 @@ func createWAFExclusion(add []interface{}, meta interface{}, wafID string, wafVe
 			rules = nil
 		}
 
-		_, err := conn.CreateWAFExclusion(&gofastly.CreateWAFExclusionInput{
+		_, err := conn.CreateWAFRuleExclusion(&gofastly.CreateWAFRuleExclusionInput{
 			WAFID:            wafID,
 			WAFVersionNumber: wafVersionNumber,
-			WAFExclusion: &gofastly.WAFExclusion{
+			WAFRuleExclusion: &gofastly.WAFRuleExclusion{
 				Name:          strToPtr(a["name"].(string)),
 				ExclusionType: strToPtr(a["exclusion_type"].(string)),
 				Condition:     strToPtr(a["condition"].(string)),
@@ -190,22 +190,22 @@ func createWAFExclusion(add []interface{}, meta interface{}, wafID string, wafVe
 func validateExecutionType() schema.SchemaValidateFunc {
 	return validation.StringInSlice(
 		[]string{
-			gofastly.WAFExclusionTypeRule,
-			gofastly.WAFExclusionTypeWAF,
+			gofastly.WAFRuleExclusionTypeRule,
+			gofastly.WAFRuleExclusionTypeWAF,
 		},
 		false,
 	)
 }
 
-func validateWAFExclusion(d *schema.ResourceDiff) error {
-	for _, i := range d.Get("exclusion").(*schema.Set).List() {
-		wafExclusion := i.(map[string]interface{})
+func validateWAFRuleExclusion(d *schema.ResourceDiff) error {
+	for _, i := range d.Get("rule_exclusion").(*schema.Set).List() {
+		wafRuleExclusion := i.(map[string]interface{})
 
-		if wafExclusion["exclusion_type"] == gofastly.WAFExclusionTypeWAF && len(wafExclusion["modsec_rule_ids"].(*schema.Set).List()) > 0 {
-			return fmt.Errorf("must not set \"modsec_rule_ids\" with \"waf\" exclusion type in exclusion \"%s\"", wafExclusion["name"])
+		if wafRuleExclusion["exclusion_type"] == gofastly.WAFRuleExclusionTypeWAF && len(wafRuleExclusion["modsec_rule_ids"].(*schema.Set).List()) > 0 {
+			return fmt.Errorf("must not set \"modsec_rule_ids\" with \"waf\" exclusion type in exclusion \"%s\"", wafRuleExclusion["name"])
 		}
-		if wafExclusion["exclusion_type"] == gofastly.WAFExclusionTypeRule && len(wafExclusion["modsec_rule_ids"].(*schema.Set).List()) == 0 {
-			return fmt.Errorf("must set \"modsec_rule_ids\" with \"rule\" exclusion type in exclusion \"%s\"", wafExclusion["name"])
+		if wafRuleExclusion["exclusion_type"] == gofastly.WAFRuleExclusionTypeRule && len(wafRuleExclusion["modsec_rule_ids"].(*schema.Set).List()) == 0 {
+			return fmt.Errorf("must set \"modsec_rule_ids\" with \"rule\" exclusion type in exclusion \"%s\"", wafRuleExclusion["name"])
 		}
 	}
 	return nil

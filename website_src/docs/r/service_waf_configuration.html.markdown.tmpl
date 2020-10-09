@@ -134,7 +134,7 @@ resource "fastly_service_waf_configuration" "waf" {
 }
 ```
 
-Usage with exclusions:
+Usage with rule exclusions:
 
 ```hcl
 resource "fastly_service_v1" "demo" {
@@ -193,7 +193,7 @@ resource "fastly_service_waf_configuration" "waf" {
     status         = "log"
   }
 
-  exclusion {
+  rule_exclusion {
     name = "index page"
     exclusion_type = "rule"
     condition = "req.url.basename == \"index.html\""
@@ -588,7 +588,7 @@ The following arguments are supported:
 * `warning_anomaly_score` - (Optional) Score value to add for warning anomalies.
 * `xss_score_threshold` - (Optional) XSS attack threshold.
 * `rule` - (Optional) The Web Application Firewall's active rules.
-* `exclusion` - (Optional) The Web Application Firewall's exclusions.
+* `rule_exclusion` - (Optional) The Web Application Firewall's rule exclusions.
 
 
 The `rule` block supports:
@@ -597,16 +597,16 @@ The `rule` block supports:
 * `modsec_rule_id` - (Required) The Web Application Firewall rule's modsecurity ID.
 * `revision` - (Optional) The Web Application Firewall rule's revision. The latest revision will be used if this is not provided.
 
-The `exclusion` block supports:
+The `rule_exclusion` block supports:
 
-* `name` - (Required) The name of exclusion.
-* `exclusion_type` - (Required) The type of exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall.
+* `name` - (Required) The name of rule exclusion.
+* `exclusion_type` - (Required) The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall.
 * `condition` - (Required) A conditional expression in VCL used to determine if the condition is met.
 * `modsec_rule_ids` - (Required) Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded.
 
-The `exclusion` block exports:
+The `rule_exclusion` block exports:
 
-* `number` - The numeric ID assigned to the WAF Exclusion.
+* `number` - The numeric ID assigned to the WAF Rule Exclusion.
 
 ## Import
 

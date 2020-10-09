@@ -14,18 +14,18 @@ import (
 	"testing"
 )
 
-func TestAccFastlyServiceWAFVersionV1FlattenWAFExclusions(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 	cases := []struct {
-		remote []*gofastly.WAFExclusion
+		remote []*gofastly.WAFRuleExclusion
 		local  []map[string]interface{}
 	}{
 		{
-			remote: []*gofastly.WAFExclusion{
+			remote: []*gofastly.WAFRuleExclusion{
 				{
 					ID:            "abc",
 					Number:        intToPtr(1),
 					Name:          strToPtr("index page"),
-					ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 					Condition:     strToPtr("req.url.basename == \"index.html\""),
 					Rules: []*gofastly.WAFRule{
 						{
@@ -42,7 +42,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFExclusions(t *testing.T) {
 					ID:            "def",
 					Number:        intToPtr(2),
 					Name:          strToPtr("index php"),
-					ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 					Condition:     strToPtr("req.url.basename == \"index.php\""),
 					Rules: []*gofastly.WAFRule{
 						{
@@ -55,7 +55,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFExclusions(t *testing.T) {
 					ID:            "ghi",
 					Number:        intToPtr(3),
 					Name:          strToPtr("index asp"),
-					ExclusionType: strToPtr(gofastly.WAFExclusionTypeWAF),
+					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
 					Condition:     strToPtr("req.url.basename == \"index.asp\""),
 				},
 			},
@@ -84,7 +84,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFExclusions(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		out := flattenWAFExclusions(c.remote)
+		out := flattenWAFRuleExclusions(c.remote)
 		local := c.local
 		assertEqualsSliceOfMaps(t, out, local)
 	}
@@ -94,14 +94,14 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	cases := []struct {
-		exclusions      []gofastly.WAFExclusion
+		exclusions      []gofastly.WAFRuleExclusion
 		expectedMessage string
 	}{
 		{
-			exclusions: []gofastly.WAFExclusion{
+			exclusions: []gofastly.WAFRuleExclusion{
 				{
 					Name:          strToPtr("index page"),
-					ExclusionType: strToPtr(gofastly.WAFExclusionTypeWAF),
+					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
 					Condition:     strToPtr("req.url.basename == \"index.html\""),
 					Rules: []*gofastly.WAFRule{
 						{
@@ -113,10 +113,10 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 			expectedMessage: "must not set \"modsec_rule_ids\" with \"waf\" exclusion type in exclusion \"index page\"",
 		},
 		{
-			exclusions: []gofastly.WAFExclusion{
+			exclusions: []gofastly.WAFRuleExclusion{
 				{
 					Name:          strToPtr("index page"),
-					ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 					Condition:     strToPtr("req.url.basename == \"index.html\""),
 				},
 			},
@@ -127,7 +127,7 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 	for _, c := range cases {
 
 		wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-		exclusionsTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFExclusions(c.exclusions)
+		exclusionsTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(c.exclusions)
 
 		wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", exclusionsTF1)
 
@@ -168,10 +168,10 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 		},
 	}
 
-	exclusions1 := []gofastly.WAFExclusion{
+	exclusions1 := []gofastly.WAFRuleExclusion{
 		{
 			Name:          strToPtr("index page"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 			Condition:     strToPtr("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
@@ -184,7 +184,7 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 		},
 		{
 			Name:          strToPtr("index php"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 			Condition:     strToPtr("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
@@ -194,15 +194,15 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 		},
 		{
 			Name:          strToPtr("index asp"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeWAF),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
 			Condition:     strToPtr("req.url.basename == \"index.asp\""),
 		},
 	}
 
-	exclusions2 := []gofastly.WAFExclusion{
+	exclusions2 := []gofastly.WAFRuleExclusion{
 		{
 			Name:          strToPtr("index page"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 			Condition:     strToPtr("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
@@ -212,7 +212,7 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 		},
 		{
 			Name:          strToPtr("index php"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 			Condition:     strToPtr("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
@@ -222,7 +222,7 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 		},
 		{
 			Name:          strToPtr("index new page"),
-			ExclusionType: strToPtr(gofastly.WAFExclusionTypeRule),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
 			Condition:     strToPtr("req.url.basename == \"index-new.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
@@ -234,8 +234,8 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
 	rulesTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules)
-	exclusionsTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFExclusions(exclusions1)
-	exclusionsTF2 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFExclusions(exclusions2)
+	exclusionsTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions1)
+	exclusionsTF2 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions2)
 
 	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF, exclusionsTF1)
 	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF, exclusionsTF2)
@@ -263,7 +263,7 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.ServiceDetail, expected []gofastly.WAFExclusion, wafVerNo int) resource.TestCheckFunc {
+func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.ServiceDetail, expected []gofastly.WAFRuleExclusion, wafVerNo int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -280,7 +280,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 		}
 
 		waf := wafResp.Items[0]
-		exclResp, err := conn.ListAllWAFExclusions(&gofastly.ListAllWAFExclusionsInput{
+		exclResp, err := conn.ListAllWAFRuleExclusions(&gofastly.ListAllWAFRuleExclusionsInput{
 			WAFID:            waf.ID,
 			WAFVersionNumber: wafVerNo,
 			Include:          strToPtr("waf_rules"),
@@ -291,7 +291,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 
 		actual := exclResp.Items
 		if len(expected) != len(actual) {
-			return fmt.Errorf("Error matching exclusions slice sizes :\nexpected: %#v\ngot: %#v", len(expected), len(actual))
+			return fmt.Errorf("Error matching rule exclusions slice sizes :\nexpected: %#v\ngot: %#v", len(expected), len(actual))
 		}
 
 		sort.Slice(expected, func(i, j int) bool {
@@ -340,7 +340,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 	}
 }
 
-func testAccCheckFastlyServiceWAFVersionV1ComposeWAFExclusions(exclusions []gofastly.WAFExclusion) string {
+func testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions []gofastly.WAFRuleExclusion) string {
 
 	var result string
 	for _, excl := range exclusions {
@@ -350,7 +350,7 @@ func testAccCheckFastlyServiceWAFVersionV1ComposeWAFExclusions(exclusions []gofa
 		}
 
 		rule := fmt.Sprintf(`
-          exclusion {
+          rule_exclusion {
             name = "%s"
             condition = "%s"
             exclusion_type = "%s"

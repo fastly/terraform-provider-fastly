@@ -11,19 +11,19 @@ import (
 	"github.com/google/jsonapi"
 )
 
-// WAFExclusionType is used for reflection because JSONAPI wants to know what it's
+// WAFRuleExclusionType is used for reflection because JSONAPI wants to know what it's
 // decoding into.
-var WAFExclusionType = reflect.TypeOf(new(WAFExclusion))
+var WAFRuleExclusionType = reflect.TypeOf(new(WAFRuleExclusion))
 
 const (
-	// WAFExclusionTypeRule is the type of WAF exclusions that excludes rules from the WAF based on certain conditions
-	WAFExclusionTypeRule = "rule"
-	// WAFExclusionTypeWAF is the type of WAF exclusions that excludes WAF based on certain conditions
-	WAFExclusionTypeWAF = "waf"
+	// WAFRuleExclusionTypeRule is the type of WAF rule exclusions that excludes rules from the WAF based on certain conditions.
+	WAFRuleExclusionTypeRule = "rule"
+	// WAFRuleExclusionTypeWAF is the type of WAF rule exclusions that excludes WAF based on certain conditions.
+	WAFRuleExclusionTypeWAF = "waf"
 )
 
-// WAFExclusion is the information about a WAF exclusion object.
-type WAFExclusion struct {
+// WAFRuleExclusion is the information about a WAF rule exclusion object.
+type WAFRuleExclusion struct {
 	ID            string     `jsonapi:"primary,waf_exclusion"`
 	Name          *string    `jsonapi:"attr,name"`
 	ExclusionType *string    `jsonapi:"attr,exclusion_type"`
@@ -34,14 +34,14 @@ type WAFExclusion struct {
 	UpdatedAt     *time.Time `jsonapi:"attr,updated_at,iso8601,omitempty"`
 }
 
-// WAFExclusionResponse represents a list of exclusions - full response.
-type WAFExclusionResponse struct {
-	Items []*WAFExclusion
+// WAFRuleExclusionResponse represents a list of rule exclusions - full response.
+type WAFRuleExclusionResponse struct {
+	Items []*WAFRuleExclusion
 	Info  infoResponse
 }
 
-// ListWAFExclusionsInput used as input for listing a WAF's exclusions.
-type ListWAFExclusionsInput struct {
+// ListWAFRuleExclusionsInput used as input for listing a WAF's rule exclusions.
+type ListWAFRuleExclusionsInput struct {
 	// The Web Application Firewall's ID.
 	WAFID string
 	// The Web Application Firewall's version number.
@@ -60,8 +60,8 @@ type ListWAFExclusionsInput struct {
 	Include *string
 }
 
-// ListAllWAFExclusionsInput used as input for listing all WAF exclusions.
-type ListAllWAFExclusionsInput struct {
+// ListAllWAFRuleExclusionsInput used as input for listing all WAF rule exclusions.
+type ListAllWAFRuleExclusionsInput struct {
 	// The Web Application Firewall's ID.
 	WAFID string
 	// The Web Application Firewall's version number.
@@ -76,39 +76,39 @@ type ListAllWAFExclusionsInput struct {
 	Include *string
 }
 
-// CreateWAFExclusionInput used as input to create a WAF exclusion.
-type CreateWAFExclusionInput struct {
+// CreateWAFRuleExclusionInput used as input to create a WAF rule exclusion.
+type CreateWAFRuleExclusionInput struct {
 	// The Web Application Firewall's ID.
 	WAFID string
 	// The Web Application Firewall's version number.
 	WAFVersionNumber int
 	// The Web Application Firewall's exclusion
-	WAFExclusion *WAFExclusion
+	WAFRuleExclusion *WAFRuleExclusion
 }
 
-// UpdateWAFExclusionInput is used for exclusions updates.
-type UpdateWAFExclusionInput struct {
+// UpdateWAFRuleExclusionInput is used for exclusions updates.
+type UpdateWAFRuleExclusionInput struct {
 	// The Web Application Firewall's ID.
 	WAFID string
 	// The Web Application Firewall's version number.
 	WAFVersionNumber int
 	// The exclusion number.
 	Number int
-	// The WAF exclusion
-	WAFExclusion *WAFExclusion
+	// The WAF rule exclusion
+	WAFRuleExclusion *WAFRuleExclusion
 }
 
-// DeleteWAFExclusionInput used as input for removing WAF exclusions.
-type DeleteWAFExclusionInput struct {
+// DeleteWAFRuleExclusionInput used as input for removing WAF rule exclusions.
+type DeleteWAFRuleExclusionInput struct {
 	// The Web Application Firewall's ID.
 	WAFID string
 	// The Web Application Firewall's version number.
 	WAFVersionNumber int
-	// The exclusion number.
+	// The rule exclusion number.
 	Number int
 }
 
-func (i *ListWAFExclusionsInput) formatFilters() map[string]string {
+func (i *ListWAFRuleExclusionsInput) formatFilters() map[string]string {
 
 	result := map[string]string{}
 	pairings := map[string]interface{}{
@@ -135,8 +135,8 @@ func (i *ListWAFExclusionsInput) formatFilters() map[string]string {
 	return result
 }
 
-// ListWAFExclusions returns the list of exclusions for a given WAF ID.
-func (c *Client) ListWAFExclusions(i *ListWAFExclusionsInput) (*WAFExclusionResponse, error) {
+// ListWAFRuleExclusions returns the list of exclusions for a given WAF ID.
+func (c *Client) ListWAFRuleExclusions(i *ListWAFRuleExclusionsInput) (*WAFRuleExclusionResponse, error) {
 
 	if i.WAFID == "" {
 		return nil, ErrMissingWAFID
@@ -162,28 +162,28 @@ func (c *Client) ListWAFExclusions(i *ListWAFExclusionsInput) (*WAFExclusionResp
 		return nil, err
 	}
 
-	data, err := jsonapi.UnmarshalManyPayload(bytes.NewReader(buf.Bytes()), WAFExclusionType)
+	data, err := jsonapi.UnmarshalManyPayload(bytes.NewReader(buf.Bytes()), WAFRuleExclusionType)
 	if err != nil {
 		return nil, err
 	}
 
-	wafExclusions := make([]*WAFExclusion, len(data))
+	wafExclusions := make([]*WAFRuleExclusion, len(data))
 	for i := range data {
-		typed, ok := data[i].(*WAFExclusion)
+		typed, ok := data[i].(*WAFRuleExclusion)
 		if !ok {
-			return nil, fmt.Errorf("got back a non-WAFExclusion response")
+			return nil, fmt.Errorf("got back a non-WAFRuleExclusion response")
 		}
 		wafExclusions[i] = typed
 	}
-	return &WAFExclusionResponse{
+	return &WAFRuleExclusionResponse{
 		Items: wafExclusions,
 		Info:  info,
 	}, nil
 }
 
-// ListAllWAFExclusions returns the complete list of WAF exclusions for a given WAF ID. It iterates through
-// all existing pages to ensure all WAF exclusions are returned at once.
-func (c *Client) ListAllWAFExclusions(i *ListAllWAFExclusionsInput) (*WAFExclusionResponse, error) {
+// ListAllWAFRuleExclusions returns the complete list of WAF rule exclusions for a given WAF ID. It iterates through
+// all existing pages to ensure all WAF rule exclusions are returned at once.
+func (c *Client) ListAllWAFRuleExclusions(i *ListAllWAFRuleExclusionsInput) (*WAFRuleExclusionResponse, error) {
 
 	if i.WAFID == "" {
 		return nil, ErrMissingWAFID
@@ -195,9 +195,9 @@ func (c *Client) ListAllWAFExclusions(i *ListAllWAFExclusionsInput) (*WAFExclusi
 
 	currentPage := 1
 	pageSize := WAFPaginationPageSize
-	result := &WAFExclusionResponse{Items: []*WAFExclusion{}}
+	result := &WAFRuleExclusionResponse{Items: []*WAFRuleExclusion{}}
 	for {
-		r, err := c.ListWAFExclusions(&ListWAFExclusionsInput{
+		r, err := c.ListWAFRuleExclusions(&ListWAFRuleExclusionsInput{
 			WAFID:               i.WAFID,
 			WAFVersionNumber:    i.WAFVersionNumber,
 			PageNumber:          &currentPage,
@@ -220,8 +220,8 @@ func (c *Client) ListAllWAFExclusions(i *ListAllWAFExclusionsInput) (*WAFExclusi
 	}
 }
 
-// CreateWAFExclusion used to create a particular WAF exclusion.
-func (c *Client) CreateWAFExclusion(i *CreateWAFExclusionInput) (*WAFExclusion, error) {
+// CreateWAFRuleExclusion used to create a particular WAF rule exclusion.
+func (c *Client) CreateWAFRuleExclusion(i *CreateWAFRuleExclusionInput) (*WAFRuleExclusion, error) {
 
 	if i.WAFID == "" {
 		return nil, ErrMissingWAFID
@@ -231,25 +231,25 @@ func (c *Client) CreateWAFExclusion(i *CreateWAFExclusionInput) (*WAFExclusion, 
 		return nil, ErrMissingWAFVersionNumber
 	}
 
-	if i.WAFExclusion == nil {
-		return nil, ErrMissingWAFExclusion
+	if i.WAFRuleExclusion == nil {
+		return nil, ErrMissingWAFRuleExclusion
 	}
 
 	path := fmt.Sprintf("/waf/firewalls/%s/versions/%d/exclusions", i.WAFID, i.WAFVersionNumber)
-	resp, err := c.PostJSONAPI(path, i.WAFExclusion, nil)
+	resp, err := c.PostJSONAPI(path, i.WAFRuleExclusion, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var wafExclusion WAFExclusion
+	var wafExclusion WAFRuleExclusion
 	if err := jsonapi.UnmarshalPayload(resp.Body, &wafExclusion); err != nil {
 		return nil, err
 	}
 	return &wafExclusion, nil
 }
 
-// UpdateWAFExclusion used to update a particular WAF exclusion.
-func (c *Client) UpdateWAFExclusion(i *UpdateWAFExclusionInput) (*WAFExclusion, error) {
+// UpdateWAFRuleExclusion used to update a particular WAF rule exclusion.
+func (c *Client) UpdateWAFRuleExclusion(i *UpdateWAFRuleExclusionInput) (*WAFRuleExclusion, error) {
 	if i.WAFID == "" {
 		return nil, ErrMissingWAFID
 	}
@@ -259,20 +259,20 @@ func (c *Client) UpdateWAFExclusion(i *UpdateWAFExclusionInput) (*WAFExclusion, 
 	}
 
 	if i.Number == 0 {
-		return nil, ErrMissingWAFExclusionNumber
+		return nil, ErrMissingWAFRuleExclusionNumber
 	}
 
-	if i.WAFExclusion == nil {
-		return nil, ErrMissingWAFExclusion
+	if i.WAFRuleExclusion == nil {
+		return nil, ErrMissingWAFRuleExclusion
 	}
 
 	path := fmt.Sprintf("/waf/firewalls/%s/versions/%d/exclusions/%d", i.WAFID, i.WAFVersionNumber, i.Number)
-	resp, err := c.PatchJSONAPI(path, i.WAFExclusion, nil)
+	resp, err := c.PatchJSONAPI(path, i.WAFRuleExclusion, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var exc *WAFExclusion
+	var exc *WAFRuleExclusion
 	if err := decodeBodyMap(resp.Body, &exc); err != nil {
 		return nil, err
 	}
@@ -280,7 +280,7 @@ func (c *Client) UpdateWAFExclusion(i *UpdateWAFExclusionInput) (*WAFExclusion, 
 }
 
 // DeleteWAFExclusions removes rules from a particular WAF.
-func (c *Client) DeleteWAFExclusion(i *DeleteWAFExclusionInput) error {
+func (c *Client) DeleteWAFRuleExclusion(i *DeleteWAFRuleExclusionInput) error {
 	if i.WAFID == "" {
 		return ErrMissingWAFID
 	}
@@ -288,7 +288,7 @@ func (c *Client) DeleteWAFExclusion(i *DeleteWAFExclusionInput) error {
 		return ErrMissingWAFVersionNumber
 	}
 	if i.Number == 0 {
-		return ErrMissingWAFExclusionNumber
+		return ErrMissingWAFRuleExclusionNumber
 	}
 
 	path := fmt.Sprintf("/waf/firewalls/%s/versions/%d/exclusions/%d", i.WAFID, i.WAFVersionNumber, i.Number)

@@ -205,8 +205,8 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 				Description:  "XSS attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"rule":      activeRule,
-			"exclusion": wafExclusion,
+			"rule":           activeRule,
+			"rule_exclusion": wafRuleExclusion,
 		},
 	}
 }
@@ -253,8 +253,8 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("exclusion") {
-		if err := updateWAFExclusions(d, meta, wafID, latestVersion.Number); err != nil {
+	if d.HasChange("rule_exclusion") {
+		if err := updateWAFRuleExclusions(d, meta, wafID, latestVersion.Number); err != nil {
 			return err
 		}
 	}
@@ -299,7 +299,7 @@ func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	if err := readWAFExclusions(meta, d, latestVersion.Number); err != nil {
+	if err := readWAFRuleExclusions(meta, d, latestVersion.Number); err != nil {
 		return err
 	}
 
@@ -508,6 +508,6 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 }
 
 func validateWAFConfigurationResource(d *schema.ResourceDiff, meta interface{}) error {
-	err := validateWAFExclusion(d)
+	err := validateWAFRuleExclusion(d)
 	return err
 }

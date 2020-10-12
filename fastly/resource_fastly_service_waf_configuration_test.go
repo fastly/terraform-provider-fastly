@@ -67,7 +67,7 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -89,7 +89,7 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -118,10 +118,10 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	wafVerInput1 := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput1, "")
+	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput1, "", "")
 
 	wafVerInput2 := testAccFastlyServiceWAFVersionV1BuildConfig(22)
-	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput2, "")
+	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput2, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -150,7 +150,7 @@ func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "")
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -184,10 +184,56 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 		"http_violation_score_threshold": 10,
 	}
 
-	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(extraHCLMap, "")
+	rules := []gofastly.WAFActiveRule{
+		{
+			ModSecID: 2029718,
+			Status:   "log",
+			Revision: 1,
+		},
+		{
+			ModSecID: 2037405,
+			Status:   "log",
+			Revision: 1,
+		},
+	}
+
+	exclusions := []gofastly.WAFRuleExclusion{
+		{
+			Name:          strToPtr("index page"),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     strToPtr("req.url.basename == \"index.html\""),
+			Rules: []*gofastly.WAFRule{
+				{
+					ModSecID: 2029718,
+				},
+				{
+					ModSecID: 2037405,
+				},
+			},
+		},
+		{
+			Name:          strToPtr("index php"),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     strToPtr("req.url.basename == \"index.php\""),
+			Rules: []*gofastly.WAFRule{
+				{
+					ModSecID: 2037405,
+				},
+			},
+		},
+		{
+			Name:          strToPtr("index asp"),
+			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
+			Condition:     strToPtr("req.url.basename == \"index.asp\""),
+		},
+	}
+
+	rulesTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules)
+	exclusionsTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions)
+	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(extraHCLMap, rulesTF, exclusionsTF)
 	wafSvcCfg := testAccFastlyServiceWAFVersionV1(name, wafVer)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -311,7 +357,7 @@ func testAccFastlyServiceWAFVersionV1GetVersionNumber(versions []*gofastly.WAFVe
 	return gofastly.WAFVersion{}, fmt.Errorf("version number %d not found", number)
 }
 
-func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface{}, rules string) string {
+func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface{}, rules string, exclusions string) string {
 
 	hcl := `
         resource "fastly_service_waf_configuration" "waf" {
@@ -331,8 +377,11 @@ func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface
          `, k, v)
 		}
 	}
-	return hcl + fmt.Sprintf(`%s
-        }`, rules)
+	return hcl + fmt.Sprintf(`
+          %s
+
+          %s
+        }`, rules, exclusions)
 }
 
 func testAccFastlyServiceWAFVersionV1(name, extraHCL string) string {

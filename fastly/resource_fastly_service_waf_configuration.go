@@ -20,7 +20,7 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceServiceWAFConfigurationV1Import,
 		},
-
+		CustomizeDiff: validateWAFConfigurationResource,
 		Schema: map[string]*schema.Schema{
 			"waf_id": {
 				Type:        schema.TypeString,
@@ -205,7 +205,8 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 				Description:  "XSS attack threshold.",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"rule": activeRule,
+			"rule":           activeRule,
+			"rule_exclusion": wafRuleExclusion,
 		},
 	}
 }
@@ -252,6 +253,12 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 		}
 	}
 
+	if d.HasChange("rule_exclusion") {
+		if err := updateWAFRuleExclusions(d, meta, wafID, latestVersion.Number); err != nil {
+			return err
+		}
+	}
+
 	err = conn.DeployWAFVersion(&gofastly.DeployWAFVersionInput{
 		WAFID:            wafID,
 		WAFVersionNumber: latestVersion.Number,
@@ -289,6 +296,10 @@ func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interfac
 	refreshWAFConfig(d, latestVersion)
 
 	if err := readWAFRules(meta, d, latestVersion.Number); err != nil {
+		return err
+	}
+
+	if err := readWAFRuleExclusions(meta, d, latestVersion.Number); err != nil {
 		return err
 	}
 
@@ -494,4 +505,9 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 	})
 
 	return versions[0], nil
+}
+
+func validateWAFConfigurationResource(d *schema.ResourceDiff, meta interface{}) error {
+	err := validateWAFRuleExclusion(d)
+	return err
 }

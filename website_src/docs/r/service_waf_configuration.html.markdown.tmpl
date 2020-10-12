@@ -134,6 +134,74 @@ resource "fastly_service_waf_configuration" "waf" {
 }
 ```
 
+Usage with rule exclusions:
+
+```hcl
+resource "fastly_service_v1" "demo" {
+  name = "demofastly"
+
+  domain {
+    name    = "example.com"
+    comment = "demo"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "origin1"
+    port    = 80
+  }
+
+  condition {
+    name      = "WAF_Prefetch"
+    type      = "PREFETCH"
+    statement = "req.backend.is_origin"
+  }
+
+  # This condition will always be false
+  # adding it to the response object created below
+  # prevents Fastly from returning a 403 on all of your traffic.
+  condition {
+    name      = "WAF_always_false"
+    statement = "false"
+    type      = "REQUEST"
+  }
+
+  response_object {
+    name              = "WAF_Response"
+    status            = "403"
+    response          = "Forbidden"
+    content_type      = "text/html"
+    content           = "<html><body>Forbidden</body></html>"
+    request_condition = "WAF_always_false"
+  }
+
+  waf {
+    prefetch_condition = "WAF_Prefetch"
+    response_object    = "WAF_Response"
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_service_waf_configuration" "waf" {
+  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold  = 100
+
+  rule {
+    modsec_rule_id = 2029718
+    revision       = 1
+    status         = "log"
+  }
+
+  rule_exclusion {
+    name = "index page"
+    exclusion_type = "rule"
+    condition = "req.url.basename == \"index.html\""
+    modsec_rule_ids = [2029718]
+  }
+}
+```
+
 Usage with rules from data source:
 
 ```hcl
@@ -520,6 +588,7 @@ The following arguments are supported:
 * `warning_anomaly_score` - (Optional) Score value to add for warning anomalies.
 * `xss_score_threshold` - (Optional) XSS attack threshold.
 * `rule` - (Optional) The Web Application Firewall's active rules.
+* `rule_exclusion` - (Optional) The Web Application Firewall's rule exclusions.
 
 
 The `rule` block supports:
@@ -528,6 +597,16 @@ The `rule` block supports:
 * `modsec_rule_id` - (Required) The Web Application Firewall rule's modsecurity ID.
 * `revision` - (Optional) The Web Application Firewall rule's revision. The latest revision will be used if this is not provided.
 
+The `rule_exclusion` block supports:
+
+* `name` - (Required) The name of rule exclusion.
+* `exclusion_type` - (Required) The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall.
+* `condition` - (Required) A conditional expression in VCL used to determine if the condition is met.
+* `modsec_rule_ids` - (Required) Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded.
+
+The `rule_exclusion` block exports:
+
+* `number` - The numeric ID assigned to the WAF Rule Exclusion.
 
 ## Import
 

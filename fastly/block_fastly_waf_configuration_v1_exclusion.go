@@ -2,11 +2,12 @@ package fastly
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"log"
-	"strconv"
 )
 
 var wafRuleExclusion = &schema.Schema{
@@ -33,7 +34,7 @@ var wafRuleExclusion = &schema.Schema{
 			"modsec_rule_ids": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "The modsec rule ids to exclude.",
+				Description: "The modsec rule IDs to exclude.",
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"number": {
@@ -52,7 +53,7 @@ func readWAFRuleExclusions(meta interface{}, d *schema.ResourceData, wafVersionN
 	resp, e := conn.ListAllWAFRuleExclusions(&gofastly.ListAllWAFRuleExclusionsInput{
 		WAFID:            wafID,
 		WAFVersionNumber: wafVersionNumber,
-		Include:          strToPtr("waf_rules"),
+		Include:          []string{"waf_rules"},
 	})
 
 	if e != nil {

@@ -2,16 +2,17 @@ package fastly
 
 import (
 	"fmt"
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"testing"
+
+	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
@@ -283,7 +284,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 		exclResp, err := conn.ListAllWAFRuleExclusions(&gofastly.ListAllWAFRuleExclusionsInput{
 			WAFID:            waf.ID,
 			WAFVersionNumber: wafVerNo,
-			Include:          strToPtr("waf_rules"),
+			Include:          []string{"waf_rules"},
 		})
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)

@@ -1,9 +1,10 @@
 package fastly
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"io/ioutil"
 	"reflect"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 import (

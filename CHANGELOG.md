@@ -1,4 +1,14 @@
-## 0.21.0 (Unreleased)
+## 0.22.0 (Unreleased)
+
+## 0.21.0 (October 14, 2020)
+
+ENHANCEMENTS:
+
+* resource/fastly_service_waf_configuration: Add `rule_exclusion` block which allows rules to be excluded from the WAF configuration. ([#328](https://github.com/fastly/terraform-provider-fastly/pull/328))
+
+NOTES:
+
+* provider: Change version of go-fastly to v2.0.0-alpha.1 ([#327](https://github.com/fastly/terraform-provider-fastly/pull/327))
 
 ## 0.20.4 (September 30, 2020)
 

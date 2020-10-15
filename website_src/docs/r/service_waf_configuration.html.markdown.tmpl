@@ -136,6 +136,8 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage with rule exclusions:
 
+~> **Warning:** Rule exclusions are part of a **beta release**, which may be subject to breaking changes and improvements over time. For more information, see our [product and feature lifecycle](https://docs.fastly.com/products/fastly-product-lifecycle#beta) descriptions.
+
 ```hcl
 resource "fastly_service_v1" "demo" {
   name = "demofastly"
@@ -599,13 +601,12 @@ The `rule` block supports:
 
 The `rule_exclusion` block supports:
 
+~> **Warning:** Rule exclusions are part of a **beta release**, which may be subject to breaking changes and improvements over time. For more information, see our [product and feature lifecycle](https://docs.fastly.com/products/fastly-product-lifecycle#beta) descriptions.
+
 * `name` - (Required) The name of rule exclusion.
 * `exclusion_type` - (Required) The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall.
 * `condition` - (Required) A conditional expression in VCL used to determine if the condition is met.
 * `modsec_rule_ids` - (Required) Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded.
-
-The `rule_exclusion` block exports:
-
 * `number` - The numeric ID assigned to the WAF Rule Exclusion.
 
 ## Import

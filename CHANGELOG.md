@@ -1,5 +1,11 @@
 ## 0.22.0 (Unreleased)
 
+## 0.21.1 (October 15, 2020)
+
+BUG FIXES:
+
+* resource/fastly_service_waf_configuration: Guard `rule_exclusion` read to ensure API is only called if used. ([#330](https://github.com/fastly/terraform-provider-fastly/pull/330))
+
 ## 0.21.0 (October 14, 2020)
 
 ENHANCEMENTS:

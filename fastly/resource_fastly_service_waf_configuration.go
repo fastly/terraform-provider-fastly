@@ -299,8 +299,14 @@ func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	if err := readWAFRuleExclusions(meta, d, latestVersion.Number); err != nil {
-		return err
+	// As the rule exclusion API is still behind a beta feature
+	// flag, ensure we only read if the Set is non-empty.
+	//
+	// TODO(phamann): Remove d.GetOk() guard once in limited availability.
+	if _, ok := d.GetOk("rule_exclusion"); ok {
+		if err := readWAFRuleExclusions(meta, d, latestVersion.Number); err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -51,70 +51,76 @@ The following arguments are supported:
 * `comment` - (Optional) Description field for the service. Default `Managed by Terraform`.
 * `version_comment` - (Optional) Description field for the version.
 * `domain` - (Required) A set of Domain names to serve as entry points for your
-Service. Defined below.
+Service. [Defined below](#domain).
 * `backend` - (Optional) A set of Backends to service requests from your Domains.
-Defined below. Backends must be defined in this argument, or defined in the
+[Defined below](#backend). Backends must be defined in this argument, or defined in the
 `vcl` argument below
 * `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
-* `package` - (Optional) A Wasm deployment package to upload. Defined below.
+[Defined below](#healthcheck).
+* `package` - (Optional) A Wasm deployment package to upload.
+[Defined below](#package).
 * `force_destroy` - (Optional) Services that are active cannot be destroyed. In
 order to destroy the Service, set `force_destroy` to `true`. Default `false`.
 * `s3logging` - (Optional) A set of S3 Buckets to send streaming logs too.
-Defined below.
+[Defined below](#s3logging).
 * `papertrail` - (Optional) A Papertrail endpoint to send streaming logs too.
-Defined below.
+[Defined below](#papertrail).
 * `sumologic` - (Optional) A Sumologic endpoint to send streaming logs too.
-Defined below.
+[Defined below](#sumologic).
 * `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
-Defined below.
+[Defined below](#gcslogging).
 * `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
-Defined below.
+[Defined below](#bigquerylogging).
 * `syslog` - (Optional) A syslog endpoint to send streaming logs too.
-Defined below.
+[Defined below](#syslog).
 * `logentries` - (Optional) A logentries endpoint to send streaming logs too.
-Defined below.
+[Defined below](#logentries).
 * `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
-Defined below.
+[Defined below](#splunk).
 * `blobstoragelogging` - (Optional) An Azure Blob Storage endpoint to send streaming logs too.
-Defined below.
+[Defined below](#blobstoragelogging).
 * `httpslogging` - (Optional) An HTTPS endpoint to send streaming logs to.
-Defined below.
+[Defined below](#httpslogging).
 * `logging_elasticsearch` - (optional) An Elasticsearch endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_elasticsearch).
 * `logging_ftp` - (Optional) An FTP endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_ftp).
 * `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_sftp).
 * `logging_datadog` - (Optional) A Datadog endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_datadog).
 * `logging_loggly` - (Optional) A Loggly endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_loggly).
 * `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_newrelic).
 * `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_scalyr).
 * `logging_googlepubsub` - (Optional) A Google Cloud Pub/Sub endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_googlepubsub).
 * `logging_kafka` - (Optional) A Kafka endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_kafka).
 * `logging_heroku` - (Optional) A Heroku endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_heroku).
 * `logging_honeycomb` - (Optional) A Honeycomb endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_honeycomb).
 * `logging_logshuttle` - (Optional) A Log Shuttle endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_logshuttle).
 * `logging_openstack` - (Optional) An OpenStack endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_openstack).
 * `logging_digitalocean` - (Optional) A DigitalOcean Spaces endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_digitalocean).
 * `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
-Defined below.
+[Defined below](#logging_cloudfiles).
 
+
+### domain
 
 The `domain` block supports:
 
 * `name` - (Required) The domain to which this Service will respond.
 * `comment` - (Optional) An optional comment about the Domain.
+
+### backend
 
 The `backend` block supports:
 
@@ -149,6 +155,8 @@ Default `200`.
 * `healthcheck` - (Optional) Name of a defined `healthcheck` to assign to this backend.
 
 
+### healthcheck
+
 The `healthcheck` block supports:
 
 * `name` - (Required) A unique name to identify this Healthcheck.
@@ -163,12 +171,16 @@ The `healthcheck` block supports:
 * `timeout` - (Optional) Timeout in milliseconds. Default `500`.
 * `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
 
+### package
+
 The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
 [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
 
 * `filename` - (Required) The path to the Wasm deployment package within your local filesystem.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package.
 
+
+### s3logging
 
 The `s3logging` block supports:
 
@@ -197,6 +209,8 @@ compressed. Default `0`.
 * `redundancy` - (Optional) The S3 redundancy level. Should be formatted; one of: `standard`, `reduced_redundancy` or null. Default `null`.
 
 
+### papertrail
+
 The `papertrail` block supports:
 
 * `name` - (Required) A unique name to identify this Papertrail endpoint.
@@ -204,12 +218,16 @@ The `papertrail` block supports:
 * `port` - (Required) The port associated with the address where the Papertrail endpoint can be accessed.
 
 
+### sumologic
+
 The `sumologic` block supports:
 
 * `name` - (Required) A unique name to identify this Sumologic endpoint.
 * `url` - (Required) The URL to Sumologic collector endpoint
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic][fastly-sumologic]
 
+
+### gcslogging
 
 The `gcslogging` block supports:
 
@@ -227,6 +245,8 @@ compressed. Default `0`.
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
 
 
+### bigquerylogging
+
 The `bigquerylogging` block supports:
 
 * `name` - (Required) A unique name to identify this BigQuery logging endpoint.
@@ -236,6 +256,8 @@ The `bigquerylogging` block supports:
 * `email` - (Required) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable.
 * `secret_key` - (Required) The secret key associated with the sservice account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines.
 
+
+### syslog
 
 The `syslog` block supports:
 
@@ -251,6 +273,8 @@ The `syslog` block supports:
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
 
 
+### logentries
+
 The `logentries` block supports:
 
 * `name` - (Required) A unique name to identify this GCS endpoint.
@@ -259,6 +283,8 @@ The `logentries` block supports:
 * `use_tls` - (Optional) Whether to use TLS for secure logging. Defaults to `true`
 
 
+### splunk
+
 The `splunk` block supports:
 
 * `name` - (Required) A unique name to identify the Splunk endpoint.
@@ -266,6 +292,8 @@ The `splunk` block supports:
 * `token` - (Required) The Splunk token to be used for authentication.
 * `tls_hostname` - (Optional) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.
+
+### blobstoragelogging
 
 The `blobstoragelogging` block supports:
 
@@ -280,6 +308,8 @@ The `blobstoragelogging` block supports:
 * `public_key` - (Optional) A PGP public key that Fastly will use to encrypt your log files before writing them to disk.
 * `message_type` - (Optional) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`.  Default `classic`.
 
+
+### httpslogging
 
 The `httpslogging` block supports:
 
@@ -299,6 +329,8 @@ The `httpslogging` block supports:
 * `message_type` - How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`.  Default `blank`.
 
 
+### logging_elasticsearch
+
 The `logging_elasticsearch` block supports:
 
 * `name` - (Required) The unique name of the Elasticsearch logging endpoint.
@@ -315,6 +347,8 @@ The `logging_elasticsearch` block supports:
 * `tls_hostname` - (Optional) The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN).
 
 
+### logging_ftp
+
 The `logging_ftp` block supports:
 
 * `name` - (Required) The unique name of the FTP logging endpoint.
@@ -328,6 +362,8 @@ The `logging_ftp` block supports:
 * `public_key` - (Optional) The PGP public key that Fastly will use to encrypt your log files before writing them to disk.
 * `timestamp_format` - (Optional) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
 
+
+### logging_sftp
 
 The `logging_sftp` block supports:
 
@@ -346,6 +382,8 @@ The `logging_sftp` block supports:
 * `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
 
 
+### logging_datadog
+
 The `logging_datadog` block supports:
 
 * `name` - (Required) The unique name of the Datadog logging endpoint.
@@ -353,11 +391,15 @@ The `logging_datadog` block supports:
 * `region` - (Optional) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined.
 
 
+### logging_loggly
+
 The `logging_loggly` block supports:
 
 * `name` - (Required) The unique name of the Loggly logging endpoint.
 * `token` - (Required) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
 
+
+### logging_newrelic
 
 The `logging_newrelic` block supports:
 
@@ -365,12 +407,16 @@ The `logging_newrelic` block supports:
 * `token` - (Required) The Insert API key from the Account page of your New Relic account.
 
 
+### logging_scalyr
+
 The `logging_scalyr` block supports:
 
 * `name` - (Required) The unique name of the Scalyr logging endpoint.
 * `token` - (Required) The token to use for authentication (https://www.scalyr.com/keys).
 * `region` - (Optional) The region that log data will be sent to. One of US or EU. Defaults to US if undefined.
 
+
+### logging_googlepubsub
 
 The `logging_googlepubsub` block supports:
 
@@ -380,6 +426,8 @@ The `logging_googlepubsub` block supports:
 * `project_id` - (Required) The ID of your Google Cloud Platform project.
 * `topic` - (Required) The Google Cloud Pub/Sub topic to which logs will be published.
 
+
+### logging_kafka
 
 The `logging_kafka` block supports:
 
@@ -395,12 +443,16 @@ The `logging_kafka` block supports:
 * `tls_hostname` - (Optional) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).
 
 
+### logging_heroku
+
 The `logging_heroku` block supports:
 
 * `name` - (Required) The unique name of the Heroku logging endpoint.
 * `token` - (Required) The token to use for authentication (https://devcenter.heroku.com/articles/add-on-partner-log-integration).
 * `url` - (Required) The url to stream logs to.
 
+
+### logging_honeycomb
 
 The `logging_honeycomb` block supports:
 
@@ -409,12 +461,16 @@ The `logging_honeycomb` block supports:
 * `token` - (Required) The Write Key from the Account page of your Honeycomb account.
 
 
+### logging_logshuttle
+
 The `logging_logshuttle` block supports:
 
 * `name` - (Required) The unique name of the Logshuttle logging endpoint.
 * `token` - (Required) The data authentication token associated with this endpoint.
 * `url` - (Required) Your Log Shuttle endpoint url.
 
+
+### logging_openstack
 
 The `logging_openstack` block supports:
 
@@ -432,6 +488,8 @@ seconds. Default `3600`.
 * `message_type` - (Optional) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
 
 
+### logging_digitalocean
+
 The `logging_digitalocean` block supports:
 
 * `name` - (Required) The unique name of the DigitalOcean Spaces logging endpoint.
@@ -446,6 +504,8 @@ The `logging_digitalocean` block supports:
 * `gzip_level` - (Optional) What level of Gzip encoding to have when dumping logs (default 0, no compression).
 * `message_type` - (Optional) How the message should be formatted. One of: classic (default), loggly, logplex or blank.
 
+
+### logging_cloudfiles
 
 The `logging_cloudfiles` block supports:
 

@@ -1,8 +1,10 @@
 {{define "backend"}}* `backend` - (Optional) A set of Backends to service requests from your Domains.
-Defined below. Backends must be defined in this argument, or defined in the
+[Defined below](#backend). Backends must be defined in this argument, or defined in the
 `vcl` argument below{{end}}
 
 {{define "backend_block"}}
+### backend
+
 The `backend` block supports:
 
 * `name` - (Required, string) Name for this Backend. Must be unique to this Service.

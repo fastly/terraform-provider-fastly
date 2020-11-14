@@ -217,103 +217,103 @@ The following arguments are supported:
 * `comment` - (Optional) Description field for the service. Default `Managed by Terraform`.
 * `version_comment` - (Optional) Description field for the version.
 * `domain` - (Required) A set of Domain names to serve as entry points for your
-Service. [Defined below](#domain).
+Service. [Defined below](#domain-block).
 * `backend` - (Optional) A set of Backends to service requests from your Domains.
-[Defined below](#backend). Backends must be defined in this argument, or defined in the
+[Defined below](#backend-block). Backends must be defined in this argument, or defined in the
 `vcl` argument below
 * `condition` - (Optional) A set of conditions to add logic to any basic
-configuration object in this service. [Defined below](#condition).
+configuration object in this service. [Defined below](#condition-block).
 * `cache_setting` - (Optional) A set of Cache Settings, allowing you to override.
-[Defined below](#cache_setting).
+[Defined below](#cache_setting-block).
 * `director` - (Optional) A director to allow more control over balancing traffic over backends.
 when an item is not to be cached based on an above `condition`.
-[Defined below](#director)
+[Defined below](#director-block)
 * `gzip` - (Required) A set of gzip rules to control automatic gzipping of
-content. [Defined below](#gzip).
+content. [Defined below](#gzip-block).
 * `header` - (Optional) A set of Headers to manipulate for each request.
-[Defined below](#header).
+[Defined below](#header-block).
 * `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
-[Defined below](#healthcheck).
+[Defined below](#healthcheck-block).
 * `default_host` - (Optional) The default hostname.
 * `default_ttl` - (Optional) The default Time-to-live (TTL) for
 requests.
 * `force_destroy` - (Optional) Services that are active cannot be destroyed. In
 order to destroy the Service, set `force_destroy` to `true`. Default `false`.
 * `request_setting` - (Optional) A set of Request modifiers.
-[Defined below](#request_setting)
+[Defined below](#request_setting-block)
 * `s3logging` - (Optional) A set of S3 Buckets to send streaming logs too.
-[Defined below](#s3logging).
+[Defined below](#s3logging-block).
 * `papertrail` - (Optional) A Papertrail endpoint to send streaming logs too.
-[Defined below](#papertrail).
+[Defined below](#papertrail-block).
 * `sumologic` - (Optional) A Sumologic endpoint to send streaming logs too.
-[Defined below](#sumologic).
+[Defined below](#sumologic-block).
 * `gcslogging` - (Optional) A gcs endpoint to send streaming logs too.
-[Defined below](#gcslogging).
+[Defined below](#gcslogging-block).
 * `bigquerylogging` - (Optional) A BigQuery endpoint to send streaming logs too.
-[Defined below](#bigquerylogging).
+[Defined below](#bigquerylogging-block).
 * `syslog` - (Optional) A syslog endpoint to send streaming logs too.
-[Defined below](#syslog).
+[Defined below](#syslog-block).
 * `logentries` - (Optional) A logentries endpoint to send streaming logs too.
-[Defined below](#logentries).
+[Defined below](#logentries-block).
 * `splunk` - (Optional) A Splunk endpoint to send streaming logs too.
-[Defined below](#splunk).
+[Defined below](#splunk-block).
 * `blobstoragelogging` - (Optional) An Azure Blob Storage endpoint to send streaming logs too.
-[Defined below](#blobstoragelogging).
+[Defined below](#blobstoragelogging-block).
 * `httpslogging` - (Optional) An HTTPS endpoint to send streaming logs to.
-[Defined below](#httpslogging).
+[Defined below](#httpslogging-block).
 * `logging_elasticsearch` - (optional) An Elasticsearch endpoint to send streaming logs to.
-[Defined below](#logging_elasticsearch).
+[Defined below](#logging_elasticsearch-block).
 * `logging_ftp` - (Optional) An FTP endpoint to send streaming logs to.
-[Defined below](#logging_ftp).
+[Defined below](#logging_ftp-block).
 * `logging_sftp` - (Optional) An SFTP endpoint to send streaming logs to.
-[Defined below](#logging_sftp).
+[Defined below](#logging_sftp-block).
 * `logging_datadog` - (Optional) A Datadog endpoint to send streaming logs to.
-[Defined below](#logging_datadog).
+[Defined below](#logging_datadog-block).
 * `logging_loggly` - (Optional) A Loggly endpoint to send streaming logs to.
-[Defined below](#logging_loggly).
+[Defined below](#logging_loggly-block).
 * `logging_newrelic` - (Optional) A New Relic endpoint to send streaming logs to.
-[Defined below](#logging_newrelic).
+[Defined below](#logging_newrelic-block).
 * `logging_scalyr` - (Optional) A Scalyr endpoint to send streaming logs to.
-[Defined below](#logging_scalyr).
+[Defined below](#logging_scalyr-block).
 * `logging_googlepubsub` - (Optional) A Google Cloud Pub/Sub endpoint to send streaming logs to.
-[Defined below](#logging_googlepubsub).
+[Defined below](#logging_googlepubsub-block).
 * `logging_kafka` - (Optional) A Kafka endpoint to send streaming logs to.
-[Defined below](#logging_kafka).
+[Defined below](#logging_kafka-block).
 * `logging_heroku` - (Optional) A Heroku endpoint to send streaming logs to.
-[Defined below](#logging_heroku).
+[Defined below](#logging_heroku-block).
 * `logging_honeycomb` - (Optional) A Honeycomb endpoint to send streaming logs to.
-[Defined below](#logging_honeycomb).
+[Defined below](#logging_honeycomb-block).
 * `logging_logshuttle` - (Optional) A Log Shuttle endpoint to send streaming logs to.
-[Defined below](#logging_logshuttle).
+[Defined below](#logging_logshuttle-block).
 * `logging_openstack` - (Optional) An OpenStack endpoint to send streaming logs to.
-[Defined below](#logging_openstack).
+[Defined below](#logging_openstack-block).
 * `logging_digitalocean` - (Optional) A DigitalOcean Spaces endpoint to send streaming logs to.
-[Defined below](#logging_digitalocean).
+[Defined below](#logging_digitalocean-block).
 * `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
-[Defined below](#logging_cloudfiles).
+[Defined below](#logging_cloudfiles-block).
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
-[Defined below](#response_object)
+[Defined below](#response_object-block)
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.
-[Defined below](#snippet).
+[Defined below](#snippet-block).
 * `dynamicsnippet` - (Optional) A set of custom, "dynamic" VCL Snippet configuration blocks.
-[Defined below](#dynamicsnippet).
+[Defined below](#dynamicsnippet-block).
 * `vcl` - (Optional) A set of custom VCL configuration blocks.
-[Defined below](#vcl). See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
+[Defined below](#vcl-block). See the [Fastly documentation](https://docs.fastly.com/vcl/custom-vcl/uploading-custom-vcl/) for more information on using custom VCL.
 * `acl` - (Optional) A set of ACL configuration blocks.
-[Defined below](#acl).
+[Defined below](#acl-block).
 * `dictionary` - (Optional) A set of dictionaries that allow the storing of key values pair for use within VCL functions.
-[Defined below](#dictionary).
+[Defined below](#dictionary-block).
 * `waf` - (Optional) A WAF configuration block.
-[Defined below](#waf).
+[Defined below](#waf-block).
 
-### domain
+### domain block
 
 The `domain` block supports:
 
 * `name` - (Required) The domain to which this Service will respond.
 * `comment` - (Optional) An optional comment about the Domain.
 
-### backend
+### backend block
 
 The `backend` block supports:
 
@@ -348,7 +348,7 @@ Default `200`.
 * `healthcheck` - (Optional) Name of a defined `healthcheck` to assign to this backend.
 
 
-### condition
+### condition block
 
 The `condition` block supports allows you to add logic to any basic configuration
 object in a service. See Fastly's documentation
@@ -364,7 +364,7 @@ used in the `request_condition`, `response_condition`, or
 * `priority` - (Optional) A number used to determine the order in which multiple
 conditions execute. Lower numbers execute first. Default `10`.
 
-### director
+### director block
 
 The `director` block supports:
 
@@ -377,7 +377,7 @@ The `director` block supports:
 * `type` - (Optional) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client).  Default `1`.
 * `retries` - (Optional) How many backends to search if it fails. Default `5`.
 
-### cache_setting
+### cache_setting block
 
 The `cache_setting` block supports:
 
@@ -388,7 +388,7 @@ on Fastly's documentation under ["Caching action descriptions"](https://docs.fas
 * `stale_ttl` - (Optional) Max "Time To Live" for stale (unreachable) objects.
 * `ttl` - (Optional) The Time-To-Live (TTL) for the object.
 
-### gzip
+### gzip block
 
 The `gzip` block supports:
 
@@ -401,7 +401,7 @@ gzip. Example: `["css", "js"]`.
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
 
-### header
+### header block
 
 The `header` block supports adding, removing, or modifying Request and Response
 headers. See Fastly's documentation on
@@ -423,7 +423,7 @@ content. (Does not apply to the `delete` action.)
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
-### healthcheck
+### healthcheck block
 
 The `healthcheck` block supports:
 
@@ -439,7 +439,7 @@ The `healthcheck` block supports:
 * `timeout` - (Optional) Timeout in milliseconds. Default `500`.
 * `window` - (Optional) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`.
 
-### request_setting
+### request_setting block
 
 The `request_setting` block allow you to customize Fastly's request handling, by
 defining behavior that should change based on a predefined `condition`:
@@ -466,7 +466,7 @@ viewing origin fetch durations.
 Fastly-Geo-Region into the request headers.
 * `default_host` - (Optional) Sets the host header.
 
-### s3logging
+### s3logging block
 
 The `s3logging` block supports:
 
@@ -501,7 +501,7 @@ see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `server_side_encryption` - (Optional) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`.
 * `server_side_encryption_kms_key_id` - (Optional) Server-side KMS Key ID. Must be set if `server_side_encryption` is set to `aws:kms`.
 
-### papertrail
+### papertrail block
 
 The `papertrail` block supports:
 
@@ -513,7 +513,7 @@ The `papertrail` block supports:
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
-### sumologic
+### sumologic block
 
 The `sumologic` block supports:
 
@@ -525,7 +525,7 @@ The `sumologic` block supports:
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
-### gcslogging
+### gcslogging block
 
 The `gcslogging` block supports:
 
@@ -545,7 +545,7 @@ compressed. Default `0`.
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
-### bigquerylogging
+### bigquerylogging block
 
 The `bigquerylogging` block supports:
 
@@ -560,7 +560,7 @@ The `bigquerylogging` block supports:
 * `template` - (Optional) Big query table name suffix template. If set will be interpreted as a strftime compatible string and used as the [Template Suffix for your table](https://cloud.google.com/bigquery/streaming-data-into-bigquery#template-tables).
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
-### syslog
+### syslog block
 
 The `syslog` block supports:
 
@@ -580,7 +580,7 @@ The `syslog` block supports:
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
-### logentries
+### logentries block
 
 The `logentries` block supports:
 
@@ -593,7 +593,7 @@ The `logentries` block supports:
 * `response_condition` - (Optional) Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals][fastly-conditionals].
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
-### splunk
+### splunk block
 
 The `splunk` block supports:
 
@@ -607,7 +607,7 @@ The `splunk` block supports:
 * `tls_hostname` - (Optional) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).
 * `tls_ca_cert` - (Optional) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.
 
-### blobstoragelogging
+### blobstoragelogging block
 
 The `blobstoragelogging` block supports:
 
@@ -626,7 +626,7 @@ The `blobstoragelogging` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed, overriding any `format_version` default. Can be either `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
-### httpslogging
+### httpslogging block
 
 The `httpslogging` block supports:
 
@@ -649,7 +649,7 @@ The `httpslogging` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
-### logging_elasticsearch
+### logging_elasticsearch block
 
 The `logging_elasticsearch` block supports:
 
@@ -670,7 +670,7 @@ The `logging_elasticsearch` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
-### logging_ftp
+### logging_ftp block
 
 The `logging_ftp` block supports:
 
@@ -689,7 +689,7 @@ The `logging_ftp` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the condition to apply.
 
-### logging_sftp
+### logging_sftp block
 
 The `logging_sftp` block supports:
 
@@ -711,7 +711,7 @@ The `logging_sftp` block supports:
 * `response_condition` - (Optional) The name of the condition to apply.
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 
-### logging_datadog
+### logging_datadog block
 
 The `logging_datadog` block supports:
 
@@ -723,7 +723,7 @@ The `logging_datadog` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the condition to apply.
 
-### logging_loggly
+### logging_loggly block
 
 The `logging_loggly` block supports:
 
@@ -734,7 +734,7 @@ The `logging_loggly` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
-### logging_newrelic
+### logging_newrelic block
 
 The `logging_newrelic` block supports:
 
@@ -745,7 +745,7 @@ The `logging_newrelic` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed.
 * `response_condition` - (Optional) The name of the condition to apply.
 
-### logging_scalyr
+### logging_scalyr block
 
 The `logging_scalyr` block supports:
 
@@ -757,7 +757,7 @@ The `logging_scalyr` block supports:
 * `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
-### logging_googlepubsub
+### logging_googlepubsub block
 
 The `logging_googlepubsub` block supports:
 
@@ -771,7 +771,7 @@ The `logging_googlepubsub` block supports:
 * `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
-### logging_kafka
+### logging_kafka block
 
 The `logging_kafka` block supports:
 
@@ -790,7 +790,7 @@ The `logging_kafka` block supports:
 * `placement` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 * `response_condition` - (Optional) The name of the `condition` to apply. If empty, always execute.
 
-### logging_heroku
+### logging_heroku block
 
 The `logging_heroku` block supports:
 
@@ -802,7 +802,7 @@ The `logging_heroku` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
-### logging_honeycomb
+### logging_honeycomb block
 
 The `logging_honeycomb` block supports:
 
@@ -814,7 +814,7 @@ The `logging_honeycomb` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
-### logging_logshuttle
+### logging_logshuttle block
 
 The `logging_logshuttle` block supports:
 
@@ -826,7 +826,7 @@ The `logging_logshuttle` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
-### logging_openstack
+### logging_openstack block
 
 The `logging_openstack` block supports:
 
@@ -848,7 +848,7 @@ seconds. Default `3600`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed; one of: `none` or `waf_debug`.
 
-### logging_digitalocean
+### logging_digitalocean block
 
 The `logging_digitalocean` block supports:
 
@@ -868,7 +868,7 @@ The `logging_digitalocean` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
-### logging_cloudfiles
+### logging_cloudfiles block
 
 The `logging_cloudfiles` block supports:
 
@@ -888,7 +888,7 @@ The `logging_cloudfiles` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
-### response_object
+### response_object block
 
 The `response_object` block supports:
 
@@ -901,7 +901,7 @@ The `response_object` block supports:
 * `cache_condition` - (Optional) Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals,
 see [Fastly's Documentation on Conditionals][fastly-conditionals].
 
-### snippet
+### snippet block
 
 The `snippet` block supports:
 
@@ -910,7 +910,7 @@ The `snippet` block supports:
 * `content` (Required) The VCL code that specifies exactly what the snippet does.
 * `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
-### dynamicsnippet
+### dynamicsnippet block
 
 The `dynamicsnippet` block supports:
 
@@ -918,7 +918,7 @@ The `dynamicsnippet` block supports:
 * `type` - (Required) The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`).
 * `priority` - (Optional) Priority determines the ordering for multiple snippets. Lower numbers execute first.  Defaults to `100`.
 
-### vcl
+### vcl block
 
 The `vcl` block supports:
 
@@ -928,13 +928,13 @@ The `vcl` block supports:
 `false`, use this block as an includable library. Only a single VCL block can be
 marked as the main block. Default is `false`.
 
-### acl
+### acl block
 
 The `acl` block supports:
 
 * `name` - (Required) A unique name to identify this ACL.
 
-### dictionary
+### dictionary block
 
 The `dictionary` block supports:
 
@@ -944,7 +944,7 @@ via API. Default is `false`. It is important to note that changing this attribut
 dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if
 the items are managed outside of Terraform.
 
-### waf
+### waf block
 
 The `waf` block supports:
 

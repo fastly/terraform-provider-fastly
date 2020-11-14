@@ -589,10 +589,10 @@ The following arguments are supported:
 * `total_arg_length` - (Optional) The maximum size of argument names and values.
 * `warning_anomaly_score` - (Optional) Score value to add for warning anomalies.
 * `xss_score_threshold` - (Optional) XSS attack threshold.
-* `rule` - (Optional) The Web Application Firewall's active rules. [Defined below](#rule)
-* `rule_exclusion` - (Optional) The Web Application Firewall's rule exclusions. [Defined below](#rule_exclusion)
+* `rule` - (Optional) The Web Application Firewall's active rules. [Defined below](#rule-block)
+* `rule_exclusion` - (Optional) The Web Application Firewall's rule exclusions. [Defined below](#rule_exclusion-block)
 
-### rule
+### rule block
 
 The `rule` block supports:
 
@@ -600,7 +600,7 @@ The `rule` block supports:
 * `modsec_rule_id` - (Required) The Web Application Firewall rule's modsecurity ID.
 * `revision` - (Optional) The Web Application Firewall rule's revision. The latest revision will be used if this is not provided.
 
-### rule_exclusion
+### rule_exclusion block
 
 The `rule_exclusion` block supports:
 

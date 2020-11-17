@@ -1,6 +1,9 @@
-{{define "healthcheck"}}* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.{{end}}
+{{define "healthcheck"}}* `healthcheck` - (Optional) Automated healthchecks on the cache that can change how Fastly interacts with the cache based on its health.
+[Defined below](#healthcheck-block).{{end}}
 
 {{define "healthcheck_block"}}
+### healthcheck block
+
 The `healthcheck` block supports:
 
 * `name` - (Required) A unique name to identify this Healthcheck.

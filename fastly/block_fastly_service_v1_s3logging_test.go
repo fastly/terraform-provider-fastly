@@ -85,7 +85,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3-us-west-2.amazonaws.com",
@@ -102,7 +102,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.S3{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3-us-west-2.amazonaws.com",
@@ -120,7 +120,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.S3{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "someotherbucketlog",
 		BucketName:      "fastlytestlogging2",
 		Domain:          "s3-us-west-2.amazonaws.com",
@@ -173,7 +173,7 @@ func TestAccFastlyServiceV1_s3logging_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "somebucketlog",
 		BucketName:      "fastlytestlogging",
 		Domain:          "s3-us-west-2.amazonaws.com",
@@ -212,7 +212,7 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3.amazonaws.com",
@@ -258,7 +258,7 @@ func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
 	defer resetEnv()
 
 	log3 := gofastly.S3{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "somebucketlog",
 		BucketName:      "fastlytestlogging",
 		Domain:          "s3-us-west-2.amazonaws.com",
@@ -298,7 +298,7 @@ func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "somebucketlog",
 		BucketName:      "fastlytestlogging",
 		Domain:          "s3-us-west-2.amazonaws.com",
@@ -337,8 +337,8 @@ func testAccCheckFastlyServiceV1S3LoggingAttributes(service *gofastly.ServiceDet
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -355,7 +355,7 @@ func testAccCheckFastlyServiceV1S3LoggingAttributes(service *gofastly.ServiceDet
 				if s.Name == ls.Name {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
-					s.Version = service.ActiveVersion.Number
+					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					ls.CreatedAt = nil

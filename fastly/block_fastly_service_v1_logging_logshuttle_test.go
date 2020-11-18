@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
 		{
 			remote: []*gofastly.Logshuttle{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "logshuttle-endpoint",
 					Token:             "token",
 					URL:               "https://example.com",
@@ -58,25 +58,25 @@ func TestAccFastlyServiceV1_logging_logshuttle_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		Version:       1,
-		Name:          "logshuttle-endpoint",
-		Token:         "s3cr3t",
-		URL:           "https://example.com",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "logshuttle-endpoint",
+		Token:          "s3cr3t",
+		URL:            "https://example.com",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	log1_after_update := gofastly.Logshuttle{
-		Version:       1,
-		Name:          "logshuttle-endpoint",
-		Token:         "secret",
-		URL:           "https://new.example.com",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b %T",
+		ServiceVersion: 1,
+		Name:           "logshuttle-endpoint",
+		Token:          "secret",
+		URL:            "https://new.example.com",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b %T",
 	}
 
 	log2 := gofastly.Logshuttle{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "another-logshuttle-endpoint",
 		Token:             "another-token",
 		URL:               "https://another.example.com",
@@ -124,10 +124,10 @@ func TestAccFastlyServiceV1_logging_logshuttle_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		Version: 1,
-		Name:    "logshuttle-endpoint",
-		Token:   "s3cr3t",
-		URL:     "https://example.com",
+		ServiceVersion: 1,
+		Name:           "logshuttle-endpoint",
+		Token:          "s3cr3t",
+		URL:            "https://example.com",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -155,8 +155,8 @@ func testAccCheckFastlyServiceV1LogshuttleAttributes(service *gofastly.ServiceDe
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -174,7 +174,7 @@ func testAccCheckFastlyServiceV1LogshuttleAttributes(service *gofastly.ServiceDe
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					el.CreatedAt = nil
@@ -259,7 +259,7 @@ resource "fastly_service_v1" "foo" {
     name   = "another-logshuttle-endpoint"
     token  = "another-token"
 		url    = "https://another.example.com"
-    placement = "none" 
+    placement = "none"
 		response_condition = "response_condition_test"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
   }

@@ -21,7 +21,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 		{
 			remote: []*gofastly.Pubsub{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "googlepubsub-endpoint",
 					User:              "user",
 					SecretKey:         privateKey(t),
@@ -64,7 +64,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Pubsub{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "googlepubsublogger",
 		User:              "user",
 		SecretKey:         privateKey(t),
@@ -77,7 +77,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.Pubsub{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "googlepubsublogger",
 		User:              "newuser",
 		SecretKey:         privateKey(t),
@@ -90,7 +90,7 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Pubsub{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "googlepubsublogger2",
 		User:              "user2",
 		SecretKey:         privateKey(t),
@@ -140,12 +140,12 @@ func TestAccFastlyServiceV1_googlepubsublogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Pubsub{
-		Version:   1,
-		Name:      "googlepubsublogger",
-		User:      "user",
-		SecretKey: privateKey(t),
-		ProjectID: "project-id",
-		Topic:     "topic",
+		ServiceVersion: 1,
+		Name:           "googlepubsublogger",
+		User:           "user",
+		SecretKey:      privateKey(t),
+		ProjectID:      "project-id",
+		Topic:          "topic",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -173,8 +173,8 @@ func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.Service
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -193,7 +193,7 @@ func testAccCheckFastlyServiceV1GooglePubSubAttributes(service *gofastly.Service
 				if s.Name == sl.Name {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
-					s.Version = service.ActiveVersion.Number
+					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					sl.CreatedAt = nil
@@ -245,7 +245,7 @@ resource "fastly_service_compute" "foo" {
 		project_id         = "project-id"
 	  topic  						 = "topic"
 	}
-	
+
 	package {
       	filename = "test_fixtures/package/valid.tar.gz"
 	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fastly/go-fastly/v2/fastly"
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -140,8 +139,8 @@ func (h *GooglePubSubServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 	// Refresh Google Cloud Pub/Sub logging endpoints.
 	log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
 	googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -213,17 +212,17 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interf
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreatePubsubInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              fastly.NullString(df["name"].(string)),
-		User:              fastly.NullString(df["user"].(string)),
-		SecretKey:         fastly.NullString(df["secret_key"].(string)),
-		ProjectID:         fastly.NullString(df["project_id"].(string)),
-		Topic:             fastly.NullString(df["topic"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		User:              df["user"].(string),
+		SecretKey:         df["secret_key"].(string),
+		ProjectID:         df["project_id"].(string),
+		Topic:             df["topic"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -231,8 +230,8 @@ func (h *GooglePubSubServiceAttributeHandler) buildDelete(googlepubsubMap interf
 	df := googlepubsubMap.(map[string]interface{})
 
 	return &gofastly.DeletePubsubInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

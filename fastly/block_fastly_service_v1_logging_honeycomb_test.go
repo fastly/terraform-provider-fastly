@@ -51,7 +51,7 @@ func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 		{
 			remote: []*gofastly.Honeycomb{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "honeycomb-endpoint",
 					Token:             "token",
 					Dataset:           "dataset",
@@ -89,16 +89,16 @@ func TestAccFastlyServiceV1_logging_honeycomb_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		Version:       1,
-		Name:          "honeycomb-endpoint",
-		Token:         "s3cr3t",
-		Dataset:       "dataset",
-		FormatVersion: 2,
-		Format:        appendNewLine(honeycombDefaultFormat),
+		ServiceVersion: 1,
+		Name:           "honeycomb-endpoint",
+		Token:          "s3cr3t",
+		Dataset:        "dataset",
+		FormatVersion:  2,
+		Format:         appendNewLine(honeycombDefaultFormat),
 	}
 
 	log1_after_update := gofastly.Honeycomb{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "honeycomb-endpoint",
 		Dataset:           "new-dataset",
 		Token:             "secret",
@@ -109,7 +109,7 @@ func TestAccFastlyServiceV1_logging_honeycomb_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Honeycomb{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "another-honeycomb-endpoint",
 		Token:             "another-token",
 		Dataset:           "another-dataset",
@@ -157,10 +157,10 @@ func TestAccFastlyServiceV1_logging_honeycomb_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		Version: 1,
-		Name:    "honeycomb-endpoint",
-		Token:   "s3cr3t",
-		Dataset: "dataset",
+		ServiceVersion: 1,
+		Name:           "honeycomb-endpoint",
+		Token:          "s3cr3t",
+		Dataset:        "dataset",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -188,8 +188,8 @@ func testAccCheckFastlyServiceV1HoneycombAttributes(service *gofastly.ServiceDet
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -207,7 +207,7 @@ func testAccCheckFastlyServiceV1HoneycombAttributes(service *gofastly.ServiceDet
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					el.CreatedAt = nil

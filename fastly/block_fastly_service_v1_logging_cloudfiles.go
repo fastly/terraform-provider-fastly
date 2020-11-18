@@ -83,8 +83,8 @@ func (h *CloudfilesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	// Refresh Cloud Files.
 	log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
 	cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -162,23 +162,23 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateCloudfilesInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		BucketName:        gofastly.NullString(df["bucket_name"].(string)),
-		User:              gofastly.NullString(df["user"].(string)),
-		AccessKey:         gofastly.NullString(df["access_key"].(string)),
-		PublicKey:         gofastly.NullString(df["public_key"].(string)),
-		GzipLevel:         gofastly.Uint(uint(df["gzip_level"].(int))),
-		MessageType:       gofastly.NullString(df["message_type"].(string)),
-		Path:              gofastly.NullString(df["path"].(string)),
-		Region:            gofastly.NullString(df["region"].(string)),
-		Period:            gofastly.Uint(uint(df["period"].(int))),
-		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		BucketName:        df["bucket_name"].(string),
+		User:              df["user"].(string),
+		AccessKey:         df["access_key"].(string),
+		PublicKey:         df["public_key"].(string),
+		GzipLevel:         df["gzip_level"].(uint),
+		MessageType:       df["message_type"].(string),
+		Path:              df["path"].(string),
+		Region:            df["region"].(string),
+		Period:            df["period"].(uint),
+		TimestampFormat:   df["timestamp_format"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -186,9 +186,9 @@ func (h *CloudfilesServiceAttributeHandler) buildDelete(cloudfilesMap interface{
 	df := cloudfilesMap.(map[string]interface{})
 
 	return &gofastly.DeleteCloudfilesInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

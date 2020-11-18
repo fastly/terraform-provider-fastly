@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 		{
 			remote: []*gofastly.HealthCheck{
 				{
-					Version:          1,
+					ServiceVersion:   1,
 					Name:             "myhealthcheck",
 					Host:             "example1.com",
 					Path:             "/test1.txt",
@@ -67,7 +67,7 @@ func TestAccFastlyServiceV1_healthcheck_basic(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.HealthCheck{
-		Version:          1,
+		ServiceVersion:   1,
 		Name:             "example-healthcheck1",
 		Host:             "example1.com",
 		Path:             "/test1.txt",
@@ -82,7 +82,7 @@ func TestAccFastlyServiceV1_healthcheck_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.HealthCheck{
-		Version:          1,
+		ServiceVersion:   1,
 		Name:             "example-healthcheck2",
 		Host:             "example2.com",
 		Path:             "/test2.txt",
@@ -133,8 +133,8 @@ func testAccCheckFastlyServiceV1HealthCheckAttributes(service *gofastly.ServiceD
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -151,7 +151,7 @@ func testAccCheckFastlyServiceV1HealthCheckAttributes(service *gofastly.ServiceD
 				if h.Name == lh.Name {
 					// we don't know these things ahead of time, so populate them now
 					h.ServiceID = service.ID
-					h.Version = service.ActiveVersion.Number
+					h.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lh.CreatedAt = nil

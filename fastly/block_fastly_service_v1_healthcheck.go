@@ -39,9 +39,9 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 	for _, hRaw := range removeHealthCheck {
 		hf := hRaw.(map[string]interface{})
 		opts := gofastly.DeleteHealthCheckInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    hf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           hf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Healthcheck removal opts: %#v", opts)
@@ -60,8 +60,8 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 		hf := hRaw.(map[string]interface{})
 
 		opts := gofastly.CreateHealthCheckInput{
-			Service:          d.Id(),
-			Version:          latestVersion,
+			ServiceID:        d.Id(),
+			ServiceVersion:   latestVersion,
 			Name:             hf["name"].(string),
 			Host:             hf["host"].(string),
 			Path:             hf["path"].(string),
@@ -88,8 +88,8 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 func (h *HealthCheckServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
 	healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

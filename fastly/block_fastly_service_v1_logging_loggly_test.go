@@ -20,10 +20,10 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 		{
 			remote: []*gofastly.Loggly{
 				{
-					Version:       1,
-					Name:          "loggly-endpoint",
-					Token:         "token",
-					FormatVersion: 2,
+					ServiceVersion: 1,
+					Name:           "loggly-endpoint",
+					Token:          "token",
+					FormatVersion:  2,
 				},
 			},
 			local: []map[string]interface{}{
@@ -50,27 +50,27 @@ func TestAccFastlyServiceV1_logging_loggly_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Loggly{
-		Version:       1,
-		Name:          "loggly-endpoint",
-		Token:         "s3cr3t",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "loggly-endpoint",
+		Token:          "s3cr3t",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	log1_after_update := gofastly.Loggly{
-		Version:       1,
-		Name:          "loggly-endpoint",
-		Token:         "secret",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b %T",
+		ServiceVersion: 1,
+		Name:           "loggly-endpoint",
+		Token:          "secret",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b %T",
 	}
 
 	log2 := gofastly.Loggly{
-		Version:       1,
-		Name:          "another-loggly-endpoint",
-		Token:         "another-token",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "another-loggly-endpoint",
+		Token:          "another-token",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -112,9 +112,9 @@ func TestAccFastlyServiceV1_logging_loggly_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Loggly{
-		Version: 1,
-		Name:    "loggly-endpoint",
-		Token:   "s3cr3t",
+		ServiceVersion: 1,
+		Name:           "loggly-endpoint",
+		Token:          "s3cr3t",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -142,8 +142,8 @@ func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -162,7 +162,7 @@ func testAccCheckFastlyServiceV1LogglyAttributes(service *gofastly.ServiceDetail
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					el.CreatedAt = nil

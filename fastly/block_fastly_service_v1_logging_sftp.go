@@ -202,7 +202,7 @@ func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 
 		opts := h.buildCreate(sf, serviceID, latestVersion)
 
-		if opts.Password == nil && opts.SecretKey == nil {
+		if opts.Password == "" && opts.SecretKey == "" {
 			return fmt.Errorf("[ERR] Either password or secret_key must be set")
 		}
 
@@ -220,8 +220,8 @@ func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 	// Refresh SFTP.
 	log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
 	sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -301,24 +301,24 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateSFTPInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Address:           gofastly.NullString(df["address"].(string)),
-		Name:              gofastly.NullString(df["name"].(string)),
-		User:              gofastly.NullString(df["user"].(string)),
-		Path:              gofastly.NullString(df["path"].(string)),
-		PublicKey:         gofastly.NullString(df["public_key"].(string)),
-		SecretKey:         gofastly.NullString(df["secret_key"].(string)),
-		SSHKnownHosts:     gofastly.NullString(df["ssh_known_hosts"].(string)),
-		Port:              gofastly.Uint(uint(df["port"].(int))),
-		Password:          gofastly.NullString(df["password"].(string)),
-		GzipLevel:         gofastly.Uint(uint(df["gzip_level"].(int))),
-		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
-		MessageType:       gofastly.NullString(df["message_type"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Address:           df["address"].(string),
+		Name:              df["name"].(string),
+		User:              df["user"].(string),
+		Path:              df["path"].(string),
+		PublicKey:         df["public_key"].(string),
+		SecretKey:         df["secret_key"].(string),
+		SSHKnownHosts:     df["ssh_known_hosts"].(string),
+		Port:              uint(df["port"].(int)),
+		Password:          df["password"].(string),
+		GzipLevel:         uint(df["gzip_level"].(int)),
+		TimestampFormat:   df["timestamp_format"].(string),
+		MessageType:       df["message_type"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -326,8 +326,8 @@ func (h *SFTPServiceAttributeHandler) buildDelete(sftpMap interface{}, serviceID
 	df := sftpMap.(map[string]interface{})
 
 	return &gofastly.DeleteSFTPInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

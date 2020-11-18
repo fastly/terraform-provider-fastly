@@ -69,8 +69,8 @@ func (h *HoneycombServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	// Refresh Honeycomb.
 	log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
 	honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -140,15 +140,15 @@ func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap interface{},
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHoneycombInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		Token:             gofastly.NullString(df["token"].(string)),
-		Dataset:           gofastly.NullString(df["dataset"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Token:             df["token"].(string),
+		Dataset:           df["dataset"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -156,9 +156,9 @@ func (h *HoneycombServiceAttributeHandler) buildDelete(honeycombMap interface{},
 	df := honeycombMap.(map[string]interface{})
 
 	return &gofastly.DeleteHoneycombInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

@@ -69,8 +69,8 @@ func (h *LogshuttleServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	// Refresh Log Shuttle.
 	log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
 	logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -140,15 +140,15 @@ func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap interface{
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateLogshuttleInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		Token:             gofastly.NullString(df["token"].(string)),
-		URL:               gofastly.NullString(df["url"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Token:             df["token"].(string),
+		URL:               df["url"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -156,9 +156,9 @@ func (h *LogshuttleServiceAttributeHandler) buildDelete(logshuttleMap interface{
 	df := logshuttleMap.(map[string]interface{})
 
 	return &gofastly.DeleteLogshuttleInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

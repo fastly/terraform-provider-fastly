@@ -111,11 +111,12 @@ func (h *WAFServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 }
 
 func wafExists(conn *gofastly.Client, s, v, id string) bool {
+	version, _ := strconv.Atoi(v)
 
 	_, err := conn.GetWAF(&gofastly.GetWAFInput{
-		Service: s,
-		Version: v,
-		ID:      id,
+		ServiceID:      s,
+		ServiceVersion: version,
+		ID:             id,
 	})
 	if err != nil {
 		return false
@@ -148,9 +149,12 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
 
 func buildCreateWAF(WAFMap interface{}, serviceID string, ServiceVersion string) *gofastly.CreateWAFInput {
 	df := WAFMap.(map[string]interface{})
+
+	version, _ := strconv.Atoi(ServiceVersion)
+
 	opts := gofastly.CreateWAFInput{
-		Service:           serviceID,
-		Version:           ServiceVersion,
+		ServiceID:         serviceID,
+		ServiceVersion:    version,
 		ID:                df["waf_id"].(string),
 		PrefetchCondition: df["prefetch_condition"].(string),
 		Response:          df["response_object"].(string),
@@ -160,21 +164,27 @@ func buildCreateWAF(WAFMap interface{}, serviceID string, ServiceVersion string)
 
 func buildDeleteWAF(WAFMap interface{}, ServiceVersion string) *gofastly.DeleteWAFInput {
 	df := WAFMap.(map[string]interface{})
+
+	version, _ := strconv.Atoi(ServiceVersion)
+
 	opts := gofastly.DeleteWAFInput{
-		ID:      df["waf_id"].(string),
-		Version: ServiceVersion,
+		ID:             df["waf_id"].(string),
+		ServiceVersion: version,
 	}
 	return &opts
 }
 
 func buildUpdateWAF(wafMap interface{}, serviceID string, ServiceVersion string) *gofastly.UpdateWAFInput {
 	df := wafMap.(map[string]interface{})
+
+	version, _ := strconv.Atoi(ServiceVersion)
+
 	opts := gofastly.UpdateWAFInput{
-		Service:           serviceID,
-		Version:           ServiceVersion,
+		ServiceID:         gofastly.String(serviceID),
+		ServiceVersion:    gofastly.Int(version),
 		ID:                df["waf_id"].(string),
-		PrefetchCondition: df["prefetch_condition"].(string),
-		Response:          df["response_object"].(string),
+		PrefetchCondition: gofastly.String(df["prefetch_condition"].(string)),
+		Response:          gofastly.String(df["response_object"].(string)),
 	}
 	return &opts
 }

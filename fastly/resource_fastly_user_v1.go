@@ -83,8 +83,8 @@ func resourceUserV1Update(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("name") || d.HasChange("role") {
 		_, err := conn.UpdateUser(&gofastly.UpdateUserInput{
 			ID:   d.Id(),
-			Name: d.Get("name").(string),
-			Role: d.Get("role").(string),
+			Name: gofastly.String(d.Get("name").(string)),
+			Role: gofastly.String(d.Get("role").(string)),
 		})
 
 		if err != nil {

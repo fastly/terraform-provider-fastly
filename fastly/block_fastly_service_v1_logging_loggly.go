@@ -69,8 +69,8 @@ func (h *LogglyServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	// Refresh Loggly.
 	log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
 	logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -139,14 +139,14 @@ func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap interface{}, servi
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateLogglyInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		Token:             gofastly.NullString(df["token"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Token:             df["token"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -154,9 +154,9 @@ func (h *LogglyServiceAttributeHandler) buildDelete(logglyMap interface{}, servi
 	df := logglyMap.(map[string]interface{})
 
 	return &gofastly.DeleteLogglyInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

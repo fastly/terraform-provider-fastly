@@ -69,8 +69,8 @@ func (h *ElasticSearchServiceAttributeHandler) Read(d *schema.ResourceData, s *g
 	// Refresh Elasticsearch.
 	log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
 	elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -270,24 +270,24 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap inte
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateElasticsearchInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		Index:             gofastly.NullString(df["index"].(string)),
-		URL:               gofastly.NullString(df["url"].(string)),
-		Pipeline:          gofastly.NullString(df["pipeline"].(string)),
-		User:              gofastly.NullString(df["user"].(string)),
-		Password:          gofastly.NullString(df["password"].(string)),
-		RequestMaxEntries: gofastly.Uint(uint(df["request_max_entries"].(int))),
-		RequestMaxBytes:   gofastly.Uint(uint(df["request_max_bytes"].(int))),
-		TLSCACert:         gofastly.NullString(df["tls_ca_cert"].(string)),
-		TLSClientCert:     gofastly.NullString(df["tls_client_cert"].(string)),
-		TLSClientKey:      gofastly.NullString(df["tls_client_key"].(string)),
-		TLSHostname:       gofastly.NullString(df["tls_hostname"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Index:             df["index"].(string),
+		URL:               df["url"].(string),
+		Pipeline:          df["pipeline"].(string),
+		User:              df["user"].(string),
+		Password:          df["password"].(string),
+		RequestMaxEntries: uint(df["request_max_entries"].(int)),
+		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
+		TLSCACert:         df["tls_ca_cert"].(string),
+		TLSClientCert:     df["tls_client_cert"].(string),
+		TLSClientKey:      df["tls_client_key"].(string),
+		TLSHostname:       df["tls_hostname"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -295,8 +295,8 @@ func (h *ElasticSearchServiceAttributeHandler) buildDelete(elasticsearchMap inte
 	df := elasticsearchMap.(map[string]interface{})
 
 	return &gofastly.DeleteElasticsearchInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

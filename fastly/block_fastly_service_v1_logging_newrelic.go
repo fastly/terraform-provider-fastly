@@ -69,8 +69,8 @@ func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 	// Refresh NewRelic.
 	log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
 	newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -137,14 +137,14 @@ func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, s
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateNewRelicInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		Token:             gofastly.NullString(df["token"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Token:             df["token"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -152,9 +152,9 @@ func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap interface{}, s
 	df := newrelicMap.(map[string]interface{})
 
 	return &gofastly.DeleteNewRelicInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

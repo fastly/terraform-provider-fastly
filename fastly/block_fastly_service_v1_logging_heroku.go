@@ -69,8 +69,8 @@ func (h *HerokuServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	// Refresh Heroku.
 	log.Printf("[DEBUG] Refreshing Heroku logging endpoints for (%s)", d.Id())
 	herokuList, err := conn.ListHerokus(&gofastly.ListHerokusInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -140,15 +140,15 @@ func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, servi
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHerokuInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		Token:             gofastly.NullString(df["token"].(string)),
-		URL:               gofastly.NullString(df["url"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Token:             df["token"].(string),
+		URL:               df["url"].(string),
+		Format:            vla.format,
+		FormatVersion:     *vla.formatVersion,
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -156,9 +156,9 @@ func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap interface{}, servi
 	df := herokuMap.(map[string]interface{})
 
 	return &gofastly.DeleteHerokuInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

@@ -248,6 +248,9 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 				ResourceName:      "fastly_service_waf_configuration.waf",
 				ImportState:       true,
 				ImportStateVerify: true,
+
+				// Rule Exclusion should be ignored until it is in GA.
+				ImportStateVerifyIgnore: []string{"rule_exclusion"},
 			},
 			{
 				Config:   wafSvcCfg,

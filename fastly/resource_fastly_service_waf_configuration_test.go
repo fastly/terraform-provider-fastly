@@ -199,9 +199,9 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 
 	exclusions := []gofastly.WAFRuleExclusion{
 		{
-			Name:          strToPtr("index page"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     strToPtr("req.url.basename == \"index.html\""),
+			Name:          gofastly.String("index page"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.String("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2029718,
@@ -212,9 +212,9 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 			},
 		},
 		{
-			Name:          strToPtr("index php"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     strToPtr("req.url.basename == \"index.php\""),
+			Name:          gofastly.String("index php"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.String("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,
@@ -222,9 +222,9 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 			},
 		},
 		{
-			Name:          strToPtr("index asp"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
-			Condition:     strToPtr("req.url.basename == \"index.asp\""),
+			Name:          gofastly.String("index asp"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
+			Condition:     gofastly.String("req.url.basename == \"index.asp\""),
 		},
 	}
 

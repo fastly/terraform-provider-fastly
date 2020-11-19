@@ -95,6 +95,37 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 			Optional:    true,
 			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or blockAttributes Subject Alternative Name (SAN).",
 		},
+
+		"parse_log_keyvals": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Parse key-value pairs within the log formatWhether to use TLS for secure logging.",
+		},
+
+		"max_batch_size": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "The maximum size of the log batch in bytes.",
+		},
+
+		"auth_method": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "SASL authentication method. Valid values are: plain, scram-sha-256, scram-sha-512.",
+		},
+
+		"username": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "SASL authentication username",
+		},
+
+		"password": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "SASL authentication password",
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -251,6 +282,11 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 			"format_version":     s.FormatVersion,
 			"placement":          s.Placement,
 			"response_condition": s.ResponseCondition,
+			"parse_log_keyvals":  s.ParseLogKeyvals,
+			"max_batch_size":     s.RequestMaxBytes,
+			"auth_method":        s.AuthMethod,
+			"username":           s.User,
+			"password":           s.Password,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -287,6 +323,11 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 		FormatVersion:     vla.formatVersion,
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ParseLogKeyvals:   fastly.CBool(df["parse_log_keyvals"].(bool)),
+		RequestMaxBytes:   fastly.Uint(uint(df["max_batch_size"].(int))),
+		AuthMethod:        fastly.NullString(df["auth_method"].(string)),
+		User:              fastly.NullString(df["username"].(string)),
+		Password:          fastly.NullString(df["password"].(string)),
 	}
 }
 

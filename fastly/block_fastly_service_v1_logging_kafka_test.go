@@ -35,6 +35,11 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
 					FormatVersion:     2,
 					Placement:         "none",
+					ParseLogKeyvals:   true,
+					RequestMaxBytes:   12345,
+					AuthMethod:        "scram-sha-512",
+					User:              "user",
+					Password:          "password",
 				},
 			},
 			local: []map[string]interface{}{
@@ -53,6 +58,11 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
 					"placement":          "none",
 					"format_version":     uint(2),
+					"parse_log_keyvals":  true,
+					"max_batch_size":     uint(12345),
+					"auth_method":        "scram-sha-512",
+					"username":           "user",
+					"password":           "password",
 				},
 			},
 		},
@@ -87,6 +97,11 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
 		FormatVersion:     2,
 		Placement:         "none",
+		ParseLogKeyvals:   true,
+		RequestMaxBytes:   12345,
+		AuthMethod:        "plain",
+		User:              "user",
+		Password:          "password",
 	}
 
 	log1_after_update := gofastly.Kafka{
@@ -105,6 +120,11 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
 		FormatVersion:     2,
 		Placement:         "waf_debug",
+		ParseLogKeyvals:   true,
+		RequestMaxBytes:   12345,
+		AuthMethod:        "scram-sha-256",
+		User:              "user",
+		Password:          "password",
 	}
 
 	log2 := gofastly.Kafka{
@@ -123,6 +143,11 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
 		FormatVersion:     2,
 		Placement:         "none",
+		ParseLogKeyvals:   true,
+		RequestMaxBytes:   12345,
+		AuthMethod:        "scram-sha-256",
+		User:              "user",
+		Password:          "password",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -327,6 +352,11 @@ resource "fastly_service_v1" "foo" {
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
 		placement          = "none"
+		parse_log_keyvals  = true
+		max_batch_size     = 12345
+		auth_method        = "plain"
+		username           = "user"
+		password           = "password"
 	}
 
 	force_destroy = true
@@ -371,6 +401,11 @@ resource "fastly_service_v1" "foo" {
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
 		placement          = "waf_debug"
+		parse_log_keyvals  = true
+		max_batch_size     = 12345
+		auth_method        = "scram-sha-256"
+		username           = "user"
+		password           = "password"
 	}
 
 	logging_kafka {
@@ -388,6 +423,11 @@ resource "fastly_service_v1" "foo" {
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
 		placement          = "none"
+		parse_log_keyvals  = true
+		max_batch_size     = 12345
+		auth_method        = "scram-sha-256"
+		username           = "user"
+		password           = "password"
 	}
 
 	force_destroy = true

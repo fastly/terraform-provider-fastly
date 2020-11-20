@@ -59,7 +59,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					"placement":          "none",
 					"format_version":     uint(2),
 					"parse_log_keyvals":  true,
-					"max_batch_size":     uint(12345),
+					"request_max_bytes":  uint(12345),
 					"auth_method":        "scram-sha-512",
 					"username":           "user",
 					"password":           "password",
@@ -353,7 +353,7 @@ resource "fastly_service_v1" "foo" {
 		format_version     = 2
 		placement          = "none"
 		parse_log_keyvals  = true
-		max_batch_size     = 12345
+		request_max_bytes  = 12345
 		auth_method        = "plain"
 		username           = "user"
 		password           = "password"
@@ -402,7 +402,7 @@ resource "fastly_service_v1" "foo" {
 		format_version     = 2
 		placement          = "waf_debug"
 		parse_log_keyvals  = true
-		max_batch_size     = 12345
+		request_max_bytes  = 12345
 		auth_method        = "scram-sha-256"
 		username           = "user"
 		password           = "password"
@@ -424,7 +424,7 @@ resource "fastly_service_v1" "foo" {
 		format_version     = 2
 		placement          = "none"
 		parse_log_keyvals  = true
-		max_batch_size     = 12345
+		request_max_bytes  = 12345
 		auth_method        = "scram-sha-256"
 		username           = "user"
 		password           = "password"

@@ -53,7 +53,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 		"required_acks": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Description: "The Number of acknowledgements blockAttributes leader must receive before blockAttributes write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
+			Description: "The Number of acknowledgements a leader must receive before a write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
 		},
 
 		"use_tls": {
@@ -93,38 +93,38 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or blockAttributes Subject Alternative Name (SAN).",
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
 		},
 
 		"parse_log_keyvals": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Parse key-value pairs within the log formatWhether to use TLS for secure logging.",
+			Description: "Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers.",
 		},
 
-		"max_batch_size": {
+		"request_max_bytes": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "The maximum size of the log batch in bytes.",
+			Description: "Maximum size of log batch, if non-zero. Defaults to 0 for unbounded.",
 		},
 
 		"auth_method": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "SASL authentication method. Valid values are: plain, scram-sha-256, scram-sha-512.",
+			Description: "SASL authentication method. One of: plain, scram-sha-256, scram-sha-512.",
 		},
 
 		"username": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "SASL authentication username",
+			Description: "SASL User.",
 		},
 
 		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "SASL authentication password",
+			Description: "SASL Pass.",
 		},
 	}
 
@@ -283,7 +283,7 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 			"placement":          s.Placement,
 			"response_condition": s.ResponseCondition,
 			"parse_log_keyvals":  s.ParseLogKeyvals,
-			"max_batch_size":     s.RequestMaxBytes,
+			"request_max_bytes":  s.RequestMaxBytes,
 			"auth_method":        s.AuthMethod,
 			"username":           s.User,
 			"password":           s.Password,
@@ -324,7 +324,7 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 		Placement:         gofastly.NullString(vla.placement),
 		ResponseCondition: gofastly.NullString(vla.responseCondition),
 		ParseLogKeyvals:   fastly.CBool(df["parse_log_keyvals"].(bool)),
-		RequestMaxBytes:   fastly.Uint(uint(df["max_batch_size"].(int))),
+		RequestMaxBytes:   fastly.Uint(uint(df["request_max_bytes"].(int))),
 		AuthMethod:        fastly.NullString(df["auth_method"].(string)),
 		User:              fastly.NullString(df["username"].(string)),
 		Password:          fastly.NullString(df["password"].(string)),

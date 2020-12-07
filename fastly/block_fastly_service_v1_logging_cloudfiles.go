@@ -176,7 +176,7 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{
 		Period:            uint(df["period"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

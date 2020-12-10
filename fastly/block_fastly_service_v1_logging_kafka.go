@@ -115,7 +115,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "SASL authentication method. One of: plain, scram-sha-256, scram-sha-512.",
 		},
 
-		"username": {
+		"user": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "SASL User.",
@@ -285,7 +285,7 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 			"parse_log_keyvals":  s.ParseLogKeyvals,
 			"request_max_bytes":  s.RequestMaxBytes,
 			"auth_method":        s.AuthMethod,
-			"username":           s.User,
+			"user":               s.User,
 			"password":           s.Password,
 		}
 
@@ -326,7 +326,7 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 		ParseLogKeyvals:   fastly.CBool(df["parse_log_keyvals"].(bool)),
 		RequestMaxBytes:   fastly.Uint(uint(df["request_max_bytes"].(int))),
 		AuthMethod:        fastly.NullString(df["auth_method"].(string)),
-		User:              fastly.NullString(df["username"].(string)),
+		User:              fastly.NullString(df["user"].(string)),
 		Password:          fastly.NullString(df["password"].(string)),
 	}
 }

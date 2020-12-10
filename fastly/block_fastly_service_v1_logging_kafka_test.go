@@ -61,7 +61,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					"parse_log_keyvals":  true,
 					"request_max_bytes":  uint(12345),
 					"auth_method":        "scram-sha-512",
-					"username":           "user",
+					"user":               "user",
 					"password":           "password",
 				},
 			},
@@ -355,7 +355,7 @@ resource "fastly_service_v1" "foo" {
 		parse_log_keyvals  = true
 		request_max_bytes  = 12345
 		auth_method        = "plain"
-		username           = "user"
+		user               = "user"
 		password           = "password"
 	}
 
@@ -404,7 +404,7 @@ resource "fastly_service_v1" "foo" {
 		parse_log_keyvals  = true
 		request_max_bytes  = 12345
 		auth_method        = "scram-sha-256"
-		username           = "user"
+		user               = "user"
 		password           = "password"
 	}
 
@@ -426,7 +426,7 @@ resource "fastly_service_v1" "foo" {
 		parse_log_keyvals  = true
 		request_max_bytes  = 12345
 		auth_method        = "scram-sha-256"
-		username           = "user"
+		user               = "user"
 		password           = "password"
 	}
 

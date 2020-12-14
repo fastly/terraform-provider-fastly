@@ -35,6 +35,9 @@ func Provider() terraform.ResourceProvider {
 			"fastly_service_dynamic_snippet_content_v1": resourceServiceDynamicSnippetContentV1(),
 			"fastly_user_v1":                            resourceUserV1(),
 			"fastly_service_waf_configuration":          resourceServiceWAFConfigurationV1(),
+			"fastly_tls_activation_v1":                  resourceTLSActivationV1(),
+			"fastly_custom_tls_certificate_v1":          resourceCustomTLSCertificateV1(),
+			"fastly_private_key_v1":                     resourcePrivateKeyV1(),
 		},
 	}
 

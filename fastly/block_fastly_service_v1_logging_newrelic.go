@@ -142,7 +142,7 @@ func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, s
 		Name:              df["name"].(string),
 		Token:             df["token"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

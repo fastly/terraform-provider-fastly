@@ -207,7 +207,7 @@ func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap interface{}, ser
 		Token:             df["token"].(string),
 		Region:            df["region"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

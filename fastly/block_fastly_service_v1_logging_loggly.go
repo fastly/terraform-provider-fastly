@@ -144,7 +144,7 @@ func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap interface{}, servi
 		Name:              df["name"].(string),
 		Token:             df["token"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

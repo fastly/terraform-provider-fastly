@@ -220,7 +220,7 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interf
 		ProjectID:         df["project_id"].(string),
 		Topic:             df["topic"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

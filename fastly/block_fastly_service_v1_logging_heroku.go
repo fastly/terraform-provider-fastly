@@ -146,7 +146,7 @@ func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, servi
 		Token:             df["token"].(string),
 		URL:               df["url"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

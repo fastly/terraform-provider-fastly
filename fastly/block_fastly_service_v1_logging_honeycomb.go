@@ -146,7 +146,7 @@ func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap interface{},
 		Token:             df["token"].(string),
 		Dataset:           df["dataset"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

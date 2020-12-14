@@ -61,7 +61,7 @@ func (h *WAFServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 
 		var err error
 		if wafExists(conn, serviceID, serviceVersion, wf["waf_id"].(string)) {
-			opts := buildUpdateWAF(wf, serviceID, serviceVersion)
+			opts := buildUpdateWAF(d, wf, serviceID, serviceVersion)
 			log.Printf("[DEBUG] Fastly WAF update opts: %#v", opts)
 			_, err = conn.UpdateWAF(opts)
 		} else {
@@ -174,17 +174,26 @@ func buildDeleteWAF(WAFMap interface{}, ServiceVersion string) *gofastly.DeleteW
 	return &opts
 }
 
-func buildUpdateWAF(wafMap interface{}, serviceID string, ServiceVersion string) *gofastly.UpdateWAFInput {
+func buildUpdateWAF(d *schema.ResourceData, wafMap interface{}, serviceID string, ServiceVersion string) *gofastly.UpdateWAFInput {
 	df := wafMap.(map[string]interface{})
 
 	version, _ := strconv.Atoi(ServiceVersion)
 
-	opts := gofastly.UpdateWAFInput{
-		ServiceID:         gofastly.String(serviceID),
-		ServiceVersion:    gofastly.Int(version),
-		ID:                df["waf_id"].(string),
-		PrefetchCondition: gofastly.String(df["prefetch_condition"].(string)),
-		Response:          gofastly.String(df["response_object"].(string)),
+	input := gofastly.UpdateWAFInput{
+		ServiceID:      gofastly.String(serviceID),
+		ServiceVersion: gofastly.Int(version),
+		ID:             df["waf_id"].(string),
 	}
-	return &opts
+
+	if v, ok := d.GetOk("prefetch_condition"); ok {
+		input.PrefetchCondition = gofastly.String(v.(string))
+	}
+	if v, ok := d.GetOk("response_object"); ok {
+		input.Response = gofastly.String(v.(string))
+	}
+	if v, ok := d.GetOk("disabled"); ok {
+		input.Disabled = gofastly.Bool(v.(bool))
+	}
+
+	return &input
 }

@@ -202,7 +202,8 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1DirectorsConfig_update(name, domainName1),
+				ExpectNonEmptyPlan: true,
+				Config:             testAccServiceV1DirectorsConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(
@@ -221,7 +222,6 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director, director_backends []*gofastly.DirectorBackend) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      service.ID,

@@ -77,6 +77,12 @@ The following example uses a regular expression to execute a grouping of basic a
 $ make testacc TESTARGS='-run=TestAccFastlyServiceV1_.*_basic'
 ```
 
+In order to run the tests with extra debugging context, prefix the `make` command with `TF_LOG` (see the [terraform documentation](https://www.terraform.io/docs/internals/debugging.html) for details).
+
+```sh
+$ TF_LOG=trace make testacc
+```
+
 Building The Documentation
 --------------------------
 

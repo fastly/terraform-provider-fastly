@@ -283,7 +283,7 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 		TLSClientKey:      df["tls_client_key"].(string),
 		TLSHostname:       df["tls_hostname"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

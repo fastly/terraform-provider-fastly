@@ -205,7 +205,7 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, servi
 		Region:            df["region"].(string),
 		Token:             df["token"].(string),
 		Format:            vla.format,
-		FormatVersion:     *vla.formatVersion,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
 	}

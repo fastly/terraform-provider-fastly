@@ -7,16 +7,18 @@ import (
 	"time"
 )
 
-// Scalyr represents a scalyr response from the Fastly API.
-type Scalyr struct {
+// Kinesis represents a Kinesis response from the Fastly API.
+type Kinesis struct {
 	ServiceID      string `mapstructure:"service_id"`
 	ServiceVersion int    `mapstructure:"version"`
 
 	Name              string     `mapstructure:"name"`
+	StreamName        string     `mapstructure:"topic"`
+	Region            string     `mapstructure:"region"`
+	AccessKey         string     `mapstructure:"access_key"`
+	SecretKey         string     `mapstructure:"secret_key"`
 	Format            string     `mapstructure:"format"`
 	FormatVersion     uint       `mapstructure:"format_version"`
-	Token             string     `mapstructure:"token"`
-	Region            string     `mapstructure:"region"`
 	ResponseCondition string     `mapstructure:"response_condition"`
 	Placement         string     `mapstructure:"placement"`
 	CreatedAt         *time.Time `mapstructure:"created_at"`
@@ -24,18 +26,18 @@ type Scalyr struct {
 	DeletedAt         *time.Time `mapstructure:"deleted_at"`
 }
 
-// scalyrByName is a sortable list of scalyrs.
-type scalyrsByName []*Scalyr
+// kinesesByName is a sortable list of Kineses.
+type kinesesByName []*Kinesis
 
 // Len, Swap, and Less implement the sortable interface.
-func (s scalyrsByName) Len() int      { return len(s) }
-func (s scalyrsByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s scalyrsByName) Less(i, j int) bool {
+func (s kinesesByName) Len() int      { return len(s) }
+func (s kinesesByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s kinesesByName) Less(i, j int) bool {
 	return s[i].Name < s[j].Name
 }
 
-// ListScalyrsInput is used as input to the ListScalyrs function.
-type ListScalyrsInput struct {
+// ListKinesesInput is used as input to the ListKineses function.
+type ListKinesesInput struct {
 	// ServiceID is the ID of the service (required).
 	ServiceID string
 
@@ -43,8 +45,8 @@ type ListScalyrsInput struct {
 	ServiceVersion int
 }
 
-// ListScalyrs returns the list of scalyrs for the configuration version.
-func (c *Client) ListScalyrs(i *ListScalyrsInput) ([]*Scalyr, error) {
+// ListKineses returns the list of Kineses for the configuration version.
+func (c *Client) ListKineses(i *ListKinesesInput) ([]*Kinesis, error) {
 	if i.ServiceID == "" {
 		return nil, ErrMissingServiceID
 	}
@@ -53,22 +55,22 @@ func (c *Client) ListScalyrs(i *ListScalyrsInput) ([]*Scalyr, error) {
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/logging/scalyr", i.ServiceID, i.ServiceVersion)
+	path := fmt.Sprintf("/service/%s/version/%d/logging/kinesis", i.ServiceID, i.ServiceVersion)
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var ss []*Scalyr
-	if err := decodeBodyMap(resp.Body, &ss); err != nil {
+	var kineses []*Kinesis
+	if err := decodeBodyMap(resp.Body, &kineses); err != nil {
 		return nil, err
 	}
-	sort.Stable(scalyrsByName(ss))
-	return ss, nil
+	sort.Stable(kinesesByName(kineses))
+	return kineses, nil
 }
 
-// CreateScalyrInput is used as input to the CreateScalyr function.
-type CreateScalyrInput struct {
+// CreateKinesisInput is used as input to the CreateKinesis function.
+type CreateKinesisInput struct {
 	// ServiceID is the ID of the service (required).
 	ServiceID string
 
@@ -76,16 +78,18 @@ type CreateScalyrInput struct {
 	ServiceVersion int
 
 	Name              string `form:"name,omitempty"`
+	StreamName        string `form:"topic,omitempty"`
+	Region            string `form:"region,omitempty"`
+	AccessKey         string `form:"access_key,omitempty"`
+	SecretKey         string `form:"secret_key,omitempty"`
 	Format            string `form:"format,omitempty"`
 	FormatVersion     uint   `form:"format_version,omitempty"`
-	Token             string `form:"token,omitempty"`
-	Region            string `form:"region,omitempty"`
 	ResponseCondition string `form:"response_condition,omitempty"`
 	Placement         string `form:"placement,omitempty"`
 }
 
-// CreateScalyr creates a new Fastly scalyr.
-func (c *Client) CreateScalyr(i *CreateScalyrInput) (*Scalyr, error) {
+// CreateKinesis creates a new Fastly Kinesis.
+func (c *Client) CreateKinesis(i *CreateKinesisInput) (*Kinesis, error) {
 	if i.ServiceID == "" {
 		return nil, ErrMissingServiceID
 	}
@@ -94,33 +98,33 @@ func (c *Client) CreateScalyr(i *CreateScalyrInput) (*Scalyr, error) {
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/logging/scalyr", i.ServiceID, i.ServiceVersion)
+	path := fmt.Sprintf("/service/%s/version/%d/logging/kinesis", i.ServiceID, i.ServiceVersion)
 	resp, err := c.PostForm(path, i, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var s *Scalyr
-	if err := decodeBodyMap(resp.Body, &s); err != nil {
+	var kinesis *Kinesis
+	if err := decodeBodyMap(resp.Body, &kinesis); err != nil {
 		return nil, err
 	}
-	return s, nil
+	return kinesis, nil
 }
 
-// GetScalyrInput is used as input to the GetScalyr function.
-type GetScalyrInput struct {
+// GetKinesisInput is used as input to the GetKinesis function.
+type GetKinesisInput struct {
 	// ServiceID is the ID of the service (required).
 	ServiceID string
 
 	// ServiceVersion is the specific configuration version (required).
 	ServiceVersion int
 
-	// Name is the name of the scalyr to fetch.
+	// Name is the name of the Kinesis logging object to fetch (required).
 	Name string
 }
 
-// GetScalyr gets the scalyr configuration with the given parameters.
-func (c *Client) GetScalyr(i *GetScalyrInput) (*Scalyr, error) {
+// GetKinesis gets the Kinesis configuration with the given parameters.
+func (c *Client) GetKinesis(i *GetKinesisInput) (*Kinesis, error) {
 	if i.ServiceID == "" {
 		return nil, ErrMissingServiceID
 	}
@@ -133,41 +137,43 @@ func (c *Client) GetScalyr(i *GetScalyrInput) (*Scalyr, error) {
 		return nil, ErrMissingName
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/logging/scalyr/%s", i.ServiceID, i.ServiceVersion, url.PathEscape(i.Name))
+	path := fmt.Sprintf("/service/%s/version/%d/logging/kinesis/%s", i.ServiceID, i.ServiceVersion, url.PathEscape(i.Name))
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var s *Scalyr
-	if err := decodeBodyMap(resp.Body, &s); err != nil {
+	var kinesis *Kinesis
+	if err := decodeBodyMap(resp.Body, &kinesis); err != nil {
 		return nil, err
 	}
-	return s, nil
+	return kinesis, nil
 }
 
-// UpdateScalyrInput is used as input to the UpdateScalyr function.
-type UpdateScalyrInput struct {
+// UpdateKinesisInput is used as input to the UpdateKinesis function.
+type UpdateKinesisInput struct {
 	// ServiceID is the ID of the service (required).
 	ServiceID string
 
 	// ServiceVersion is the specific configuration version (required).
 	ServiceVersion int
 
-	// Name is the name of the scalyr to update.
+	// Name is the name of the Kinesis logging object to update (required).
 	Name string
 
 	NewName           *string `form:"name,omitempty"`
+	StreamName        *string `form:"topic,omitempty"`
+	Region            *string `form:"region,omitempty"`
+	AccessKey         *string `form:"access_key,omitempty"`
+	SecretKey         *string `form:"secret_key,omitempty"`
 	Format            *string `form:"format,omitempty"`
 	FormatVersion     *uint   `form:"format_version,omitempty"`
-	Token             *string `form:"token,omitempty"`
-	Region            *string `form:"region,omitempty"`
 	ResponseCondition *string `form:"response_condition,omitempty"`
 	Placement         *string `form:"placement,omitempty"`
 }
 
-// UpdateScalyr updates a specific scalyr.
-func (c *Client) UpdateScalyr(i *UpdateScalyrInput) (*Scalyr, error) {
+// UpdateKinesis updates a specific Kinesis.
+func (c *Client) UpdateKinesis(i *UpdateKinesisInput) (*Kinesis, error) {
 	if i.ServiceID == "" {
 		return nil, ErrMissingServiceID
 	}
@@ -180,33 +186,33 @@ func (c *Client) UpdateScalyr(i *UpdateScalyrInput) (*Scalyr, error) {
 		return nil, ErrMissingName
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/logging/scalyr/%s", i.ServiceID, i.ServiceVersion, url.PathEscape(i.Name))
+	path := fmt.Sprintf("/service/%s/version/%d/logging/kinesis/%s", i.ServiceID, i.ServiceVersion, url.PathEscape(i.Name))
 	resp, err := c.PutForm(path, i, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var s *Scalyr
-	if err := decodeBodyMap(resp.Body, &s); err != nil {
+	var kinesis *Kinesis
+	if err := decodeBodyMap(resp.Body, &kinesis); err != nil {
 		return nil, err
 	}
-	return s, nil
+	return kinesis, nil
 }
 
-// DeleteScalyrInput is the input parameter to DeleteScalyr.
-type DeleteScalyrInput struct {
+// DeleteKinesisInput is the input parameter to DeleteKinesis.
+type DeleteKinesisInput struct {
 	// ServiceID is the ID of the service (required).
 	ServiceID string
 
 	// ServiceVersion is the specific configuration version (required).
 	ServiceVersion int
 
-	// Name is the name of the scalyr to delete (required).
+	// Name is the name of the Kinesis logging object to delete (required).
 	Name string
 }
 
-// DeleteScalyr deletes the given scalyr version.
-func (c *Client) DeleteScalyr(i *DeleteScalyrInput) error {
+// DeleteKinesis deletes the given Kinesis version.
+func (c *Client) DeleteKinesis(i *DeleteKinesisInput) error {
 	if i.ServiceID == "" {
 		return ErrMissingServiceID
 	}
@@ -219,7 +225,7 @@ func (c *Client) DeleteScalyr(i *DeleteScalyrInput) error {
 		return ErrMissingName
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/logging/scalyr/%s", i.ServiceID, i.ServiceVersion, url.PathEscape(i.Name))
+	path := fmt.Sprintf("/service/%s/version/%d/logging/kinesis/%s", i.ServiceID, i.ServiceVersion, url.PathEscape(i.Name))
 	resp, err := c.Delete(path, nil)
 	if err != nil {
 		return err
@@ -230,7 +236,7 @@ func (c *Client) DeleteScalyr(i *DeleteScalyrInput) error {
 		return err
 	}
 	if !r.Ok() {
-		return ErrStatusNotOk
+		return ErrNotOK
 	}
 	return nil
 }

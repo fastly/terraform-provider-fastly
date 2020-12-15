@@ -202,8 +202,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 			},
 
 			{
-				ExpectNonEmptyPlan: true,
-				Config:             testAccServiceV1DirectorsConfig_update(name, domainName1),
+				Config: testAccServiceV1DirectorsConfig_update(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(

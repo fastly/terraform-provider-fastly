@@ -62,7 +62,7 @@ func (h *WAFServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	serviceVersion := strconv.Itoa(latestVersion)
 	oldWAFVal, newWAFVal := d.GetChange(h.GetKey())
 
-	if len(newWAFVal.([]interface{})) > 0 {
+	if len(newWAFVal.([]interface{})) == 1 {
 		wf := newWAFVal.([]interface{})[0].(map[string]interface{})
 
 		var err error
@@ -191,13 +191,17 @@ func buildUpdateWAF(d *schema.ResourceData, wafMap interface{}, serviceID string
 		ID:             df["waf_id"].(string),
 	}
 
-	if v, ok := d.GetOk("prefetch_condition"); ok {
+	// NOTE: to access the WAF data we need to link to specific list index. This
+	// isn't ideal and if we already know that a WAF can only have MaxItems: 1,
+	// then we should probably move away from it being a schema.TypeList.
+
+	if v, ok := d.GetOk("waf.0.prefetch_condition"); ok {
 		input.PrefetchCondition = gofastly.String(v.(string))
 	}
-	if v, ok := d.GetOk("response_object"); ok {
+	if v, ok := d.GetOk("waf.0.response_object"); ok {
 		input.Response = gofastly.String(v.(string))
 	}
-	if v, ok := d.GetOk("disabled"); ok {
+	if v, ok := d.GetOk("waf.0.disabled"); ok {
 		input.Disabled = gofastly.Bool(v.(bool))
 	}
 

@@ -450,7 +450,12 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 	d.Set("version_comment", s.Version.Comment)
 	d.Set("active_version", s.ActiveVersion.Number)
 
-	if s.ActiveVersion.Number == 0 && isImport {
+	// If we are importing or `activate` is set to false, temporarily set the
+	// service.ActiveVersion number to the latest version supplied via the get
+	// service version details call. This is to ensure we still read all of the
+	// state below.
+	isInactive := d.Get("activate").(bool) == false
+	if s.ActiveVersion.Number == 0 && isImport || isInactive {
 		s.ActiveVersion.Number = s.Version.Number
 	}
 

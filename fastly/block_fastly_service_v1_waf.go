@@ -44,6 +44,12 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 					Computed:    true,
 					Description: "The Web Application Firewall (WAF) ID",
 				},
+				"disabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "A flag used to completely disable a Web Application Firewall. This is intended to be used as an emergency.",
+				},
 			},
 		},
 	}

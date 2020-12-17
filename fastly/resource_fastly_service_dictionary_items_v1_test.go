@@ -327,7 +327,6 @@ func testAccCheckFastlyServiceDictionaryItemsV1DoesNotExists(n string) resource.
 
 func testAccCheckFastlyServiceDictionaryItemsV1RemoteState(service *gofastly.ServiceDetail, name, dictName string, expectedItems map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -335,7 +334,7 @@ func testAccCheckFastlyServiceDictionaryItemsV1RemoteState(service *gofastly.Ser
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
 			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceVersion: service.Version.Number,
 			Name:           dictName,
 		})
 

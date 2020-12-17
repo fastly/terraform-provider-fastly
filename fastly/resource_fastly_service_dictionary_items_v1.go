@@ -164,8 +164,7 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 
 	var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
 
-	for key, _ := range items {
-
+	for key := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
 			Operation: gofastly.DeleteBatchOperation,
 			ItemKey:   key,

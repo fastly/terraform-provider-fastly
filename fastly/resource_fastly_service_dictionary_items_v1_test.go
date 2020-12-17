@@ -74,6 +74,16 @@ func TestAccFastlyServiceDictionaryItemV1_create(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceDictionaryItemV1_create_inactive_service validates that
+// when creating a new inactive service consisting of a dictionary along with a
+// predefined list of items to populate it with, are applied successfully
+// instead of generating an error suggesting the dictionary ID was missing.
+//
+// NOTE: This error stemmed from a bug in our code (#345) where we discovered
+// that if a configuration has the activate field set to false AND it has no
+// previous active version, then the state wasn't being read. This manifested
+// itself as a runtime error in certain situations, such as another resource
+// referencing the state in its configuration.
 func TestAccFastlyServiceDictionaryItemV1_create_inactive_service(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

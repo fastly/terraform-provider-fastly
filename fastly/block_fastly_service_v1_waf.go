@@ -48,7 +48,7 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: "A flag used to completely disable a Web Application Firewall. This is intended to be used as an emergency.",
+					Description: "A flag used to completely disable a Web Application Firewall. This is intended to only be used in an emergency.",
 				},
 			},
 		},

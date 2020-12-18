@@ -106,7 +106,7 @@ func (h *SetDiff) computeKey(elem interface{}) (interface{}, error) {
 	return key, nil
 }
 
-// Filter filters out unmodified fields of a map data structure by ranging over
+// Filter filters out unmodified fields of a Set elements map data structure by ranging over
 // the original data and comparing each field against the new data.
 func (h *SetDiff) Filter(modified map[string]interface{}, oldSet *schema.Set) map[string]interface{} {
 	elements := oldSet.List()

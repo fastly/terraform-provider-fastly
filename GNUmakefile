@@ -5,7 +5,6 @@ PKG_NAME=fastly
 FULL_PKG_NAME=github.com/fastly/terraform-provider-fastly
 VERSION_PLACEHOLDER=version.ProviderVersion
 VERSION=$(shell git describe --tags --always)
-TF_LOG ?= "ERROR"
 
 default: build
 
@@ -24,7 +23,7 @@ test:
 # https://www.terraform.io/docs/internals/debugging.html
 #
 testacc: fmtcheck
-	TF_LOG=$(TF_LOG) TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
 
 vet:
 	@echo "go vet ."

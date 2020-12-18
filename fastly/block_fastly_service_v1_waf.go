@@ -181,9 +181,12 @@ func buildUpdateWAF(d *schema.ResourceData, wafMap interface{}, serviceID string
 		ID:             df["waf_id"].(string),
 	}
 
-	// NOTE: to access the WAF data we need to link to specific list index. This
-	// isn't ideal and if we already know that a WAF can only have MaxItems: 1,
-	// then we should probably move away from it being a schema.TypeList.
+	// NOTE: to access the WAF data we need to link to a specific list index.
+	// This is because the schema defines the service as being of TypeList.
+	//
+	// Although there should only ever be one service (hence MaxItems: 1) we are
+	// unable to change the schema to a TypeMap as that would contrain the map's
+	// value to a single type (e.g. TypeString, TypeBool, TypeInt, or TypeFloat).
 
 	if v, ok := d.GetOk("waf.0.prefetch_condition"); ok {
 		input.PrefetchCondition = gofastly.String(v.(string))

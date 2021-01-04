@@ -24,10 +24,10 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 			remote: []*gofastly.WAFRuleExclusion{
 				{
 					ID:            "abc",
-					Number:        intToPtr(1),
-					Name:          strToPtr("index page"),
-					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-					Condition:     strToPtr("req.url.basename == \"index.html\""),
+					Number:        gofastly.Int(1),
+					Name:          gofastly.String("index page"),
+					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+					Condition:     gofastly.String("req.url.basename == \"index.html\""),
 					Rules: []*gofastly.WAFRule{
 						{
 							ID:       "2029718",
@@ -41,10 +41,10 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 				},
 				{
 					ID:            "def",
-					Number:        intToPtr(2),
-					Name:          strToPtr("index php"),
-					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-					Condition:     strToPtr("req.url.basename == \"index.php\""),
+					Number:        gofastly.Int(2),
+					Name:          gofastly.String("index php"),
+					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+					Condition:     gofastly.String("req.url.basename == \"index.php\""),
 					Rules: []*gofastly.WAFRule{
 						{
 							ID:       "1010070",
@@ -54,10 +54,10 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 				},
 				{
 					ID:            "ghi",
-					Number:        intToPtr(3),
-					Name:          strToPtr("index asp"),
-					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
-					Condition:     strToPtr("req.url.basename == \"index.asp\""),
+					Number:        gofastly.Int(3),
+					Name:          gofastly.String("index asp"),
+					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
+					Condition:     gofastly.String("req.url.basename == \"index.asp\""),
 				},
 			},
 			local: []map[string]interface{}{
@@ -101,9 +101,9 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 		{
 			exclusions: []gofastly.WAFRuleExclusion{
 				{
-					Name:          strToPtr("index page"),
-					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
-					Condition:     strToPtr("req.url.basename == \"index.html\""),
+					Name:          gofastly.String("index page"),
+					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
+					Condition:     gofastly.String("req.url.basename == \"index.html\""),
 					Rules: []*gofastly.WAFRule{
 						{
 							ModSecID: 2029718,
@@ -116,9 +116,9 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 		{
 			exclusions: []gofastly.WAFRuleExclusion{
 				{
-					Name:          strToPtr("index page"),
-					ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-					Condition:     strToPtr("req.url.basename == \"index.html\""),
+					Name:          gofastly.String("index page"),
+					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+					Condition:     gofastly.String("req.url.basename == \"index.html\""),
 				},
 			},
 			expectedMessage: "must set \"modsec_rule_ids\" with \"rule\" exclusion type in exclusion \"index page\"",
@@ -171,9 +171,9 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 
 	exclusions1 := []gofastly.WAFRuleExclusion{
 		{
-			Name:          strToPtr("index page"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     strToPtr("req.url.basename == \"index.html\""),
+			Name:          gofastly.String("index page"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.String("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2029718,
@@ -184,9 +184,9 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          strToPtr("index php"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     strToPtr("req.url.basename == \"index.php\""),
+			Name:          gofastly.String("index php"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.String("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,
@@ -194,17 +194,17 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          strToPtr("index asp"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeWAF),
-			Condition:     strToPtr("req.url.basename == \"index.asp\""),
+			Name:          gofastly.String("index asp"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
+			Condition:     gofastly.String("req.url.basename == \"index.asp\""),
 		},
 	}
 
 	exclusions2 := []gofastly.WAFRuleExclusion{
 		{
-			Name:          strToPtr("index page"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     strToPtr("req.url.basename == \"index.html\""),
+			Name:          gofastly.String("index page"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.String("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 21032607,
@@ -212,9 +212,9 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          strToPtr("index php"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     strToPtr("req.url.basename == \"index.php\""),
+			Name:          gofastly.String("index php"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.String("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,
@@ -222,9 +222,9 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          strToPtr("index new page"),
-			ExclusionType: strToPtr(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     strToPtr("req.url.basename == \"index-new.html\""),
+			Name:          gofastly.String("index new page"),
+			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.String("req.url.basename == \"index-new.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,

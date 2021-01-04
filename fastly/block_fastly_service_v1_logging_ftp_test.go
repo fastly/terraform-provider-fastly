@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 		{
 			remote: []*gofastly.FTP{
 				{
-					Version:         1,
+					ServiceVersion:  1,
 					Name:            "ftp-endpoint",
 					Address:         "ftp.example.com",
 					Username:        "username",
@@ -72,7 +72,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.FTP{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "ftp-endpoint",
 		Address:         "ftp.example.com",
 		Username:        "user",
@@ -90,7 +90,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.FTP{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "ftp-endpoint",
 		Address:         "ftp2.example.com",
 		Username:        "user",
@@ -108,7 +108,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.FTP{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "another-ftp-endpoint",
 		Address:         "ftp.example.com",
 		Username:        "user",
@@ -163,7 +163,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.FTP{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "ftp-endpoint",
 		Address:         "ftp.example.com",
 		Username:        "user",
@@ -201,8 +201,8 @@ func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, f
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -221,7 +221,7 @@ func testAccCheckFastlyServiceV1FTPAttributes(service *gofastly.ServiceDetail, f
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					el.CreatedAt = nil

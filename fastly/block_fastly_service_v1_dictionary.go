@@ -41,9 +41,9 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, dRaw := range remove {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteDictionaryInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Dictionary Removal opts: %#v", opts)
@@ -64,8 +64,8 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 			log.Printf("[DEBUG] Error building Dicitionary: %s", err)
 			return err
 		}
-		opts.Service = d.Id()
-		opts.Version = latestVersion
+		opts.ServiceID = d.Id()
+		opts.ServiceVersion = latestVersion
 
 		log.Printf("[DEBUG] Fastly Dictionary Addition opts: %#v", opts)
 		_, err = conn.CreateDictionary(opts)
@@ -79,8 +79,8 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 func (h *DictionaryServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
 	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
@@ -151,7 +151,7 @@ func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, erro
 	df := dictMap.(map[string]interface{})
 	opts := gofastly.CreateDictionaryInput{
 		Name:      df["name"].(string),
-		WriteOnly: gofastly.CBool(df["write_only"].(bool)),
+		WriteOnly: gofastly.Compatibool(df["write_only"].(bool)),
 	}
 
 	return &opts, nil

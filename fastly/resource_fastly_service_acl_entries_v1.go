@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"strings"
 )
 
 func resourceServiceAclEntriesV1() *schema.Resource {
@@ -85,10 +86,10 @@ func resourceServiceAclEntriesV1Create(d *schema.ResourceData, meta interface{})
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 			Operation: gofastly.CreateBatchOperation,
-			IP:        val["ip"].(string),
-			Subnet:    val["subnet"].(string),
-			Negated:   val["negated"].(bool),
-			Comment:   val["comment"].(string),
+			IP:        gofastly.String(val["ip"].(string)),
+			Subnet:    gofastly.String(val["subnet"].(string)),
+			Negated:   gofastly.Bool(val["negated"].(bool)),
+			Comment:   gofastly.String(val["comment"].(string)),
 		})
 	}
 
@@ -109,8 +110,8 @@ func resourceServiceAclEntriesV1Read(d *schema.ResourceData, meta interface{}) e
 	aclID := d.Get("acl_id").(string)
 
 	aclEntries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
-		Service: serviceID,
-		ACL:     aclID,
+		ServiceID: serviceID,
+		ACLID:     aclID,
 	})
 
 	if err != nil {
@@ -152,7 +153,7 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 				Operation: gofastly.DeleteBatchOperation,
-				ID:        val["id"].(string),
+				ID:        gofastly.String(val["id"].(string)),
 			})
 		}
 
@@ -162,11 +163,11 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 				Operation: gofastly.CreateBatchOperation,
-				ID:        val["id"].(string),
-				IP:        val["ip"].(string),
-				Subnet:    val["subnet"].(string),
-				Negated:   val["negated"].(bool),
-				Comment:   val["comment"].(string),
+				ID:        gofastly.String(val["id"].(string)),
+				IP:        gofastly.String(val["ip"].(string)),
+				Subnet:    gofastly.String(val["subnet"].(string)),
+				Negated:   gofastly.Bool(val["negated"].(bool)),
+				Comment:   gofastly.String(val["comment"].(string)),
 			})
 		}
 	}
@@ -194,7 +195,7 @@ func resourceServiceAclEntriesV1Delete(d *schema.ResourceData, meta interface{})
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 			Operation: gofastly.DeleteBatchOperation,
-			ID:        val["id"].(string),
+			ID:        gofastly.String(val["id"].(string)),
 		})
 	}
 
@@ -267,9 +268,9 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 		}
 
 		err := conn.BatchModifyACLEntries(&gofastly.BatchModifyACLEntriesInput{
-			Service: serviceID,
-			ACL:     aclID,
-			Entries: batchACLEntries[i:j],
+			ServiceID: serviceID,
+			ACLID:     aclID,
+			Entries:   batchACLEntries[i:j],
 		})
 
 		if err != nil {

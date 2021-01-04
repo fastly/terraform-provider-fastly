@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -103,6 +104,27 @@ func (h *SetDiff) computeKey(elem interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("invalid key for element %v, %v", elem, err)
 	}
 	return key, nil
+}
+
+// Filter filters out unmodified fields of a Set elements map data structure by ranging over
+// the original data and comparing each field against the new data.
+func (h *SetDiff) Filter(modified map[string]interface{}, oldSet *schema.Set) map[string]interface{} {
+	elements := oldSet.List()
+	filtered := make(map[string]interface{})
+
+	for _, e := range elements {
+		m := e.(map[string]interface{})
+
+		if m["name"].(string) == modified["name"].(string) {
+			for k, v := range m {
+				if v != modified[k] {
+					filtered[k] = modified[k]
+				}
+			}
+		}
+	}
+
+	return filtered
 }
 
 func newElementKeyError(elem interface{}, err error) error {

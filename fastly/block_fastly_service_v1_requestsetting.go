@@ -40,9 +40,9 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 	for _, sRaw := range removeRequestSettings {
 		sf := sRaw.(map[string]interface{})
 		opts := gofastly.DeleteRequestSettingInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    sf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           sf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Request Setting removal opts: %#v", opts)
@@ -63,8 +63,8 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 			log.Printf("[DEBUG] Error building Requset Setting: %s", err)
 			return err
 		}
-		opts.Service = d.Id()
-		opts.Version = latestVersion
+		opts.ServiceID = d.Id()
+		opts.ServiceVersion = latestVersion
 
 		log.Printf("[DEBUG] Create Request Setting Opts: %#v", opts)
 		_, err = conn.CreateRequestSetting(opts)
@@ -79,8 +79,8 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 func (h *RequestSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
 	rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -208,12 +208,12 @@ func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequest
 	opts := gofastly.CreateRequestSettingInput{
 		Name:             df["name"].(string),
 		MaxStaleAge:      uint(df["max_stale_age"].(int)),
-		ForceMiss:        gofastly.CBool(df["force_miss"].(bool)),
-		ForceSSL:         gofastly.CBool(df["force_ssl"].(bool)),
-		BypassBusyWait:   gofastly.CBool(df["bypass_busy_wait"].(bool)),
+		ForceMiss:        gofastly.Compatibool(df["force_miss"].(bool)),
+		ForceSSL:         gofastly.Compatibool(df["force_ssl"].(bool)),
+		BypassBusyWait:   gofastly.Compatibool(df["bypass_busy_wait"].(bool)),
 		HashKeys:         df["hash_keys"].(string),
-		TimerSupport:     gofastly.CBool(df["timer_support"].(bool)),
-		GeoHeaders:       gofastly.CBool(df["geo_headers"].(bool)),
+		TimerSupport:     gofastly.Compatibool(df["timer_support"].(bool)),
+		GeoHeaders:       gofastly.Compatibool(df["geo_headers"].(bool)),
 		DefaultHost:      df["default_host"].(string),
 		RequestCondition: df["request_condition"].(string),
 	}

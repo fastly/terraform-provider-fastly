@@ -46,9 +46,9 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	for _, cRaw := range removeConditions {
 		cf := cRaw.(map[string]interface{})
 		opts := gofastly.DeleteConditionInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    cf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           cf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Conditions Removal opts: %#v", opts)
@@ -66,10 +66,10 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	for _, cRaw := range addConditions {
 		cf := cRaw.(map[string]interface{})
 		opts := gofastly.CreateConditionInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    cf["name"].(string),
-			Type:    cf["type"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           cf["name"].(string),
+			Type:           cf["type"].(string),
 			// need to trim leading/tailing spaces, incase the config has HEREDOC
 			// formatting and contains a trailing new line
 			Statement: strings.TrimSpace(cf["statement"].(string)),
@@ -88,8 +88,8 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 func (h *ConditionServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
 	conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

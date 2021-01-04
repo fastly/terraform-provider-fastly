@@ -41,9 +41,9 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	for _, dRaw := range remove {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteGzipInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Gzip removal opts: %#v", opts)
@@ -61,8 +61,8 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	for _, dRaw := range add {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateGzipInput{
-			Service:        d.Id(),
-			Version:        latestVersion,
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
 			Name:           df["name"].(string),
 			CacheCondition: df["cache_condition"].(string),
 		}
@@ -100,8 +100,8 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 func (h *GzipServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
 	gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 		{
 			remote: []*gofastly.Cloudfiles{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "cloudfiles-endpoint",
 					BucketName:        "bucket",
 					User:              "user",
@@ -74,7 +74,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Cloudfiles{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "cloudfiles-endpoint",
 		BucketName:        "bucket",
 		User:              "user",
@@ -93,7 +93,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.Cloudfiles{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "cloudfiles-endpoint",
 		BucketName:        "bucketupdate",
 		User:              "userupdate",
@@ -112,7 +112,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Cloudfiles{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "another-cloudfiles-endpoint",
 		BucketName:        "bucket2",
 		User:              "user2",
@@ -168,7 +168,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1Compute := gofastly.Cloudfiles{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "cloudfiles-endpoint",
 		BucketName:      "bucket",
 		User:            "user",
@@ -207,8 +207,8 @@ func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDe
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -226,7 +226,7 @@ func testAccCheckFastlyServiceV1CloudfilesAttributes(service *gofastly.ServiceDe
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					el.CreatedAt = nil
@@ -279,7 +279,7 @@ resource "fastly_service_compute" "none" {
 	gzip_level = 0
 	timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
   }
- 
+
   package {
     filename = "test_fixtures/package/valid.tar.gz"
 	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")

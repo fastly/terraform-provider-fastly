@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenHeroku(t *testing.T) {
 		{
 			remote: []*gofastly.Heroku{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "heroku-endpoint",
 					URL:               "https://example.com",
 					Token:             "token",
@@ -58,16 +58,16 @@ func TestAccFastlyServiceV1_logging_heroku_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		Version:       1,
-		Name:          "heroku-endpoint",
-		URL:           "https://example.com",
-		Token:         "s3cr3t",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "heroku-endpoint",
+		URL:            "https://example.com",
+		Token:          "s3cr3t",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	log1_after_update := gofastly.Heroku{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "heroku-endpoint",
 		URL:               "https://example.com",
 		Placement:         "none",
@@ -78,12 +78,12 @@ func TestAccFastlyServiceV1_logging_heroku_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Heroku{
-		Version:       1,
-		Name:          "another-heroku-endpoint",
-		URL:           "https://new.example.com",
-		Token:         "another-token",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "another-heroku-endpoint",
+		URL:            "https://new.example.com",
+		Token:          "another-token",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -124,10 +124,10 @@ func TestAccFastlyServiceV1_logging_heroku_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		Version: 1,
-		Name:    "heroku-endpoint",
-		URL:     "https://example.com",
-		Token:   "s3cr3t",
+		ServiceVersion: 1,
+		Name:           "heroku-endpoint",
+		URL:            "https://example.com",
+		Token:          "s3cr3t",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -155,8 +155,8 @@ func testAccCheckFastlyServiceV1HerokuAttributes(service *gofastly.ServiceDetail
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		herokuList, err := conn.ListHerokus(&gofastly.ListHerokusInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -174,7 +174,7 @@ func testAccCheckFastlyServiceV1HerokuAttributes(service *gofastly.ServiceDetail
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					el.CreatedAt = nil

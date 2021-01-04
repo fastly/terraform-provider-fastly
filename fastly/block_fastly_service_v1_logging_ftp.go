@@ -84,8 +84,8 @@ func (h *FTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 	// Refresh FTP.
 	log.Printf("[DEBUG] Refreshing FTP logging endpoints for (%s)", d.Id())
 	ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -277,8 +277,8 @@ func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID s
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateFTPInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
 		Name:              df["name"].(string),
 		Address:           df["address"].(string),
 		Username:          df["user"].(string),
@@ -301,8 +301,8 @@ func (h *FTPServiceAttributeHandler) buildDelete(ftpMap interface{}, serviceID s
 	df := ftpMap.(map[string]interface{})
 
 	return &gofastly.DeleteFTPInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

@@ -69,8 +69,8 @@ func (h *DatadogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 	// Refresh Datadog.
 	log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
 	datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -201,15 +201,15 @@ func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap interface{}, ser
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateDatadogInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		Token:             gofastly.NullString(df["token"].(string)),
-		Region:            gofastly.NullString(df["region"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Token:             df["token"].(string),
+		Region:            df["region"].(string),
+		Format:            vla.format,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -217,8 +217,8 @@ func (h *DatadogServiceAttributeHandler) buildDelete(datadogMap interface{}, ser
 	df := datadogMap.(map[string]interface{})
 
 	return &gofastly.DeleteDatadogInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

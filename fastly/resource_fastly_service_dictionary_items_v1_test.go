@@ -74,6 +74,16 @@ func TestAccFastlyServiceDictionaryItemV1_create(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceDictionaryItemV1_create_inactive_service validates that
+// when creating a new inactive service consisting of a dictionary along with a
+// predefined list of items to populate it with, are applied successfully
+// instead of generating an error suggesting the dictionary ID was missing.
+//
+// NOTE: This error stemmed from a bug in our code (#345) where we discovered
+// that if a configuration has the activate field set to false AND it has no
+// previous active version, then the state wasn't being read. This manifested
+// itself as a runtime error in certain situations, such as another resource
+// referencing the state in its configuration.
 func TestAccFastlyServiceDictionaryItemV1_create_inactive_service(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -327,16 +337,15 @@ func testAccCheckFastlyServiceDictionaryItemsV1DoesNotExists(n string) resource.
 
 func testAccCheckFastlyServiceDictionaryItemsV1RemoteState(service *gofastly.ServiceDetail, name, dictName string, expectedItems map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-			Service: service.ID,
-			Version: service.Version.Number,
-			Name:    dictName,
+			ServiceID:      service.ID,
+			ServiceVersion: service.Version.Number,
+			Name:           dictName,
 		})
 
 		if err != nil {
@@ -344,8 +353,8 @@ func testAccCheckFastlyServiceDictionaryItemsV1RemoteState(service *gofastly.Ser
 		}
 
 		dictItems, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
-			Service:    service.ID,
-			Dictionary: dict.ID,
+			ServiceID:    service.ID,
+			DictionaryID: dict.ID,
 		})
 
 		if err != nil {
@@ -373,8 +382,8 @@ func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	}
 
 	_, err = conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
-		Service:    service.ID,
-		Dictionary: dict.ID,
+		ServiceID:    service.ID,
+		DictionaryID: dict.ID,
 
 		ItemKey:   expectedKey,
 		ItemValue: expectedValue,
@@ -390,9 +399,9 @@ func getDictionaryByName(service *gofastly.ServiceDetail, dictName string) (*gof
 	conn := testAccProvider.Meta().(*FastlyClient).conn
 
 	dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-		Service: service.ID,
-		Version: service.ActiveVersion.Number,
-		Name:    dictName,
+		ServiceID:      service.ID,
+		ServiceVersion: service.ActiveVersion.Number,
+		Name:           dictName,
 	})
 	return dict, err
 }

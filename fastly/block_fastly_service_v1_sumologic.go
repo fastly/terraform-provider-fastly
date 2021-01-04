@@ -39,9 +39,9 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	for _, pRaw := range removeSumologic {
 		sf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteSumologicInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    sf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           sf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Sumologic removal opts: %#v", opts)
@@ -61,8 +61,8 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateSumologicInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              sf["name"].(string),
 			URL:               sf["url"].(string),
 			MessageType:       sf["message_type"].(string),
@@ -84,8 +84,8 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

@@ -272,8 +272,8 @@ func testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(service *gofastly.S
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		remoteBlobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -290,7 +290,7 @@ func testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(service *gofastly.S
 				if lbs.Name == rbs.Name {
 					// we don't know these things ahead of time, so populate them now
 					lbs.ServiceID = service.ID
-					lbs.Version = service.ActiveVersion.Number
+					lbs.ServiceVersion = service.ActiveVersion.Number
 
 					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
 					if serviceType == ServiceTypeCompute {

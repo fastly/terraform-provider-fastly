@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 		{
 			remote: []*fst.Elasticsearch{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "elasticsearch-endpoint",
 					Index:             "index",
 					URL:               "https://logs.example.com",
@@ -76,7 +76,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := fst.Elasticsearch{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "elasticsearch-endpoint",
 		Index:             "#{%F}",
 		URL:               "https://es.example.com",
@@ -96,7 +96,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 	}
 
 	log1_after_update := fst.Elasticsearch{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "elasticsearch-endpoint",
 		Index:             "#{%F}",
 		URL:               "https://es.example.com",
@@ -116,7 +116,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 	}
 
 	log2 := fst.Elasticsearch{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "another-elasticsearch-endpoint",
 		Index:             "#{%F}",
 		URL:               "https://es2.example.com",
@@ -174,7 +174,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := fst.Elasticsearch{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "elasticsearch-endpoint",
 		Index:             "#{%F}",
 		URL:               "https://es.example.com",
@@ -214,8 +214,8 @@ func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDeta
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		elasticsearchList, err := conn.ListElasticsearch(&fst.ListElasticsearchInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -234,7 +234,7 @@ func testAccCheckFastlyServiceV1ElasticsearchAttributes(service *fst.ServiceDeta
 				if e.Name == el.Name {
 					// We don't know these things ahead of time, so populate them now.
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time.
 					el.CreatedAt = nil

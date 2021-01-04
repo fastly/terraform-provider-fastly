@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 		{
 			remote: []*gofastly.Papertrail{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "papertrailtesting",
 					Address:           "test1.papertrailapp.com",
 					Port:              3600,
@@ -55,7 +55,7 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "papertrailtesting",
 		Address:           "test1.papertrailapp.com",
 		Port:              uint(3600),
@@ -64,11 +64,11 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Papertrail{
-		Version: 1,
-		Name:    "papertrailtesting2",
-		Address: "test2.papertrailapp.com",
-		Port:    uint(8080),
-		Format:  "%h %l %u %t %r %>s",
+		ServiceVersion: 1,
+		Name:           "papertrailtesting2",
+		Address:        "test2.papertrailapp.com",
+		Port:           uint(8080),
+		Format:         "%h %l %u %t %r %>s",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -110,10 +110,10 @@ func TestAccFastlyServiceV1_papertrail_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		Version: 1,
-		Name:    "papertrailtesting",
-		Address: "test1.papertrailapp.com",
-		Port:    uint(3600),
+		ServiceVersion: 1,
+		Name:           "papertrailtesting",
+		Address:        "test1.papertrailapp.com",
+		Port:           uint(3600),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -141,8 +141,8 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -159,7 +159,7 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 				if p.Name == lp.Name {
 					// we don't know these things ahead of time, so populate them now
 					p.ServiceID = service.ID
-					p.Version = service.ActiveVersion.Number
+					p.ServiceVersion = service.ActiveVersion.Number
 					// we don't support the format_version field, so set it to the zero value
 					lp.FormatVersion = 0
 					// We don't track these, so clear them out because we also wont know

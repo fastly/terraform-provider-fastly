@@ -73,7 +73,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Openstack{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "openstack-endpoint",
 		URL:               "https://auth.example.com/v1", // /v1, /v2 or /v3 are required to be in the path.
 		User:              "user",
@@ -92,7 +92,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.Openstack{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "openstack-endpoint",
 		Format:            "%h %l %u %t \"%r\" %>s %b %T",
 		URL:               "https://auth.example.com/v2", // /v1, /v2 or /v3 are required to be in the path.
@@ -111,7 +111,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Openstack{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "another-openstack-endpoint",
 		URL:               "https://auth.example.com/v3", // /v1, /v2 or /v3 are required to be in the path.
 		User:              "user2",
@@ -167,7 +167,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Openstack{
-		Version:         1,
+		ServiceVersion:  1,
 		Name:            "openstack-endpoint",
 		URL:             "https://auth.example.com/v1", // /v1, /v2 or /v3 are required to be in the path.
 		User:            "user",
@@ -206,8 +206,8 @@ func testAccCheckFastlyServiceV1OpenstackAttributes(service *gofastly.ServiceDet
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		openstackList, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -225,7 +225,7 @@ func testAccCheckFastlyServiceV1OpenstackAttributes(service *gofastly.ServiceDet
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
-					e.Version = service.ActiveVersion.Number
+					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					el.CreatedAt = nil

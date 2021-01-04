@@ -40,9 +40,9 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	for _, dRaw := range remove {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteDomainInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Domain removal opts: %#v", opts)
@@ -60,9 +60,9 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	for _, dRaw := range add {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateDomainInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		if v, ok := df["comment"]; ok {
@@ -84,8 +84,8 @@ func (h *DomainServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	// to find out that info
 	log.Printf("[DEBUG] Refreshing Domains for (%s)", d.Id())
 	domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

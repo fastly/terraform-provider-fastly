@@ -108,23 +108,23 @@ func TestAccFastlyServiceV1_gzips_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Gzip{
-		Version:        1,
+		ServiceVersion: 1,
 		Name:           "gzip file types",
 		Extensions:     "js css",
 		CacheCondition: "testing_condition",
 	}
 
 	log2 := gofastly.Gzip{
-		Version:      1,
-		Name:         "gzip extensions",
-		ContentTypes: "text/css text/html",
+		ServiceVersion: 1,
+		Name:           "gzip extensions",
+		ContentTypes:   "text/css text/html",
 	}
 
 	log3 := gofastly.Gzip{
-		Version:      1,
-		Name:         "all",
-		Extensions:   "js html css",
-		ContentTypes: "text/javascript application/x-javascript application/javascript text/css text/html",
+		ServiceVersion: 1,
+		Name:           "all",
+		Extensions:     "js html css",
+		ContentTypes:   "text/javascript application/x-javascript application/javascript text/css text/html",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -164,8 +164,8 @@ func testAccCheckFastlyServiceV1GzipsAttributes(service *gofastly.ServiceDetail,
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -182,7 +182,7 @@ func testAccCheckFastlyServiceV1GzipsAttributes(service *gofastly.ServiceDetail,
 				if g.Name == lg.Name {
 					// we don't know these things ahead of time, so populate them now
 					g.ServiceID = service.ID
-					g.Version = service.ActiveVersion.Number
+					g.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lg.CreatedAt = nil

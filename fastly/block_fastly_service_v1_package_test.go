@@ -90,8 +90,8 @@ func testAccCheckFastlyServiceV1PackageAttributes(service *gofastly.ServiceDetai
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		wp, err := conn.GetPackage(&gofastly.GetPackageInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {

@@ -200,9 +200,9 @@ func testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(service *gofast
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		snippet, err := conn.GetSnippet(&gofastly.GetSnippetInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
-			Name:    dynamicSnippetName,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
+			Name:           dynamicSnippetName,
 		})
 
 		if err != nil {
@@ -210,8 +210,8 @@ func testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(service *gofast
 		}
 
 		dynamicSnippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
-			Service: service.ID,
-			ID:      snippet.ID,
+			ServiceID: service.ID,
+			ID:        snippet.ID,
 		})
 
 		if err != nil {
@@ -235,8 +235,8 @@ func testAccCheckFastlyServiceDynamicSnippetContentV1RemoteStateDoesntExist(serv
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		snippets, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -258,8 +258,8 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	conn := testAccProvider.Meta().(*FastlyClient).conn
 
 	newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
-		Service: service.ID,
-		Version: service.ActiveVersion.Number,
+		ServiceID:      service.ID,
+		ServiceVersion: service.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -267,11 +267,11 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	}
 
 	dynamicSnippet, err := conn.CreateSnippet(&gofastly.CreateSnippetInput{
-		Service: service.ID,
-		Version: newVersion.Number,
-		Name:    dynamicSnippetName,
-		Type:    snippetType,
-		Dynamic: 1,
+		ServiceID:      service.ID,
+		ServiceVersion: newVersion.Number,
+		Name:           dynamicSnippetName,
+		Type:           snippetType,
+		Dynamic:        1,
 	})
 
 	if err != nil {
@@ -279,8 +279,8 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	}
 
 	_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-		Service: service.ID,
-		Version: newVersion.Number,
+		ServiceID:      service.ID,
+		ServiceVersion: newVersion.Number,
 	})
 
 	if err != nil {
@@ -288,9 +288,9 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	}
 
 	_, err = conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
-		Service: service.ID,
-		ID:      dynamicSnippet.ID,
-		Content: content,
+		ServiceID: service.ID,
+		ID:        dynamicSnippet.ID,
+		Content:   content,
 	})
 
 	if err != nil {
@@ -345,7 +345,7 @@ func testAccServiceDynamicSnippetContentV1ConfigWithSnippetAndDynamicSnippet(ser
 variable "mydynamicsnippet" {
 	type = object({ name=string, content=string })
 	default = {
-		name = "%s" 
+		name = "%s"
 		content = %q
 	}
 }
@@ -371,7 +371,7 @@ resource "fastly_service_v1" "foo" {
 
   dynamicsnippet {
 	name = var.mydynamicsnippet.name
-	type = "hit"      
+	type = "hit"
   }
 
   force_destroy = true
@@ -393,7 +393,7 @@ func testAccServiceDynamicSnippetContentV1ConfigWithDynamicSnippet(serviceName, 
 variable "mydynamicsnippet" {
 	type = object({ name=string, content=string })
 	default = {
-		name = "%s" 
+		name = "%s"
 		content = %q
 	}
 }
@@ -413,7 +413,7 @@ resource "fastly_service_v1" "foo" {
 
   dynamicsnippet {
 	name = var.mydynamicsnippet.name
-	type = "hit"      
+	type = "hit"
   }
 
   force_destroy = true

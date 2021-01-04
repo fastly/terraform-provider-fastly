@@ -41,9 +41,9 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	for _, dRaw := range remove {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteHeaderInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Header removal opts: %#v", opts)
@@ -64,8 +64,8 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			log.Printf("[DEBUG] Error building Header: %s", err)
 			return err
 		}
-		opts.Service = d.Id()
-		opts.Version = latestVersion
+		opts.ServiceID = d.Id()
+		opts.ServiceVersion = latestVersion
 
 		log.Printf("[DEBUG] Fastly Header Addition opts: %#v", opts)
 		_, err = conn.CreateHeader(opts)
@@ -80,8 +80,8 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 func (h *HeaderServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
 	headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -215,7 +215,7 @@ func buildHeader(headerMap interface{}) (*gofastly.CreateHeaderInput, error) {
 	df := headerMap.(map[string]interface{})
 	opts := gofastly.CreateHeaderInput{
 		Name:              df["name"].(string),
-		IgnoreIfSet:       gofastly.CBool(df["ignore_if_set"].(bool)),
+		IgnoreIfSet:       gofastly.Compatibool(df["ignore_if_set"].(bool)),
 		Destination:       df["destination"].(string),
 		Priority:          uint(df["priority"].(int)),
 		Source:            df["source"].(string),

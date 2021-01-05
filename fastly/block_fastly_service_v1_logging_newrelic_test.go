@@ -20,10 +20,10 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 		{
 			remote: []*gofastly.NewRelic{
 				{
-					Version:       1,
-					Name:          "newrelic-endpoint",
-					Token:         "token",
-					FormatVersion: 2,
+					ServiceVersion: 1,
+					Name:           "newrelic-endpoint",
+					Token:          "token",
+					FormatVersion:  2,
 				},
 			},
 			local: []map[string]interface{}{
@@ -66,27 +66,27 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		Version:       1,
-		Name:          "newrelic-endpoint",
-		Token:         "token",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "newrelic-endpoint",
+		Token:          "token",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	log1_after_update := gofastly.NewRelic{
-		Version:       1,
-		Name:          "newrelic-endpoint",
-		Token:         "t0k3n",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b %T",
+		ServiceVersion: 1,
+		Name:           "newrelic-endpoint",
+		Token:          "t0k3n",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b %T",
 	}
 
 	log2 := gofastly.NewRelic{
-		Version:       1,
-		Name:          "another-newrelic-endpoint",
-		Token:         "another-token",
-		FormatVersion: 2,
-		Format:        appendNewLine(newrelicDefaultFormat),
+		ServiceVersion: 1,
+		Name:           "another-newrelic-endpoint",
+		Token:          "another-token",
+		FormatVersion:  2,
+		Format:         appendNewLine(newrelicDefaultFormat),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -128,11 +128,11 @@ func TestAccFastlyServiceV1_logging_newrelic_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		Version:       1,
-		Name:          "newrelic-endpoint",
-		Token:         "token",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "newrelic-endpoint",
+		Token:          "token",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -160,8 +160,8 @@ func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDeta
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -180,7 +180,7 @@ func testAccCheckFastlyServiceV1NewRelicAttributes(service *gofastly.ServiceDeta
 				if d.Name == dl.Name {
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ID
-					d.Version = service.ActiveVersion.Number
+					d.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					dl.CreatedAt = nil

@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 		{
 			remote: []*gofastly.Kafka{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "kafka-endpoint",
 					Topic:             "topic",
 					Brokers:           "127.0.0.1,127.0.0.2",
@@ -82,7 +82,7 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kafka{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "kafkalogger",
 		Topic:             "topic",
 		Brokers:           "127.0.0.1,127.0.0.2",
@@ -105,7 +105,7 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.Kafka{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "kafkalogger",
 		Topic:             "newtopic",
 		Brokers:           "127.0.0.3,127.0.0.4",
@@ -128,7 +128,7 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Kafka{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "kafkalogger2",
 		Topic:             "topicb",
 		Brokers:           "127.0.0.3,127.0.0.4",
@@ -189,7 +189,7 @@ func TestAccFastlyServiceV1_kafkalogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kafka{
-		Version:          1,
+		ServiceVersion:   1,
 		Name:             "kafkalogger",
 		Topic:            "topic",
 		Brokers:          "127.0.0.1,127.0.0.2",
@@ -227,8 +227,8 @@ func testAccCheckFastlyServiceV1KafkaAttributes(service *gofastly.ServiceDetail,
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -247,7 +247,7 @@ func testAccCheckFastlyServiceV1KafkaAttributes(service *gofastly.ServiceDetail,
 				if s.Name == sl.Name {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
-					s.Version = service.ActiveVersion.Number
+					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					sl.CreatedAt = nil

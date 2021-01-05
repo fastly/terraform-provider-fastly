@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
 		{
 			remote: []*gofastly.ResponseObject{
 				{
-					Version:          1,
+					ServiceVersion:   1,
 					Name:             "responseObjecttesting",
 					Status:           200,
 					Response:         "OK",
@@ -59,7 +59,7 @@ func TestAccFastlyServiceV1_response_object_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.ResponseObject{
-		Version:          1,
+		ServiceVersion:   1,
 		Name:             "responseObjecttesting",
 		Status:           200,
 		Response:         "OK",
@@ -70,7 +70,7 @@ func TestAccFastlyServiceV1_response_object_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.ResponseObject{
-		Version:          1,
+		ServiceVersion:   1,
 		Name:             "responseObjecttesting2",
 		Status:           404,
 		Response:         "Not Found",
@@ -117,8 +117,8 @@ func testAccCheckFastlyServiceV1ResponseObjectAttributes(service *gofastly.Servi
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -135,7 +135,7 @@ func testAccCheckFastlyServiceV1ResponseObjectAttributes(service *gofastly.Servi
 				if p.Name == lp.Name {
 					// we don't know these things ahead of time, so populate them now
 					p.ServiceID = service.ID
-					p.Version = service.ActiveVersion.Number
+					p.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lp.CreatedAt = nil

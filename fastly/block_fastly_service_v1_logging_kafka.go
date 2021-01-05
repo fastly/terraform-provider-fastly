@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fastly/go-fastly/v2/fastly"
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -227,8 +226,8 @@ func (h *KafkaServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.
 	// refresh Kafka
 	log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
 	kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -307,27 +306,27 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateKafkaInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              fastly.NullString(df["name"].(string)),
-		Brokers:           fastly.NullString(df["brokers"].(string)),
-		Topic:             fastly.NullString(df["topic"].(string)),
-		RequiredACKs:      fastly.NullString(df["required_acks"].(string)),
-		UseTLS:            fastly.CBool(df["use_tls"].(bool)),
-		CompressionCodec:  fastly.NullString(df["compression_codec"].(string)),
-		TLSCACert:         fastly.NullString(df["tls_ca_cert"].(string)),
-		TLSClientCert:     fastly.NullString(df["tls_client_cert"].(string)),
-		TLSClientKey:      fastly.NullString(df["tls_client_key"].(string)),
-		TLSHostname:       fastly.NullString(df["tls_hostname"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
-		ParseLogKeyvals:   fastly.CBool(df["parse_log_keyvals"].(bool)),
-		RequestMaxBytes:   fastly.Uint(uint(df["request_max_bytes"].(int))),
-		AuthMethod:        fastly.NullString(df["auth_method"].(string)),
-		User:              fastly.NullString(df["user"].(string)),
-		Password:          fastly.NullString(df["password"].(string)),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Brokers:           df["brokers"].(string),
+		Topic:             df["topic"].(string),
+		RequiredACKs:      df["required_acks"].(string),
+		UseTLS:            gofastly.Compatibool(df["use_tls"].(bool)),
+		CompressionCodec:  df["compression_codec"].(string),
+		TLSCACert:         df["tls_ca_cert"].(string),
+		TLSClientCert:     df["tls_client_cert"].(string),
+		TLSClientKey:      df["tls_client_key"].(string),
+		TLSHostname:       df["tls_hostname"].(string),
+		Format:            vla.format,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
+		ParseLogKeyvals:   gofastly.Compatibool(df["parse_log_keyvals"].(bool)),
+		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
+		AuthMethod:        df["auth_method"].(string),
+		User:              df["user"].(string),
+		Password:          df["password"].(string),
 	}
 }
 
@@ -335,8 +334,8 @@ func (h *KafkaServiceAttributeHandler) buildDelete(kafkaMap interface{}, service
 	df := kafkaMap.(map[string]interface{})
 
 	return &gofastly.DeleteKafkaInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

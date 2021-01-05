@@ -174,9 +174,9 @@ func createWAFRuleExclusion(add []interface{}, meta interface{}, wafID string, w
 			WAFID:            wafID,
 			WAFVersionNumber: wafVersionNumber,
 			WAFRuleExclusion: &gofastly.WAFRuleExclusion{
-				Name:          strToPtr(a["name"].(string)),
-				ExclusionType: strToPtr(a["exclusion_type"].(string)),
-				Condition:     strToPtr(a["condition"].(string)),
+				Name:          gofastly.String(a["name"].(string)),
+				ExclusionType: gofastly.String(a["exclusion_type"].(string)),
+				Condition:     gofastly.String(a["condition"].(string)),
 				Rules:         rules,
 			},
 		})

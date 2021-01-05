@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 		{
 			remote: []*gofastly.Scalyr{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "scalyr-endpoint",
 					Region:            "US",
 					Token:             "tkn",
@@ -59,7 +59,7 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "scalyrlogger",
 		Token:             "tkn",
 		Placement:         "none",
@@ -71,7 +71,7 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.Scalyr{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "scalyrlogger",
 		Region:            "EU",
 		Token:             "newtkn",
@@ -83,11 +83,11 @@ func TestAccFastlyServiceV1_scalyrlogging_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Scalyr{
-		Version:   1,
-		Name:      "another-scalyrlogger",
-		Token:     "tknb",
-		Placement: "none",
-		Format:    `%a %l %u %t %m %U%q %H %>s %b %T`,
+		ServiceVersion: 1,
+		Name:           "another-scalyrlogger",
+		Token:          "tknb",
+		Placement:      "none",
+		Format:         `%a %l %u %t %m %U%q %H %>s %b %T`,
 
 		Region:        "US",
 		FormatVersion: 2,
@@ -132,10 +132,10 @@ func TestAccFastlyServiceV1_scalyrlogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		Version: 1,
-		Name:    "scalyrlogger",
-		Token:   "tkn",
-		Region:  "US",
+		ServiceVersion: 1,
+		Name:           "scalyrlogger",
+		Token:          "tkn",
+		Region:         "US",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -163,8 +163,8 @@ func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -183,7 +183,7 @@ func testAccCheckFastlyServiceV1ScalyrAttributes(service *gofastly.ServiceDetail
 				if s.Name == sl.Name {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
-					s.Version = service.ActiveVersion.Number
+					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					sl.CreatedAt = nil

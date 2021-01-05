@@ -84,8 +84,8 @@ func (h *OpenstackServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	// Refresh OpenStack.
 	log.Printf("[DEBUG] Refreshing OpenStack logging endpoints for (%s)", d.Id())
 	openstackList, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -163,23 +163,23 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{},
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateOpenstackInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		URL:               gofastly.NullString(df["url"].(string)),
-		User:              gofastly.NullString(df["user"].(string)),
-		BucketName:        gofastly.NullString(df["bucket_name"].(string)),
-		AccessKey:         gofastly.NullString(df["access_key"].(string)),
-		PublicKey:         gofastly.NullString(df["public_key"].(string)),
-		GzipLevel:         gofastly.Uint(uint(df["gzip_level"].(int))),
-		MessageType:       gofastly.NullString(df["message_type"].(string)),
-		Path:              gofastly.NullString(df["path"].(string)),
-		Period:            gofastly.Uint(uint(df["period"].(int))),
-		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		URL:               df["url"].(string),
+		User:              df["user"].(string),
+		BucketName:        df["bucket_name"].(string),
+		AccessKey:         df["access_key"].(string),
+		PublicKey:         df["public_key"].(string),
+		GzipLevel:         uint(df["gzip_level"].(int)),
+		MessageType:       df["message_type"].(string),
+		Path:              df["path"].(string),
+		Period:            uint(df["period"].(int)),
+		TimestampFormat:   df["timestamp_format"].(string),
+		Format:            vla.format,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -187,9 +187,9 @@ func (h *OpenstackServiceAttributeHandler) buildDelete(openstackMap interface{},
 	df := openstackMap.(map[string]interface{})
 
 	return &gofastly.DeleteOpenstackInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

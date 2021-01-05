@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 		{
 			remote: []*gofastly.HTTPS{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "https-endpoint",
 					URL:               "https://example.com/logs",
 					RequestMaxEntries: 10,
@@ -59,10 +59,10 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.HTTPS{
-		Version: 1,
-		Name:    "httpslogger",
-		URL:     "https://example.com/logs/1",
-		Method:  "PUT",
+		ServiceVersion: 1,
+		Name:           "httpslogger",
+		URL:            "https://example.com/logs/1",
+		Method:         "PUT",
 
 		Format:            "%a %l %u %t %m %U%q %H %>s %b %T",
 		RequestMaxEntries: 0,
@@ -73,10 +73,10 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.HTTPS{
-		Version: 1,
-		Name:    "httpslogger",
-		URL:     "https://example.com/logs/1",
-		Method:  "POST",
+		ServiceVersion: 1,
+		Name:           "httpslogger",
+		URL:            "https://example.com/logs/1",
+		Method:         "POST",
 
 		Format:            "%a %l %u %t %m %U%q %H %>s %b",
 		RequestMaxEntries: 0,
@@ -87,10 +87,10 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.HTTPS{
-		Version: 1,
-		Name:    "httpslogger2",
-		URL:     "https://example.com/logs/2",
-		Method:  "POST",
+		ServiceVersion: 1,
+		Name:           "httpslogger2",
+		URL:            "https://example.com/logs/2",
+		Method:         "POST",
 
 		Format:            "%a %l %u %t %m %U%q %H %>s %b %T",
 		RequestMaxEntries: 0,
@@ -138,7 +138,7 @@ func TestAccFastlyServiceV1_httpslogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log := gofastly.HTTPS{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "httpslogger",
 		URL:               "https://example.com/logs/1",
 		Method:            "PUT",
@@ -173,8 +173,8 @@ func testAccCheckFastlyServiceV1HTTPSAttributes(service *gofastly.ServiceDetail,
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -193,7 +193,7 @@ func testAccCheckFastlyServiceV1HTTPSAttributes(service *gofastly.ServiceDetail,
 				if h.Name == hl.Name {
 					// we don't know these things ahead of time, so populate them now
 					h.ServiceID = service.ID
-					h.Version = service.ActiveVersion.Number
+					h.ServiceVersion = service.ActiveVersion.Number
 
 					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
 					if serviceType == ServiceTypeCompute {

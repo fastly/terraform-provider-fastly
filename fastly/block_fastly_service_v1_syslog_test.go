@@ -26,7 +26,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 		{
 			remote: []*gofastly.Syslog{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "somesyslogname",
 					Address:           "127.0.0.1",
 					IPV4:              "127.0.0.1",
@@ -78,7 +78,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somesyslogname",
 		Address:           "127.0.0.1",
 		IPV4:              "127.0.0.1",
@@ -90,7 +90,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	}
 
 	log1_after_update := gofastly.Syslog{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somesyslogname",
 		Address:           "127.0.0.1",
 		IPV4:              "127.0.0.1",
@@ -102,14 +102,14 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Syslog{
-		Version:       1,
-		Name:          "somesyslogname2",
-		Address:       "127.0.0.2",
-		IPV4:          "127.0.0.2",
-		Port:          uint(10514),
-		Format:        "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion: 1,
-		MessageType:   "classic",
+		ServiceVersion: 1,
+		Name:           "somesyslogname2",
+		Address:        "127.0.0.2",
+		IPV4:           "127.0.0.2",
+		Port:           uint(10514),
+		Format:         "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:  1,
+		MessageType:    "classic",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -151,12 +151,12 @@ func TestAccFastlyServiceV1_syslog_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		Version:     1,
-		Name:        "somesyslogname",
-		Address:     "127.0.0.1",
-		IPV4:        "127.0.0.1",
-		Port:        uint(514),
-		MessageType: "classic",
+		ServiceVersion: 1,
+		Name:           "somesyslogname",
+		Address:        "127.0.0.1",
+		IPV4:           "127.0.0.1",
+		Port:           uint(514),
+		MessageType:    "classic",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -185,14 +185,14 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		Version:       1,
-		Name:          "somesyslogname",
-		Address:       "127.0.0.1",
-		IPV4:          "127.0.0.1",
-		Port:          uint(514),
-		Format:        "%a %l %u %t %m %U%q %H %>s %b %T",
-		FormatVersion: 2,
-		MessageType:   "classic",
+		ServiceVersion: 1,
+		Name:           "somesyslogname",
+		Address:        "127.0.0.1",
+		IPV4:           "127.0.0.1",
+		Port:           uint(514),
+		Format:         "%a %l %u %t %m %U%q %H %>s %b %T",
+		FormatVersion:  2,
+		MessageType:    "classic",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -229,19 +229,19 @@ func TestAccFastlyServiceV1_syslog_useTls(t *testing.T) {
 	defer resetEnv()
 
 	log1 := gofastly.Syslog{
-		Version:       1,
-		Name:          "somesyslogname",
-		Address:       "127.0.0.1",
-		IPV4:          "127.0.0.1",
-		Port:          uint(514),
-		Format:        "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion: 1,
-		MessageType:   "classic",
-		UseTLS:        true,
-		TLSCACert:     cert,
-		TLSHostname:   "example.com",
-		TLSClientCert: cert,
-		TLSClientKey:  key,
+		ServiceVersion: 1,
+		Name:           "somesyslogname",
+		Address:        "127.0.0.1",
+		IPV4:           "127.0.0.1",
+		Port:           uint(514),
+		Format:         "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:  1,
+		MessageType:    "classic",
+		UseTLS:         true,
+		TLSCACert:      cert,
+		TLSHostname:    "example.com",
+		TLSClientCert:  cert,
+		TLSClientKey:   key,
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -269,8 +269,8 @@ func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -289,7 +289,7 @@ func testAccCheckFastlyServiceV1SyslogAttributes(service *gofastly.ServiceDetail
 				if s.Name == ls.Name {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
-					s.Version = service.ActiveVersion.Number
+					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					ls.CreatedAt = nil

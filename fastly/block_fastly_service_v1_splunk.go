@@ -40,9 +40,9 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	for _, sRaw := range remove {
 		sf := sRaw.(map[string]interface{})
 		opts := gofastly.DeleteSplunkInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    sf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           sf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Splunk removal opts: %#v", opts)
@@ -76,8 +76,8 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 
 		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateSplunkInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              sf["name"].(string),
 			URL:               sf["url"].(string),
 			Token:             sf["token"].(string),
@@ -101,8 +101,8 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
 	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

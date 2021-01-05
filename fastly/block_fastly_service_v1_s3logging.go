@@ -80,8 +80,8 @@ func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	// Refresh S3.
 	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
 	s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -298,8 +298,8 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, servic
 
 	var vla = h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateS3Input{
-		Service:                      serviceID,
-		Version:                      serviceVersion,
+		ServiceID:                    serviceID,
+		ServiceVersion:               serviceVersion,
 		Name:                         df["name"].(string),
 		BucketName:                   df["bucket_name"].(string),
 		AccessKey:                    df["s3_access_key"].(string),
@@ -341,8 +341,8 @@ func (h *S3LoggingServiceAttributeHandler) buildDelete(s3Map interface{}, servic
 	df := s3Map.(map[string]interface{})
 
 	return &gofastly.DeleteS3Input{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

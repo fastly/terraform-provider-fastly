@@ -278,8 +278,8 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 	if d.HasChange("name") || d.HasChange("comment") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ID:      d.Id(),
-			Name:    d.Get("name").(string),
-			Comment: d.Get("comment").(string),
+			Name:    gofastly.String(d.Get("name").(string)),
+			Comment: gofastly.String(d.Get("comment").(string)),
 		})
 		if err != nil {
 			return err
@@ -309,9 +309,9 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		}
 
 		opts := gofastly.UpdateVersionInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Comment: d.Get("version_comment").(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Comment:        gofastly.String(d.Get("version_comment").(string)),
 		}
 
 		log.Printf("[DEBUG] Update Version opts: %#v", opts)
@@ -334,8 +334,8 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 			// Clone the latest version, giving us an unlocked version we can modify.
 			log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
 			newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
-				Service: d.Id(),
-				Version: latestVersion,
+				ServiceID:      d.Id(),
+				ServiceVersion: latestVersion,
 			})
 			if err != nil {
 				return err
@@ -354,9 +354,9 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 			// Update the cloned version's comment.
 			if d.Get("version_comment").(string) != "" {
 				opts := gofastly.UpdateVersionInput{
-					Service: d.Id(),
-					Version: latestVersion,
-					Comment: d.Get("version_comment").(string),
+					ServiceID:      d.Id(),
+					ServiceVersion: latestVersion,
+					Comment:        gofastly.String(d.Get("version_comment").(string)),
 				}
 
 				log.Printf("[DEBUG] Update Version opts: %#v", opts)
@@ -380,8 +380,8 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		// Validate version.
 		log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
 		valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
-			Service: d.Id(),
-			Version: latestVersion,
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
 		})
 
 		if err != nil {
@@ -396,8 +396,8 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		if shouldActivate {
 			log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
 			_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-				Service: d.Id(),
-				Version: latestVersion,
+				ServiceID:      d.Id(),
+				ServiceVersion: latestVersion,
 			})
 			if err != nil {
 				return fmt.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
@@ -450,7 +450,12 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 	d.Set("version_comment", s.Version.Comment)
 	d.Set("active_version", s.ActiveVersion.Number)
 
-	if s.ActiveVersion.Number == 0 && isImport {
+	// If we are importing or `activate` is set to false, temporarily set the
+	// service.ActiveVersion number to the latest version supplied via the get
+	// service version details call. This is to ensure we still read all of the
+	// state below.
+	isInactive := d.Get("activate").(bool) == false
+	if s.ActiveVersion.Number == 0 && isImport || isInactive {
 		s.ActiveVersion.Number = s.Version.Number
 	}
 
@@ -491,8 +496,8 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef 
 
 		if s.ActiveVersion.Number != 0 {
 			_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
-				Service: d.Id(),
-				Version: s.ActiveVersion.Number,
+				ServiceID:      d.Id(),
+				ServiceVersion: s.ActiveVersion.Number,
 			})
 			if err != nil {
 				return err

@@ -40,9 +40,9 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 	for _, bslRaw := range remove {
 		bslf := bslRaw.(map[string]interface{})
 		opts := gofastly.DeleteBlobStorageInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    bslf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           bslf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Blob Storage logging removal opts: %#v", opts)
@@ -76,8 +76,8 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 
 		var vla = h.getVCLLoggingAttributes(bslf)
 		opts := gofastly.CreateBlobStorageInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              bslf["name"].(string),
 			Path:              bslf["path"].(string),
 			AccountName:       bslf["account_name"].(string),
@@ -106,8 +106,8 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
 	blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

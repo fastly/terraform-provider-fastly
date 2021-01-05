@@ -315,8 +315,8 @@ func TestAccFastlyServiceV1_disappears(t *testing.T) {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		// deactivate active version to destoy
 		_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
 			return err
@@ -380,8 +380,8 @@ func testAccCheckFastlyServiceV1Attributes(service *gofastly.ServiceDetail, name
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -414,8 +414,8 @@ func testAccCheckFastlyServiceV1Attributes_backends(service *gofastly.ServiceDet
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {

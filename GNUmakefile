@@ -16,6 +16,12 @@ test:
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
 
+# prefix `go test` with TF_LOG=debug or 'trace' for additional terraform output
+# such as all the requests and responses it handles.
+#
+# reference:
+# https://www.terraform.io/docs/internals/debugging.html
+#
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
 

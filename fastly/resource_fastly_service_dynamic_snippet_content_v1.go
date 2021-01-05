@@ -48,9 +48,9 @@ func resourceServiceDynamicSnippetV1Create(d *schema.ResourceData, meta interfac
 	content := d.Get("content").(string)
 
 	_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
-		Service: serviceID,
-		ID:      snippetID,
-		Content: content,
+		ServiceID: serviceID,
+		ID:        snippetID,
+		Content:   content,
 	})
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
@@ -77,9 +77,9 @@ func resourceServiceDynamicSnippetV1Update(d *schema.ResourceData, meta interfac
 		content := d.Get("content").(string)
 
 		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
-			Service: serviceID,
-			ID:      snippetID,
-			Content: content,
+			ServiceID: serviceID,
+			ID:        snippetID,
+			Content:   content,
 		})
 
 		if err != nil {
@@ -97,8 +97,8 @@ func resourceServiceDynamicSnippetV1Read(d *schema.ResourceData, meta interface{
 	snippetID := d.Get("snippet_id").(string)
 
 	dynamicSnippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
-		Service: serviceID,
-		ID:      snippetID,
+		ServiceID: serviceID,
+		ID:        snippetID,
 	})
 	if err != nil {
 		return err

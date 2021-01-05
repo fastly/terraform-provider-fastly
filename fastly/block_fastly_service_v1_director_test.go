@@ -122,12 +122,12 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	createdDir1 := gofastly.Director{
-		Version:  1,
-		Name:     "mydirector",
-		Type:     3,
-		Quorum:   75,
-		Capacity: 100,
-		Retries:  5,
+		ServiceVersion: 1,
+		Name:           "mydirector",
+		Type:           3,
+		Quorum:         75,
+		Capacity:       100,
+		Retries:        5,
 	}
 	createdDb1 := gofastly.DirectorBackend{
 		Director: "mydirector",
@@ -135,12 +135,12 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	}
 
 	updatedDir1 := gofastly.Director{
-		Version:  1,
-		Name:     "mydirector",
-		Type:     4,
-		Quorum:   30,
-		Capacity: 25,
-		Retries:  10,
+		ServiceVersion: 1,
+		Name:           "mydirector",
+		Type:           4,
+		Quorum:         30,
+		Capacity:       25,
+		Retries:        10,
 	}
 	updatedDb1 := gofastly.DirectorBackend{
 		Director: "mydirector",
@@ -148,12 +148,12 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	}
 
 	createdDir2 := gofastly.Director{
-		Version:  1,
-		Name:     "unchangeddirector",
-		Type:     3,
-		Quorum:   75,
-		Capacity: 100,
-		Retries:  5,
+		ServiceVersion: 1,
+		Name:           "unchangeddirector",
+		Type:           3,
+		Quorum:         75,
+		Capacity:       100,
+		Retries:        5,
 	}
 	createdDb2 := gofastly.DirectorBackend{
 		Director: "unchangeddirector",
@@ -165,12 +165,12 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	updatedDb2 := createdDb2
 
 	updatedDir3 := gofastly.Director{
-		Version:  1,
-		Name:     "myotherdirector",
-		Type:     3,
-		Quorum:   75,
-		Capacity: 100,
-		Retries:  5,
+		ServiceVersion: 1,
+		Name:           "myotherdirector",
+		Type:           3,
+		Quorum:         75,
+		Capacity:       100,
+		Retries:        5,
 	}
 	updatedDb3x := gofastly.DirectorBackend{
 		Director: "myotherdirector",
@@ -221,11 +221,10 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director, director_backends []*gofastly.DirectorBackend) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -242,7 +241,7 @@ func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDet
 				if d.Name == ld.Name {
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ID
-					d.Version = service.ActiveVersion.Number
+					d.ServiceVersion = service.ActiveVersion.Number
 					ld.CreatedAt = nil
 					ld.UpdatedAt = nil
 					if !reflect.DeepEqual(d, ld) {

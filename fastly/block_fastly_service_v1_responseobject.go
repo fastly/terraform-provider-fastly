@@ -39,9 +39,9 @@ func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, 
 	for _, rRaw := range removeResponseObject {
 		rf := rRaw.(map[string]interface{})
 		opts := gofastly.DeleteResponseObjectInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    rf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           rf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Response Object removal opts: %#v", opts)
@@ -60,8 +60,8 @@ func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, 
 		rf := rRaw.(map[string]interface{})
 
 		opts := gofastly.CreateResponseObjectInput{
-			Service:          d.Id(),
-			Version:          latestVersion,
+			ServiceID:        d.Id(),
+			ServiceVersion:   latestVersion,
 			Name:             rf["name"].(string),
 			Status:           uint(rf["status"].(int)),
 			Response:         rf["response"].(string),
@@ -83,8 +83,8 @@ func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, 
 func (h *ResponseObjectServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
 	responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

@@ -1,5 +1,17 @@
 ## 0.22.0 (Unreleased)
 
+## 0.21.3 (January 04, 2021)
+
+NOTES:
+
+* provider: Change version of go-fastly to v2.0.0 ([#341](https://github.com/fastly/terraform-provider-fastly/pull/341))
+
+## 0.21.2 (December 16, 2020)
+
+BUG FIXES:
+
+* resource/fastly_service_*: Ensure we still refresh remote state when `activate` is set to `false` ([#345](https://github.com/fastly/terraform-provider-fastly/pull/345))
+
 ## 0.21.1 (October 15, 2020)
 
 BUG FIXES:

@@ -312,8 +312,8 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		remoteSplunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -330,7 +330,7 @@ func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail
 				if ls.Name == rs.Name {
 					// we don't know these things ahead of time, so populate them now
 					ls.ServiceID = service.ID
-					ls.Version = service.ActiveVersion.Number
+					ls.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					rs.CreatedAt = nil

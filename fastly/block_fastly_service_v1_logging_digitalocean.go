@@ -84,8 +84,8 @@ func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 	// Refresh DigitalOcean Spaces.
 	log.Printf("[DEBUG] Refreshing DigitalOcean Spaces logging endpoints for (%s)", d.Id())
 	digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -163,23 +163,23 @@ func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interf
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateDigitalOceanInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              gofastly.NullString(df["name"].(string)),
-		BucketName:        gofastly.NullString(df["bucket_name"].(string)),
-		Domain:            gofastly.NullString(df["domain"].(string)),
-		AccessKey:         gofastly.NullString(df["access_key"].(string)),
-		SecretKey:         gofastly.NullString(df["secret_key"].(string)),
-		PublicKey:         gofastly.NullString(df["public_key"].(string)),
-		Path:              gofastly.NullString(df["path"].(string)),
-		Period:            gofastly.Uint(uint(df["period"].(int))),
-		GzipLevel:         gofastly.Uint(uint(df["gzip_level"].(int))),
-		TimestampFormat:   gofastly.NullString(df["timestamp_format"].(string)),
-		MessageType:       gofastly.NullString(df["message_type"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		BucketName:        df["bucket_name"].(string),
+		Domain:            df["domain"].(string),
+		AccessKey:         df["access_key"].(string),
+		SecretKey:         df["secret_key"].(string),
+		PublicKey:         df["public_key"].(string),
+		Path:              df["path"].(string),
+		Period:            uint(df["period"].(int)),
+		GzipLevel:         uint(df["gzip_level"].(int)),
+		TimestampFormat:   df["timestamp_format"].(string),
+		MessageType:       df["message_type"].(string),
+		Format:            vla.format,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -187,9 +187,9 @@ func (h *DigitalOceanServiceAttributeHandler) buildDelete(digitaloceanMap interf
 	df := digitaloceanMap.(map[string]interface{})
 
 	return &gofastly.DeleteDigitalOceanInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }
 

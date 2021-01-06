@@ -42,7 +42,7 @@ var computeService = &BaseServiceDefinition{
 		NewServiceLoggingOpenstack(computeAttributes),
 		NewServiceLoggingDigitalOcean(computeAttributes),
 		NewServiceLoggingCloudfiles(computeAttributes),
-		NewServiceLoggingKinesis(vclAttributes),
+		NewServiceLoggingKinesis(computeAttributes),
 		NewServicePackage(computeAttributes),
 	},
 }

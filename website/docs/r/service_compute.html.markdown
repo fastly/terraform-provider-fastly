@@ -528,7 +528,7 @@ The `logging_cloudfiles` block supports:
 
 The `logging_kinesis` block supports:
 
-* `name` - (Required) The unique name of the Logshuttle logging endpoint.
+* `name` - (Required) The unique name of the Kinesis logging endpoint.
 * `topic` - (Required) The Kinesis stream name.
 * `region` - (Optional) The AWS region the stream resides in. (Default: `us-east-1`).
 * `access_key` - (Required) The AWS access key to be used to write to the stream.

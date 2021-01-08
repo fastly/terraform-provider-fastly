@@ -13,7 +13,7 @@ import (
 )
 
 func TestResourceFastlyFlattenSplunk(t *testing.T) {
-	_, cert, err := generateKeyAndCert()
+	key, cert, err := generateKeyAndCert()
 	if err != nil {
 		t.Errorf("Failed to generate key and cert: %s", err)
 	}
@@ -34,6 +34,8 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					Token:             "test-token",
 					TLSCACert:         cert,
 					TLSHostname:       "example.com",
+					TLSClientCert:     cert,
+					TLSClientKey:      key,
 				},
 			},
 			local: []map[string]interface{}{
@@ -47,6 +49,8 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"token":              "test-token",
 					"tls_hostname":       "example.com",
 					"tls_ca_cert":        cert,
+					"tls_client_cert":    cert,
+					"tls_client_key":     key,
 				},
 			},
 		},
@@ -192,7 +196,7 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
-	_, cert, err := generateKeyAndCert()
+	key, cert, err := generateKeyAndCert()
 	if err != nil {
 		t.Errorf("Failed to generate key and cert: %s", err)
 	}
@@ -207,6 +211,8 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		ResponseCondition: "error_response_5XX",
 		TLSHostname:       "example.com",
 		TLSCACert:         cert,
+		TLSClientCert:     cert,
+		TLSClientKey:      key,
 	}
 
 	splunkLogOneUpdated := gofastly.Splunk{
@@ -219,6 +225,8 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		ResponseCondition: "error_response_5XX",
 		TLSHostname:       "example.com",
 		TLSCACert:         cert,
+		TLSClientCert:     cert,
+		TLSClientKey:      key,
 	}
 
 	splunkLogTwo := gofastly.Splunk{
@@ -231,6 +239,8 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		ResponseCondition: "ok_response_2XX",
 		TLSHostname:       "example.com",
 		TLSCACert:         cert,
+		TLSClientCert:     cert,
+		TLSClientKey:      key,
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -239,7 +249,7 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1SplunkConfig_useTLS(serviceName, cert),
+				Config: testAccServiceV1SplunkConfig_useTLS(serviceName, cert, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
@@ -251,7 +261,7 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1SplunkConfig_updateUseTLS(serviceName, cert),
+				Config: testAccServiceV1SplunkConfig_updateUseTLS(serviceName, cert, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
@@ -433,7 +443,7 @@ resource "fastly_service_v1" "foo" {
 }`, serviceName, domainName, format)
 }
 
-func testAccServiceV1SplunkConfig_useTLS(serviceName string, cert string) string {
+func testAccServiceV1SplunkConfig_useTLS(serviceName, cert, key string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	format := "%h %l %u %t \"%r\" %>s %b"
@@ -468,11 +478,13 @@ resource "fastly_service_v1" "foo" {
     placement          = "waf_debug"
     tls_hostname       = "example.com"
     tls_ca_cert        = %q
+    tls_client_cert    = %q
+    tls_client_key     = %q
     response_condition = "error_response_5XX"
   }
 
   force_destroy = true
-}`, serviceName, domainName, format, cert)
+}`, serviceName, domainName, format, cert, cert, key)
 }
 
 func testAccServiceV1SplunkConfig_update(serviceName string) string {
@@ -531,7 +543,7 @@ resource "fastly_service_v1" "foo" {
 }`, serviceName, domainName, format, format)
 }
 
-func testAccServiceV1SplunkConfig_updateUseTLS(serviceName string, cert string) string {
+func testAccServiceV1SplunkConfig_updateUseTLS(serviceName, cert, key string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
 
@@ -572,6 +584,8 @@ resource "fastly_service_v1" "foo" {
     placement          = "waf_debug"
     tls_hostname       = "example.com"
     tls_ca_cert        = %q
+    tls_client_cert    = %q
+    tls_client_key     = %q
     response_condition = "error_response_5XX"
   }
 
@@ -584,11 +598,13 @@ resource "fastly_service_v1" "foo" {
     placement          = "waf_debug"
     tls_hostname       = "example.com"
     tls_ca_cert        = %q
+    tls_client_cert    = %q
+    tls_client_key     = %q
     response_condition = "ok_response_2XX"
   }
 
   force_destroy = true
-}`, serviceName, domainName, format, cert, format, cert)
+}`, serviceName, domainName, format, cert, cert, key, format, cert, cert, key)
 }
 
 func testAccServiceV1SplunkConfig_default(serviceName string) string {

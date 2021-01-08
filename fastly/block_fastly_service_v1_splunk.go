@@ -83,6 +83,8 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			Token:             sf["token"].(string),
 			TLSHostname:       sf["tls_hostname"].(string),
 			TLSCACert:         sf["tls_ca_cert"].(string),
+			TLSClientCert:     sf["tls_client_cert"].(string),
+			TLSClientKey:      sf["tls_client_key"].(string),
 			Format:            vla.format,
 			FormatVersion:     uintOrDefault(vla.formatVersion),
 			ResponseCondition: vla.responseCondition,
@@ -149,6 +151,19 @@ func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
 			Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`",
 		},
+		"tls_client_cert": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CLIENT_CERT", ""),
+			Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+		},
+		"tls_client_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CLIENT_KEY", ""),
+			Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+			Sensitive:   true,
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -202,6 +217,8 @@ func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 			"token":              s.Token,
 			"tls_hostname":       s.TLSHostname,
 			"tls_ca_cert":        s.TLSCACert,
+			"tls_client_cert":    s.TLSClientCert,
+			"tls_client_key":     s.TLSClientKey,
 		}
 
 		// prune any empty values that come from the default string value in structs

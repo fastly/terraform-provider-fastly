@@ -1,4 +1,10 @@
-## 0.22.0 (Unreleased)
+## 0.23.0 (Unreleased)
+
+## 0.22.0 (January 08, 2021)
+
+ENHANCEMENT:
+
+* Add Kinesis logging support ([#351](https://github.com/fastly/terraform-provider-fastly/pull/351))
 
 ## 0.21.3 (January 04, 2021)
 

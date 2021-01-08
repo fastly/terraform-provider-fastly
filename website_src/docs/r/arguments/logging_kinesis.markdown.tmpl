@@ -1,0 +1,17 @@
+{{define "logging_kinesis"}}* `logging_kinesis` - (Optional) A Kinesis endpoint to send streaming logs to.
+[Defined below](#logging_kinesis-block).{{end}}
+
+{{define "logging_kinesis_block"}}
+### logging_kinesis block
+
+The `logging_kinesis` block supports:
+
+* `name` - (Required) The unique name of the Kinesis logging endpoint.
+* `topic` - (Required) The Kinesis stream name.
+* `region` - (Optional) The AWS region the stream resides in. (Default: `us-east-1`).
+* `access_key` - (Required) The AWS access key to be used to write to the stream.
+* `secret_key` - (Required) The AWS secret access key to authenticate with.
+{{ if eq .Data.ServiceType "vcl"}}* `format` - (Optional) Apache style log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.{{end}}{{end}}

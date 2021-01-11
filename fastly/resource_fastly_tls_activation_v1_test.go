@@ -3,6 +3,8 @@ package fastly
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -17,7 +19,11 @@ func TestAccFastlyTLSActivationV1_basic(t *testing.T) {
 	// These tests work when I replace the next line with a TLSConfiguration ID from my account but of course that won't work for CI/CD purposes.
 	// We can call the API from here to GET a list of configurations and just use the 1st one OR I can add a terraform data source for TLSConfiguration.
 	// This would also require adding TLSConfiguration List and Get operations to the go-fastly package.
-	configurationID := "HARD CODED ID"
+	configurationID, err := getFastlyTestingTLSConfigurationID()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	hostname := fmt.Sprintf("%s.com", acctest.RandString(10))
 	key, certBlob, err := generateKeyAndCertWithSan(hostname)
 	if err != nil {
@@ -51,7 +57,10 @@ func TestAccFastlyTLSActivationV1_basic(t *testing.T) {
 
 func TestAccFastlyTLSActivationV1_updateCertificateID(t *testing.T) {
 	var ta gofastly.TLSActivation
-	configurationID := "sZRO3jiT0LPs6C0CmR7dZg"
+	configurationID, err := getFastlyTestingTLSConfigurationID()
+	if err != nil {
+		t.Fatal(err)
+	}
 	hostname := fmt.Sprintf("%s.com", acctest.RandString(10))
 	key, certBlob, err := generateKeyAndCertWithSan(hostname)
 	if err != nil {
@@ -91,7 +100,10 @@ func TestAccFastlyTLSActivationV1_updateCertificateID(t *testing.T) {
 
 func TestAccFastlyTLSActivationV1_import(t *testing.T) {
 	var ta gofastly.TLSActivation
-	configurationID := "sZRO3jiT0LPs6C0CmR7dZg"
+	configurationID, err := getFastlyTestingTLSConfigurationID()
+	if err != nil {
+		t.Fatal(err)
+	}
 	hostname := fmt.Sprintf("%s.com", acctest.RandString(10))
 	key, certBlob, err := generateKeyAndCertWithSan(hostname)
 	if err != nil {
@@ -234,4 +246,13 @@ resource "fastly_private_key_v1" "foo" {
 		cert_blob = "%s"
 		name  = fastly_private_key_v1.bar.name
 }`, key, name, certBlob, name, hostname, configurationID, key2, name+"-2", certBlob2)
+}
+
+// Testing Fastly TLS Activation functions requires a valid TLS Activation ID to be set as an environment variable
+func getFastlyTestingTLSConfigurationID() (string, error) {
+	configurationID := os.Getenv("FASTLY_TESTING_TLS_CONFIGURATION_ID")
+	if configurationID == "" {
+		return "", errors.New("FASTLY_TESTING_TLS_CONFIGURATION_ID environment variable must be set in order to run TLS Activation tests")
+	}
+	return configurationID, nil
 }

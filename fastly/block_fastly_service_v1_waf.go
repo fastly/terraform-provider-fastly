@@ -3,7 +3,6 @@ package fastly
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -44,6 +43,12 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 					Computed:    true,
 					Description: "The Web Application Firewall (WAF) ID",
 				},
+				"disabled": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "A flag used to completely disable a Web Application Firewall. This is intended to only be used in an emergency.",
+				},
 			},
 		},
 	}
@@ -51,17 +56,16 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *WAFServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *WAFServiceAttributeHandler) Process(d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	serviceVersion := strconv.Itoa(latestVersion)
 	oldWAFVal, newWAFVal := d.GetChange(h.GetKey())
 
-	if len(newWAFVal.([]interface{})) > 0 {
+	if len(newWAFVal.([]interface{})) == 1 {
 		wf := newWAFVal.([]interface{})[0].(map[string]interface{})
 
 		var err error
 		if wafExists(conn, serviceID, serviceVersion, wf["waf_id"].(string)) {
-			opts := buildUpdateWAF(wf, serviceID, serviceVersion)
+			opts := buildUpdateWAF(d, wf, serviceID, serviceVersion)
 			log.Printf("[DEBUG] Fastly WAF update opts: %#v", opts)
 			_, err = conn.UpdateWAF(opts)
 		} else {
@@ -110,12 +114,11 @@ func (h *WAFServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 	return nil
 }
 
-func wafExists(conn *gofastly.Client, s, v, id string) bool {
-
+func wafExists(conn *gofastly.Client, s string, v int, id string) bool {
 	_, err := conn.GetWAF(&gofastly.GetWAFInput{
-		Service: s,
-		Version: v,
-		ID:      id,
+		ServiceID:      s,
+		ServiceVersion: v,
+		ID:             id,
 	})
 	if err != nil {
 		return false
@@ -146,11 +149,12 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
 	return append(wl, WAFMapString)
 }
 
-func buildCreateWAF(WAFMap interface{}, serviceID string, ServiceVersion string) *gofastly.CreateWAFInput {
+func buildCreateWAF(WAFMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
 	df := WAFMap.(map[string]interface{})
+
 	opts := gofastly.CreateWAFInput{
-		Service:           serviceID,
-		Version:           ServiceVersion,
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
 		ID:                df["waf_id"].(string),
 		PrefetchCondition: df["prefetch_condition"].(string),
 		Response:          df["response_object"].(string),
@@ -158,23 +162,41 @@ func buildCreateWAF(WAFMap interface{}, serviceID string, ServiceVersion string)
 	return &opts
 }
 
-func buildDeleteWAF(WAFMap interface{}, ServiceVersion string) *gofastly.DeleteWAFInput {
+func buildDeleteWAF(WAFMap interface{}, serviceVersion int) *gofastly.DeleteWAFInput {
 	df := WAFMap.(map[string]interface{})
+
 	opts := gofastly.DeleteWAFInput{
-		ID:      df["waf_id"].(string),
-		Version: ServiceVersion,
+		ID:             df["waf_id"].(string),
+		ServiceVersion: serviceVersion,
 	}
 	return &opts
 }
 
-func buildUpdateWAF(wafMap interface{}, serviceID string, ServiceVersion string) *gofastly.UpdateWAFInput {
+func buildUpdateWAF(d *schema.ResourceData, wafMap interface{}, serviceID string, serviceVersion int) *gofastly.UpdateWAFInput {
 	df := wafMap.(map[string]interface{})
-	opts := gofastly.UpdateWAFInput{
-		Service:           serviceID,
-		Version:           ServiceVersion,
-		ID:                df["waf_id"].(string),
-		PrefetchCondition: df["prefetch_condition"].(string),
-		Response:          df["response_object"].(string),
+
+	input := gofastly.UpdateWAFInput{
+		ServiceID:      gofastly.String(serviceID),
+		ServiceVersion: gofastly.Int(serviceVersion),
+		ID:             df["waf_id"].(string),
 	}
-	return &opts
+
+	// NOTE: to access the WAF data we need to link to a specific list index.
+	// This is because the schema defines the service as being of TypeList.
+	//
+	// Although there should only ever be one service (hence MaxItems: 1) we are
+	// unable to change the schema to a TypeMap as that would contrain the map's
+	// value to a single type (e.g. TypeString, TypeBool, TypeInt, or TypeFloat).
+
+	if v, ok := d.GetOk("waf.0.prefetch_condition"); ok {
+		input.PrefetchCondition = gofastly.String(v.(string))
+	}
+	if v, ok := d.GetOk("waf.0.response_object"); ok {
+		input.Response = gofastly.String(v.(string))
+	}
+	if v, ok := d.GetOk("waf.0.disabled"); ok {
+		input.Disabled = gofastly.Bool(v.(bool))
+	}
+
+	return &input
 }

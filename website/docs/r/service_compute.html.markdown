@@ -8,7 +8,7 @@ description: |-
 
 # fastly_service_compute
 
-Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/), which is ran at the edge using [Lucet](https://github.com/bytecodealliance/lucet), an open-source WebAssembly runtime created by Fastly. A compute service encompasses Domains and Backends.
+Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/), which is run at the edge using [Lucet](https://github.com/bytecodealliance/lucet), an open-source WebAssembly runtime created by Fastly. A compute service encompasses Domains and Backends.
 
 The Service resource requires a domain name that is correctly set up to direct
 traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]
@@ -111,6 +111,8 @@ order to destroy the Service, set `force_destroy` to `true`. Default `false`.
 [Defined below](#logging_digitalocean-block).
 * `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
 [Defined below](#logging_cloudfiles-block).
+* `logging_kinesis` - (Optional) A Kinesis endpoint to send streaming logs to.
+[Defined below](#logging_kinesis-block).
 
 
 ### domain block
@@ -520,6 +522,17 @@ The `logging_cloudfiles` block supports:
 * `region` - (Optional) The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong).
 * `period` - (Optional) How frequently log files are finalized so they can be available for reading (in seconds, default 3600).
 * `timestamp_format` - (Optional) The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).
+
+
+### logging_kinesis block
+
+The `logging_kinesis` block supports:
+
+* `name` - (Required) The unique name of the Kinesis logging endpoint.
+* `topic` - (Required) The Kinesis stream name.
+* `region` - (Optional) The AWS region the stream resides in. (Default: `us-east-1`).
+* `access_key` - (Required) The AWS access key to be used to write to the stream.
+* `secret_key` - (Required) The AWS secret access key to authenticate with.
 
 
 ## Attributes Reference

@@ -39,9 +39,9 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range removeGcslogging {
 		sf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteGCSInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    sf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           sf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly gcslogging removal opts: %#v", opts)
@@ -60,8 +60,8 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 		sf := pRaw.(map[string]interface{})
 		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateGCSInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              sf["name"].(string),
 			User:              sf["email"].(string),
 			Bucket:            sf["bucket_name"].(string),
@@ -88,8 +88,8 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
 	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

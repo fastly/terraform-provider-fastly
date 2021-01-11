@@ -40,9 +40,9 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	for _, vRaw := range remove {
 		val := vRaw.(map[string]interface{})
 		opts := gofastly.DeleteACLInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    val["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           val["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly ACL removal opts: %#v", opts)
@@ -61,9 +61,9 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	for _, vRaw := range add {
 		val := vRaw.(map[string]interface{})
 		opts := gofastly.CreateACLInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    val["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           val["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
@@ -79,8 +79,8 @@ func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 
 	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
 	aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up ACLs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)

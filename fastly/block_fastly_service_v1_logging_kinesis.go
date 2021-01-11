@@ -8,20 +8,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type LogglyServiceAttributeHandler struct {
+type KinesisServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
-func NewServiceLoggingLoggly(sa ServiceMetadata) ServiceAttributeDefinition {
-	return &LogglyServiceAttributeHandler{
+func NewServiceLoggingKinesis(sa ServiceMetadata) ServiceAttributeDefinition {
+	return &KinesisServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
-			key:             "logging_loggly",
+			key:             "logging_kinesis",
 			serviceMetadata: sa,
 		},
 	}
 }
 
-func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	ol, nl := d.GetChange(h.GetKey())
 
@@ -35,29 +35,29 @@ func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	ols := ol.(*schema.Set)
 	nls := nl.(*schema.Set)
 
-	removeLogglyLogging := ols.Difference(nls).List()
-	addLogglyLogging := nls.Difference(ols).List()
+	removeKinesisLogging := ols.Difference(nls).List()
+	addKinesisLogging := nls.Difference(ols).List()
 
-	// DELETE old Loggly logging endpoints.
-	for _, oRaw := range removeLogglyLogging {
+	// DELETE old Kinesis logging endpoints.
+	for _, oRaw := range removeKinesisLogging {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
-		log.Printf("[DEBUG] Fastly Loggly logging endpoint removal opts: %#v", opts)
+		log.Printf("[DEBUG] Fastly Kinesis logging endpoint removal opts: %#v", opts)
 
-		if err := deleteLoggly(conn, opts); err != nil {
+		if err := deleteKinesis(conn, opts); err != nil {
 			return err
 		}
 	}
 
-	// POST new/updated Loggly logging endpoints.
-	for _, nRaw := range addLogglyLogging {
+	// POST new/updated Kinesis logging endpoints.
+	for _, nRaw := range addKinesisLogging {
 		lf := nRaw.(map[string]interface{})
 		opts := h.buildCreate(lf, serviceID, latestVersion)
 
-		log.Printf("[DEBUG] Fastly Loggly logging addition opts: %#v", opts)
+		log.Printf("[DEBUG] Fastly Kinesis logging addition opts: %#v", opts)
 
-		if err := createLoggly(conn, opts); err != nil {
+		if err := createKinesis(conn, opts); err != nil {
 			return err
 		}
 	}
@@ -65,34 +65,34 @@ func (h *LogglyServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	return nil
 }
 
-func (h *LogglyServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	// Refresh Loggly.
-	log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
-	logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
+func (h *KinesisServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	// Refresh Kinesis.
+	log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
+	kinesisList, err := conn.ListKineses(&gofastly.ListKinesesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Loggly logging endpoints for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("[ERR] Error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
 
-	ell := flattenLoggly(logglyList)
+	ell := flattenKinesis(kinesisList)
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting Loggly logging endpoints for (%s): %s", d.Id(), err)
+		log.Printf("[WARN] Error setting Kinesis logging endpoints for (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func createLoggly(conn *gofastly.Client, i *gofastly.CreateLogglyInput) error {
-	_, err := conn.CreateLoggly(i)
+func createKinesis(conn *gofastly.Client, i *gofastly.CreateKinesisInput) error {
+	_, err := conn.CreateKinesis(i)
 	return err
 }
 
-func deleteLoggly(conn *gofastly.Client, i *gofastly.DeleteLogglyInput) error {
-	err := conn.DeleteLoggly(i)
+func deleteKinesis(conn *gofastly.Client, i *gofastly.DeleteKinesisInput) error {
+	err := conn.DeleteKinesis(i)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {
@@ -108,13 +108,16 @@ func deleteLoggly(conn *gofastly.Client, i *gofastly.DeleteLogglyInput) error {
 	return nil
 }
 
-func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]interface{} {
+func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]interface{} {
 	var lsl []map[string]interface{}
-	for _, ll := range logglyList {
-		// Convert Loggly logging to a map for saving to state.
+	for _, ll := range kinesisList {
+		// Convert Kinesis logging to a map for saving to state.
 		nll := map[string]interface{}{
 			"name":               ll.Name,
-			"token":              ll.Token,
+			"topic":              ll.StreamName,
+			"region":             ll.Region,
+			"access_key":         ll.AccessKey,
+			"secret_key":         ll.SecretKey,
 			"format":             ll.Format,
 			"format_version":     ll.FormatVersion,
 			"placement":          ll.Placement,
@@ -134,15 +137,18 @@ func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]interface{} {
 	return lsl
 }
 
-func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogglyInput {
-	df := logglyMap.(map[string]interface{})
+func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateKinesisInput {
+	df := kinesisMap.(map[string]interface{})
 
 	var vla = h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateLogglyInput{
+	return &gofastly.CreateKinesisInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
 		Name:              df["name"].(string),
-		Token:             df["token"].(string),
+		StreamName:        df["topic"].(string),
+		Region:            df["region"].(string),
+		AccessKey:         df["access_key"].(string),
+		SecretKey:         df["secret_key"].(string),
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
@@ -150,30 +156,50 @@ func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap interface{}, servi
 	}
 }
 
-func (h *LogglyServiceAttributeHandler) buildDelete(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteLogglyInput {
-	df := logglyMap.(map[string]interface{})
+func (h *KinesisServiceAttributeHandler) buildDelete(kinesisMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteKinesisInput {
+	df := kinesisMap.(map[string]interface{})
 
-	return &gofastly.DeleteLogglyInput{
+	return &gofastly.DeleteKinesisInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
 		Name:           df["name"].(string),
 	}
 }
 
-func (h *LogglyServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *KinesisServiceAttributeHandler) Register(s *schema.Resource) error {
 	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Loggly logging endpoint.",
+			Description: "The unique name of the Kinesis logging endpoint.",
 		},
 
-		"token": {
+		"topic": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Kinesis stream name.",
+		},
+
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "us-east-1",
+			Description: "The AWS region the stream resides in.",
+		},
+
+		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).",
+			Description: "The AWS access key to be used to write to the stream.",
+		},
+
+		"secret_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The AWS secret access key to authenticate with.",
 		},
 	}
 
@@ -181,7 +207,7 @@ func (h *LogglyServiceAttributeHandler) Register(s *schema.Resource) error {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Apache-style string or VCL variables to use for log formatting.",
+			Description: "Apache style log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:         schema.TypeInt,

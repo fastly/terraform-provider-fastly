@@ -70,8 +70,8 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 	// refresh HTTPS
 	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
 	httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -293,8 +293,8 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, 
 
 	var vla = h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateHTTPSInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
 		Name:              df["name"].(string),
 		URL:               df["url"].(string),
 		RequestMaxEntries: uint(df["request_max_entries"].(int)),
@@ -322,9 +322,9 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap interface{}, 
 	df := httpsMap.(map[string]interface{})
 
 	opts := gofastly.DeleteHTTPSInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 
 	return &opts

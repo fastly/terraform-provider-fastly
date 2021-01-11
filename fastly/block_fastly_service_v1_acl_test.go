@@ -70,9 +70,9 @@ func testAccCheckFastlyServiceV1Attributes_acl(service *gofastly.ServiceDetail, 
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		acl, err := conn.GetACL(&gofastly.GetACLInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
-			Name:    aclName,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
+			Name:           aclName,
 		})
 
 		if err != nil {

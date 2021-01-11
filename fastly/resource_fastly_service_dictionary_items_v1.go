@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"strings"
 )
 
 func resourceServiceDictionaryItemsV1() *schema.Resource {
@@ -143,8 +144,8 @@ func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface
 	dictionaryID := d.Get("dictionary_id").(string)
 
 	dictList, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
-		Service:    serviceID,
-		Dictionary: dictionaryID,
+		ServiceID:    serviceID,
+		DictionaryID: dictionaryID,
 	})
 	if err != nil {
 		return err
@@ -163,8 +164,7 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 
 	var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
 
-	for key, _ := range items {
-
+	for key := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
 			Operation: gofastly.DeleteBatchOperation,
 			ItemKey:   key,
@@ -224,9 +224,9 @@ func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictiona
 		}
 
 		err := conn.BatchModifyDictionaryItems(&gofastly.BatchModifyDictionaryItemsInput{
-			Service:    serviceID,
-			Dictionary: dictionaryID,
-			Items:      batchDictionaryItems[i:j],
+			ServiceID:    serviceID,
+			DictionaryID: dictionaryID,
+			Items:        batchDictionaryItems[i:j],
 		})
 
 		if err != nil {

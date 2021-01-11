@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"fmt"
+	"log"
+
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
 )
 
 type SettingsServiceAttributeHandler struct {
@@ -16,15 +17,15 @@ func NewServiceSettings() ServiceAttributeDefinition {
 
 func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSettingsInput{
-		Service: d.Id(),
-		Version: latestVersion,
+		ServiceID:      d.Id(),
+		ServiceVersion: latestVersion,
 		// default_ttl has the same default value of 3600 that is provided by
 		// the Fastly API, so it's safe to include here
 		DefaultTTL: uint(d.Get("default_ttl").(int)),
 	}
 
 	if attr, ok := d.GetOk("default_host"); ok {
-		opts.DefaultHost = attr.(string)
+		opts.DefaultHost = gofastly.String(attr.(string))
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
@@ -35,8 +36,8 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 
 func (h *SettingsServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	settingsOpts := gofastly.GetSettingsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	}
 	if settings, err := conn.GetSettings(&settingsOpts); err == nil {
 		d.Set("default_host", settings.DefaultHost)

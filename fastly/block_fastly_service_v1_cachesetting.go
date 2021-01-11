@@ -41,9 +41,9 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	for _, dRaw := range remove {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteCacheSettingInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Cache Settings removal opts: %#v", opts)
@@ -64,8 +64,8 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 			log.Printf("[DEBUG] Error building Cache Setting: %s", err)
 			return err
 		}
-		opts.Service = d.Id()
-		opts.Version = latestVersion
+		opts.ServiceID = d.Id()
+		opts.ServiceVersion = latestVersion
 
 		log.Printf("[DEBUG] Fastly Cache Settings Addition opts: %#v", opts)
 		_, err = conn.CreateCacheSetting(opts)
@@ -79,8 +79,8 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 func (h *CacheSettingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
 	cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Cache Settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)

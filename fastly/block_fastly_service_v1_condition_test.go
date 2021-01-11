@@ -87,8 +87,8 @@ func testAccCheckFastlyServiceV1ConditionalAttributes(service *gofastly.ServiceD
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -105,7 +105,7 @@ func testAccCheckFastlyServiceV1ConditionalAttributes(service *gofastly.ServiceD
 				if c.Name == lc.Name {
 					// we don't know these things ahead of time, so populate them now
 					c.ServiceID = service.ID
-					c.Version = service.ActiveVersion.Number
+					c.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lc.CreatedAt = nil

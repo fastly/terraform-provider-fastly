@@ -21,7 +21,7 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 		{
 			remote: []*gofastly.Logentries{
 				{
-					Version:           1,
+					ServiceVersion:    1,
 					Name:              "somelogentriesname",
 					Port:              8080,
 					Token:             "mytoken",
@@ -59,7 +59,7 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Logentries{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somelogentriesname",
 		Port:              uint(20000),
 		UseTLS:            true,
@@ -70,7 +70,7 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Logentries{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somelogentriesanothername",
 		Port:              uint(10000),
 		UseTLS:            false,
@@ -117,7 +117,7 @@ func TestAccFastlyServiceV1_logentries_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Logentries{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somelogentriesname",
 		Port:              uint(20000),
 		UseTLS:            true,
@@ -152,8 +152,8 @@ func testAccCheckFastlyServiceV1LogentriesAttributes(service *gofastly.ServiceDe
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -172,7 +172,7 @@ func testAccCheckFastlyServiceV1LogentriesAttributes(service *gofastly.ServiceDe
 				if s.Name == ls.Name {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
-					s.Version = service.ActiveVersion.Number
+					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					ls.CreatedAt = nil
@@ -208,7 +208,7 @@ func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Logentries{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "somelogentriesname",
 		Port:              uint(20000),
 		UseTLS:            true,

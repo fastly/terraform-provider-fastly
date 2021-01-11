@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fastly/go-fastly/v2/fastly"
 	gofastly "github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -131,8 +130,8 @@ func (h *ScalyrServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 	// Refresh Scalyr.
 	log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
 	scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -200,15 +199,15 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, servi
 
 	var vla = h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateScalyrInput{
-		Service:           serviceID,
-		Version:           serviceVersion,
-		Name:              fastly.NullString(df["name"].(string)),
-		Region:            fastly.NullString(df["region"].(string)),
-		Token:             fastly.NullString(df["token"].(string)),
-		Format:            gofastly.NullString(vla.format),
-		FormatVersion:     vla.formatVersion,
-		Placement:         gofastly.NullString(vla.placement),
-		ResponseCondition: gofastly.NullString(vla.responseCondition),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
+		Name:              df["name"].(string),
+		Region:            df["region"].(string),
+		Token:             df["token"].(string),
+		Format:            vla.format,
+		FormatVersion:     uintOrDefault(vla.formatVersion),
+		Placement:         vla.placement,
+		ResponseCondition: vla.responseCondition,
 	}
 }
 
@@ -216,8 +215,8 @@ func (h *ScalyrServiceAttributeHandler) buildDelete(scalyrMap interface{}, servi
 	df := scalyrMap.(map[string]interface{})
 
 	return &gofastly.DeleteScalyrInput{
-		Service: serviceID,
-		Version: serviceVersion,
-		Name:    df["name"].(string),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Name:           df["name"].(string),
 	}
 }

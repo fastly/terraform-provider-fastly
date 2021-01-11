@@ -336,9 +336,9 @@ func testAccCheckFastlyServiceAclEntriesV1RemoteState(service *gofastly.ServiceD
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		acl, err := conn.GetACL(&gofastly.GetACLInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
-			Name:    aclName,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
+			Name:           aclName,
 		})
 
 		if err != nil {
@@ -346,8 +346,8 @@ func testAccCheckFastlyServiceAclEntriesV1RemoteState(service *gofastly.ServiceD
 		}
 
 		aclEntries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
-			Service: service.ID,
-			ACL:     acl.ID,
+			ServiceID: service.ID,
+			ACLID:     acl.ID,
 		})
 
 		if err != nil {

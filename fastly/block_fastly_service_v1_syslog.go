@@ -39,9 +39,9 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	for _, pRaw := range removeSyslog {
 		slf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteSyslogInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    slf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           slf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Syslog removal opts: %#v", opts)
@@ -61,13 +61,13 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 
 		var vla = h.getVCLLoggingAttributes(slf)
 		opts := gofastly.CreateSyslogInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              slf["name"].(string),
 			Address:           slf["address"].(string),
 			Port:              uint(slf["port"].(int)),
 			Token:             slf["token"].(string),
-			UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+			UseTLS:            gofastly.Compatibool(slf["use_tls"].(bool)),
 			TLSHostname:       slf["tls_hostname"].(string),
 			TLSCACert:         slf["tls_ca_cert"].(string),
 			TLSClientCert:     slf["tls_client_cert"].(string),
@@ -91,8 +91,8 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 func (h *SyslogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
 	syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

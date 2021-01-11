@@ -39,9 +39,9 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range removeLogentries {
 		slf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteLogentriesInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    slf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           slf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Logentries removal opts: %#v", opts)
@@ -61,11 +61,11 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 
 		var vla = h.getVCLLoggingAttributes(slf)
 		opts := gofastly.CreateLogentriesInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              slf["name"].(string),
 			Port:              uint(slf["port"].(int)),
-			UseTLS:            gofastly.CBool(slf["use_tls"].(bool)),
+			UseTLS:            gofastly.Compatibool(slf["use_tls"].(bool)),
 			Token:             slf["token"].(string),
 			Format:            vla.format,
 			FormatVersion:     uintOrDefault(vla.formatVersion),
@@ -86,8 +86,8 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
 	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

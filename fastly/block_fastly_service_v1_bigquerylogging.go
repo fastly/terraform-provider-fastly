@@ -39,9 +39,9 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 	for _, pRaw := range removeBigquerylogging {
 		sf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteBigQueryInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    sf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           sf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly bigquerylogging removal opts: %#v", opts)
@@ -75,8 +75,8 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 
 		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateBigQueryInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              sf["name"].(string),
 			ProjectID:         sf["project_id"].(string),
 			Dataset:           sf["dataset"].(string),
@@ -104,8 +104,8 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
 	BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

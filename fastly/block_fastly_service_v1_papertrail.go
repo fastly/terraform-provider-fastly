@@ -39,9 +39,9 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 	for _, pRaw := range removePapertrail {
 		pf := pRaw.(map[string]interface{})
 		opts := gofastly.DeletePapertrailInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    pf["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           pf["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Papertrail removal opts: %#v", opts)
@@ -61,8 +61,8 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 
 		var vla = h.getVCLLoggingAttributes(pf)
 		opts := gofastly.CreatePapertrailInput{
-			Service:           d.Id(),
-			Version:           latestVersion,
+			ServiceID:         d.Id(),
+			ServiceVersion:    latestVersion,
 			Name:              pf["name"].(string),
 			Address:           pf["address"].(string),
 			Port:              uint(pf["port"].(int)),
@@ -84,8 +84,8 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
 	papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

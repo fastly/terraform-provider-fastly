@@ -43,9 +43,9 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	for _, dRaw := range remove {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteSnippetInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Snippet Removal opts: %#v", opts)
@@ -66,8 +66,8 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 			log.Printf("[DEBUG] Error building VCL Snippet: %s", err)
 			return err
 		}
-		opts.Service = d.Id()
-		opts.Version = latestVersion
+		opts.ServiceID = d.Id()
+		opts.ServiceVersion = latestVersion
 
 		log.Printf("[DEBUG] Fastly VCL Snippet Addition opts: %#v", opts)
 		_, err = conn.CreateSnippet(opts)
@@ -81,8 +81,8 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 func (h *SnippetServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)

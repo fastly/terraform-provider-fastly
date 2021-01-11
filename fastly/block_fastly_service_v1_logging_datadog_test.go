@@ -20,11 +20,11 @@ func TestResourceFastlyFlattenDatadog(t *testing.T) {
 		{
 			remote: []*gofastly.Datadog{
 				{
-					Version:       1,
-					Name:          "datadog-endpoint",
-					Token:         "token",
-					Region:        "US",
-					FormatVersion: 2,
+					ServiceVersion: 1,
+					Name:           "datadog-endpoint",
+					Token:          "token",
+					Region:         "US",
+					FormatVersion:  2,
 				},
 			},
 			local: []map[string]interface{}{
@@ -134,30 +134,30 @@ func TestAccFastlyServiceV1_logging_datadog_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		Version:       1,
-		Name:          "datadog-endpoint",
-		Token:         "token",
-		Region:        "US",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: 1,
+		Name:           "datadog-endpoint",
+		Token:          "token",
+		Region:         "US",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
 	log1_after_update := gofastly.Datadog{
-		Version:       1,
-		Name:          "datadog-endpoint",
-		Token:         "t0k3n",
-		Region:        "EU",
-		FormatVersion: 2,
-		Format:        "%h %l %u %t \"%r\" %>s %b %T",
+		ServiceVersion: 1,
+		Name:           "datadog-endpoint",
+		Token:          "t0k3n",
+		Region:         "EU",
+		FormatVersion:  2,
+		Format:         "%h %l %u %t \"%r\" %>s %b %T",
 	}
 
 	log2 := gofastly.Datadog{
-		Version:       1,
-		Name:          "another-datadog-endpoint",
-		Token:         "another-token",
-		Region:        "US",
-		FormatVersion: 2,
-		Format:        datadogDefaultFormat + "\n",
+		ServiceVersion: 1,
+		Name:           "another-datadog-endpoint",
+		Token:          "another-token",
+		Region:         "US",
+		FormatVersion:  2,
+		Format:         datadogDefaultFormat + "\n",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -198,10 +198,10 @@ func TestAccFastlyServiceV1_logging_datadog_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		Version: 1,
-		Name:    "datadog-endpoint",
-		Token:   "token",
-		Region:  "US",
+		ServiceVersion: 1,
+		Name:           "datadog-endpoint",
+		Token:          "token",
+		Region:         "US",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -229,8 +229,8 @@ func testAccCheckFastlyServiceV1DatadogAttributes(service *gofastly.ServiceDetai
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -249,7 +249,7 @@ func testAccCheckFastlyServiceV1DatadogAttributes(service *gofastly.ServiceDetai
 				if d.Name == dl.Name {
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ID
-					d.Version = service.ActiveVersion.Number
+					d.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					dl.CreatedAt = nil

@@ -65,7 +65,7 @@ func TestFastlyServiceV1_BuildHeaders(t *testing.T) {
 			remote: &gofastly.CreateHeaderInput{
 				Name:        "someheadder",
 				Action:      gofastly.HeaderActionDelete,
-				IgnoreIfSet: gofastly.CBool(true),
+				IgnoreIfSet: true,
 				Type:        gofastly.HeaderTypeCache,
 				Destination: "http.aws-id",
 				Priority:    uint(100),
@@ -89,7 +89,7 @@ func TestFastlyServiceV1_BuildHeaders(t *testing.T) {
 			remote: &gofastly.CreateHeaderInput{
 				Name:        "someheadder",
 				Action:      gofastly.HeaderActionSet,
-				IgnoreIfSet: gofastly.CBool(false),
+				IgnoreIfSet: false,
 				Type:        gofastly.HeaderTypeCache,
 				Destination: "http.aws-id",
 				Priority:    uint(100),
@@ -126,35 +126,35 @@ func TestAccFastlyServiceV1_headers_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Header{
-		Version:     1,
-		Name:        "remove x-amz-request-id",
-		Destination: "http.x-amz-request-id",
-		Type:        "cache",
-		Action:      "delete",
-		Priority:    uint(100),
+		ServiceVersion: 1,
+		Name:           "remove x-amz-request-id",
+		Destination:    "http.x-amz-request-id",
+		Type:           "cache",
+		Action:         "delete",
+		Priority:       uint(100),
 	}
 
 	log2 := gofastly.Header{
-		Version:     1,
-		Name:        "remove s3 server",
-		Destination: "http.Server",
-		Type:        "cache",
-		Action:      "delete",
-		IgnoreIfSet: true,
-		Priority:    uint(100),
+		ServiceVersion: 1,
+		Name:           "remove s3 server",
+		Destination:    "http.Server",
+		Type:           "cache",
+		Action:         "delete",
+		IgnoreIfSet:    true,
+		Priority:       uint(100),
 	}
 
 	log3 := gofastly.Header{
-		Version:     1,
-		Name:        "DESTROY S3",
-		Destination: "http.Server",
-		Type:        "cache",
-		Action:      "delete",
-		Priority:    uint(100),
+		ServiceVersion: 1,
+		Name:           "DESTROY S3",
+		Destination:    "http.Server",
+		Type:           "cache",
+		Action:         "delete",
+		Priority:       uint(100),
 	}
 
 	log4 := gofastly.Header{
-		Version:           1,
+		ServiceVersion:    1,
 		Name:              "Add server name",
 		Destination:       "http.server-name",
 		Type:              "request",
@@ -203,8 +203,8 @@ func testAccCheckFastlyServiceV1HeaderAttributes(service *gofastly.ServiceDetail
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		headersList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -221,7 +221,7 @@ func testAccCheckFastlyServiceV1HeaderAttributes(service *gofastly.ServiceDetail
 				if h.Name == lh.Name {
 					// we don't know these things ahead of time, so populate them now
 					h.ServiceID = service.ID
-					h.Version = service.ActiveVersion.Number
+					h.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lh.CreatedAt = nil

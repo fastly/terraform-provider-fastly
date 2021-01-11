@@ -53,9 +53,9 @@ func (h *PackageServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		packageFilename := Package["filename"].(string)
 
 		err := updatePackage(conn, &gofastly.UpdatePackageInput{
-			Service:     d.Id(),
-			Version:     latestVersion,
-			PackagePath: packageFilename,
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			PackagePath:    packageFilename,
 		})
 		if err != nil {
 			return fmt.Errorf("Error modifying package %s: %s", d.Id(), err)
@@ -68,8 +68,8 @@ func (h *PackageServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 func (h *PackageServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
 	Package, err := conn.GetPackage(&gofastly.GetPackageInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {

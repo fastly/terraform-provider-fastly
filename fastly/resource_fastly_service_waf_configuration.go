@@ -380,91 +380,91 @@ func buildUpdateInput(d *schema.ResourceData, id string, number int) *gofastly.U
 		WAFVersionNumber: &number,
 	}
 	if v, ok := d.GetOk("waf_id"); ok {
-		input.WAFID = strToPtr(v.(string))
+		input.WAFID = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("allowed_http_versions"); ok {
-		input.AllowedHTTPVersions = strToPtr(v.(string))
+		input.AllowedHTTPVersions = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("allowed_methods"); ok {
-		input.AllowedMethods = strToPtr(v.(string))
+		input.AllowedMethods = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("allowed_request_content_type"); ok {
-		input.AllowedRequestContentType = strToPtr(v.(string))
+		input.AllowedRequestContentType = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("allowed_request_content_type_charset"); ok {
-		input.AllowedRequestContentTypeCharset = strToPtr(v.(string))
+		input.AllowedRequestContentTypeCharset = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("arg_length"); ok {
-		input.ArgLength = intToPtr(v.(int))
+		input.ArgLength = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("arg_name_length"); ok {
-		input.ArgNameLength = intToPtr(v.(int))
+		input.ArgNameLength = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("combined_file_sizes"); ok {
-		input.CombinedFileSizes = intToPtr(v.(int))
+		input.CombinedFileSizes = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("critical_anomaly_score"); ok {
-		input.CriticalAnomalyScore = intToPtr(v.(int))
+		input.CriticalAnomalyScore = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("crs_validate_utf8_encoding"); ok {
-		input.CRSValidateUTF8Encoding = boolToPtr(v.(bool))
+		input.CRSValidateUTF8Encoding = gofastly.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("error_anomaly_score"); ok {
-		input.ErrorAnomalyScore = intToPtr(v.(int))
+		input.ErrorAnomalyScore = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("high_risk_country_codes"); ok {
-		input.HighRiskCountryCodes = strToPtr(v.(string))
+		input.HighRiskCountryCodes = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("http_violation_score_threshold"); ok {
-		input.HTTPViolationScoreThreshold = intToPtr(v.(int))
+		input.HTTPViolationScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("inbound_anomaly_score_threshold"); ok {
-		input.InboundAnomalyScoreThreshold = intToPtr(v.(int))
+		input.InboundAnomalyScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("lfi_score_threshold"); ok {
-		input.LFIScoreThreshold = intToPtr(v.(int))
+		input.LFIScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("max_file_size"); ok {
-		input.MaxFileSize = intToPtr(v.(int))
+		input.MaxFileSize = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("max_num_args"); ok {
-		input.MaxNumArgs = intToPtr(v.(int))
+		input.MaxNumArgs = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("notice_anomaly_score"); ok {
-		input.NoticeAnomalyScore = intToPtr(v.(int))
+		input.NoticeAnomalyScore = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("paranoia_level"); ok {
-		input.ParanoiaLevel = intToPtr(v.(int))
+		input.ParanoiaLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("php_injection_score_threshold"); ok {
-		input.PHPInjectionScoreThreshold = intToPtr(v.(int))
+		input.PHPInjectionScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("rce_score_threshold"); ok {
-		input.RCEScoreThreshold = intToPtr(v.(int))
+		input.RCEScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("restricted_extensions"); ok {
-		input.RestrictedExtensions = strToPtr(v.(string))
+		input.RestrictedExtensions = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("restricted_headers"); ok {
-		input.RestrictedHeaders = strToPtr(v.(string))
+		input.RestrictedHeaders = gofastly.String(v.(string))
 	}
 	if v, ok := d.GetOk("rfi_score_threshold"); ok {
-		input.RFIScoreThreshold = intToPtr(v.(int))
+		input.RFIScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("session_fixation_score_threshold"); ok {
-		input.SessionFixationScoreThreshold = intToPtr(v.(int))
+		input.SessionFixationScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("sql_injection_score_threshold"); ok {
-		input.SQLInjectionScoreThreshold = intToPtr(v.(int))
+		input.SQLInjectionScoreThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("total_arg_length"); ok {
-		input.TotalArgLength = intToPtr(v.(int))
+		input.TotalArgLength = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("warning_anomaly_score"); ok {
-		input.WarningAnomalyScore = intToPtr(v.(int))
+		input.WarningAnomalyScore = gofastly.Int(v.(int))
 	}
 	if v, ok := d.GetOk("xss_score_threshold"); ok {
-		input.XSSScoreThreshold = intToPtr(v.(int))
+		input.XSSScoreThreshold = gofastly.Int(v.(int))
 	}
 	return input
 }

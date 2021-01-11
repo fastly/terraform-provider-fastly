@@ -107,8 +107,8 @@ func testAccCheckFastlyServiceV1CacheSettingsAttributes(service *gofastly.Servic
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		cList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -125,7 +125,7 @@ func testAccCheckFastlyServiceV1CacheSettingsAttributes(service *gofastly.Servic
 				if c.Name == lc.Name {
 					// we don't know these things ahead of time, so populate them now
 					c.ServiceID = service.ID
-					c.Version = service.ActiveVersion.Number
+					c.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lc.CreatedAt = nil

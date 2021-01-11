@@ -43,9 +43,9 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	for _, dRaw := range remove {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteVCLInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Removal opts: %#v", opts)
@@ -62,10 +62,10 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	for _, dRaw := range add {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateVCLInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
-			Content: df["content"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
+			Content:        df["content"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Addition opts: %#v", opts)
@@ -77,9 +77,9 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		// if this new VCL is the main
 		if df["main"].(bool) {
 			opts := gofastly.ActivateVCLInput{
-				Service: d.Id(),
-				Version: latestVersion,
-				Name:    df["name"].(string),
+				ServiceID:      d.Id(),
+				ServiceVersion: latestVersion,
+				Name:           df["name"].(string),
 			}
 			log.Printf("[DEBUG] Fastly VCL activation opts: %#v", opts)
 			_, err := conn.ActivateVCL(&opts)
@@ -95,8 +95,8 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 func (h *VCLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
 	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up VCLs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)

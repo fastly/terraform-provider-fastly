@@ -40,9 +40,9 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	for _, dRaw := range removeDirector {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteDirectorInput{
-			Service: d.Id(),
-			Version: latestVersion,
-			Name:    df["name"].(string),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Director Removal opts: %#v", opts)
@@ -60,14 +60,14 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	for _, dRaw := range addDirector {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateDirectorInput{
-			Service:  d.Id(),
-			Version:  latestVersion,
-			Name:     df["name"].(string),
-			Comment:  df["comment"].(string),
-			Shield:   df["shield"].(string),
-			Capacity: uint(df["capacity"].(int)),
-			Quorum:   uint(df["quorum"].(int)),
-			Retries:  uint(df["retries"].(int)),
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           df["name"].(string),
+			Comment:        df["comment"].(string),
+			Shield:         df["shield"].(string),
+			Capacity:       uint(df["capacity"].(int)),
+			Quorum:         uint(df["quorum"].(int)),
+			Retries:        uint(df["retries"].(int)),
 		}
 
 		switch df["type"].(int) {
@@ -91,10 +91,10 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 			if len(v.(*schema.Set).List()) > 0 {
 				for _, b := range v.(*schema.Set).List() {
 					opts := gofastly.CreateDirectorBackendInput{
-						Service:  d.Id(),
-						Version:  latestVersion,
-						Director: df["name"].(string),
-						Backend:  b.(string),
+						ServiceID:      d.Id(),
+						ServiceVersion: latestVersion,
+						Director:       df["name"].(string),
+						Backend:        b.(string),
 					}
 
 					log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
@@ -112,8 +112,8 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -122,8 +122,8 @@ func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 
 	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
 	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-		Service: d.Id(),
-		Version: s.ActiveVersion.Number,
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
 	})
 
 	if err != nil {
@@ -136,10 +136,10 @@ func (h *DirectorServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 	for _, director := range directorList {
 		for _, backend := range backendList {
 			directorBackendGet, err := conn.GetDirectorBackend(&gofastly.GetDirectorBackendInput{
-				Service:  d.Id(),
-				Version:  s.ActiveVersion.Number,
-				Director: director.Name,
-				Backend:  backend.Name,
+				ServiceID:      d.Id(),
+				ServiceVersion: s.ActiveVersion.Number,
+				Director:       director.Name,
+				Backend:        backend.Name,
 			})
 			if err == nil {
 				directorBackendList = append(directorBackendList, directorBackendGet)

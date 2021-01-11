@@ -291,6 +291,8 @@ order to destroy the Service, set `force_destroy` to `true`. Default `false`.
 [Defined below](#logging_digitalocean-block).
 * `logging_cloudfiles` - (Optional) A Rackspace Cloud Files endpoint to send streaming logs to.
 [Defined below](#logging_cloudfiles-block).
+* `logging_kinesis` - (Optional) A Kinesis endpoint to send streaming logs to.
+[Defined below](#logging_kinesis-block).
 * `response_object` - (Optional) Allows you to create synthetic responses that exist entirely on the varnish machine. Useful for creating error or maintenance pages that exists outside the scope of your datacenter. Best when used with Condition objects.
 [Defined below](#response_object-block)
 * `snippet` - (Optional) A set of custom, "regular" (non-dynamic) VCL Snippet configuration blocks.
@@ -888,6 +890,20 @@ The `logging_cloudfiles` block supports:
 * `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 * `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
+### logging_kinesis block
+
+The `logging_kinesis` block supports:
+
+* `name` - (Required) The unique name of the Kinesis logging endpoint.
+* `topic` - (Required) The Kinesis stream name.
+* `region` - (Optional) The AWS region the stream resides in. (Default: `us-east-1`).
+* `access_key` - (Required) The AWS access key to be used to write to the stream.
+* `secret_key` - (Required) The AWS secret access key to authenticate with.
+* `format` - (Optional) Apache style log formatting.
+* `format_version` - (Optional) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+* `placement` - (Optional) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
+* `response_condition` - (Optional) The name of an existing condition in the configured endpoint, or leave blank to always execute.
+
 ### response_object block
 
 The `response_object` block supports:
@@ -988,4 +1004,3 @@ Fastly Service can be imported using their service ID, e.g.
 ```
 $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 ```
-

@@ -124,8 +124,8 @@ func testAccCheckFastlyServiceV1DynamicSnippetAttributes(service *gofastly.Servi
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-			Service: service.ID,
-			Version: service.ActiveVersion.Number,
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
 		})
 
 		if err != nil {
@@ -141,7 +141,7 @@ func testAccCheckFastlyServiceV1DynamicSnippetAttributes(service *gofastly.Servi
 			for _, lr := range sList {
 				if expected.Name == lr.Name {
 					expected.ServiceID = service.ID
-					expected.Version = service.ActiveVersion.Number
+					expected.ServiceVersion = service.ActiveVersion.Number
 
 					// We don't know these things ahead of time, so ignore them
 					lr.ID = ""

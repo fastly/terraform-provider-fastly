@@ -20,6 +20,7 @@ var extraResponse = `
 	status = "403"
 	response = "Forbidden"
 	content = "content"
+	request_condition = "ALWAYS_FALSE"
   }`
 
 var extraCondition = `
@@ -251,6 +252,35 @@ resource "fastly_service_v1" "foo" {
 
   %s
 
+	# The WAF was updated to insert an ALWAYS_FALSE default condition, which 
+	# broke our tests because the terraform state was unaware of the default 
+	# condition resource that was being dynamically created by the API. This 
+	# meant terraform would flag the difference in state as unexpected, and
+	# subsequently produce an error.
+	#
+	# To resolve this error we define the default condition in our terraform which 
+	# prevented the API from creating it, but there was a bug in the API 
+	# implementation which meant the name of the condition had to match exactly
+	# otherwise it would consider the condition missing.
+	#
+	# TODO(integralist):
+	# Once the bug in the API has been fixed, come back and update the tests so 
+	# that we can validate the test terraform code no longer requires the
+	# condition name to be ALWAYS_FALSE (e.g. set the name to "foobar").
+	#
+	# NOTE:
+	# If the WAF isn't in place and without that ALWAYS_FALSE condition, the WAF 
+	# response object (403) will be served for all inbound traffic. This 
+	# condition was added by the WAF team to prevent Fastly from returning a 403 
+	# on all of the customer traffic before WAF is provisioned to the service.
+
+	condition {
+		name      = "ALWAYS_FALSE"
+		priority  = 10
+		statement = "!req.url"
+		type      = "REQUEST"
+	}
+
   condition {
 	name = "prefetch"
 	type = "PREFETCH"
@@ -262,6 +292,7 @@ resource "fastly_service_v1" "foo" {
 	status = "403"
 	response = "Forbidden"
 	content = "content"
+	request_condition = "ALWAYS_FALSE"
   }
 
   %s

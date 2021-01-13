@@ -52,7 +52,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 		"required_acks": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Description: "The Number of acknowledgements blockAttributes leader must receive before blockAttributes write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
+			Description: "The Number of acknowledgements a leader must receive before a write is considered successful. One of: 1 (default) One server needs to respond. 0 No servers need to respond. -1	Wait for all in-sync replicas to respond.",
 		},
 
 		"use_tls": {
@@ -92,7 +92,38 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or blockAttributes Subject Alternative Name (SAN).",
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN).",
+		},
+
+		"parse_log_keyvals": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers.",
+		},
+
+		"request_max_bytes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Maximum size of log batch, if non-zero. Defaults to 0 for unbounded.",
+		},
+
+		"auth_method": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "SASL authentication method. One of: plain, scram-sha-256, scram-sha-512.",
+		},
+
+		"user": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "SASL User.",
+		},
+
+		"password": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "SASL Pass.",
 		},
 	}
 
@@ -250,6 +281,11 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 			"format_version":     s.FormatVersion,
 			"placement":          s.Placement,
 			"response_condition": s.ResponseCondition,
+			"parse_log_keyvals":  s.ParseLogKeyvals,
+			"request_max_bytes":  s.RequestMaxBytes,
+			"auth_method":        s.AuthMethod,
+			"user":               s.User,
+			"password":           s.Password,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -286,6 +322,11 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
 		ResponseCondition: vla.responseCondition,
+		ParseLogKeyvals:   gofastly.Compatibool(df["parse_log_keyvals"].(bool)),
+		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
+		AuthMethod:        df["auth_method"].(string),
+		User:              df["user"].(string),
+		Password:          df["password"].(string),
 	}
 }
 

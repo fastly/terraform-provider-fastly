@@ -1,5 +1,11 @@
 ## 0.23.0 (Unreleased)
 
+## 0.23.0 (January 14, 2021)
+
+ENHANCEMENT:
+
+* Add support for kafka endpoints with sasl options ([#342](https://github.com/fastly/terraform-provider-fastly/pull/342))
+
 ## 0.22.0 (January 08, 2021)
 
 ENHANCEMENT:

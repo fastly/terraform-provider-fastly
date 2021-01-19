@@ -40,6 +40,10 @@ func main() {
 			path: docsDir + "docs/d/ip_ranges.html.markdown",
 		},
 		{
+			name: "tls_configuration",
+			path: docsDir + "docs/d/tls_configuration.html.markdown",
+		},
+		{
 			name: "waf_rules",
 			path: docsDir + "docs/d/waf_rules.html.markdown",
 		},

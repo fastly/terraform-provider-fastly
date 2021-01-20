@@ -46,7 +46,7 @@ func generateKey() (string, error) {
 	return string(bytes), nil
 }
 
-func generateKeyAndCert() (key, cert string, err error) {
+func generateKeyAndCert(SANs ...string) (key, cert string, err error) {
 	now := time.Now()
 	serialNumber := new(big.Int).SetInt64(rnd.Int63())
 	template := x509.Certificate{
@@ -61,6 +61,7 @@ func generateKeyAndCert() (key, cert string, err error) {
 		BasicConstraintsValid: true,
 		SignatureAlgorithm:    x509.SHA256WithRSA,
 		IsCA:                  true,
+		DNSNames:              SANs,
 	}
 
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)

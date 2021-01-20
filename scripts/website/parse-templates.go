@@ -80,6 +80,10 @@ func main() {
 			name: "user_v1",
 			path: docsDir + "docs/r/user_v1.html.markdown",
 		},
+		{
+			name: "tls_private_key",
+			path: docsDir + "docs/r/tls_private_key.html.markdown",
+		},
 	}
 
 	var pages = append(resourcePages, Page{

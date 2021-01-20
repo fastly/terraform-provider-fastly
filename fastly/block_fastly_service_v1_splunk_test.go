@@ -32,10 +32,15 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					ResponseCondition: "error_response",
 					Placement:         "waf_debug",
 					Token:             "test-token",
-					TLSCACert:         cert,
-					TLSHostname:       "example.com",
-					TLSClientCert:     cert,
-					TLSClientKey:      key,
+					// The same certificate is used here for
+					// TLSCACert and TLSClientCert, but this
+					// is stricly for testing. In practice
+					// the same value should not be used for
+					// these two fields.
+					TLSCACert:     cert,
+					TLSHostname:   "example.com",
+					TLSClientCert: cert,
+					TLSClientKey:  key,
 				},
 			},
 			local: []map[string]interface{}{
@@ -48,9 +53,14 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"placement":          "waf_debug",
 					"token":              "test-token",
 					"tls_hostname":       "example.com",
-					"tls_ca_cert":        cert,
-					"tls_client_cert":    cert,
-					"tls_client_key":     key,
+					// The same certificate is used here for
+					// TLSCACert and TLSClientCert, but this
+					// is stricly for testing. In practice
+					// the same value should not be used for
+					// these two fields.
+					"tls_ca_cert":     cert,
+					"tls_client_cert": cert,
+					"tls_client_key":  key,
 				},
 			},
 		},
@@ -210,9 +220,14 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
 		TLSHostname:       "example.com",
-		TLSCACert:         cert,
-		TLSClientCert:     cert,
-		TLSClientKey:      key,
+		// The same certificate is used here for
+		// TLSCACert and TLSClientCert, but this
+		// is stricly for testing. In practice
+		// the same value should not be used for
+		// these two fields.
+		TLSCACert:     cert,
+		TLSClientCert: cert,
+		TLSClientKey:  key,
 	}
 
 	splunkLogOneUpdated := gofastly.Splunk{
@@ -224,9 +239,14 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
 		TLSHostname:       "example.com",
-		TLSCACert:         cert,
-		TLSClientCert:     cert,
-		TLSClientKey:      key,
+		// The same certificate is used here for
+		// TLSCACert and TLSClientCert, but this
+		// is stricly for testing. In practice
+		// the same value should not be used for
+		// these two fields.
+		TLSCACert:     cert,
+		TLSClientCert: cert,
+		TLSClientKey:  key,
 	}
 
 	splunkLogTwo := gofastly.Splunk{
@@ -238,9 +258,14 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		Placement:         "waf_debug",
 		ResponseCondition: "ok_response_2XX",
 		TLSHostname:       "example.com",
-		TLSCACert:         cert,
-		TLSClientCert:     cert,
-		TLSClientKey:      key,
+		// The same certificate is used here for
+		// TLSCACert and TLSClientCert, but this
+		// is stricly for testing. In practice
+		// the same value should not be used for
+		// these two fields.
+		TLSCACert:     cert,
+		TLSClientCert: cert,
+		TLSClientKey:  key,
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -448,6 +473,9 @@ func testAccServiceV1SplunkConfig_useTLS(serviceName, cert, key string) string {
 
 	format := "%h %l %u %t \"%r\" %>s %b"
 
+	// The same certificate is used here for tls_ca_cert and tls_client_cert,
+	// but this is stricly for testing. In practice the same value should
+	// not be used for these two fields.
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = %q
@@ -547,6 +575,9 @@ func testAccServiceV1SplunkConfig_updateUseTLS(serviceName, cert, key string) st
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
 
+	// The same certificate is used here for tls_ca_cert and tls_client_cert,
+	// but this is stricly for testing. In practice the same value should
+	// not be used for these two fields.
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = %q

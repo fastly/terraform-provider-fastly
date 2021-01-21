@@ -22,7 +22,7 @@ type FastlyClient struct {
 	conn *gofastly.Client
 }
 
-func (c *Config) Client() (interface{}, error) {
+func (c *Config) Client() (*FastlyClient, error) {
 	var client FastlyClient
 
 	if c.ApiKey == "" {

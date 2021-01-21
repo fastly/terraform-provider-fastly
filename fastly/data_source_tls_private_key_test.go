@@ -15,7 +15,7 @@ func TestAccFastlyDataSourceTLSPrivateKeyBasic(t *testing.T) {
 	}
 	key = strings.ReplaceAll(key, "\n", `\n`)
 
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },

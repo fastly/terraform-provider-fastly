@@ -58,7 +58,11 @@ website:
 website-test:
 	go run "scripts/website/parse-templates.go"
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test build_local clean install_local
+sweep:
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m
+
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test sweep build_local clean install_local
 
 PROVIDER_HOSTNAME=registry.terraform.io
 PROVIDER_NAMESPACE=fastly

@@ -12,8 +12,8 @@ import (
 )
 
 func TestAccFastlyTLSCertificate_withName(t *testing.T) {
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(20))
-	updatedName := fmt.Sprintf("tf-test-%s", acctest.RandString(20))
+	name := acctest.RandomWithPrefix(testResourcePrefix)
+	updatedName := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.example.com", name)
 
 	key, cert, cert2, err := generateKeyAndMultipleCerts(domain)
@@ -55,7 +55,7 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 }
 
 func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(20))
+	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.example.com", name)
 
 	key, cert, err := generateKeyAndCert(domain)

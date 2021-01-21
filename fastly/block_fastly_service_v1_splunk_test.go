@@ -474,7 +474,7 @@ func testAccServiceV1SplunkConfig_useTLS(serviceName, cert, key string) string {
 	format := "%h %l %u %t \"%r\" %>s %b"
 
 	// The same certificate is used here for tls_ca_cert and tls_client_cert,
-	// but this is stricly for testing. In practice the same value should
+	// but this is strictly for testing. In practice the same value should
 	// not be used for these two fields.
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {

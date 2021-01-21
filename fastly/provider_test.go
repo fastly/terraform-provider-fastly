@@ -47,6 +47,11 @@ func generateKey() (string, error) {
 }
 
 func generateKeyAndCert(SANs ...string) (key, cert string, err error) {
+	key, cert, _, err = generateKeyAndMultipleCerts(SANs...)
+	return
+}
+
+func generateKeyAndMultipleCerts(SANs ...string) (key, cert, cert2 string, err error) {
 	now := time.Now()
 	serialNumber := new(big.Int).SetInt64(rnd.Int63())
 	template := x509.Certificate{
@@ -55,13 +60,34 @@ func generateKeyAndCert(SANs ...string) (key, cert string, err error) {
 			SerialNumber: fmt.Sprintf("%d", serialNumber),
 		},
 		NotBefore:             now,
-		NotAfter:              now.Add(24 * 365 * 20 * time.Hour),
+		NotAfter:              now.Add(24 * 90 * time.Hour),
 		KeyUsage:              x509.KeyUsageCertSign,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		SignatureAlgorithm:    x509.SHA256WithRSA,
 		IsCA:                  true,
 		DNSNames:              SANs,
+	}
+
+	serialNumber2 := new(big.Int).SetInt64(rnd.Int63())
+	template2 := x509.Certificate{
+		SerialNumber: serialNumber2,
+		Subject: pkix.Name{
+			SerialNumber: fmt.Sprintf("%d", serialNumber2),
+		},
+		NotBefore:             now,
+		NotAfter:              now.Add(24 * 120 * time.Hour),
+		KeyUsage:              x509.KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageCodeSigning},
+		BasicConstraintsValid: true,
+		SignatureAlgorithm:    x509.SHA256WithRSA,
+		IsCA:                  true,
+		DNSNames:              SANs,
+	}
+
+	if len(SANs) != 0 {
+		template.Subject.CommonName = SANs[0]
+		template2.Subject.CommonName = SANs[0]
 	}
 
 	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -96,6 +122,23 @@ func generateKeyAndCert(SANs ...string) (key, cert string, err error) {
 		Bytes: derBytes,
 	}
 	cert = strings.TrimSpace(string(pem.EncodeToMemory(certBlock)))
+
+	derBytes2, err := x509.CreateCertificate(
+		rand.Reader,
+		&template2,
+		&template2,
+		&privKey.PublicKey,
+		privKey,
+	)
+	if err != nil {
+		err = fmt.Errorf("Failed to create certificate: %s", err)
+		return
+	}
+	certBlock2 := &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: derBytes2,
+	}
+	cert2 = strings.TrimSpace(string(pem.EncodeToMemory(certBlock2)))
 
 	return
 }

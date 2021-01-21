@@ -85,6 +85,10 @@ func main() {
 			path: docsDir + "docs/r/user_v1.html.markdown",
 		},
 		{
+			name: "tls_certificate",
+			path: docsDir + "docs/r/tls_certificate.html.markdown",
+		},
+		{
 			name: "tls_private_key",
 			path: docsDir + "docs/r/tls_private_key.html.markdown",
 		},

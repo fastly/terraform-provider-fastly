@@ -93,6 +93,10 @@ func main() {
 			path: docsDir + "docs/r/user_v1.html.markdown",
 		},
 		{
+			name: "tls_activation",
+			path: docsDir + "docs/r/tls_activation.html.markdown",
+		},
+		{
 			name: "tls_certificate",
 			path: docsDir + "docs/r/tls_certificate.html.markdown",
 		},

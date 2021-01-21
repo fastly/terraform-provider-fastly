@@ -3,7 +3,6 @@ package fastly
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/fastly/go-fastly/v2/fastly"
@@ -46,66 +45,4 @@ func sharedClientForRegion(region string) (*fastly.Client, error) {
 	sweeperClients[region] = client.conn
 
 	return client.conn, nil
-}
-
-func init() {
-	resource.AddTestSweepers("fastly_tls_private_key", &resource.Sweeper{
-		Name:         "fastly_tls_private_key",
-		Dependencies: []string{"fastly_tls_certificate"}, // in case a private key is used by a certificate
-		F:            testSweepTLSPrivateKeys,
-	})
-	resource.AddTestSweepers("fastly_tls_certificate", &resource.Sweeper{
-		Name: "fastly_tls_certificate",
-		F:    testSweepTLSCertificates,
-	})
-}
-
-func testSweepTLSCertificates(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
-	}
-
-	certificates, err := client.ListCustomTLSCertificates(&fastly.ListCustomTLSCertificatesInput{PageSize: 1000})
-	if err != nil {
-		return err
-	}
-
-	for _, certificate := range certificates {
-		if !strings.HasPrefix(certificate.Name, testResourcePrefix) {
-			continue
-		}
-
-		err := client.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{ID: certificate.ID})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func testSweepTLSPrivateKeys(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
-	}
-
-	keys, err := client.ListPrivateKeys(&fastly.ListPrivateKeysInput{PageSize: 1000})
-	if err != nil {
-		return err
-	}
-
-	for _, key := range keys {
-		if !strings.HasPrefix(key.Name, testResourcePrefix) {
-			continue
-		}
-
-		err := client.DeletePrivateKey(&fastly.DeletePrivateKeyInput{ID: key.ID})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/fastly/go-fastly/v2/fastly"
@@ -10,6 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	resource.AddTestSweepers("fastly_tls_certificate", &resource.Sweeper{
+		Name:         "fastly_tls_certificate",
+		Dependencies: []string{"fastly_tls_activation"}, // in case certificate used by an activation
+		F:            testSweepTLSCertificates,
+	})
+}
 
 func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
@@ -156,6 +165,31 @@ func testAccCheckTLSCertificateDestroy(s *terraform.State) error {
 			if certificate.ID == r.Primary.ID {
 				return fmt.Errorf("certificate %s still exists", r.Primary.ID)
 			}
+		}
+	}
+
+	return nil
+}
+
+func testSweepTLSCertificates(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return err
+	}
+
+	certificates, err := client.ListCustomTLSCertificates(&fastly.ListCustomTLSCertificatesInput{PageSize: 1000})
+	if err != nil {
+		return err
+	}
+
+	for _, certificate := range certificates {
+		if !strings.HasPrefix(certificate.Name, testResourcePrefix) {
+			continue
+		}
+
+		err := client.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{ID: certificate.ID})
+		if err != nil {
+			return err
 		}
 	}
 

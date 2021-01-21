@@ -40,6 +40,7 @@ func Provider() terraform.ResourceProvider {
 			"fastly_service_waf_configuration":          resourceServiceWAFConfigurationV1(),
 			"fastly_tls_certificate":                    resourceTLSCertificate(),
 			"fastly_tls_private_key":                    resourceTLSPrivateKey(),
+			"fastly_tls_activation":                     resourceTLSActivation(),
 		},
 	}
 

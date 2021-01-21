@@ -2,13 +2,21 @@ package fastly
 
 import (
 	"fmt"
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	"github.com/fastly/go-fastly/v2/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"strings"
 	"testing"
 )
+
+func init() {
+	resource.AddTestSweepers("fastly_tls_private_key", &resource.Sweeper{
+		Name:         "fastly_tls_private_key",
+		Dependencies: []string{"fastly_tls_certificate"}, // in case a private key is used by a certificate
+		F:            testSweepTLSPrivateKeys,
+	})
+}
 
 func TestAccFastlyResourceTLSPrivateKey_basic(t *testing.T) {
 	key, _, err := generateKeyAndCert()
@@ -48,7 +56,7 @@ func testAccCheckPrivateKeyDestroy(state *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
-		keys, err := conn.ListPrivateKeys(&gofastly.ListPrivateKeysInput{})
+		keys, err := conn.ListPrivateKeys(&fastly.ListPrivateKeysInput{})
 		if err != nil {
 			return fmt.Errorf(
 				"[WARN] Error listing private keys when deleting private key %s: %w",
@@ -90,7 +98,7 @@ func testAccCheckPrivateKeyExists(resourceName string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 
-		_, err := conn.GetPrivateKey(&gofastly.GetPrivateKeyInput{
+		_, err := conn.GetPrivateKey(&fastly.GetPrivateKeyInput{
 			ID: res.Primary.ID,
 		})
 		if err != nil {
@@ -99,4 +107,29 @@ func testAccCheckPrivateKeyExists(resourceName string) resource.TestCheckFunc {
 
 		return nil
 	}
+}
+
+func testSweepTLSPrivateKeys(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return err
+	}
+
+	keys, err := client.ListPrivateKeys(&fastly.ListPrivateKeysInput{PageSize: 1000})
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		if !strings.HasPrefix(key.Name, testResourcePrefix) {
+			continue
+		}
+
+		err := client.DeletePrivateKey(&fastly.DeletePrivateKeyInput{ID: key.ID})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

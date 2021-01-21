@@ -1,0 +1,39 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_tls_private_key"
+sidebar_current: "docs-fastly-datasource-tls_private_key"
+description: |-
+  Get information on a TLS Private Key.
+---
+
+# fastly_tls_private_key
+
+Use this data source to get information on a TLS Private Key uploaded to Fastly.
+
+## Example Usage
+
+```hcl
+data "fastly_tls_private_key" "demo" {
+  name = "demo-private-key"
+}
+
+output "private_key_needs_replacing" {
+  value = data.fastly_tls_private_key.demo.replace
+}
+```
+
+## Arguments Reference
+
+* `name` - The human-readable name assigned to the private key when uploaded.
+* `key_length` - The key length used to generate the private key.
+* `key_type` - The algorithm used to generate the private key. Must be RSA.
+* `public_key_sha1` - A hash of the associated public key useful for safely identifying the key.
+
+~> **Note:** If more or less than a single match is returned by the search, Terraform will fail. Ensure that your search is specific enough to return a single key.
+
+## Attributes Reference
+
+In addition to the arguments listed above, the following attributes are exported:
+
+* `created_at` - Timestamp (GMT) when the private key was created.
+* `replace` - Whether Fastly recommends replacing this private key.

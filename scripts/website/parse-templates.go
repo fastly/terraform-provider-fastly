@@ -47,6 +47,10 @@ func main() {
 			name: "waf_rules",
 			path: docsDir + "docs/d/waf_rules.html.markdown",
 		},
+		{
+			name: "tls_private_key",
+			path: docsDir + "docs/d/tls_private_key.html.markdown",
+		},
 	}
 
 	var resourcePages = []Page{

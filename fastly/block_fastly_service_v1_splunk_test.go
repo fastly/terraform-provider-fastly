@@ -260,7 +260,7 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		TLSHostname:       "example.com",
 		// The same certificate is used here for
 		// TLSCACert and TLSClientCert, but this
-		// is stricly for testing. In practice
+		// is strictly for testing. In practice
 		// the same value should not be used for
 		// these two fields.
 		TLSCACert:     cert,

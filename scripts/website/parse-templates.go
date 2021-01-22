@@ -40,6 +40,10 @@ func main() {
 			path: docsDir + "docs/d/ip_ranges.html.markdown",
 		},
 		{
+			name: "tls_activation",
+			path: docsDir + "docs/d/tls_activation.html.markdown",
+		},
+		{
 			name: "tls_configuration",
 			path: docsDir + "docs/d/tls_configuration.html.markdown",
 		},

@@ -103,7 +103,7 @@ func dataSourceTLSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(privateKeys) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+		return fmt.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
 	}
 
 	privateKey := privateKeys[0]

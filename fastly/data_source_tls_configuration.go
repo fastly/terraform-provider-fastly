@@ -50,13 +50,11 @@ func dataSourceFastlyTLSConfiguration() *schema.Resource {
 			"created_at": {
 				Type:        schema.TypeString,
 				Description: "Time-stamp (GMT) when the configuration was created",
-				Optional:    true,
 				Computed:    true,
 			},
 			"updated_at": {
 				Type:        schema.TypeString,
 				Description: "Time-stamp (GMT) when the configuration was last updated",
-				Optional:    true,
 				Computed:    true,
 			},
 		},

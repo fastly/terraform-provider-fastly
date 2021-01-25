@@ -26,6 +26,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"fastly_ip_ranges":             dataSourceFastlyIPRanges(),
 			"fastly_tls_activation":        dataSourceFastlyTLSActivation(),
+			"fastly_tls_activation_ids":    dataSourceFastlyTLSActivationIds(),
 			"fastly_tls_certificate":       dataSourceFastlyTLSCertificate(),
 			"fastly_tls_certificate_ids":   dataSourceFastlyTLSCertificateIDs(),
 			"fastly_tls_configuration":     dataSourceFastlyTLSConfiguration(),

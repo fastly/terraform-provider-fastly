@@ -20,6 +20,11 @@ data "fastly_tls_activation" "example" {
 
 ## Argument Reference
 
+~> **Warning:** The data source's filters are applied using an **AND** boolean operator, so depending on the combination
+of filters, they may become mutually exclusive. The exception to this is `id` which must not be specified in combination
+with any of the others.
+
+* `id` - (Optional) Fastly Activation ID. Conflicts with all other other filters.
 * `certificate_id` - (Optional) ID of the TLS Certificate used
 * `configuration_id` - (Optional) ID of the TLS Configuration used.
 * `domain` - (Optional) Domain that TLS was enabled on.

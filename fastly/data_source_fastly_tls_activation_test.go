@@ -34,6 +34,27 @@ func TestAccDataSourceFastlyTLSActivationBasic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyDataSourceTLSActivation_byID(t *testing.T) {
+	domain := fmt.Sprintf("tf-test-%s.com", acctest.RandomWithPrefix("tf-test-"))
+	key, cert, err := generateKeyAndCert(domain)
+	require.NoError(t, err)
+	key = strings.ReplaceAll(key, "\n", `\n`)
+	cert = strings.ReplaceAll(cert, "\n", `\n`)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFastlyDataSourceTLSActivationConfigByID(key, cert, domain),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.fastly_tls_activation.subject", "domain", domain),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceFastlyTLSActivationConfig(key, cert, domain string) string {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
@@ -73,6 +94,57 @@ resource "fastly_tls_activation" "test" {
 
 data "fastly_tls_activation" "test" {
   domain = fastly_tls_activation.test.domain
+}
+`,
+		name,
+		domain,
+		key,
+		name,
+		cert,
+		name,
+		domain,
+	)
+}
+
+func testAccFastlyDataSourceTLSActivationConfigByID(key, cert, domain string) string {
+	name := acctest.RandomWithPrefix(testResourcePrefix)
+
+	return fmt.Sprintf(
+		`
+resource "fastly_service_v1" "test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_tls_private_key" "test" {
+  key_pem = "%s"
+  name = "%s"
+}
+
+resource "fastly_tls_certificate" "test" {
+  certificate_body = "%s"
+  name = "%s"
+  depends_on = [fastly_tls_private_key.test]
+}
+
+resource "fastly_tls_activation" "test" {
+  certificate_id = fastly_tls_certificate.test.id
+  domain = "%s"
+  depends_on = [fastly_service_v1.test]
+}
+
+data "fastly_tls_activation" "subject" {
+  id = fastly_tls_activation.test.id
 }
 `,
 		name,

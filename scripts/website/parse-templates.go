@@ -83,8 +83,8 @@ func main() {
 	}
 
 	var pages = append(resourcePages, Page{
-		name:         "fastly_erb",
-		path:         docsDir + "fastly.erb",
+		name:         "no-op",
+		path:         docsDir + "no_op",
 		DataMenu:     generateMenuItems("data-sources", dataPages),
 		ResourceMenu: generateMenuItems("resources", resourcePages),
 	})

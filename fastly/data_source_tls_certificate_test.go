@@ -26,6 +26,8 @@ func TestAccFastlyDataSourceTLSCertificate_withName(t *testing.T) {
 				Config: testAccDataSourceTlsCertificate(name, key, cert, domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
+						dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(
 						dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(
 						dataSourceName, "created_at", resourceName, "created_at"),

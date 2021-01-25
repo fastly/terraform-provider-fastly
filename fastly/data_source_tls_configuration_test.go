@@ -6,14 +6,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccFastlyDataSourceTLSConfiguration(t *testing.T) {
+func TestAccFastlyDataSourceTLSConfiguration_basic(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceTLSConfiguration,
+				Config: testAccFastlyDataSourceTLSConfiguration_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
@@ -29,21 +29,21 @@ func TestAccFastlyDataSourceTLSConfiguration(t *testing.T) {
 	})
 }
 
-const testAccFastlyDataSourceTLSConfiguration = `
+const testAccFastlyDataSourceTLSConfiguration_basic = `
 data "fastly_tls_configuration" "subject" {
   default = true
   tls_service = "CUSTOM"
 }
 `
 
-func TestAccFastlyDataSourceTLSConfigurationWithIDLookup(t *testing.T) {
+func TestAccFastlyDataSourceTLSConfiguration_withIDLookup(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceTLSConfigurationWithIDLookup,
+				Config: testAccFastlyDataSourceTLSConfiguration_withIDLookup,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "name", "data.fastly_tls_configuration.default", "name"),
 				),
@@ -52,7 +52,7 @@ func TestAccFastlyDataSourceTLSConfigurationWithIDLookup(t *testing.T) {
 	})
 }
 
-const testAccFastlyDataSourceTLSConfigurationWithIDLookup = `
+const testAccFastlyDataSourceTLSConfiguration_withIDLookup = `
 data "fastly_tls_configuration" "default" {
   default = true
 }

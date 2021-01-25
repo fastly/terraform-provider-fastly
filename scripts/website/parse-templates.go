@@ -48,6 +48,10 @@ func main() {
 			path: docsDir + "docs/d/tls_configuration.html.markdown",
 		},
 		{
+			name: "tls_configuration_ids",
+			path: docsDir + "docs/d/tls_configuration_ids.html.markdown",
+		},
+		{
 			name: "tls_certificate",
 			path: docsDir + "docs/d/tls_certificate.html.markdown",
 		},

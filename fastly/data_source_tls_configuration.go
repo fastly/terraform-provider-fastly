@@ -14,38 +14,50 @@ func dataSourceFastlyTLSConfiguration() *schema.Resource {
 		Read: dataSourceFastlyTLSConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:          schema.TypeString,
+				Description:   "Unique ID of the configuration",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"name", "tls_protocols", "http_protocols", "tls_service", "default"},
+			},
 			"name": {
-				Type:        schema.TypeString,
-				Description: "Custom name of the TLS configuration",
-				Optional:    true,
-				Computed:    true,
+				Type:          schema.TypeString,
+				Description:   "Custom name of the TLS configuration",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"id"},
 			},
 			"tls_protocols": {
-				Type:        schema.TypeSet,
-				Description: "TLS protocols available on the TLS configuration",
-				Optional:    true,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Description:   "TLS protocols available on the TLS configuration",
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"id"},
 			},
 			"http_protocols": {
-				Type:        schema.TypeSet,
-				Description: "HTTP protocols available on the TLS configuration",
-				Optional:    true,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Description:   "HTTP protocols available on the TLS configuration",
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"id"},
 			},
 			"tls_service": {
-				Type:         schema.TypeString,
-				Description:  fmt.Sprintf("Whether the configuration should support the `%s` or `%s` TLS service", tlsPlatformService, tlsCustomService),
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{tlsPlatformService, tlsCustomService}, false),
+				Type:          schema.TypeString,
+				Description:   fmt.Sprintf("Whether the configuration should support the `%s` or `%s` TLS service", tlsPlatformService, tlsCustomService),
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validation.StringInSlice([]string{tlsPlatformService, tlsCustomService}, false),
+				ConflictsWith: []string{"id"},
 			},
 			"default": {
-				Type:        schema.TypeBool,
-				Description: "Signifies whether Fastly will use this configuration as a default when creating a new TLS activation",
-				Optional:    true,
-				Computed:    true,
+				Type:          schema.TypeBool,
+				Description:   "Signifies whether Fastly will use this configuration as a default when creating a new TLS activation",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"id"},
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -69,6 +81,40 @@ const (
 func dataSourceFastlyTLSConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
+	var configuration *fastly.CustomTLSConfiguration
+
+	if v, ok := d.GetOk("id"); ok {
+		config, err := conn.GetCustomTLSConfiguration(&fastly.GetCustomTLSConfigurationInput{
+			ID: v.(string),
+		})
+		if err != nil {
+			return err
+		}
+
+		configuration = config
+	} else {
+		filters := getTLSConfigurationFilters(d)
+
+		configurations, err := listTLSConfigurations(conn, filters...)
+		if err != nil {
+			return err
+		}
+
+		if len(configurations) == 0 {
+			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		}
+
+		if len(configurations) > 1 {
+			return fmt.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+		}
+
+		configuration = configurations[0]
+	}
+
+	return dataSourceFastlyTLSConfigurationSetAttributes(configuration, d)
+}
+
+func getTLSConfigurationFilters(d *schema.ResourceData) []func(*fastly.CustomTLSConfiguration) bool {
 	var filters []func(*fastly.CustomTLSConfiguration) bool
 
 	if v, ok := d.GetOk("name"); ok {
@@ -101,6 +147,10 @@ func dataSourceFastlyTLSConfigurationRead(d *schema.ResourceData, meta interface
 		})
 	}
 
+	return filters
+}
+
+func listTLSConfigurations(conn *fastly.Client, filters ...func(*fastly.CustomTLSConfiguration) bool) ([]*fastly.CustomTLSConfiguration, error) {
 	var configurations []*fastly.CustomTLSConfiguration
 	cursor := 0
 	for {
@@ -108,7 +158,7 @@ func dataSourceFastlyTLSConfigurationRead(d *schema.ResourceData, meta interface
 			PageNumber: cursor,
 		})
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if len(list) == 0 {
 			break
@@ -121,17 +171,10 @@ func dataSourceFastlyTLSConfigurationRead(d *schema.ResourceData, meta interface
 			}
 		}
 	}
+	return configurations, nil
+}
 
-	if len(configurations) == 0 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-
-	if len(configurations) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
-	}
-
-	configuration := configurations[0]
-
+func dataSourceFastlyTLSConfigurationSetAttributes(configuration *fastly.CustomTLSConfiguration, d *schema.ResourceData) error {
 	tlsService := tlsCustomService
 	if configuration.Bulk {
 		tlsService = tlsPlatformService

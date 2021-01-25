@@ -1004,3 +1004,4 @@ Fastly Service can be imported using their service ID, e.g.
 ```
 $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 ```
+

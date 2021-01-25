@@ -31,62 +31,62 @@ type MenuItem struct {
 
 func main() {
 	baseDir := getBaseDir()
-	tmplDir := baseDir + "/website_src/"
-	docsDir := baseDir + "/website/"
+	tmplDir := baseDir + "/docs_src/"
+	docsDir := baseDir + "/docs/"
 
 	var dataPages = []Page{
 		{
 			name: "ip_ranges",
-			path: docsDir + "docs/d/ip_ranges.html.markdown",
+			path: docsDir + "data-sources/ip_ranges.html.markdown",
 		},
 		{
 			name: "waf_rules",
-			path: docsDir + "docs/d/waf_rules.html.markdown",
+			path: docsDir + "data-sources/waf_rules.html.markdown",
 		},
 	}
 
 	var resourcePages = []Page{
 		{
 			name: "service_v1",
-			path: docsDir + "docs/r/service_v1.html.markdown",
+			path: docsDir + "resources/service_v1.html.markdown",
 			Data: PageData{
 				"vcl",
 			},
 		},
 		{
 			name: "service_compute",
-			path: docsDir + "docs/r/service_compute.html.markdown",
+			path: docsDir + "resources/service_compute.html.markdown",
 			Data: PageData{
 				"wasm",
 			},
 		},
 		{
 			name: "service_dictionary_items_v1",
-			path: docsDir + "docs/r/service_dictionary_items_v1.html.markdown",
+			path: docsDir + "resources/service_dictionary_items_v1.html.markdown",
 		},
 		{
 			name: "service_acl_entries_v1",
-			path: docsDir + "docs/r/service_acl_entries_v1.html.markdown",
+			path: docsDir + "resources/service_acl_entries_v1.html.markdown",
 		},
 		{
 			name: "service_dynamic_snippet_content_v1",
-			path: docsDir + "docs/r/service_dynamic_snippet_content_v1.html.markdown",
+			path: docsDir + "resources/service_dynamic_snippet_content_v1.html.markdown",
 		},
 		{
 			name: "service_waf_configuration",
-			path: docsDir + "docs/r/service_waf_configuration.html.markdown",
+			path: docsDir + "resources/service_waf_configuration.html.markdown",
 		},
 		{
 			name: "user_v1",
-			path: docsDir + "docs/r/user_v1.html.markdown",
+			path: docsDir + "resources/user_v1.html.markdown",
 		},
 	}
 
 	var pages = append(resourcePages, Page{
 		name:         "fastly_erb",
 		path:         docsDir + "fastly.erb",
-		DataMenu:     generateMenuItems("d", dataPages),
-		ResourceMenu: generateMenuItems("r", resourcePages),
+		DataMenu:     generateMenuItems("data-sources", dataPages),
+		ResourceMenu: generateMenuItems("resources", resourcePages),
 	})
 
 	renderPages(getTemplate(tmplDir), pages)
@@ -97,7 +97,7 @@ func generateMenuItems(pageType string, pages []Page) []MenuItem {
 	for _, p := range pages {
 		menuItems = append(menuItems, MenuItem{
 			Lookup: fmt.Sprintf("docs-fastly-resource-%s", strings.ReplaceAll(p.name, "_", "-")),
-			Link:   fmt.Sprintf("/docs/providers/fastly/%s/%s.html", pageType, p.name),
+			Link:   fmt.Sprintf("/providers/fastly/%s/%s.html", pageType, p.name),
 			Title:  fmt.Sprintf("fastly_%s", p.name),
 		})
 	}

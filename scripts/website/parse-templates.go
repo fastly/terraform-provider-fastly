@@ -125,7 +125,6 @@ func getTemplate(tmplDir string) *template.Template {
 		}
 		return nil
 	})
-	fmt.Println(templateFiles)
 	return template.Must(template.ParseFiles(templateFiles...))
 }
 

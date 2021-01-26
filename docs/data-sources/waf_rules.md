@@ -6,7 +6,7 @@ description: |-
   Get information on Fastly WAF rules.
 ---
 
--> **Note:** This data source is only available from x.x.x of the Fastly terraform provider.
+-> **Note:** This data source is only available from 0.20.0 of the Fastly terraform provider.
 
 # fastly_waf_rules
 
@@ -145,4 +145,4 @@ The `rules` block supports:
 * `latest_revision_number` - The rule's latest revision.
 * `type` - The rule's type.
 
-[1]: https://docs.fastly.com/api/ngwaf#ngwaf_rules
+[1]: https://developer.fastly.com/reference/api/waf/rules/

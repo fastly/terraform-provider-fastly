@@ -82,10 +82,10 @@ Building the documentation copies the full markdown into the `docs` folder, read
 > NOTE: you'll need the [`tfplugindocs`](https://github.com/hashicorp/terraform-plugin-docs) tool for generating the Markdown to be deployed to Hashicorp.
 
 * To validate the documentation directory structure:
-`tfplugindocs validate`
+`make validate-docs`
 
 * To build the `/docs` documentation Markdown files:
-`tfplugindocs generate`
+`make gen-docs`
 
 * To view the documentation:
 Paste `/docs` Markdown file content into https://registry.terraform.io/tools/doc-preview

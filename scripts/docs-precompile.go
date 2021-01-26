@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -124,6 +125,8 @@ func main() {
 	backupTemplatesDir(tmplDir)
 
 	replaceTemplatesDir(tmplDir, tempDir)
+
+	runTFPluginDocs()
 }
 
 // getBaseDir returns the terraform repo directory.
@@ -248,5 +251,21 @@ func replaceTemplatesDir(tmplDir string, tempDir string) {
 	err = os.Rename(tempDir, tmplDir)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+// runTFPluginDocs executes the tfplugindocs binary which generates
+// documentation Markdown files from our terraform code, while also utilizing
+// any templates we have defined in the /templates directory.
+//
+// NOTE: it is presumed that the /templates directory that is referenced will
+// consist of precompiled templates and that the original untouched templates
+// will still exist in the /templates-backup directory ready to be restored
+// once the /docs content has been generated.
+func runTFPluginDocs() {
+	cmd := exec.Command("tfplugindocs", "generate")
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal()
 	}
 }

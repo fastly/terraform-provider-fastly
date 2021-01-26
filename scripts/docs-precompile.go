@@ -59,7 +59,6 @@ type Page struct {
 func main() {
 	baseDir := getBaseDir()
 	tmplDir := baseDir + "/templates"
-	// docsDir := baseDir + "/docs/"
 
 	tempDir, err := ioutil.TempDir("", "precompile")
 	fmt.Println(tempDir)
@@ -127,6 +126,8 @@ func main() {
 	replaceTemplatesDir(tmplDir, tempDir)
 
 	runTFPluginDocs()
+
+	replaceTemplatesDir(tmplDir, tmplDir+"-backup")
 }
 
 // getBaseDir returns the terraform repo directory.

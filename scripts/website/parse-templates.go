@@ -82,6 +82,12 @@ func main() {
 		},
 	}
 
+	// TODO(integralist): redesign the template parsing so that we don't need
+	// a root node of the pages tree structure. Historically the 'no-op' file
+	// would have referenced a fastly_erb/fastly.erb file containing a Ruby based
+	// HTML template file (as the terraform.io used to run on a Ruby platform).
+	// This file would define the HTML for a side-menu bar that linked to other
+	// pages and resources.
 	var pages = append(resourcePages, Page{
 		name:         "no-op",
 		path:         docsDir + "no_op",

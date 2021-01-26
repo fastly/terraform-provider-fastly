@@ -58,7 +58,4 @@ precompile-docs:
 validate-docs:
 	tfplugindocs validate
 
-gen-docs:
-	tfplugindocs generate
-
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs gen-docs

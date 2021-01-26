@@ -1,4 +1,4 @@
-{{define "service_waf_configuration"}}---
+---
 layout: "fastly"
 page_title: "Fastly: service_waf_configuration"
 sidebar_current: "docs-fastly-resource-service-waf-configuration"
@@ -627,4 +627,4 @@ The following is an example of the Terraform state command to remove the resourc
 ```
 $ terraform state rm fastly_service_waf_configuration.waf
 ```
-{{end}}
+{{ .SchemaMarkdown | trimspace }}

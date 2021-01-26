@@ -1,4 +1,4 @@
-{{define "service_v1"}}---
+---
 layout: "fastly"
 page_title: "Fastly: service_v1"
 sidebar_current: "docs-fastly-resource-service-v1"
@@ -311,4 +311,5 @@ The following arguments are supported:
 {{ template "dictionary_export" .}}
 
 {{ template "footer" .}}
-{{end}}
+
+{{ .SchemaMarkdown | trimspace }}

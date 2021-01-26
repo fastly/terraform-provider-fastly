@@ -1,4 +1,4 @@
-{{define "service_compute"}}---
+---
 layout: "fastly"
 page_title: "Fastly: service_compute"
 sidebar_current: "docs-fastly-resource-service-compute"
@@ -115,4 +115,5 @@ The following arguments are supported:
 
 {{ template "export_intro" .}}
 {{ template "footer" .}}
-{{end}}
+
+{{ .SchemaMarkdown | trimspace }}

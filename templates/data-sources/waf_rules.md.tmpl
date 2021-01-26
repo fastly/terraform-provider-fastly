@@ -1,4 +1,4 @@
-{{define "waf_rules"}}---
+---
 layout: "fastly"
 page_title: "Fastly: fastly_waf_rules"
 sidebar_current: "docs-fastly-datasource-waf_rules"
@@ -146,4 +146,5 @@ The `rules` block supports:
 * `type` - The rule's type.
 
 [1]: https://developer.fastly.com/reference/api/waf/rules/
-{{end}}
+
+{{ .SchemaMarkdown | trimspace }}

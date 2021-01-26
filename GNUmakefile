@@ -52,6 +52,9 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
+precompile-docs:
+	go run scripts/docs-precompile.go
+
 validate-docs:
 	tfplugindocs validate
 

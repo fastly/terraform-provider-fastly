@@ -1,4 +1,4 @@
----
+{{define "ip_ranges"}}---
 page_title: "Fastly: fastly_ip_ranges"
 ---
 
@@ -30,4 +30,4 @@ resource "aws_security_group" "from_fastly" {
 * `ipv6_cidr_blocks` - The lexically ordered list of ipv6 CIDR blocks.
 
 [1]: https://docs.fastly.com/guides/securing-communications/accessing-fastlys-ip-ranges
-{{ .SchemaMarkdown | trimspace }}
+{{end}}

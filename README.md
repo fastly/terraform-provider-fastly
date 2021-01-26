@@ -1,20 +1,16 @@
-Terraform Provider
-==================
+# Fastly Terraform Provider
 
 - Website: https://www.terraform.io
+- Documentation: https://registry.terraform.io/providers/fastly/fastly/latest/docs
+- Mailing list: http://groups.google.com/group/terraform-tool
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
 
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
-
-Requirements
-------------
+## Requirements
 
 -	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
 -	[Go](https://golang.org/doc/install) 1.14 (to build the provider plugin)
 
-Building The Provider
----------------------
+## Building The Provider
 
 Clone repository to: `$GOPATH/src/github.com/fastly/terraform-provider-fastly`
 
@@ -30,12 +26,7 @@ $ cd $GOPATH/src/github.com/fastly/terraform-provider-fastly
 $ make build
 ```
 
-Using the provider
-----------------------
-## Fill in for each provider
-
-Developing the Provider
----------------------------
+## Developing the Provider
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.14+ is *required*).
 
@@ -83,21 +74,27 @@ In order to run the tests with extra debugging context, prefix the `make` comman
 $ TF_LOG=trace make testacc
 ```
 
-Building The Documentation
---------------------------
+## Building The Documentation
 
-The documentation is built from components (go templates) stored in the `website_src` folder.
-Building the documentation copies the full markdown into the `website` folder, ready for deployment to Hashicorp.
+The documentation is built from components (go templates) stored in the `docs_src` folder.
+Building the documentation copies the full markdown into the `docs` folder, ready for deployment to Hashicorp.
+
+> NOTE: you'll need the [`tfplugindocs`](https://github.com/hashicorp/terraform-plugin-docs) tool for generating HTML from the Markdown to be deployed to Hashicorp.
 
 With the repository cloned to: `$GOPATH/src/github.com/fastly/terraform-provider-fastly`:
 
-* To build the documentation:
-`go run scripts/website/parse-templates.go `
+* To build the documentation Markdown files:
+`go run scripts/website/parse-templates.go`
 
-* To build and preview the documentation online:
-`make website`
+* To validate the documentation directory structure:
+`tfplugindocs validate`
 
-Contributing
---------------------------
+* To build the documentation HTML:
+`tfplugindocs generate`
+
+* To view the documentation:
+`???`
+
+## Contributing
 
 Refer to [CONTRIBUTING.md](./CONTRIBUTING.md)

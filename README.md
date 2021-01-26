@@ -79,7 +79,7 @@ $ TF_LOG=trace make testacc
 The documentation is built from components (go templates) stored in the `docs_src` folder.
 Building the documentation copies the full markdown into the `docs` folder, ready for deployment to Hashicorp.
 
-> NOTE: you'll need the [`tfplugindocs`](https://github.com/hashicorp/terraform-plugin-docs) tool for generating HTML from the Markdown to be deployed to Hashicorp.
+> NOTE: you'll need the [`tfplugindocs`](https://github.com/hashicorp/terraform-plugin-docs) tool for generating the Markdown to be deployed to Hashicorp.
 
 With the repository cloned to: `$GOPATH/src/github.com/fastly/terraform-provider-fastly`:
 

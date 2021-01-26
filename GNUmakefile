@@ -52,6 +52,8 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
+# requires GOPATH to be set
+# e.g. export GOPATH="$(go env GOPATH)"
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."

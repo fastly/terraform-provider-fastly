@@ -89,11 +89,11 @@ With the repository cloned to: `$GOPATH/src/github.com/fastly/terraform-provider
 * To validate the documentation directory structure:
 `tfplugindocs validate`
 
-* To build the documentation HTML:
+* To build the `/docs` documentation Markdown files:
 `tfplugindocs generate`
 
 * To view the documentation:
-`???`
+Paste `/docs` Markdown file content into https://registry.terraform.io/tools/doc-preview
 
 ## Contributing
 

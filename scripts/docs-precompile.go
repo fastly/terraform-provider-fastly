@@ -61,7 +61,6 @@ func main() {
 	tmplDir := baseDir + "/templates"
 
 	tempDir, err := ioutil.TempDir("", "precompile")
-	fmt.Println(tempDir)
 	if err != nil {
 		log.Fatal(err)
 	}

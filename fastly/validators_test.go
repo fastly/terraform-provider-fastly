@@ -387,3 +387,33 @@ func TestValidateHTTPSURL(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatePEMCertificate(t *testing.T) {
+	key, cert, ca, err := generateKeyAndCertWithCA()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, testcase := range []struct {
+		value           string
+		expectedPemType string
+		expectedWarns   int
+		expectedErrors  int
+	}{
+		{key, "PRIVATE KEY", 0, 0},
+		{cert, "CERTIFICATE", 0, 0},
+		{ca, "CERTIFICATE", 0, 0},
+		{key, "CERTIFICATE", 0, 1},
+		{"-----BEGIN CERTIFICATE-----\ncafebabe-----END CERTIFICATE-----\n", "CERTIFICATE", 0, 1},
+	} {
+		t.Run(fmt.Sprintf("%s - %s", testcase.expectedPemType, testcase.value), func(t *testing.T) {
+			actualWarns, actualErrors := validatePEMBlock(testcase.expectedPemType)(testcase.value, "certificate_blob")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

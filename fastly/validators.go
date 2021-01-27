@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"encoding/pem"
 	"fmt"
 	"strings"
 
@@ -138,5 +139,18 @@ func validateHTTPSURL() schema.SchemaValidateFunc {
 			errs = append(errs, fmt.Errorf("%q must be https URL, got: %s", key, v))
 		}
 		return
+	}
+}
+
+func validatePEMBlock(pemType string) schema.SchemaValidateFunc {
+	return func(val interface{}, key string) ([]string, []error) {
+		b, _ := pem.Decode([]byte(val.(string))) // TODO: might want to loop here to support multiple PEM resources in one string for intermediates blob?
+		if b == nil {
+			return nil, []error{fmt.Errorf("expected %s to be a valid PEM-format block", key)}
+		}
+		if b.Type != pemType {
+			return nil, []error{fmt.Errorf("expected %s to be a valid PEM-format block of type '%s'", key, pemType)}
+		}
+		return nil, nil
 	}
 }

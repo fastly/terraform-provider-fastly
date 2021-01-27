@@ -1,8 +1,6 @@
 package fastly
 
 import (
-	"encoding/pem"
-	"fmt"
 	"time"
 
 	"github.com/fastly/go-fastly/v2/fastly"
@@ -27,16 +25,10 @@ func resourceTLSCertificate() *schema.Resource {
 				Computed:    true,
 			},
 			"certificate_body": {
-				Type:        schema.TypeString,
-				Description: "PEM-formatted certificate",
-				Required:    true,
-				ValidateFunc: func(v interface{}, k string) ([]string, []error) {
-					b, _ := pem.Decode([]byte(v.(string)))
-					if b == nil {
-						return nil, []error{fmt.Errorf("expected %s to be a valid PEM-format certificate", k)}
-					}
-					return nil, nil
-				},
+				Type:         schema.TypeString,
+				Description:  "PEM-formatted certificate",
+				Required:     true,
+				ValidateFunc: validatePEMBlock("CERTIFICATE"),
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -181,6 +173,5 @@ func resourceTLSCertificateDelete(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	d.SetId("")
 	return nil
 }

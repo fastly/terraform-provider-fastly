@@ -18,16 +18,18 @@
 // 2. render the templates into Markdown
 // 3. write the file output to a temp directory and still use .tmpl extension
 // 4. append to each rendered .tmpl file the template code needed by tfplugindocs (e.g. {{ .SchemaMarkdown | trimspace }})
-// 5. rename repo /templates/{data-sources/resources} directories to avoid being overwritten by next step
-// 6. move contents of temp directory (i.e. data-sources/resources) into repo /templates directory
-// 7. run tfplugindocs generate function to output final documentation to /docs directory
-// 8. replace /templates/{data-sources/resources} directories with their backed up equivalents
+// 5. copy the index.md file (which requires no pre-compiling) to the temporary directory so tfplugindocs can include it
+// 6. rename repo /templates/{data-sources/resources} directories to avoid being overwritten by next step
+// 7. move contents of temp directory (i.e. data-sources/resources) into repo /templates directory
+// 8. run tfplugindocs generate function to output final documentation to /docs directory
+// 9. replace /templates/{data-sources/resources} directories with their backed up equivalents
 //
 package main
 
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -119,6 +121,8 @@ func main() {
 	renderPages(getTemplate(tmplDir), pages)
 
 	appendSyntaxToFiles(tempDir)
+
+	copyIndexToTempDir(tmplDir, tempDir)
 
 	backupTemplatesDir(tmplDir)
 
@@ -226,6 +230,38 @@ func appendSyntaxToFiles(tempDir string) {
 		}
 		return nil
 	})
+}
+
+// copyIndexToTempDir copies the non-templated index.md into our temporary
+// directory so that when we come to replace the repo's /templates with our
+// pre-compiled version, then the tfplugindocs command will be able to include
+// the index.md in the generated output in the /docs directory.
+//
+// The reason the index.md isn't already in our temporary directory of
+// pre-compiled Markdown templates is because the renderPages function is
+// designed to include only files with a .tmpl extension, where as index.md
+// doesn't require any templating.
+func copyIndexToTempDir(tmplDir string, tempDir string) {
+	filename := "/index.md"
+	srcFile := tmplDir + filename
+	dstFile := tempDir + filename
+
+	src, err := os.Open(srcFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer src.Close()
+
+	dst, err := os.Create(dstFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // backupTemplatesDir renames the /templates directory.

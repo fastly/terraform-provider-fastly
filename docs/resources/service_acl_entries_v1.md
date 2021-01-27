@@ -195,24 +195,6 @@ resource "fastly_service_acl_entries_v1" "entries" {
 }
 ```
 
-
-## Argument Reference
-
-The following arguments are supported:
-
-* `service_id` - (Required) The ID of the Service that the ACL belongs to
-* `acl_id` - (Required) The ID of the ACL that the items belong to
-* `entry` - (Optional) A Set ACL entries that are applied to the service. Defined below
-
-The `entry` block supports:
-
-* `ip` - (Required, string) An IP address that is the focus for the ACL
-* `subnet` - (Optional, string) An optional subnet mask applied to the IP address
-* `negated` - (Optional, boolean) A boolean that will negate the match if true
-* `comment` - (Optional, string) A personal freeform descriptive note
-
-
-
 ## Attributes Reference
 
 * [fastly-acl](https://developer.fastly.com/reference/api/acls/acl/)
@@ -239,8 +221,8 @@ $ terraform state rm fastly_service_acl_entries_v1.entries
 
 ### Required
 
-- **acl_id** (String) ACL Id
-- **service_id** (String) Service Id
+- **acl_id** (String) The ID of the ACL that the items belong to
+- **service_id** (String) The ID of the Service that the ACL belongs to
 
 ### Optional
 

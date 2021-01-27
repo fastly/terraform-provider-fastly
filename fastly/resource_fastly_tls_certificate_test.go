@@ -35,7 +35,7 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 		CheckDestroy: testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTlsCertificateWithName(name, key, name, cert),
+				Config: testAccTLSCertificateWithName(name, key, name, cert),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -50,7 +50,7 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTlsCertificateWithName(name, key, updatedName, cert2),
+				Config: testAccTLSCertificateWithName(name, key, updatedName, cert2),
 				Check:  resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 			},
 			{
@@ -114,7 +114,7 @@ func testAccTLSCertificateExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccTlsCertificateWithName(keyName string, key string, certName string, cert string) string {
+func testAccTLSCertificateWithName(keyName string, key string, certName string, cert string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "key" {
   name = "%[1]s"

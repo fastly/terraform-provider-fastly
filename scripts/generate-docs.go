@@ -179,6 +179,10 @@ func main() {
 			name: "tls_private_key",
 			path: tempDir + "/resources/tls_private_key.md.tmpl",
 		},
+		{
+			name: "tls_subscription",
+			path: tempDir + "/resources/tls_subscription.md.tmpl",
+		},
 	}
 
 	pages := append(resourcePages, dataPages...)

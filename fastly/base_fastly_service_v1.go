@@ -160,8 +160,9 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			// creating and activating. It's used internally, but also exported for
 			// users to see.
 			"active_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The currently active version of your Fastly Service.",
 			},
 
 			// Cloned Version represents the latest cloned version by the provider. It
@@ -171,8 +172,9 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			// to prevent the service from being activated. It is not used internally,
 			// but it is exported for users to see after running `terraform apply`.
 			"cloned_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The latest cloned version by the provider. The value gets only set after running `terraform apply`.",
 			},
 
 			"activate": {
@@ -183,8 +185,9 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 
 			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
 			},
 		},
 	}

@@ -30,14 +30,16 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"filename": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The path to the Wasm deployment package within your local filesystem",
 				},
 				// sha512 hash of the file
 				"source_code_hash": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+					Type:        schema.TypeString,
+					Optional:    true,
+					Computed:    true,
+					Description: `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
 				},
 			},
 		},

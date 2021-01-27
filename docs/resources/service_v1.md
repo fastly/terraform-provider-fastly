@@ -1025,7 +1025,7 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 - **dictionary** (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - **director** (Block Set) (see [below for nested schema](#nestedblock--director))
 - **dynamicsnippet** (Block Set) (see [below for nested schema](#nestedblock--dynamicsnippet))
-- **force_destroy** (Boolean)
+- **force_destroy** (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - **gcslogging** (Block Set) (see [below for nested schema](#nestedblock--gcslogging))
 - **gzip** (Block Set) (see [below for nested schema](#nestedblock--gzip))
 - **header** (Block Set) (see [below for nested schema](#nestedblock--header))
@@ -1063,8 +1063,8 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Read-only
 
-- **active_version** (Number)
-- **cloned_version** (Number)
+- **active_version** (Number) The currently active version of your Fastly Service.
+- **cloned_version** (Number) The latest cloned version by the provider. The value gets only set after running `terraform apply`.
 
 <a id="nestedblock--domain"></a>
 ### Nested Schema for `domain`
@@ -1075,7 +1075,7 @@ Required:
 
 Optional:
 
-- **comment** (String)
+- **comment** (String) An optional comment about the Domain.
 
 
 <a id="nestedblock--acl"></a>

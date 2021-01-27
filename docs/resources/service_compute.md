@@ -569,7 +569,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 - **bigquerylogging** (Block Set) (see [below for nested schema](#nestedblock--bigquerylogging))
 - **blobstoragelogging** (Block Set) (see [below for nested schema](#nestedblock--blobstoragelogging))
 - **comment** (String) A personal freeform descriptive note
-- **force_destroy** (Boolean)
+- **force_destroy** (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - **gcslogging** (Block Set) (see [below for nested schema](#nestedblock--gcslogging))
 - **healthcheck** (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
 - **httpslogging** (Block Set) (see [below for nested schema](#nestedblock--httpslogging))
@@ -600,8 +600,8 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Read-only
 
-- **active_version** (Number)
-- **cloned_version** (Number)
+- **active_version** (Number) The currently active version of your Fastly Service.
+- **cloned_version** (Number) The latest cloned version by the provider. The value gets only set after running `terraform apply`.
 
 <a id="nestedblock--domain"></a>
 ### Nested Schema for `domain`
@@ -612,7 +612,7 @@ Required:
 
 Optional:
 
-- **comment** (String)
+- **comment** (String) An optional comment about the Domain.
 
 
 <a id="nestedblock--package"></a>
@@ -620,11 +620,11 @@ Optional:
 
 Required:
 
-- **filename** (String)
+- **filename** (String) The path to the Wasm deployment package within your local filesystem
 
 Optional:
 
-- **source_code_hash** (String)
+- **source_code_hash** (String) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package
 
 
 <a id="nestedblock--backend"></a>

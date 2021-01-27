@@ -58,4 +58,4 @@ generate-docs:
 validate-docs:
 	tfplugindocs validate
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs gen-docs
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs

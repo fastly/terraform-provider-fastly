@@ -87,7 +87,7 @@ Building the documentation copies the full markdown into the `docs` folder, read
 
 * To build the `/docs` documentation Markdown files:
 ```
-make precompile-docs
+make generate-docs
 ```
 
 * To view the documentation:

@@ -27,13 +27,13 @@ func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Scalyr logging endpoint.",
+			Description: "The unique name of the Scalyr logging endpoint",
 		},
 
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The token to use for authentication (https://www.scalyr.com/keys).",
+			Description: "The token to use for authentication (https://www.scalyr.com/keys)",
 			Sensitive:   true,
 		},
 
@@ -42,7 +42,7 @@ func (h *ScalyrServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "US",
-			Description: "The region that log data will be sent to. One of US or EU. Defaults to US if undefined.",
+			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined",
 		},
 	}
 

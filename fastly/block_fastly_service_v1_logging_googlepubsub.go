@@ -27,31 +27,31 @@ func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource) error
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Google Cloud Pub/Sub logging endpoint.",
+			Description: "The unique name of the Google Cloud Pub/Sub logging endpoint",
 		},
 
 		"user": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your Google Cloud Platform service account email address. The client_email field in your service account authentication JSON. ",
+			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON",
 		},
 
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your Google Cloud Platform account secret key. The private_key field in your service account authentication JSON.",
+			Description: "Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON",
 		},
 
 		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The ID of your Google Cloud Platform project.",
+			Description: "The ID of your Google Cloud Platform project",
 		},
 
 		"topic": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The Google Cloud Pub/Sub topic to which logs will be published.",
+			Description: "The Google Cloud Pub/Sub topic to which logs will be published",
 		},
 	}
 

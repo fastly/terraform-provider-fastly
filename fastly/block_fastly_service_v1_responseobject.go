@@ -109,20 +109,20 @@ func (h *ResponseObjectServiceAttributeHandler) Register(s *schema.Resource) err
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name to refer to this request object",
+					Description: "A unique name to identify this Response Object",
 				},
 				// Optional fields
 				"status": {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     200,
-					Description: "The HTTP Status Code of the object",
+					Description: "The HTTP Status Code. Default `200`",
 				},
 				"response": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "OK",
-					Description: "The HTTP Response of the object",
+					Description: "The HTTP Response. Default `OK`",
 				},
 				"content": {
 					Type:        schema.TypeString,
@@ -140,13 +140,13 @@ func (h *ResponseObjectServiceAttributeHandler) Register(s *schema.Resource) err
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
-					Description: "Name of the condition to be checked during the request phase to see if the object should be delivered",
+					Description: "Name of already defined `condition` to be checked during the request phase. If the condition passes then this object will be delivered. This `condition` must be of type `REQUEST`",
 				},
 				"cache_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
-					Description: "Name of the condition checked after we have retrieved an object. If the condition passes then deliver this Request Object instead.",
+					Description: "Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
 				},
 			},
 		},

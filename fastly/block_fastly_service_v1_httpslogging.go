@@ -98,7 +98,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 		"url": {
 			Type:         schema.TypeString,
 			Required:     true,
-			Description:  "URL that log data will be sent to. Must use the https protocol.",
+			Description:  "URL that log data will be sent to. Must use the https protocol",
 			ValidateFunc: validateHTTPSURL(),
 		},
 
@@ -106,38 +106,38 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 		"request_max_entries": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "The maximum number of logs sent in one request.",
+			Description: "The maximum number of logs sent in one request",
 		},
 
 		"request_max_bytes": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "The maximum number of bytes sent in one request.",
+			Description: "The maximum number of bytes sent in one request",
 		},
 
 		"content_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Content-Type header sent with the request.",
+			Description: "Value of the `Content-Type` header sent with the request",
 		},
 
 		"header_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Custom header sent with the request.",
+			Description: "Custom header sent with the request",
 		},
 
 		"header_value": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Value of the custom header sent with the request.",
+			Description: "Value of the custom header sent with the request",
 		},
 
 		"method": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "POST",
-			Description:  "HTTP method used for request.",
+			Description:  "HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`",
 			ValidateFunc: validation.StringInSlice([]string{"POST", "PUT"}, false),
 		},
 
@@ -146,14 +146,14 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "0",
-			Description:  "Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`).",
+			Description:  "Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)",
 			ValidateFunc: validation.StringInSlice([]string{"0", "1", "2"}, false),
 		},
 
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+			Description: "A secure certificate to authenticate the server with. Must be in PEM format",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -162,7 +162,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 		"tls_client_cert": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+			Description: "The client certificate used to make authenticated requests. Must be in PEM format",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -171,7 +171,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 		"tls_client_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+			Description: "The client private key used to make authenticated requests. Must be in PEM format",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -180,14 +180,14 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or blockAttributes Subject Alternative Name (SAN).",
+			Description: "Used during the TLS handshake to validate the certificate",
 		},
 
 		"message_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "blank",
-			Description:  "How the message should be formatted",
+			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `blank`",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 	}

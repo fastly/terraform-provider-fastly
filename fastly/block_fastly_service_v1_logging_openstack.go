@@ -199,39 +199,39 @@ func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the OpenStack logging endpoint.",
+			Description: "The unique name of the OpenStack logging endpoint",
 		},
 
 		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your OpenStack auth url.",
+			Description: "Your OpenStack auth url",
 		},
 
 		"user": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The username for your OpenStack account.",
+			Description: "The username for your OpenStack account",
 		},
 
 		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The name of your OpenStack container.",
+			Description: "The name of your OpenStack container",
 		},
 
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "Your OpenStack account access key.",
+			Description: "Your OpenStack account access key",
 		},
 
 		// Optional fields
 		"public_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
 		},
@@ -240,27 +240,27 @@ func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
+			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
 		},
 
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
-			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+			Description: "How frequently the logs should be transferred, in seconds. Default `3600`",
 		},
 
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The path to upload logs to.",
+			Description: "Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path",
 		},
 
 		"message_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "classic",
-			Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 

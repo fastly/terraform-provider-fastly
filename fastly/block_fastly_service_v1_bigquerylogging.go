@@ -126,7 +126,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Unique name to refer to this logging setup",
+			Description: "A unique name to identify this BigQuery logging endpoint",
 		},
 		"project_id": {
 			Type:        schema.TypeString,
@@ -147,14 +147,14 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 			Type:        schema.TypeString,
 			Required:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
-			Description: "The email address associated with the target BigQuery dataset on your account.",
+			Description: "The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable",
 			Sensitive:   true,
 		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
-			Description: "The secret key associated with the target BigQuery dataset on your account.",
+			Description: "The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -164,7 +164,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Big query table name suffix template",
+			Description: "BigQuery table name suffix template",
 		},
 	}
 

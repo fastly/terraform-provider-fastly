@@ -121,6 +121,8 @@ resource "fastly_service_waf_configuration" "waf" {
 }
 ```
 
+
+
 ## Argument Reference
 
 ~> **Warning:** The data source's filters are applied using an **AND** boolean operator, so depending on the combination of filters, they may become mutually exclusive.

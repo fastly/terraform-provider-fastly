@@ -27,31 +27,31 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the SFTP logging endpoint.",
+			Description: "The unique name of the SFTP logging endpoint",
 		},
 
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The SFTP address to stream logs to.",
+			Description: "The SFTP address to stream logs to",
 		},
 
 		"user": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The username for the server.",
+			Description: "The username for the server",
 		},
 
 		"path": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The path to upload log files to. If the path ends in / then it is treated as blockAttributes directory.",
+			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
 		},
 
 		"ssh_known_hosts": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A list of host keys for all hosts we can connect to over SFTP.",
+			Description: "A list of host keys for all hosts we can connect to over SFTP",
 		},
 
 		// Optional fields
@@ -59,20 +59,20 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     22,
-			Description: "The port the SFTP service listens on. (Default: 22).",
+			Description: "The port the SFTP service listens on. (Default: `22`)",
 		},
 
 		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The password for the server. If both password and secret_key are passed, secret_key will be preferred.",
+			Description: "The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
 			Sensitive:   true,
 		},
 
 		"secret_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The SSH private key for the server. If both password and secret_key are passed, secret_key will be preferred.",
+			Description: "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -81,7 +81,7 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		"public_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
 		},
@@ -90,28 +90,28 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
-			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
 		},
 
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
 		},
 
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "The strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+			Description: "The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
 		},
 
 		"message_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "classic",
-			Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+			Description:  "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 	}

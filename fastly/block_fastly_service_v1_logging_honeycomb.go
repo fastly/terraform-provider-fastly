@@ -168,20 +168,20 @@ func (h *HoneycombServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Honeycomb logging endpoint.",
+			Description: "The unique name of the Honeycomb logging endpoint",
 		},
 
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The Write Key from the Account page of your Honeycomb account.",
+			Description: "The Write Key from the Account page of your Honeycomb account",
 		},
 
 		"dataset": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The Honeycomb Dataset you want to log to.",
+			Description: "The Honeycomb Dataset you want to log to",
 		},
 	}
 

@@ -111,8 +111,9 @@ func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The unique name for the condition",
 				},
 				"statement": {
 					Type:        schema.TypeString,
@@ -123,12 +124,12 @@ func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     10,
-					Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first",
+					Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`",
 				},
 				"type": {
 					Type:         schema.TypeString,
 					Required:     true,
-					Description:  "Type of the condition, either `REQUEST`, `RESPONSE`, or `CACHE`",
+					Description:  "Type of condition, either `REQUEST` (req), `RESPONSE` (req, resp), or `CACHE` (req, beresp)",
 					ValidateFunc: validateConditionType(),
 				},
 			},

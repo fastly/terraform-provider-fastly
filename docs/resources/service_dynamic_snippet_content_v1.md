@@ -173,15 +173,6 @@ resource "fastly_service_dynamic_snippet_content_v1" "my_dyn_content" {
 }
 ```
 
-
-## Argument Reference
-
-The following arguments are supported:
-
-* `service_id` - (Required) The ID of the service that the dynamic snippet belongs to
-* `snippet_id` - (Required) The ID of the dynamic snippet that the content belong to
-* `content` - (Required) The VCL code that specifies exactly what the snippet does.
-
 ## Attributes Reference
 
 * [fastly-vcl](https://developer.fastly.com/reference/api/vcl-services/vcl/)
@@ -207,9 +198,9 @@ $ terraform state rm fastly_service_dynamic_snippet_content_v1.content
 
 ### Required
 
-- **content** (String) The contents of the VCL dynamic snippet
-- **service_id** (String) Service Id
-- **snippet_id** (String) Snippet Id
+- **content** (String) The VCL code that specifies exactly what the snippet does
+- **service_id** (String) The ID of the service that the dynamic snippet belongs to
+- **snippet_id** (String) The ID of the dynamic snippet that the content belong to
 
 ### Optional
 

@@ -139,20 +139,20 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Unique name for this Service",
+				Description: "The unique name for the Service to create",
 			},
 
 			"comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "Managed by Terraform",
-				Description: "A personal freeform descriptive note",
+				Description: "Description field for the service. Default `Managed by Terraform`",
 			},
 
 			"version_comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A personal freeform descriptive note",
+				Description: "Description field for the version",
 			},
 
 			// Active Version represents the currently activated version in Fastly. In
@@ -162,7 +162,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			"active_version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "The currently active version of your Fastly Service.",
+				Description: "The currently active version of your Fastly Service",
 			},
 
 			// Cloned Version represents the latest cloned version by the provider. It
@@ -174,12 +174,12 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			"cloned_version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "The latest cloned version by the provider. The value gets only set after running `terraform apply`.",
+				Description: "The latest cloned version by the provider. The value gets only set after running `terraform apply`",
 			},
 
 			"activate": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally prevents the Service from being activated",
+				Description: "Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
 				Default:     true,
 				Optional:    true,
 			},

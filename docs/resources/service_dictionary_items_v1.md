@@ -217,16 +217,6 @@ resource "fastly_service_dictionary_items_v1" "items" {
 }
 ```
 
-
-## Argument Reference
-
-The following arguments are supported:
-
-* `service_id` - (Required) The ID of the service that the dictionary belongs to
-* `dictionary_id` - (Required) The ID of the dictionary that the items belong to
-* `items` - (Optional) A map representing an entry in the dictionary, (key/value)
-
-
 ## Attributes Reference
 
 * [fastly-dictionary](https://developer.fastly.com/reference/api/dictionaries/dictionary/)
@@ -252,10 +242,10 @@ $ terraform state rm fastly_service_dictionary_items_v1.items
 
 ### Required
 
-- **dictionary_id** (String) The dictionary the items belong to
-- **service_id** (String) The service the dictionary belongs to
+- **dictionary_id** (String) The ID of the dictionary that the items belong to
+- **service_id** (String) The ID of the service that the dictionary belongs to
 
 ### Optional
 
 - **id** (String) The ID of this resource.
-- **items** (Map of String) Map of key/value pairs that make up an item in the dictionary
+- **items** (Map of String) A map representing an entry in the dictionary, (key/value)

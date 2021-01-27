@@ -552,62 +552,6 @@ For this scenario, it's recommended to split the changes into two distinct steps
 1. Add the `waf` block to the `fastly_service_v1` and apply the changes
 2. Add the `fastly_service_waf_configuration` to the HCL and apply the changes
 
-## Argument Reference
-
-The following arguments are supported:
-
-* `waf_id` - (Required) The ID of the Web Application Firewall that the configuration belongs to.
-* `allowed_http_versions` - (Optional) Allowed HTTP versions.
-* `allowed_methods` - (Optional) A space-separated list of HTTP method names.
-* `allowed_request_content_type` - (Optional) Allowed request content types.
-* `allowed_request_content_type_charset` - (Optional) Allowed request content type charset.
-* `arg_length` - (Optional) The maximum number of arguments allowed.
-* `arg_name_length` - (Optional) The maximum allowed argument name length.
-* `combined_file_sizes` - (Optional) The maximum allowed size of all files.
-* `critical_anomaly_score` - (Optional) Score value to add for critical anomalies.
-* `crs_validate_utf8_encoding` - (Optional) CRS validate UTF8 encoding.
-* `error_anomaly_score` - (Optional) Score value to add for error anomalies.
-* `high_risk_country_codes` - (Optional) A space-separated list of country codes in ISO 3166-1 (two-letter) format.
-* `http_violation_score_threshold` - (Optional) HTTP violation threshold.
-* `inbound_anomaly_score_threshold` - (Optional) Inbound anomaly threshold.
-* `lfi_score_threshold` - (Optional) Local file inclusion attack threshold.
-* `max_file_size` - (Optional) The maximum allowed file size, in bytes.
-* `max_num_args` - (Optional) The maximum number of arguments allowed.
-* `notice_anomaly_score` - (Optional) Score value to add for notice anomalies.
-* `paranoia_level` - (Optional) The configured paranoia level.
-* `php_injection_score_threshold` - (Optional) PHP injection threshold.
-* `rce_score_threshold` - (Optional) Remote code execution threshold.
-* `restricted_extensions` - (Optional) A space-separated list of allowed file extensions.
-* `restricted_headers` - (Optional) A space-separated list of allowed header names.
-* `rfi_score_threshold` - (Optional) Remote file inclusion attack threshold.
-* `session_fixation_score_threshold` - (Optional) Session fixation attack threshold.
-* `sql_injection_score_threshold` - (Optional) SQL injection attack threshold.
-* `total_arg_length` - (Optional) The maximum size of argument names and values.
-* `warning_anomaly_score` - (Optional) Score value to add for warning anomalies.
-* `xss_score_threshold` - (Optional) XSS attack threshold.
-* `rule` - (Optional) The Web Application Firewall's active rules. [Defined below](#rule-block)
-* `rule_exclusion` - (Optional) The Web Application Firewall's rule exclusions. [Defined below](#rule_exclusion-block)
-
-### rule block
-
-The `rule` block supports:
-
-* `status` - (Required) The Web Application Firewall rule's status. Allowed values are (`log`, `block` and `score`).
-* `modsec_rule_id` - (Required) The Web Application Firewall rule's modsecurity ID.
-* `revision` - (Optional) The Web Application Firewall rule's revision. The latest revision will be used if this is not provided.
-
-### rule_exclusion block
-
-The `rule_exclusion` block supports:
-
-~> **Warning:** Rule exclusions are part of a **beta release**, which may be subject to breaking changes and improvements over time. For more information, see our [product and feature lifecycle](https://docs.fastly.com/products/fastly-product-lifecycle#beta) descriptions.
-
-* `name` - (Required) The name of rule exclusion.
-* `exclusion_type` - (Required) The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall.
-* `condition` - (Required) A conditional expression in VCL used to determine if the condition is met.
-* `modsec_rule_ids` - (Required) Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded.
-* `number` - The numeric ID assigned to the WAF Rule Exclusion.
-
 ## Import
 
 This is an example of the import command being applied to the resource named `fastly_service_waf_configuration.waf`
@@ -628,53 +572,53 @@ $ terraform state rm fastly_service_waf_configuration.waf
 
 ### Required
 
-- **waf_id** (String) The service the WAF belongs to.
+- **waf_id** (String) The ID of the Web Application Firewall that the configuration belongs to
 
 ### Optional
 
-- **allowed_http_versions** (String) Allowed HTTP versions (default HTTP/1.0 HTTP/1.1 HTTP/2).
-- **allowed_methods** (String) A space-separated list of HTTP method names (default GET HEAD POST OPTIONS PUT PATCH DELETE).
-- **allowed_request_content_type** (String) Allowed request content types (default application/x-www-form-urlencoded|multipart/form-data|text/xml|application/xml|application/x-amf|application/json|text/plain).
-- **allowed_request_content_type_charset** (String) Allowed request content type charset (default utf-8|iso-8859-1|iso-8859-15|windows-1252).
-- **arg_length** (Number) The maximum number of arguments allowed (default 400).
-- **arg_name_length** (Number) The maximum allowed argument name length (default 100).
-- **combined_file_sizes** (Number) The maximum allowed size of all files (in bytes, default 10000000).
-- **critical_anomaly_score** (Number) Score value to add for critical anomalies (default 6).
-- **crs_validate_utf8_encoding** (Boolean) CRS validate UTF8 encoding.
-- **error_anomaly_score** (Number) Score value to add for error anomalies (default 5).
-- **high_risk_country_codes** (String) A space-separated list of country codes in ISO 3166-1 (two-letter) format.
-- **http_violation_score_threshold** (Number) HTTP violation threshold.
+- **allowed_http_versions** (String) Allowed HTTP versions
+- **allowed_methods** (String) A space-separated list of HTTP method names
+- **allowed_request_content_type** (String) Allowed request content types
+- **allowed_request_content_type_charset** (String) Allowed request content type charset
+- **arg_length** (Number) The maximum number of arguments allowed
+- **arg_name_length** (Number) The maximum allowed argument name length
+- **combined_file_sizes** (Number) The maximum allowed size of all files
+- **critical_anomaly_score** (Number) Score value to add for critical anomalies
+- **crs_validate_utf8_encoding** (Boolean) CRS validate UTF8 encoding
+- **error_anomaly_score** (Number) Score value to add for error anomalies
+- **high_risk_country_codes** (String) A space-separated list of country codes in ISO 3166-1 (two-letter) format
+- **http_violation_score_threshold** (Number) HTTP violation threshold
 - **id** (String) The ID of this resource.
-- **inbound_anomaly_score_threshold** (Number) Inbound anomaly threshold.
-- **lfi_score_threshold** (Number) Local file inclusion attack threshold.
-- **max_file_size** (Number) The maximum allowed file size, in bytes (default 10000000).
-- **max_num_args** (Number) The maximum number of arguments allowed (default 255).
-- **notice_anomaly_score** (Number) Score value to add for notice anomalies (default 4).
-- **paranoia_level** (Number) The configured paranoia level (default 1).
-- **php_injection_score_threshold** (Number) PHP injection threshold.
-- **rce_score_threshold** (Number) Remote code execution threshold.
-- **restricted_extensions** (String) A space-separated list of allowed file extensions (default .asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .resources/ .resx/ .sql/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx).
-- **restricted_headers** (String) A space-separated list of allowed header names (default /proxy/ /lock-token/ /content-range/ /translate/ /if/).
-- **rfi_score_threshold** (Number) Remote file inclusion attack threshold.
+- **inbound_anomaly_score_threshold** (Number) Inbound anomaly threshold
+- **lfi_score_threshold** (Number) Local file inclusion attack threshold
+- **max_file_size** (Number) The maximum allowed file size, in bytes
+- **max_num_args** (Number) The maximum number of arguments allowed
+- **notice_anomaly_score** (Number) Score value to add for notice anomalies
+- **paranoia_level** (Number) The configured paranoia level
+- **php_injection_score_threshold** (Number) PHP injection threshold
+- **rce_score_threshold** (Number) Remote code execution threshold
+- **restricted_extensions** (String) A space-separated list of allowed file extensions
+- **restricted_headers** (String) A space-separated list of allowed header names
+- **rfi_score_threshold** (Number) Remote file inclusion attack threshold
 - **rule** (Block Set) (see [below for nested schema](#nestedblock--rule))
 - **rule_exclusion** (Block Set) (see [below for nested schema](#nestedblock--rule_exclusion))
-- **session_fixation_score_threshold** (Number) Session fixation attack threshold.
-- **sql_injection_score_threshold** (Number) SQL injection attack threshold.
-- **total_arg_length** (Number) The maximum size of argument names and values (default 6400).
-- **warning_anomaly_score** (Number) Score value to add for warning anomalies.
-- **xss_score_threshold** (Number) XSS attack threshold.
+- **session_fixation_score_threshold** (Number) Session fixation attack threshold
+- **sql_injection_score_threshold** (Number) SQL injection attack threshold
+- **total_arg_length** (Number) The maximum size of argument names and values
+- **warning_anomaly_score** (Number) Score value to add for warning anomalies
+- **xss_score_threshold** (Number) XSS attack threshold
 
 <a id="nestedblock--rule"></a>
 ### Nested Schema for `rule`
 
 Required:
 
-- **modsec_rule_id** (Number) The Web Application Firewall rule's modsec ID.
-- **status** (String) The Web Application Firewall rule's status. Allowed values are (log, block and score).
+- **modsec_rule_id** (Number) The Web Application Firewall rule's modsecurity ID
+- **status** (String) The Web Application Firewall rule's status. Allowed values are (`log`, `block` and `score`)
 
 Optional:
 
-- **revision** (Number) The Web Application Firewall rule's revision.
+- **revision** (Number) The Web Application Firewall rule's revision. The latest revision will be used if this is not provided
 
 
 <a id="nestedblock--rule_exclusion"></a>
@@ -682,14 +626,14 @@ Optional:
 
 Required:
 
-- **condition** (String) A conditional expression in VCL used to determine if the condition is met.
-- **exclusion_type** (String) The type of exclusion.
-- **name** (String) Name of the exclusion.
+- **condition** (String) A conditional expression in VCL used to determine if the condition is met
+- **exclusion_type** (String) The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall
+- **name** (String) The name of rule exclusion
 
 Optional:
 
-- **modsec_rule_ids** (Set of Number) The modsec rule IDs to exclude.
+- **modsec_rule_ids** (Set of Number) Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded
 
 Read-only:
 
-- **number** (Number) A sequential ID assigned to the exclusion.
+- **number** (Number) The numeric ID assigned to the WAF Rule Exclusion

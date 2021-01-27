@@ -38,78 +38,8 @@ resource "fastly_service_compute" "demo" {
 }
 ```
 
-## Argument Reference
-
-The following arguments are supported:
-
-{{ template "activate" . }}
-{{ template "name" . }}
-{{ template "comment" . }}
-{{ template "version_comment" . }}
-{{ template "domain" . }}
-{{ template "backend" . }}
-{{ template "healthcheck" . }}
-{{ template "package" . }}
-{{ template "force_destroy" . }}
-{{ template "s3logging" . }}
-{{ template "papertrail" . }}
-{{ template "sumologic" . }}
-{{ template "gcslogging" . }}
-{{ template "bigquerylogging" . }}
-{{ template "syslog" . }}
-{{ template "logentries" . }}
-{{ template "splunk" . }}
-{{ template "blobstoragelogging" . }}
-{{ template "httpslogging" . }}
-{{ template "logging_elasticsearch" . }}
-{{ template "logging_ftp" . }}
-{{ template "logging_sftp" .}}
-{{ template "logging_datadog" . }}
-{{ template "logging_loggly" . }}
-{{ template "logging_newrelic" . }}
-{{ template "logging_scalyr" . }}
-{{ template "logging_googlepubsub" . }}
-{{ template "logging_kafka" . }}
-{{ template "logging_heroku" . }}
-{{ template "logging_honeycomb" . }}
-{{ template "logging_logshuttle" . }}
-{{ template "logging_openstack" . }}
-{{ template "logging_digitalocean" . }}
-{{ template "logging_cloudfiles" . }}
-{{ template "logging_kinesis" . }}
-
-{{ template "domain_block" . }}
-{{ template "backend_block" . }}
-{{ template "healthcheck_block" . }}
 {{ template "package_block" . }}
-{{ template "s3logging_block" . }}
-{{ template "papertrail_block" . }}
-{{ template "sumologic_block" . }}
-{{ template "gcslogging_block" . }}
-{{ template "bigquerylogging_block" . }}
-{{ template "syslog_block" . }}
-{{ template "logentries_block" . }}
-{{ template "splunk_block" . }}
-{{ template "blobstoragelogging_block" . }}
-{{ template "httpslogging_block" . }}
-{{ template "logging_elasticsearch_block" . }}
-{{ template "logging_ftp_block" . }}
-{{ template "logging_sftp_block" . }}
-{{ template "logging_datadog_block" . }}
-{{ template "logging_loggly_block" . }}
-{{ template "logging_newrelic_block" . }}
-{{ template "logging_scalyr_block" . }}
-{{ template "logging_googlepubsub_block" . }}
-{{ template "logging_kafka_block" . }}
-{{ template "logging_heroku_block" . }}
-{{ template "logging_honeycomb_block" . }}
-{{ template "logging_logshuttle_block" . }}
-{{ template "logging_openstack_block" . }}
-{{ template "logging_digitalocean_block" . }}
-{{ template "logging_cloudfiles_block" . }}
-{{ template "logging_kinesis_block" . }}
 
-{{ template "export_intro" .}}
 {{ template "footer" .}}
 
 {{end}}

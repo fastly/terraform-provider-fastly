@@ -114,14 +114,14 @@ func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Datadog logging endpoint.",
+			Description: "The unique name of the Datadog logging endpoint",
 		},
 
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The API key from your Datadog account.",
+			Description: "The API key from your Datadog account",
 		},
 
 		// Optional fields
@@ -129,7 +129,7 @@ func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "US",
-			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined.",
+			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined",
 		},
 	}
 

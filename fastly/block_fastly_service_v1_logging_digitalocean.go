@@ -199,41 +199,41 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the DigitalOcean Spaces logging endpoint.",
+			Description: "The unique name of the DigitalOcean Spaces logging endpoint",
 		},
 
 		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The name of the DigitalOcean Space.",
+			Description: "The name of the DigitalOcean Space",
 		},
 
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "Your DigitalOcean Spaces account access key.",
+			Description: "Your DigitalOcean Spaces account access key",
 		},
 
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "Your DigitalOcean Spaces account secret key.",
+			Description: "Your DigitalOcean Spaces account secret key",
 		},
 
 		// Optional fields
 		"domain": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The domain of the DigitalOcean Spaces endpoint (default: nyc3.digitaloceanspaces.com).",
+			Description: "The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)",
 			Default:     "nyc3.digitaloceanspaces.com",
 		},
 
 		"public_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
 		},
@@ -241,32 +241,32 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The path to upload logs to.",
+			Description: "The path to upload logs to",
 		},
 
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
 		},
 
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "strftime specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+			Description: "`strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
 		},
 
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "What level of Gzip encoding to have when dumping logs (default 0, no compression).",
+			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
 		},
 
 		"message_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "classic",
-			Description:  "How the message should be formatted.",
+			Description:  "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 	}

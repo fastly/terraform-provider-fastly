@@ -198,33 +198,33 @@ func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Cloud Files logging endpoint.",
+			Description: "The unique name of the Rackspace Cloud Files logging endpoint",
 		},
 
 		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The name of your Cloud Files container.",
+			Description: "The name of your Cloud Files container",
 		},
 
 		"user": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The username for your Cloudfile account.",
+			Description: "The username for your Cloud Files account",
 		},
 
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "Your Cloudfile account access key.",
+			Description: "Your Cloud File account access key",
 		},
 
 		// Optional fields
 		"public_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
 		},
@@ -233,41 +233,41 @@ func (h *CloudfilesServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of GZIP encoding to have when dumping logs (default 0, no compression).",
+			Description: "What level of GZIP encoding to have when dumping logs (default `0`, no compression)",
 		},
 
 		"message_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "classic",
-			Description:  "How the message should be formatted. One of: classic (default), loggly, logplex or blank.",
+			Description:  "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The path to upload logs to.",
+			Description: "The path to upload logs to",
 		},
 
 		"region": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Description: "The region to stream logs to. One of: DFW	(Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong).",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)",
 		},
 
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
-			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default 3600).",
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
 		},
 
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "The specified format of the log's timestamp (default `%Y-%m-%dT%H:%M:%S.000`).",
+			Description: "The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
 		},
 	}
 

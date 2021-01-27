@@ -104,19 +104,19 @@ func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name to refer to this Dictionary",
+					Description: "A unique name to identify this dictionary",
 				},
 				// Optional fields
 				"dictionary_id": {
 					Type:        schema.TypeString,
 					Computed:    true,
-					Description: "Generated dictionary ID",
+					Description: "The ID of the dictionary",
 				},
 				"write_only": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: "Determines if items in the dictionary are readable or not",
+					Description: "If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
 				},
 			},
 		},

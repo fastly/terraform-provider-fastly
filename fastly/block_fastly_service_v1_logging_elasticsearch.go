@@ -91,38 +91,38 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Elasticsearch logging endpoint.",
+			Description: "The unique name of the Elasticsearch logging endpoint",
 		},
 
 		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The Elasticsearch URL to stream logs to.",
+			Description: "The Elasticsearch URL to stream logs to",
 		},
 
 		"index": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The name of the Elasticsearch index to send documents (logs) to.",
+			Description: "The name of the Elasticsearch index to send documents (logs) to",
 		},
 
 		// Optional fields
 		"pipeline": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing.",
+			Description: "The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing",
 		},
 
 		"user": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "BasicAuth user.",
+			Description: "BasicAuth username for Elasticsearch",
 		},
 
 		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "BasicAuth password.",
+			Description: "BasicAuth password for Elasticsearch",
 			Sensitive:   true,
 		},
 
@@ -130,20 +130,20 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "The maximum number of logs sent in one request.",
+			Description: "The maximum number of bytes sent in one request. Defaults to `0` for unbounded",
 		},
 
 		"request_max_bytes": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "The maximum number of bytes sent in one request.",
+			Description: "The maximum number of logs sent in one request. Defaults to `0` for unbounded",
 		},
 
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "A secure certificate to authenticate the server with. Must be in PEM format.",
+			Description: "A secure certificate to authenticate the server with. Must be in PEM format",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -152,7 +152,7 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 		"tls_client_cert": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+			Description: "The client certificate used to make authenticated requests. Must be in PEM format",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -161,7 +161,7 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 		"tls_client_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The client private key used to make authenticated requests. Must be in PEM format.",
+			Description: "The client private key used to make authenticated requests. Must be in PEM format",
 			Sensitive:   true,
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
@@ -170,7 +170,7 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or blockAttributes Subject Alternative Name (SAN).",
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN)",
 		},
 	}
 

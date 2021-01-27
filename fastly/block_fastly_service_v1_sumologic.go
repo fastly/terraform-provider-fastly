@@ -105,19 +105,19 @@ func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Unique name to refer to this logging setup",
+			Description: "A unique name to identify this Sumologic endpoint",
 		},
 		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The URL to POST to.",
+			Description: "The URL to Sumologic collector endpoint",
 		},
 		// Optional fields
 		"message_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "classic",
-			Description:  "How the message should be formatted.",
+			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic](https://developer.fastly.com/reference/api/logging/sumologic/)",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 	}

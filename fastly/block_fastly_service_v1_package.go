@@ -25,7 +25,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:        schema.TypeList,
 		Required:    true,
-		Description: "The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)",
+		Description: "The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/)",
 		MaxItems:    1,
 		MinItems:    1,
 		Elem: &schema.Resource{

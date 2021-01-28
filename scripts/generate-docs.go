@@ -35,8 +35,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
-	"strings"
 )
 
 // PageData represents a type of service and enables a template to render
@@ -59,7 +57,10 @@ type Page struct {
 }
 
 func main() {
-	baseDir := getBaseDir()
+	baseDir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
 	tmplDir := baseDir + "/templates"
 
 	tempDir, err := ioutil.TempDir("", "precompile")
@@ -131,24 +132,6 @@ func main() {
 	runTFPluginDocs()
 
 	replaceTemplatesDir(tmplDir, tmplDir+"-backup")
-}
-
-// getBaseDir returns the terraform repo directory.
-//
-// TODO: simplify this logic with something like:
-// git rev-parse --show-toplevel
-func getBaseDir() string {
-	_, scriptPath, _, ok := runtime.Caller(0)
-	if !ok {
-		log.Fatal("Could not get current working directory")
-	}
-	for !strings.HasPrefix(filepath.Base(scriptPath), "terraform-provider-") && scriptPath != "/" {
-		scriptPath = filepath.Clean(scriptPath + "/..")
-	}
-	if scriptPath == "/" {
-		log.Fatal("Script was run outside of fastly provider directory")
-	}
-	return scriptPath
 }
 
 // getTemplate walks the templates directory filtering non-tmpl extension

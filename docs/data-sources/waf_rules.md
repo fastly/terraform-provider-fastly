@@ -1,5 +1,9 @@
 ---
+layout: "fastly"
 page_title: "Fastly: fastly_waf_rules"
+sidebar_current: "docs-fastly-datasource-waf_rules"
+description: |-
+  Get information on Fastly WAF rules.
 ---
 
 -> **Note:** This data source is only available from 0.20.0 of the Fastly terraform provider.

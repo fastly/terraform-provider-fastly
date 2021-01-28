@@ -1,5 +1,9 @@
 ---
+layout: "fastly"
 page_title: "Fastly: service_waf_configuration"
+sidebar_current: "docs-fastly-resource-service-waf-configuration"
+description: |-
+  Provides a Web Application Firewall configuration and rules that can be applied to a service.
 ---
 
 -> **Note:** This resource is only available from 0.20.0 of the Fastly terraform provider.

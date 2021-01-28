@@ -1,5 +1,9 @@
 ---
+layout: "fastly"
 page_title: "Fastly: service_dictionary_items_v1"
+sidebar_current: "docs-fastly-resource-service-dictionary-items-v1"
+description: |-
+  Provides a grouping of Fastly dictionary items that can be applied to a service. 
 ---
 
 # fastly_service_dictionary_items_v1

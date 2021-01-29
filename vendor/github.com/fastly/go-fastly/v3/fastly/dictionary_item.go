@@ -46,7 +46,7 @@ func (c *Client) ListDictionaryItems(i *ListDictionaryItemsInput) ([]*Dictionary
 	}
 
 	if i.DictionaryID == "" {
-		return nil, ErrMissingDictionary
+		return nil, ErrMissingDictionaryID
 	}
 
 	path := fmt.Sprintf("/service/%s/dictionary/%s/items", i.ServiceID, i.DictionaryID)
@@ -82,7 +82,7 @@ func (c *Client) CreateDictionaryItem(i *CreateDictionaryItemInput) (*Dictionary
 	}
 
 	if i.DictionaryID == "" {
-		return nil, ErrMissingDictionary
+		return nil, ErrMissingDictionaryID
 	}
 
 	path := fmt.Sprintf("/service/%s/dictionary/%s/item", i.ServiceID, i.DictionaryID)
@@ -131,7 +131,7 @@ func (c *Client) GetDictionaryItem(i *GetDictionaryItemInput) (*DictionaryItem, 
 	}
 
 	if i.DictionaryID == "" {
-		return nil, ErrMissingDictionary
+		return nil, ErrMissingDictionaryID
 	}
 
 	if i.ItemKey == "" {
@@ -159,10 +159,11 @@ type UpdateDictionaryItemInput struct {
 	// DictionaryID is the ID of the dictionary to retrieve items for (required).
 	DictionaryID string
 
-	// ItemKey is the name of the dictionary item to fetch.
+	// ItemKey is the name of the dictionary item to fetch (required).
 	ItemKey string
 
-	ItemValue *string `form:"item_value,omitempty"`
+	// ItemValue is the new value of the dictionary item (required).
+	ItemValue string `form:"item_value"`
 }
 
 // UpdateDictionaryItem updates a specific dictionary item.
@@ -172,7 +173,7 @@ func (c *Client) UpdateDictionaryItem(i *UpdateDictionaryItemInput) (*Dictionary
 	}
 
 	if i.DictionaryID == "" {
-		return nil, ErrMissingDictionary
+		return nil, ErrMissingDictionaryID
 	}
 
 	if i.ItemKey == "" {
@@ -215,11 +216,11 @@ func (c *Client) BatchModifyDictionaryItems(i *BatchModifyDictionaryItemsInput) 
 	}
 
 	if i.DictionaryID == "" {
-		return ErrMissingDictionary
+		return ErrMissingDictionaryID
 	}
 
 	if len(i.Items) > BatchModifyMaximumOperations {
-		return ErrBatchUpdateMaximumOperationsExceeded
+		return ErrMaxExceededItems
 	}
 
 	path := fmt.Sprintf("/service/%s/dictionary/%s/items", i.ServiceID, i.DictionaryID)
@@ -255,7 +256,7 @@ func (c *Client) DeleteDictionaryItem(i *DeleteDictionaryItemInput) error {
 	}
 
 	if i.DictionaryID == "" {
-		return ErrMissingDictionary
+		return ErrMissingDictionaryID
 	}
 
 	if i.ItemKey == "" {

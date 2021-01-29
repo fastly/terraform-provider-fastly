@@ -68,7 +68,7 @@ func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 func (h *KinesisServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Kinesis.
 	log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
-	kinesisList, err := conn.ListKineses(&gofastly.ListKinesesInput{
+	kinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: s.ActiveVersion.Number,
 	})

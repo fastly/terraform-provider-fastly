@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -68,7 +68,7 @@ func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 func (h *KinesisServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// Refresh Kinesis.
 	log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
-	kinesisList, err := conn.ListKineses(&gofastly.ListKinesesInput{
+	kinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: s.ActiveVersion.Number,
 	})

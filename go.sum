@@ -40,8 +40,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dnaeon/go-vcr v1.0.1 h1:r8L/HqC0Hje5AXMu1ooW8oyQyOFv4GxqpL0nRP7SLLY=
 github.com/dnaeon/go-vcr v1.0.1/go.mod h1:aBB1+wY4s93YsC3HHjMBMrwTj2R9FHDzUr9KyGc8n1E=
-github.com/fastly/go-fastly/v2 v2.1.0 h1:VQWCFiUZyCcknyxyhiQwU0MjLYzeK4g1mLo/US2r/P0=
-github.com/fastly/go-fastly/v2 v2.1.0/go.mod h1:+gom+YR+9Q5I4biSk/ZjHQGWXxqpRxC3YDVYQcRpZwQ=
+github.com/fastly/go-fastly/v3 v3.0.0 h1:TtTkBnBO5CcPTAUgBL/vcoS5VL5LaKfXV6cilX8bn8U=
+github.com/fastly/go-fastly/v3 v3.0.0/go.mod h1:1GAnpEjDwBQD6DZgrgO5RoIawXFqrYC1K+JOkgZXCPk=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=

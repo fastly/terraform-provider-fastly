@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -280,9 +280,9 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 	// Update Name and/or Comment. No new version is required for this.
 	if d.HasChange("name") || d.HasChange("comment") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
-			ID:      d.Id(),
-			Name:    gofastly.String(d.Get("name").(string)),
-			Comment: gofastly.String(d.Get("comment").(string)),
+			ServiceID: d.Id(),
+			Name:      gofastly.String(d.Get("name").(string)),
+			Comment:   gofastly.String(d.Get("comment").(string)),
 		})
 		if err != nil {
 			return err

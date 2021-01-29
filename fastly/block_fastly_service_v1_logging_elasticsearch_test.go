@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	fst "github.com/fastly/go-fastly/v2/fastly"
+	fst "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"

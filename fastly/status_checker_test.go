@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"fmt"
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"testing"
+
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func TestAccFastlyServiceWAFVersionDeploymentStatus(t *testing.T) {

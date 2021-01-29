@@ -65,13 +65,13 @@ func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Default:     3600,
-		Description: "The default Time-to-live (TTL) for the version",
+		Description: "The default Time-to-live (TTL) for requests",
 	}
 	s.Schema["default_host"] = &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
-		Description: "The default hostname for the version",
+		Description: "The default hostname",
 	}
 	return nil
 }

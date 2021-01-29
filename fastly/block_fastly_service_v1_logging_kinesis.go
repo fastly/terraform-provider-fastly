@@ -172,34 +172,34 @@ func (h *KinesisServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Kinesis logging endpoint.",
+			Description: "The unique name of the Kinesis logging endpoint",
 		},
 
 		"topic": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The Kinesis stream name.",
+			Description: "The Kinesis stream name",
 		},
 
 		"region": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "us-east-1",
-			Description: "The AWS region the stream resides in.",
+			Description: "The AWS region the stream resides in. (Default: `us-east-1`)",
 		},
 
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The AWS access key to be used to write to the stream.",
+			Description: "The AWS access key to be used to write to the stream",
 		},
 
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The AWS secret access key to authenticate with.",
+			Description: "The AWS secret access key to authenticate with",
 		},
 	}
 

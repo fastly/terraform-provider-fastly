@@ -119,18 +119,18 @@ func (h *VCLServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A name to refer to this VCL configuration",
+					Description: "A unique name for this configuration block",
 				},
 				"content": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The contents of this VCL configuration",
+					Description: "The custom VCL code to upload",
 				},
 				"main": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: "Should this VCL configuration be the main configuration",
+					Description: "If `true`, use this block as the main configuration. If `false`, use this block as an includable library. Only a single VCL block can be marked as the main block. Default is `false`",
 				},
 			},
 		},

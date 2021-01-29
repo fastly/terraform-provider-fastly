@@ -171,7 +171,7 @@ func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The Insert API key from the Account page of your New Relic account.",
+			Description: "The Insert API key from the Account page of your New Relic account",
 		},
 	}
 

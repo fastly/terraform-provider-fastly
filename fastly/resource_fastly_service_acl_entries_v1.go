@@ -23,14 +23,14 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Service Id",
+				Description: "The ID of the Service that the ACL belongs to",
 			},
 
 			"acl_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "ACL Id",
+				Description: "The ID of the ACL that the items belong to",
 			},
 			"entry": {
 				Type:        schema.TypeSet,

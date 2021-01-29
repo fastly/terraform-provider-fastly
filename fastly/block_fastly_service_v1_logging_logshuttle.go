@@ -168,20 +168,20 @@ func (h *LogshuttleServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Log Shuttle logging endpoint.",
+			Description: "The unique name of the Log Shuttle logging endpoint",
 		},
 
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The data authentication token associated with this endpoint.",
+			Description: "The data authentication token associated with this endpoint",
 		},
 
 		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your Log Shuttle endpoint url.",
+			Description: "Your Log Shuttle endpoint URL",
 		},
 	}
 

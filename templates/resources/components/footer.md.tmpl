@@ -1,0 +1,16 @@
+{{define "footer"}}[fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
+[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
+[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
+[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
+[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
+
+## Import
+
+Fastly Services can be imported using their service ID, e.g.
+
+{{ if eq .Data.ServiceType "vcl"}}```
+$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
+```{{end}}
+{{ if eq .Data.ServiceType "wasm"}}```
+$ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
+```{{end}}{{end}}

@@ -105,13 +105,13 @@ func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name to refer to this ACL",
+					Description: "A unique name to identify this ACL",
 				},
 				// Optional fields
 				"acl_id": {
 					Type:        schema.TypeString,
 					Computed:    true,
-					Description: "Generated acl id",
+					Description: "The ID of the ACL",
 				},
 			},
 		},

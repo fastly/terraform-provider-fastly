@@ -168,20 +168,20 @@ func (h *HerokuServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Heroku logging endpoint.",
+			Description: "The unique name of the Heroku logging endpoint",
 		},
 
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/).",
+			Description: "The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)",
 		},
 
 		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The url to stream logs to.",
+			Description: "The URL to stream logs to",
 		},
 	}
 

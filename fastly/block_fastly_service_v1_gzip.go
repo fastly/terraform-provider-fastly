@@ -133,20 +133,20 @@ func (h *GzipServiceAttributeHandler) Register(s *schema.Resource) error {
 				"content_types": {
 					Type:        schema.TypeSet,
 					Optional:    true,
-					Description: "Content types to apply automatic gzip to",
+					Description: "The content-type for each type of content you wish to have dynamically gzip'ed. Example: `[\"text/html\", \"text/css\"]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 				"extensions": {
 					Type:        schema.TypeSet,
 					Optional:    true,
-					Description: "File extensions to apply automatic gzip to. Do not include '.'",
+					Description: "File extensions for each file type to dynamically gzip. Example: `[\"css\", \"js\"]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 				"cache_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
-					Description: "Name of a condition controlling when this gzip configuration applies.",
+					Description: "Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
 				},
 			},
 		},

@@ -139,20 +139,20 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Unique name for this Service",
+				Description: "The unique name for the Service to create",
 			},
 
 			"comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "Managed by Terraform",
-				Description: "A personal freeform descriptive note",
+				Description: "Description field for the service. Default `Managed by Terraform`",
 			},
 
 			"version_comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A personal freeform descriptive note",
+				Description: "Description field for the version",
 			},
 
 			// Active Version represents the currently activated version in Fastly. In
@@ -160,8 +160,9 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			// creating and activating. It's used internally, but also exported for
 			// users to see.
 			"active_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The currently active version of your Fastly Service",
 			},
 
 			// Cloned Version represents the latest cloned version by the provider. It
@@ -171,20 +172,22 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			// to prevent the service from being activated. It is not used internally,
 			// but it is exported for users to see after running `terraform apply`.
 			"cloned_version": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The latest cloned version by the provider. The value gets only set after running `terraform apply`",
 			},
 
 			"activate": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally prevents the Service from being activated",
+				Description: "Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
 				Default:     true,
 				Optional:    true,
 			},
 
 			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
 			},
 		},
 	}

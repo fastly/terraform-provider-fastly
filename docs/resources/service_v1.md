@@ -381,6 +381,7 @@ Required:
 
 Optional:
 
+- **file_max_bytes** (Number) Maximum size of an uploaded log file, if non-zero.
 - **format** (String) Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t "%r" %>s %b`)
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)
 - **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`

@@ -81,6 +81,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 - **bigquerylogging** (Block Set) (see [below for nested schema](#nestedblock--bigquerylogging))
 - **blobstoragelogging** (Block Set) (see [below for nested schema](#nestedblock--blobstoragelogging))
 - **comment** (String) Description field for the service. Default `Managed by Terraform`
+- **dictionary** (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - **force_destroy** (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - **gcslogging** (Block Set) (see [below for nested schema](#nestedblock--gcslogging))
 - **healthcheck** (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
@@ -208,6 +209,22 @@ Optional:
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - **sas_token** (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
 - **timestamp_format** (String) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`
+
+
+<a id="nestedblock--dictionary"></a>
+### Nested Schema for `dictionary`
+
+Required:
+
+- **name** (String) A unique name to identify this dictionary
+
+Optional:
+
+- **write_only** (Boolean) If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform
+
+Read-only:
+
+- **dictionary_id** (String) The ID of the dictionary
 
 
 <a id="nestedblock--gcslogging"></a>

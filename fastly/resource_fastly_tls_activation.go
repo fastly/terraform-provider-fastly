@@ -3,6 +3,7 @@ package fastly
 import (
 	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"log"
 	"time"
 )
 
@@ -116,6 +117,10 @@ func resourceFastlyTLSActivationDelete(d *schema.ResourceData, meta interface{})
 		ID: d.Id(),
 	})
 	if err != nil {
+		if httpErr, ok := err.(*fastly.HTTPError); ok && httpErr.IsNotFound() {
+			log.Printf("[WARN] Error deleting TLS activation (%s), not found. Was a TLS subscription enabled on the same domain?\n", d.Id())
+			return nil
+		}
 		return err
 	}
 

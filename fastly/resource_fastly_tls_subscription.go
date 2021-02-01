@@ -199,28 +199,39 @@ func resourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{})
 func resourceFastlyTLSSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
-	// Delete all activations on TLS Domains in the Subscription
-	for _, domain := range d.Get("domains").(*schema.Set).List() {
+	subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
+		ID: d.Id(),
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete any associated TLS activations using this subscription
+	if subscription.Certificates != nil && len(subscription.Certificates) > 0 {
+		certificateID := subscription.Certificates[0].ID
+
 		activations, err := conn.ListTLSActivations(&fastly.ListTLSActivationsInput{
-			FilterTLSDomainID: domain.(string),
+			FilterTLSCertificateID: certificateID,
 		})
 		if err != nil {
 			return err
 		}
 
 		for _, activation := range activations {
-			if activation.Domain.ID != domain.(string) {
-				return fmt.Errorf("Fastly API returned too many TLS activations for this domain (%s)", domain)
+			if activation.Certificate.ID != certificateID {
+				return fmt.Errorf("Fastly API returned a TLS activation for a different subscription or certificate")
 			}
 
-			err = conn.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{ID: activation.ID})
+			err := conn.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{
+				ID: activation.ID,
+			})
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	err := conn.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
+	err = conn.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
 		ID: d.Id(),
 	})
 	return err

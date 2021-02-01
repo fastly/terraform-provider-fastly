@@ -123,6 +123,14 @@ func main() {
 			path: tempDir + "/data-sources/tls_private_key_ids.md.tmpl",
 		},
 		{
+			name: "data_source_tls_subscription",
+			path: tempDir + "/data-sources/tls_subscription.md.tmpl",
+		},
+		{
+			name: "data_source_tls_subscription_ids",
+			path: tempDir + "/data-sources/tls_subscription_ids.md.tmpl",
+		},
+		{
 			name: "waf_rules",
 			path: tempDir + "/data-sources/waf_rules.md.tmpl",
 		},

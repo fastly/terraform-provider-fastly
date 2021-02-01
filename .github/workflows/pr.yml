@@ -47,21 +47,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Install Go
       uses: actions/setup-go@v2
       with:
         go-version: 1.14.x
-    - name: Restore cache
+    - name: Restore cached binaries
       id: cache
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: ~/go/bin
         key: ${{ runner.os }}-go-bin-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-bin-
-    - name: Restore cache
-      uses: actions/cache@v1
+    - name: Restore cached modules dependencies
+      uses: actions/cache@v2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}

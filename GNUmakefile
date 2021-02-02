@@ -53,14 +53,17 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 dependencies:
-	go install
+	@echo "Download go.mod dependencies"
+	@go mod download
 
-generate-docs: dependencies
-	pwd
-	ls -la
+install-tools: dependencies
+	@echo "Installing tools from tools/tools.go"
+	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | xargs -tI {} go install {}
+
+generate-docs: install-tools
 	go run scripts/generate-docs.go
 
-validate-docs: dependencies
+validate-docs: install-tools
 	tfplugindocs validate
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs install-tools dependencies

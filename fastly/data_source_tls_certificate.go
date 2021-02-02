@@ -119,11 +119,6 @@ type TLSCertificatePredicate func(*fastly.CustomTLSCertificate) bool
 func getTLSCertificateFilters(d *schema.ResourceData) []TLSCertificatePredicate {
 	var filters []TLSCertificatePredicate
 
-	if v, ok := d.GetOk("id"); ok {
-		filters = append(filters, func(c *fastly.CustomTLSCertificate) bool {
-			return c.ID == v.(string)
-		})
-	}
 	if v, ok := d.GetOk("name"); ok {
 		filters = append(filters, func(c *fastly.CustomTLSCertificate) bool {
 			return c.Name == v.(string)

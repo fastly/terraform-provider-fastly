@@ -103,11 +103,6 @@ type PlatformTLSCertificatePredicate func(certificate *fastly.BulkCertificate) b
 func getPlatformTLSCertificateFilters(d *schema.ResourceData) []PlatformTLSCertificatePredicate {
 	var filters []PlatformTLSCertificatePredicate
 
-	if v, ok := d.GetOk("id"); ok {
-		filters = append(filters, func(c *fastly.BulkCertificate) bool {
-			return c.ID == v.(string)
-		})
-	}
 	if v, ok := d.GetOk("domains"); ok {
 		filters = append(filters, func(c *fastly.BulkCertificate) bool {
 			s := v.(*schema.Set)

@@ -107,7 +107,7 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A unique name to identify this Papertrail endpoint",
+			Description: "A unique name to identify this Papertrail endpoint!",
 		},
 		"address": {
 			Type:        schema.TypeString,

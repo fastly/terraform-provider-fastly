@@ -286,6 +286,6 @@ func runTFPluginDocs() {
 	cmd := exec.Command("tfplugindocs", "generate")
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err)
 	}
 }

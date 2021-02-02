@@ -60,8 +60,12 @@ func main() {
 			path: docsDir + "docs/d/tls_certificate_ids.html.markdown",
 		},
 		{
-			name: "waf_rules",
-			path: docsDir + "docs/d/waf_rules.html.markdown",
+			name: "tls_platform_certificate",
+			path: docsDir + "docs/d/tls_platform_certificate.html.markdown",
+		},
+		{
+			name: "tls_platform_certificate_ids",
+			path: docsDir + "docs/d/tls_platform_certificate_ids.html.markdown",
 		},
 		{
 			name: "tls_private_key",
@@ -70,6 +74,10 @@ func main() {
 		{
 			name: "tls_private_key_ids",
 			path: docsDir + "docs/d/tls_private_key_ids.html.markdown",
+		},
+		{
+			name: "waf_rules",
+			path: docsDir + "docs/d/waf_rules.html.markdown",
 		},
 	}
 

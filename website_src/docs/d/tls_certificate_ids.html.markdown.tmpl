@@ -8,7 +8,7 @@ Get IDs of available TLS certificates.
 
 # fastly_tls_certificate_ids
 
-Use this data source to get the IDs of available TLS configurations for use with other resources.
+Use this data source to get the IDs of available TLS certificates for use with other resources.
 
 ## Example Usage
 

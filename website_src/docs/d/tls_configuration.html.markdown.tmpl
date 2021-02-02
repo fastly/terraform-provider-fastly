@@ -38,4 +38,11 @@ resource "fastly_tls_activation" "example" {
 
 * `created_at` - Time-stamp (GMT) when the configuration was created
 * `updated_at` - Time-stamp (GMT) when the configuration was last updated
+* `dns_records` - The DNS records to use for the configuration. See DNS Records below for details.
+
+### DNS Records
+
+* `record_type` - Type of DNS record to set, e.g. A, AAAA, or CNAME.
+* `record_value` - The IP address or hostname of the DNS record.
+* `region` - The regions that will be used to route traffic. Select DNS Records with a `global` region to route traffic to the most performant point of presence (POP) worldwide (global pricing will apply). Select DNS records with a `us-eu` region to exclusively land traffic on North American and European POPs.
 {{end}}

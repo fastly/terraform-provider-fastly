@@ -23,6 +23,7 @@ func TestAccFastlyDataSourceTLSConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_records.#"),
 				),
 			},
 		},

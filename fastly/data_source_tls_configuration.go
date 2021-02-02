@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"time"
 
 	"github.com/fastly/go-fastly/v2/fastly"
@@ -61,13 +62,38 @@ func dataSourceFastlyTLSConfiguration() *schema.Resource {
 			},
 			"created_at": {
 				Type:        schema.TypeString,
-				Description: "Time-stamp (GMT) when the configuration was created",
+				Description: "Timestamp (GMT) when the configuration was created",
 				Computed:    true,
 			},
 			"updated_at": {
 				Type:        schema.TypeString,
-				Description: "Time-stamp (GMT) when the configuration was last updated",
+				Description: "Timestamp (GMT) when the configuration was last updated",
 				Computed:    true,
+			},
+			"dns_records": {
+				Type:        schema.TypeSet,
+				Description: "The available DNS addresses that can be used to enable TLS for a domain. DNS must be configured for a domain for TLS handshakes to succeed. If enabling TLS on an apex domain (e.g. `example.com`) you must create four A records (or four AAAA records for IPv6 support) using the displayed global A record's IP addresses with your DNS provider. For subdomains and wildcard domains (e.g. `www.example.com` or `*.example.com`) you will need to create a relevant CNAME record.",
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"record_type": {
+							Type:        schema.TypeString,
+							Description: "Type of DNS record to set, e.g. A, AAAA, or CNAME.",
+							Computed:    true,
+						},
+						"record_value": {
+							Type:        schema.TypeString,
+							Description: "The IP address or hostname of the DNS record.",
+							Computed:    true,
+						},
+						"region": {
+							Type:        schema.TypeString,
+							Description: "The regions that will be used to route traffic. Select DNS Records with a `global` region to route traffic to the most performant point of presence (POP) worldwide (global pricing will apply). Select DNS records with a `us-eu` region to exclusively land traffic on North American and European POPs.",
+							Computed:    true,
+						},
+					},
+				},
+				Set: DNSRecordsHash,
 			},
 		},
 	}
@@ -156,6 +182,7 @@ func listTLSConfigurations(conn *fastly.Client, filters ...func(*fastly.CustomTL
 	for {
 		list, err := conn.ListCustomTLSConfigurations(&fastly.ListCustomTLSConfigurationsInput{
 			PageNumber: cursor,
+			Include:    "dns_records",
 		})
 		if err != nil {
 			return nil, err
@@ -180,6 +207,15 @@ func dataSourceFastlyTLSConfigurationSetAttributes(configuration *fastly.CustomT
 		tlsService = tlsPlatformService
 	}
 
+	var DNSRecords []map[string]string
+	for _, record := range configuration.DNSRecords {
+		DNSRecords = append(DNSRecords, map[string]string{
+			"record_type":  record.RecordType,
+			"record_value": record.ID,
+			"region":       record.Region,
+		})
+	}
+
 	d.SetId(configuration.ID)
 	if err := d.Set("name", configuration.Name); err != nil {
 		return err
@@ -200,6 +236,9 @@ func dataSourceFastlyTLSConfigurationSetAttributes(configuration *fastly.CustomT
 		return err
 	}
 	if err := d.Set("updated_at", configuration.UpdatedAt.Format(time.RFC3339)); err != nil {
+		return err
+	}
+	if err := d.Set("dns_records", DNSRecords); err != nil {
 		return err
 	}
 	return nil
@@ -231,4 +270,23 @@ func contains(haystack []string, needle interface{}) bool {
 	}
 
 	return false
+}
+
+func DNSRecordsHash(value interface{}) int {
+	m, ok := value.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+
+	recordType, ok := m["record_type"].(string)
+	if !ok {
+		return 0
+	}
+
+	recordValue, ok := m["record_value"].(string)
+	if ok {
+		return hashcode.String(fmt.Sprintf("%s_%s", recordType, recordValue))
+	}
+
+	return 0
 }

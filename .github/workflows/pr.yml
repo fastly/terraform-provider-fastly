@@ -76,5 +76,4 @@ jobs:
         make generate-docs
     - name: Check diff
       run: |
-        cd $GOPATH/src/github.com/${{ github.repository }}
         git diff-files --ignore-all-space --name-only --exit-code

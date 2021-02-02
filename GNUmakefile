@@ -53,12 +53,12 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 dependencies:
-	go get -v -u github.com/hashicorp/terraform-plugin-docs
+	go install
 
-generate-docs:
+generate-docs: dependencies
 	go run scripts/generate-docs.go
 
-validate-docs:
+validate-docs: dependencies
 	tfplugindocs validate
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs

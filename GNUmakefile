@@ -56,6 +56,8 @@ dependencies:
 	go install
 
 generate-docs: dependencies
+	pwd
+	ls -la
 	go run scripts/generate-docs.go
 
 validate-docs: dependencies

@@ -159,6 +159,7 @@ func renderPages(t *template.Template, pages []Page) {
 func renderPage(t *template.Template, p Page) {
 	basePath := filepath.Dir(p.path)
 	err := makeDirectoryIfNotExists(basePath)
+	log.Println(p.path)
 	if err != nil {
 		log.Fatal(err)
 	}

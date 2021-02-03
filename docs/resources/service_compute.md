@@ -549,7 +549,7 @@ Optional:
 Required:
 
 - **address** (String) The address of the Papertrail endpoint
-- **name** (String) A unique name to identify this Papertrail endpoint!
+- **name** (String) A unique name to identify this Papertrail endpoint
 - **port** (Number) The port associated with the address where the Papertrail endpoint can be accessed
 
 

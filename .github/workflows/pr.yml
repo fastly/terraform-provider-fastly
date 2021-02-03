@@ -76,4 +76,4 @@ jobs:
         make generate-docs
     - name: Check diff
       run: |
-        git diff --exit-code --ignore-all-space
+        git diff --exit-code --ignore-all-space ./docs/

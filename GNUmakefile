@@ -66,7 +66,4 @@ generate-docs: install-tools
 validate-docs: install-tools
 	tfplugindocs validate
 
-diff-docs:
-	@git diff --exit-code --ignore-all-space
-
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs install-tools dependencies diff-docs
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs install-tools dependencies

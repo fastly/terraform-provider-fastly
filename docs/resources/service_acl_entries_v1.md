@@ -246,6 +246,6 @@ Optional:
 - **negated** (Boolean) A boolean that will negate the match if true
 - **subnet** (String) An optional subnet mask applied to the IP address
 
-Read-only:
+Read-Only:
 
 - **id** (String) The ID of this resource.

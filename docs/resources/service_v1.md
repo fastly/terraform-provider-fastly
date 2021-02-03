@@ -282,7 +282,7 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 - **version_comment** (String) Description field for the version
 - **waf** (Block List, Max: 1) (see [below for nested schema](#nestedblock--waf))
 
-### Read-only
+### Read-Only
 
 - **active_version** (Number) The currently active version of your Fastly Service
 - **cloned_version** (Number) The latest cloned version by the provider. The value gets only set after running `terraform apply`
@@ -306,7 +306,7 @@ Required:
 
 - **name** (String) A unique name to identify this ACL
 
-Read-only:
+Read-Only:
 
 - **acl_id** (String) The ID of the ACL
 
@@ -430,7 +430,7 @@ Optional:
 
 - **write_only** (Boolean) If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform
 
-Read-only:
+Read-Only:
 
 - **dictionary_id** (String) The ID of the dictionary
 
@@ -465,7 +465,7 @@ Optional:
 
 - **priority** (Number) Priority determines the ordering for multiple snippets. Lower numbers execute first. Defaults to `100`
 
-Read-only:
+Read-Only:
 
 - **snippet_id** (String) The ID of the dynamic snippet
 
@@ -938,7 +938,7 @@ Optional:
 Required:
 
 - **address** (String) The address of the Papertrail endpoint
-- **name** (String) A unique name to identify this Papertrail endpoint
+- **name** (String) A unique name to identify this Papertrail endpoint!
 - **port** (Number) The port associated with the address where the Papertrail endpoint can be accessed
 
 Optional:
@@ -1114,6 +1114,6 @@ Optional:
 - **disabled** (Boolean) A flag used to completely disable a Web Application Firewall. This is intended to only be used in an emergency
 - **prefetch_condition** (String) The `condition` to determine which requests will be run past your Fastly WAF. This `condition` must be of type `PREFETCH`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)
 
-Read-only:
+Read-Only:
 
 - **waf_id** (String) The ID of the WAF

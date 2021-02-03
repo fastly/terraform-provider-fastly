@@ -110,7 +110,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 - **syslog** (Block Set) (see [below for nested schema](#nestedblock--syslog))
 - **version_comment** (String) Description field for the version
 
-### Read-only
+### Read-Only
 
 - **active_version** (Number) The currently active version of your Fastly Service
 - **cloned_version** (Number) The latest cloned version by the provider. The value gets only set after running `terraform apply`
@@ -549,7 +549,7 @@ Optional:
 Required:
 
 - **address** (String) The address of the Papertrail endpoint
-- **name** (String) A unique name to identify this Papertrail endpoint
+- **name** (String) A unique name to identify this Papertrail endpoint!
 - **port** (Number) The port associated with the address where the Papertrail endpoint can be accessed
 
 

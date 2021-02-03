@@ -67,6 +67,6 @@ validate-docs: install-tools
 	tfplugindocs validate
 
 diff-docs:
-	@git diff-files --ignore-all-space --name-only --exit-code
+	@git diff --exit-code --ignore-all-space
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs install-tools dependencies diff-docs

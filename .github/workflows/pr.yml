@@ -76,4 +76,4 @@ jobs:
         make generate-docs
     - name: Check diff
       run: |
-        git diff-files --name-only --exit-code
+        make diff-docs

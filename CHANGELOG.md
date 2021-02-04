@@ -5,7 +5,7 @@
 ENHANCEMENTS:
 
 * CI: check if docs need to be regenerated ([#362](https://github.com/fastly/terraform-provider-fastly/pull/362))
-* Update Go-Fastly dependency to 3.0.0 ([#359](https://github.com/fastly/terraform-provider-fastly/pull/359))
+* Update go-fastly dependency to 3.0.0 ([#359](https://github.com/fastly/terraform-provider-fastly/pull/359))
 
 BUG FIXES:
 

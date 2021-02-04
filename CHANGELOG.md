@@ -2,7 +2,7 @@
 
 ## 0.24.0 (February 4, 2021)
 
-ENHANCEMENT:
+ENHANCEMENTS:
 
 * CI: check if docs need to be regenerated ([#362](https://github.com/fastly/terraform-provider-fastly/pull/362))
 * Update Go-Fastly dependency to 3.0.0 ([#359](https://github.com/fastly/terraform-provider-fastly/pull/359))

@@ -1,4 +1,15 @@
-## 0.23.0 (Unreleased)
+## 0.25.0 (Unreleased)
+
+## 0.24.0 (February 4, 2021)
+
+ENHANCEMENT:
+
+* CI: check if docs need to be regenerated ([#362](https://github.com/fastly/terraform-provider-fastly/pull/362))
+* Update Go-Fastly dependency to 3.0.0 ([#359](https://github.com/fastly/terraform-provider-fastly/pull/359))
+
+BUG:
+
+* Replace old doc generation process with new tfplugindocs tool ([#356](https://github.com/fastly/terraform-provider-fastly/pull/356))
 
 ## 0.23.0 (January 14, 2021)
 

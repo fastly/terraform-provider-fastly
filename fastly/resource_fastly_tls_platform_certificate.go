@@ -26,7 +26,7 @@ func resourceTLSPlatformCertificate() *schema.Resource {
 			},
 			"intermediates_blob": {
 				Type:         schema.TypeString,
-				Description:  "PEM-formatted certificate chain.",
+				Description:  "PEM-formatted certificate chain from the `certificate_body` to its root.",
 				Required:     true,
 				ValidateFunc: validatePEMBlock("CERTIFICATE"),
 			},
@@ -38,7 +38,7 @@ func resourceTLSPlatformCertificate() *schema.Resource {
 			},
 			"allow_untrusted_root": {
 				Type:        schema.TypeBool,
-				Description: "Skip checking that the root of the certificate chain is trusted. Only works for creating the certificate, not updating it.",
+				Description: "Disable checking whether the root of the certificate chain is trusted. Useful for development purposes to allow use of self-signed CAs. Defaults to false. Write-only on create.",
 				Optional:    true,
 				Default:     false,
 			},

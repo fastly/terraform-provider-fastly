@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -107,17 +107,17 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Unique name to refer to this logging setup",
+			Description: "A unique name to identify this Papertrail endpoint",
 		},
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The address of the papertrail service",
+			Description: "The address of the Papertrail endpoint",
 		},
 		"port": {
 			Type:        schema.TypeInt,
 			Required:    true,
-			Description: "The port of the papertrail service",
+			Description: "The port associated with the address where the Papertrail endpoint can be accessed",
 		},
 	}
 
@@ -137,7 +137,7 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 		blockAttributes["placement"] = &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed.",
+			Description:  "Where in the generated VCL the logging call should be placed",
 			ValidateFunc: validateLoggingPlacement(),
 		}
 	}

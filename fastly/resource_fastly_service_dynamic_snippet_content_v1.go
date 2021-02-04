@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -22,18 +22,18 @@ func resourceServiceDynamicSnippetContentV1() *schema.Resource {
 			"service_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Service Id",
+				Description: "The ID of the service that the dynamic snippet belongs to",
 			},
 			"snippet_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Snippet Id",
+				Description: "The ID of the dynamic snippet that the content belong to",
 			},
 
 			"content": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The contents of the VCL dynamic snippet",
+				Description: "The VCL code that specifies exactly what the snippet does",
 			},
 		},
 	}

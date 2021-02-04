@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -123,7 +123,7 @@ func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Splunk logging endpoint",
+			Description: "A unique name to identify the Splunk endpoint",
 		},
 		"url": {
 			Type:        schema.TypeString,
@@ -141,13 +141,13 @@ func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or blockAttributes Subject Alternative Name (SAN).",
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)",
 		},
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
-			Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`.",
+			Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`",
 		},
 	}
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -171,7 +171,7 @@ func (h *NewRelicServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The Insert API key from the Account page of your New Relic account.",
+			Description: "The Insert API key from the Account page of your New Relic account",
 		},
 	}
 

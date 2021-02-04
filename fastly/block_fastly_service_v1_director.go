@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -165,12 +165,12 @@ func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A name to refer to this director",
+					Description: "Unique name for this Director",
 				},
 				"backends": {
 					Type:        schema.TypeSet,
 					Required:    true,
-					Description: "List of backends associated with this director",
+					Description: "Names of defined backends to map the director to. Example: `[ \"origin1\", \"origin2\" ]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 				// optional fields
@@ -178,37 +178,38 @@ func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     100,
-					Description: "Load balancing weight for the backends",
+					Description: "Load balancing weight for the backends. Default `100`",
 				},
 				"comment": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "An optional comment about the Director",
 				},
 				"shield": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
-					Description: "Selected POP to serve as a 'shield' for origin servers.",
+					Description: "Selected POP to serve as a \"shield\" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response",
 				},
 				"quorum": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      75,
-					Description:  "Percentage of capacity that needs to be up for the director itself to be considered up",
+					Description:  "Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`",
 					ValidateFunc: validateDirectorQuorum(),
 				},
 				"type": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      1,
-					Description:  "Type of load balance group to use. Integer, 1 to 4. Values: 1 (random), 3 (hash), 4 (client)",
+					Description:  "Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`",
 					ValidateFunc: validateDirectorType(),
 				},
 				"retries": {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     5,
-					Description: "How many backends to search if it fails",
+					Description: "How many backends to search if it fails. Default `5`",
 				},
 			},
 		},

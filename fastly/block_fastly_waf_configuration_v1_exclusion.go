@@ -5,7 +5,7 @@ import (
 	"log"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
@@ -18,29 +18,29 @@ var wafRuleExclusion = &schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the exclusion.",
+				Description: "The name of rule exclusion",
 			},
 			"condition": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "A conditional expression in VCL used to determine if the condition is met.",
+				Description: "A conditional expression in VCL used to determine if the condition is met",
 			},
 			"exclusion_type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Description:  "The type of exclusion.",
+				Description:  "The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall",
 				ValidateFunc: validateExecutionType(),
 			},
 			"modsec_rule_ids": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "The modsec rule IDs to exclude.",
+				Description: "Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded",
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"number": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "A sequential ID assigned to the exclusion.",
+				Description: "The numeric ID assigned to the WAF Rule Exclusion",
 			},
 		},
 	},

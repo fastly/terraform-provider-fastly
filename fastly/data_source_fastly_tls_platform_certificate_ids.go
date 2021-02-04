@@ -12,7 +12,7 @@ func dataSourceFastlyTLSPlatformCertificateIDs() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"ids": {
 				Type:        schema.TypeList,
-				Description: "IDs of Platform TLS certificates",
+				Description: "List of IDs corresponding to Platform TLS certificates.",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},

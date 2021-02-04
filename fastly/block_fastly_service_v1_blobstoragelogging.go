@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -128,7 +128,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Azure Blob Storage logging endpoint",
+			Description: "A unique name to identify the Azure Blob Storage endpoint",
 		},
 		"account_name": {
 			Type:        schema.TypeString,
@@ -144,37 +144,37 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 			Type:        schema.TypeString,
 			Required:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE", ""),
-			Description: "The Azure shared access signature providing write access to the blob service objects",
+			Description: "The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work",
 			Sensitive:   true,
 		},
 		// Optional fields
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The path to upload logs to. Must end with a trailing slash",
+			Description: "The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path",
 		},
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
-			Description: "How frequently the logs should be transferred, in seconds (default: 3600)",
+			Description: "How frequently the logs should be transferred in seconds. Default `3600`",
 		},
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "strftime specified timestamp formatting (default: `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: "`strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`",
 		},
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "The Gzip compression level (default: 0)",
+			Description: "Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`",
 		},
 		"public_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
 		},
@@ -182,7 +182,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "classic",
-			Description:  "How the message should be formatted (default: `classic`)",
+			Description:  "How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default `classic`",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 	}

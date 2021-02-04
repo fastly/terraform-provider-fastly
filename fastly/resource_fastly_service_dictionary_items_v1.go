@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -23,20 +23,20 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The service the dictionary belongs to",
+				Description: "The ID of the service that the dictionary belongs to",
 			},
 
 			"dictionary_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The dictionary the items belong to",
+				Description: "The ID of the dictionary that the items belong to",
 			},
 
 			"items": {
 				Type:         schema.TypeMap,
 				Optional:     true,
-				Description:  "Map of key/value pairs that make up an item in the dictionary",
+				Description:  "A map representing an entry in the dictionary, (key/value)",
 				ValidateFunc: validateDictionaryItems(),
 			},
 		},

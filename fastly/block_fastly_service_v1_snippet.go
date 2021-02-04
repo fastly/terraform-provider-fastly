@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -105,24 +105,24 @@ func (h *SnippetServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name to refer to this VCL snippet",
+					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks`,
 				},
 				"type": {
 					Type:         schema.TypeString,
 					Required:     true,
-					Description:  "One of init, recv, hit, miss, pass, fetch, error, deliver, log, none",
+					Description:  "The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`)",
 					ValidateFunc: validateSnippetType(),
 				},
 				"content": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The contents of the VCL snippet",
+					Description: "The VCL code that specifies exactly what the snippet does",
 				},
 				"priority": {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     100,
-					Description: "Determines ordering for multiple snippets. Lower priorities execute first. (Default: 100)",
+					Description: "Priority determines the ordering for multiple snippets. Lower numbers execute first. Defaults to `100`",
 				},
 			},
 		},

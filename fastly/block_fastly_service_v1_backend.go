@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -245,7 +245,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A name for this Backend",
+			Description: "Name for this Backend. Must be unique to this Service",
 		},
 		"address": {
 			Type:        schema.TypeString,
@@ -257,49 +257,49 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: "Should this Backend be load balanced",
+			Description: "Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `true`",
 		},
 		"between_bytes_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     10000,
-			Description: "How long to wait between bytes in milliseconds",
+			Description: "How long to wait between bytes in milliseconds. Default `10000`",
 		},
 		"connect_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     1000,
-			Description: "How long to wait for a timeout in milliseconds",
+			Description: "How long to wait for a timeout in milliseconds. Default `1000`",
 		},
 		"error_threshold": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "Number of errors to allow before the Backend is marked as down",
+			Description: "Number of errors to allow before the Backend is marked as down. Default `0`",
 		},
 		"first_byte_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     15000,
-			Description: "How long to wait for the first bytes in milliseconds",
+			Description: "How long to wait for the first bytes in milliseconds. Default `15000`",
 		},
 		"healthcheck": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "The healthcheck name that should be used for this Backend",
+			Description: "Name of a defined `healthcheck` to assign to this backend",
 		},
 		"max_conn": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     200,
-			Description: "Maximum number of connections for this Backend",
+			Description: "Maximum number of connections for this Backend. Default `200`",
 		},
 		"port": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     80,
-			Description: "The port number Backend responds on. Default 80",
+			Description: "The port number on which the Backend responds. Default `80`",
 		},
 		"override_host": {
 			Type:        schema.TypeString,
@@ -310,13 +310,13 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "The POP of the shield designated to reduce inbound load.",
+			Description: "The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response",
 		},
 		"use_ssl": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Whether or not to use SSL to reach the Backend",
+			Description: "Whether or not to use SSL to reach the Backend. Default `false`",
 		},
 		"max_tls_version": {
 			Type:        schema.TypeString,
@@ -334,19 +334,19 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Comma sepparated list of ciphers",
+			Description: "Comma separated list of OpenSSL Ciphers to try when negotiating to the backend",
 		},
 		"ssl_check_cert": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
-			Description: "Be strict on checking SSL certs",
+			Description: "Be strict about checking SSL certs. Default `true`",
 		},
 		"ssl_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "SSL certificate hostname",
+			Description: "Used for both SNI during the TLS handshake and to validate the cert",
 			Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
 		},
 		"ssl_ca_cert": {
@@ -359,34 +359,33 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "SSL certificate hostname for cert verification",
+			Description: "Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all",
 		},
 		"ssl_sni_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "SSL certificate hostname for SNI verification",
+			Description: "Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all",
 		},
 		"ssl_client_cert": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "SSL certificate file for client connections to the backend.",
+			Description: "Client certificate attached to origin. Used when connecting to the backend",
 			Sensitive:   true,
 		},
 		"ssl_client_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "SSL key file for client connections to backend.",
+			Description: "Client key attached to origin. Used when connecting to the backend",
 			Sensitive:   true,
 		},
-
 		"weight": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     100,
-			Description: "The portion of traffic to send to a specific origins. Each origin receives weight/total of the traffic.",
+			Description: "The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`",
 		},
 	}
 

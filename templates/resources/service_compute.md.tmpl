@@ -1,0 +1,49 @@
+{{define "service_compute"}}---
+layout: "fastly"
+page_title: "Fastly: service_compute"
+sidebar_current: "docs-fastly-resource-service-compute"
+description: |-
+  Provides an Fastly Compute@Edge service
+---
+
+# fastly_service_compute
+
+Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/), which is run at the edge using [Lucet](https://github.com/bytecodealliance/lucet), an open-source WebAssembly runtime created by Fastly. A compute service encompasses Domains and Backends.
+
+The Service resource requires a domain name that is correctly set up to direct
+traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]
+on their documentation site for guidance.
+
+## Example Usage
+
+Basic usage:
+
+```hcl
+resource "fastly_service_compute" "demo" {
+    name = "demofastly"
+
+    domain {
+      name    = "demo.notexample.com"
+      comment = "demo"
+    }
+
+    backend {
+      address = "127.0.0.1"
+      name    = "localhost"
+      port    = 80
+    }
+
+    package {
+      filename = "package.tar.gz"
+      source_code_hash = filesha512("package.tar.gz")
+    }
+
+    force_destroy = true
+}
+```
+
+{{ template "package_block" . }}
+
+{{ template "footer" .}}
+
+{{end}}

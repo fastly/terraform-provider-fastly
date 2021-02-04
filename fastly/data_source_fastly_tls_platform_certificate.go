@@ -15,7 +15,7 @@ func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:          schema.TypeString,
-				Description:   "Unique ID assigned to certificate by Fastly.",
+				Description:   "Unique ID assigned to certificate by Fastly. Conflicts with all the other filters.",
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"domains"},

@@ -19,7 +19,7 @@ func resourceTLSActivation() *schema.Resource {
 			"certificate_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "ID of TLS certificate to enable.",
+				Description: "ID of certificate to use. Must have the `domain` specified in the certificate's Subject Alternative Names.",
 			},
 			"configuration_id": {
 				Type:        schema.TypeString,
@@ -32,7 +32,7 @@ func resourceTLSActivation() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Domain to enable TLS traffic on.",
+				Description: "Domain to enable TLS on. Must be assigned to an existing Fastly Service.",
 			},
 			"created_at": {
 				Type:        schema.TypeString,

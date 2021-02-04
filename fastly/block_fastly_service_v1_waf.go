@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -31,23 +31,23 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 				"response_object": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The Web Application Firewall's (WAF) response object",
+					Description: "The name of the response object used by the Web Application Firewall",
 				},
 				"prefetch_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "The Web Application Firewall's (WAF) prefetch condition",
+					Description: "The `condition` to determine which requests will be run past your Fastly WAF. This `condition` must be of type `PREFETCH`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
 				},
 				"waf_id": {
 					Type:        schema.TypeString,
 					Computed:    true,
-					Description: "The Web Application Firewall (WAF) ID",
+					Description: "The ID of the WAF",
 				},
 				"disabled": {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: "A flag used to completely disable a Web Application Firewall. This is intended to only be used in an emergency.",
+					Description: "A flag used to completely disable a Web Application Firewall. This is intended to only be used in an emergency",
 				},
 			},
 		},

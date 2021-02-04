@@ -3,7 +3,7 @@ package fastly
 import (
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -15,19 +15,19 @@ var activeRule = &schema.Schema{
 			"status": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Description:  "The Web Application Firewall rule's status. Allowed values are (log, block and score).",
+				Description:  "The Web Application Firewall rule's status. Allowed values are (`log`, `block` and `score`)",
 				ValidateFunc: validateRuleStatusType(),
 			},
 			"modsec_rule_id": {
 				Type:        schema.TypeInt,
 				Required:    true,
-				Description: "The Web Application Firewall rule's modsec ID.",
+				Description: "The Web Application Firewall rule's modsecurity ID",
 			},
 			"revision": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Computed:    true,
-				Description: "The Web Application Firewall rule's revision.",
+				Description: "The Web Application Firewall rule's revision. The latest revision will be used if this is not provided",
 			},
 		},
 	},

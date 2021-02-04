@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -106,32 +106,32 @@ func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the FTP logging endpoint.",
+			Description: "The unique name of the FTP logging endpoint",
 		},
 
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The FTP URL to stream logs to.",
+			Description: "The FTP address to stream logs to",
 		},
 
 		"user": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The username for the server (can be anonymous).",
+			Description: "The username for the server (can be `anonymous`)",
 		},
 
 		"password": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The password for the server (for anonymous use an email address).",
+			Description: "The password for the server (for anonymous use an email address)",
 			Sensitive:   true,
 		},
 
 		"path": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The path to upload log files to. If the path ends in / then it is treated as blockAttributes directory.",
+			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
 		},
 
 		// Optional fields
@@ -139,20 +139,20 @@ func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     21,
-			Description: "The port number.",
+			Description: "The port number. Default: `21`",
 		},
 
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
-			Description: "How frequently the logs should be transferred, in seconds (Default 3600).",
+			Description: "How frequently the logs should be transferred, in seconds (Default `3600`)",
 		},
 
 		"public_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk.",
+			Description: "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
 			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
 			StateFunc: trimSpaceStateFunc,
 		},
@@ -161,14 +161,14 @@ func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "Gzip Compression level.",
+			Description: "Gzip Compression level. Default `0`",
 		},
 
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`).",
+			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
 		},
 
 		"message_type": {

@@ -1,0 +1,32 @@
+{{define "data_source_tls_private_key"}}---
+
+layout: "fastly"
+page_title: "Fastly: fastly_tls_private_key"
+sidebar_current: "docs-fastly-datasource-tls_private_key"
+description: |-
+  Get information on a TLS Private Key.
+---
+
+# fastly_tls_private_key
+
+Use this data source to get information on a TLS Private Key uploaded to Fastly.
+
+~> **Warning:** The data source's filters are applied using an **AND** boolean operator, so depending on the combination
+ of filters, they may become mutually exclusive. The exception to this is `id` which must not be specified in combination
+ with any of the others.
+
+~> **Note:** If more or less than a single match is returned by the search, Terraform will fail. Ensure that your search
+ is specific enough to return a single key.
+
+## Example Usage
+
+```hcl
+data "fastly_tls_private_key" "demo" {
+  name = "demo-private-key"
+}
+
+output "private_key_needs_replacing" {
+  value = data.fastly_tls_private_key.demo.replace
+}
+```
+{{end}}

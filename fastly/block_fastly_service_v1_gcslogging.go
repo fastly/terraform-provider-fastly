@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -110,37 +110,37 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Unique name to refer to this logging setup",
+			Description: "A unique name to identify this GCS endpoint",
 		},
 		"email": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_EMAIL", ""),
-			Description: "The email address associated with the target GCS bucket on your account.",
+			Description: "The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`",
 		},
 		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The name of the bucket in which to store the logs.",
+			Description: "The name of the bucket in which to store the logs",
 		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_SECRET_KEY", ""),
-			Description: "The secret key associated with the target gcs bucket on your account.",
+			Description: "The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required",
 			Sensitive:   true,
 		},
 		// Optional fields
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Path to store the files. Must end with a trailing slash",
+			Description: "Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path",
 		},
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "Gzip Compression level",
+			Description: "Level of Gzip compression, from `0-9`. `0` is no compression. `1` is fastest and least compressed, `9` is slowest and most compressed. Default `0`",
 		},
 		"period": {
 			Type:        schema.TypeInt,
@@ -158,7 +158,7 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "classic",
-			Description:  "The log message type per the fastly docs: https://docs.fastly.com/api/logging#logging_gcs",
+			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
 			ValidateFunc: validateLoggingMessageType(),
 		},
 	}

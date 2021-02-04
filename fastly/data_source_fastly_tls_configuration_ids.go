@@ -12,7 +12,7 @@ func dataSourceFastlyTLSConfigurationIDs() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"ids": {
 				Type:        schema.TypeList,
-				Description: "IDs of available TLS configurations",
+				Description: "List of IDs corresponding to available TLS configurations.",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},

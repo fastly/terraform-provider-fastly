@@ -1,7 +1,7 @@
 package fastly
 
 import (
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -20,20 +20,20 @@ func resourceUserV1() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The email address, which is the login name, of this user.",
+				Description: "The email address, which is the login name, of the User",
 			},
 
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The real life name of the user.",
+				Description: "The real life name of the user",
 			},
 
 			"role": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "user",
-				Description:  "The user-assigned permissions role. Can be `user` (the default), `billing`, `engineer`, or `superuser`.",
+				Description:  "The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do)",
 				ValidateFunc: validateUserRole(),
 			},
 		},

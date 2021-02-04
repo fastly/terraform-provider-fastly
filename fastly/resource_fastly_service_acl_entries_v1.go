@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -23,14 +23,14 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Service Id",
+				Description: "The ID of the Service that the ACL belongs to",
 			},
 
 			"acl_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "ACL Id",
+				Description: "The ID of the ACL that the items belong to",
 			},
 			"entry": {
 				Type:        schema.TypeSet,

@@ -52,37 +52,20 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-website:
-	go run "scripts/website/parse-templates.go"
+BIN=$(CURDIR)/bin
+$(BIN)/%:
+	@echo "Installing tools from tools/tools.go"
+	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} go install {}
 
-website-test:
-	go run "scripts/website/parse-templates.go"
+# Inject ./bin into PATH to allow scripts/generate-docs.go to access local tfplugindocs binary
+generate-docs: $(BIN)/tfplugindocs
+	PATH=$(PATH):$(BIN) go run scripts/generate-docs.go
+
+validate-docs: $(BIN)/tfplugindocs
+	$(BIN)/tfplugindocs validate
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test sweep build_local clean install_local
-
-PROVIDER_HOSTNAME=registry.terraform.io
-PROVIDER_NAMESPACE=fastly
-PROVIDER_TYPE=fastly
-PROVIDER_TARGET=$(shell go env GOOS)_$(shell go env GOARCH)
-PROVIDER_VERSION = 99.99.99
-
-PLUGINS_PATH = ~/.terraform.d/plugins
-PLUGINS_PROVIDER_PATH=$(PROVIDER_HOSTNAME)/$(PROVIDER_NAMESPACE)/$(PROVIDER_TYPE)/$(PROVIDER_VERSION)/$(PROVIDER_TARGET)
-
-build_local:
-	@echo "Building local provider binary"
-	@mkdir -p ./bin
-	go build -o bin/terraform-provider-$(PROVIDER_TYPE)_v$(PROVIDER_VERSION)
-
-clean:
-	@echo "Deleting local provider binary"
-	rm -rf ./bin
-
-install_local: build_local
-	@echo "Installing local provider binary to plugins mirror path $(PLUGINS_PATH)/$(PLUGINS_PROVIDER_PATH)"
-	@mkdir -p $(PLUGINS_PATH)/$(PLUGINS_PROVIDER_PATH)
-	@cp ./bin/terraform-provider-$(PROVIDER_TYPE)_v$(PROVIDER_VERSION) $(PLUGINS_PATH)/$(PLUGINS_PROVIDER_PATH)
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs

@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -164,7 +164,7 @@ func testAccCheckFastlyServiceV1KinesisAttributes(service *gofastly.ServiceDetai
 	return func(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
-		KinesisList, err := conn.ListKineses(&gofastly.ListKinesesInput{
+		KinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
@@ -174,10 +174,10 @@ func testAccCheckFastlyServiceV1KinesisAttributes(service *gofastly.ServiceDetai
 		}
 
 		if len(KinesisList) != len(Kinesis) {
-			return fmt.Errorf("Kineses List count mismatch, expected (%d), got (%d)", len(Kinesis), len(KinesisList))
+			return fmt.Errorf("Kinesis List count mismatch, expected (%d), got (%d)", len(Kinesis), len(KinesisList))
 		}
 
-		log.Printf("[DEBUG] KinesesList = %#v\n", KinesisList)
+		log.Printf("[DEBUG] KinesisList = %#v\n", KinesisList)
 
 		for _, e := range Kinesis {
 			for _, el := range KinesisList {

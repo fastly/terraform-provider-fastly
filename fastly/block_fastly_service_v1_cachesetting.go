@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -104,29 +104,29 @@ func (h *CacheSettingServiceAttributeHandler) Register(s *schema.Resource) error
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A name to refer to this Cache Setting",
+					Description: "Unique name for this Cache Setting",
 				},
 				"action": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "Action to take",
+					Description: `One of cache, pass, or restart, as defined on Fastly's documentation under "[Caching action descriptions](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions)"`,
 				},
 				// optional
 				"cache_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
-					Description: "Name of a condition to check if this Cache Setting applies",
+					Description: "Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`",
 				},
 				"stale_ttl": {
 					Type:        schema.TypeInt,
 					Optional:    true,
-					Description: "Max 'Time To Live' for stale (unreachable) objects.",
+					Description: `Max "Time To Live" for stale (unreachable) objects`,
 				},
 				"ttl": {
 					Type:        schema.TypeInt,
 					Optional:    true,
-					Description: "The 'Time To Live' for the object",
+					Description: "The Time-To-Live (TTL) for the object",
 				},
 			},
 		},

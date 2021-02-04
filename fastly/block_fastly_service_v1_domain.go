@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v2/fastly"
+	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -103,8 +103,9 @@ func (h *DomainServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 func (h *DomainServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
-		Type:     schema.TypeSet,
-		Required: true,
+		Type:        schema.TypeSet,
+		Required:    true,
+		Description: "A set of Domain names to serve as entry points for your Service",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
@@ -114,8 +115,9 @@ func (h *DomainServiceAttributeHandler) Register(s *schema.Resource) error {
 				},
 
 				"comment": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "An optional comment about the Domain.",
 				},
 			},
 		},

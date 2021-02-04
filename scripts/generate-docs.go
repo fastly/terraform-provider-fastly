@@ -160,7 +160,7 @@ func renderPage(t *template.Template, p Page) {
 	basePath := filepath.Dir(p.path)
 	err := makeDirectoryIfNotExists(basePath)
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err)
 	}
 
 	f, err := os.Create(p.path)
@@ -285,6 +285,6 @@ func runTFPluginDocs() {
 	cmd := exec.Command("tfplugindocs", "generate")
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err)
 	}
 }

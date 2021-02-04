@@ -110,7 +110,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 - **syslog** (Block Set) (see [below for nested schema](#nestedblock--syslog))
 - **version_comment** (String) Description field for the version
 
-### Read-only
+### Read-Only
 
 - **active_version** (Number) The currently active version of your Fastly Service
 - **cloned_version** (Number) The latest cloned version by the provider. The value gets only set after running `terraform apply`

@@ -36,7 +36,7 @@ resource "aws_security_group" "from_fastly" {
 
 - **id** (String) The ID of this resource.
 
-### Read-only
+### Read-Only
 
 - **cidr_blocks** (List of String) The lexically ordered list of ipv4 CIDR blocks.
 - **ipv6_cidr_blocks** (List of String) The lexically ordered list of ipv6 CIDR blocks.

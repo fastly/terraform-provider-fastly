@@ -24,6 +24,9 @@ website/node_modules
 *.test
 *.iml
 
+# ignore the compiled binary when running `go install`
+terraform-provider-fastly
+
 website/vendor
 
 # Test exclusions

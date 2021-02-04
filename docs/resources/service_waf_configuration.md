@@ -638,6 +638,6 @@ Optional:
 
 - **modsec_rule_ids** (Set of Number) Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded
 
-Read-only:
+Read-Only:
 
 - **number** (Number) The numeric ID assigned to the WAF Rule Exclusion

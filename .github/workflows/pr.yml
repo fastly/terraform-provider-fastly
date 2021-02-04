@@ -43,3 +43,37 @@ jobs:
           ${{ runner.os }}-go-mod-
     - name: Test
       run: make test
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14.x
+    - name: Restore cached binaries
+      id: cache
+      uses: actions/cache@v2
+      with:
+        path: ~/go/bin
+        key: ${{ runner.os }}-go-bin-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-bin-
+    - name: Restore cached modules dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-
+    - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: make dependencies
+      shell: bash
+    - name: Generate Docs
+      run: |
+        make generate-docs
+    - name: Check diff
+      run: |
+        git diff --exit-code --ignore-all-space ./docs/

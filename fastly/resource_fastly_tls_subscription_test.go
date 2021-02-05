@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -36,6 +37,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckResourceAttr(resourceName, "managed_dns_challenge.%", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "managed_http_challenges.#"),
+					resource.TestCheckResourceAttr(resourceName, "common_name", domain),
 					testAccResourceFastlyTLSSubscriptionExists(resourceName),
 				),
 			},
@@ -43,6 +45,10 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config:      testAccResourceFastlyTLSSubscriptionConfig_invalidCommonName(),
+				ExpectError: regexp.MustCompile("Domain specified as common_name.*"),
 			},
 		},
 	})
@@ -82,6 +88,18 @@ func testAccResourceFastlyTLSSubscriptionExists(resourceName string) resource.Te
 		})
 		return err
 	}
+}
+
+func testAccResourceFastlyTLSSubscriptionConfig_invalidCommonName() string {
+	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
+	commonName := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
+	return fmt.Sprintf(`
+resource "fastly_tls_subscription" "subject" {
+  domains = ["%s"]
+  common_name = "%s"
+  certificate_authority = "lets-encrypt"
+}
+`, domain, commonName)
 }
 
 func testSweepTLSSubscription(region string) error {

@@ -20,6 +20,7 @@ func TestAccDataSourceFastlyTLSSubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority", "lets-encrypt"),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "common_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "state", "pending"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 				),
@@ -40,6 +41,7 @@ func TestAccDataSourceFastlyTLSSubscription_byID(t *testing.T) {
 				Config: testAccDataSourceFastlyTLSSubscriptionConfig_byID(domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "common_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "state", "pending"),
 				),
 			},

@@ -107,6 +107,10 @@ func main() {
 			path: tempDir + "/data-sources/tls_configuration_ids.md.tmpl",
 		},
 		{
+			name: "data_source_tls_domain",
+			path: tempDir + "/data-sources/tls_domain.md.tmpl",
+		},
+		{
 			name: "data_source_tls_platform_certificate",
 			path: tempDir + "/data-sources/tls_platform_certificate.md.tmpl",
 		},

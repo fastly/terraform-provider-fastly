@@ -588,6 +588,8 @@ Required:
 Optional:
 
 - **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
+- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format.
+- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
 - **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
 - **token** (String, Sensitive) The Splunk token to be used for authentication
 

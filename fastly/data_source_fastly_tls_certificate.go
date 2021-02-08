@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fastly/go-fastly/v2/fastly"
+	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -132,7 +132,7 @@ func getTLSCertificateFilters(d *schema.ResourceData) []TLSCertificatePredicate 
 	if v, ok := d.GetOk("domains"); ok {
 		filters = append(filters, func(c *fastly.CustomTLSCertificate) bool {
 			s := v.(*schema.Set)
-			for _, domain := range c.TLSDomains {
+			for _, domain := range c.Domains {
 				if s.Contains(domain.ID) {
 					return true
 				}
@@ -177,7 +177,7 @@ func listTLSCertificates(conn *fastly.Client, filters ...TLSCertificatePredicate
 
 func dataSourceFastlyTLSCertificateSetAttributes(certificate *fastly.CustomTLSCertificate, d *schema.ResourceData) error {
 	var domains []string
-	for _, domain := range certificate.TLSDomains {
+	for _, domain := range certificate.Domains {
 		domains = append(domains, domain.ID)
 	}
 

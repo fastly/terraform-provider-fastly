@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fastly/go-fastly/v2/fastly"
+	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -132,7 +132,7 @@ func testSweepTLSPlatformCertificates(region string) error {
 	}
 
 	for _, certificate := range certificates {
-		for _, domain := range certificate.TLSDomains {
+		for _, domain := range certificate.Domains {
 			if !strings.HasPrefix(domain.ID, testResourcePrefix) || !strings.HasPrefix(domain.ID, ".test") {
 				continue
 			}

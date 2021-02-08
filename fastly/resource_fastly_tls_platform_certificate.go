@@ -3,7 +3,7 @@ package fastly
 import (
 	"time"
 
-	"github.com/fastly/go-fastly/v2/fastly"
+	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -82,7 +82,7 @@ func resourceTLSPlatformCertificateCreate(d *schema.ResourceData, meta interface
 	input := &fastly.CreateBulkCertificateInput{
 		CertBlob:          d.Get("certificate_body").(string),
 		IntermediatesBlob: d.Get("intermediates_blob").(string),
-		TLSConfigurations: []*fastly.TLSConfiguration{{
+		Configurations: []*fastly.TLSConfiguration{{
 			ID: d.Get("configuration_id").(string),
 		}},
 		AllowUntrusted: d.Get("allow_untrusted_root").(bool),
@@ -109,11 +109,11 @@ func resourceTLSPlatformCertificateRead(d *schema.ResourceData, meta interface{}
 	}
 
 	var domains []string
-	for _, domain := range certificate.TLSDomains {
+	for _, domain := range certificate.Domains {
 		domains = append(domains, domain.ID)
 	}
 
-	if err := d.Set("configuration_id", certificate.TLSConfigurations[0].ID); err != nil {
+	if err := d.Set("configuration_id", certificate.Configurations[0].ID); err != nil {
 		return err
 	}
 	if err := d.Set("not_after", certificate.NotAfter.Format(time.RFC3339)); err != nil {

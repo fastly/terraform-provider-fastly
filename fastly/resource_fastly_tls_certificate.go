@@ -3,7 +3,7 @@ package fastly
 import (
 	"time"
 
-	"github.com/fastly/go-fastly/v2/fastly"
+	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -107,7 +107,7 @@ func resourceTLSCertificateRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	var domains []string
-	for _, domain := range cert.TLSDomains {
+	for _, domain := range cert.Domains {
 		domains = append(domains, domain.ID)
 	}
 

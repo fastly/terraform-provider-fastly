@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fastly/go-fastly/v2/fastly"
+	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -106,7 +106,7 @@ func getPlatformTLSCertificateFilters(d *schema.ResourceData) []PlatformTLSCerti
 	if v, ok := d.GetOk("domains"); ok {
 		filters = append(filters, func(c *fastly.BulkCertificate) bool {
 			s := v.(*schema.Set)
-			for _, domain := range c.TLSDomains {
+			for _, domain := range c.Domains {
 				if s.Contains(domain.ID) {
 					return true
 				}
@@ -146,7 +146,7 @@ func listPlatformTLSCertificates(conn *fastly.Client, filters ...PlatformTLSCert
 
 func dataSourceFastlyTLSPlatformCertificateSetAttributes(certificate *fastly.BulkCertificate, d *schema.ResourceData) error {
 	var domains []string
-	for _, domain := range certificate.TLSDomains {
+	for _, domain := range certificate.Domains {
 		domains = append(domains, domain.ID)
 	}
 
@@ -169,7 +169,7 @@ func dataSourceFastlyTLSPlatformCertificateSetAttributes(certificate *fastly.Bul
 	if err := d.Set("domains", domains); err != nil {
 		return err
 	}
-	if err := d.Set("configuration_id", certificate.TLSConfigurations[0].ID); err != nil {
+	if err := d.Set("configuration_id", certificate.Configurations[0].ID); err != nil {
 		return err
 	}
 

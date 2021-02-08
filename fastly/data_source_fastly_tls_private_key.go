@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func dataSourceTLSPrivateKey() *schema.Resource {
+func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceTLSPrivateKeyRead,
 		Schema: map[string]*schema.Schema{
@@ -74,37 +74,31 @@ func dataSourceTLSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 	} else {
-		var err error
-		privateKey, err = findTLSPrivateKey(conn, d)
+		filters := getTLSPrivateKeyFilters(d)
+
+		privateKeys, err := listTLSPrivateKeys(conn, filters...)
 		if err != nil {
 			return err
 		}
+
+		if len(privateKeys) == 0 {
+			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		}
+
+		if len(privateKeys) > 1 {
+			return fmt.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
+		}
+
+		privateKey = privateKeys[0]
 	}
 
-	d.SetId(privateKey.ID)
-	if err := d.Set("name", privateKey.Name); err != nil {
-		return err
-	}
-	if err := d.Set("created_at", privateKey.CreatedAt.Format(time.RFC3339)); err != nil {
-		return err
-	}
-	if err := d.Set("key_length", privateKey.KeyLength); err != nil {
-		return err
-	}
-	if err := d.Set("key_type", privateKey.KeyType); err != nil {
-		return err
-	}
-	if err := d.Set("replace", privateKey.Replace); err != nil {
-		return err
-	}
-	if err := d.Set("public_key_sha1", privateKey.PublicKeySHA1); err != nil {
-		return err
-	}
-	return nil
+	return dataSourceFastlyTLSPrivateKeySetAttributes(privateKey, d)
 }
 
-func findTLSPrivateKey(conn *fastly.Client, d *schema.ResourceData) (*fastly.PrivateKey, error) {
-	var filters []func(*fastly.PrivateKey) bool
+type TLSPrivateKeyPredicate func(key *fastly.PrivateKey) bool
+
+func getTLSPrivateKeyFilters(d *schema.ResourceData) []TLSPrivateKeyPredicate {
+	var filters []TLSPrivateKeyPredicate
 
 	if v, ok := d.GetOk("id"); ok {
 		filters = append(filters, func(key *fastly.PrivateKey) bool {
@@ -132,23 +126,10 @@ func findTLSPrivateKey(conn *fastly.Client, d *schema.ResourceData) (*fastly.Pri
 		})
 	}
 
-	privateKeys, err := listTLSPrivateKeys(conn, filters...)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(privateKeys) == 0 {
-		return nil, fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-
-	if len(privateKeys) > 1 {
-		return nil, fmt.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
-	}
-
-	return privateKeys[0], nil
+	return filters
 }
 
-func listTLSPrivateKeys(conn *fastly.Client, filters ...func(*fastly.PrivateKey) bool) ([]*fastly.PrivateKey, error) {
+func listTLSPrivateKeys(conn *fastly.Client, filters ...TLSPrivateKeyPredicate) ([]*fastly.PrivateKey, error) {
 	var privateKeys []*fastly.PrivateKey
 	pageNumber := 1
 	for {
@@ -169,10 +150,36 @@ func listTLSPrivateKeys(conn *fastly.Client, filters ...func(*fastly.PrivateKey)
 			}
 		}
 	}
+
 	return privateKeys, nil
 }
 
-func filterPrivateKey(privateKey *fastly.PrivateKey, filters []func(*fastly.PrivateKey) bool) bool {
+func dataSourceFastlyTLSPrivateKeySetAttributes(privateKey *fastly.PrivateKey, d *schema.ResourceData) error {
+	d.SetId(privateKey.ID)
+
+	if err := d.Set("name", privateKey.Name); err != nil {
+		return err
+	}
+	if err := d.Set("created_at", privateKey.CreatedAt.Format(time.RFC3339)); err != nil {
+		return err
+	}
+	if err := d.Set("key_length", privateKey.KeyLength); err != nil {
+		return err
+	}
+	if err := d.Set("key_type", privateKey.KeyType); err != nil {
+		return err
+	}
+	if err := d.Set("replace", privateKey.Replace); err != nil {
+		return err
+	}
+	if err := d.Set("public_key_sha1", privateKey.PublicKeySHA1); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func filterPrivateKey(privateKey *fastly.PrivateKey, filters []TLSPrivateKeyPredicate) bool {
 	for _, f := range filters {
 		if !f(privateKey) {
 			return false

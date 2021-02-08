@@ -9,7 +9,7 @@ import (
 
 func dataSourceFastlyTLSActivationIds() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSActivationIdsRead,
+		Read: dataSourceFastlyTLSActivationIDsRead,
 		Schema: map[string]*schema.Schema{
 			"certificate_id": {
 				Type:        schema.TypeString,
@@ -27,7 +27,7 @@ func dataSourceFastlyTLSActivationIds() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSActivationIdsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSActivationIDsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	var certificateID string
@@ -55,18 +55,19 @@ func dataSourceFastlyTLSActivationIdsRead(d *schema.ResourceData, meta interface
 		activations = append(activations, list...)
 	}
 
-	if len(activations) == 0 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
-	}
-
-	activationIds := make([]string, 0)
-
+	var ids []string
 	for _, activation := range activations {
-		activationIds = append(activationIds, activation.ID)
+		ids = append(ids, activation.ID)
 	}
 
+	// 2.x upgrade note - `hashcode.String` was removed from the SDK
+	// Code will need to be copied into this repository
+	// https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html#removal-of-helper-hashcode-package
 	d.SetId(fmt.Sprintf("%d", hashcode.String(certificateID)))
-	d.Set("ids", activationIds)
+	err := d.Set("ids", ids)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

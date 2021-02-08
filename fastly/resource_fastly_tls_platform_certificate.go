@@ -16,7 +16,6 @@ func resourceTLSPlatformCertificate() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
 				Type:         schema.TypeString,

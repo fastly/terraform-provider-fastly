@@ -82,7 +82,7 @@ func resourceTLSCertificateCreate(d *schema.ResourceData, meta interface{}) erro
 		CertBlob: d.Get("certificate_body").(string),
 	}
 
-	if v, ok := d.GetOkExists("name"); ok {
+	if v, ok := d.GetOk("name"); ok {
 		input.Name = v.(string)
 	}
 

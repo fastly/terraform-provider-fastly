@@ -183,6 +183,10 @@ func main() {
 			name: "tls_subscription",
 			path: tempDir + "/resources/tls_subscription.md.tmpl",
 		},
+		{
+			name: "tls_subscription_validation",
+			path: tempDir + "/resources/tls_subscription_validation.md.tmpl",
+		},
 	}
 
 	pages := append(resourcePages, dataPages...)

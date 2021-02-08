@@ -339,7 +339,7 @@ func replaceTemplatesDir(tmplDir string, tempDir string) {
 //
 // NOTE: it is presumed that the /templates directory that is referenced will
 // consist of precompiled templates and that the original untouched templates
-// will still exist in the /templates directory ready to be restored
+// will still exist in the /templates-backup directory ready to be restored
 // once the /docs content has been generated.
 func runTFPluginDocs() {
 	cmd := exec.Command("tfplugindocs", "generate")

@@ -27,7 +27,7 @@ func resourceTLSPlatformCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Description:  "PEM-formatted certificate chain from the `certificate_body` to its root.",
 				Required:     true,
-				ValidateFunc: validatePEMBlock("CERTIFICATE"),
+				ValidateFunc: validatePEMBlocks("CERTIFICATE"),
 			},
 			"configuration_id": {
 				Type:        schema.TypeString,

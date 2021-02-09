@@ -145,6 +145,7 @@ func resourceTLSPlatformCertificateUpdate(d *schema.ResourceData, meta interface
 		ID:                d.Id(),
 		CertBlob:          d.Get("certificate_body").(string),
 		IntermediatesBlob: d.Get("intermediates_blob").(string),
+		AllowUntrusted:    d.Get("allow_untrusted_root").(bool),
 	})
 	if err != nil {
 		return err

@@ -67,7 +67,7 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v3 v3.0.0 => github.com/opencredo/go-fastly/v3 v3.0.0-20210208131624-9ccb395d6808
+# github.com/fastly/go-fastly/v3 v3.0.0 => github.com/opencredo/go-fastly/v3 v3.0.0-20210209140016-2732f6b4c6d5
 ## explicit
 github.com/fastly/go-fastly/v3/fastly
 # github.com/fatih/color v1.7.0

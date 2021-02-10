@@ -101,6 +101,7 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Force delete the subscription even if it has active domains. Warning: this can disable production traffic if used incorrectly. Defaults to false.",
 				Optional:    true,
+				ForceNew:    true, // FIXME: remove when PATCH endpoint included in Update function
 				Default:     false,
 			},
 		},

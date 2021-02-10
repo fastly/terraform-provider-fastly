@@ -45,6 +45,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfig_invalidCommonName(),

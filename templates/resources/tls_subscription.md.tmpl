@@ -97,6 +97,9 @@ The following arguments are supported:
 * `domains` - (Required) List of domains on which to enable TLS.
 * `certificate_authority` - (Required) The entity that issues and certifies the TLS certificates for your subscription. Valid values are `lets-encrypt` or `globalsign`.
 * `configuration_id` - (Optional) The ID of the set of TLS configuration options that apply to the enabled domains on this subscription.
+* `force_destroy` - (Optional) Always delete subscription, even when active domains are present. Defaults to false.
+
+!> **Warning:** by default, the Fastly API protects you from disabling production traffic by preventing deleting subscriptions with active domains. The use of `force_destroy` will override these protections. Take extra care using this option if you are handling production traffic.
 
 ## Attributes Reference
 

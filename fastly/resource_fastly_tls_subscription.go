@@ -97,6 +97,12 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				},
 				Set: authorisationChallengesHash,
 			},
+			"force_destroy": {
+				Type:        schema.TypeBool,
+				Description: "Force delete the subscription even if it has active domains. Warning: this can disable production traffic if used incorrectly. Defaults to false.",
+				Optional:    true,
+				Default:     false,
+			},
 		},
 	}
 }
@@ -222,40 +228,9 @@ func resourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{})
 func resourceFastlyTLSSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
-	subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
+	err := conn.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
 		ID: d.Id(),
-	})
-	if err != nil {
-		return err
-	}
-
-	// Delete any associated TLS activations using this subscription
-	if subscription.Certificates != nil && len(subscription.Certificates) > 0 {
-		certificateID := subscription.Certificates[0].ID
-
-		activations, err := conn.ListTLSActivations(&fastly.ListTLSActivationsInput{
-			FilterTLSCertificateID: certificateID,
-		})
-		if err != nil {
-			return err
-		}
-
-		for _, activation := range activations {
-			if activation.Certificate.ID != certificateID {
-				return fmt.Errorf("Fastly API returned a TLS activation for a different subscription or certificate")
-			}
-
-			err := conn.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{
-				ID: activation.ID,
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	err = conn.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
-		ID: d.Id(),
+		Force: d.Get("force_destroy").(bool),
 	})
 	return err
 }

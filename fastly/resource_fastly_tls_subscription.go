@@ -103,7 +103,12 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Force delete the subscription even if it has active domains. Warning: this can disable production traffic if used incorrectly. Defaults to false.",
 				Optional:    true,
-				ForceNew:    true, // FIXME: remove when PATCH endpoint included in Update function
+				Default:     false,
+			},
+			"force_update": {
+				Type:        schema.TypeBool,
+				Description: "Force update the subscription even if it has active domains. Warning: this can disable production traffic if used incorrectly.",
+				Optional:    true,
 				Default:     false,
 			},
 		},
@@ -231,7 +236,10 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	updates := &fastly.UpdateTLSSubscriptionInput{ID: d.Id()}
+	updates := &fastly.UpdateTLSSubscriptionInput{
+		ID:    d.Id(),
+		Force: d.Get("force_update").(bool),
+	}
 
 	if d.HasChange("domains") {
 		var domains []*fastly.TLSDomain

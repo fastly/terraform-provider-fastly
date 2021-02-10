@@ -582,7 +582,7 @@ Optional:
 
 Required:
 
-- **name** (String) Unique name to refer to this logging setup
+- **name** (String) The unique name of the Logentries logging endpoint
 - **token** (String) Use token based authentication (https://logentries.com/doc/input-token/)
 
 Optional:

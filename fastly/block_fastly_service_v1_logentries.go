@@ -117,7 +117,7 @@ func (h *LogentriesServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Unique name to refer to this logging setup",
+			Description: "The unique name of the Logentries logging endpoint",
 		},
 		"token": {
 			Type:        schema.TypeString,

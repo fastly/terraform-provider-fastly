@@ -31,15 +31,15 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 		newDictVal = new(schema.Set)
 	}
 
-	oldDictSet := oldDictVal.(*schema.Set)
-	newDictSet := newDictVal.(*schema.Set)
+	oldSet := oldDictVal.(*schema.Set)
+	newSet := newDictVal.(*schema.Set)
 
-	setDiff := NewSetDiff(func(dictionary interface{}) (interface{}, error) {
-		// Use the dictionary name as the key
-		return dictionary.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oldDictSet, newDictSet)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

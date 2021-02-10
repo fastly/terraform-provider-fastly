@@ -37,15 +37,15 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		nc = new(schema.Set)
 	}
 
-	ocs := oc.(*schema.Set)
-	ncs := nc.(*schema.Set)
+	oldSet := oc.(*schema.Set)
+	newSet := nc.(*schema.Set)
 
-	setDiff := NewSetDiff(func(cond interface{}) (interface{}, error) {
-		// Use the condition name as the key
-		return cond.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ocs, ncs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

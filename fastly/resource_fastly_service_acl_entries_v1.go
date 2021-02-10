@@ -141,15 +141,15 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 			ne = new(schema.Set)
 		}
 
-		oes := oe.(*schema.Set)
-		nes := ne.(*schema.Set)
+		oldSet := oe.(*schema.Set)
+		newSet := ne.(*schema.Set)
 
-		setDiff := NewSetDiff(func(entries interface{}) (interface{}, error) {
-			// Use the entry ID as the key
-			return entries.(map[string]interface{})["id"], nil
+		setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+			// Use the resource ID as the key
+			return resource.(map[string]interface{})["id"], nil
 		})
 
-		diffResult, err := setDiff.Diff(oes, nes)
+		diffResult, err := setDiff.Diff(oldSet, newSet)
 		if err != nil {
 			return err
 		}

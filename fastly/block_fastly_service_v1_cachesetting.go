@@ -31,15 +31,15 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		nc = new(schema.Set)
 	}
 
-	ocs := oc.(*schema.Set)
-	ncs := nc.(*schema.Set)
+	oldSet := oc.(*schema.Set)
+	newSet := nc.(*schema.Set)
 
-	setDiff := NewSetDiff(func(cachesettings interface{}) (interface{}, error) {
-		// Use the cache settings name as the key
-		return cachesettings.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ocs, ncs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

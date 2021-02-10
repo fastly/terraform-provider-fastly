@@ -112,15 +112,15 @@ func updateWAFRuleExclusions(d *schema.ResourceData, meta interface{}, wafID str
 		ns = new(schema.Set)
 	}
 
-	oss := os.(*schema.Set)
-	nss := ns.(*schema.Set)
+	oldSet := os.(*schema.Set)
+	newSet := ns.(*schema.Set)
 
-	setDiff := NewSetDiff(func(exclusion interface{}) (interface{}, error) {
-		// Use the exclusion name as the key
-		return exclusion.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oss, nss)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

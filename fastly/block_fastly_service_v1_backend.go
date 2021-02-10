@@ -31,15 +31,15 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		nb = new(schema.Set)
 	}
 
-	obs := ob.(*schema.Set)
-	nbs := nb.(*schema.Set)
+	oldSet := ob.(*schema.Set)
+	newSet := nb.(*schema.Set)
 
-	setDiff := NewSetDiff(func(backend interface{}) (interface{}, error) {
-		// Use the backend name as key
-		return backend.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(obs, nbs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		// filter out any unmodified nested fields by comparing them against the
 		// original backend set data structure using .Filter.
 		//
-		modified := setDiff.Filter(backend, obs)
+		modified := setDiff.Filter(backend, oldSet)
 		opts := h.buildUpdateBackendInput(d.Id(), latestVersion, backend, modified)
 
 		log.Printf("[DEBUG] Update Backend Opts: %#v", opts)

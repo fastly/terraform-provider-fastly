@@ -33,15 +33,15 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		nh = new(schema.Set)
 	}
 
-	ohs := oh.(*schema.Set)
-	nhs := nh.(*schema.Set)
+	oldSet := oh.(*schema.Set)
+	newSet := nh.(*schema.Set)
 
-	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
-		// Use the logging endpoint name as the key
-		return logging.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource endpoint name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ohs, nhs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

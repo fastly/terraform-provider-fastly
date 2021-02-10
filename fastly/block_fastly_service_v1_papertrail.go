@@ -30,15 +30,15 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 		ns = new(schema.Set)
 	}
 
-	oss := os.(*schema.Set)
-	nss := ns.(*schema.Set)
+	oldSet := os.(*schema.Set)
+	newSet := ns.(*schema.Set)
 
-	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
-		// Use the logging endpoint name as the key
-		return logging.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource endpoint name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oss, nss)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

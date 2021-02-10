@@ -30,15 +30,15 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 		nbsl = new(schema.Set)
 	}
 
-	obsls := obsl.(*schema.Set)
-	nbsls := nbsl.(*schema.Set)
+	oldSet := obsl.(*schema.Set)
+	newSet := nbsl.(*schema.Set)
 
-	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
-		// Use the logging endpoint name as the key
-		return logging.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource endpoint name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(obsls, nbsls)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

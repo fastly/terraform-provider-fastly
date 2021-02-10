@@ -30,15 +30,15 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		newACLVal = new(schema.Set)
 	}
 
-	oldACLSet := oldACLVal.(*schema.Set)
-	newACLSet := newACLVal.(*schema.Set)
+	oldSet := oldACLVal.(*schema.Set)
+	newSet := newACLVal.(*schema.Set)
 
-	setDiff := NewSetDiff(func(acl interface{}) (interface{}, error) {
-		// Use the acl name as the key
-		return acl.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oldACLSet, newACLSet)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

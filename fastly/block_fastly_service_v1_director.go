@@ -30,15 +30,15 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		nd = new(schema.Set)
 	}
 
-	ods := od.(*schema.Set)
-	nds := nd.(*schema.Set)
+	oldSet := od.(*schema.Set)
+	newSet := nd.(*schema.Set)
 
-	setDiff := NewSetDiff(func(director interface{}) (interface{}, error) {
-		// Use the director name as the key
-		return director.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ods, nds)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

@@ -32,15 +32,15 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		nl = new(schema.Set)
 	}
 
-	ols := ol.(*schema.Set)
-	nls := nl.(*schema.Set)
+	oldSet := ol.(*schema.Set)
+	newSet := nl.(*schema.Set)
 
-	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
-		// Use the logging endpoint name as the key
-		return logging.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource endpoint name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ols, nls)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

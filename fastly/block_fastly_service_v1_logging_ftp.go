@@ -32,15 +32,15 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		nf = new(schema.Set)
 	}
 
-	ofs := of.(*schema.Set)
-	nfs := nf.(*schema.Set)
+	oldSet := of.(*schema.Set)
+	newSet := nf.(*schema.Set)
 
-	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
-		// Use the logging endpoint name as the key
-		return logging.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource endpoint name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ofs, nfs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

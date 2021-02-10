@@ -31,15 +31,15 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		ng = new(schema.Set)
 	}
 
-	ogs := og.(*schema.Set)
-	ngs := ng.(*schema.Set)
+	oldSet := og.(*schema.Set)
+	newSet := ng.(*schema.Set)
 
-	setDiff := NewSetDiff(func(gzip interface{}) (interface{}, error) {
-		// Use the gzip name as the key
-		return gzip.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ogs, ngs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

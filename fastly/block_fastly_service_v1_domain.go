@@ -30,15 +30,15 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		nd = new(schema.Set)
 	}
 
-	ods := od.(*schema.Set)
-	nds := nd.(*schema.Set)
+	oldSet := od.(*schema.Set)
+	newSet := nd.(*schema.Set)
 
-	setDiff := NewSetDiff(func(domain interface{}) (interface{}, error) {
-		// Use the domain name as the key
-		return domain.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ods, nds)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

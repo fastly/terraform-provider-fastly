@@ -33,15 +33,15 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 		newDynamicSnippetVal = new(schema.Set)
 	}
 
-	oldDynamicSnippetSet := oldDynamicSnippetVal.(*schema.Set)
-	newDynamicSnippetSet := newDynamicSnippetVal.(*schema.Set)
+	oldSet := oldDynamicSnippetVal.(*schema.Set)
+	newSet := newDynamicSnippetVal.(*schema.Set)
 
-	setDiff := NewSetDiff(func(dynsnippet interface{}) (interface{}, error) {
-		// Use the dynamic snippet name as the key
-		return dynsnippet.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oldDynamicSnippetSet, newDynamicSnippetSet)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

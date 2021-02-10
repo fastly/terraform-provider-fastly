@@ -31,15 +31,15 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		nh = new(schema.Set)
 	}
 
-	ohs := oh.(*schema.Set)
-	nhs := nh.(*schema.Set)
+	oldSet := oh.(*schema.Set)
+	newSet := nh.(*schema.Set)
 
-	setDiff := NewSetDiff(func(domain interface{}) (interface{}, error) {
-		// Use the header name as the key
-		return domain.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ohs, nhs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

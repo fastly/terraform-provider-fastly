@@ -30,15 +30,15 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 		nh = new(schema.Set)
 	}
 
-	ohs := oh.(*schema.Set)
-	nhs := nh.(*schema.Set)
+	oldSet := oh.(*schema.Set)
+	newSet := nh.(*schema.Set)
 
-	setDiff := NewSetDiff(func(healthcheck interface{}) (interface{}, error) {
-		// Use the health check name as the key
-		return healthcheck.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(ohs, nhs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

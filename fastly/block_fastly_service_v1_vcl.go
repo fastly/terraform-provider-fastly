@@ -33,15 +33,15 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		newVCLVal = new(schema.Set)
 	}
 
-	oldVCLSet := oldVCLVal.(*schema.Set)
-	newVCLSet := newVCLVal.(*schema.Set)
+	oldSet := oldVCLVal.(*schema.Set)
+	newSet := newVCLVal.(*schema.Set)
 
-	setDiff := NewSetDiff(func(vcl interface{}) (interface{}, error) {
-		// Use the vcl name as the key
-		return vcl.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oldVCLSet, newVCLSet)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

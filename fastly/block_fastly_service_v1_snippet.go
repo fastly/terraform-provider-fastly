@@ -33,15 +33,15 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		newSnippetVal = new(schema.Set)
 	}
 
-	oldSnippetSet := oldSnippetVal.(*schema.Set)
-	newSnippetSet := newSnippetVal.(*schema.Set)
+	oldSet := oldSnippetVal.(*schema.Set)
+	newSet := newSnippetVal.(*schema.Set)
 
-	setDiff := NewSetDiff(func(snippet interface{}) (interface{}, error) {
-		// Use the snippet name as the key
-		return snippet.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oldSnippetSet, newSnippetSet)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

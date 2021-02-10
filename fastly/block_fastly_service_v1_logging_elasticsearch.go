@@ -32,15 +32,15 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 		ne = new(schema.Set)
 	}
 
-	oes := oe.(*schema.Set)
-	nes := ne.(*schema.Set)
+	oldSet := oe.(*schema.Set)
+	newSet := ne.(*schema.Set)
 
-	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
-		// Use the logging endpoint name as the key
-		return logging.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		// Use the resource endpoint name as the key
+		return resource.(map[string]interface{})["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(oes, nes)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}

@@ -22,6 +22,7 @@ func init() {
 func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.test", name)
+	domain2 := fmt.Sprintf("%sALT.test", name)
 
 	resourceName := "fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,7 +31,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceFastlyTLSSubscriptionConfig(name, domain),
+				Config: testAccResourceFastlyTLSSubscriptionConfig(name, domain, domain2, domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "configuration_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -41,6 +42,10 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "common_name", domain),
 					testAccResourceFastlyTLSSubscriptionExists(resourceName),
 				),
+			},
+			{
+				Config: testAccResourceFastlyTLSSubscriptionConfig(name, domain, domain2, domain2),
+				Check:  resource.TestCheckResourceAttr(resourceName, "common_name", domain2),
 			},
 			{
 				ResourceName:            resourceName,
@@ -56,10 +61,14 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	})
 }
 
-func testAccResourceFastlyTLSSubscriptionConfig(name, domain string) string {
+func testAccResourceFastlyTLSSubscriptionConfig(name, domain, domain2, commonName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "test" {
   name = "%s"
+
+  domain {
+    name = "%s"
+  }
 
   domain {
     name = "%s"
@@ -74,9 +83,10 @@ resource "fastly_service_v1" "test" {
 }
 resource "fastly_tls_subscription" "subject" {
   domains = [for domain in fastly_service_v1.test.domain : domain.name]
+  common_name = "%s"
   certificate_authority = "lets-encrypt"
 }
-`, name, domain)
+`, name, domain, domain2, commonName)
 }
 
 func testAccResourceFastlyTLSSubscriptionExists(resourceName string) resource.TestCheckFunc {

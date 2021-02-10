@@ -33,11 +33,18 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 	obsls := obsl.(*schema.Set)
 	nbsls := nbsl.(*schema.Set)
 
-	remove := obsls.Difference(nbsls).List()
-	add := nbsls.Difference(obsls).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(obsls, nbsls)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Blob Storage logging configurations
-	for _, bslRaw := range remove {
+	for _, bslRaw := range diffResult.Deleted {
 		bslf := bslRaw.(map[string]interface{})
 		opts := gofastly.DeleteBlobStorageInput{
 			ServiceID:      d.Id(),
@@ -57,7 +64,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 	}
 
 	// POST new/updated Blob Storage logging configurations
-	for _, bslRaw := range add {
+	for _, bslRaw := range diffResult.Added {
 		bslf := bslRaw.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.

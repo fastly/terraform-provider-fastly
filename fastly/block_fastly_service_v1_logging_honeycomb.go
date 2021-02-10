@@ -35,11 +35,18 @@ func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	ols := ol.(*schema.Set)
 	nls := nl.(*schema.Set)
 
-	removeHoneycombLogging := ols.Difference(nls).List()
-	addHoneycombLogging := nls.Difference(ols).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ols, nls)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Honeycomb logging endpoints.
-	for _, oRaw := range removeHoneycombLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *HoneycombServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	}
 
 	// POST new/updated Honeycomb logging endpoints.
-	for _, nRaw := range addHoneycombLogging {
+	for _, nRaw := range diffResult.Added {
 		lf := nRaw.(map[string]interface{})
 		opts := h.buildCreate(lf, serviceID, latestVersion)
 

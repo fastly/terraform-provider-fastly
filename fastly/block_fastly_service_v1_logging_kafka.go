@@ -177,11 +177,18 @@ func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVer
 	oldLogSet := oldLogCfg.(*schema.Set)
 	newLogSet := newLogCfg.(*schema.Set)
 
-	removeKafkaLogging := oldLogSet.Difference(newLogSet).List()
-	addKafkaLogging := newLogSet.Difference(oldLogSet).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldLogSet, newLogSet)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Kafka logging endpoints
-	for _, oRaw := range removeKafkaLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -193,7 +200,7 @@ func (h *KafkaServiceAttributeHandler) Process(d *schema.ResourceData, latestVer
 	}
 
 	// POST new/updated Kafka logging endponts
-	for _, nRaw := range addKafkaLogging {
+	for _, nRaw := range diffResult.Added {
 		cfg := nRaw.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.

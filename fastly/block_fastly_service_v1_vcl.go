@@ -36,11 +36,18 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	oldVCLSet := oldVCLVal.(*schema.Set)
 	newVCLSet := newVCLVal.(*schema.Set)
 
-	remove := oldVCLSet.Difference(newVCLSet).List()
-	add := newVCLSet.Difference(oldVCLSet).List()
+	setDiff := NewSetDiff(func(vcl interface{}) (interface{}, error) {
+		// Use the vcl name as the key
+		return vcl.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldVCLSet, newVCLSet)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed VCL configurations
-	for _, dRaw := range remove {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteVCLInput{
 			ServiceID:      d.Id(),
@@ -59,7 +66,7 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		}
 	}
 	// POST new VCL configurations
-	for _, dRaw := range add {
+	for _, dRaw := range diffResult.Added {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateVCLInput{
 			ServiceID:      d.Id(),

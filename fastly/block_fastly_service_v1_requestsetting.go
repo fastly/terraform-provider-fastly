@@ -33,11 +33,19 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 
 	ors := os.(*schema.Set)
 	nrs := ns.(*schema.Set)
-	removeRequestSettings := ors.Difference(nrs).List()
-	addRequestSettings := nrs.Difference(ors).List()
+
+	setDiff := NewSetDiff(func(reqsettings interface{}) (interface{}, error) {
+		// Use the request settings name as the key
+		return reqsettings.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ors, nrs)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Request Settings configurations
-	for _, sRaw := range removeRequestSettings {
+	for _, sRaw := range diffResult.Deleted {
 		sf := sRaw.(map[string]interface{})
 		opts := gofastly.DeleteRequestSettingInput{
 			ServiceID:      d.Id(),
@@ -57,7 +65,7 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 	}
 
 	// POST new/updated Request Setting
-	for _, sRaw := range addRequestSettings {
+	for _, sRaw := range diffResult.Added {
 		opts, err := buildRequestSetting(sRaw.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Requset Setting: %s", err)

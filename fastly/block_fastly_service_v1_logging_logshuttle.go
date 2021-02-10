@@ -35,11 +35,18 @@ func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, late
 	ols := ol.(*schema.Set)
 	nls := nl.(*schema.Set)
 
-	removeLogshuttleLogging := ols.Difference(nls).List()
-	addLogshuttleLogging := nls.Difference(ols).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ols, nls)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Log Shuttle logging endpoints.
-	for _, oRaw := range removeLogshuttleLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *LogshuttleServiceAttributeHandler) Process(d *schema.ResourceData, late
 	}
 
 	// POST new/updated Log Shuttle logging endpoints.
-	for _, nRaw := range addLogshuttleLogging {
+	for _, nRaw := range diffResult.Added {
 		lf := nRaw.(map[string]interface{})
 		opts := h.buildCreate(lf, serviceID, latestVersion)
 

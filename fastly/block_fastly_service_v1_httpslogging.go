@@ -36,11 +36,18 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	ohs := oh.(*schema.Set)
 	nhs := nh.(*schema.Set)
 
-	removeHTTPSLogging := ohs.Difference(nhs).List()
-	addHTTPSLogging := nhs.Difference(ohs).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ohs, nhs)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old HTTPS logging endpoints
-	for _, oRaw := range removeHTTPSLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -52,7 +59,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	}
 
 	// POST new/updated HTTPS logging endponts
-	for _, nRaw := range addHTTPSLogging {
+	for _, nRaw := range diffResult.Added {
 		hf := nRaw.(map[string]interface{})
 		opts := h.buildCreate(hf, serviceID, latestVersion)
 

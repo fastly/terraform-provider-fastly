@@ -32,11 +32,19 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
-	removeGcslogging := oss.Difference(nss).List()
-	addGcslogging := nss.Difference(oss).List()
+
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old gcslogging configurations
-	for _, pRaw := range removeGcslogging {
+	for _, pRaw := range diffResult.Deleted {
 		sf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteGCSInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 	}
 
 	// POST new/updated gcslogging
-	for _, pRaw := range addGcslogging {
+	for _, pRaw := range diffResult.Added {
 		sf := pRaw.(map[string]interface{})
 		var vla = h.getVCLLoggingAttributes(sf)
 		opts := gofastly.CreateGCSInput{

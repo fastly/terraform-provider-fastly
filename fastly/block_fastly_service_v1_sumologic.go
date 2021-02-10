@@ -32,11 +32,19 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
-	removeSumologic := oss.Difference(nss).List()
-	addSumologic := nss.Difference(oss).List()
+
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old sumologic configurations
-	for _, pRaw := range removeSumologic {
+	for _, pRaw := range diffResult.Deleted {
 		sf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteSumologicInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	}
 
 	// POST new/updated Sumologic
-	for _, pRaw := range addSumologic {
+	for _, pRaw := range diffResult.Added {
 		sf := pRaw.(map[string]interface{})
 
 		var vla = h.getVCLLoggingAttributes(sf)

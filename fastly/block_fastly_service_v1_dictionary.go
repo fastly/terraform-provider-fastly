@@ -34,11 +34,18 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 	oldDictSet := oldDictVal.(*schema.Set)
 	newDictSet := newDictVal.(*schema.Set)
 
-	remove := oldDictSet.Difference(newDictSet).List()
-	add := newDictSet.Difference(oldDictSet).List()
+	setDiff := NewSetDiff(func(dictionary interface{}) (interface{}, error) {
+		// Use the dictionary name as the key
+		return dictionary.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldDictSet, newDictSet)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed dictionary configurations
-	for _, dRaw := range remove {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteDictionaryInput{
 			ServiceID:      d.Id(),
@@ -58,7 +65,7 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 	}
 
 	// POST new dictionary configurations
-	for _, dRaw := range add {
+	for _, dRaw := range diffResult.Added {
 		opts, err := buildDictionary(dRaw.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Dicitionary: %s", err)

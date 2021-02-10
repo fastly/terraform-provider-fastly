@@ -32,11 +32,19 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
-	removePapertrail := oss.Difference(nss).List()
-	addPapertrail := nss.Difference(oss).List()
+
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old papertrail configurations
-	for _, pRaw := range removePapertrail {
+	for _, pRaw := range diffResult.Deleted {
 		pf := pRaw.(map[string]interface{})
 		opts := gofastly.DeletePapertrailInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *PaperTrailServiceAttributeHandler) Process(d *schema.ResourceData, late
 	}
 
 	// POST new/updated Papertrail
-	for _, pRaw := range addPapertrail {
+	for _, pRaw := range diffResult.Added {
 		pf := pRaw.(map[string]interface{})
 
 		var vla = h.getVCLLoggingAttributes(pf)

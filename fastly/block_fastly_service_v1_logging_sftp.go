@@ -167,11 +167,18 @@ func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
 
-	removeSFTPLogging := oss.Difference(nss).List()
-	addSFTPLogging := nss.Difference(oss).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old SFTP logging endpoints.
-	for _, oRaw := range removeSFTPLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -183,7 +190,7 @@ func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	}
 
 	// POST new/updated SFTP logging endpoints.
-	for _, nRaw := range addSFTPLogging {
+	for _, nRaw := range diffResult.Added {
 		sf := nRaw.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.

@@ -144,11 +144,18 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 		oes := oe.(*schema.Set)
 		nes := ne.(*schema.Set)
 
-		removeEntries := oes.Difference(nes).List()
-		addEntries := nes.Difference(oes).List()
+		setDiff := NewSetDiff(func(entries interface{}) (interface{}, error) {
+			// Use the entry ID as the key
+			return entries.(map[string]interface{})["id"], nil
+		})
+
+		diffResult, err := setDiff.Diff(oes, nes)
+		if err != nil {
+			return err
+		}
 
 		// DELETE old ACL entry
-		for _, vRaw := range removeEntries {
+		for _, vRaw := range diffResult.Deleted {
 			val := vRaw.(map[string]interface{})
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
@@ -158,7 +165,7 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 		}
 
 		// POST new ACL entry
-		for _, vRaw := range addEntries {
+		for _, vRaw := range diffResult.Added {
 			val := vRaw.(map[string]interface{})
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{

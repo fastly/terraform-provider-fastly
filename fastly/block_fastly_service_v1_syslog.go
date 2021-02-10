@@ -32,11 +32,19 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
-	removeSyslog := oss.Difference(nss).List()
-	addSyslog := nss.Difference(oss).List()
+
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old syslog configurations
-	for _, pRaw := range removeSyslog {
+	for _, pRaw := range diffResult.Deleted {
 		slf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteSyslogInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	}
 
 	// POST new/updated Syslog
-	for _, pRaw := range addSyslog {
+	for _, pRaw := range diffResult.Added {
 		slf := pRaw.(map[string]interface{})
 
 		var vla = h.getVCLLoggingAttributes(slf)

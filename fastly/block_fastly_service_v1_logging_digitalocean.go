@@ -35,11 +35,18 @@ func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, la
 	ols := ol.(*schema.Set)
 	nls := nl.(*schema.Set)
 
-	removeDigitalOceanLogging := ols.Difference(nls).List()
-	addDigitalOceanLogging := nls.Difference(ols).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ols, nls)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old DigitalOcean Spaces logging endpoints.
-	for _, oRaw := range removeDigitalOceanLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, la
 	}
 
 	// POST new/updated DigitalOcean Spaces logging endpoints.
-	for _, nRaw := range addDigitalOceanLogging {
+	for _, nRaw := range diffResult.Added {
 		lf := nRaw.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.

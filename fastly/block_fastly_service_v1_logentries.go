@@ -32,11 +32,19 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
-	removeLogentries := oss.Difference(nss).List()
-	addLogentries := nss.Difference(oss).List()
+
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old logentries configurations
-	for _, pRaw := range removeLogentries {
+	for _, pRaw := range diffResult.Deleted {
 		slf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteLogentriesInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *LogentriesServiceAttributeHandler) Process(d *schema.ResourceData, late
 	}
 
 	// POST new/updated Logentries
-	for _, pRaw := range addLogentries {
+	for _, pRaw := range diffResult.Added {
 		slf := pRaw.(map[string]interface{})
 
 		var vla = h.getVCLLoggingAttributes(slf)

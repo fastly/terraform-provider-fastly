@@ -35,11 +35,18 @@ func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	ols := ol.(*schema.Set)
 	nls := nl.(*schema.Set)
 
-	removeKinesisLogging := ols.Difference(nls).List()
-	addKinesisLogging := nls.Difference(ols).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ols, nls)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Kinesis logging endpoints.
-	for _, oRaw := range removeKinesisLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	}
 
 	// POST new/updated Kinesis logging endpoints.
-	for _, nRaw := range addKinesisLogging {
+	for _, nRaw := range diffResult.Added {
 		lf := nRaw.(map[string]interface{})
 		opts := h.buildCreate(lf, serviceID, latestVersion)
 

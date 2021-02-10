@@ -34,11 +34,18 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	ohs := oh.(*schema.Set)
 	nhs := nh.(*schema.Set)
 
-	remove := ohs.Difference(nhs).List()
-	add := nhs.Difference(ohs).List()
+	setDiff := NewSetDiff(func(domain interface{}) (interface{}, error) {
+		// Use the header name as the key
+		return domain.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ohs, nhs)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed headers
-	for _, dRaw := range remove {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteHeaderInput{
 			ServiceID:      d.Id(),
@@ -58,7 +65,7 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	}
 
 	// POST new Headers
-	for _, dRaw := range add {
+	for _, dRaw := range diffResult.Added {
 		opts, err := buildHeader(dRaw.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Header: %s", err)

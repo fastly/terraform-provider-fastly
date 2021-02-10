@@ -33,11 +33,18 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
 
-	remove := oss.Difference(nss).List()
-	add := nss.Difference(oss).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Splunk logging configurations
-	for _, sRaw := range remove {
+	for _, sRaw := range diffResult.Deleted {
 		sf := sRaw.(map[string]interface{})
 		opts := gofastly.DeleteSplunkInput{
 			ServiceID:      d.Id(),
@@ -57,7 +64,7 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	}
 
 	// POST new/updated Splunk configurations
-	for _, sRaw := range add {
+	for _, sRaw := range diffResult.Added {
 		sf := sRaw.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.

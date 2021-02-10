@@ -32,11 +32,19 @@ func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, 
 
 	ors := or.(*schema.Set)
 	nrs := nr.(*schema.Set)
-	removeResponseObject := ors.Difference(nrs).List()
-	addResponseObject := nrs.Difference(ors).List()
+
+	setDiff := NewSetDiff(func(respobj interface{}) (interface{}, error) {
+		// Use the response object name as the key
+		return respobj.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ors, nrs)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old response object configurations
-	for _, rRaw := range removeResponseObject {
+	for _, rRaw := range diffResult.Deleted {
 		rf := rRaw.(map[string]interface{})
 		opts := gofastly.DeleteResponseObjectInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *ResponseObjectServiceAttributeHandler) Process(d *schema.ResourceData, 
 	}
 
 	// POST new/updated Response Object
-	for _, rRaw := range addResponseObject {
+	for _, rRaw := range diffResult.Added {
 		rf := rRaw.(map[string]interface{})
 
 		opts := gofastly.CreateResponseObjectInput{

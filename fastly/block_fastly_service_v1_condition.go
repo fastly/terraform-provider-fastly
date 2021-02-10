@@ -39,11 +39,19 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	ocs := oc.(*schema.Set)
 	ncs := nc.(*schema.Set)
-	removeConditions := ocs.Difference(ncs).List()
-	addConditions := ncs.Difference(ocs).List()
+
+	setDiff := NewSetDiff(func(cond interface{}) (interface{}, error) {
+		// Use the condition name as the key
+		return cond.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ocs, ncs)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Conditions
-	for _, cRaw := range removeConditions {
+	for _, cRaw := range diffResult.Deleted {
 		cf := cRaw.(map[string]interface{})
 		opts := gofastly.DeleteConditionInput{
 			ServiceID:      d.Id(),
@@ -63,7 +71,7 @@ func (h *ConditionServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	}
 
 	// POST new Conditions
-	for _, cRaw := range addConditions {
+	for _, cRaw := range diffResult.Added {
 		cf := cRaw.(map[string]interface{})
 		opts := gofastly.CreateConditionInput{
 			ServiceID:      d.Id(),

@@ -35,11 +35,18 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	ofs := of.(*schema.Set)
 	nfs := nf.(*schema.Set)
 
-	removeFTPLogging := ofs.Difference(nfs).List()
-	addFTPLogging := nfs.Difference(ofs).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ofs, nfs)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old FTP logging endpoints.
-	for _, oRaw := range removeFTPLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	}
 
 	// POST new/updated FTP logging endpoints.
-	for _, nRaw := range addFTPLogging {
+	for _, nRaw := range diffResult.Added {
 		ef := nRaw.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.

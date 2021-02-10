@@ -34,11 +34,18 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	ocs := oc.(*schema.Set)
 	ncs := nc.(*schema.Set)
 
-	remove := ocs.Difference(ncs).List()
-	add := ncs.Difference(ocs).List()
+	setDiff := NewSetDiff(func(cachesettings interface{}) (interface{}, error) {
+		// Use the cache settings name as the key
+		return cachesettings.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ocs, ncs)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed Cache Settings
-	for _, dRaw := range remove {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteCacheSettingInput{
 			ServiceID:      d.Id(),
@@ -58,7 +65,7 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	}
 
 	// POST new Cache Settings
-	for _, dRaw := range add {
+	for _, dRaw := range diffResult.Added {
 		opts, err := buildCacheSetting(dRaw.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Cache Setting: %s", err)

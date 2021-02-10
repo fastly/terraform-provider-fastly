@@ -32,11 +32,19 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 
 	ohs := oh.(*schema.Set)
 	nhs := nh.(*schema.Set)
-	removeHealthCheck := ohs.Difference(nhs).List()
-	addHealthCheck := nhs.Difference(ohs).List()
+
+	setDiff := NewSetDiff(func(healthcheck interface{}) (interface{}, error) {
+		// Use the health check name as the key
+		return healthcheck.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ohs, nhs)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old healthcheck configurations
-	for _, hRaw := range removeHealthCheck {
+	for _, hRaw := range diffResult.Deleted {
 		hf := hRaw.(map[string]interface{})
 		opts := gofastly.DeleteHealthCheckInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 	}
 
 	// POST new/updated Healthcheck
-	for _, hRaw := range addHealthCheck {
+	for _, hRaw := range diffResult.Added {
 		hf := hRaw.(map[string]interface{})
 
 		opts := gofastly.CreateHealthCheckInput{

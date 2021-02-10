@@ -36,11 +36,18 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	oldSnippetSet := oldSnippetVal.(*schema.Set)
 	newSnippetSet := newSnippetVal.(*schema.Set)
 
-	remove := oldSnippetSet.Difference(newSnippetSet).List()
-	add := newSnippetSet.Difference(oldSnippetSet).List()
+	setDiff := NewSetDiff(func(snippet interface{}) (interface{}, error) {
+		// Use the snippet name as the key
+		return snippet.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldSnippetSet, newSnippetSet)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed VCL Snippet configurations
-	for _, dRaw := range remove {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteSnippetInput{
 			ServiceID:      d.Id(),
@@ -60,7 +67,7 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	}
 
 	// POST new VCL Snippet configurations
-	for _, dRaw := range add {
+	for _, dRaw := range diffResult.Added {
 		opts, err := buildSnippet(dRaw.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building VCL Snippet: %s", err)

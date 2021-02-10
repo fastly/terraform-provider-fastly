@@ -32,11 +32,19 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
-	removeBigquerylogging := oss.Difference(nss).List()
-	addBigquerylogging := nss.Difference(oss).List()
+
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old bigquerylogging configurations
-	for _, pRaw := range removeBigquerylogging {
+	for _, pRaw := range diffResult.Deleted {
 		sf := pRaw.(map[string]interface{})
 		opts := gofastly.DeleteBigQueryInput{
 			ServiceID:      d.Id(),
@@ -56,7 +64,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 	}
 
 	// POST new/updated bigquerylogging
-	for _, pRaw := range addBigquerylogging {
+	for _, pRaw := range diffResult.Added {
 		sf := pRaw.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.

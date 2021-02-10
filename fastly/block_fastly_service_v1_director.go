@@ -33,11 +33,18 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	ods := od.(*schema.Set)
 	nds := nd.(*schema.Set)
 
-	removeDirector := ods.Difference(nds).List()
-	addDirector := nds.Difference(ods).List()
+	setDiff := NewSetDiff(func(director interface{}) (interface{}, error) {
+		// Use the director name as the key
+		return director.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ods, nds)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old director configurations
-	for _, dRaw := range removeDirector {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteDirectorInput{
 			ServiceID:      d.Id(),
@@ -57,7 +64,7 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	}
 
 	// POST new/updated Director
-	for _, dRaw := range addDirector {
+	for _, dRaw := range diffResult.Added {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateDirectorInput{
 			ServiceID:      d.Id(),

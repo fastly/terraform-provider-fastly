@@ -34,11 +34,18 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	ogs := og.(*schema.Set)
 	ngs := ng.(*schema.Set)
 
-	remove := ogs.Difference(ngs).List()
-	add := ngs.Difference(ogs).List()
+	setDiff := NewSetDiff(func(gzip interface{}) (interface{}, error) {
+		// Use the gzip name as the key
+		return gzip.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ogs, ngs)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed gzip rules
-	for _, dRaw := range remove {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteGzipInput{
 			ServiceID:      d.Id(),
@@ -58,7 +65,7 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	}
 
 	// POST new Gzips
-	for _, dRaw := range add {
+	for _, dRaw := range diffResult.Added {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateGzipInput{
 			ServiceID:      d.Id(),

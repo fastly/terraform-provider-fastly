@@ -33,11 +33,18 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	oldACLSet := oldACLVal.(*schema.Set)
 	newACLSet := newACLVal.(*schema.Set)
 
-	remove := oldACLSet.Difference(newACLSet).List()
-	add := newACLSet.Difference(oldACLSet).List()
+	setDiff := NewSetDiff(func(acl interface{}) (interface{}, error) {
+		// Use the acl name as the key
+		return acl.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldACLSet, newACLSet)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed ACL configurations
-	for _, vRaw := range remove {
+	for _, vRaw := range diffResult.Deleted {
 		val := vRaw.(map[string]interface{})
 		opts := gofastly.DeleteACLInput{
 			ServiceID:      d.Id(),
@@ -58,7 +65,7 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	}
 
 	// POST new ACL configurations
-	for _, vRaw := range add {
+	for _, vRaw := range diffResult.Added {
 		val := vRaw.(map[string]interface{})
 		opts := gofastly.CreateACLInput{
 			ServiceID:      d.Id(),

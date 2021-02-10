@@ -35,11 +35,19 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 
 	oss := os.(*schema.Set)
 	nss := ns.(*schema.Set)
-	removeS3Logging := oss.Difference(nss).List()
-	addS3Logging := nss.Difference(oss).List()
+
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oss, nss)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old S3 Log configurations.
-	for _, sRaw := range removeS3Logging {
+	for _, sRaw := range diffResult.Deleted {
 		opts := h.buildDelete(sRaw, serviceID, latestVersion)
 		err := deleteS3(conn, opts)
 		if err != nil {
@@ -48,7 +56,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	}
 
 	// POST new/updated S3 Logging.
-	for _, sRaw := range addS3Logging {
+	for _, sRaw := range diffResult.Added {
 		opts, err := h.buildCreate(sRaw, d.Id(), latestVersion)
 		if err != nil {
 			return err

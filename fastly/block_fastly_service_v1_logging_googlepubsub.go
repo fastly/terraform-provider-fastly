@@ -105,11 +105,18 @@ func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, la
 	oldLogSet := oldLogCfg.(*schema.Set)
 	newLogSet := newLogCfg.(*schema.Set)
 
-	removeGooglePubSubLogging := oldLogSet.Difference(newLogSet).List()
-	addGooglePubSubLogging := newLogSet.Difference(oldLogSet).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldLogSet, newLogSet)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Google Cloud Pub/Sub logging endpoints.
-	for _, oRaw := range removeGooglePubSubLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -121,7 +128,7 @@ func (h *GooglePubSubServiceAttributeHandler) Process(d *schema.ResourceData, la
 	}
 
 	// POST new/updated Google Cloud Pub/Sub logging endponts.
-	for _, nRaw := range addGooglePubSubLogging {
+	for _, nRaw := range diffResult.Added {
 		cfg := nRaw.(map[string]interface{})
 		opts := h.buildCreate(cfg, serviceID, latestVersion)
 

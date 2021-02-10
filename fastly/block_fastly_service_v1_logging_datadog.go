@@ -35,11 +35,18 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	ods := od.(*schema.Set)
 	nds := nd.(*schema.Set)
 
-	removeDatadogLogging := ods.Difference(nds).List()
-	addDatadogLogging := nds.Difference(ods).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ods, nds)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Datadog logging endpoints.
-	for _, oRaw := range removeDatadogLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *DatadogServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	}
 
 	// POST new/updated Datadog logging endpoints.
-	for _, nRaw := range addDatadogLogging {
+	for _, nRaw := range diffResult.Added {
 		df := nRaw.(map[string]interface{})
 		opts := h.buildCreate(df, serviceID, latestVersion)
 

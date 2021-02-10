@@ -35,11 +35,18 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 	oes := oe.(*schema.Set)
 	nes := ne.(*schema.Set)
 
-	removeElasticsearchLogging := oes.Difference(nes).List()
-	addElasticsearchLogging := nes.Difference(oes).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oes, nes)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old Elasticsearch logging endpoints.
-	for _, oRaw := range removeElasticsearchLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 	}
 
 	// POST new/updated Elasticsearch logging endpoints.
-	for _, nRaw := range addElasticsearchLogging {
+	for _, nRaw := range diffResult.Added {
 		ef := nRaw.(map[string]interface{})
 		opts := h.buildCreate(ef, serviceID, latestVersion)
 

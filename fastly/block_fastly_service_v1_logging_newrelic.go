@@ -35,11 +35,18 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	ods := od.(*schema.Set)
 	nds := nd.(*schema.Set)
 
-	removeNewRelicLogging := ods.Difference(nds).List()
-	addNewRelicLogging := nds.Difference(ods).List()
+	setDiff := NewSetDiff(func(logging interface{}) (interface{}, error) {
+		// Use the logging endpoint name as the key
+		return logging.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ods, nds)
+	if err != nil {
+		return err
+	}
 
 	// DELETE old NewRelic logging endpoints.
-	for _, oRaw := range removeNewRelicLogging {
+	for _, oRaw := range diffResult.Deleted {
 		of := oRaw.(map[string]interface{})
 		opts := h.buildDelete(of, serviceID, latestVersion)
 
@@ -51,7 +58,7 @@ func (h *NewRelicServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	}
 
 	// POST new/updated NewRelic logging endpoints.
-	for _, nRaw := range addNewRelicLogging {
+	for _, nRaw := range diffResult.Added {
 		df := nRaw.(map[string]interface{})
 		opts := h.buildCreate(df, serviceID, latestVersion)
 

@@ -33,11 +33,18 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	ods := od.(*schema.Set)
 	nds := nd.(*schema.Set)
 
-	remove := ods.Difference(nds).List()
-	add := nds.Difference(ods).List()
+	setDiff := NewSetDiff(func(domain interface{}) (interface{}, error) {
+		// Use the domain name as the key
+		return domain.(map[string]interface{})["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(ods, nds)
+	if err != nil {
+		return err
+	}
 
 	// Delete removed domains
-	for _, dRaw := range remove {
+	for _, dRaw := range diffResult.Deleted {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.DeleteDomainInput{
 			ServiceID:      d.Id(),
@@ -57,7 +64,7 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	}
 
 	// POST new Domains
-	for _, dRaw := range add {
+	for _, dRaw := range diffResult.Added {
 		df := dRaw.(map[string]interface{})
 		opts := gofastly.CreateDomainInput{
 			ServiceID:      d.Id(),
@@ -75,6 +82,7 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			return err
 		}
 	}
+
 	return nil
 }
 

@@ -34,8 +34,11 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	newSet := nd.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -43,13 +46,13 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		return err
 	}
 
-	// Delete removed domains
-	for _, dRaw := range diffResult.Deleted {
-		df := dRaw.(map[string]interface{})
+	// DELETE removed domains
+	for _, domain := range diffResult.Deleted {
+		domain := domain.(map[string]interface{})
 		opts := gofastly.DeleteDomainInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           domain["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Domain removal opts: %#v", opts)
@@ -63,21 +66,49 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 	}
 
-	// POST new Domains
-	for _, dRaw := range diffResult.Added {
-		df := dRaw.(map[string]interface{})
+	// ADD new domains
+	for _, domain := range diffResult.Added {
+		domain := domain.(map[string]interface{})
 		opts := gofastly.CreateDomainInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           domain["name"].(string),
 		}
 
-		if v, ok := df["comment"]; ok {
+		if v, ok := domain["comment"]; ok {
 			opts.Comment = v.(string)
 		}
 
 		log.Printf("[DEBUG] Fastly Domain Addition opts: %#v", opts)
 		_, err := conn.CreateDomain(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified domains
+	//
+	// NOTE: although the go-fastly API client enables updating of a domain by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	// Although we do allow for updating a domain whose 'comment' attribute has
+	// been updated (thus avoiding the expense associated with a DELETE/CREATE
+	// by enabling just the UPDATE operation).
+	for _, domain := range diffResult.Modified {
+		domain := domain.(map[string]interface{})
+
+		opts := gofastly.UpdateDomainInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           domain["name"].(string),
+		}
+
+		if v, ok := domain["comment"]; ok {
+			opts.Comment = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Domain Opts: %#v", opts)
+		_, err := conn.UpdateDomain(&opts)
 		if err != nil {
 			return err
 		}

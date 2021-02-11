@@ -46,7 +46,7 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		return err
 	}
 
-	// DELETE removed domains
+	// DELETE removed resources
 	for _, domain := range diffResult.Deleted {
 		domain := domain.(map[string]interface{})
 		opts := gofastly.DeleteDomainInput{
@@ -66,16 +66,16 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 	}
 
-	// ADD new domains
-	for _, domain := range diffResult.Added {
-		domain := domain.(map[string]interface{})
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.CreateDomainInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           domain["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
-		if v, ok := domain["comment"]; ok {
+		if v, ok := resource["comment"]; ok {
 			opts.Comment = v.(string)
 		}
 
@@ -86,7 +86,7 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 	}
 
-	// UPDATE modified domains
+	// UPDATE modified resources
 	//
 	// NOTE: although the go-fastly API client enables updating of a domain by
 	// its 'name' attribute, this isn't possible within terraform due to
@@ -94,17 +94,17 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// Although we do allow for updating a domain whose 'comment' attribute has
 	// been updated (thus avoiding the expense associated with a DELETE/CREATE
 	// by enabling just the UPDATE operation).
-	for _, domain := range diffResult.Modified {
-		domain := domain.(map[string]interface{})
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
 
 		opts := gofastly.UpdateDomainInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           domain["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		// only attempt to update attributes that have changed
-		modified := setDiff.Filter(domain, oldSet)
+		modified := setDiff.Filter(resource, oldSet)
 
 		if v, ok := modified["comment"]; ok {
 			opts.Comment = gofastly.String(v.(string))

@@ -943,9 +943,10 @@ Required:
 
 Optional:
 
-- **format** (String) Apache-style string or VCL variables to use for log formatting
-- **placement** (String) Where in the generated VCL the logging call should be placed
-- **response_condition** (String) Name of blockAttributes condition to apply this logging
+- **format** (String) A Fastly [log format string](https://docs.fastly.com/en/guides/custom-log-formats)
+- **format_version** (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`
+- **placement** (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of 2 are placed in `vcl_log` and those with `format_version` of 1 are placed in `vcl_deliver`
+- **response_condition** (String) The name of an existing condition in the configured endpoint, or leave blank to always execute
 
 
 <a id="nestedblock--request_setting"></a>

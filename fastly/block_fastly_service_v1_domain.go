@@ -103,7 +103,10 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			Name:           domain["name"].(string),
 		}
 
-		if v, ok := domain["comment"]; ok {
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(domain, oldSet)
+
+		if v, ok := modified["comment"]; ok {
 			opts.Comment = gofastly.String(v.(string))
 		}
 

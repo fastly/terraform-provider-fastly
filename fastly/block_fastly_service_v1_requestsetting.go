@@ -86,12 +86,9 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 
 	// UPDATE modified resources
 	//
-	// NOTE: although the go-fastly API client enables updating of a domain by
+	// NOTE: although the go-fastly API client enables updating of a resource by
 	// its 'name' attribute, this isn't possible within terraform due to
 	// constraints in the data model/schema of the resources not having a uid.
-	// Although we do allow for updating a domain whose 'comment' attribute has
-	// been updated (thus avoiding the expense associated with a DELETE/CREATE
-	// by enabling just the UPDATE operation).
 	for _, resource := range diffResult.Modified {
 		resource := resource.(map[string]interface{})
 
@@ -154,7 +151,7 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 			opts.RequestCondition = gofastly.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Update Domain Opts: %#v", opts)
+		log.Printf("[DEBUG] Update Request Settings Opts: %#v", opts)
 		_, err := conn.UpdateRequestSetting(&opts)
 		if err != nil {
 			return err

@@ -47,12 +47,12 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	}
 
 	// DELETE removed resources
-	for _, domain := range diffResult.Deleted {
-		domain := domain.(map[string]interface{})
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteDomainInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           domain["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Domain removal opts: %#v", opts)
@@ -88,12 +88,9 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 
 	// UPDATE modified resources
 	//
-	// NOTE: although the go-fastly API client enables updating of a domain by
+	// NOTE: although the go-fastly API client enables updating of a resource by
 	// its 'name' attribute, this isn't possible within terraform due to
 	// constraints in the data model/schema of the resources not having a uid.
-	// Although we do allow for updating a domain whose 'comment' attribute has
-	// been updated (thus avoiding the expense associated with a DELETE/CREATE
-	// by enabling just the UPDATE operation).
 	for _, resource := range diffResult.Modified {
 		resource := resource.(map[string]interface{})
 

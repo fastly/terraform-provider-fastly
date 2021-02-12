@@ -65,7 +65,7 @@ func TestAccFastlyServiceV1_gcslogging(t *testing.T) {
 		t.Errorf("Failed to generate key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -90,7 +90,7 @@ func TestAccFastlyServiceV1_gcslogging_compute(t *testing.T) {
 		t.Errorf("Failed to generate key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -119,7 +119,7 @@ func TestAccFastlyServiceV1_gcslogging_env(t *testing.T) {
 	resetEnv := setGcsEnv("someEnv", secretKey, t)
 	defer resetEnv()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

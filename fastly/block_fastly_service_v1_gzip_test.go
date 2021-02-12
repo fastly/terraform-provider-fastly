@@ -127,7 +127,7 @@ func TestAccFastlyServiceV1_gzips_basic(t *testing.T) {
 		ContentTypes:   "text/javascript application/x-javascript application/javascript text/css text/html",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

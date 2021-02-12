@@ -120,7 +120,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		ResponseCondition: "ok_response_2XX",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -169,7 +169,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic_compute(t *testing.T) {
 		MessageType:     "blank",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -206,7 +206,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_default(t *testing.T) {
 		MessageType:     "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -247,7 +247,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_env(t *testing.T) {
 		MessageType:     "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

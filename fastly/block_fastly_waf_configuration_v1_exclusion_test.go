@@ -92,6 +92,10 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 }
 
 func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
+	// Must set test to parallel outside of resource.ParallelTest due to the for loop. Otherwise t.Parallel() would be
+	// called multiple times, leading to a panic
+	t.Parallel()
+
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	cases := []struct {

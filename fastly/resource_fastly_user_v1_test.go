@@ -18,7 +18,7 @@ func TestAccFastlyUserV1_basic(t *testing.T) {
 	name2 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	role2 := "superuser"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckUserV1Destroy,
@@ -57,7 +57,7 @@ func TestAccFastlyUserV1_updateLogin(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	role := "engineer"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckUserV1Destroy,

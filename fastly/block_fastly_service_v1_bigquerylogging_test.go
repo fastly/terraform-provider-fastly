@@ -23,7 +23,7 @@ func TestAccFastlyServiceV1_bigquerylogging(t *testing.T) {
 		t.Errorf("Failed to generate key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -50,7 +50,7 @@ func TestAccFastlyServiceV1_bigquerylogging_compute(t *testing.T) {
 		t.Errorf("Failed to generate key: %s", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -79,7 +79,7 @@ func TestAccFastlyServiceV1_bigquerylogging_env(t *testing.T) {
 	resetEnv := setBQEnv("someEnv", secretKey, t)
 	defer resetEnv()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

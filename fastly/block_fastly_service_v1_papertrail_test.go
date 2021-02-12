@@ -75,7 +75,7 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 		FormatVersion:  uint(2),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -120,7 +120,7 @@ func TestAccFastlyServiceV1_papertrail_basic_compute(t *testing.T) {
 		Port:           uint(3600),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

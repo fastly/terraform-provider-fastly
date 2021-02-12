@@ -112,7 +112,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		MessageType:    "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -159,7 +159,7 @@ func TestAccFastlyServiceV1_syslog_basic_compute(t *testing.T) {
 		MessageType:    "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -195,7 +195,7 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 		MessageType:    "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -244,7 +244,7 @@ func TestAccFastlyServiceV1_syslog_useTls(t *testing.T) {
 		TLSClientKey:   key,
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

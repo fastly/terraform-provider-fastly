@@ -68,7 +68,7 @@ func TestAccFastlyServiceV1_sumologic(t *testing.T) {
 		Format:        "my format new",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -110,7 +110,7 @@ func TestAccFastlyServiceV1_sumologic_compute(t *testing.T) {
 		URL:  "https://collectors.sumologic.com/receiver/1",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

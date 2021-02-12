@@ -20,7 +20,7 @@ func TestAccFastlyServiceDynamicSnippetContentV1_create(t *testing.T) {
 	expectedSnippetPriority := "100"
 	expectedSnippetContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -50,7 +50,7 @@ func TestAccFastlyServiceDynamicSnippetContentV1_update(t *testing.T) {
 
 	expectedRemoteItemsAfterUpdate := "if ( req.url ) {\n set req.http.my-updated-test-header = \"true\";\n}"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -87,7 +87,7 @@ func TestAccFastlyServiceDynamicSnippetContentV1_external_snippet_is_removed(t *
 	managedDynamicSnippetName := fmt.Sprintf("dynamic snippet %s", acctest.RandString(10))
 	managedContent := "if ( req.url ) {\n set req.http.my-updated-test-header = \"true\";\n}"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -126,7 +126,7 @@ func TestAccFastlyServiceDynamicSnippetContentV1_normal_snippet_is_not_removed(t
 	dynamicSnippetName := fmt.Sprintf("existing dynamic snippet %s", acctest.RandString(10))
 	dynamicContent := "if ( req.url ) {\n set req.http.my-new-content-test-header = \"true\";\n}"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -164,7 +164,7 @@ func TestAccFastlyServiceDynamicSnippetContentV1_import(t *testing.T) {
 	expectedSnippetPriority := "100"
 	expectedSnippetContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

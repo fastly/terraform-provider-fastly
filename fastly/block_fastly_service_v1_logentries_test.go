@@ -80,7 +80,7 @@ func TestAccFastlyServiceV1_logentries_basic(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -127,7 +127,7 @@ func TestAccFastlyServiceV1_logentries_basic_compute(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -218,7 +218,7 @@ func TestAccFastlyServiceV1_logentries_formatVersion(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

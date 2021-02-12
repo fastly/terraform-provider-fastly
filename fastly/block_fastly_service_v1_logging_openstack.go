@@ -36,8 +36,11 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	newSet := nl.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource endpoint name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -45,10 +48,10 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		return err
 	}
 
-	// DELETE old OpenStack logging endpoints.
-	for _, oRaw := range diffResult.Deleted {
-		of := oRaw.(map[string]interface{})
-		opts := h.buildDelete(of, serviceID, latestVersion)
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
+		opts := h.buildDelete(resource, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
 
@@ -57,9 +60,9 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		}
 	}
 
-	// POST new/updated OpenStack logging endpoints.
-	for _, nRaw := range diffResult.Added {
-		lf := nRaw.(map[string]interface{})
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.
 		//
@@ -71,15 +74,90 @@ func (h *OpenstackServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
 		// properly handles setting state with the StateFunc, it returns extra entries
 		// during state Gets, specifically `GetChange("logging_openstack")` in this case.
-		if v, ok := lf["name"]; !ok || v.(string) == "" {
+		if v, ok := resource["name"]; !ok || v.(string) == "" {
 			continue
 		}
 
-		opts := h.buildCreate(lf, serviceID, latestVersion)
+		opts := h.buildCreate(resource, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
 
 		if err := createOpenstack(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateOpenstackInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["access_key"]; ok {
+			opts.AccessKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["bucket_name"]; ok {
+			opts.BucketName = gofastly.String(v.(string))
+		}
+		if v, ok := modified["url"]; ok {
+			opts.URL = gofastly.String(v.(string))
+		}
+		if v, ok := modified["user"]; ok {
+			opts.User = gofastly.String(v.(string))
+		}
+		if v, ok := modified["path"]; ok {
+			opts.Path = gofastly.String(v.(string))
+		}
+		if v, ok := modified["placement"]; ok {
+			opts.Placement = gofastly.String(v.(string))
+		}
+		if v, ok := modified["period"]; ok {
+			opts.Period = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["compression_codec"]; ok {
+			opts.CompressionCodec = gofastly.String(v.(string))
+		}
+		if v, ok := modified["gzip_level"]; ok {
+			opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["format"]; ok {
+			opts.Format = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format_version"]; ok {
+			opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["response_condition"]; ok {
+			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["message_type"]; ok {
+			opts.MessageType = gofastly.String(v.(string))
+		}
+		if v, ok := modified["timestamp_format"]; ok {
+			opts.TimestampFormat = gofastly.String(v.(string))
+		}
+		if v, ok := modified["public_key"]; ok {
+			opts.PublicKey = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update OpenStack Opts: %#v", opts)
+		_, err := conn.UpdateOpenstack(&opts)
+		if err != nil {
 			return err
 		}
 	}

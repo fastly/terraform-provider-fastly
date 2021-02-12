@@ -108,7 +108,7 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 		ResponseCondition: "ok_response_2XX",
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -150,7 +150,7 @@ func TestAccFastlyServiceV1_splunk_basic_compute(t *testing.T) {
 		Token: "test-token",
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -182,7 +182,7 @@ func TestAccFastlyServiceV1_splunk_default(t *testing.T) {
 		FormatVersion: 2,
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -268,7 +268,7 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 		TLSClientKey:  key,
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -322,7 +322,7 @@ func TestAccFastlyServiceV1_splunk_env(t *testing.T) {
 		FormatVersion: 2,
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

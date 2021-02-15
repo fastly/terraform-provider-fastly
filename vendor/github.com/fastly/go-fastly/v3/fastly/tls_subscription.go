@@ -27,6 +27,7 @@ type TLSSubscriptionCertificate struct {
 	ID string `jsonapi:"primary,tls_certificate"`
 }
 
+// TLSAuthorizations gives information needed to verify domain ownership in order to enable a TLSSubscription
 type TLSAuthorizations struct {
 	ID string `jsonapi:"primary,tls_authorization"`
 	// Nested structs only work with values, not pointers. See https://github.com/google/jsonapi/pull/99
@@ -36,6 +37,7 @@ type TLSAuthorizations struct {
 	State      string         `jsonapi:"attr,state,omitempty"`
 }
 
+// TLSChallenge represents a DNS record to be added for a specific type of domain ownership challenge
 type TLSChallenge struct {
 	Type       string   `jsonapi:"attr,type"`
 	RecordType string   `jsonapi:"attr,record_type"`
@@ -116,6 +118,7 @@ func (c *Client) ListTLSSubscriptions(i *ListTLSSubscriptionsInput) ([]*TLSSubsc
 	return subscriptions, nil
 }
 
+// CreateTLSSubscriptionInput is used as input to the CreateTLSSubscription function
 type CreateTLSSubscriptionInput struct {
 	// ID value is ignored and should not be set, needed to make JSONAPI work correctly.
 	ID string `jsonapi:"primary,tls_subscription"`
@@ -151,6 +154,8 @@ func (c *Client) CreateTLSSubscription(i *CreateTLSSubscriptionInput) (*TLSSubsc
 	return &subscription, nil
 }
 
+// domainInSlice takes a slice of TLSDomain structs, and another TLSDomain struct to search for, returning true if any
+// of the ID fields in the slice match
 func domainInSlice(haystack []*TLSDomain, needle *TLSDomain) bool {
 	for _, s := range haystack {
 		if s.ID == needle.ID {
@@ -161,6 +166,7 @@ func domainInSlice(haystack []*TLSDomain, needle *TLSDomain) bool {
 	return false
 }
 
+// GetTLSSubscriptionInput is used as input to the GetTLSSubscription function
 type GetTLSSubscriptionInput struct {
 	// ID of the TLS subscription to fetch.
 	ID string
@@ -199,9 +205,12 @@ func (c *Client) GetTLSSubscription(i *GetTLSSubscriptionInput) (*TLSSubscriptio
 	return &subscription, err
 }
 
+// DeleteTLSSubscriptionInput is used as input to the DeleteTLSSubscription function
 type DeleteTLSSubscriptionInput struct {
 	// ID of the TLS subscription to delete.
 	ID string
+	// Force the subscription to be deleted, even if domains are active. Warning: can disable production traffic.
+	Force bool
 }
 
 func (c *Client) DeleteTLSSubscription(i *DeleteTLSSubscriptionInput) error {
@@ -209,7 +218,14 @@ func (c *Client) DeleteTLSSubscription(i *DeleteTLSSubscriptionInput) error {
 		return ErrMissingID
 	}
 
+	var ro RequestOptions
+	if i.Force {
+		ro.Params = map[string]string{
+			"force": "true",
+		}
+	}
+
 	path := fmt.Sprintf("/tls/subscriptions/%s", i.ID)
-	_, err := c.Delete(path, nil)
+	_, err := c.Delete(path, &ro)
 	return err
 }

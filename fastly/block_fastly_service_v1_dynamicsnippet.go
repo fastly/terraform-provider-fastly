@@ -37,8 +37,11 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 	newSet := newDynamicSnippetVal.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -46,13 +49,13 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 		return err
 	}
 
-	// Delete removed VCL Snippet configurations
-	for _, dRaw := range diffResult.Deleted {
-		df := dRaw.(map[string]interface{})
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteSnippetInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Removal opts: %#v", opts)
@@ -66,9 +69,9 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 		}
 	}
 
-	// POST new VCL Snippet configurations
-	for _, dRaw := range diffResult.Added {
-		opts, err := buildDynamicSnippet(dRaw.(map[string]interface{}))
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildDynamicSnippet(resource.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building VCL Dynamic Snippet: %s", err)
 			return err
@@ -78,6 +81,48 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 
 		log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Addition opts: %#v", opts)
 		_, err = conn.CreateSnippet(opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateSnippetInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["priority"]; ok {
+			opts.Priority = v.(int)
+		}
+		if v, ok := modified["dynamic"]; ok {
+			opts.Dynamic = v.(int)
+		}
+		if v, ok := modified["content"]; ok {
+			opts.Content = v.(string)
+		}
+		if v, ok := modified["type"]; ok {
+			opts.Type = v.(gofastly.SnippetType)
+		}
+
+		log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
+		_, err := conn.UpdateSnippet(&opts)
 		if err != nil {
 			return err
 		}

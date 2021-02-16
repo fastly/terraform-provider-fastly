@@ -35,8 +35,11 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	newSet := nh.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -44,13 +47,13 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		return err
 	}
 
-	// Delete removed headers
-	for _, dRaw := range diffResult.Deleted {
-		df := dRaw.(map[string]interface{})
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteHeaderInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Header removal opts: %#v", opts)
@@ -64,9 +67,9 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 	}
 
-	// POST new Headers
-	for _, dRaw := range diffResult.Added {
-		opts, err := buildHeader(dRaw.(map[string]interface{}))
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildHeader(resource.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Header: %s", err)
 			return err
@@ -76,6 +79,69 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 
 		log.Printf("[DEBUG] Fastly Header Addition opts: %#v", opts)
 		_, err = conn.CreateHeader(opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateHeaderInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["action"]; ok {
+			opts.Action = gofastly.PHeaderAction(gofastly.HeaderAction(v.(string)))
+		}
+		if v, ok := modified["ignore_if_set"]; ok {
+			opts.IgnoreIfSet = gofastly.CBool(v.(bool))
+		}
+		if v, ok := modified["type"]; ok {
+			opts.Type = gofastly.PHeaderType(gofastly.HeaderType(v.(string)))
+		}
+		if v, ok := modified["dst"]; ok {
+			opts.Destination = gofastly.String(v.(string))
+		}
+		if v, ok := modified["src"]; ok {
+			opts.Source = gofastly.String(v.(string))
+		}
+		if v, ok := modified["regex"]; ok {
+			opts.Regex = gofastly.String(v.(string))
+		}
+		if v, ok := modified["substitution"]; ok {
+			opts.Substitution = gofastly.String(v.(string))
+		}
+		if v, ok := modified["priority"]; ok {
+			opts.Priority = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["request_condition"]; ok {
+			opts.RequestCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["cache_condition"]; ok {
+			opts.CacheCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["response_condition"]; ok {
+			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Header Opts: %#v", opts)
+		_, err := conn.UpdateHeader(&opts)
 		if err != nil {
 			return err
 		}

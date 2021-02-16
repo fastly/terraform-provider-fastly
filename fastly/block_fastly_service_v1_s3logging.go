@@ -37,8 +37,11 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 	newSet := ns.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource endpoint name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -46,18 +49,18 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		return err
 	}
 
-	// DELETE old S3 Log configurations.
-	for _, sRaw := range diffResult.Deleted {
-		opts := h.buildDelete(sRaw, serviceID, latestVersion)
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		opts := h.buildDelete(resource, serviceID, latestVersion)
 		err := deleteS3(conn, opts)
 		if err != nil {
 			return err
 		}
 	}
 
-	// POST new/updated S3 Logging.
-	for _, sRaw := range diffResult.Added {
-		opts, err := h.buildCreate(sRaw, d.Id(), latestVersion)
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		opts, err := h.buildCreate(resource, d.Id(), latestVersion)
 		if err != nil {
 			return err
 		}
@@ -81,6 +84,91 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 			return err
 		}
 	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateS3Input{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["bucket_name"]; ok {
+			opts.BucketName = gofastly.String(v.(string))
+		}
+		if v, ok := modified["domain"]; ok {
+			opts.Domain = gofastly.String(v.(string))
+		}
+		if v, ok := modified["access_key"]; ok {
+			opts.AccessKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["secret_key"]; ok {
+			opts.SecretKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["path"]; ok {
+			opts.Path = gofastly.String(v.(string))
+		}
+		if v, ok := modified["period"]; ok {
+			opts.Period = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["compression_codec"]; ok {
+			opts.CompressionCodec = gofastly.String(v.(string))
+		}
+		if v, ok := modified["gzip_level"]; ok {
+			opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["format"]; ok {
+			opts.Format = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format_version"]; ok {
+			opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["response_condition"]; ok {
+			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["message_type"]; ok {
+			opts.MessageType = gofastly.String(v.(string))
+		}
+		if v, ok := modified["timestamp_format"]; ok {
+			opts.TimestampFormat = gofastly.String(v.(string))
+		}
+		if v, ok := modified["redundancy"]; ok {
+			opts.Redundancy = gofastly.S3Redundancy(v.(string))
+		}
+		if v, ok := modified["placement"]; ok {
+			opts.Placement = gofastly.String(v.(string))
+		}
+		if v, ok := modified["public_key"]; ok {
+			opts.PublicKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["server_side_encryption_kms_key_id"]; ok {
+			opts.ServerSideEncryptionKMSKeyID = gofastly.String(v.(string))
+		}
+		if v, ok := modified["server_side_encryption"]; ok {
+			opts.ServerSideEncryption = gofastly.S3ServerSideEncryption(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update S3 Opts: %#v", opts)
+		_, err := conn.UpdateS3(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

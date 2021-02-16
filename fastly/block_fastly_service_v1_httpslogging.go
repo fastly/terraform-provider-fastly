@@ -37,8 +37,11 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 	newSet := nh.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource endpoint name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -46,10 +49,10 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		return err
 	}
 
-	// DELETE old HTTPS logging endpoints
-	for _, oRaw := range diffResult.Deleted {
-		of := oRaw.(map[string]interface{})
-		opts := h.buildDelete(of, serviceID, latestVersion)
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
+		opts := h.buildDelete(resource, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
 
@@ -58,7 +61,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		}
 	}
 
-	// POST new/updated HTTPS logging endponts
+	// ADD new resources
 	for _, nRaw := range diffResult.Added {
 		hf := nRaw.(map[string]interface{})
 		opts := h.buildCreate(hf, serviceID, latestVersion)
@@ -66,6 +69,87 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
 
 		if err := createHTTPS(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateHTTPSInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["response_condition"]; ok {
+			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format"]; ok {
+			opts.Format = gofastly.String(v.(string))
+		}
+		if v, ok := modified["url"]; ok {
+			opts.URL = gofastly.String(v.(string))
+		}
+		if v, ok := modified["request_max_entries"]; ok {
+			opts.RequestMaxEntries = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["request_max_bytes"]; ok {
+			opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["content_type"]; ok {
+			opts.ContentType = gofastly.String(v.(string))
+		}
+		if v, ok := modified["header_name"]; ok {
+			opts.HeaderName = gofastly.String(v.(string))
+		}
+		if v, ok := modified["header_value"]; ok {
+			opts.HeaderValue = gofastly.String(v.(string))
+		}
+		if v, ok := modified["method"]; ok {
+			opts.Method = gofastly.String(v.(string))
+		}
+		if v, ok := modified["json_format"]; ok {
+			opts.JSONFormat = gofastly.String(v.(string))
+		}
+		if v, ok := modified["placement"]; ok {
+			opts.Placement = gofastly.String(v.(string))
+		}
+		if v, ok := modified["tls_ca_cert"]; ok {
+			opts.TLSCACert = gofastly.String(v.(string))
+		}
+		if v, ok := modified["tls_client_cert"]; ok {
+			opts.TLSClientCert = gofastly.String(v.(string))
+		}
+		if v, ok := modified["tls_client_key"]; ok {
+			opts.TLSClientKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["tls_hostname"]; ok {
+			opts.TLSHostname = gofastly.String(v.(string))
+		}
+		if v, ok := modified["message_type"]; ok {
+			opts.MessageType = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format_version"]; ok {
+			opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		}
+
+		log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
+		_, err := conn.UpdateHTTPS(&opts)
+		if err != nil {
 			return err
 		}
 	}

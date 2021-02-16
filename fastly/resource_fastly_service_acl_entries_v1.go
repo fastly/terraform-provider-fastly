@@ -145,8 +145,11 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 		newSet := ne.(*schema.Set)
 
 		setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-			// Use the resource ID as the key
-			return resource.(map[string]interface{})["id"], nil
+			t, ok := resource.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+			}
+			return t["id"], nil
 		})
 
 		diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -154,27 +157,41 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 			return err
 		}
 
-		// DELETE old ACL entry
-		for _, vRaw := range diffResult.Deleted {
-			val := vRaw.(map[string]interface{})
+		// DELETE removed resources
+		for _, resource := range diffResult.Deleted {
+			resource := resource.(map[string]interface{})
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 				Operation: gofastly.DeleteBatchOperation,
-				ID:        gofastly.String(val["id"].(string)),
+				ID:        gofastly.String(resource["id"].(string)),
 			})
 		}
 
-		// POST new ACL entry
-		for _, vRaw := range diffResult.Added {
-			val := vRaw.(map[string]interface{})
+		// ADD new resources
+		for _, resource := range diffResult.Added {
+			resource := resource.(map[string]interface{})
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 				Operation: gofastly.CreateBatchOperation,
-				ID:        gofastly.String(val["id"].(string)),
-				IP:        gofastly.String(val["ip"].(string)),
-				Subnet:    gofastly.String(val["subnet"].(string)),
-				Negated:   gofastly.Bool(val["negated"].(bool)),
-				Comment:   gofastly.String(val["comment"].(string)),
+				ID:        gofastly.String(resource["id"].(string)),
+				IP:        gofastly.String(resource["ip"].(string)),
+				Subnet:    gofastly.String(resource["subnet"].(string)),
+				Negated:   gofastly.Bool(resource["negated"].(bool)),
+				Comment:   gofastly.String(resource["comment"].(string)),
+			})
+		}
+
+		// UPDATE modified resources
+		for _, resource := range diffResult.Modified {
+			resource := resource.(map[string]interface{})
+
+			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
+				Operation: gofastly.UpdateBatchOperation,
+				ID:        gofastly.String(resource["id"].(string)),
+				IP:        gofastly.String(resource["ip"].(string)),
+				Subnet:    gofastly.String(resource["subnet"].(string)),
+				Negated:   gofastly.Bool(resource["negated"].(bool)),
+				Comment:   gofastly.String(resource["comment"].(string)),
 			})
 		}
 	}

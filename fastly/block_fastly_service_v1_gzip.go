@@ -35,8 +35,11 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	newSet := ng.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -44,13 +47,13 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		return err
 	}
 
-	// Delete removed gzip rules
-	for _, dRaw := range diffResult.Deleted {
-		df := dRaw.(map[string]interface{})
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteGzipInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Gzip removal opts: %#v", opts)
@@ -64,17 +67,17 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		}
 	}
 
-	// POST new Gzips
-	for _, dRaw := range diffResult.Added {
-		df := dRaw.(map[string]interface{})
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.CreateGzipInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
-			CacheCondition: df["cache_condition"].(string),
+			Name:           resource["name"].(string),
+			CacheCondition: resource["cache_condition"].(string),
 		}
 
-		if v, ok := df["content_types"]; ok {
+		if v, ok := resource["content_types"]; ok {
 			if len(v.(*schema.Set).List()) > 0 {
 				var cl []string
 				for _, c := range v.(*schema.Set).List() {
@@ -84,7 +87,7 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 			}
 		}
 
-		if v, ok := df["extensions"]; ok {
+		if v, ok := resource["extensions"]; ok {
 			if len(v.(*schema.Set).List()) > 0 {
 				var el []string
 				for _, e := range v.(*schema.Set).List() {
@@ -96,6 +99,45 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 
 		log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
 		_, err := conn.CreateGzip(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateGzipInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["content_types"]; ok {
+			opts.ContentTypes = gofastly.String(v.(string))
+		}
+		if v, ok := modified["extensions"]; ok {
+			opts.Extensions = gofastly.String(v.(string))
+		}
+		if v, ok := modified["cache_condition"]; ok {
+			opts.CacheCondition = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Gzip Opts: %#v", opts)
+		_, err := conn.UpdateGzip(&opts)
 		if err != nil {
 			return err
 		}

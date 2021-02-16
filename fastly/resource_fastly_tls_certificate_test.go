@@ -97,7 +97,10 @@ func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
 
 func testAccTLSCertificateExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		r := s.RootModule().Resources[resourceName]
+		r, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 

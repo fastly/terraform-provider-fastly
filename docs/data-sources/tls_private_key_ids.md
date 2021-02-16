@@ -28,4 +28,4 @@ data "fastly_tls_private_key" "example" {
 
 ### Read-Only
 
-- **ids** (List of String) List of IDs of the TLS private keys.
+- **ids** (Set of String) List of IDs of the TLS private keys.

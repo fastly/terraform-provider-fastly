@@ -13,7 +13,6 @@ Use this data source to get the list of TLS Activation identifiers in Fastly.
 ## Example Usage
 
 ```hcl
-
 data "fastly_tls_activation_ids" "example" {
   certificate_id = fastly_tls_certificate.example.id
 }
@@ -26,6 +25,5 @@ data "fastly_tls_activation" "example" {
 output "activation_domains" {
   value = [for a in data.fastly_tls_activation.example : a.domain]
 }
-
 ```
 {{end}}

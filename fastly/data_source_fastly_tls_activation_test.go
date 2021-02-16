@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccDataSourceFastlyTLSActivation_basic(t *testing.T) {
-	domain := fmt.Sprintf("tf-test-%s.com", acctest.RandomWithPrefix("tf-test-"))
+	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	key, cert, err := generateKeyAndCert(domain)
 	require.NoError(t, err)
 	key = strings.ReplaceAll(key, "\n", `\n`)
@@ -35,7 +35,7 @@ func TestAccDataSourceFastlyTLSActivation_basic(t *testing.T) {
 }
 
 func TestAccFastlyDataSourceFastlyTLSActivation_byID(t *testing.T) {
-	domain := fmt.Sprintf("tf-test-%s.com", acctest.RandomWithPrefix("tf-test-"))
+	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	key, cert, err := generateKeyAndCert(domain)
 	require.NoError(t, err)
 	key = strings.ReplaceAll(key, "\n", `\n`)

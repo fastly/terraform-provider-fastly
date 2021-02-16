@@ -20,7 +20,6 @@ func dataSourceFastlyTLSActivationIds() *schema.Resource {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
 				Description: "List of IDs of the TLS Activations.",
 			},
 		},

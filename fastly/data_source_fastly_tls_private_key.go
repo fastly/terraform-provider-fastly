@@ -10,7 +10,7 @@ import (
 
 func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTLSPrivateKeyRead,
+		Read: dataSourceFastlyTLSPrivateKeyRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:          schema.TypeString,
@@ -63,7 +63,7 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 	}
 }
 
-func dataSourceTLSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	var privateKey *fastly.PrivateKey

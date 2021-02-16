@@ -7,7 +7,6 @@ terraform.tfstate
 bin/
 modules-dev/
 /pkg/
-playground/
 website/.vagrant
 website/.bundle
 website/build

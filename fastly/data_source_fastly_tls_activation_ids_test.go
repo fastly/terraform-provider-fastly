@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDataSourceFastlyTLSActivationIds_basic(t *testing.T) {
-	domain := fmt.Sprintf("tf-test-%s.com", acctest.RandomWithPrefix("tf-test-"))
+	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	key, cert, err := generateKeyAndCert(domain)
 	require.NoError(t, err)
 	key = strings.ReplaceAll(key, "\n", `\n`)
@@ -35,8 +35,14 @@ func TestAccDataSourceFastlyTLSActivationIds_basic(t *testing.T) {
 
 func testAccTLSActivationIDIncluded(dataSourceName string, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		r := s.RootModule().Resources[resourceName]
-		d := s.RootModule().Resources[dataSourceName]
+		r, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+		d, ok := s.RootModule().Resources[dataSourceName]
+		if !ok {
+			return fmt.Errorf("data source not found: %s", dataSourceName)
+		}
 
 		for k, v := range d.Primary.Attributes {
 			if k == "ids.#" {

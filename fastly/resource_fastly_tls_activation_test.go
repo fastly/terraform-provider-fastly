@@ -98,7 +98,10 @@ func testAccFastlyTLSActivationCheckExists(resourceName string) resource.TestChe
 	return func(state *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 
-		r := state.RootModule().Resources[resourceName]
+		r, ok := state.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
 		_, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{
 			ID: r.Primary.ID,
 		})

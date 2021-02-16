@@ -10,8 +10,8 @@ Uploads a custom TLS certificate
 
 Uploads a custom TLS certificate to Fastly to be used to terminate TLS traffic.
 
--> Each TLS certificate **must** have its corresponding private uploaded _prior_ to uploading the certificate. This can
-be achieved in Terraform using [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html)
+-> Each TLS certificate **must** have its corresponding private key uploaded _prior_ to uploading the certificate. This
+can be achieved in Terraform using [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html)
 
 ## Example Usage
 

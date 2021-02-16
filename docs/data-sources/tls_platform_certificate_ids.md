@@ -28,4 +28,4 @@ data "fastly_tls_platform_certificate" "example" {
 
 ### Read-Only
 
-- **ids** (List of String) List of IDs corresponding to Platform TLS certificates.
+- **ids** (Set of String) List of IDs corresponding to Platform TLS certificates.

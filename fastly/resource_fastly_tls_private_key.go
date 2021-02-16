@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-func resourceTLSPrivateKey() *schema.Resource {
+func resourceFastlyTLSPrivateKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTLSPrivateKeyCreate,
-		Read:   resourceTlSPrivateKeyRead,
-		Delete: resourceTLSPrivateKeyDelete,
+		Create: resourceFastlyTLSPrivateKeyCreate,
+		Read:   resourceFastlyTLSPrivateKeyRead,
+		Delete: resourceFastlyTLSPrivateKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceTLSPrivateKey() *schema.Resource {
 	}
 }
 
-func resourceTLSPrivateKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPrivateKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	privateKey, err := conn.CreatePrivateKey(&gofastly.CreatePrivateKeyInput{
@@ -70,10 +70,10 @@ func resourceTLSPrivateKeyCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(privateKey.ID)
 
-	return resourceTlSPrivateKeyRead(d, meta)
+	return resourceFastlyTLSPrivateKeyRead(d, meta)
 }
 
-func resourceTlSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	privateKey, err := conn.GetPrivateKey(&gofastly.GetPrivateKeyInput{
@@ -111,7 +111,7 @@ func resourceTlSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func resourceTLSPrivateKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPrivateKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	err := conn.DeletePrivateKey(&gofastly.DeletePrivateKeyInput{

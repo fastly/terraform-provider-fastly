@@ -7,12 +7,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceTLSCertificate() *schema.Resource {
+func resourceFastlyTLSCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTLSCertificateCreate,
-		Read:   resourceTLSCertificateRead,
-		Update: resourceTLSCertificateUpdate,
-		Delete: resourceTLSCertificateDelete,
+		Create: resourceFastlyTLSCertificateCreate,
+		Read:   resourceFastlyTLSCertificateRead,
+		Update: resourceFastlyTLSCertificateUpdate,
+		Delete: resourceFastlyTLSCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -75,7 +75,7 @@ func resourceTLSCertificate() *schema.Resource {
 	}
 }
 
-func resourceTLSCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	input := &fastly.CreateCustomTLSCertificateInput{
@@ -93,10 +93,10 @@ func resourceTLSCertificateCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(output.ID)
 
-	return resourceTLSCertificateRead(d, meta)
+	return resourceFastlyTLSCertificateRead(d, meta)
 }
 
-func resourceTLSCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	cert, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
@@ -142,7 +142,7 @@ func resourceTLSCertificateRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceTLSCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	input := &fastly.UpdateCustomTLSCertificateInput{
@@ -159,10 +159,10 @@ func resourceTLSCertificateUpdate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	return resourceTLSCertificateRead(d, meta)
+	return resourceFastlyTLSCertificateRead(d, meta)
 }
 
-func resourceTLSCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	err := conn.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{

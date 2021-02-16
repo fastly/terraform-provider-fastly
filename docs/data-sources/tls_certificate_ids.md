@@ -29,4 +29,4 @@ resource "fastly_tls_activation" "example" {
 
 ### Read-Only
 
-- **ids** (List of String) List of IDs corresponding to Custom TLS certificates.
+- **ids** (Set of String) List of IDs corresponding to Custom TLS certificates.

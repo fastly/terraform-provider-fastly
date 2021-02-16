@@ -2,7 +2,6 @@ package fastly
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
@@ -93,7 +92,6 @@ func dataSourceFastlyTLSConfiguration() *schema.Resource {
 						},
 					},
 				},
-				Set: DNSRecordsHash,
 			},
 		},
 	}
@@ -270,23 +268,4 @@ func contains(haystack []string, needle interface{}) bool {
 	}
 
 	return false
-}
-
-func DNSRecordsHash(value interface{}) int {
-	m, ok := value.(map[string]interface{})
-	if !ok {
-		return 0
-	}
-
-	recordType, ok := m["record_type"].(string)
-	if !ok {
-		return 0
-	}
-
-	recordValue, ok := m["record_value"].(string)
-	if ok {
-		return hashcode.String(fmt.Sprintf("%s_%s", recordType, recordValue))
-	}
-
-	return 0
 }

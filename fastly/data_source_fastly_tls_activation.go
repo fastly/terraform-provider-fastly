@@ -49,13 +49,11 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 }
 
 func dataSourceFastlyTLSActivationRead(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*FastlyClient).conn
 
 	var activation *fastly.TLSActivation
 
 	if v, ok := d.GetOk("id"); ok {
-
 		foundActivation, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{
 			ID: v.(string),
 		})
@@ -63,9 +61,7 @@ func dataSourceFastlyTLSActivationRead(d *schema.ResourceData, meta interface{})
 			return err
 		}
 		activation = foundActivation
-
 	} else {
-
 		filters := getTLSActivationFilters(d)
 
 		activations, err := listTLSActivations(conn, filters...)

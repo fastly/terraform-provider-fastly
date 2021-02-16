@@ -11,7 +11,7 @@ func dataSourceFastlyTLSCertificateIDs() *schema.Resource {
 		Read: dataSourceFastlyTLSCertificateIDsRead,
 		Schema: map[string]*schema.Schema{
 			"ids": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "List of IDs corresponding to Custom TLS certificates.",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -36,7 +36,7 @@ func dataSourceFastlyTLSCertificateIDsRead(d *schema.ResourceData, meta interfac
 	// 2.x upgrade note - `hashcode.String` was removed from the SDK
 	// Code will need to be copied into this repository
 	// https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html#removal-of-helper-hashcode-package
-	d.SetId(fmt.Sprintf("%d", hashcode.String(""))) // hashCode should include any filters set when they are added
+	d.SetId(fmt.Sprintf("%d", hashcode.String(""))) // if other filters are added to this data source, they should be included in this hashcode instead of the empty string
 	err = d.Set("ids", ids)
 	if err != nil {
 		return err

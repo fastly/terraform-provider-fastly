@@ -7,12 +7,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceTLSPlatformCertificate() *schema.Resource {
+func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTLSPlatformCertificateCreate,
-		Read:   resourceTLSPlatformCertificateRead,
-		Update: resourceTLSPlatformCertificateUpdate,
-		Delete: resourceTLSPlatformCertificateDelete,
+		Create: resourceFastlyTLSPlatformCertificateCreate,
+		Read:   resourceFastlyTLSPlatformCertificateRead,
+		Update: resourceFastlyTLSPlatformCertificateUpdate,
+		Delete: resourceFastlyTLSPlatformCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +76,7 @@ func resourceTLSPlatformCertificate() *schema.Resource {
 	}
 }
 
-func resourceTLSPlatformCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	input := &fastly.CreateBulkCertificateInput{
@@ -95,10 +95,10 @@ func resourceTLSPlatformCertificateCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(certificate.ID)
 
-	return resourceTLSPlatformCertificateRead(d, meta)
+	return resourceFastlyTLSPlatformCertificateRead(d, meta)
 }
 
-func resourceTLSPlatformCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	certificate, err := conn.GetBulkCertificate(&fastly.GetBulkCertificateInput{
@@ -138,7 +138,7 @@ func resourceTLSPlatformCertificateRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceTLSPlatformCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	_, err := conn.UpdateBulkCertificate(&fastly.UpdateBulkCertificateInput{
@@ -151,10 +151,10 @@ func resourceTLSPlatformCertificateUpdate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	return resourceTLSPlatformCertificateRead(d, meta)
+	return resourceFastlyTLSPlatformCertificateRead(d, meta)
 }
 
-func resourceTLSPlatformCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	if err := conn.DeleteBulkCertificate(&fastly.DeleteBulkCertificateInput{

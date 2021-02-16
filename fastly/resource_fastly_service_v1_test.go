@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -11,6 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("fastly_service_v1", &resource.Sweeper{
+		Name: "fastly_service_v1",
+		F:    testSweepServices,
+	})
+}
 
 func TestResourceFastlyFlattenDomains(t *testing.T) {
 	cases := []struct {
@@ -821,4 +829,46 @@ resource "fastly_service_v1" "foo" {
 }
 
 `, serviceName, domainName01, backendName01, domainName02, backendName02)
+}
+
+func testSweepServices(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return err
+	}
+
+	services, err := client.ListServices(&gofastly.ListServicesInput{})
+	if err != nil {
+		return err
+	}
+
+	for _, service := range services {
+		if strings.HasPrefix(service.Name, testResourcePrefix) {
+			s, err := client.GetServiceDetails(&gofastly.GetServiceInput{
+				ID: service.ID,
+			})
+			if err != nil {
+				return err
+			}
+
+			if s.ActiveVersion.Number != 0 {
+				_, err := client.DeactivateVersion(&gofastly.DeactivateVersionInput{
+					ServiceID:      service.ID,
+					ServiceVersion: s.ActiveVersion.Number,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			err = client.DeleteService(&gofastly.DeleteServiceInput{
+				ID: service.ID,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

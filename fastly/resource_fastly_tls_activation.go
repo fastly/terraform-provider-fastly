@@ -1,10 +1,11 @@
 package fastly
 
 import (
-	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"time"
+
+	"github.com/fastly/go-fastly/v3/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceFastlyTLSActivation() *schema.Resource {

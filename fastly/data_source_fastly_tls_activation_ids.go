@@ -3,8 +3,8 @@ package fastly
 import (
 	"fmt"
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceFastlyTLSActivationIds() *schema.Resource {
@@ -59,9 +59,6 @@ func dataSourceFastlyTLSActivationIDsRead(d *schema.ResourceData, meta interface
 		ids = append(ids, activation.ID)
 	}
 
-	// 2.x upgrade note - `hashcode.String` was removed from the SDK
-	// Code will need to be copied into this repository
-	// https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html#removal-of-helper-hashcode-package
 	d.SetId(fmt.Sprintf("%d", hashcode.String(certificateID)))
 	err := d.Set("ids", ids)
 	if err != nil {

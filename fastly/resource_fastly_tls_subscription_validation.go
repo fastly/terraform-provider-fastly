@@ -3,8 +3,8 @@ package fastly
 import (
 	"fmt"
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"time"
 )
 

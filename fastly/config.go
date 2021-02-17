@@ -2,11 +2,11 @@ package fastly
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/fastly/terraform-provider-fastly/version"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
-	"github.com/hashicorp/terraform-plugin-sdk/httpclient"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 )
 
 const TerraformProviderProductUserAgent = "terraform-provider-fastly"
@@ -29,7 +29,7 @@ func (c *Config) Client() (*FastlyClient, error) {
 		return nil, fmt.Errorf("[Err] No API key for Fastly")
 	}
 
-	tfUserAgent := httpclient.TerraformUserAgent(c.terraformVersion)
+	tfUserAgent := fmt.Sprintf("HashiCorp Terraform/%s (+https://www.terraform.io) Terraform Plugin SDK/%s", c.terraformVersion, meta.SDKVersionString())
 	providerUserAgent := fmt.Sprintf("%s/%s", TerraformProviderProductUserAgent, version.ProviderVersion)
 	ua := fmt.Sprintf("%s %s", tfUserAgent, providerUserAgent)
 	gofastly.UserAgent = ua

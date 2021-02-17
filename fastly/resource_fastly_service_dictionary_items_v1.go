@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceServiceDictionaryItemsV1() *schema.Resource {
@@ -50,7 +50,7 @@ func resourceServiceDictionaryItemsV1Create(d *schema.ResourceData, meta interfa
 	dictionaryID := d.Get("dictionary_id").(string)
 	items := d.Get("items").(map[string]interface{})
 
-	var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
+	var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
 	for key, val := range items {
 
@@ -78,11 +78,9 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
 
-	d.Partial(true)
-
 	if d.HasChange("items") {
 
-		var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
+		var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
 		o, n := d.GetChange("items")
 
@@ -128,11 +126,7 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 		if err != nil {
 			return fmt.Errorf("Error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 		}
-
-		d.SetPartial("items")
 	}
-
-	d.Partial(false)
 
 	return resourceServiceDictionaryItemsV1Read(d, meta)
 }
@@ -151,8 +145,8 @@ func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.Set("items", flattenDictionaryItems(dictList))
-	return nil
+	err = d.Set("items", flattenDictionaryItems(dictList))
+	return err
 }
 
 func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interface{}) error {
@@ -162,7 +156,7 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 	dictionaryID := d.Get("dictionary_id").(string)
 	items := d.Get("items").(map[string]interface{})
 
-	var batchDictionaryItems = []*gofastly.BatchDictionaryItem{}
+	var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
 	for key := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
@@ -181,7 +175,7 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceServiceDictionaryItemsV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceDictionaryItemsV1Import(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

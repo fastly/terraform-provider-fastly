@@ -1,14 +1,15 @@
 package fastly
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"sort"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceServiceWAFConfigurationV1() *schema.Resource {
@@ -513,7 +514,7 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 	return versions[0], nil
 }
 
-func validateWAFConfigurationResource(d *schema.ResourceDiff, meta interface{}) error {
+func validateWAFConfigurationResource(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	err := validateWAFRuleExclusion(d)
 	return err
 }

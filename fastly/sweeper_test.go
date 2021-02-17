@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const testResourcePrefix = "tf-test"

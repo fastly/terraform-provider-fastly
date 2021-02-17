@@ -7,7 +7,7 @@ import (
 	"time"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")

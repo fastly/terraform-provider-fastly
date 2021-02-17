@@ -5,8 +5,8 @@ import (
 	"log"
 	"sort"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type dataSourceFastlyIPRangesResult struct {

@@ -27,6 +27,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"html/template"
 	"io"
@@ -57,6 +58,13 @@ type Page struct {
 }
 
 func main() {
+	tfplugindocsPath := flag.String("tfplugindocsPath", "bin/tfplugindocs", "location where tfplugindocs is installed")
+	flag.Parse()
+
+	if !tfPluginDocsExists(*tfplugindocsPath) {
+		log.Fatalf("tfplugindocs not found at '%s' - have you run the Makefile?", *tfplugindocsPath)
+	}
+
 	baseDir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
@@ -185,9 +193,17 @@ func main() {
 
 	replaceTemplatesDir(tmplDir, tempDir)
 
-	runTFPluginDocs()
+	runTFPluginDocs(*tfplugindocsPath)
 
 	replaceTemplatesDir(tmplDir, tmplDir+"-backup")
+}
+
+func tfPluginDocsExists(tfplugindocsLocation string) bool {
+	stat, err := os.Stat(tfplugindocsLocation)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !stat.IsDir()
 }
 
 // getTemplate walks the templates directory filtering non-tmpl extension
@@ -341,8 +357,8 @@ func replaceTemplatesDir(tmplDir string, tempDir string) {
 // consist of precompiled templates and that the original untouched templates
 // will still exist in the /templates-backup directory ready to be restored
 // once the /docs content has been generated.
-func runTFPluginDocs() {
-	cmd := exec.Command("tfplugindocs", "generate")
+func runTFPluginDocs(tfplugindocsLocation string) {
+	cmd := exec.Command(tfplugindocsLocation, "generate")
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)

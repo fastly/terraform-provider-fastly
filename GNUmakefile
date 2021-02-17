@@ -57,9 +57,8 @@ $(BIN)/%:
 	@echo "Installing tools from tools/tools.go"
 	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} go install {}
 
-# Inject ./bin into PATH to allow scripts/generate-docs.go to access local tfplugindocs binary
 generate-docs: $(BIN)/tfplugindocs
-	PATH=$(PATH):$(BIN) go run scripts/generate-docs.go
+	go run scripts/generate-docs.go -tfplugindocsPath=$(BIN)/tfplugindocs
 
 validate-docs: $(BIN)/tfplugindocs
 	$(BIN)/tfplugindocs validate

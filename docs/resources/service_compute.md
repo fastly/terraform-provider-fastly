@@ -70,9 +70,9 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
-- **domain** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--domain))
+- **domain** (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - **name** (String) The unique name for the Service to create
-- **package** (Block List, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--package))
+- **package** (Block List, Min: 1, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
 
 ### Optional
 
@@ -168,7 +168,7 @@ Optional:
 - **ssl_ciphers** (String) Comma separated list of OpenSSL Ciphers to try when negotiating to the backend
 - **ssl_client_cert** (String, Sensitive) Client certificate attached to origin. Used when connecting to the backend
 - **ssl_client_key** (String, Sensitive) Client key attached to origin. Used when connecting to the backend
-- **ssl_hostname** (String) Used for both SNI during the TLS handshake and to validate the cert
+- **ssl_hostname** (String, Deprecated) Used for both SNI during the TLS handshake and to validate the cert
 - **ssl_sni_hostname** (String) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all
 - **use_ssl** (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
 - **weight** (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`

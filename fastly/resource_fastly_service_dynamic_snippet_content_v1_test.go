@@ -31,9 +31,11 @@ func TestAccFastlyServiceDynamicSnippetContentV1_create(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(&service, serviceName, expectedSnippetName, expectedSnippetContent),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", expectedNumberOfSnippets),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.name", expectedSnippetName),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.type", expectedSnippetType),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.priority", expectedSnippetPriority),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_v1.foo", "dynamicsnippet.*", map[string]string{
+						"name":     expectedSnippetName,
+						"type":     expectedSnippetType,
+						"priority": expectedSnippetPriority,
+					}),
 					resource.TestCheckResourceAttr("fastly_service_dynamic_snippet_content_v1.content", "content", expectedSnippetContent),
 				),
 			},
@@ -175,9 +177,11 @@ func TestAccFastlyServiceDynamicSnippetContentV1_import(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(&service, serviceName, expectedSnippetName, expectedSnippetContent),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", expectedNumberOfSnippets),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.name", expectedSnippetName),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.type", expectedSnippetType),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.452453150.priority", expectedSnippetPriority),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_v1.foo", "dynamicsnippet.*", map[string]string{
+						"name":     expectedSnippetName,
+						"type":     expectedSnippetType,
+						"priority": expectedSnippetPriority,
+					}),
 					resource.TestCheckResourceAttr("fastly_service_dynamic_snippet_content_v1.content", "content", expectedSnippetContent),
 				),
 			},
@@ -378,7 +382,6 @@ resource "fastly_service_v1" "foo" {
 }
 
 resource "fastly_service_dynamic_snippet_content_v1" "content" {
-	count = length(fastly_service_v1.foo.dynamicsnippet)
     service_id = fastly_service_v1.foo.id
     snippet_id = {for s in fastly_service_v1.foo.dynamicsnippet : s.name => s.snippet_id}[var.mydynamicsnippet.name]
     content = var.mydynamicsnippet.content
@@ -420,7 +423,6 @@ resource "fastly_service_v1" "foo" {
 }
 
 resource "fastly_service_dynamic_snippet_content_v1" "content" {
-	count = length(fastly_service_v1.foo.dynamicsnippet)
     service_id = fastly_service_v1.foo.id
     snippet_id = {for s in fastly_service_v1.foo.dynamicsnippet : s.name => s.snippet_id}[var.mydynamicsnippet.name]
     content = var.mydynamicsnippet.content

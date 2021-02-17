@@ -31,8 +31,14 @@ func TestAccDataSourceFastlyTLSSubscriptionIds_basic(t *testing.T) {
 
 func testAccTLSSubscriptionIDIncluded(dataSourceName string, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		r := s.RootModule().Resources[resourceName]
-		d := s.RootModule().Resources[dataSourceName]
+		r, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+		d, ok := s.RootModule().Resources[dataSourceName]
+		if !ok {
+			return fmt.Errorf("data source not found: %s", dataSourceName)
+		}
 
 		for k, v := range d.Primary.Attributes {
 			if k == "ids.#" {

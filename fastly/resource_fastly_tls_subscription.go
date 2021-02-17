@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
@@ -26,7 +25,6 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				ForceNew:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MinItems:    1,
-				Set:         schema.HashString,
 			},
 			"common_name": {
 				Type:        schema.TypeString,
@@ -91,11 +89,9 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 							Description: "A list with the value(s) to which the DNS record should point.",
 							Computed:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 						},
 					},
 				},
-				Set: authorisationChallengesHash,
 			},
 			"force_destroy": {
 				Type:        schema.TypeBool,
@@ -230,27 +226,8 @@ func resourceFastlyTLSSubscriptionDelete(d *schema.ResourceData, meta interface{
 	conn := meta.(*FastlyClient).conn
 
 	err := conn.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
-		ID: d.Id(),
+		ID:    d.Id(),
 		Force: d.Get("force_destroy").(bool),
 	})
 	return err
-}
-
-func authorisationChallengesHash(value interface{}) int {
-	m, ok := value.(map[string]interface{})
-	if !ok {
-		return 0
-	}
-
-	recordType, ok := m["record_type"].(string)
-	if !ok {
-		return 0
-	}
-
-	recordName, ok := m["record_name"].(string)
-	if ok {
-		return hashcode.String(fmt.Sprintf("%s_%s", recordType, recordName))
-	}
-
-	return 0
 }

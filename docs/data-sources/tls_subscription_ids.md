@@ -33,4 +33,4 @@ output "subscription_domains" {
 
 ### Read-Only
 
-- **ids** (List of String) IDs of available TLS subscriptions.
+- **ids** (Set of String) IDs of available TLS subscriptions.

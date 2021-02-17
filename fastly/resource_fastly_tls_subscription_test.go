@@ -42,9 +42,9 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
@@ -80,7 +80,10 @@ resource "fastly_tls_subscription" "subject" {
 
 func testAccResourceFastlyTLSSubscriptionExists(resourceName string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		r := state.RootModule().Resources[resourceName]
+		r, ok := state.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 

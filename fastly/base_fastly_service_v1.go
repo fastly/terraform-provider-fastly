@@ -101,6 +101,18 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 	return vla
 }
 
+// pruneVCLLoggingAttributes deletes the keys corresponding to VCL-only logging attributes which aren't present for
+// Compute services.
+func (h *DefaultServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]interface{}) map[string]interface{} {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+	}
+	return data
+}
+
 // ServiceDefinition defines the data model for service definitions
 // There are two types of service: VCL and Compute. This interface specifies the data object from which service resources
 // are constructed.

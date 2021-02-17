@@ -155,6 +155,10 @@ func (h *PaperTrailServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	pl := flattenPapertrails(papertrailList)
 
+	for _, element := range pl {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), pl); err != nil {
 		log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
 	}

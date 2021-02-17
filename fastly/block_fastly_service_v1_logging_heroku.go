@@ -137,6 +137,10 @@ func (h *HerokuServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	ell := flattenHeroku(herokuList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Heroku logging endpoints for (%s): %s", d.Id(), err)
 	}

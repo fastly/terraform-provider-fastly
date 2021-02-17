@@ -156,6 +156,11 @@ func (h *SumologicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 	}
 
 	sul := flattenSumologics(sumologicList)
+
+	for _, element := range sul {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), sul); err != nil {
 		log.Printf("[WARN] Error setting Sumologic for (%s): %s", d.Id(), err)
 	}

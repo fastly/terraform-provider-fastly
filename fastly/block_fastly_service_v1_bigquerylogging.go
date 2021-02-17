@@ -185,6 +185,11 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s 
 	}
 
 	bql := flattenBigQuery(BQList)
+
+	for _, element := range bql {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), bql); err != nil {
 		log.Printf("[WARN] Error setting bigquerylogging for (%s): %s", d.Id(), err)
 	}

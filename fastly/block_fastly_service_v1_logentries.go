@@ -161,6 +161,10 @@ func (h *LogentriesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	lel := flattenLogentries(logentriesList)
 
+	for _, element := range lel {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), lel); err != nil {
 		log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
 	}

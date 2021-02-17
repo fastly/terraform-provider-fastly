@@ -137,6 +137,10 @@ func (h *HoneycombServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 
 	ell := flattenHoneycomb(honeycombList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Honeycomb logging endpoints for (%s): %s", d.Id(), err)
 	}

@@ -199,6 +199,10 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(d *schema.ResourceData,
 
 	bsl := flattenBlobStorages(blobStorageList)
 
+	for _, element := range bsl {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), bsl); err != nil {
 		log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
 	}

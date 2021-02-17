@@ -137,6 +137,10 @@ func (h *DatadogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 
 	dll := flattenDatadog(datadogList)
 
+	for _, element := range dll {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), dll); err != nil {
 		log.Printf("[WARN] Error setting Datadog logging endpoints for (%s): %s", d.Id(), err)
 	}

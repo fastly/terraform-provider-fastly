@@ -186,6 +186,10 @@ func (h *S3LoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 
 	sl := flattenS3s(s3List)
 
+	for _, element := range sl {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), sl); err != nil {
 		log.Printf("[WARN] Error setting S3 Logging for (%s): %s", d.Id(), err)
 	}

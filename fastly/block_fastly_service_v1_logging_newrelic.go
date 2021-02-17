@@ -134,6 +134,10 @@ func (h *NewRelicServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 
 	dll := flattenNewRelic(newrelicList)
 
+	for _, element := range dll {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), dll); err != nil {
 		log.Printf("[WARN] Error setting New Relic logging endpoints for (%s): %s", d.Id(), err)
 	}

@@ -137,6 +137,10 @@ func (h *LogshuttleServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	ell := flattenLogshuttle(logshuttleList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Log Shuttle logging endpoints for (%s): %s", d.Id(), err)
 	}

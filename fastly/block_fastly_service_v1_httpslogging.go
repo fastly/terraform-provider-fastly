@@ -171,6 +171,10 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 
 	hll := flattenHTTPS(httpsList)
 
+	for _, element := range hll {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), hll); err != nil {
 		log.Printf("[WARN] Error setting HTTPS logging endpoints for (%s): %s", d.Id(), err)
 	}

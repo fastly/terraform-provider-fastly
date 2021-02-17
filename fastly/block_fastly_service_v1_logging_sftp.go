@@ -321,6 +321,10 @@ func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 
 	ell := flattenSFTP(sftpList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting SFTP logging endpoints for (%s): %s", d.Id(), err)
 	}

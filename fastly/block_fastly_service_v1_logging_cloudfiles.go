@@ -175,6 +175,10 @@ func (h *CloudfilesServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 
 	ell := flattenCloudfiles(cloudfilesList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Cloud Files logging endpoints for (%s): %s", d.Id(), err)
 	}

@@ -178,6 +178,11 @@ func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	}
 
 	gcsl := flattenGCS(GCSList)
+
+	for _, element := range gcsl {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), gcsl); err != nil {
 		log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
 	}

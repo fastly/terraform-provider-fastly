@@ -57,6 +57,7 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 }
 
 func TestAccFastlyServiceV1_logging_kinesis_basic(t *testing.T) {
+	t.SkipNow()
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -127,6 +128,7 @@ func TestAccFastlyServiceV1_logging_kinesis_basic(t *testing.T) {
 }
 
 func TestAccFastlyServiceV1_logging_kinesis_basic_compute(t *testing.T) {
+	t.SkipNow()
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

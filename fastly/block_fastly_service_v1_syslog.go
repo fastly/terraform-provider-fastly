@@ -188,6 +188,10 @@ func (h *SyslogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	sll := flattenSyslogs(syslogList)
 
+	for _, element := range sll {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), sll); err != nil {
 		log.Printf("[WARN] Error setting Syslog for (%s): %s", d.Id(), err)
 	}

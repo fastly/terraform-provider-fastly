@@ -179,6 +179,10 @@ func (h *OpenstackServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 
 	ell := flattenOpenstack(openstackList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting OpenStack logging endpoints for (%s): %s", d.Id(), err)
 	}

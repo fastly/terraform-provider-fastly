@@ -190,6 +190,10 @@ func (h *SplunkServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	spl := flattenSplunks(splunkList)
 
+	for _, element := range spl {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), spl); err != nil {
 		log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
 	}

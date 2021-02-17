@@ -216,6 +216,10 @@ func (h *GooglePubSubServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 
 	googlepubsubLogList := flattenGooglePubSub(googlepubsubList)
 
+	for _, element := range googlepubsubLogList {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), googlepubsubLogList); err != nil {
 		log.Printf("[WARN] Error setting Google Cloud Pub/Sublogging endpoints for (%s): %s", d.Id(), err)
 	}

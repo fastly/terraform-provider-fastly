@@ -134,6 +134,10 @@ func (h *LogglyServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly
 
 	ell := flattenLoggly(logglyList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Loggly logging endpoints for (%s): %s", d.Id(), err)
 	}

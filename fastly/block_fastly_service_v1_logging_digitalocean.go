@@ -176,6 +176,10 @@ func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 
 	ell := flattenDigitalOcean(digitaloceanList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting DigitalOcean Spaces logging endpoints for (%s): %s", d.Id(), err)
 	}

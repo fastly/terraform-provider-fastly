@@ -13,11 +13,8 @@ Use this data source to get the IDs of activations, certificates and subscriptio
 ## Example Usage
 
 ```hcl
-data "fastly_tls_configuration_ids" "example" {}
-
-resource "fastly_tls_activation" "example" {
-  configuration_id = data.fastly_tls_configuration.example.ids[0]
-  // ...
+data "fastly_tls_domain" "domain" {
+  domain = "example.com"
 }
 ```
 {{end}}

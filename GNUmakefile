@@ -52,18 +52,19 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-dependencies:
-	@echo "Download go.mod dependencies"
-	@go mod download
-
-install-tools: dependencies
+BIN=$(CURDIR)/bin
+$(BIN)/%:
 	@echo "Installing tools from tools/tools.go"
-	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | xargs -tI {} go install {}
+	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} go install {}
 
-generate-docs: install-tools
-	go run scripts/generate-docs.go
+generate-docs: $(BIN)/tfplugindocs
+	go run scripts/generate-docs.go -tfplugindocsPath=$(BIN)/tfplugindocs
 
-validate-docs: install-tools
-	tfplugindocs validate
+validate-docs: $(BIN)/tfplugindocs
+	$(BIN)/tfplugindocs validate
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile validate-docs generate-docs install-tools dependencies
+sweep:
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m
+
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs

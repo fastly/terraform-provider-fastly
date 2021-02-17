@@ -27,6 +27,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"html/template"
 	"io"
@@ -57,6 +58,13 @@ type Page struct {
 }
 
 func main() {
+	tfplugindocsPath := flag.String("tfplugindocsPath", "bin/tfplugindocs", "location where tfplugindocs is installed")
+	flag.Parse()
+
+	if !tfPluginDocsExists(*tfplugindocsPath) {
+		log.Fatalf("tfplugindocs not found at '%s' - have you run the Makefile?", *tfplugindocsPath)
+	}
+
 	baseDir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
@@ -73,6 +81,46 @@ func main() {
 		{
 			name: "ip_ranges",
 			path: tempDir + "/data-sources/ip_ranges.md.tmpl",
+		},
+		{
+			name: "data_source_tls_activation",
+			path: tempDir + "/data-sources/tls_activation.md.tmpl",
+		},
+		{
+			name: "data_source_tls_activation_ids",
+			path: tempDir + "/data-sources/tls_activation_ids.md.tmpl",
+		},
+		{
+			name: "data_source_tls_certificate",
+			path: tempDir + "/data-sources/tls_certificate.md.tmpl",
+		},
+		{
+			name: "data_source_tls_certificate_ids",
+			path: tempDir + "/data-sources/tls_certificate_ids.md.tmpl",
+		},
+		{
+			name: "data_source_tls_configuration",
+			path: tempDir + "/data-sources/tls_configuration.md.tmpl",
+		},
+		{
+			name: "data_source_tls_configuration_ids",
+			path: tempDir + "/data-sources/tls_configuration_ids.md.tmpl",
+		},
+		{
+			name: "data_source_tls_platform_certificate",
+			path: tempDir + "/data-sources/tls_platform_certificate.md.tmpl",
+		},
+		{
+			name: "data_source_tls_platform_certificate_ids",
+			path: tempDir + "/data-sources/tls_platform_certificate_ids.md.tmpl",
+		},
+		{
+			name: "data_source_tls_private_key",
+			path: tempDir + "/data-sources/tls_private_key.md.tmpl",
+		},
+		{
+			name: "data_source_tls_private_key_ids",
+			path: tempDir + "/data-sources/tls_private_key_ids.md.tmpl",
 		},
 		{
 			name: "waf_rules",
@@ -115,6 +163,22 @@ func main() {
 			name: "user_v1",
 			path: tempDir + "/resources/user_v1.md.tmpl",
 		},
+		{
+			name: "tls_activation",
+			path: tempDir + "/resources/tls_activation.md.tmpl",
+		},
+		{
+			name: "tls_certificate",
+			path: tempDir + "/resources/tls_certificate.md.tmpl",
+		},
+		{
+			name: "tls_platform_certificate",
+			path: tempDir + "/resources/tls_platform_certificate.md.tmpl",
+		},
+		{
+			name: "tls_private_key",
+			path: tempDir + "/resources/tls_private_key.md.tmpl",
+		},
 	}
 
 	pages := append(resourcePages, dataPages...)
@@ -129,9 +193,17 @@ func main() {
 
 	replaceTemplatesDir(tmplDir, tempDir)
 
-	runTFPluginDocs()
+	runTFPluginDocs(*tfplugindocsPath)
 
 	replaceTemplatesDir(tmplDir, tmplDir+"-backup")
+}
+
+func tfPluginDocsExists(tfplugindocsLocation string) bool {
+	stat, err := os.Stat(tfplugindocsLocation)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !stat.IsDir()
 }
 
 // getTemplate walks the templates directory filtering non-tmpl extension
@@ -144,7 +216,11 @@ func getTemplate(tmplDir string) *template.Template {
 		}
 		return nil
 	})
-	return template.Must(template.ParseFiles(templateFiles...))
+	template, err := template.ParseFiles(templateFiles...)
+	if err != nil {
+		log.Fatalf("Error parsing template files: %s", err)
+	}
+	return template
 }
 
 // renderPages iterates over the given pages and renders each element.
@@ -281,8 +357,8 @@ func replaceTemplatesDir(tmplDir string, tempDir string) {
 // consist of precompiled templates and that the original untouched templates
 // will still exist in the /templates-backup directory ready to be restored
 // once the /docs content has been generated.
-func runTFPluginDocs() {
-	cmd := exec.Command("tfplugindocs", "generate")
+func runTFPluginDocs(tfplugindocsLocation string) {
+	cmd := exec.Command(tfplugindocsLocation, "generate")
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)

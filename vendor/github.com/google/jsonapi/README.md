@@ -3,9 +3,12 @@
 [![Build Status](https://travis-ci.org/google/jsonapi.svg?branch=master)](https://travis-ci.org/google/jsonapi)
 [![Go Report Card](https://goreportcard.com/badge/github.com/google/jsonapi)](https://goreportcard.com/report/github.com/google/jsonapi)
 [![GoDoc](https://godoc.org/github.com/google/jsonapi?status.svg)](http://godoc.org/github.com/google/jsonapi)
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 
 A serializer/deserializer for JSON payloads that comply to the
 [JSON API - jsonapi.org](http://jsonapi.org) spec in go.
+
+
 
 ## Installation
 
@@ -181,7 +184,7 @@ to-many from being serialized.
 **All `Marshal` and `Unmarshal` methods expect pointers to struct
 instance or slices of the same contained with the `interface{}`s**
 
-Now you have your structs prepared to be seralized or materialized, What
+Now you have your structs prepared to be serialized or materialized, What
 about the rest?
 
 ### Create Record Example
@@ -341,6 +344,23 @@ func (post Post) JSONAPIRelationshipMeta(relation string) *Meta {
 	}
 	return nil
 }
+```
+
+### Custom types
+
+Custom types are supported for primitive types, only, as attributes.  Examples,
+
+```go
+type CustomIntType int
+type CustomFloatType float64
+type CustomStringType string
+```
+
+Types like following are not supported, but may be in the future:
+
+```go
+type CustomMapType map[string]interface{}
+type CustomSliceMapType []map[string]interface{}
 ```
 
 ### Errors

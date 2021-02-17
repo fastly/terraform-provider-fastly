@@ -387,3 +387,66 @@ func TestValidateHTTPSURL(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatePEMCertificate(t *testing.T) {
+	key, cert, ca, err := generateKeyAndCertWithCA()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, testcase := range []struct {
+		value           string
+		expectedPemType string
+		expectedWarns   int
+		expectedErrors  int
+	}{
+		{key, "PRIVATE KEY", 0, 0},
+		{cert, "CERTIFICATE", 0, 0},
+		{ca, "CERTIFICATE", 0, 0},
+		{key, "CERTIFICATE", 0, 1},
+		{"-----BEGIN CERTIFICATE-----\ncafebabe-----END CERTIFICATE-----\n", "CERTIFICATE", 0, 1},
+		{fmt.Sprintf("%s\n%s", cert, ca), "CERTIFICATE", 0, 1},
+		{"", "", 0, 1},
+	} {
+		t.Run(fmt.Sprintf("%s - %s", testcase.expectedPemType, testcase.value), func(t *testing.T) {
+			actualWarns, actualErrors := validatePEMBlock(testcase.expectedPemType)(testcase.value, "certificate_blob")
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}
+
+func TestValidateMultiplePEMBlocks(t *testing.T) {
+	key, cert, ca, err := generateKeyAndCertWithCA()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for name, testCase := range map[string]struct {
+		value            string
+		expectedPemType  string
+		expectedWarnings int
+		expectedErrors   int
+	}{
+		"single cert":                  {cert, "CERTIFICATE", 0, 0},
+		"empty string":                 {"", "", 0, 1},
+		"two blocks same type":         {fmt.Sprintf("%s\n%s", cert, ca), "CERTIFICATE", 0, 0},
+		"three blocks different types": {fmt.Sprintf("%s\n%s\n%s", cert, ca, key), "CERTIFICATE", 0, 1},
+		"gibberish":                    {"jkljansdfj\nasldfjhadskjfh\nlshakdjf", "", 0, 1},
+	} {
+		t.Run(fmt.Sprintf(name), func(t *testing.T) {
+			actualWarnings, actualErrors := validatePEMBlocks(testCase.expectedPemType)(testCase.value, "intermediates_blob")
+
+			if len(actualWarnings) != testCase.expectedWarnings {
+				t.Errorf("expected %d warnings, got %d", testCase.expectedWarnings, len(actualWarnings))
+			}
+			if len(actualErrors) != testCase.expectedErrors {
+				t.Errorf("expected %d errors, got %d", testCase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}

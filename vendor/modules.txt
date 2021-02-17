@@ -67,7 +67,7 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v3 v3.0.0
+# github.com/fastly/go-fastly/v3 v3.3.0
 ## explicit
 github.com/fastly/go-fastly/v3/fastly
 # github.com/fatih/color v1.7.0
@@ -86,8 +86,7 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/google/jsonapi v0.0.0-20180313013858-2dcc18f43696
-## explicit
+# github.com/google/jsonapi v0.0.0-20201022225600-f822737867f6
 github.com/google/jsonapi
 # github.com/google/uuid v1.1.2
 github.com/google/uuid
@@ -252,6 +251,7 @@ github.com/spf13/afero/mem
 # github.com/stretchr/testify v1.6.1
 ## explicit
 github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # github.com/ulikunitz/xz v0.5.5
 github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/hash

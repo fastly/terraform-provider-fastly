@@ -31,10 +31,13 @@ func Provider() terraform.ResourceProvider {
 			"fastly_tls_certificate_ids":          dataSourceFastlyTLSCertificateIDs(),
 			"fastly_tls_configuration":            dataSourceFastlyTLSConfiguration(),
 			"fastly_tls_configuration_ids":        dataSourceFastlyTLSConfigurationIDs(),
+			"fastly_tls_domain":                   dataSourceFastlyTLSDomain(),
 			"fastly_tls_platform_certificate":     dataSourceFastlyTLSPlatformCertificate(),
 			"fastly_tls_platform_certificate_ids": dataSourceFastlyTLSPlatformCertificateIDs(),
 			"fastly_tls_private_key":              dataSourceFastlyTLSPrivateKey(),
 			"fastly_tls_private_key_ids":          dataSourceFastlyTLSPrivateKeyIDs(),
+			"fastly_tls_subscription":             dataSourceFastlyTLSSubscription(),
+			"fastly_tls_subscription_ids":         dataSourceFastlyTLSSubscriptionIDs(),
 			"fastly_waf_rules":                    dataSourceFastlyWAFRules(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -48,6 +51,8 @@ func Provider() terraform.ResourceProvider {
 			"fastly_tls_certificate":                    resourceFastlyTLSCertificate(),
 			"fastly_tls_private_key":                    resourceFastlyTLSPrivateKey(),
 			"fastly_tls_platform_certificate":           resourceFastlyTLSPlatformCertificate(),
+			"fastly_tls_subscription":                   resourceFastlyTLSSubscription(),
+			"fastly_tls_subscription_validation":        resourceFastlyTLSSubscriptionValidation(),
 			"fastly_user_v1":                            resourceUserV1(),
 		},
 	}

@@ -1,0 +1,20 @@
+{{define "data_source_tls_subscription"}}---
+layout: "fastly"
+page_title: "Fastly: fastly_tls_subscription"
+sidebar_current: "docs-fastly-datasource-tls_subscription"
+description: |-
+Get information on Fastly TLS subscription.
+---
+
+# fastly_tls_subscription
+
+Use this data source to get information about a TLS subscription.
+
+## Example Usage
+
+```hcl
+data "fastly_tls_subscription" "example" {
+  domains = ["example.com"]
+}
+```
+{{end}}

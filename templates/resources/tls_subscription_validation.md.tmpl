@@ -23,21 +23,6 @@ locals {
   domain_name = "example.com"
 }
 
-data "aws_route53_zone" "demo" {
-  name         = local.domain_name
-  private_zone = false
-}
-
-# Set up DNS record for managed DNS domain validation method
-resource "aws_route53_record" "domain_validation" {
-  name            = fastly_tls_subscription.example.managed_dns_challenge.record_name
-  type            = fastly_tls_subscription.example.managed_dns_challenge.record_type
-  zone_id         = data.aws_route53_zone.demo.id
-  allow_overwrite = true
-  records         = [fastly_tls_subscription.example.managed_dns_challenge.record_value]
-  ttl             = 60
-}
-
 resource "fastly_service_v1" "example" {
   name = "example-service"
 
@@ -56,6 +41,21 @@ resource "fastly_service_v1" "example" {
 resource "fastly_tls_subscription" "example" {
   domains               = [for domain in fastly_service_v1.example.domain : domain.name]
   certificate_authority = "lets-encrypt"
+}
+
+data "aws_route53_zone" "demo" {
+  name         = local.domain_name
+  private_zone = false
+}
+
+# Set up DNS record for managed DNS domain validation method
+resource "aws_route53_record" "domain_validation" {
+  name            = fastly_tls_subscription.example.managed_dns_challenge.record_name
+  type            = fastly_tls_subscription.example.managed_dns_challenge.record_type
+  zone_id         = data.aws_route53_zone.demo.id
+  allow_overwrite = true
+  records         = [fastly_tls_subscription.example.managed_dns_challenge.record_value]
+  ttl             = 60
 }
 
 # Resource that other resources can depend on if they require the certificate to be issued

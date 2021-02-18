@@ -49,7 +49,6 @@ func testAccTLSDomainCertIDIncluded(dataSourceName string, resourceName string) 
 			return fmt.Errorf("data source not found: %s", dataSourceName)
 		}
 
-
 		for k, v := range d.Primary.Attributes {
 			if k == "tls_certificate_ids.#" {
 				continue

@@ -9,8 +9,7 @@ import (
 
 func dataSourceFastlyTLSDomain() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTLSDomainsRead,
-
+		Read: dataSourceFastlyTLSDomainsRead,
 		Schema: map[string]*schema.Schema{
 			"domain": {
 				Type:        schema.TypeString,
@@ -39,7 +38,7 @@ func dataSourceFastlyTLSDomain() *schema.Resource {
 	}
 }
 
-func dataSourceTLSDomainsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSDomainsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*FastlyClient).conn
 
 	domain, err := findTLSDomain(conn, d)
@@ -75,14 +74,12 @@ func dataSourceTLSDomainsRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func findTLSDomain(conn *fastly.Client, d *schema.ResourceData) (*fastly.TLSDomain, error) {
-	var filters []func(*fastly.TLSDomain) bool
-
 	domain := d.Get("domain").(string)
-	filters = append(filters, func(d *fastly.TLSDomain) bool {
+	filter := func(d *fastly.TLSDomain) bool {
 		return d.ID == domain
-	})
+	}
 
-	domains, err := listTLSDomains(conn, filters...)
+	domains, err := listTLSDomains(conn, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +95,9 @@ func findTLSDomain(conn *fastly.Client, d *schema.ResourceData) (*fastly.TLSDoma
 	return domains[0], nil
 }
 
-func listTLSDomains(conn *fastly.Client, filters ...func(*fastly.TLSDomain) bool) ([]*fastly.TLSDomain, error) {
+type TLSDomainPredicate func(domain *fastly.TLSDomain) bool
+
+func listTLSDomains(conn *fastly.Client, filters ...TLSDomainPredicate) ([]*fastly.TLSDomain, error) {
 	var domains []*fastly.TLSDomain
 	pageNumber := 1
 
@@ -123,7 +122,7 @@ func listTLSDomains(conn *fastly.Client, filters ...func(*fastly.TLSDomain) bool
 	return domains, nil
 }
 
-func filterTLSDomain(domain *fastly.TLSDomain, filters []func(*fastly.TLSDomain) bool) bool {
+func filterTLSDomain(domain *fastly.TLSDomain, filters []TLSDomainPredicate) bool {
 	for _, f := range filters {
 		if !f(domain) {
 			return false

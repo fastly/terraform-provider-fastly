@@ -78,7 +78,7 @@ func TestAccFastlyServiceV1_dictionary_write_only(t *testing.T) {
 		CheckDestroy: testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1Config_dictionary_write_only(name, dictName, backendName, domainName, true),
+				Config: testAccServiceV1Config_dictionary_write_only(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_dictionary(&service, name, dictName, true),
@@ -114,36 +114,6 @@ func TestAccFastlyServiceV1_dictionary_update_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_dictionary(&service, name, updatedDictName, false),
-				),
-			},
-		},
-	})
-}
-
-func TestAccFastlyServiceV1_dictionary_update_write_only(t *testing.T) {
-	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1Config_dictionary(name, dictName, backendName, domainName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_dictionary(&service, name, dictName, false),
-				),
-			},
-			{
-				Config: testAccServiceV1Config_dictionary_write_only(name, dictName, backendName, domainName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_dictionary(&service, name, dictName, true),
 				),
 			},
 		},
@@ -203,7 +173,7 @@ resource "fastly_service_v1" "foo" {
 }`, name, domainName, backendName, dictName)
 }
 
-func testAccServiceV1Config_dictionary_write_only(name, dictName, backendName, domainName string, writeOnly bool) string {
+func testAccServiceV1Config_dictionary_write_only(name, dictName, backendName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -220,9 +190,9 @@ resource "fastly_service_v1" "foo" {
 
   dictionary {
     name       = "%s"
-    write_only = %v
+    write_only = true
   }
 
   force_destroy = true
-}`, name, domainName, backendName, dictName, writeOnly)
+}`, name, domainName, backendName, dictName)
 }

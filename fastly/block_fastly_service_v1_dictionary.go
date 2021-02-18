@@ -35,8 +35,11 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 	newSet := newDictVal.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -44,13 +47,13 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 		return err
 	}
 
-	// Delete removed dictionary configurations
-	for _, dRaw := range diffResult.Deleted {
-		df := dRaw.(map[string]interface{})
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteDictionaryInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Dictionary Removal opts: %#v", opts)
@@ -64,9 +67,9 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 		}
 	}
 
-	// POST new dictionary configurations
-	for _, dRaw := range diffResult.Added {
-		opts, err := buildDictionary(dRaw.(map[string]interface{}))
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildDictionary(resource.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Dicitionary: %s", err)
 			return err
@@ -80,6 +83,20 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 			return err
 		}
 	}
+
+	// UPDATE modified resources (NOT IMPLEMENTED)
+	//
+	// Although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	//
+	// Additionally, the only other attribute available to a dictionary is the
+	// `write_only` attribute which cannot be modified. For more details see:
+	// https://docs.fastly.com/en/guides/private-dictionaries#limitations-and-considerations
+	//
+	// Because of this we do not implement any logic for updating the dictionary
+	// resource, only CREATE and DELETE functionality.
+
 	return nil
 }
 

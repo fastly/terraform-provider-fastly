@@ -34,8 +34,11 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	newSet := nd.(*schema.Set)
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		// Use the resource name as the key
-		return resource.(map[string]interface{})["name"], nil
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
 	diffResult, err := setDiff.Diff(oldSet, newSet)
@@ -43,13 +46,13 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		return err
 	}
 
-	// DELETE old director configurations
-	for _, dRaw := range diffResult.Deleted {
-		df := dRaw.(map[string]interface{})
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteDirectorInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Director Removal opts: %#v", opts)
@@ -63,21 +66,21 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		}
 	}
 
-	// POST new/updated Director
-	for _, dRaw := range diffResult.Added {
-		df := dRaw.(map[string]interface{})
+	// ADD new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.CreateDirectorInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
-			Comment:        df["comment"].(string),
-			Shield:         df["shield"].(string),
-			Capacity:       uint(df["capacity"].(int)),
-			Quorum:         uint(df["quorum"].(int)),
-			Retries:        uint(df["retries"].(int)),
+			Name:           resource["name"].(string),
+			Comment:        resource["comment"].(string),
+			Shield:         resource["shield"].(string),
+			Capacity:       uint(resource["capacity"].(int)),
+			Quorum:         uint(resource["quorum"].(int)),
+			Retries:        uint(resource["retries"].(int)),
 		}
 
-		switch df["type"].(int) {
+		switch resource["type"].(int) {
 		case 1:
 			opts.Type = gofastly.DirectorTypeRandom
 		case 2:
@@ -94,14 +97,15 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 			return err
 		}
 
-		if v, ok := df["backends"]; ok {
-			if len(v.(*schema.Set).List()) > 0 {
-				for _, b := range v.(*schema.Set).List() {
+		if v, ok := resource["backends"]; ok {
+			backends := v.(*schema.Set).List()
+			if len(backends) > 0 {
+				for _, backend := range backends {
 					opts := gofastly.CreateDirectorBackendInput{
 						ServiceID:      d.Id(),
 						ServiceVersion: latestVersion,
-						Director:       df["name"].(string),
-						Backend:        b.(string),
+						Director:       resource["name"].(string),
+						Backend:        backend.(string),
 					}
 
 					log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
@@ -113,6 +117,84 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 			}
 		}
 	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateDirectorInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["comment"]; ok {
+			opts.Comment = gofastly.String(v.(string))
+		}
+		if v, ok := modified["shield"]; ok {
+			opts.Shield = gofastly.String(v.(string))
+		}
+		if v, ok := modified["quorum"]; ok {
+			opts.Quorum = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["type"]; ok {
+			switch v.(int) {
+			case 1:
+				opts.Type = gofastly.DirectorTypeRandom
+			case 2:
+				opts.Type = gofastly.DirectorTypeRoundRobin
+			case 3:
+				opts.Type = gofastly.DirectorTypeHash
+			case 4:
+				opts.Type = gofastly.DirectorTypeClient
+			}
+		}
+		if v, ok := modified["retries"]; ok {
+			opts.Retries = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["capacity"]; ok {
+			opts.Capacity = gofastly.Uint(uint(v.(int)))
+		}
+
+		log.Printf("[DEBUG] Update Director Opts: %#v", opts)
+		_, err := conn.UpdateDirector(&opts)
+		if err != nil {
+			return err
+		}
+
+		if v, ok := modified["backends"]; ok {
+			backends := v.(*schema.Set).List()
+			if len(backends) > 0 {
+				for _, backend := range backends {
+					opts := gofastly.CreateDirectorBackendInput{
+						ServiceID:      d.Id(),
+						ServiceVersion: latestVersion,
+						Director:       resource["name"].(string),
+						Backend:        backend.(string),
+					}
+
+					log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
+					_, err := conn.CreateDirectorBackend(&opts)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
 

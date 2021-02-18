@@ -121,64 +121,64 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	createdDir1 := gofastly.Director{
+	// Director + Backend 1
+	directorDeveloper := gofastly.Director{
 		ServiceVersion: 1,
-		Name:           "mydirector",
+		Name:           "director_developer",
 		Type:           3,
 		Quorum:         75,
 		Capacity:       100,
 		Retries:        5,
 	}
-	createdDb1 := gofastly.DirectorBackend{
-		Director: "mydirector",
-		Backend:  "origin old",
+	directorBackendDeveloper := gofastly.DirectorBackend{
+		Director: "director_developer",
+		Backend:  "developer",
 	}
 
-	updatedDir1 := gofastly.Director{
+	// Director + Backend 2
+	directorDeveloperUpdated := gofastly.Director{
 		ServiceVersion: 1,
-		Name:           "mydirector",
+		Name:           "director_developer",
 		Type:           4,
 		Quorum:         30,
 		Capacity:       25,
 		Retries:        10,
 	}
-	updatedDb1 := gofastly.DirectorBackend{
-		Director: "mydirector",
-		Backend:  "origin new",
+	directorBackendDeveloperUpdated := gofastly.DirectorBackend{
+		Director: "director_developer",
+		Backend:  "developer_updated",
 	}
 
-	createdDir2 := gofastly.Director{
+	// Director + Backend 3
+	directorApps := gofastly.Director{
 		ServiceVersion: 1,
-		Name:           "unchangeddirector",
+		Name:           "director_apps",
 		Type:           3,
 		Quorum:         75,
 		Capacity:       100,
 		Retries:        5,
 	}
-	createdDb2 := gofastly.DirectorBackend{
-		Director: "unchangeddirector",
-		Backend:  "origin apps",
+	directorBackendApps := gofastly.DirectorBackend{
+		Director: "director_apps",
+		Backend:  "apps",
 	}
 
-	// Updated director should be the same as the created ones
-	updatedDir2 := createdDir2
-	updatedDb2 := createdDb2
-
-	updatedDir3 := gofastly.Director{
+	// Director + Backend 4
+	directorWWWDemo := gofastly.Director{
 		ServiceVersion: 1,
-		Name:           "myotherdirector",
+		Name:           "director_www_demo",
 		Type:           3,
 		Quorum:         75,
 		Capacity:       100,
 		Retries:        5,
 	}
-	updatedDb3x := gofastly.DirectorBackend{
-		Director: "myotherdirector",
-		Backend:  "origin x",
+	directorBackendWWW := gofastly.DirectorBackend{
+		Director: "director_www_demo",
+		Backend:  "www",
 	}
-	updatedDb3y := gofastly.DirectorBackend{
-		Director: "myotherdirector",
-		Backend:  "origin y",
+	directorBackendDemo := gofastly.DirectorBackend{
+		Director: "director_www_demo",
+		Backend:  "demo",
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -192,12 +192,10 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(
 						&service,
-						[]*gofastly.Director{&createdDir1, &createdDir2},
-						[]*gofastly.DirectorBackend{&createdDb1, &createdDb2}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "director.#", "2"),
+						[]*gofastly.Director{&directorDeveloper, &directorApps},
+						[]*gofastly.DirectorBackend{&directorBackendDeveloper, &directorBackendApps}),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "director.#", "2"),
 				),
 			},
 
@@ -207,12 +205,10 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(
 						&service,
-						[]*gofastly.Director{&updatedDir1, &updatedDir2, &updatedDir3},
-						[]*gofastly.DirectorBackend{&updatedDb1, &updatedDb2, &updatedDb3x, &updatedDb3y}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "director.#", "3"),
+						[]*gofastly.Director{&directorDeveloperUpdated, &directorApps, &directorWWWDemo},
+						[]*gofastly.DirectorBackend{&directorBackendDeveloperUpdated, &directorBackendApps, &directorBackendWWW, &directorBackendDemo}),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_v1.foo", "director.#", "3"),
 				),
 			},
 		},
@@ -272,25 +268,25 @@ resource "fastly_service_v1" "foo" {
 
   backend {
     address = "developer.fastly.com"
-    name    = "origin old"
+    name    = "developer"
   }
 
   backend {
     address = "apps.fastly.com"
-    name    = "origin apps"
+    name    = "apps"
     weight  = 1
   }
 
   director {
-    name = "mydirector"
+    name = "director_developer"
     type = 3
-    backends = [ "origin old" ]
+    backends = [ "developer" ]
   }
 
   director {
-    name = "unchangeddirector"
+    name = "director_apps"
     type = 3
-    backends = [ "origin apps" ]
+    backends = [ "apps" ]
   }
 
   force_destroy = true
@@ -309,44 +305,44 @@ resource "fastly_service_v1" "foo" {
 
   backend {
     address = "developer.fastly.com"
-    name    = "origin new"
+    name    = "developer_updated"
   }
 
   backend {
     address = "apps.fastly.com"
-    name    = "origin apps"
+    name    = "apps"
     weight  = 9
   }
 
   backend {
     address = "www.fastly.com"
-    name    = "origin x"
+    name    = "www"
   }
 
   backend {
     address = "www.fastlydemo.net"
-    name    = "origin y"
+    name    = "demo"
   }
 
   director {
-    name = "mydirector"
+    name = "director_developer"
     type = 4
     quorum = 30
     retries = 10
     capacity = 25
-    backends = [ "origin new" ]
+    backends = [ "developer_updated" ]
   }
 
   director {
-    name = "unchangeddirector"
+    name = "director_apps"
     type = 3
-    backends = [ "origin apps" ]
+    backends = [ "apps" ]
   }
 
   director {
-    name = "myotherdirector"
+    name = "director_www_demo"
     type = 3
-    backends = [ "origin x", "origin y" ]
+    backends = [ "www", "demo" ]
   }
 
   force_destroy = true

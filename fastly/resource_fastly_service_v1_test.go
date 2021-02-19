@@ -175,12 +175,24 @@ func TestAccFastlyServiceV1_updateDomain(t *testing.T) {
 			},
 
 			{
+				Config: testAccServiceV1Config_domainUpdateComment(nameUpdate, domainName1, domainName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes(&service, nameUpdate, []string{domainName1, domainName2}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "active_version", "3"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "domain.#", "2"),
+				),
+			},
+
+			{
 				Config: testAccServiceV1Config_domainUpdate(nameUpdate, domainName1, domainName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes(&service, nameUpdate, []string{domainName1, domainName3}),
 					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "active_version", "3"),
+						"fastly_service_v1.foo", "active_version", "4"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "domain.#", "2"),
 				),
@@ -646,6 +658,30 @@ resource "fastly_service_v1" "foo" {
   domain {
     name    = "%s"
     comment = "tf-testing-domain"
+  }
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-other-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  force_destroy = true
+}`, name, domain1, domain2)
+}
+
+func testAccServiceV1Config_domainUpdateComment(name, domain1, domain2 string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain-updated"
   }
 
   domain {

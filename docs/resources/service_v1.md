@@ -292,7 +292,7 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 
 Required:
 
-- **name** (String) The domain that this Service will respond to
+- **name** (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the domain.
 
 Optional:
 

@@ -150,7 +150,7 @@ func (h *DomainServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The domain that this Service will respond to",
+					Description: "The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the domain.",
 				},
 
 				"comment": {

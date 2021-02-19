@@ -168,20 +168,20 @@ func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
 func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
 	var al []map[string]interface{}
 	for _, acl := range aclList {
-		// Convert VCLs to a map for saving to state.
-		vclMap := map[string]interface{}{
+		// Convert ACLs to a map for saving to state.
+		aclMap := map[string]interface{}{
 			"acl_id": acl.ID,
 			"name":   acl.Name,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range vclMap {
+		for k, v := range aclMap {
 			if v == "" {
-				delete(vclMap, k)
+				delete(aclMap, k)
 			}
 		}
 
-		al = append(al, vclMap)
+		al = append(al, aclMap)
 	}
 
 	return al

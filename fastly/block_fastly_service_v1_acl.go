@@ -46,13 +46,6 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		return err
 	}
 
-	// TODO: URGENT/CRITICAL:
-	// The SetDiff.Diff causes the ACL resource to be deleted and created.
-	//
-	// This is fine for making the tests pass, but the impact of doing this is
-	// that a client will lose data as the resource is version-less and mean any
-	// content they dynamically add to the resource will be lost!
-
 	// DELETE removed resources
 	for _, resource := range diffResult.Deleted {
 		resource := resource.(map[string]interface{})

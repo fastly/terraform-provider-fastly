@@ -67,7 +67,7 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		opts, err := buildHeader(resource.(map[string]interface{}))
 		if err != nil {

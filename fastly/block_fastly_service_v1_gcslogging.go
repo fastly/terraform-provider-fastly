@@ -66,7 +66,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
 		var vla = h.getVCLLoggingAttributes(resource)

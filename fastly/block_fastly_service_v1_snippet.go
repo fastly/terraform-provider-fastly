@@ -72,7 +72,7 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		opts, err := buildSnippet(resource.(map[string]interface{}))
 		if err != nil {

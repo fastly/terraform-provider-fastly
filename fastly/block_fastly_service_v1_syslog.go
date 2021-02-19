@@ -66,7 +66,7 @@ func (h *SyslogServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
 

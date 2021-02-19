@@ -67,7 +67,7 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		opts, err := buildDictionary(resource.(map[string]interface{}))
 		if err != nil {

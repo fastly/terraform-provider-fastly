@@ -66,7 +66,7 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
 

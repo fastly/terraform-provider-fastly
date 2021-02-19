@@ -67,7 +67,7 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		opts, err := buildRequestSetting(resource.(map[string]interface{}))
 		if err != nil {

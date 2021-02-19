@@ -67,7 +67,7 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		opts, err := buildCacheSetting(resource.(map[string]interface{}))
 		if err != nil {

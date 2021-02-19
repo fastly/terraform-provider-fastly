@@ -66,7 +66,7 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
 		opts := gofastly.CreateDirectorInput{

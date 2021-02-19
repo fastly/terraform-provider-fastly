@@ -69,7 +69,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		opts, err := buildDynamicSnippet(resource.(map[string]interface{}))
 		if err != nil {

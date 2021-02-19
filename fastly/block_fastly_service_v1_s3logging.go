@@ -58,7 +58,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		opts, err := h.buildCreate(resource, d.Id(), latestVersion)
 		if err != nil {

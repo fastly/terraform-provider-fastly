@@ -60,7 +60,7 @@ func (h *ElasticSearchServiceAttributeHandler) Process(d *schema.ResourceData, l
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
 		opts := h.buildCreate(resource, serviceID, latestVersion)

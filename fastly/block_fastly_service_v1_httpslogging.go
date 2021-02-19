@@ -61,7 +61,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		}
 	}
 
-	// ADD new resources
+	// CREATE new resources
 	for _, nRaw := range diffResult.Added {
 		hf := nRaw.(map[string]interface{})
 		opts := h.buildCreate(hf, serviceID, latestVersion)

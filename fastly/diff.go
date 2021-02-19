@@ -119,7 +119,7 @@ func (h *SetDiff) computeKey(elem interface{}) (interface{}, error) {
 // Filter filters out unmodified fields of a Set elements map data structure by ranging over
 // the original data and comparing each field against the new data.
 //
-// The motivation for this function is to avoid resetting a attribute on a
+// The motivation for this function is to avoid resetting an attribute on a
 // resource to a value that hasn't actually changed because (depending on the
 // attribute) it might have unexpected consequences (e.g. a nested resource
 // gets replaced/recreated). Safer to only update attributes that need to be.

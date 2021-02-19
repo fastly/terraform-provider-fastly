@@ -151,7 +151,7 @@ func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name to identify this ACL",
+					Description: "A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL",
 				},
 				// Optional fields
 				"acl_id": {

@@ -83,33 +83,14 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		}
 	}
 
-	// UPDATE modified resources
+	// UPDATE modified resources (NOT IMPLEMENTED)
 	//
-	// NOTE: although the go-fastly API client enables updating of a resource by
+	// Although the go-fastly API client enables updating of a resource by
 	// its 'name' attribute, this isn't possible within terraform due to
 	// constraints in the data model/schema of the resources not having a uid.
-	for _, resource := range diffResult.Modified {
-		resource := resource.(map[string]interface{})
-
-		opts := gofastly.UpdateACLInput{
-			ServiceID:      d.Id(),
-			ServiceVersion: latestVersion,
-			Name:           resource["name"].(string),
-		}
-
-		// only attempt to update attributes that have changed
-		modified := setDiff.Filter(resource, oldSet)
-
-		if v, ok := modified["name"]; ok {
-			opts.NewName = v.(string)
-		}
-
-		log.Printf("[DEBUG] Update ACL Opts: %#v", opts)
-		_, err := conn.UpdateACL(&opts)
-		if err != nil {
-			return err
-		}
-	}
+	//
+	// Because of this we do not implement any logic for updating the dictionary
+	// resource, only CREATE and DELETE functionality.
 
 	return nil
 }

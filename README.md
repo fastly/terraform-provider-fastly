@@ -75,6 +75,14 @@ In order to run the tests with extra debugging context, prefix the `make` comman
 $ TF_LOG=trace make testacc
 ```
 
+By default, the tests run with a parallelism of 4.
+This can be reduced if some tests are failing due to network-related issues, or increased if possible, to reduce the running time of the tests.
+Prefix the `make` command with `TEST_PARALLELISM`, as in the following example, to configure this.
+
+```sh
+$ TEST_PARALLELISM=8 make testacc
+```
+
 ## Building The Documentation
 
 The documentation is built from components (go templates) stored in the `templates` folder.

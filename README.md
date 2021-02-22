@@ -83,6 +83,11 @@ Prefix the `make` command with `TEST_PARALLELISM`, as in the following example, 
 $ TEST_PARALLELISM=8 make testacc
 ```
 
+Depending on the Fastly account used, some features may not be enabled (e.g. Platform TLS).
+This may result in some tests failing, potentially with `403 Unauthorised` errors, when the full test suite is being run.
+Check the [Fastly API documentation](https://developer.fastly.com/reference/api/) to confirm if the failing tests use features in Limited Availability or only available to certain customers.
+If this is the case, either use the `TESTARGS` regular expressions described above, or temporarily add `t.SkipNow()` to the top of any tests that should be excluded. 
+
 ## Building The Documentation
 
 The documentation is built from components (go templates) stored in the `templates` folder.

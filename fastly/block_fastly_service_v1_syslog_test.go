@@ -215,6 +215,8 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 	})
 }
 
+// This test should not be run in parallel due to its use of schema.EnvDefaultFunc to set/reset environment variables,
+// which conflicts with other running tests.
 func TestAccFastlyServiceV1_syslog_useTLS(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {

@@ -300,6 +300,8 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 	})
 }
 
+// This test should not be run in parallel due to its use of schema.EnvDefaultFunc to set/reset environment variables,
+// which conflicts with other running tests.
 func TestAccFastlyServiceV1_splunk_env(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

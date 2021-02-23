@@ -211,7 +211,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A unique name to identify the Azure Blob Storage endpoint",
+			Description: "A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"account_name": {
 			Type:        schema.TypeString,

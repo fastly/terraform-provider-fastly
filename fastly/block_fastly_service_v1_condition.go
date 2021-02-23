@@ -167,7 +167,7 @@ func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The unique name for the condition",
+					Description: "The unique name for the condition. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"statement": {
 					Type:        schema.TypeString,

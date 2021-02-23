@@ -180,7 +180,7 @@ func (h *HeaderServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name for this header attribute",
+					Description: "Unique name for this header attribute. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"action": {
 					Type:         schema.TypeString,

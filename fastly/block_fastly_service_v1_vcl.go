@@ -159,7 +159,7 @@ func (h *VCLServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name for this configuration block",
+					Description: "A unique name for this configuration block. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"content": {
 					Type:        schema.TypeString,

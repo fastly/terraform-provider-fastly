@@ -254,7 +254,7 @@ func (h *DirectorServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name for this Director",
+					Description: "Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"backends": {
 					Type:        schema.TypeSet,

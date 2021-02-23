@@ -202,7 +202,7 @@ func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A unique name to identify the Splunk endpoint",
+			Description: "A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"url": {
 			Type:        schema.TypeString,

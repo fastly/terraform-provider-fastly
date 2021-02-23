@@ -191,7 +191,7 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A unique name to identify this GCS endpoint",
+			Description: "A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"email": {
 			Type:        schema.TypeString,

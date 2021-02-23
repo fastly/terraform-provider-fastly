@@ -198,7 +198,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A unique name to identify this BigQuery logging endpoint",
+			Description: "A unique name to identify this BigQuery logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"project_id": {
 			Type:        schema.TypeString,

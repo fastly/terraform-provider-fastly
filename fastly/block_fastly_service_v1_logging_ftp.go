@@ -191,7 +191,7 @@ func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the FTP logging endpoint",
+			Description: "The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 
 		"address": {

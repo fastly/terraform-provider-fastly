@@ -189,7 +189,7 @@ func (h *HealthCheckServiceAttributeHandler) Register(s *schema.Resource) error 
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name to identify this Healthcheck",
+					Description: "A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"host": {
 					Type:        schema.TypeString,

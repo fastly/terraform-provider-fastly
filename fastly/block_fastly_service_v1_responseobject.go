@@ -169,7 +169,7 @@ func (h *ResponseObjectServiceAttributeHandler) Register(s *schema.Resource) err
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name to identify this Response Object",
+					Description: "A unique name to identify this Response Object. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				// Optional fields
 				"status": {

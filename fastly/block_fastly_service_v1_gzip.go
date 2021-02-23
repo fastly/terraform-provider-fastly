@@ -176,7 +176,7 @@ func (h *GzipServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A name to refer to this gzip condition",
+					Description: "A name to refer to this gzip condition. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				// optional fields
 				"content_types": {

@@ -27,7 +27,7 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the SFTP logging endpoint",
+			Description: "The unique name of the SFTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 
 		"address": {

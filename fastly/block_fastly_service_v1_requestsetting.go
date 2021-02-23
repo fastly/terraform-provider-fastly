@@ -190,7 +190,7 @@ func (h *RequestSettingServiceAttributeHandler) Register(s *schema.Resource) err
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name to refer to this Request Setting",
+					Description: "Unique name to refer to this Request Setting. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				// Optional fields
 				"request_condition": {

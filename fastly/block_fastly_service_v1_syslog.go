@@ -200,7 +200,7 @@ func (h *SyslogServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A unique name to identify this Syslog endpoint",
+			Description: "A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"address": {
 			Type:        schema.TypeString,

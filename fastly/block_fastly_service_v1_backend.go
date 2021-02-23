@@ -353,7 +353,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Name for this Backend. Must be unique to this Service",
+			Description: "Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"address": {
 			Type:        schema.TypeString,

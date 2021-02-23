@@ -158,7 +158,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Register(s *schema.Resource) err
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks`,
+					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks. It is important to note that changing this attribute will delete and recreate the resource`,
 				},
 				"type": {
 					Type:         schema.TypeString,

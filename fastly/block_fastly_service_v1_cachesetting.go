@@ -157,7 +157,7 @@ func (h *CacheSettingServiceAttributeHandler) Register(s *schema.Resource) error
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name for this Cache Setting",
+					Description: "Unique name for this Cache Setting. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"action": {
 					Type:        schema.TypeString,

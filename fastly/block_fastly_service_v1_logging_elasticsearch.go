@@ -176,7 +176,7 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Elasticsearch logging endpoint",
+			Description: "The unique name of the Elasticsearch logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 
 		"url": {

@@ -112,15 +112,15 @@ resource "fastly_service_v1" "foo" {
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name    = "tf-test-backend"
   }
 
   acl {
-		name       = "a_%s"
+	name = "a_%s"
   }
 
   acl {
-		name       = "b_%s"
+    name = "b_%s"
   }
 
   force_destroy = true

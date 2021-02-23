@@ -75,25 +75,6 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		}
 	}
 
-	// UPDATE existing backends
-	for _, dRaw := range diffResult.Modified {
-		backend := dRaw.(map[string]interface{})
-
-		// Each element in the .Modified slice is a backend with nested fields.
-		// Although we know the backend has been modified, we have to manually
-		// filter out any unmodified nested fields by comparing them against the
-		// original backend set data structure using .Filter.
-		//
-		modified := setDiff.Filter(backend, oldSet)
-		opts := h.buildUpdateBackendInput(d.Id(), latestVersion, backend, modified)
-
-		log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
-		_, err := conn.UpdateBackend(&opts)
-		if err != nil {
-			return err
-		}
-	}
-
 	// UPDATE modified resources
 	//
 	// NOTE: although the go-fastly API client enables updating of a resource by
@@ -102,95 +83,10 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	for _, resource := range diffResult.Modified {
 		resource := resource.(map[string]interface{})
 
-		opts := gofastly.UpdateBackendInput{
-			ServiceID:      d.Id(),
-			ServiceVersion: latestVersion,
-			Name:           resource["name"].(string),
-		}
-
 		// only attempt to update attributes that have changed
 		modified := setDiff.Filter(resource, oldSet)
 
-		// NOTE: where we transition between interface{} we lose the ability to
-		// infer the underlying type being either a uint vs an int. This
-		// materializes as a panic (yay) and so it's only at runtime we discover
-		// this and so we've updated the below code to convert the type asserted
-		// int into a uint before passing the value to gofastly.Uint().
-		if v, ok := modified["comment"]; ok {
-			opts.Comment = gofastly.String(v.(string))
-		}
-		if v, ok := modified["address"]; ok {
-			opts.Address = gofastly.String(v.(string))
-		}
-		if v, ok := modified["port"]; ok {
-			opts.Port = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["override_host"]; ok {
-			opts.OverrideHost = gofastly.String(v.(string))
-		}
-		if v, ok := modified["connect_timeout"]; ok {
-			opts.ConnectTimeout = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["max_conn"]; ok {
-			opts.MaxConn = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["error_threshold"]; ok {
-			opts.ErrorThreshold = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["first_byte_timeout"]; ok {
-			opts.FirstByteTimeout = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["between_bytes_timeout"]; ok {
-			opts.BetweenBytesTimeout = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["auto_loadbalance"]; ok {
-			opts.AutoLoadbalance = gofastly.CBool(v.(bool))
-		}
-		if v, ok := modified["weight"]; ok {
-			opts.Weight = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["request_condition"]; ok {
-			opts.RequestCondition = gofastly.String(v.(string))
-		}
-		if v, ok := modified["healthcheck"]; ok {
-			opts.HealthCheck = gofastly.String(v.(string))
-		}
-		if v, ok := modified["shield"]; ok {
-			opts.Shield = gofastly.String(v.(string))
-		}
-		if v, ok := modified["use_ssl"]; ok {
-			opts.UseSSL = gofastly.CBool(v.(bool))
-		}
-		if v, ok := modified["ssl_check_cert"]; ok {
-			opts.SSLCheckCert = gofastly.CBool(v.(bool))
-		}
-		if v, ok := modified["ssl_ca_cert"]; ok {
-			opts.SSLCACert = gofastly.String(v.(string))
-		}
-		if v, ok := modified["ssl_client_cert"]; ok {
-			opts.SSLClientCert = gofastly.String(v.(string))
-		}
-		if v, ok := modified["ssl_client_key"]; ok {
-			opts.SSLClientKey = gofastly.String(v.(string))
-		}
-		if v, ok := modified["ssl_hostname"]; ok {
-			opts.SSLHostname = gofastly.String(v.(string))
-		}
-		if v, ok := modified["ssl_cert_hostname"]; ok {
-			opts.SSLCertHostname = gofastly.String(v.(string))
-		}
-		if v, ok := modified["ssl_sni_hostname"]; ok {
-			opts.SSLSNIHostname = gofastly.String(v.(string))
-		}
-		if v, ok := modified["min_tls_version"]; ok {
-			opts.MinTLSVersion = gofastly.String(v.(string))
-		}
-		if v, ok := modified["max_tls_version"]; ok {
-			opts.MaxTLSVersion = gofastly.String(v.(string))
-		}
-		if v, ok := modified["ssl_ciphers"]; ok {
-			opts.SSLCiphers = v.([]string)
-		}
+		opts := h.buildUpdateBackendInput(d.Id(), latestVersion, resource, modified)
 
 		log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
 		_, err := conn.UpdateBackend(&opts)
@@ -246,87 +142,97 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	return opts
 }
 
-func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(service string, latestVersion int, backend, modified map[string]interface{}) gofastly.UpdateBackendInput {
-	input := gofastly.UpdateBackendInput{
-		ServiceID:      service,
+func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID string, latestVersion int, resource, modified map[string]interface{}) gofastly.UpdateBackendInput {
+	opts := gofastly.UpdateBackendInput{
+		ServiceID:      serviceID,
 		ServiceVersion: latestVersion,
-		Name:           backend["name"].(string),
+		Name:           resource["name"].(string),
 	}
 
+	// NOTE: where we transition between interface{} we lose the ability to
+	// infer the underlying type being either a uint vs an int. This
+	// materializes as a panic (yay) and so it's only at runtime we discover
+	// this and so we've updated the below code to convert the type asserted
+	// int into a uint before passing the value to gofastly.Uint().
+	if v, ok := modified["comment"]; ok {
+		opts.Comment = gofastly.String(v.(string))
+	}
 	if v, ok := modified["address"]; ok {
-		input.Address = gofastly.String(v.(string))
-	}
-	if v, ok := modified["override_host"]; ok {
-		input.OverrideHost = gofastly.String(v.(string))
-	}
-	if v, ok := modified["auto_loadbalance"]; ok {
-		input.AutoLoadbalance = gofastly.CBool(v.(bool))
-	}
-	if v, ok := modified["ssl_check_cert"]; ok {
-		input.SSLCheckCert = gofastly.CBool(v.(bool))
-	}
-	if v, ok := modified["ssl_hostname"]; ok {
-		input.SSLHostname = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_ca_cert"]; ok {
-		input.SSLCACert = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_cert_hostname"]; ok {
-		input.SSLCertHostname = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_sni_hostname"]; ok {
-		input.SSLSNIHostname = gofastly.String(v.(string))
-	}
-	if v, ok := modified["use_ssl"]; ok {
-		input.UseSSL = gofastly.CBool(v.(bool))
-	}
-	if v, ok := modified["ssl_client_key"]; ok {
-		input.SSLClientKey = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_client_cert"]; ok {
-		input.SSLClientCert = gofastly.String(v.(string))
-	}
-	if v, ok := modified["max_tls_version"]; ok {
-		input.MaxTLSVersion = gofastly.String(v.(string))
-	}
-	if v, ok := modified["min_tls_version"]; ok {
-		input.MinTLSVersion = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_ciphers"]; ok {
-		input.SSLCiphers = strings.Split(v.(string), ",")
-	}
-	if v, ok := modified["shield"]; ok {
-		input.Shield = gofastly.String(v.(string))
+		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		input.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Uint(uint(v.(int)))
 	}
-	if v, ok := modified["between_bytes_timeout"]; ok {
-		input.BetweenBytesTimeout = gofastly.Uint(uint(v.(int)))
+	if v, ok := modified["override_host"]; ok {
+		opts.OverrideHost = gofastly.String(v.(string))
 	}
 	if v, ok := modified["connect_timeout"]; ok {
-		input.ConnectTimeout = gofastly.Uint(uint(v.(int)))
-	}
-	if v, ok := modified["error_threshold"]; ok {
-		input.ErrorThreshold = gofastly.Uint(uint(v.(int)))
-	}
-	if v, ok := modified["first_byte_timeout"]; ok {
-		input.FirstByteTimeout = gofastly.Uint(uint(v.(int)))
+		opts.ConnectTimeout = gofastly.Uint(uint(v.(int)))
 	}
 	if v, ok := modified["max_conn"]; ok {
-		input.MaxConn = gofastly.Uint(uint(v.(int)))
+		opts.MaxConn = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["error_threshold"]; ok {
+		opts.ErrorThreshold = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["first_byte_timeout"]; ok {
+		opts.FirstByteTimeout = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["between_bytes_timeout"]; ok {
+		opts.BetweenBytesTimeout = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["auto_loadbalance"]; ok {
+		opts.AutoLoadbalance = gofastly.CBool(v.(bool))
 	}
 	if v, ok := modified["weight"]; ok {
-		input.Weight = gofastly.Uint(uint(v.(int)))
+		opts.Weight = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["request_condition"]; ok {
+		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+			opts.RequestCondition = gofastly.String(v.(string))
+		}
 	}
 	if v, ok := modified["healthcheck"]; ok {
-		input.HealthCheck = gofastly.String(v.(string))
+		opts.HealthCheck = gofastly.String(v.(string))
+	}
+	if v, ok := modified["shield"]; ok {
+		opts.Shield = gofastly.String(v.(string))
+	}
+	if v, ok := modified["use_ssl"]; ok {
+		opts.UseSSL = gofastly.CBool(v.(bool))
+	}
+	if v, ok := modified["ssl_check_cert"]; ok {
+		opts.SSLCheckCert = gofastly.CBool(v.(bool))
+	}
+	if v, ok := modified["ssl_ca_cert"]; ok {
+		opts.SSLCACert = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_client_cert"]; ok {
+		opts.SSLClientCert = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_client_key"]; ok {
+		opts.SSLClientKey = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_hostname"]; ok {
+		opts.SSLHostname = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_cert_hostname"]; ok {
+		opts.SSLCertHostname = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_sni_hostname"]; ok {
+		opts.SSLSNIHostname = gofastly.String(v.(string))
+	}
+	if v, ok := modified["min_tls_version"]; ok {
+		opts.MinTLSVersion = gofastly.String(v.(string))
+	}
+	if v, ok := modified["max_tls_version"]; ok {
+		opts.MaxTLSVersion = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_ciphers"]; ok {
+		opts.SSLCiphers = strings.Split(v.(string), ",")
 	}
 
-	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		input.RequestCondition = gofastly.String(backend["request_condition"].(string))
-	}
-	return input
+	return opts
 }
 
 func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {

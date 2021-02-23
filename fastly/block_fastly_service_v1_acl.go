@@ -89,7 +89,7 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	// its 'name' attribute, this isn't possible within terraform due to
 	// constraints in the data model/schema of the resources not having a uid.
 	//
-	// Because of this we do not implement any logic for updating the dictionary
+	// Because of this we do not implement any logic for updating the ACL
 	// resource, only CREATE and DELETE functionality.
 
 	return nil

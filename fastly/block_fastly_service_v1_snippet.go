@@ -48,9 +48,6 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 	if err != nil {
 		return err
 	}
-	fmt.Printf("\n\nold values: %+v\n\n", oldSet)
-	fmt.Printf("\n\nnew values: %+v\n\n", newSet)
-	fmt.Printf("\n\ndiffResult: %+v\n\n", diffResult)
 
 	// DELETE removed resources
 	for _, resource := range diffResult.Deleted {

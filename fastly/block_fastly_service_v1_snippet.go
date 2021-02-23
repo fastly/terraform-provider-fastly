@@ -33,19 +33,29 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		newSnippetVal = new(schema.Set)
 	}
 
-	oldSnippetSet := oldSnippetVal.(*schema.Set)
-	newSnippetSet := newSnippetVal.(*schema.Set)
+	oldSet := oldSnippetVal.(*schema.Set)
+	newSet := newSnippetVal.(*schema.Set)
 
-	remove := oldSnippetSet.Difference(newSnippetSet).List()
-	add := newSnippetSet.Difference(oldSnippetSet).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// Delete removed VCL Snippet configurations
-	for _, dRaw := range remove {
-		df := dRaw.(map[string]interface{})
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteSnippetInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Snippet Removal opts: %#v", opts)
@@ -59,9 +69,9 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		}
 	}
 
-	// POST new VCL Snippet configurations
-	for _, dRaw := range add {
-		opts, err := buildSnippet(dRaw.(map[string]interface{}))
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildSnippet(resource.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building VCL Snippet: %s", err)
 			return err
@@ -75,6 +85,85 @@ func (h *SnippetServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 			return err
 		}
 	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		// Safety check in case keys aren't actually set in the HCL.
+		name, _ := resource["name"].(string)
+		priority, _ := resource["priority"].(int)
+		dynamic, _ := resource["dynamic"].(int)
+		content, _ := resource["content"].(string)
+		stype, _ := resource["type"].(string)
+
+		opts := gofastly.UpdateSnippetInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           name,
+			NewName:        name,
+			Priority:       priority,
+			Dynamic:        dynamic,
+			Content:        content,
+			Type:           gofastly.SnippetType(stype),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["priority"]; ok {
+			opts.Priority = v.(int)
+		}
+		if v, ok := modified["dynamic"]; ok {
+			opts.Dynamic = v.(int)
+		}
+		if v, ok := modified["content"]; ok {
+			opts.Content = v.(string)
+		}
+		if v, ok := modified["type"]; ok {
+			snippetType := strings.ToLower(v.(string))
+			switch snippetType {
+			case "init":
+				opts.Type = gofastly.SnippetTypeInit
+			case "recv":
+				opts.Type = gofastly.SnippetTypeRecv
+			case "hash":
+				opts.Type = gofastly.SnippetTypeHash
+			case "hit":
+				opts.Type = gofastly.SnippetTypeHit
+			case "miss":
+				opts.Type = gofastly.SnippetTypeMiss
+			case "pass":
+				opts.Type = gofastly.SnippetTypePass
+			case "fetch":
+				opts.Type = gofastly.SnippetTypeFetch
+			case "error":
+				opts.Type = gofastly.SnippetTypeError
+			case "deliver":
+				opts.Type = gofastly.SnippetTypeDeliver
+			case "log":
+				opts.Type = gofastly.SnippetTypeLog
+			case "none":
+				opts.Type = gofastly.SnippetTypeNone
+			}
+		}
+
+		log.Printf("[DEBUG] Update VCL Snippet Opts: %#v", opts)
+		_, err := conn.UpdateSnippet(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -105,7 +194,7 @@ func (h *SnippetServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks`,
+					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks. It is important to note that changing this attribute will delete and recreate the resource`,
 				},
 				"type": {
 					Type:         schema.TypeString,

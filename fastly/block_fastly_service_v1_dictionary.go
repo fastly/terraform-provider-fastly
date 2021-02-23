@@ -31,19 +31,29 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 		newDictVal = new(schema.Set)
 	}
 
-	oldDictSet := oldDictVal.(*schema.Set)
-	newDictSet := newDictVal.(*schema.Set)
+	oldSet := oldDictVal.(*schema.Set)
+	newSet := newDictVal.(*schema.Set)
 
-	remove := oldDictSet.Difference(newDictSet).List()
-	add := newDictSet.Difference(oldDictSet).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// Delete removed dictionary configurations
-	for _, dRaw := range remove {
-		df := dRaw.(map[string]interface{})
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteDictionaryInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Dictionary Removal opts: %#v", opts)
@@ -57,9 +67,9 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 		}
 	}
 
-	// POST new dictionary configurations
-	for _, dRaw := range add {
-		opts, err := buildDictionary(dRaw.(map[string]interface{}))
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildDictionary(resource.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Dicitionary: %s", err)
 			return err
@@ -73,6 +83,20 @@ func (h *DictionaryServiceAttributeHandler) Process(d *schema.ResourceData, late
 			return err
 		}
 	}
+
+	// UPDATE modified resources (NOT IMPLEMENTED)
+	//
+	// Although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	//
+	// Additionally, the only other attribute available to a dictionary is the
+	// `write_only` attribute which cannot be modified. For more details see:
+	// https://docs.fastly.com/en/guides/private-dictionaries#limitations-and-considerations
+	//
+	// Because of this we do not implement any logic for updating the dictionary
+	// resource, only CREATE and DELETE functionality.
+
 	return nil
 }
 
@@ -104,7 +128,7 @@ func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name to identify this dictionary",
+					Description: "A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary",
 				},
 				// Optional fields
 				"dictionary_id": {
@@ -116,7 +140,7 @@ func (h *DictionaryServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: "If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
+					Description: "If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
 				},
 			},
 		},

@@ -32,16 +32,26 @@ func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		nl = new(schema.Set)
 	}
 
-	ols := ol.(*schema.Set)
-	nls := nl.(*schema.Set)
+	oldSet := ol.(*schema.Set)
+	newSet := nl.(*schema.Set)
 
-	removeKinesisLogging := ols.Difference(nls).List()
-	addKinesisLogging := nls.Difference(ols).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// DELETE old Kinesis logging endpoints.
-	for _, oRaw := range removeKinesisLogging {
-		of := oRaw.(map[string]interface{})
-		opts := h.buildDelete(of, serviceID, latestVersion)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
+		opts := h.buildDelete(resource, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Kinesis logging endpoint removal opts: %#v", opts)
 
@@ -50,14 +60,68 @@ func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		}
 	}
 
-	// POST new/updated Kinesis logging endpoints.
-	for _, nRaw := range addKinesisLogging {
-		lf := nRaw.(map[string]interface{})
-		opts := h.buildCreate(lf, serviceID, latestVersion)
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
+		opts := h.buildCreate(resource, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly Kinesis logging addition opts: %#v", opts)
 
 		if err := createKinesis(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateKinesisInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["topic"]; ok {
+			opts.StreamName = gofastly.String(v.(string))
+		}
+		if v, ok := modified["region"]; ok {
+			opts.Region = gofastly.String(v.(string))
+		}
+		if v, ok := modified["access_key"]; ok {
+			opts.AccessKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["secret_key"]; ok {
+			opts.SecretKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format"]; ok {
+			opts.Format = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format_version"]; ok {
+			opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["response_condition"]; ok {
+			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["placement"]; ok {
+			opts.Placement = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Kinesis Opts: %#v", opts)
+		_, err := conn.UpdateKinesis(&opts)
+		if err != nil {
 			return err
 		}
 	}
@@ -172,7 +236,7 @@ func (h *KinesisServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the Kinesis logging endpoint",
+			Description: "The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 
 		"topic": {

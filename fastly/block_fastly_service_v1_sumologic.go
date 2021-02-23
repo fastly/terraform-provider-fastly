@@ -30,18 +30,29 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		ns = new(schema.Set)
 	}
 
-	oss := os.(*schema.Set)
-	nss := ns.(*schema.Set)
-	removeSumologic := oss.Difference(nss).List()
-	addSumologic := nss.Difference(oss).List()
+	oldSet := os.(*schema.Set)
+	newSet := ns.(*schema.Set)
 
-	// DELETE old sumologic configurations
-	for _, pRaw := range removeSumologic {
-		sf := pRaw.(map[string]interface{})
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteSumologicInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           sf["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Sumologic removal opts: %#v", opts)
@@ -55,17 +66,17 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		}
 	}
 
-	// POST new/updated Sumologic
-	for _, pRaw := range addSumologic {
-		sf := pRaw.(map[string]interface{})
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 
-		var vla = h.getVCLLoggingAttributes(sf)
+		var vla = h.getVCLLoggingAttributes(resource)
 		opts := gofastly.CreateSumologicInput{
 			ServiceID:         d.Id(),
 			ServiceVersion:    latestVersion,
-			Name:              sf["name"].(string),
-			URL:               sf["url"].(string),
-			MessageType:       sf["message_type"].(string),
+			Name:              resource["name"].(string),
+			URL:               resource["url"].(string),
+			MessageType:       resource["message_type"].(string),
 			Format:            vla.format,
 			FormatVersion:     int(uintOrDefault(vla.formatVersion)),
 			ResponseCondition: vla.responseCondition,
@@ -78,6 +89,58 @@ func (h *SumologicServiceAttributeHandler) Process(d *schema.ResourceData, lates
 			return err
 		}
 	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateSumologicInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["address"]; ok {
+			opts.Address = gofastly.String(v.(string))
+		}
+		if v, ok := modified["url"]; ok {
+			opts.URL = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format"]; ok {
+			opts.Format = gofastly.String(v.(string))
+		}
+		if v, ok := modified["response_condition"]; ok {
+			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["message_type"]; ok {
+			opts.MessageType = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format_version"]; ok {
+			opts.FormatVersion = gofastly.Int(v.(int))
+		}
+		if v, ok := modified["placement"]; ok {
+			opts.Placement = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Sumologic Opts: %#v", opts)
+		_, err := conn.UpdateSumologic(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -105,7 +168,7 @@ func (h *SumologicServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A unique name to identify this Sumologic endpoint",
+			Description: "A unique name to identify this Sumologic endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"url": {
 			Type:        schema.TypeString,

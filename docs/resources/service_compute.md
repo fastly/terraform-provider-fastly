@@ -121,7 +121,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 
 Required:
 
-- **name** (String) The domain that this Service will respond to
+- **name** (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
 
 Optional:
 
@@ -146,7 +146,7 @@ Optional:
 Required:
 
 - **address** (String) An IPv4, hostname, or IPv6 address for the Backend
-- **name** (String) Name for this Backend. Must be unique to this Service
+- **name** (String) Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
@@ -180,7 +180,7 @@ Optional:
 Required:
 
 - **dataset** (String) The ID of your BigQuery dataset
-- **name** (String) A unique name to identify this BigQuery logging endpoint
+- **name** (String) A unique name to identify this BigQuery logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **project_id** (String) The ID of your GCP project
 - **table** (String) The ID of your BigQuery table
 
@@ -198,7 +198,7 @@ Required:
 
 - **account_name** (String) The unique Azure Blob Storage namespace in which your data objects are stored
 - **container** (String) The name of the Azure Blob Storage container in which to store logs
-- **name** (String) A unique name to identify the Azure Blob Storage endpoint
+- **name** (String) A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
@@ -216,11 +216,11 @@ Optional:
 
 Required:
 
-- **name** (String) A unique name to identify this dictionary
+- **name** (String) A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary
 
 Optional:
 
-- **write_only** (Boolean) If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform
+- **write_only** (Boolean) If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform
 
 Read-Only:
 
@@ -233,7 +233,7 @@ Read-Only:
 Required:
 
 - **bucket_name** (String) The name of the bucket in which to store the logs
-- **name** (String) A unique name to identify this GCS endpoint
+- **name** (String) A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
@@ -252,7 +252,7 @@ Optional:
 Required:
 
 - **host** (String) The Host header to send for this Healthcheck
-- **name** (String) A unique name to identify this Healthcheck
+- **name** (String) A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource
 - **path** (String) The path to check
 
 Optional:
@@ -272,7 +272,7 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the HTTPS logging endpoint
+- **name** (String) The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **url** (String) URL that log data will be sent to. Must use the https protocol
 
 Optional:
@@ -296,7 +296,7 @@ Optional:
 
 Required:
 
-- **name** (String) Unique name to refer to this logging setup
+- **name** (String) The unique name of the Logentries logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String) Use token based authentication (https://logentries.com/doc/input-token/)
 
 Optional:
@@ -312,7 +312,7 @@ Required:
 
 - **access_key** (String, Sensitive) Your Cloud File account access key
 - **bucket_name** (String) The name of your Cloud Files container
-- **name** (String) The unique name of the Rackspace Cloud Files logging endpoint
+- **name** (String) The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **user** (String) The username for your Cloud Files account
 
 Optional:
@@ -331,7 +331,7 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Datadog logging endpoint
+- **name** (String) The unique name of the Datadog logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The API key from your Datadog account
 
 Optional:
@@ -346,7 +346,7 @@ Required:
 
 - **access_key** (String, Sensitive) Your DigitalOcean Spaces account access key
 - **bucket_name** (String) The name of the DigitalOcean Space
-- **name** (String) The unique name of the DigitalOcean Spaces logging endpoint
+- **name** (String) The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **secret_key** (String, Sensitive) Your DigitalOcean Spaces account secret key
 
 Optional:
@@ -366,7 +366,7 @@ Optional:
 Required:
 
 - **index** (String) The name of the Elasticsearch index to send documents (logs) to
-- **name** (String) The unique name of the Elasticsearch logging endpoint
+- **name** (String) The unique name of the Elasticsearch logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **url** (String) The Elasticsearch URL to stream logs to
 
 Optional:
@@ -388,7 +388,7 @@ Optional:
 Required:
 
 - **address** (String) The FTP address to stream logs to
-- **name** (String) The unique name of the FTP logging endpoint
+- **name** (String) The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **password** (String, Sensitive) The password for the server (for anonymous use an email address)
 - **path** (String) The path to upload log files to. If the path ends in `/` then it is treated as a directory
 - **user** (String) The username for the server (can be `anonymous`)
@@ -408,7 +408,7 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Google Cloud Pub/Sub logging endpoint
+- **name** (String) The unique name of the Google Cloud Pub/Sub logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **project_id** (String) The ID of your Google Cloud Platform project
 - **secret_key** (String) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON
 - **topic** (String) The Google Cloud Pub/Sub topic to which logs will be published
@@ -420,7 +420,7 @@ Required:
 
 Required:
 
-- **name** (String) The unique name of the Heroku logging endpoint
+- **name** (String) The unique name of the Heroku logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)
 - **url** (String) The URL to stream logs to
 
@@ -431,7 +431,7 @@ Required:
 Required:
 
 - **dataset** (String) The Honeycomb Dataset you want to log to
-- **name** (String) The unique name of the Honeycomb logging endpoint
+- **name** (String) The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The Write Key from the Account page of your Honeycomb account
 
 
@@ -441,7 +441,7 @@ Required:
 Required:
 
 - **brokers** (String) A comma-separated list of IP addresses or hostnames of Kafka brokers
-- **name** (String) The unique name of the Kafka logging endpoint
+- **name** (String) The unique name of the Kafka logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **topic** (String) The Kafka topic to send logs to
 
 Optional:
@@ -466,7 +466,7 @@ Optional:
 Required:
 
 - **access_key** (String, Sensitive) The AWS access key to be used to write to the stream
-- **name** (String) The unique name of the Kinesis logging endpoint
+- **name** (String) The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **secret_key** (String, Sensitive) The AWS secret access key to authenticate with
 - **topic** (String) The Kinesis stream name
 
@@ -480,7 +480,7 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Loggly logging endpoint
+- **name** (String) The unique name of the Loggly logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
 
 
@@ -489,7 +489,7 @@ Required:
 
 Required:
 
-- **name** (String) The unique name of the Log Shuttle logging endpoint
+- **name** (String) The unique name of the Log Shuttle logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The data authentication token associated with this endpoint
 - **url** (String) Your Log Shuttle endpoint URL
 
@@ -499,7 +499,7 @@ Required:
 
 Required:
 
-- **name** (String) The unique name of the New Relic logging endpoint
+- **name** (String) The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The Insert API key from the Account page of your New Relic account
 
 
@@ -510,7 +510,7 @@ Required:
 
 - **access_key** (String, Sensitive) Your OpenStack account access key
 - **bucket_name** (String) The name of your OpenStack container
-- **name** (String) The unique name of the OpenStack logging endpoint
+- **name** (String) The unique name of the OpenStack logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **url** (String) Your OpenStack auth url
 - **user** (String) The username for your OpenStack account
 
@@ -529,7 +529,7 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Scalyr logging endpoint
+- **name** (String) The unique name of the Scalyr logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The token to use for authentication (https://www.scalyr.com/keys)
 
 Optional:
@@ -543,7 +543,7 @@ Optional:
 Required:
 
 - **address** (String) The SFTP address to stream logs to
-- **name** (String) The unique name of the SFTP logging endpoint
+- **name** (String) The unique name of the SFTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **path** (String) The path to upload log files to. If the path ends in `/` then it is treated as a directory
 - **ssh_known_hosts** (String) A list of host keys for all hosts we can connect to over SFTP
 - **user** (String) The username for the server
@@ -566,7 +566,7 @@ Optional:
 Required:
 
 - **address** (String) The address of the Papertrail endpoint
-- **name** (String) A unique name to identify this Papertrail endpoint
+- **name** (String) A unique name to identify this Papertrail endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **port** (Number) The port associated with the address where the Papertrail endpoint can be accessed
 
 
@@ -576,7 +576,7 @@ Required:
 Required:
 
 - **bucket_name** (String) The name of the bucket in which to store the logs
-- **name** (String) The unique name of the S3 logging endpoint
+- **name** (String) The unique name of the S3 logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
@@ -599,7 +599,7 @@ Optional:
 
 Required:
 
-- **name** (String) A unique name to identify the Splunk endpoint
+- **name** (String) A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **url** (String) The Splunk URL to stream logs to
 
 Optional:
@@ -616,7 +616,7 @@ Optional:
 
 Required:
 
-- **name** (String) A unique name to identify this Sumologic endpoint
+- **name** (String) A unique name to identify this Sumologic endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **url** (String) The URL to Sumologic collector endpoint
 
 Optional:
@@ -630,7 +630,7 @@ Optional:
 Required:
 
 - **address** (String) A hostname or IPv4 address of the Syslog endpoint
-- **name** (String) A unique name to identify this Syslog endpoint
+- **name** (String) A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 

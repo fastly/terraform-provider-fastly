@@ -33,19 +33,29 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 		newDynamicSnippetVal = new(schema.Set)
 	}
 
-	oldDynamicSnippetSet := oldDynamicSnippetVal.(*schema.Set)
-	newDynamicSnippetSet := newDynamicSnippetVal.(*schema.Set)
+	oldSet := oldDynamicSnippetVal.(*schema.Set)
+	newSet := newDynamicSnippetVal.(*schema.Set)
 
-	remove := oldDynamicSnippetSet.Difference(newDynamicSnippetSet).List()
-	add := newDynamicSnippetSet.Difference(oldDynamicSnippetSet).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// Delete removed VCL Snippet configurations
-	for _, dRaw := range remove {
-		df := dRaw.(map[string]interface{})
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteSnippetInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Removal opts: %#v", opts)
@@ -59,9 +69,9 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 		}
 	}
 
-	// POST new VCL Snippet configurations
-	for _, dRaw := range add {
-		opts, err := buildDynamicSnippet(dRaw.(map[string]interface{}))
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildDynamicSnippet(resource.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building VCL Dynamic Snippet: %s", err)
 			return err
@@ -71,6 +81,48 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 
 		log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Addition opts: %#v", opts)
 		_, err = conn.CreateSnippet(opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateSnippetInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["priority"]; ok {
+			opts.Priority = v.(int)
+		}
+		if v, ok := modified["dynamic"]; ok {
+			opts.Dynamic = v.(int)
+		}
+		if v, ok := modified["content"]; ok {
+			opts.Content = v.(string)
+		}
+		if v, ok := modified["type"]; ok {
+			opts.Type = v.(gofastly.SnippetType)
+		}
+
+		log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
+		_, err := conn.UpdateSnippet(&opts)
 		if err != nil {
 			return err
 		}
@@ -106,7 +158,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Register(s *schema.Resource) err
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks`,
+					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks. It is important to note that changing this attribute will delete and recreate the resource`,
 				},
 				"type": {
 					Type:         schema.TypeString,

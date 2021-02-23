@@ -33,19 +33,29 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		newVCLVal = new(schema.Set)
 	}
 
-	oldVCLSet := oldVCLVal.(*schema.Set)
-	newVCLSet := newVCLVal.(*schema.Set)
+	oldSet := oldVCLVal.(*schema.Set)
+	newSet := newVCLVal.(*schema.Set)
 
-	remove := oldVCLSet.Difference(newVCLSet).List()
-	add := newVCLSet.Difference(oldVCLSet).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// Delete removed VCL configurations
-	for _, dRaw := range remove {
-		df := dRaw.(map[string]interface{})
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteVCLInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Removal opts: %#v", opts)
@@ -58,14 +68,15 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 			return err
 		}
 	}
-	// POST new VCL configurations
-	for _, dRaw := range add {
-		df := dRaw.(map[string]interface{})
+
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.CreateVCLInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
-			Content:        df["content"].(string),
+			Name:           resource["name"].(string),
+			Content:        resource["content"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Addition opts: %#v", opts)
@@ -75,11 +86,11 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		}
 
 		// if this new VCL is the main
-		if df["main"].(bool) {
+		if resource["main"].(bool) {
 			opts := gofastly.ActivateVCLInput{
 				ServiceID:      d.Id(),
 				ServiceVersion: latestVersion,
-				Name:           df["name"].(string),
+				Name:           resource["name"].(string),
 			}
 			log.Printf("[DEBUG] Fastly VCL activation opts: %#v", opts)
 			_, err := conn.ActivateVCL(&opts)
@@ -89,6 +100,35 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 
 		}
 	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateVCLInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		if v, ok := modified["content"]; ok {
+			opts.Content = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update VCL Opts: %#v", opts)
+		_, err := conn.UpdateVCL(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -119,7 +159,7 @@ func (h *VCLServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name for this configuration block",
+					Description: "A unique name for this configuration block. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"content": {
 					Type:        schema.TypeString,

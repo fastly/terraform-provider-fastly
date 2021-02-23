@@ -31,18 +31,29 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 		ns = new(schema.Set)
 	}
 
-	ors := os.(*schema.Set)
-	nrs := ns.(*schema.Set)
-	removeRequestSettings := ors.Difference(nrs).List()
-	addRequestSettings := nrs.Difference(ors).List()
+	oldSet := os.(*schema.Set)
+	newSet := ns.(*schema.Set)
 
-	// DELETE old Request Settings configurations
-	for _, sRaw := range removeRequestSettings {
-		sf := sRaw.(map[string]interface{})
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteRequestSettingInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           sf["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Request Setting removal opts: %#v", opts)
@@ -56,11 +67,11 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 		}
 	}
 
-	// POST new/updated Request Setting
-	for _, sRaw := range addRequestSettings {
-		opts, err := buildRequestSetting(sRaw.(map[string]interface{}))
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildRequestSetting(resource.(map[string]interface{}))
 		if err != nil {
-			log.Printf("[DEBUG] Error building Requset Setting: %s", err)
+			log.Printf("[DEBUG] Error building Request Setting: %s", err)
 			return err
 		}
 		opts.ServiceID = d.Id()
@@ -68,6 +79,80 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 
 		log.Printf("[DEBUG] Create Request Setting Opts: %#v", opts)
 		_, err = conn.CreateRequestSetting(opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateRequestSettingInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		if v, ok := modified["force_miss"]; ok {
+			opts.ForceMiss = gofastly.CBool(v.(bool))
+		}
+		if v, ok := modified["force_ssl"]; ok {
+			opts.ForceSSL = gofastly.CBool(v.(bool))
+		}
+		if v, ok := modified["action"]; ok {
+			switch strings.ToLower(v.(string)) {
+			case "lookup":
+				opts.Action = gofastly.RequestSettingActionLookup
+			case "pass":
+				opts.Action = gofastly.RequestSettingActionPass
+			}
+		}
+		if v, ok := modified["bypass_busy_wait"]; ok {
+			opts.BypassBusyWait = gofastly.CBool(v.(bool))
+		}
+		if v, ok := modified["max_stale_age"]; ok {
+			opts.MaxStaleAge = gofastly.Uint(v.(uint))
+		}
+		if v, ok := modified["hash_keys"]; ok {
+			opts.HashKeys = gofastly.String(v.(string))
+		}
+		if v, ok := modified["xff"]; ok {
+			switch strings.ToLower(v.(string)) {
+			case "clear":
+				opts.XForwardedFor = gofastly.RequestSettingXFFClear
+			case "leave":
+				opts.XForwardedFor = gofastly.RequestSettingXFFLeave
+			case "append":
+				opts.XForwardedFor = gofastly.RequestSettingXFFAppend
+			case "append_all":
+				opts.XForwardedFor = gofastly.RequestSettingXFFAppendAll
+			case "overwrite":
+				opts.XForwardedFor = gofastly.RequestSettingXFFOverwrite
+			}
+		}
+		if v, ok := modified["timer_support"]; ok {
+			opts.TimerSupport = gofastly.CBool(v.(bool))
+		}
+		if v, ok := modified["geo_headers"]; ok {
+			opts.GeoHeaders = gofastly.CBool(v.(bool))
+		}
+		if v, ok := modified["default_host"]; ok {
+			opts.DefaultHost = gofastly.String(v.(string))
+		}
+		if v, ok := modified["request_condition"]; ok {
+			opts.RequestCondition = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Request Settings Opts: %#v", opts)
+		_, err := conn.UpdateRequestSetting(&opts)
 		if err != nil {
 			return err
 		}
@@ -105,7 +190,7 @@ func (h *RequestSettingServiceAttributeHandler) Register(s *schema.Resource) err
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name to refer to this Request Setting",
+					Description: "Unique name to refer to this Request Setting. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				// Optional fields
 				"request_condition": {
@@ -204,21 +289,21 @@ func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]inte
 }
 
 func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequestSettingInput, error) {
-	df := requestSettingMap.(map[string]interface{})
+	resource := requestSettingMap.(map[string]interface{})
 	opts := gofastly.CreateRequestSettingInput{
-		Name:             df["name"].(string),
-		MaxStaleAge:      uint(df["max_stale_age"].(int)),
-		ForceMiss:        gofastly.Compatibool(df["force_miss"].(bool)),
-		ForceSSL:         gofastly.Compatibool(df["force_ssl"].(bool)),
-		BypassBusyWait:   gofastly.Compatibool(df["bypass_busy_wait"].(bool)),
-		HashKeys:         df["hash_keys"].(string),
-		TimerSupport:     gofastly.Compatibool(df["timer_support"].(bool)),
-		GeoHeaders:       gofastly.Compatibool(df["geo_headers"].(bool)),
-		DefaultHost:      df["default_host"].(string),
-		RequestCondition: df["request_condition"].(string),
+		Name:             resource["name"].(string),
+		MaxStaleAge:      uint(resource["max_stale_age"].(int)),
+		ForceMiss:        gofastly.Compatibool(resource["force_miss"].(bool)),
+		ForceSSL:         gofastly.Compatibool(resource["force_ssl"].(bool)),
+		BypassBusyWait:   gofastly.Compatibool(resource["bypass_busy_wait"].(bool)),
+		HashKeys:         resource["hash_keys"].(string),
+		TimerSupport:     gofastly.Compatibool(resource["timer_support"].(bool)),
+		GeoHeaders:       gofastly.Compatibool(resource["geo_headers"].(bool)),
+		DefaultHost:      resource["default_host"].(string),
+		RequestCondition: resource["request_condition"].(string),
 	}
 
-	act := strings.ToLower(df["action"].(string))
+	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "lookup":
 		opts.Action = gofastly.RequestSettingActionLookup
@@ -226,7 +311,7 @@ func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequest
 		opts.Action = gofastly.RequestSettingActionPass
 	}
 
-	xff := strings.ToLower(df["xff"].(string))
+	xff := strings.ToLower(resource["xff"].(string))
 	switch xff {
 	case "clear":
 		opts.XForwardedFor = gofastly.RequestSettingXFFClear

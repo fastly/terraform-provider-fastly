@@ -30,18 +30,29 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 		nh = new(schema.Set)
 	}
 
-	ohs := oh.(*schema.Set)
-	nhs := nh.(*schema.Set)
-	removeHealthCheck := ohs.Difference(nhs).List()
-	addHealthCheck := nhs.Difference(ohs).List()
+	oldSet := oh.(*schema.Set)
+	newSet := nh.(*schema.Set)
 
-	// DELETE old healthcheck configurations
-	for _, hRaw := range removeHealthCheck {
-		hf := hRaw.(map[string]interface{})
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteHealthCheckInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           hf["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Healthcheck removal opts: %#v", opts)
@@ -55,28 +66,91 @@ func (h *HealthCheckServiceAttributeHandler) Process(d *schema.ResourceData, lat
 		}
 	}
 
-	// POST new/updated Healthcheck
-	for _, hRaw := range addHealthCheck {
-		hf := hRaw.(map[string]interface{})
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 
 		opts := gofastly.CreateHealthCheckInput{
 			ServiceID:        d.Id(),
 			ServiceVersion:   latestVersion,
-			Name:             hf["name"].(string),
-			Host:             hf["host"].(string),
-			Path:             hf["path"].(string),
-			CheckInterval:    uint(hf["check_interval"].(int)),
-			ExpectedResponse: uint(hf["expected_response"].(int)),
-			HTTPVersion:      hf["http_version"].(string),
-			Initial:          uint(hf["initial"].(int)),
-			Method:           hf["method"].(string),
-			Threshold:        uint(hf["threshold"].(int)),
-			Timeout:          uint(hf["timeout"].(int)),
-			Window:           uint(hf["window"].(int)),
+			Name:             resource["name"].(string),
+			Host:             resource["host"].(string),
+			Path:             resource["path"].(string),
+			CheckInterval:    uint(resource["check_interval"].(int)),
+			ExpectedResponse: uint(resource["expected_response"].(int)),
+			HTTPVersion:      resource["http_version"].(string),
+			Initial:          uint(resource["initial"].(int)),
+			Method:           resource["method"].(string),
+			Threshold:        uint(resource["threshold"].(int)),
+			Timeout:          uint(resource["timeout"].(int)),
+			Window:           uint(resource["window"].(int)),
 		}
 
 		log.Printf("[DEBUG] Create Healthcheck Opts: %#v", opts)
 		_, err := conn.CreateHealthCheck(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateHealthCheckInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["comment"]; ok {
+			opts.Comment = gofastly.String(v.(string))
+		}
+		if v, ok := modified["method"]; ok {
+			opts.Method = gofastly.String(v.(string))
+		}
+		if v, ok := modified["host"]; ok {
+			opts.Host = gofastly.String(v.(string))
+		}
+		if v, ok := modified["path"]; ok {
+			opts.Path = gofastly.String(v.(string))
+		}
+		if v, ok := modified["http_version"]; ok {
+			opts.HTTPVersion = gofastly.String(v.(string))
+		}
+		if v, ok := modified["timeout"]; ok {
+			opts.Timeout = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["check_interval"]; ok {
+			opts.CheckInterval = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["expected_response"]; ok {
+			opts.ExpectedResponse = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["window"]; ok {
+			opts.Window = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["threshold"]; ok {
+			opts.Threshold = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["initial"]; ok {
+			opts.Initial = gofastly.Uint(uint(v.(int)))
+		}
+
+		log.Printf("[DEBUG] Update Healthcheck Opts: %#v", opts)
+		_, err := conn.UpdateHealthCheck(&opts)
 		if err != nil {
 			return err
 		}
@@ -115,7 +189,7 @@ func (h *HealthCheckServiceAttributeHandler) Register(s *schema.Resource) error 
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name to identify this Healthcheck",
+					Description: "A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"host": {
 					Type:        schema.TypeString,

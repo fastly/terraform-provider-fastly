@@ -32,16 +32,26 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		nf = new(schema.Set)
 	}
 
-	ofs := of.(*schema.Set)
-	nfs := nf.(*schema.Set)
+	oldSet := of.(*schema.Set)
+	newSet := nf.(*schema.Set)
 
-	removeFTPLogging := ofs.Difference(nfs).List()
-	addFTPLogging := nfs.Difference(ofs).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// DELETE old FTP logging endpoints.
-	for _, oRaw := range removeFTPLogging {
-		of := oRaw.(map[string]interface{})
-		opts := h.buildDelete(of, serviceID, latestVersion)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
+		opts := h.buildDelete(resource, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly FTP logging endpoint removal opts: %#v", opts)
 
@@ -50,9 +60,9 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		}
 	}
 
-	// POST new/updated FTP logging endpoints.
-	for _, nRaw := range addFTPLogging {
-		ef := nRaw.(map[string]interface{})
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 
 		// @HACK for a TF SDK Issue.
 		//
@@ -64,15 +74,90 @@ func (h *FTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
 		// properly handles setting state with the StateFunc, it returns extra entries
 		// during state Gets, specifically `GetChange("logging_ftp")` in this case.
-		if v, ok := ef["name"]; !ok || v.(string) == "" {
+		if v, ok := resource["name"]; !ok || v.(string) == "" {
 			continue
 		}
 
-		opts := h.buildCreate(ef, serviceID, latestVersion)
+		opts := h.buildCreate(resource, serviceID, latestVersion)
 
 		log.Printf("[DEBUG] Fastly FTP logging addition opts: %#v", opts)
 
 		if err := createFTP(conn, opts); err != nil {
+			return err
+		}
+	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateFTPInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["address"]; ok {
+			opts.Address = gofastly.String(v.(string))
+		}
+		if v, ok := modified["port"]; ok {
+			opts.Port = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["public_key"]; ok {
+			opts.PublicKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["user"]; ok {
+			opts.Username = gofastly.String(v.(string))
+		}
+		if v, ok := modified["password"]; ok {
+			opts.Password = gofastly.String(v.(string))
+		}
+		if v, ok := modified["path"]; ok {
+			opts.Path = gofastly.String(v.(string))
+		}
+		if v, ok := modified["period"]; ok {
+			opts.Period = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["format"]; ok {
+			opts.Format = gofastly.String(v.(string))
+		}
+		if v, ok := modified["format_version"]; ok {
+			opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["response_condition"]; ok {
+			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["placement"]; ok {
+			opts.Placement = gofastly.String(v.(string))
+		}
+		if v, ok := modified["gzip_level"]; ok {
+			opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		}
+		if v, ok := modified["compression_codec"]; ok {
+			opts.CompressionCodec = gofastly.String(v.(string))
+		}
+		if v, ok := modified["message_type"]; ok {
+			opts.MessageType = gofastly.String(v.(string))
+		}
+		if v, ok := modified["timestamp_format"]; ok {
+			opts.TimestampFormat = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update FTP Opts: %#v", opts)
+		_, err := conn.UpdateFTP(&opts)
+		if err != nil {
 			return err
 		}
 	}
@@ -106,7 +191,7 @@ func (h *FTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The unique name of the FTP logging endpoint",
+			Description: "The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 
 		"address": {

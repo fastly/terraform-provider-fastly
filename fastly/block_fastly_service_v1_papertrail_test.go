@@ -25,6 +25,7 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 					Address:           "test1.papertrailapp.com",
 					Port:              3600,
 					Format:            "%h %l %u %t %r %>s",
+					FormatVersion:     2,
 					ResponseCondition: "test_response_condition",
 				},
 			},
@@ -34,6 +35,7 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 					"address":            "test1.papertrailapp.com",
 					"port":               uint(3600),
 					"format":             "%h %l %u %t %r %>s",
+					"format_version":     uint(2),
 					"response_condition": "test_response_condition",
 				},
 			},
@@ -60,6 +62,7 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 		Address:           "test1.papertrailapp.com",
 		Port:              uint(3600),
 		Format:            "%h %l %u %t %r %>s",
+		FormatVersion:     uint(2),
 		ResponseCondition: "test_response_condition",
 	}
 
@@ -69,6 +72,7 @@ func TestAccFastlyServiceV1_papertrail_basic(t *testing.T) {
 		Address:        "test2.papertrailapp.com",
 		Port:           uint(8080),
 		Format:         "%h %l %u %t %r %>s",
+		FormatVersion:  uint(2),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -160,8 +164,6 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 					// we don't know these things ahead of time, so populate them now
 					p.ServiceID = service.ID
 					p.ServiceVersion = service.ActiveVersion.Number
-					// we don't support the format_version field, so set it to the zero value
-					lp.FormatVersion = 0
 					// We don't track these, so clear them out because we also wont know
 					// these ahead of time
 					lp.CreatedAt = nil
@@ -169,6 +171,7 @@ func testAccCheckFastlyServiceV1PapertrailAttributes(service *gofastly.ServiceDe
 
 					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
 					if serviceType == ServiceTypeCompute {
+						lp.FormatVersion = p.FormatVersion
 						lp.Format = p.Format
 						lp.ResponseCondition = p.ResponseCondition
 						lp.Placement = p.Placement

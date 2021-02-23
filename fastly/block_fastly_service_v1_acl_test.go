@@ -43,7 +43,8 @@ func TestResourceFastlyFlattenAcl(t *testing.T) {
 func TestAccFastlyServiceV1_acl(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	aclName := fmt.Sprintf("acl %s", acctest.RandString(10))
+	aclName := fmt.Sprintf("acl_%s", acctest.RandString(10))
+	aclNameUpdated := fmt.Sprintf("acl_updated_%s", acctest.RandString(10))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,7 +55,16 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 				Config: testAccServiceV1Config_acl(name, aclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_acl(&service, name, aclName),
+					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "a_"+aclName),
+					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "b_"+aclName),
+				),
+			},
+			{
+				Config: testAccServiceV1Config_acl(name, aclNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "a_"+aclNameUpdated),
+					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "b_"+aclNameUpdated),
 				),
 			},
 		},
@@ -106,9 +116,13 @@ resource "fastly_service_v1" "foo" {
   }
 
   acl {
-	name       = "%s"
+		name       = "a_%s"
+  }
+
+  acl {
+		name       = "b_%s"
   }
 
   force_destroy = true
-}`, name, domainName, backendName, aclName)
+}`, name, domainName, backendName, aclName, aclName)
 }

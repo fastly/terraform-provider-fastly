@@ -31,23 +31,26 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		nb = new(schema.Set)
 	}
 
-	obs := ob.(*schema.Set)
-	nbs := nb.(*schema.Set)
+	oldSet := ob.(*schema.Set)
+	newSet := nb.(*schema.Set)
 
-	setDiff := NewSetDiff(func(backend interface{}) (interface{}, error) {
-		// Use the backend name as key
-		return backend.(map[string]interface{})["name"], nil
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
 	})
 
-	diffResult, err := setDiff.Diff(obs, nbs)
+	diffResult, err := setDiff.Diff(oldSet, newSet)
 	if err != nil {
 		return err
 	}
 
-	// DELETE old Backends
-	for _, bRaw := range diffResult.Deleted {
-		bf := bRaw.(map[string]interface{})
-		opts := h.createDeleteBackendInput(d.Id(), latestVersion, bf)
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
+		opts := h.createDeleteBackendInput(d.Id(), latestVersion, resource)
 
 		log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
 		err := conn.DeleteBackend(&opts)
@@ -60,10 +63,10 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		}
 	}
 
-	// ADD new Backends
-	for _, dRaw := range diffResult.Added {
-		df := dRaw.(map[string]interface{})
-		opts := h.buildCreateBackendInput(d.Id(), latestVersion, df)
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
+		opts := h.buildCreateBackendInput(d.Id(), latestVersion, resource)
 
 		log.Printf("[DEBUG] Create Backend Opts: %#v", opts)
 		_, err := conn.CreateBackend(&opts)
@@ -72,17 +75,18 @@ func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		}
 	}
 
-	// UPDATE existing backends
-	for _, dRaw := range diffResult.Modified {
-		backend := dRaw.(map[string]interface{})
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
 
-		// Each element in the .Modified slice is a backend with nested fields.
-		// Although we know the backend has been modified, we have to manually
-		// filter out any unmodified nested fields by comparing them against the
-		// original backend set data structure using .Filter.
-		//
-		modified := setDiff.Filter(backend, obs)
-		opts := h.buildUpdateBackendInput(d.Id(), latestVersion, backend, modified)
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		opts := h.buildUpdateBackendInput(d.Id(), latestVersion, resource, modified)
 
 		log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
 		_, err := conn.UpdateBackend(&opts)
@@ -138,87 +142,97 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	return opts
 }
 
-func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(service string, latestVersion int, backend, modified map[string]interface{}) gofastly.UpdateBackendInput {
-	input := gofastly.UpdateBackendInput{
-		ServiceID:      service,
+func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID string, latestVersion int, resource, modified map[string]interface{}) gofastly.UpdateBackendInput {
+	opts := gofastly.UpdateBackendInput{
+		ServiceID:      serviceID,
 		ServiceVersion: latestVersion,
-		Name:           backend["name"].(string),
+		Name:           resource["name"].(string),
 	}
 
+	// NOTE: where we transition between interface{} we lose the ability to
+	// infer the underlying type being either a uint vs an int. This
+	// materializes as a panic (yay) and so it's only at runtime we discover
+	// this and so we've updated the below code to convert the type asserted
+	// int into a uint before passing the value to gofastly.Uint().
+	if v, ok := modified["comment"]; ok {
+		opts.Comment = gofastly.String(v.(string))
+	}
 	if v, ok := modified["address"]; ok {
-		input.Address = gofastly.String(v.(string))
-	}
-	if v, ok := modified["override_host"]; ok {
-		input.OverrideHost = gofastly.String(v.(string))
-	}
-	if v, ok := modified["auto_loadbalance"]; ok {
-		input.AutoLoadbalance = gofastly.CBool(v.(bool))
-	}
-	if v, ok := modified["ssl_check_cert"]; ok {
-		input.SSLCheckCert = gofastly.CBool(v.(bool))
-	}
-	if v, ok := modified["ssl_hostname"]; ok {
-		input.SSLHostname = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_ca_cert"]; ok {
-		input.SSLCACert = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_cert_hostname"]; ok {
-		input.SSLCertHostname = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_sni_hostname"]; ok {
-		input.SSLSNIHostname = gofastly.String(v.(string))
-	}
-	if v, ok := modified["use_ssl"]; ok {
-		input.UseSSL = gofastly.CBool(v.(bool))
-	}
-	if v, ok := modified["ssl_client_key"]; ok {
-		input.SSLClientKey = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_client_cert"]; ok {
-		input.SSLClientCert = gofastly.String(v.(string))
-	}
-	if v, ok := modified["max_tls_version"]; ok {
-		input.MaxTLSVersion = gofastly.String(v.(string))
-	}
-	if v, ok := modified["min_tls_version"]; ok {
-		input.MinTLSVersion = gofastly.String(v.(string))
-	}
-	if v, ok := modified["ssl_ciphers"]; ok {
-		input.SSLCiphers = strings.Split(v.(string), ",")
-	}
-	if v, ok := modified["shield"]; ok {
-		input.Shield = gofastly.String(v.(string))
+		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		input.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Uint(uint(v.(int)))
 	}
-	if v, ok := modified["between_bytes_timeout"]; ok {
-		input.BetweenBytesTimeout = gofastly.Uint(uint(v.(int)))
+	if v, ok := modified["override_host"]; ok {
+		opts.OverrideHost = gofastly.String(v.(string))
 	}
 	if v, ok := modified["connect_timeout"]; ok {
-		input.ConnectTimeout = gofastly.Uint(uint(v.(int)))
-	}
-	if v, ok := modified["error_threshold"]; ok {
-		input.ErrorThreshold = gofastly.Uint(uint(v.(int)))
-	}
-	if v, ok := modified["first_byte_timeout"]; ok {
-		input.FirstByteTimeout = gofastly.Uint(uint(v.(int)))
+		opts.ConnectTimeout = gofastly.Uint(uint(v.(int)))
 	}
 	if v, ok := modified["max_conn"]; ok {
-		input.MaxConn = gofastly.Uint(uint(v.(int)))
+		opts.MaxConn = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["error_threshold"]; ok {
+		opts.ErrorThreshold = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["first_byte_timeout"]; ok {
+		opts.FirstByteTimeout = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["between_bytes_timeout"]; ok {
+		opts.BetweenBytesTimeout = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["auto_loadbalance"]; ok {
+		opts.AutoLoadbalance = gofastly.CBool(v.(bool))
 	}
 	if v, ok := modified["weight"]; ok {
-		input.Weight = gofastly.Uint(uint(v.(int)))
+		opts.Weight = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["request_condition"]; ok {
+		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+			opts.RequestCondition = gofastly.String(v.(string))
+		}
 	}
 	if v, ok := modified["healthcheck"]; ok {
-		input.HealthCheck = gofastly.String(v.(string))
+		opts.HealthCheck = gofastly.String(v.(string))
+	}
+	if v, ok := modified["shield"]; ok {
+		opts.Shield = gofastly.String(v.(string))
+	}
+	if v, ok := modified["use_ssl"]; ok {
+		opts.UseSSL = gofastly.CBool(v.(bool))
+	}
+	if v, ok := modified["ssl_check_cert"]; ok {
+		opts.SSLCheckCert = gofastly.CBool(v.(bool))
+	}
+	if v, ok := modified["ssl_ca_cert"]; ok {
+		opts.SSLCACert = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_client_cert"]; ok {
+		opts.SSLClientCert = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_client_key"]; ok {
+		opts.SSLClientKey = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_hostname"]; ok {
+		opts.SSLHostname = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_cert_hostname"]; ok {
+		opts.SSLCertHostname = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_sni_hostname"]; ok {
+		opts.SSLSNIHostname = gofastly.String(v.(string))
+	}
+	if v, ok := modified["min_tls_version"]; ok {
+		opts.MinTLSVersion = gofastly.String(v.(string))
+	}
+	if v, ok := modified["max_tls_version"]; ok {
+		opts.MaxTLSVersion = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssl_ciphers"]; ok {
+		opts.SSLCiphers = strings.Split(v.(string), ",")
 	}
 
-	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		input.RequestCondition = gofastly.String(backend["request_condition"].(string))
-	}
-	return input
+	return opts
 }
 
 func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
@@ -245,7 +259,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Name for this Backend. Must be unique to this Service",
+			Description: "Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"address": {
 			Type:        schema.TypeString,

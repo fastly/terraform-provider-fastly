@@ -30,19 +30,29 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		nd = new(schema.Set)
 	}
 
-	ods := od.(*schema.Set)
-	nds := nd.(*schema.Set)
+	oldSet := od.(*schema.Set)
+	newSet := nd.(*schema.Set)
 
-	remove := ods.Difference(nds).List()
-	add := nds.Difference(ods).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// Delete removed domains
-	for _, dRaw := range remove {
-		df := dRaw.(map[string]interface{})
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteDomainInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Domain removal opts: %#v", opts)
@@ -56,16 +66,16 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		}
 	}
 
-	// POST new Domains
-	for _, dRaw := range add {
-		df := dRaw.(map[string]interface{})
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.CreateDomainInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
-		if v, ok := df["comment"]; ok {
+		if v, ok := resource["comment"]; ok {
 			opts.Comment = v.(string)
 		}
 
@@ -75,6 +85,35 @@ func (h *DomainServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 			return err
 		}
 	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateDomainInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		if v, ok := modified["comment"]; ok {
+			opts.Comment = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Domain Opts: %#v", opts)
+		_, err := conn.UpdateDomain(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -111,7 +150,7 @@ func (h *DomainServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "The domain that this Service will respond to",
+					Description: "The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.",
 				},
 
 				"comment": {

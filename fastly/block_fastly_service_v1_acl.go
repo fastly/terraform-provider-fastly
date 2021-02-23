@@ -30,19 +30,29 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		newACLVal = new(schema.Set)
 	}
 
-	oldACLSet := oldACLVal.(*schema.Set)
-	newACLSet := newACLVal.(*schema.Set)
+	oldSet := oldACLVal.(*schema.Set)
+	newSet := newACLVal.(*schema.Set)
 
-	remove := oldACLSet.Difference(newACLSet).List()
-	add := newACLSet.Difference(oldACLSet).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// Delete removed ACL configurations
-	for _, vRaw := range remove {
-		val := vRaw.(map[string]interface{})
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteACLInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           val["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly ACL removal opts: %#v", opts)
@@ -57,13 +67,13 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 		}
 	}
 
-	// POST new ACL configurations
-	for _, vRaw := range add {
-		val := vRaw.(map[string]interface{})
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.CreateACLInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           val["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
@@ -72,6 +82,16 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 			return err
 		}
 	}
+
+	// UPDATE modified resources (NOT IMPLEMENTED)
+	//
+	// Although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	//
+	// Because of this we do not implement any logic for updating the ACL
+	// resource, only CREATE and DELETE functionality.
+
 	return nil
 }
 
@@ -105,7 +125,7 @@ func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "A unique name to identify this ACL",
+					Description: "A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL",
 				},
 				// Optional fields
 				"acl_id": {
@@ -122,20 +142,20 @@ func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
 func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
 	var al []map[string]interface{}
 	for _, acl := range aclList {
-		// Convert VCLs to a map for saving to state.
-		vclMap := map[string]interface{}{
+		// Convert ACLs to a map for saving to state.
+		aclMap := map[string]interface{}{
 			"acl_id": acl.ID,
 			"name":   acl.Name,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range vclMap {
+		for k, v := range aclMap {
 			if v == "" {
-				delete(vclMap, k)
+				delete(aclMap, k)
 			}
 		}
 
-		al = append(al, vclMap)
+		al = append(al, aclMap)
 	}
 
 	return al

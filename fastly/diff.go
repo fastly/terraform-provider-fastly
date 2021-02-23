@@ -38,6 +38,16 @@ func NewSetDiff(keyFunc KeyFunc) *SetDiff {
 // Diff diffs two Set objects and returns a DiffResult object containing the diffs.
 //
 // The DiffResult object will contain the elements from newSet on the Modified field.
+//
+// NOTE: there is a caveat with the current implementation which is related to
+// the lookup 'key' you specify. If the key you use (to lookup a resource
+// within the comparable set) is also updatable via the fastly API, then that
+// means you'll end up deleting and recreating the resource rather than simply
+// updating it (which is less efficient, as it's two separate operations).
+//
+// For example, a 'domain' can be updated by changing either its 'name' or its
+// 'comment' attribute, but in order to compare changes using SetDiff we only
+// really have the option to use 'name' as the lookup key.
 func (h *SetDiff) Diff(oldSet, newSet *schema.Set) (*DiffResult, error) {
 
 	// Convert the set into a map to facilitate lookup
@@ -108,6 +118,11 @@ func (h *SetDiff) computeKey(elem interface{}) (interface{}, error) {
 
 // Filter filters out unmodified fields of a Set elements map data structure by ranging over
 // the original data and comparing each field against the new data.
+//
+// The motivation for this function is to avoid resetting an attribute on a
+// resource to a value that hasn't actually changed because (depending on the
+// attribute) it might have unexpected consequences (e.g. a nested resource
+// gets replaced/recreated). Safer to only update attributes that need to be.
 func (h *SetDiff) Filter(modified map[string]interface{}, oldSet *schema.Set) map[string]interface{} {
 	elements := oldSet.List()
 	filtered := make(map[string]interface{})

@@ -31,19 +31,29 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		nc = new(schema.Set)
 	}
 
-	ocs := oc.(*schema.Set)
-	ncs := nc.(*schema.Set)
+	oldSet := oc.(*schema.Set)
+	newSet := nc.(*schema.Set)
 
-	remove := ocs.Difference(ncs).List()
-	add := ncs.Difference(ocs).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		return t["name"], nil
+	})
 
-	// Delete removed Cache Settings
-	for _, dRaw := range remove {
-		df := dRaw.(map[string]interface{})
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// DELETE removed resources
+	for _, resource := range diffResult.Deleted {
+		resource := resource.(map[string]interface{})
 		opts := gofastly.DeleteCacheSettingInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			Name:           df["name"].(string),
+			Name:           resource["name"].(string),
 		}
 
 		log.Printf("[DEBUG] Fastly Cache Settings removal opts: %#v", opts)
@@ -57,9 +67,9 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 		}
 	}
 
-	// POST new Cache Settings
-	for _, dRaw := range add {
-		opts, err := buildCacheSetting(dRaw.(map[string]interface{}))
+	// CREATE new resources
+	for _, resource := range diffResult.Added {
+		opts, err := buildCacheSetting(resource.(map[string]interface{}))
 		if err != nil {
 			log.Printf("[DEBUG] Error building Cache Setting: %s", err)
 			return err
@@ -73,6 +83,49 @@ func (h *CacheSettingServiceAttributeHandler) Process(d *schema.ResourceData, la
 			return err
 		}
 	}
+
+	// UPDATE modified resources
+	//
+	// NOTE: although the go-fastly API client enables updating of a resource by
+	// its 'name' attribute, this isn't possible within terraform due to
+	// constraints in the data model/schema of the resources not having a uid.
+	for _, resource := range diffResult.Modified {
+		resource := resource.(map[string]interface{})
+
+		opts := gofastly.UpdateCacheSettingInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+			Name:           resource["name"].(string),
+		}
+
+		// only attempt to update attributes that have changed
+		modified := setDiff.Filter(resource, oldSet)
+
+		// NOTE: where we transition between interface{} we lose the ability to
+		// infer the underlying type being either a uint vs an int. This
+		// materializes as a panic (yay) and so it's only at runtime we discover
+		// this and so we've updated the below code to convert the type asserted
+		// int into a uint before passing the value to gofastly.Uint().
+		if v, ok := modified["action"]; ok {
+			opts.Action = gofastly.CacheSettingAction(v.(string))
+		}
+		if v, ok := modified["ttl"]; ok {
+			opts.TTL = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["stale_ttl"]; ok {
+			opts.StaleTTL = gofastly.Uint(uint(v.(int)))
+		}
+		if v, ok := modified["cache_condition"]; ok {
+			opts.CacheCondition = gofastly.String(v.(string))
+		}
+
+		log.Printf("[DEBUG] Update Cache Setting Opts: %#v", opts)
+		_, err := conn.UpdateCacheSetting(&opts)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -104,7 +157,7 @@ func (h *CacheSettingServiceAttributeHandler) Register(s *schema.Resource) error
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Unique name for this Cache Setting",
+					Description: "Unique name for this Cache Setting. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"action": {
 					Type:        schema.TypeString,

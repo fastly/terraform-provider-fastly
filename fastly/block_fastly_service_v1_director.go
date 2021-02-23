@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -185,10 +186,15 @@ func (h *DirectorServiceAttributeHandler) Process(d *schema.ResourceData, latest
 						Backend:        backend.(string),
 					}
 
-					log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
+					log.Printf("[DEBUG] Director Backend Update opts: %#v", opts)
 					_, err := conn.CreateDirectorBackend(&opts)
 					if err != nil {
-						return err
+						// If we end up trying to create a backend that already exists, then the
+						// API will return a '409 Conflict'. We don't want to return those errors
+						// as they ultimately don't mean anything useful to the user.
+						if !strings.Contains(err.Error(), "409 - Conflict") {
+							return err
+						}
 					}
 				}
 			}

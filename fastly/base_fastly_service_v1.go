@@ -69,7 +69,7 @@ func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool 
 }
 
 // See interface definition for comments.
-func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, initialVersion bool) bool {
+func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, _ bool) bool {
 	return h.HasChange(d)
 }
 
@@ -218,32 +218,32 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 // resourceCreate satisfies the Terraform resource schema Create "interface"
 // while injecting the ServiceDefinition into the true Create functionality.
 func resourceCreate(serviceDef ServiceDefinition) schema.CreateContextFunc {
-	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
-		return resourceServiceCreate(ctx, data, i, serviceDef)
+	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		return resourceServiceCreate(ctx, d, meta, serviceDef)
 	}
 }
 
 // resourceRead satisfies the Terraform resource schema Read "interface"
 // while injecting the ServiceDefinition into the true Read functionality.
 func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
-	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
-		return resourceServiceRead(ctx, data, i, serviceDef, false)
+	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		return resourceServiceRead(ctx, d, meta, serviceDef, false)
 	}
 }
 
 // resourceUpdate satisfies the Terraform resource schema Update "interface"
 // while injecting the ServiceDefinition into the true Update functionality.
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
-	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
-		return resourceServiceUpdate(ctx, data, i, serviceDef)
+	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		return resourceServiceUpdate(ctx, d, meta, serviceDef)
 	}
 }
 
 // resourceDelete satisfies the Terraform resource schema Delete "interface"
 // while injecting the ServiceDefinition into the true Delete functionality.
 func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
-	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
-		return resourceServiceDelete(ctx, data, i, serviceDef)
+	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		return resourceServiceDelete(ctx, d, meta, serviceDef)
 	}
 }
 
@@ -251,8 +251,8 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 // while injecting the ServiceDefinition into the true Import functionality.
 func resourceImport(serviceDef ServiceDefinition) *schema.ResourceImporter {
 	return &schema.ResourceImporter{
-		StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-			err := diagToErr(resourceServiceRead(ctx, d, m, serviceDef, true))
+		StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			err := diagToErr(resourceServiceRead(ctx, d, meta, serviceDef, true))
 			if err != nil {
 				return nil, err
 			}
@@ -291,7 +291,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*FastlyClient).conn
 
 	// Update Name and/or Comment. No new version is required for this.
-	if d.HasChange("name") || d.HasChange("comment") {
+	if d.HasChanges("name", "comment") {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
 			Name:      gofastly.String(d.Get("name").(string)),
@@ -495,7 +495,7 @@ func resourceServiceRead(_ context.Context, d *schema.ResourceData, meta interfa
 }
 
 // resourceServiceDelete provides service resource Delete functionality.
-func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta interface{}, _ ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.

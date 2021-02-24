@@ -70,6 +70,12 @@ generate-docs: $(BIN)/tfplugindocs
 validate-docs: $(BIN)/tfplugindocs
 	$(BIN)/tfplugindocs validate
 
+tfproviderlintx: $(BIN)/tfproviderlintx
+	$(BIN)/tfproviderlintx $(TFPROVIDERLINT_ARGS) ./...
+
+tfproviderlint: $(BIN)/tfproviderlint
+	$(BIN)/tfproviderlint $(TFPROVIDERLINT_ARGS) ./...
+
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m

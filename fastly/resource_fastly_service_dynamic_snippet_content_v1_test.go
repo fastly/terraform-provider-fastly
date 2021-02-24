@@ -39,6 +39,11 @@ func TestAccFastlyServiceDynamicSnippetContentV1_create(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_dynamic_snippet_content_v1.content", "content", expectedSnippetContent),
 				),
 			},
+			{
+				ResourceName:      "fastly_service_dynamic_snippet_content_v1.content",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -153,46 +158,6 @@ func TestAccFastlyServiceDynamicSnippetContentV1_normal_snippet_is_not_removed(t
 			},
 		},
 	})
-}
-
-func TestAccFastlyServiceDynamicSnippetContentV1_import(t *testing.T) {
-
-	var service gofastly.ServiceDetail
-	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-
-	expectedNumberOfSnippets := "1"
-	expectedSnippetName := "dyn_hit_test"
-	expectedSnippetType := "hit"
-	expectedSnippetPriority := "100"
-	expectedSnippetContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceDynamicSnippetContentV1ConfigWithDynamicSnippet(serviceName, expectedSnippetName, expectedSnippetContent),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(&service, serviceName, expectedSnippetName, expectedSnippetContent),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "dynamicsnippet.#", expectedNumberOfSnippets),
-					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_v1.foo", "dynamicsnippet.*", map[string]string{
-						"name":     expectedSnippetName,
-						"type":     expectedSnippetType,
-						"priority": expectedSnippetPriority,
-					}),
-					resource.TestCheckResourceAttr("fastly_service_dynamic_snippet_content_v1.content", "content", expectedSnippetContent),
-				),
-			},
-			{
-				ResourceName:      "fastly_service_dynamic_snippet_content_v1.content",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-
 }
 
 func testAccCheckFastlyServiceDynamicSnippetContentV1RemoteState(service *gofastly.ServiceDetail, name, dynamicSnippetName, expectedContent string) resource.TestCheckFunc {

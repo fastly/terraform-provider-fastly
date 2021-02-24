@@ -43,7 +43,7 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeString,
-							Description: "",
+							Description: "The unique ID of the entry",
 							Computed:    true,
 						},
 						"ip": {
@@ -120,7 +120,11 @@ func resourceServiceAclEntriesV1Read(_ context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	d.Set("entry", flattenAclEntries(aclEntries))
+	err = d.Set("entry", flattenAclEntries(aclEntries))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
@@ -260,7 +264,7 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 	return resultList
 }
 
-func resourceServiceACLEntriesV1Import(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceACLEntriesV1Import(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

@@ -42,7 +42,7 @@ func resourceUserV1() *schema.Resource {
 	}
 }
 
-func resourceUserV1Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserV1Create(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	u, err := conn.CreateUser(&gofastly.CreateUserInput{
@@ -82,7 +82,7 @@ func resourceUserV1Update(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*FastlyClient).conn
 
 	// Update Name and/or Role.
-	if d.HasChange("name") || d.HasChange("role") {
+	if d.HasChanges("name", "role") {
 		_, err := conn.UpdateUser(&gofastly.UpdateUserInput{
 			ID:   d.Id(),
 			Name: gofastly.String(d.Get("name").(string)),

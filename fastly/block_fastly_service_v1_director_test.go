@@ -215,7 +215,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director, director_backends []*gofastly.DirectorBackend) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director, _ []*gofastly.DirectorBackend) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{

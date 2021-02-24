@@ -10,10 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type dataSourceFastlyIPRangesResult struct {
-	Addresses []string
-}
-
 func dataSourceFastlyIPRanges() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyIPRangesRead,

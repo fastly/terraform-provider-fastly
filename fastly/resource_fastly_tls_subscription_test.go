@@ -27,6 +27,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceFastlyTLSSubscriptionConfig(name, domain),

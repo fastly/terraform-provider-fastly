@@ -114,13 +114,13 @@ func resourceServiceDynamicSnippetV1Read(_ context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceServiceDynamicSnippetV1Delete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetV1Delete(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
 	// Dynamic snippet content cannot be deleted. Removing from state only
 	d.SetId("")
 	return nil
 }
 
-func resourceServiceDynamicSnippetContentV1Import(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceDynamicSnippetContentV1Import(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

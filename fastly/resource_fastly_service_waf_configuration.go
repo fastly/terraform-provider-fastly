@@ -356,7 +356,7 @@ func resourceServiceWAFConfigurationV1Delete(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceServiceWAFConfigurationV1Import(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceWAFConfigurationV1Import(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 
 	wafID := d.Id()
 	err := d.Set("waf_id", wafID)
@@ -523,7 +523,7 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 	return versions[0], nil
 }
 
-func validateWAFConfigurationResource(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func validateWAFConfigurationResource(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
 	err := validateWAFRuleExclusion(d)
 	return err
 }

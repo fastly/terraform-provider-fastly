@@ -90,6 +90,11 @@ func TestAccFastlyServiceAclEntriesV1_create(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
 				),
 			},
+			{
+				ResourceName:      "fastly_service_acl_entries_v1.entries",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -240,43 +245,6 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					resource.TestCheckNoResourceAttr("fastly_service_v1.foo", "entry"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccFastlyServiceAclEntriesV1_import(t *testing.T) {
-
-	var service gofastly.ServiceDetail
-
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	aclName := fmt.Sprintf("acl %s", acctest.RandString(10))
-
-	expectedRemoteEntries := []map[string]interface{}{
-		{
-			"id":      "",
-			"ip":      "127.0.0.1",
-			"subnet":  "24",
-			"negated": false,
-			"comment": "ALC Entry 1",
-		},
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(name, aclName, expectedRemoteEntries),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-				),
-			},
-			{
-				ResourceName:      "fastly_service_acl_entries_v1.entries",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

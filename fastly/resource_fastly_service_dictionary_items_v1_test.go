@@ -70,6 +70,11 @@ func TestAccFastlyServiceDictionaryItemV1_create(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", "2"),
 				),
 			},
+			{
+				ResourceName:      "fastly_service_dictionary_items_v1.items",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -287,38 +292,6 @@ func TestAccFastlyServiceDictionaryItemV1_batch_1001_items(t *testing.T) {
 					testAccCheckFastlyServiceDictionaryItemsV1RemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items_v1.items", "items.%", strconv.Itoa(expectedBatchSize)),
 				),
-			},
-		},
-	})
-}
-
-func TestAccFastlyServiceDictionaryItemV1_import(t *testing.T) {
-
-	var service gofastly.ServiceDetail
-
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
-
-	expectedRemoteItems := map[string]string{
-		"key1": "value1",
-		"key2": "value2",
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceDictionaryItemsV1Config_one_dictionary_with_items(name, dictName, expectedRemoteItems, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-				),
-			},
-			{
-				ResourceName:      "fastly_service_dictionary_items_v1.items",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

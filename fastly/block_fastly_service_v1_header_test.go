@@ -166,7 +166,7 @@ func TestAccFastlyServiceV1_headers_basic(t *testing.T) {
 		ResponseCondition: "test_res_condition",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

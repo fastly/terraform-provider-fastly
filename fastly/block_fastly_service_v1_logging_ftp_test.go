@@ -125,7 +125,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 		MessageType:     "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -176,7 +176,7 @@ func TestAccFastlyServiceV1_logging_ftp_basic_compute(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

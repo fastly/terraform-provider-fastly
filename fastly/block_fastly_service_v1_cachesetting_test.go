@@ -68,7 +68,7 @@ func TestAccFastlyServiceV1CacheSetting_basic(t *testing.T) {
 		TTL:            uint(300),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

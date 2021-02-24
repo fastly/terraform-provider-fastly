@@ -86,7 +86,7 @@ func TestAccFastlyServiceV1_logging_heroku_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -130,7 +130,7 @@ func TestAccFastlyServiceV1_logging_heroku_basic_compute(t *testing.T) {
 		Token:          "s3cr3t",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

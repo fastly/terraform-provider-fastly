@@ -103,7 +103,7 @@ func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
 	wafrulesHCL2 := `
     publishers = ["owasp","fastly"]
     `
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -130,7 +130,7 @@ func TestAccFastlyWAFRulesExcludeFilter(t *testing.T) {
     publishers = ["owasp"]
     exclude_modsec_rule_ids = [1010020]
     `
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -153,7 +153,7 @@ func TestAccFastlyWAFRulesTagFilter(t *testing.T) {
 	wafrulesHCL2 := `
     tags = ["CVE-2018-17384", "attack-rce"]
     `
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

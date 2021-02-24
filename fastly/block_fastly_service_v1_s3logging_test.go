@@ -134,7 +134,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -186,7 +186,7 @@ func TestAccFastlyServiceV1_s3logging_basic_compute(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -227,7 +227,7 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -272,7 +272,7 @@ func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -312,7 +312,7 @@ func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

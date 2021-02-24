@@ -135,7 +135,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic(t *testing.T) {
 		Placement:         "none",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -189,7 +189,7 @@ func TestAccFastlyServiceV1_logging_elasticsearch_basic_compute(t *testing.T) {
 		TLSHostname:       "example.com",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

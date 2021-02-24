@@ -130,7 +130,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -182,7 +182,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic_compute(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

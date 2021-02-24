@@ -150,7 +150,7 @@ func TestAccFastlyServiceV1_kafkalogging_basic(t *testing.T) {
 		Password:          "password",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -202,7 +202,7 @@ func TestAccFastlyServiceV1_kafkalogging_basic_compute(t *testing.T) {
 		TLSHostname:      "example.com",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

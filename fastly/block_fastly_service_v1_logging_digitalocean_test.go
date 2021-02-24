@@ -130,7 +130,7 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -182,7 +182,7 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic_compute(t *testing.T) {
 		MessageType:     "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

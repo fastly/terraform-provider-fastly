@@ -93,7 +93,7 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test1.tf-%s.com", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceComputeDestroy,
@@ -146,7 +146,7 @@ func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 
 func TestAccFastlyServiceCompute_import(t *testing.T) {
 	var service gofastly.ServiceDetail
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

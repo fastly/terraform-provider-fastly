@@ -46,7 +46,7 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 	aclName := fmt.Sprintf("acl_%s", acctest.RandString(10))
 	aclNameUpdated := fmt.Sprintf("acl_updated_%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

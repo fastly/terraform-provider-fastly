@@ -75,6 +75,19 @@ In order to run the tests with extra debugging context, prefix the `make` comman
 $ TF_LOG=trace make testacc
 ```
 
+By default, the tests run with a parallelism of 4.
+This can be reduced if some tests are failing due to network-related issues, or increased if possible, to reduce the running time of the tests.
+Prefix the `make` command with `TEST_PARALLELISM`, as in the following example, to configure this.
+
+```sh
+$ TEST_PARALLELISM=8 make testacc
+```
+
+Depending on the Fastly account used, some features may not be enabled (e.g. Platform TLS).
+This may result in some tests failing, potentially with `403 Unauthorised` errors, when the full test suite is being run.
+Check the [Fastly API documentation](https://developer.fastly.com/reference/api/) to confirm if the failing tests use features in Limited Availability or only available to certain customers.
+If this is the case, either use the `TESTARGS` regular expressions described above, or temporarily add `t.SkipNow()` to the top of any tests that should be excluded. 
+
 ## Building The Documentation
 
 The documentation is built from components (go templates) stored in the `templates` folder.

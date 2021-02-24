@@ -100,7 +100,7 @@ func TestAccFastlyServiceV1_httpslogging_basic(t *testing.T) {
 		JSONFormat:        "0",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -148,7 +148,7 @@ func TestAccFastlyServiceV1_httpslogging_basic_compute(t *testing.T) {
 		JSONFormat:        "0",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

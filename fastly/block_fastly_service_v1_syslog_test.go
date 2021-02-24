@@ -112,7 +112,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		MessageType:    "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -159,7 +159,7 @@ func TestAccFastlyServiceV1_syslog_basic_compute(t *testing.T) {
 		MessageType:    "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -195,7 +195,7 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 		MessageType:    "classic",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -215,7 +215,9 @@ func TestAccFastlyServiceV1_syslog_formatVersion(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_syslog_useTls(t *testing.T) {
+// This test should not be run in parallel due to its use of schema.EnvDefaultFunc to set/reset environment variables,
+// which conflicts with other running tests.
+func TestAccFastlyServiceV1_syslog_useTLS(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
 		t.Errorf("Failed to generate key and cert: %s", err)

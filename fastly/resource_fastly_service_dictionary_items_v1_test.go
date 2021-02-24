@@ -57,7 +57,7 @@ func TestAccFastlyServiceDictionaryItemV1_create(t *testing.T) {
 		"key2": "value2",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -94,7 +94,7 @@ func TestAccFastlyServiceDictionaryItemV1_create_inactive_service(t *testing.T) 
 		"key2": "value2",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -123,7 +123,7 @@ func TestAccFastlyServiceDictionaryItemV1_create_dynamic(t *testing.T) {
 		"delta": "delta.demo.notexample.com",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -156,7 +156,7 @@ func TestAccFastlyServiceDictionaryItemV1_update(t *testing.T) {
 		"key3": "value3",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -195,7 +195,7 @@ func TestAccFastlyServiceDictionaryItemV1_external_item_is_removed(t *testing.T)
 
 	config := testAccServiceDictionaryItemsV1Config_one_dictionary_with_items(name, dictName, expectedRemoteItems, true)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -235,7 +235,7 @@ func TestAccFastlyServiceDictionaryItemV1_external_item_deleted(t *testing.T) {
 
 	expectedRemoteItemsAfterUpdate := map[string]string{}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -275,7 +275,7 @@ func TestAccFastlyServiceDictionaryItemV1_batch_1001_items(t *testing.T) {
 		expectedRemoteItems[fmt.Sprintf("key%d", i)] = fmt.Sprintf("value%d", i)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,
@@ -304,7 +304,7 @@ func TestAccFastlyServiceDictionaryItemV1_import(t *testing.T) {
 		"key2": "value2",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

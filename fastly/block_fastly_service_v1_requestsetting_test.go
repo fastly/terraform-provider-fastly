@@ -68,7 +68,7 @@ func TestAccFastlyServiceV1RequestSetting_basic(t *testing.T) {
 		MaxStaleAge:      uint(90),
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

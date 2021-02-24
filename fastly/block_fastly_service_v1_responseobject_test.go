@@ -80,7 +80,7 @@ func TestAccFastlyServiceV1_response_object_basic(t *testing.T) {
 		CacheCondition:   "another-test-cache-condition",
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceV1Destroy,

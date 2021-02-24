@@ -162,7 +162,7 @@ resource "fastly_service_v1" "foo" {
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name    = "tf-test backend"
   }
 
   dictionary {

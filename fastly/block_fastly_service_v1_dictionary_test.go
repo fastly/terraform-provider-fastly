@@ -80,7 +80,7 @@ func TestAccFastlyServiceV1_dictionary(t *testing.T) {
 			},
 			{
 				Config: testAccServiceV1Config_dictionary(name, updatedDictName, backendName, domainName),
-				Check:  testAccAddDictionaryItems(&dictionary),
+				Check:  testAccAddDictionaryItems(&dictionary), // triggers side-effect of adding a Dictionary Item
 			},
 			{
 				Config:      testAccServiceV1Config_dictionary(name, dictName, backendName, domainName),

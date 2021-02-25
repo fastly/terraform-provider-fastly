@@ -78,7 +78,7 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 			},
 			{
 				Config: testAccServiceV1Config_acl(name, aclNameUpdated),
-				Check:  testAccAddACLEntries(&acl),
+				Check:  testAccAddACLEntries(&acl), // triggers side-effect of adding an ACL Entry
 			},
 			{
 				Config:      testAccServiceV1Config_acl(name, aclName),

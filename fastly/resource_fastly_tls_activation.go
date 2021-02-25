@@ -1,6 +1,8 @@
 package fastly
 
 import (
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"time"
 
@@ -10,10 +12,10 @@ import (
 
 func resourceFastlyTLSActivation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFastlyTLSActivationCreate,
-		Read:   resourceFastlyTLSActivationRead,
-		Update: resourceFastlyTLSActivationUpdate,
-		Delete: resourceFastlyTLSActivationDelete,
+		CreateContext: resourceFastlyTLSActivationCreate,
+		ReadContext:   resourceFastlyTLSActivationRead,
+		UpdateContext: resourceFastlyTLSActivationUpdate,
+		DeleteContext: resourceFastlyTLSActivationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -45,7 +47,7 @@ func resourceFastlyTLSActivation() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSActivationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var configuration *fastly.TLSConfiguration
@@ -59,45 +61,45 @@ func resourceFastlyTLSActivationCreate(d *schema.ResourceData, meta interface{})
 		Domain:        &fastly.TLSDomain{ID: d.Get("domain").(string)},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(activation.ID)
 
-	return resourceFastlyTLSActivationRead(d, meta)
+	return resourceFastlyTLSActivationRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSActivationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	activation, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{
 		ID: d.Id(),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = d.Set("certificate_id", activation.Certificate.ID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("configuration_id", activation.Configuration.ID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("domain", activation.Domain.ID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("created_at", activation.CreatedAt.Format(time.RFC3339))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceFastlyTLSActivationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	_, err := conn.UpdateTLSActivation(&fastly.UpdateTLSActivationInput{
@@ -105,13 +107,13 @@ func resourceFastlyTLSActivationUpdate(d *schema.ResourceData, meta interface{})
 		Certificate: &fastly.CustomTLSCertificate{ID: d.Get("certificate_id").(string)},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceFastlyTLSActivationRead(d, meta)
+	return resourceFastlyTLSActivationRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSActivationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSActivationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	err := conn.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{
@@ -122,7 +124,7 @@ func resourceFastlyTLSActivationDelete(d *schema.ResourceData, meta interface{})
 			log.Printf("[WARN] Error deleting TLS activation (%s), not found. Was a TLS subscription enabled on the same domain?\n", d.Id())
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

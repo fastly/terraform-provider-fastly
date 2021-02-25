@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,7 +11,7 @@ import (
 
 func dataSourceFastlyTLSDomain() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSDomainsRead,
+		ReadContext: dataSourceFastlyTLSDomainsRead,
 		Schema: map[string]*schema.Schema{
 			"domain": {
 				Type:        schema.TypeString,
@@ -38,12 +40,12 @@ func dataSourceFastlyTLSDomain() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSDomainsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSDomainsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	domain, err := findTLSDomain(conn, d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	var activations []string
@@ -61,13 +63,13 @@ func dataSourceFastlyTLSDomainsRead(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(domain.ID)
 	if err := d.Set("tls_activation_ids", activations); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("tls_certificate_ids", certificates); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("tls_subscription_ids", subscriptions); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

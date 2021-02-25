@@ -1,7 +1,8 @@
 package fastly
 
 import (
-	"fmt"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
@@ -10,7 +11,7 @@ import (
 
 func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSPrivateKeyRead,
+		ReadContext: dataSourceFastlyTLSPrivateKeyRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:          schema.TypeString,
@@ -63,7 +64,7 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSPrivateKeyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var privateKey *fastly.PrivateKey
@@ -71,28 +72,33 @@ func dataSourceFastlyTLSPrivateKeyRead(d *schema.ResourceData, meta interface{})
 		var err error
 		privateKey, err = conn.GetPrivateKey(&fastly.GetPrivateKeyInput{ID: v.(string)})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		filters := getTLSPrivateKeyFilters(d)
 
 		privateKeys, err := listTLSPrivateKeys(conn, filters...)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if len(privateKeys) == 0 {
-			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(privateKeys) > 1 {
-			return fmt.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
+			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
 		}
 
 		privateKey = privateKeys[0]
 	}
 
-	return dataSourceFastlyTLSPrivateKeySetAttributes(privateKey, d)
+	err := dataSourceFastlyTLSPrivateKeySetAttributes(privateKey, d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 type TLSPrivateKeyPredicate func(key *fastly.PrivateKey) bool

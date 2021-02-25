@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
@@ -11,7 +13,7 @@ import (
 
 func dataSourceFastlyTLSConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSConfigurationRead,
+		ReadContext: dataSourceFastlyTLSConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -102,7 +104,7 @@ const (
 	tlsCustomService   = "CUSTOM"
 )
 
-func dataSourceFastlyTLSConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var configuration *fastly.CustomTLSConfiguration
@@ -112,7 +114,7 @@ func dataSourceFastlyTLSConfigurationRead(d *schema.ResourceData, meta interface
 			ID: v.(string),
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		configuration = config
@@ -121,21 +123,26 @@ func dataSourceFastlyTLSConfigurationRead(d *schema.ResourceData, meta interface
 
 		configurations, err := listTLSConfigurations(conn, filters...)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if len(configurations) == 0 {
-			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(configurations) > 1 {
-			return fmt.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+			return diag.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
 		}
 
 		configuration = configurations[0]
 	}
 
-	return dataSourceFastlyTLSConfigurationSetAttributes(configuration, d)
+	err := dataSourceFastlyTLSConfigurationSetAttributes(configuration, d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 func getTLSConfigurationFilters(d *schema.ResourceData) []func(*fastly.CustomTLSConfiguration) bool {

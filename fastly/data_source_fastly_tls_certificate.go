@@ -1,7 +1,8 @@
 package fastly
 
 import (
-	"fmt"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
@@ -10,7 +11,7 @@ import (
 
 func dataSourceFastlyTLSCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSCertificateRead,
+		ReadContext: dataSourceFastlyTLSCertificateRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -78,7 +79,7 @@ func dataSourceFastlyTLSCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var certificate *fastly.CustomTLSCertificate
@@ -88,7 +89,7 @@ func dataSourceFastlyTLSCertificateRead(d *schema.ResourceData, meta interface{}
 			ID: v.(string),
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		certificate = cert
@@ -97,21 +98,26 @@ func dataSourceFastlyTLSCertificateRead(d *schema.ResourceData, meta interface{}
 
 		certificates, err := listTLSCertificates(conn, filters...)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if len(certificates) == 0 {
-			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(certificates) > 1 {
-			return fmt.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+			return diag.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
 		}
 
 		certificate = certificates[0]
 	}
 
-	return dataSourceFastlyTLSCertificateSetAttributes(certificate, d)
+	err := dataSourceFastlyTLSCertificateSetAttributes(certificate, d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 type TLSCertificatePredicate func(*fastly.CustomTLSCertificate) bool

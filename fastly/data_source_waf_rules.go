@@ -1,8 +1,9 @@
 package fastly
 
 import (
+	"context"
 	"errors"
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"sort"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 
 func dataSourceFastlyWAFRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyWAFRulesRead,
+		ReadContext: dataSourceFastlyWAFRulesRead,
 
 		Schema: map[string]*schema.Schema{
 			"publishers": {
@@ -63,7 +64,7 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyWAFRulesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	conn := meta.(*FastlyClient).conn
 	input := &gofastly.ListAllWAFRulesInput{}
@@ -92,14 +93,14 @@ func dataSourceFastlyWAFRulesRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[INFO] Reading WAF rules with ops: %#v", input)
 	res, err := conn.ListAllWAFRules(input)
 	if err != nil {
-		return fmt.Errorf("error listing WAF rules: %s", err)
+		return diag.Errorf("error listing WAF rules: %s", err)
 	}
 
 	rules := flattenWAFRules(res.Items)
 
 	d.SetId(strconv.Itoa(createFiltersHash(input)))
 	if err := d.Set("rules", rules); err != nil {
-		return fmt.Errorf("error setting WAF rules: %s", err)
+		return diag.Errorf("error setting WAF rules: %s", err)
 	}
 
 	return nil

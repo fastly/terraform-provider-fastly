@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"sort"
 
@@ -14,10 +15,10 @@ import (
 
 func resourceServiceWAFConfigurationV1() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServiceWAFConfigurationV1Create,
-		Read:   resourceServiceWAFConfigurationV1Read,
-		Update: resourceServiceWAFConfigurationV1Update,
-		Delete: resourceServiceWAFConfigurationV1Delete,
+		CreateContext: resourceServiceWAFConfigurationV1Create,
+		ReadContext:   resourceServiceWAFConfigurationV1Read,
+		UpdateContext: resourceServiceWAFConfigurationV1Update,
+		DeleteContext: resourceServiceWAFConfigurationV1Delete,
 		Importer: &schema.ResourceImporter{
 			State: resourceServiceWAFConfigurationV1Import,
 		},
@@ -214,18 +215,18 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 
 // this method calls update because the creation of the waf (within the service resource) automatically creates
 // the first waf version, and this makes both a create and an updating exactly the same operation.
-func resourceServiceWAFConfigurationV1Create(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceWAFConfigurationV1Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] creating configuration for WAF: %s", d.Get("waf_id").(string))
 	d.SetId(d.Get("waf_id").(string))
-	return resourceServiceWAFConfigurationV1Update(d, meta)
+	return resourceServiceWAFConfigurationV1Update(ctx, d, meta)
 }
 
-func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	latestVersion, err := getLatestVersion(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	wafID := d.Get("waf_id").(string)
@@ -236,7 +237,7 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 			WAFVersionNumber: latestVersion.Number,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -244,19 +245,19 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 	if input.HasChanges() {
 		latestVersion, err = conn.UpdateWAFVersion(input)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("rule") {
 		if err := updateRules(d, meta, wafID, latestVersion.Number); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.HasChange("rule_exclusion") {
 		if err := updateWAFRuleExclusions(d, meta, wafID, latestVersion.Number); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -265,7 +266,7 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 		WAFVersionNumber: latestVersion.Number,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	statusCheck := &WAFDeploymentChecker{
@@ -276,12 +277,12 @@ func resourceServiceWAFConfigurationV1Update(d *schema.ResourceData, meta interf
 	}
 	err = statusCheck.waitForDeployment(wafID, latestVersion)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	return resourceServiceWAFConfigurationV1Read(d, meta)
+	return resourceServiceWAFConfigurationV1Read(ctx, d, meta)
 }
 
-func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceWAFConfigurationV1Read(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	latestVersion, err := getLatestVersion(d, meta)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
@@ -290,14 +291,14 @@ func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interfac
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] retrieving WAF version number: %d", latestVersion.Number)
 	refreshWAFConfig(d, latestVersion)
 
 	if err := readWAFRules(meta, d, latestVersion.Number); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// As the rule exclusion API is still behind a beta feature
@@ -306,14 +307,14 @@ func resourceServiceWAFConfigurationV1Read(d *schema.ResourceData, meta interfac
 	// TODO(phamann): Remove d.GetOk() guard once in limited availability.
 	if _, ok := d.GetOk("rule_exclusion"); ok {
 		if err := readWAFRuleExclusions(meta, d, latestVersion.Number); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	return nil
 }
 
-func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceWAFConfigurationV1Delete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	wafID := d.Get("waf_id").(string)
@@ -322,7 +323,7 @@ func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interf
 		WAFID: wafID,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = conn.DeployWAFVersion(&gofastly.DeployWAFVersionInput{
@@ -330,7 +331,7 @@ func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interf
 		WAFVersionNumber: emptyVersion.Number,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	statusCheck := &WAFDeploymentChecker{
@@ -341,7 +342,7 @@ func resourceServiceWAFConfigurationV1Delete(d *schema.ResourceData, meta interf
 	}
 	err = statusCheck.waitForDeployment(wafID, emptyVersion)
 	if err != nil {
-		return fmt.Errorf("Error waiting for WAF Version (%s) to be deleted: %s", d.Id(), err)
+		return diag.Errorf("Error waiting for WAF Version (%s) to be deleted: %s", d.Id(), err)
 	}
 	d.SetId("")
 	return nil

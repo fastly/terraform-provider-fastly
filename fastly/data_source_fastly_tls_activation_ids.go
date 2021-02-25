@@ -1,15 +1,17 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"github.com/fastly/go-fastly/v3/fastly"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceFastlyTLSActivationIds() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSActivationIDsRead,
+		ReadContext: dataSourceFastlyTLSActivationIDsRead,
 		Schema: map[string]*schema.Schema{
 			"certificate_id": {
 				Type:        schema.TypeString,
@@ -26,7 +28,7 @@ func dataSourceFastlyTLSActivationIds() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSActivationIDsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSActivationIDsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var certificateID string
@@ -44,7 +46,7 @@ func dataSourceFastlyTLSActivationIDsRead(d *schema.ResourceData, meta interface
 			PageSize:               10,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if len(list) == 0 {
 			break
@@ -62,7 +64,7 @@ func dataSourceFastlyTLSActivationIDsRead(d *schema.ResourceData, meta interface
 	d.SetId(fmt.Sprintf("%d", hashcode.String(certificateID)))
 	err := d.Set("ids", ids)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

@@ -1,7 +1,8 @@
 package fastly
 
 import (
-	"fmt"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
@@ -10,7 +11,7 @@ import (
 
 func dataSourceFastlyTLSSubscription() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSSubscriptionRead,
+		ReadContext: dataSourceFastlyTLSSubscriptionRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:          schema.TypeString,
@@ -65,7 +66,7 @@ func dataSourceFastlyTLSSubscription() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var subscription *fastly.TLSSubscription
@@ -75,28 +76,33 @@ func dataSourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{
 			ID: v.(string),
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		subscription = foundSubscription
 	} else {
 		filters := getTLSSubscriptionFilters(d)
 		subscriptions, err := listTLSSubscriptions(conn, filters...)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if len(subscriptions) == 0 {
-			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
+			return diag.Errorf("Your query returned no results. Please change your search criteria and try again")
 		}
 
 		if len(subscriptions) > 1 {
-			return fmt.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
+			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
 		}
 
 		subscription = subscriptions[0]
 	}
 
-	return dataSourceFastlyTLSSubscriptionSetAttributes(subscription, d)
+	err := dataSourceFastlyTLSSubscriptionSetAttributes(subscription, d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 type TLSSubscriptionPredicate func(*fastly.TLSSubscription) bool

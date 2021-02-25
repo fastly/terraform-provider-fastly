@@ -1,8 +1,10 @@
 package fastly
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"time"
 
@@ -141,11 +143,11 @@ func (d *BaseServiceDefinition) GetAttributeHandler() []ServiceAttributeDefiniti
 // resourceService returns a Terraform resource schema for VCL or Compute.
 func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	s := &schema.Resource{
-		Create:   resourceCreate(serviceDef),
-		Read:     resourceRead(serviceDef),
-		Update:   resourceUpdate(serviceDef),
-		Delete:   resourceDelete(serviceDef),
-		Importer: resourceImport(serviceDef),
+		CreateContext: resourceCreate(serviceDef),
+		ReadContext:   resourceRead(serviceDef),
+		UpdateContext: resourceUpdate(serviceDef),
+		DeleteContext: resourceDelete(serviceDef),
+		Importer:      resourceImport(serviceDef),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -216,33 +218,33 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 
 // resourceCreate satisfies the Terraform resource schema Create "interface"
 // while injecting the ServiceDefinition into the true Create functionality.
-func resourceCreate(serviceDef ServiceDefinition) schema.CreateFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceCreate(data, i, serviceDef)
+func resourceCreate(serviceDef ServiceDefinition) schema.CreateContextFunc {
+	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
+		return resourceServiceCreate(ctx, data, i, serviceDef)
 	}
 }
 
 // resourceRead satisfies the Terraform resource schema Read "interface"
 // while injecting the ServiceDefinition into the true Read functionality.
-func resourceRead(serviceDef ServiceDefinition) schema.ReadFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceRead(data, i, serviceDef, false)
+func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
+	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
+		return resourceServiceRead(ctx, data, i, serviceDef, false)
 	}
 }
 
 // resourceUpdate satisfies the Terraform resource schema Update "interface"
 // while injecting the ServiceDefinition into the true Update functionality.
-func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceUpdate(data, i, serviceDef)
+func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
+	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
+		return resourceServiceUpdate(ctx, data, i, serviceDef)
 	}
 }
 
 // resourceDelete satisfies the Terraform resource schema Delete "interface"
 // while injecting the ServiceDefinition into the true Delete functionality.
-func resourceDelete(serviceDef ServiceDefinition) schema.DeleteFunc {
-	return func(data *schema.ResourceData, i interface{}) error {
-		return resourceServiceDelete(data, i, serviceDef)
+func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
+	return func(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
+		return resourceServiceDelete(ctx, data, i, serviceDef)
 	}
 }
 
@@ -250,10 +252,15 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteFunc {
 // while injecting the ServiceDefinition into the true Import functionality.
 func resourceImport(serviceDef ServiceDefinition) *schema.ResourceImporter {
 	return &schema.ResourceImporter{
-		State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-			error := resourceServiceRead(d, m, serviceDef, true)
-			if error != nil {
-				return nil, error
+		StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+			diagnostics := resourceServiceRead(ctx, d, m, serviceDef, true)
+			if diagnostics.HasError() {
+				// diagnostics could have multiple Warnings as well as an Error
+				for _, diagnostic := range diagnostics {
+					if diagnostic.Severity == diag.Error {
+						return nil, fmt.Errorf("%s", diagnostic.Summary)
+					}
+				}
 			}
 			return []*schema.ResourceData{d}, nil
 		},
@@ -261,9 +268,9 @@ func resourceImport(serviceDef ServiceDefinition) *schema.ResourceImporter {
 }
 
 // resourceServiceCreate provides service resource Create functionality.
-func resourceServiceCreate(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	conn := meta.(*FastlyClient).conn
@@ -274,17 +281,17 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}, serviceDef 
 	})
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(service.ID)
-	return resourceServiceUpdate(d, meta, serviceDef)
+	return resourceServiceUpdate(ctx, d, meta, serviceDef)
 }
 
 // resourceServiceUpdate provides service resource Update functionality.
-func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	conn := meta.(*FastlyClient).conn
@@ -297,7 +304,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 			Comment:   gofastly.String(d.Get("comment").(string)),
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -332,7 +339,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		log.Printf("[DEBUG] Update Version opts: %#v", opts)
 		_, err := conn.UpdateVersion(&opts)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -353,7 +360,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 				ServiceVersion: latestVersion,
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			// The new version number is named "Number", but it's actually a string.
@@ -377,7 +384,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 				log.Printf("[DEBUG] Update Version opts: %#v", opts)
 				_, err := conn.UpdateVersion(&opts)
 				if err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		}
@@ -387,7 +394,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		for _, a := range serviceDef.GetAttributeHandler() {
 			if a.MustProcess(d, initialVersion) {
 				if err := a.Process(d, latestVersion, conn); err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		}
@@ -400,11 +407,11 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		})
 
 		if err != nil {
-			return fmt.Errorf("[ERR] Error checking validation: %s", err)
+			return diag.Errorf("[ERR] Error checking validation: %s", err)
 		}
 
 		if !valid {
-			return fmt.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
+			return diag.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
 		shouldActivate := d.Get("activate").(bool)
@@ -415,7 +422,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 				ServiceVersion: latestVersion,
 			})
 			if err != nil {
-				return fmt.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
+				return diag.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
 			}
 
 			// Only if the version is valid and activated do we set the active_version.
@@ -429,11 +436,11 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}, serviceDef 
 		}
 	}
 
-	return resourceServiceRead(d, meta, serviceDef, false)
+	return resourceServiceRead(ctx, d, meta, serviceDef, false)
 }
 
 // resourceServiceRead provides service resource Read functionality.
-func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isImport bool) error {
+func resourceServiceRead(_ context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isImport bool) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
@@ -446,7 +453,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 	// Check if deleted, if so, clear ID field and exit early.
 	if s.DeletedAt != nil {
@@ -457,7 +464,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 
 	// Check for service type mismatch (i.e. when importing)
 	if s.Type != serviceDef.GetType() {
-		return fmt.Errorf("[ERR] Service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
+		return diag.Errorf("[ERR] Service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
 	}
 
 	d.Set("name", s.Name)
@@ -483,7 +490,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
 			if err := a.Read(d, s, conn); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	} else if !isImport {
@@ -494,7 +501,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}, serviceDef Se
 }
 
 // resourceServiceDelete provides service resource Delete functionality.
-func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) error {
+func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.
@@ -506,7 +513,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef 
 		})
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if s.ActiveVersion.Number != 0 {
@@ -515,12 +522,17 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}, serviceDef 
 				ServiceVersion: s.ActiveVersion.Number,
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
 
-	return conn.DeleteService(&gofastly.DeleteServiceInput{
+	err := conn.DeleteService(&gofastly.DeleteServiceInput{
 		ID: d.Id(),
 	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }

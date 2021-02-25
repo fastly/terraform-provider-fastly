@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -10,10 +12,10 @@ import (
 
 func resourceServiceDictionaryItemsV1() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServiceDictionaryItemsV1Create,
-		Read:   resourceServiceDictionaryItemsV1Read,
-		Update: resourceServiceDictionaryItemsV1Update,
-		Delete: resourceServiceDictionaryItemsV1Delete,
+		CreateContext: resourceServiceDictionaryItemsV1Create,
+		ReadContext:   resourceServiceDictionaryItemsV1Read,
+		UpdateContext: resourceServiceDictionaryItemsV1Update,
+		DeleteContext: resourceServiceDictionaryItemsV1Delete,
 		Importer: &schema.ResourceImporter{
 			State: resourceServiceDictionaryItemsV1Import,
 		},
@@ -43,7 +45,7 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 	}
 }
 
-func resourceServiceDictionaryItemsV1Create(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceDictionaryItemsV1Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -64,14 +66,14 @@ func resourceServiceDictionaryItemsV1Create(d *schema.ResourceData, meta interfa
 	// Process the batch operations
 	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return fmt.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return diag.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, dictionaryID))
-	return resourceServiceDictionaryItemsV1Read(d, meta)
+	return resourceServiceDictionaryItemsV1Read(ctx, d, meta)
 }
 
-func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceDictionaryItemsV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	conn := meta.(*FastlyClient).conn
 
@@ -124,14 +126,14 @@ func resourceServiceDictionaryItemsV1Update(d *schema.ResourceData, meta interfa
 		// Process the batch operations
 		err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 		if err != nil {
-			return fmt.Errorf("Error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+			return diag.Errorf("Error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 		}
 	}
 
-	return resourceServiceDictionaryItemsV1Read(d, meta)
+	return resourceServiceDictionaryItemsV1Read(ctx, d, meta)
 }
 
-func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceDictionaryItemsV1Read(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -142,14 +144,14 @@ func resourceServiceDictionaryItemsV1Read(d *schema.ResourceData, meta interface
 		DictionaryID: dictionaryID,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = d.Set("items", flattenDictionaryItems(dictList))
-	return err
+	return diag.FromErr(err)
 }
 
-func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceDictionaryItemsV1Delete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -168,7 +170,7 @@ func resourceServiceDictionaryItemsV1Delete(d *schema.ResourceData, meta interfa
 	// Process the batch operations
 	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return fmt.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return diag.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId("")

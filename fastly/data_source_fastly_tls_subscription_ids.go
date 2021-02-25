@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,7 +11,7 @@ import (
 
 func dataSourceFastlyTLSSubscriptionIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSSubscriptionIDsRead,
+		ReadContext: dataSourceFastlyTLSSubscriptionIDsRead,
 		Schema: map[string]*schema.Schema{
 			"ids": {
 				Type:        schema.TypeSet,
@@ -21,12 +23,12 @@ func dataSourceFastlyTLSSubscriptionIDs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSSubscriptionIDsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSSubscriptionIDsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	subscriptions, err := listTLSSubscriptions(conn)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	var ids []string
@@ -36,7 +38,7 @@ func dataSourceFastlyTLSSubscriptionIDsRead(d *schema.ResourceData, meta interfa
 
 	d.SetId(fmt.Sprintf("%d", hashcode.String(""))) // if other filters are added to this data source, they should be included in this hashcode instead of the empty string
 	if err := d.Set("ids", ids); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }

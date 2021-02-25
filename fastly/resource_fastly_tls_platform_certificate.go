@@ -1,6 +1,8 @@
 package fastly
 
 import (
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
@@ -9,10 +11,10 @@ import (
 
 func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFastlyTLSPlatformCertificateCreate,
-		Read:   resourceFastlyTLSPlatformCertificateRead,
-		Update: resourceFastlyTLSPlatformCertificateUpdate,
-		Delete: resourceFastlyTLSPlatformCertificateDelete,
+		CreateContext: resourceFastlyTLSPlatformCertificateCreate,
+		ReadContext:   resourceFastlyTLSPlatformCertificateRead,
+		UpdateContext: resourceFastlyTLSPlatformCertificateUpdate,
+		DeleteContext: resourceFastlyTLSPlatformCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -76,7 +78,7 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSPlatformCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	input := &fastly.CreateBulkCertificateInput{
@@ -90,22 +92,22 @@ func resourceFastlyTLSPlatformCertificateCreate(d *schema.ResourceData, meta int
 
 	certificate, err := conn.CreateBulkCertificate(input)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(certificate.ID)
 
-	return resourceFastlyTLSPlatformCertificateRead(d, meta)
+	return resourceFastlyTLSPlatformCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPlatformCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	certificate, err := conn.GetBulkCertificate(&fastly.GetBulkCertificateInput{
 		ID: d.Id(),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	var domains []string
@@ -114,31 +116,31 @@ func resourceFastlyTLSPlatformCertificateRead(d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("configuration_id", certificate.Configurations[0].ID); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("not_after", certificate.NotAfter.Format(time.RFC3339)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("not_before", certificate.NotBefore.Format(time.RFC3339)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("created_at", certificate.CreatedAt.Format(time.RFC3339)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("updated_at", certificate.UpdatedAt.Format(time.RFC3339)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("replace", certificate.Replace); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("domains", domains); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceFastlyTLSPlatformCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	_, err := conn.UpdateBulkCertificate(&fastly.UpdateBulkCertificateInput{
@@ -148,19 +150,19 @@ func resourceFastlyTLSPlatformCertificateUpdate(d *schema.ResourceData, meta int
 		AllowUntrusted:    d.Get("allow_untrusted_root").(bool),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceFastlyTLSPlatformCertificateRead(d, meta)
+	return resourceFastlyTLSPlatformCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPlatformCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSPlatformCertificateDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	if err := conn.DeleteBulkCertificate(&fastly.DeleteBulkCertificateInput{
 		ID: d.Id(),
 	}); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

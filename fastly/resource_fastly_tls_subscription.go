@@ -1,7 +1,8 @@
 package fastly
 
 import (
-	"fmt"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
@@ -11,9 +12,9 @@ import (
 
 func resourceFastlyTLSSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFastlyTLSSubscriptionCreate,
-		Read:   resourceFastlyTLSSubscriptionRead,
-		Delete: resourceFastlyTLSSubscriptionDelete,
+		CreateContext: resourceFastlyTLSSubscriptionCreate,
+		ReadContext:   resourceFastlyTLSSubscriptionRead,
+		DeleteContext: resourceFastlyTLSSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -104,7 +105,7 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var configuration *fastly.TLSConfiguration
@@ -122,7 +123,7 @@ func resourceFastlyTLSSubscriptionCreate(d *schema.ResourceData, meta interface{
 	var commonName *fastly.TLSDomain
 	if v, ok := d.GetOk("common_name"); ok {
 		if !contains(domainStrings, v.(string)) {
-			return fmt.Errorf("Domain specified as common_name (%s) must also be in domains (%v)", v, domainStrings)
+			return diag.Errorf("Domain specified as common_name (%s) must also be in domains (%v)", v, domainStrings)
 		}
 
 		commonName = &fastly.TLSDomain{ID: v.(string)}
@@ -135,15 +136,15 @@ func resourceFastlyTLSSubscriptionCreate(d *schema.ResourceData, meta interface{
 		CommonName:           commonName,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(subscription.ID)
 
-	return resourceFastlyTLSSubscriptionRead(d, meta)
+	return resourceFastlyTLSSubscriptionRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	include := "tls_authorizations"
@@ -152,7 +153,7 @@ func resourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{})
 		Include: &include,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	var domains []string
@@ -165,7 +166,7 @@ func resourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{})
 	for _, challenge := range subscription.Authorizations[0].Challenges {
 		if challenge.Type == "managed-dns" {
 			if len(challenge.Values) < 1 {
-				return fmt.Errorf("Fastly API returned no record values for Managed DNS Challenge")
+				return diag.Errorf("Fastly API returned no record values for Managed DNS Challenge")
 			}
 
 			managedDNSChallenge = map[string]string{
@@ -184,50 +185,50 @@ func resourceFastlyTLSSubscriptionRead(d *schema.ResourceData, meta interface{})
 
 	err = d.Set("domains", domains)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("common_name", subscription.CommonName.ID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("certificate_authority", subscription.CertificateAuthority)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("configuration_id", subscription.Configuration.ID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("created_at", subscription.CreatedAt.Format(time.RFC3339))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("updated_at", subscription.UpdatedAt.Format(time.RFC3339))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("state", subscription.State)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("managed_dns_challenge", managedDNSChallenge)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("managed_http_challenges", managedHTTPChallenges)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceFastlyTLSSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	err := conn.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
 		ID:    d.Id(),
 		Force: d.Get("force_destroy").(bool),
 	})
-	return err
+	return diag.FromErr(err)
 }

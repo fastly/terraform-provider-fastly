@@ -84,7 +84,7 @@ func TestAccFastlyServiceV1_dictionary(t *testing.T) {
 			},
 			{
 				Config:      testAccServiceV1Config_dictionary(name, dictName, backendName, domainName),
-				ExpectError: regexp.MustCompile(""),
+				ExpectError: regexp.MustCompile("Cannot delete.*not empty.*"),
 			},
 			{
 				Config: testAccServiceV1Config_dictionaryForceDestroy(name, updatedDictName, backendName, domainName),

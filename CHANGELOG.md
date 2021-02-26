@@ -1,4 +1,17 @@
-## 0.25.0 (Unreleased)
+## 0.26.0 (Unreleased)
+
+## 0.25.0 (February 26, 2021)
+
+ENHANCEMENTS:
+
+* Add TLSCLientCert and TLSClientKey options for splunk logging ([#353](https://github.com/fastly/terraform-provider-fastly/pull/353))
+* Add Dictionary to Compute service ([#361](https://github.com/fastly/terraform-provider-fastly/pull/361))
+* Resources for Custom TLS and Platform TLS products ([#364](https://github.com/fastly/terraform-provider-fastly/pull/364))
+* Managed TLS Subscriptions Resources ([#365](https://github.com/fastly/terraform-provider-fastly/pull/365))
+* Ensure schema.Set uses custom SetDiff algorithm ([#366](https://github.com/fastly/terraform-provider-fastly/pull/366))
+* Test speedup ([#371](https://github.com/fastly/terraform-provider-fastly/pull/371))
+* Add service test sweeper ([#373](https://github.com/fastly/terraform-provider-fastly/pull/373))
+* Add force_destroy flag to ACLs and Dicts to allow deleting non-empty lists ([#372](https://github.com/fastly/terraform-provider-fastly/pull/372))
 
 ## 0.24.0 (February 4, 2021)
 

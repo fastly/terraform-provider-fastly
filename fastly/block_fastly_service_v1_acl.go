@@ -49,6 +49,18 @@ func (h *ACLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 	// DELETE removed resources
 	for _, resource := range diffResult.Deleted {
 		resource := resource.(map[string]interface{})
+
+		if !resource["force_destroy"].(bool) {
+			mayDelete, err := isACLEmpty(d.Id(), resource["acl_id"].(string), conn)
+			if err != nil {
+				return err
+			}
+
+			if !mayDelete {
+				return fmt.Errorf("Cannot delete ACL (%s), list is not empty. Either delete the entries first, or set force_destroy to true and apply it before making this change.", resource["acl_id"].(string))
+			}
+		}
+
 		opts := gofastly.DeleteACLInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
@@ -108,6 +120,18 @@ func (h *ACLServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.Se
 
 	al := flattenACLs(aclList)
 
+	// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
+	stateACLs := d.Get(h.GetKey()).(*schema.Set).List()
+	for _, acl := range al {
+		for _, sa := range stateACLs {
+			stateACL := sa.(map[string]interface{})
+			if acl["name"] == stateACL["name"] {
+				acl["force_destroy"] = stateACL["force_destroy"]
+				break
+			}
+		}
+	}
+
 	if err := d.Set(h.GetKey(), al); err != nil {
 		log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
 	}
@@ -132,6 +156,12 @@ func (h *ACLServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:        schema.TypeString,
 					Computed:    true,
 					Description: "The ID of the ACL",
+				},
+				"force_destroy": {
+					Type:        schema.TypeBool,
+					Default:     false,
+					Optional:    true,
+					Description: "Allow the ACL to be deleted, even if it contains entries. Defaults to false.",
 				},
 			},
 		},
@@ -159,4 +189,16 @@ func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
 	}
 
 	return al
+}
+
+func isACLEmpty(serviceID, aclID string, conn *gofastly.Client) (bool, error) {
+	entries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
+		ServiceID: serviceID,
+		ACLID:     aclID,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return len(entries) == 0, nil
 }

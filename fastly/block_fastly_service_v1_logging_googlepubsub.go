@@ -33,13 +33,16 @@ func (h *GooglePubSubServiceAttributeHandler) Register(s *schema.Resource) error
 		"user": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON",
+			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.",
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_EMAIL", ""),
 		},
 
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON",
+			Description: "Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.",
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_SECRET_KEY", ""),
+			Sensitive:   true,
 		},
 
 		"project_id": {

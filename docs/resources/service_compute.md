@@ -411,9 +411,12 @@ Required:
 
 - **name** (String) The unique name of the Google Cloud Pub/Sub logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **project_id** (String) The ID of your Google Cloud Platform project
-- **secret_key** (String) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON
 - **topic** (String) The Google Cloud Pub/Sub topic to which logs will be published
-- **user** (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON
+
+Optional:
+
+- **secret_key** (String, Sensitive) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
+- **user** (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.
 
 
 <a id="nestedblock--logging_heroku"></a>

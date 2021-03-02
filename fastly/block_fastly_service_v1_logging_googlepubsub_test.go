@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -56,6 +58,43 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 		}
 	}
 
+}
+
+func TestSecretKeySchemaDefaultFunc(t *testing.T) {
+	computeAttributes := ServiceMetadata{ServiceTypeCompute}
+	v := NewServiceLoggingGooglePubSub(computeAttributes)
+	resource := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	}
+	v.Register(resource)
+	loggingResource := resource.Schema["logging_googlepubsub"]
+	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
+
+	// Defaults to "" if no environment variable is set
+	result, err := loggingResourceSchema["secret_key"].DefaultFunc()
+	if err != nil {
+		t.Fatalf("Unexpected err %#v when calling secret_key DefaultFunc", err)
+	}
+	if result != "" {
+		t.Fatalf("Error matching:\nexpected: \"\"\ngot: %#v", result)
+	}
+
+	// Actually set env var and expect it to be used to determine secret_key
+	envVarKey := "FASTLY_GOOGLE_PUBSUB_SECRET_KEY"
+	mockValue := "-----BEGIN PRIVATE KEY-----\nabc123\n-----END PRIVATE KEY-----\n"
+	originalEnvValue := os.Getenv(envVarKey)
+	defer func() {
+		os.Setenv(envVarKey, originalEnvValue)
+	}()
+	os.Setenv(envVarKey, mockValue)
+
+	result, err = loggingResourceSchema["secret_key"].DefaultFunc()
+	if err != nil {
+		t.Fatalf("Unexpected err %#v when calling secret_key DefaultFunc", err)
+	}
+	if result != mockValue {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", mockValue, result)
+	}
 }
 
 func TestAccFastlyServiceV1_googlepubsublogging_basic(t *testing.T) {

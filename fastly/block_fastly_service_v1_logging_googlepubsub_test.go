@@ -60,6 +60,43 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 
 }
 
+func TestUserEmailSchemaDefaultFunc(t *testing.T) {
+	computeAttributes := ServiceMetadata{ServiceTypeCompute}
+	v := NewServiceLoggingGooglePubSub(computeAttributes)
+	resource := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	}
+	v.Register(resource)
+	loggingResource := resource.Schema["logging_googlepubsub"]
+	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
+
+	// Defaults to "" if no environment variable is set
+	result, err := loggingResourceSchema["user"].DefaultFunc()
+	if err != nil {
+		t.Fatalf("Unexpected err %#v when calling user DefaultFunc", err)
+	}
+	if result != "" {
+		t.Fatalf("Error matching:\nexpected: \"\"\ngot: %#v", result)
+	}
+
+	// Actually set env var and expect it to be used to determine user
+	envVarKey := "FASTLY_GOOGLE_PUBSUB_EMAIL"
+	mockValue := "example@my-project.iam.gserviceaccount.com"
+	originalEnvValue := os.Getenv(envVarKey)
+	defer func() {
+		os.Setenv(envVarKey, originalEnvValue)
+	}()
+	os.Setenv(envVarKey, mockValue)
+
+	result, err = loggingResourceSchema["user"].DefaultFunc()
+	if err != nil {
+		t.Fatalf("Unexpected err %#v when calling user DefaultFunc", err)
+	}
+	if result != mockValue {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", mockValue, result)
+	}
+}
+
 func TestSecretKeySchemaDefaultFunc(t *testing.T) {
 	computeAttributes := ServiceMetadata{ServiceTypeCompute}
 	v := NewServiceLoggingGooglePubSub(computeAttributes)
@@ -69,6 +106,11 @@ func TestSecretKeySchemaDefaultFunc(t *testing.T) {
 	v.Register(resource)
 	loggingResource := resource.Schema["logging_googlepubsub"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
+
+	// Expect secret_key to be sensitive
+	if !loggingResourceSchema["secret_key"].Sensitive {
+		t.Fatalf("Expected secret_key to be marked as a Sensitive value")
+	}
 
 	// Defaults to "" if no environment variable is set
 	result, err := loggingResourceSchema["secret_key"].DefaultFunc()

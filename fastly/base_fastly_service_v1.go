@@ -3,7 +3,6 @@ package fastly
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"time"
@@ -253,14 +252,9 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 func resourceImport(serviceDef ServiceDefinition) *schema.ResourceImporter {
 	return &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-			diagnostics := resourceServiceRead(ctx, d, m, serviceDef, true)
-			if diagnostics.HasError() {
-				// diagnostics could have multiple Warnings as well as an Error
-				for _, diagnostic := range diagnostics {
-					if diagnostic.Severity == diag.Error {
-						return nil, fmt.Errorf("%s", diagnostic.Summary)
-					}
-				}
+			err := diagToErr(resourceServiceRead(ctx, d, m, serviceDef, true))
+			if err != nil {
+				return nil, err
 			}
 			return []*schema.ResourceData{d}, nil
 		},

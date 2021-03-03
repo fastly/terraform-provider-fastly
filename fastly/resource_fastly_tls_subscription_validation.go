@@ -36,7 +36,7 @@ const (
 func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
 			ID: d.Get("subscription_id").(string),
 		})
@@ -48,13 +48,19 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 			return resource.RetryableError(fmt.Errorf("Expected subscription state to be %s but it was %s", subscriptionStateIssued, subscription.State))
 		}
 
-		err = resourceFastlyTLSSubscriptionValidationRead(d, meta)
+		err = diagToErr(resourceFastlyTLSSubscriptionValidationRead(ctx, d, meta))
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -367,27 +367,6 @@ func TestValidateUserRole(t *testing.T) {
 	}
 }
 
-func TestValidateHTTPSURL(t *testing.T) {
-	for _, testcase := range []struct {
-		value          string
-		expectedWarns  int
-		expectedErrors int
-	}{
-		{"https://api.fastly.com", 0, 0},
-		{"http://example.com", 0, 1},
-	} {
-		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateHTTPSURL()(testcase.value, "url")
-			if len(actualWarns) != testcase.expectedWarns {
-				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
-			}
-			if len(actualErrors) != testcase.expectedErrors {
-				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
-			}
-		})
-	}
-}
-
 func TestValidatePEMCertificate(t *testing.T) {
 	key, cert, ca, err := generateKeyAndCertWithCA()
 	if err != nil {

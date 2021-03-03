@@ -3,8 +3,6 @@ package fastly
 import (
 	"encoding/pem"
 	"fmt"
-	"strings"
-
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -129,17 +127,6 @@ func validateUserRole() schema.SchemaValidateFunc {
 		},
 		false,
 	)
-}
-
-// TODO: Use SDK's validation.IsURLWithHTTPS() after we upgrade
-func validateHTTPSURL() schema.SchemaValidateFunc {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if !strings.HasPrefix(v, "https://") {
-			errs = append(errs, fmt.Errorf("%q must be https URL, got: %s", key, v))
-		}
-		return
-	}
 }
 
 // validatePEMBlock returns a schema validation function that checks whether a string contains a single PEM block of

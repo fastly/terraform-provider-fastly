@@ -194,7 +194,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Type:         schema.TypeString,
 			Required:     true,
 			Description:  "URL that log data will be sent to. Must use the https protocol",
-			ValidateFunc: validateHTTPSURL(),
+			ValidateFunc: validation.IsURLWithHTTPS,
 		},
 
 		// Optional fields

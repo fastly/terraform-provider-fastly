@@ -9,8 +9,8 @@ import (
 func TestAccFastlyDataSourceTLSConfiguration_basic(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyDataSourceTLSConfiguration_basic,
@@ -40,8 +40,8 @@ data "fastly_tls_configuration" "subject" {
 func TestAccFastlyDataSourceTLSConfiguration_withIDLookup(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyDataSourceTLSConfiguration_withIDLookup,

@@ -31,9 +31,9 @@ func TestAccFastlyTLSActivation_basic(t *testing.T) {
 
 	resourceName := "fastly_tls_activation.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccFastlyTLSActivationCheckDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccFastlyTLSActivationCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyTLSActivationConfig(name, name, key, name, cert, domain),

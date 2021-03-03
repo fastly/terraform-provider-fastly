@@ -20,7 +20,7 @@ func TestAccFastlyDataSourceTLSDomain_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
-		Providers:                 testAccProviders,
+		ProviderFactories:         testAccProviders,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{

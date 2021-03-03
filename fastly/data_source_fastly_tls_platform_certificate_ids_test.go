@@ -16,8 +16,8 @@ func TestAccFastlyDataSourceTLSPlatformCertificateIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resources(name, key, cert, ca),

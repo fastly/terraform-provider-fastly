@@ -18,8 +18,8 @@ func TestAccFastlyDataSourceTLSPrivateKeyIds_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyDataSourceTLSPrivateKeyIdsConfigOnlyTestKey(key, name),

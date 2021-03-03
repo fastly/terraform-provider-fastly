@@ -28,9 +28,9 @@ func TestAccFastlyTLSPlatformCertificate_basic(t *testing.T) {
 
 	resourceName := "fastly_tls_platform_certificate.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTLSPlatformCertificateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckTLSPlatformCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSPlatformCertificateWithName(name, key, cert, ca),

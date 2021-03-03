@@ -15,8 +15,8 @@ func TestAccDataSourceFastlyTLSSubscriptionIds_basic(t *testing.T) {
 
 	datasourceName := "data.fastly_tls_subscription_ids.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceFastlyTLSSubscriptionIdsConfigResources(name, domain),

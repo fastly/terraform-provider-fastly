@@ -25,8 +25,8 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 
 	resourceName := "fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceFastlyTLSSubscriptionConfig(name, domain),

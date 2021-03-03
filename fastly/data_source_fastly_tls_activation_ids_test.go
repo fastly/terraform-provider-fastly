@@ -19,8 +19,8 @@ func TestAccDataSourceFastlyTLSActivationIds_basic(t *testing.T) {
 
 	datasourceName := "data.fastly_tls_activation_ids.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceFastlyTLSActivationIdsConfig(key, cert, domain),

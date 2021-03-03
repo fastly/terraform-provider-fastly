@@ -28,9 +28,9 @@ func TestAccFastlyResourceTLSPrivateKey_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPrivateKeyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckPrivateKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyTLSPrivateKeyConfig_simple_private_key(key, name),

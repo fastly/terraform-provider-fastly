@@ -56,9 +56,9 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 	// 5. Without renaming the ACLs, set force_destroy=true to skip the deletion check
 	// 6. Try to rename the ACLs again, expect to succeed
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceV1Config_acl(name, aclName),

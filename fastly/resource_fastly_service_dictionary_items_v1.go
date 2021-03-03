@@ -17,7 +17,7 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 		UpdateContext: resourceServiceDictionaryItemsV1Update,
 		DeleteContext: resourceServiceDictionaryItemsV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceServiceDictionaryItemsV1Import,
+			StateContext: resourceServiceDictionaryItemsV1Import,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -177,7 +177,7 @@ func resourceServiceDictionaryItemsV1Delete(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceServiceDictionaryItemsV1Import(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceDictionaryItemsV1Import(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

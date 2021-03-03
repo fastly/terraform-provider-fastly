@@ -20,7 +20,7 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 		UpdateContext: resourceServiceWAFConfigurationV1Update,
 		DeleteContext: resourceServiceWAFConfigurationV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceServiceWAFConfigurationV1Import,
+			StateContext: resourceServiceWAFConfigurationV1Import,
 		},
 		CustomizeDiff: validateWAFConfigurationResource,
 		Schema: map[string]*schema.Schema{
@@ -348,7 +348,7 @@ func resourceServiceWAFConfigurationV1Delete(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceServiceWAFConfigurationV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceWAFConfigurationV1Import(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 
 	wafID := d.Id()
 	err := d.Set("waf_id", wafID)

@@ -17,7 +17,7 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 		UpdateContext: resourceServiceAclEntriesV1Update,
 		DeleteContext: resourceServiceAclEntriesV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceServiceACLEntriesV1Import,
+			StateContext: resourceServiceACLEntriesV1Import,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -260,7 +260,7 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 	return resultList
 }
 
-func resourceServiceACLEntriesV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceACLEntriesV1Import(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

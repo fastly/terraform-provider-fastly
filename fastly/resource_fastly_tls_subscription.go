@@ -16,7 +16,7 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 		ReadContext:   resourceFastlyTLSSubscriptionRead,
 		DeleteContext: resourceFastlyTLSSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"domains": {

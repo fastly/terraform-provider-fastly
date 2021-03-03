@@ -14,7 +14,7 @@ func resourceFastlyTLSPrivateKey() *schema.Resource {
 		ReadContext:   resourceFastlyTLSPrivateKeyRead,
 		DeleteContext: resourceFastlyTLSPrivateKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"key_pem": {

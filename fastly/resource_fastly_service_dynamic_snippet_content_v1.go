@@ -17,7 +17,7 @@ func resourceServiceDynamicSnippetContentV1() *schema.Resource {
 		UpdateContext: resourceServiceDynamicSnippetV1Update,
 		DeleteContext: resourceServiceDynamicSnippetV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceServiceDynamicSnippetContentV1Import,
+			StateContext: resourceServiceDynamicSnippetContentV1Import,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -120,7 +120,7 @@ func resourceServiceDynamicSnippetV1Delete(_ context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceServiceDynamicSnippetContentV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceDynamicSnippetContentV1Import(_ context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

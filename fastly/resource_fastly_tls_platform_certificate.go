@@ -16,7 +16,7 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 		UpdateContext: resourceFastlyTLSPlatformCertificateUpdate,
 		DeleteContext: resourceFastlyTLSPlatformCertificateDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {

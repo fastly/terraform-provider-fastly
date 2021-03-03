@@ -175,9 +175,9 @@ func testAccCheckTLSCertificateDestroy(s *terraform.State) error {
 }
 
 func testSweepTLSCertificates(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	certificates, err := client.ListCustomTLSCertificates(&fastly.ListCustomTLSCertificatesInput{PageSize: 1000})

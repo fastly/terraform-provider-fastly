@@ -832,9 +832,9 @@ resource "fastly_service_v1" "foo" {
 }
 
 func testSweepServices(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	services, err := client.ListServices(&gofastly.ListServicesInput{})

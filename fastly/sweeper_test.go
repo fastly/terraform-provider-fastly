@@ -2,6 +2,9 @@ package fastly
 
 import (
 	"fmt"
+	"github.com/fastly/terraform-provider-fastly/version"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"os"
 	"testing"
 
@@ -18,13 +21,9 @@ func TestMain(m *testing.M) {
 	resource.TestMain(m)
 }
 
-func sharedClientForRegion(region string) (*fastly.Client, error) {
+func sharedClientForRegion(region string) (*fastly.Client, diag.Diagnostics) {
 	if client, ok := sweeperClients[region]; ok {
 		return client, nil
-	}
-
-	if os.Getenv("FASTLY_API_KEY") == "" {
-		return nil, fmt.Errorf("must provide environment variables 'FASTLY_API_KEY'")
 	}
 
 	url := fastly.DefaultEndpoint
@@ -32,14 +31,20 @@ func sharedClientForRegion(region string) (*fastly.Client, error) {
 		url = v
 	}
 	c := Config{
-		ApiKey:           os.Getenv("FASTLY_API_KEY"),
-		BaseURL:          url,
-		terraformVersion: "test-sweepers",
+		ApiKey:  os.Getenv("FASTLY_API_KEY"),
+		BaseURL: url,
+		UserAgent: fmt.Sprintf(
+			"HashiCorp Terraform/%s (+https://www.terraform.io) Terraform Plugin SDK/%s %s/%s",
+			"test-sweepers",
+			meta.SDKVersionString(),
+			TerraformProviderProductUserAgent,
+			version.ProviderVersion,
+		),
 	}
 
-	client, err := c.Client()
-	if err != nil {
-		return nil, err
+	client, diagnostics := c.Client()
+	if diagnostics.HasError() {
+		return nil, diagnostics
 	}
 
 	sweeperClients[region] = client.conn

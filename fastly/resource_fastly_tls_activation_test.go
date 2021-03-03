@@ -138,9 +138,9 @@ func testAccFastlyTLSActivationCheckDestroy(state *terraform.State) error {
 }
 
 func testSweepTLSActivation(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	activations, err := client.ListTLSActivations(&fastly.ListTLSActivationsInput{PageSize: 1000})

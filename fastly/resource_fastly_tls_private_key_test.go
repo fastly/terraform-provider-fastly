@@ -110,9 +110,9 @@ func testAccCheckPrivateKeyExists(resourceName string) resource.TestCheckFunc {
 }
 
 func testSweepTLSPrivateKeys(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	keys, err := client.ListPrivateKeys(&fastly.ListPrivateKeysInput{PageSize: 1000})

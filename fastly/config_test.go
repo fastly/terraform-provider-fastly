@@ -1,11 +1,7 @@
 package fastly
 
 import (
-	"strings"
 	"testing"
-
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/fastly/terraform-provider-fastly/version"
 )
 
 func TestUserAgentContainsProviderVersion(t *testing.T) {
@@ -13,13 +9,9 @@ func TestUserAgentContainsProviderVersion(t *testing.T) {
 		ApiKey:  "someapikey",
 		BaseURL: "http://localhost",
 	}
-	_, err := c.Client()
+	_, diagnostics := c.Client()
 
-	if err != nil {
-		t.Errorf("Failed to create client: %s", err)
-	}
-	configuredUserAgent := gofastly.UserAgent
-	if !strings.Contains(configuredUserAgent, TerraformProviderProductUserAgent+"/"+version.ProviderVersion) {
-		t.Errorf("User agent doesn't contain the terraform provider version")
+	if diagnostics.HasError() {
+		t.Errorf("Failed to create client: %s", diagToErr(diagnostics))
 	}
 }

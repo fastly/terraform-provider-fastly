@@ -107,9 +107,9 @@ resource "fastly_tls_subscription" "subject" {
 }
 
 func testSweepTLSSubscription(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	subscriptions, err := client.ListTLSSubscriptions(&fastly.ListTLSSubscriptionsInput{PageSize: 1000})

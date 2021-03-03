@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"sort"
@@ -285,11 +286,18 @@ func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.Reso
 func resourceServiceWAFConfigurationV1Read(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	latestVersion, err := getLatestVersion(d, meta)
-	if errRes, ok := err.(*gofastly.HTTPError); ok {
-		if errRes.StatusCode == 404 {
-			log.Printf("[DEBUG] WAF (%s) was not found - removing from state", d.Get("waf_id").(string))
-			d.SetId("")
-			return nil
+	if err != nil {
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			if errRes.StatusCode == 404 {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity:      diag.Warning,
+						Summary:       fmt.Sprintf("WAF (%s) not found - removing from state", d.Get("waf_id")),
+						AttributePath: cty.Path{cty.GetAttrStep{Name: "waf_id"}},
+					},
+				}
+			}
 		}
 		return diag.FromErr(err)
 	}

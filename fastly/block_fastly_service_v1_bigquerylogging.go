@@ -259,10 +259,10 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 			Description: "Name of a condition to apply this logging.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

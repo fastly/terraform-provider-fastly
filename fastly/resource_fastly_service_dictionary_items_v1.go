@@ -36,10 +36,10 @@ func resourceServiceDictionaryItemsV1() *schema.Resource {
 			},
 
 			"items": {
-				Type:         schema.TypeMap,
-				Optional:     true,
-				Description:  "A map representing an entry in the dictionary, (key/value)",
-				ValidateFunc: validateDictionaryItems(),
+				Type:             schema.TypeMap,
+				Optional:         true,
+				Description:      "A map representing an entry in the dictionary, (key/value)",
+				ValidateDiagFunc: validateDictionaryItems(),
 			},
 		},
 	}

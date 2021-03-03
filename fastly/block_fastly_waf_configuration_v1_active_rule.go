@@ -13,10 +13,10 @@ var activeRule = &schema.Schema{
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"status": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "The Web Application Firewall rule's status. Allowed values are (`log`, `block` and `score`)",
-				ValidateFunc: validateRuleStatusType(),
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The Web Application Firewall rule's status. Allowed values are (`log`, `block` and `score`)",
+				ValidateDiagFunc: validateRuleStatusType(),
 			},
 			"modsec_rule_id": {
 				Type:        schema.TypeInt,

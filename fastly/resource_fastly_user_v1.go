@@ -32,11 +32,11 @@ func resourceUserV1() *schema.Resource {
 			},
 
 			"role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "user",
-				Description:  "The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do)",
-				ValidateFunc: validateUserRole(),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "user",
+				Description:      "The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do)",
+				ValidateDiagFunc: validateUserRole(),
 			},
 		},
 	}

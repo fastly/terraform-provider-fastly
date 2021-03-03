@@ -279,11 +279,11 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 		},
 
 		"message_type": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "blank",
-			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `blank`",
-			ValidateFunc: validateLoggingMessageType(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "blank",
+			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `blank`",
+			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 	}
 
@@ -294,17 +294,17 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Description: "Apache-style string or VCL variables to use for log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      2,
-			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
-			ValidateFunc: validateLoggingFormatVersion(),
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,

@@ -26,3 +26,18 @@ func diagToErr(diagnostics diag.Diagnostics) error {
 	}
 	return nil
 }
+
+// diagToWarnsAndErrs takes a diag.Diagnostics and produces two slices of warnings and errors.
+// This is to enable emulation of deprecated SchemaValidateFunc behaviour in the unit tests for SchemaValidateDiagFuncs.
+func diagToWarnsAndErrs(diagnostics diag.Diagnostics) (warnings []string, errors []string) {
+	for _, diagnostic := range diagnostics {
+		if diagnostic.Severity == diag.Warning {
+			warnings = append(warnings, diagnostic.Summary)
+		} else if diagnostic.Severity == diag.Error {
+			errors = append(errors, diagnostic.Summary)
+		} else {
+			errors = append(errors, fmt.Sprintf("%s (unknown diagnostic severity: %d)", diagnostic.Summary, diagnostic.Severity))
+		}
+	}
+	return
+}

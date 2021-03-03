@@ -20,16 +20,16 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
-				Type:         schema.TypeString,
-				Description:  "PEM-formatted certificate.",
-				Required:     true,
-				ValidateFunc: validatePEMBlock("CERTIFICATE"),
+				Type:             schema.TypeString,
+				Description:      "PEM-formatted certificate.",
+				Required:         true,
+				ValidateDiagFunc: validatePEMBlock("CERTIFICATE"),
 			},
 			"intermediates_blob": {
-				Type:         schema.TypeString,
-				Description:  "PEM-formatted certificate chain from the `certificate_body` to its root.",
-				Required:     true,
-				ValidateFunc: validatePEMBlocks("CERTIFICATE"),
+				Type:             schema.TypeString,
+				Description:      "PEM-formatted certificate chain from the `certificate_body` to its root.",
+				Required:         true,
+				ValidateDiagFunc: validatePEMBlocks("CERTIFICATE"),
 			},
 			"configuration_id": {
 				Type:        schema.TypeString,

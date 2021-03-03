@@ -194,11 +194,11 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "A Fastly [log format string](https://docs.fastly.com/en/guides/custom-log-formats)",
 		}
 		blockAttributes["format_version"] = &schema.Schema{
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      2,
-			Description:  "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`",
-			ValidateFunc: validateLoggingFormatVersion(),
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
@@ -207,10 +207,10 @@ func (h *PaperTrailServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of 2 are placed in `vcl_log` and those with `format_version` of 1 are placed in `vcl_deliver`",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of 2 are placed in `vcl_log` and those with `format_version` of 1 are placed in `vcl_deliver`",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

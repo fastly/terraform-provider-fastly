@@ -161,10 +161,10 @@ func (h *DynamicSnippetServiceAttributeHandler) Register(s *schema.Resource) err
 					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks. It is important to note that changing this attribute will delete and recreate the resource`,
 				},
 				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					Description:  "The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`)",
-					ValidateFunc: validateSnippetType(),
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`)",
+					ValidateDiagFunc: validateSnippetType(),
 				},
 				"priority": {
 					Type:        schema.TypeInt,

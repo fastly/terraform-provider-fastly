@@ -241,11 +241,11 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
 		},
 		"message_type": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "classic",
-			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
-			ValidateFunc: validateLoggingMessageType(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
+			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 	}
 
@@ -263,10 +263,10 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "Name of a condition to apply this logging.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

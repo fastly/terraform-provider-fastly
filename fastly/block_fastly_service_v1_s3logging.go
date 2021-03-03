@@ -266,17 +266,17 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			StateFunc: trimSpaceStateFunc,
 		},
 		"message_type": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "classic",
-			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`",
-			ValidateFunc: validateLoggingMessageType(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`",
+			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"server_side_encryption": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`",
-			ValidateFunc: validateLoggingServerSideEncryption(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`",
+			ValidateDiagFunc: validateLoggingServerSideEncryption(),
 		},
 		"server_side_encryption_kms_key_id": {
 			Type:        schema.TypeString,
@@ -293,11 +293,11 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "Apache-style string or VCL variables to use for log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      1,
-			Description:  "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).",
-			ValidateFunc: validateLoggingFormatVersion(),
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          1,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
@@ -306,10 +306,10 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "Name of blockAttributes condition to apply this logging.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

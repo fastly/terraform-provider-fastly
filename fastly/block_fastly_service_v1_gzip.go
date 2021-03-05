@@ -127,10 +127,24 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		// this and so we've updated the below code to convert the type asserted
 		// int into a uint before passing the value to gofastly.Uint().
 		if v, ok := modified["content_types"]; ok {
-			opts.ContentTypes = gofastly.String(v.(string))
+			set := v.(*schema.Set)
+			if len(set.List()) > 0 {
+				var s []string
+				for _, elem := range set.List() {
+					s = append(s, elem.(string))
+				}
+				opts.ContentTypes = gofastly.String(strings.Join(s, " "))
+			}
 		}
 		if v, ok := modified["extensions"]; ok {
-			opts.Extensions = gofastly.String(v.(string))
+			set := v.(*schema.Set)
+			if len(set.List()) > 0 {
+				var s []string
+				for _, elem := range set.List() {
+					s = append(s, elem.(string))
+				}
+				opts.Extensions = gofastly.String(strings.Join(s, " "))
+			}
 		}
 		if v, ok := modified["cache_condition"]; ok {
 			opts.CacheCondition = gofastly.String(v.(string))

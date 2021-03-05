@@ -1,4 +1,14 @@
-## 0.26.0 (Unreleased)
+## 0.27.0 (Unreleased)
+
+## 0.26.0 (March 5, 2021)
+
+ENHANCEMENTS:
+
+* Better sensitive value handling in Google pub/sub logging provider [#376](https://github.com/fastly/terraform-provider-fastly/pull/376)
+
+BUG FIXES:
+
+* Fix panic caused by incorrect type assert [#377](https://github.com/fastly/terraform-provider-fastly/pull/377)
 
 ## 0.25.0 (February 26, 2021)
 

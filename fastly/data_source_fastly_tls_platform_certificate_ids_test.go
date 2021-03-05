@@ -25,7 +25,10 @@ func TestAccFastlyDataSourceTLSPlatformCertificateIDs(t *testing.T) {
 			{
 				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resourcesAndData(name, key, cert, ca),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckOutput("result", "true"),
+					resource.TestCheckTypeSetElemAttrPair(
+						"data.fastly_tls_platform_certificate_ids.subject", "ids.*",
+						"fastly_tls_platform_certificate.cert", "id",
+					),
 				),
 			},
 		},
@@ -63,10 +66,5 @@ func testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resourcesAndData(nam
 	return fmt.Sprintf(`
 %s
 data "fastly_tls_platform_certificate_ids" "subject" {}
-output "result" {
-  value = tostring(contains(
-    data.fastly_tls_platform_certificate_ids.subject.ids, fastly_tls_platform_certificate.cert.id
-  ))
-}
 `, testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resources(name, key, cert, ca))
 }

@@ -2,12 +2,10 @@ package fastly
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,39 +28,14 @@ func TestAccFastlyDataSourceTLSDomain_basic(t *testing.T) {
 				Config: testAccFastlyDataSourceTLSDomainWithDataSource(key, cert, domain, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.fastly_tls_domain.subject", "tls_certificate_ids.#", "1"),
-					testAccTLSDomainCertIDIncluded("data.fastly_tls_domain.subject", "fastly_tls_certificate.example"),
+					resource.TestCheckTypeSetElemAttrPair(
+						"data.fastly_tls_domain.subject", "tls_certificate_ids.*",
+						"fastly_tls_certificate.example", "id",
+					),
 				),
 			},
 		},
 	})
-}
-
-// This can be replaced with `TestCheckTypeSetElemNestedAttrs` when using SDK 2.x
-func testAccTLSDomainCertIDIncluded(dataSourceName string, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		r, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-		d, ok := s.RootModule().Resources[dataSourceName]
-		if !ok {
-			return fmt.Errorf("data source not found: %s", dataSourceName)
-		}
-
-		for k, v := range d.Primary.Attributes {
-			if k == "tls_certificate_ids.#" {
-				continue
-			}
-			if !strings.HasPrefix(k, "tls_certificate_ids.") {
-				continue
-			}
-			if v == r.Primary.ID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("unable to find certificate %s in list of certificate ids", r.Primary.ID)
-	}
 }
 
 func testAccFastlyDataSourceTLSDomainResources(key string, cert string, name string) string {

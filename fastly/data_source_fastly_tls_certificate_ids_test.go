@@ -24,12 +24,9 @@ func TestAccFastlyDataSourceTlSCertificateIDs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyDataSourceTLSCertificateIDSConfig_resources(name, key, cert),
-			},
-			{
-				Config: testAccFastlyDataSourceTLSCertificateIDSConfig_resourcesAndData(name, key, cert),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckOutput("result", "true"),
-				),
+				Check: resource.TestCheckTypeSetElemAttrPair(
+					"data.fastly_tls_certificate_ids.subject", "ids.*",
+					"fastly_tls_certificate.cert", "id"),
 			},
 		},
 	})
@@ -45,17 +42,8 @@ resource "fastly_tls_certificate" "cert" {
   certificate_body = "%s"
   depends_on = [fastly_tls_private_key.key]
 }
+data "fastly_tls_certificate_ids" "subject" {
+  depends_on = [fastly_tls_certificate.cert]
+}
 `, key, name, cert)
-}
-
-func testAccFastlyDataSourceTLSCertificateIDSConfig_resourcesAndData(name, key, cert string) string {
-	return fmt.Sprintf(`
-%s
-data "fastly_tls_certificate_ids" "subject" {}
-output "result" {
-  value = tostring(contains(
-    data.fastly_tls_certificate_ids.subject.ids, fastly_tls_certificate.cert.id
-  ))
-}
-`, testAccFastlyDataSourceTLSCertificateIDSConfig_resources(name, key, cert))
 }

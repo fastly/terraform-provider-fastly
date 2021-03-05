@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
 	"testing"
 )
 
@@ -23,37 +21,13 @@ func TestAccDataSourceFastlyTLSSubscriptionIds_basic(t *testing.T) {
 			},
 			{
 				Config: testAccDataSourceFastlyTLSSubscriptionIdsConfigWithDataSource(name, domain),
-				Check:  testAccTLSSubscriptionIDIncluded(datasourceName, "fastly_tls_subscription.test"),
+				Check: resource.TestCheckTypeSetElemAttrPair(
+					datasourceName, "ids.*",
+					"fastly_tls_subscription.test", "id",
+				),
 			},
 		},
 	})
-}
-
-func testAccTLSSubscriptionIDIncluded(dataSourceName string, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		r, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-		d, ok := s.RootModule().Resources[dataSourceName]
-		if !ok {
-			return fmt.Errorf("data source not found: %s", dataSourceName)
-		}
-
-		for k, v := range d.Primary.Attributes {
-			if k == "ids.#" {
-				continue
-			}
-			if !strings.HasPrefix(k, "ids.") {
-				continue
-			}
-			if v == r.Primary.ID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("unable to find private key %s in list of private key ids", r.Primary.ID)
-	}
 }
 
 func testAccDataSourceFastlyTLSSubscriptionIdsConfigResources(name, domain string) string {

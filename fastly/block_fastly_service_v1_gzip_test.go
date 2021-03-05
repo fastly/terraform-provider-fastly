@@ -127,6 +127,13 @@ func TestAccFastlyServiceV1_gzips_basic(t *testing.T) {
 		ContentTypes:   "text/javascript application/x-javascript application/javascript text/css text/html",
 	}
 
+	log4 := gofastly.Gzip{
+		ServiceVersion: 1,
+		Name:           "all",
+		Extensions:     "css",
+		ContentTypes:   "text/javascript application/x-javascript",
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -145,10 +152,22 @@ func TestAccFastlyServiceV1_gzips_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1GzipsConfig_update(name, domainName1),
+				Config: testAccServiceV1GzipsConfig_delete_create(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1GzipsAttributes(&service, []*gofastly.Gzip{&log3}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "gzip.#", "1"),
+				),
+			},
+
+			{
+				Config: testAccServiceV1GzipsConfig_update(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1GzipsAttributes(&service, []*gofastly.Gzip{&log4}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -240,7 +259,7 @@ resource "fastly_service_v1" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceV1GzipsConfig_update(name, domain string) string {
+func testAccServiceV1GzipsConfig_delete_create(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -265,6 +284,35 @@ resource "fastly_service_v1" "foo" {
       "application/x-javascript",
       "text/css",
       "application/javascript",
+      "text/javascript",
+    ]
+  }
+
+  force_destroy = true
+}`, name, domain)
+}
+
+func testAccServiceV1GzipsConfig_update(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  gzip {
+    name       = "all"
+    extensions = ["css"]
+
+    content_types = [
+      "application/x-javascript",
       "text/javascript",
     ]
   }

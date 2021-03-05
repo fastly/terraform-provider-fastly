@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
@@ -101,6 +102,8 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
+	var diags diag.Diagnostics
+
 	cert, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
 		ID: d.Id(),
 	})
@@ -111,6 +114,13 @@ func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData,
 	var domains []string
 	for _, domain := range cert.Domains {
 		domains = append(domains, domain.ID)
+	}
+
+	if cert.Replace {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Fastly recommends that this certificate (%s) be replaced", cert.ID),
+		})
 	}
 
 	if err := d.Set("name", cert.Name); err != nil {
@@ -141,7 +151,7 @@ func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"fmt"
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -78,11 +79,20 @@ func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceDa
 func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
+	var diags diag.Diagnostics
+
 	privateKey, err := conn.GetPrivateKey(&gofastly.GetPrivateKeyInput{
 		ID: d.Id(),
 	})
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if privateKey.Replace {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Fastly recommends that this private key (%s) be replaced", privateKey.ID),
+		})
 	}
 
 	err = d.Set("name", privateKey.Name)
@@ -110,7 +120,7 @@ func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	return diag.FromErr(err)
+	return diags
 }
 
 func resourceFastlyTLSPrivateKeyDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

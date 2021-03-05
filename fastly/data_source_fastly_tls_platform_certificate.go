@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
@@ -66,6 +67,8 @@ func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
+	var diags diag.Diagnostics
+
 	var certificate *fastly.BulkCertificate
 
 	if v, ok := d.GetOk("id"); ok {
@@ -96,12 +99,19 @@ func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Res
 		certificate = certificates[0]
 	}
 
+	if certificate.Replace {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Fastly recommends that this certificate (%s) be replaced", certificate.ID),
+		})
+	}
+
 	err := dataSourceFastlyTLSPlatformCertificateSetAttributes(certificate, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
 
 type PlatformTLSCertificatePredicate func(certificate *fastly.BulkCertificate) bool

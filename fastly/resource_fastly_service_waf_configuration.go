@@ -276,7 +276,7 @@ func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.Reso
 		MinTimeout: WAFStatusCheckMinTimeout,
 		Check:      DefaultWAFDeploymentChecker(conn),
 	}
-	err = statusCheck.waitForDeployment(wafID, latestVersion)
+	err = statusCheck.waitForDeployment(ctx, wafID, latestVersion)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -322,7 +322,7 @@ func resourceServiceWAFConfigurationV1Read(_ context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceServiceWAFConfigurationV1Delete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationV1Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	wafID := d.Get("waf_id").(string)
@@ -348,7 +348,7 @@ func resourceServiceWAFConfigurationV1Delete(_ context.Context, d *schema.Resour
 		MinTimeout: WAFStatusCheckMinTimeout,
 		Check:      DefaultWAFDeploymentChecker(conn),
 	}
-	err = statusCheck.waitForDeployment(wafID, emptyVersion)
+	err = statusCheck.waitForDeployment(ctx, wafID, emptyVersion)
 	if err != nil {
 		return diag.Errorf("Error waiting for WAF Version (%s) to be deleted: %s", d.Id(), err)
 	}

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -44,7 +45,7 @@ func TestAccFastlyServiceWAFVersionDeploymentStatus(t *testing.T) {
 					}, nil
 				},
 			}
-			err := statusCheck.waitForDeployment(wafID, latestVersion)
+			err := statusCheck.waitForDeployment(context.Background(), wafID, latestVersion)
 			hasErrored := err != nil
 			if c.ExpectError && !hasErrored {
 				t.Fatalf("Error expected to be %v but wan't", c.ExpectError)

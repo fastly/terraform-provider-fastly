@@ -434,7 +434,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 // resourceServiceRead provides service resource Read functionality.
-func resourceServiceRead(_ context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isImport bool) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isImport bool) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
@@ -483,6 +483,15 @@ func resourceServiceRead(_ context.Context, d *schema.ResourceData, meta interfa
 		// This delegates read to all the attribute handlers which can then manage reading state for
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
+			// Check if the Read has been cancelled and return early if so
+			if err := ctx.Err(); err != nil {
+				if errors.Is(err, context.Canceled) {
+					return nil
+				}
+
+				return diag.FromErr(err)
+			}
+
 			if err := a.Read(d, s, conn); err != nil {
 				return diag.FromErr(err)
 			}

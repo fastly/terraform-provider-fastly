@@ -127,12 +127,14 @@ func testCreateSet(items []map[string]interface{}) *schema.Set {
 	return schema.NewSet(schema.HashResource(&schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Description: "test name",
+				Required:    true,
 			},
 			"value": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Description: "test value",
+				Required:    true,
 			},
 		},
 	}), toArrayInterface(items))

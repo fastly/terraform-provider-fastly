@@ -318,13 +318,6 @@ github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfdiags
 github.com/hashicorp/terraform-plugin-sdk/v2/meta
 github.com/hashicorp/terraform-plugin-sdk/v2/plugin
 github.com/hashicorp/terraform-plugin-sdk/v2/terraform
-# github.com/hashicorp/tf-sdk-migrator v1.4.0
-## explicit
-github.com/hashicorp/tf-sdk-migrator
-github.com/hashicorp/tf-sdk-migrator/cmd/check
-github.com/hashicorp/tf-sdk-migrator/cmd/migrate
-github.com/hashicorp/tf-sdk-migrator/cmd/v2upgrade
-github.com/hashicorp/tf-sdk-migrator/util
 # github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d
 github.com/hashicorp/yamux
 # github.com/huandu/xstrings v1.3.2
@@ -337,8 +330,6 @@ github.com/jmespath/go-jmespath
 github.com/jstemmer/go-junit-report
 github.com/jstemmer/go-junit-report/formatter
 github.com/jstemmer/go-junit-report/parser
-# github.com/kmoe/go-list v1.0.0
-github.com/kmoe/go-list
 # github.com/mattn/go-colorable v0.1.8
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12
@@ -366,8 +357,6 @@ github.com/posener/complete
 github.com/posener/complete/cmd
 github.com/posener/complete/cmd/install
 github.com/posener/complete/match
-# github.com/radeksimko/go-refs v0.0.0-20190823125319-880a3294a1a0
-github.com/radeksimko/go-refs/parser
 # github.com/russross/blackfriday v1.6.0
 github.com/russross/blackfriday
 # github.com/stretchr/testify v1.6.1
@@ -430,8 +419,6 @@ golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/lint
 golang.org/x/lint/golint
 # golang.org/x/mod v0.3.0
-golang.org/x/mod/internal/lazyregexp
-golang.org/x/mod/modfile
 golang.org/x/mod/module
 golang.org/x/mod/semver
 # golang.org/x/net v0.0.0-20200707034311-ab3426394381

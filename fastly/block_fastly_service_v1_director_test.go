@@ -130,10 +130,6 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Capacity:       100,
 		Retries:        5,
 	}
-	directorBackendDeveloper := gofastly.DirectorBackend{
-		Director: "director_developer",
-		Backend:  "developer",
-	}
 
 	// Director + Backend 2
 	directorDeveloperUpdated := gofastly.Director{
@@ -143,10 +139,6 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Quorum:         30,
 		Capacity:       25,
 		Retries:        10,
-	}
-	directorBackendDeveloperUpdated := gofastly.DirectorBackend{
-		Director: "director_developer",
-		Backend:  "developer_updated",
 	}
 
 	// Director + Backend 3
@@ -158,10 +150,6 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Capacity:       100,
 		Retries:        5,
 	}
-	directorBackendApps := gofastly.DirectorBackend{
-		Director: "director_apps",
-		Backend:  "apps",
-	}
 
 	// Director + Backend 4
 	directorWWWDemo := gofastly.Director{
@@ -171,14 +159,6 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 		Quorum:         75,
 		Capacity:       100,
 		Retries:        5,
-	}
-	directorBackendWWW := gofastly.DirectorBackend{
-		Director: "director_www_demo",
-		Backend:  "www",
-	}
-	directorBackendDemo := gofastly.DirectorBackend{
-		Director: "director_www_demo",
-		Backend:  "demo",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -192,8 +172,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(
 						&service,
-						[]*gofastly.Director{&directorDeveloper, &directorApps},
-						[]*gofastly.DirectorBackend{&directorBackendDeveloper, &directorBackendApps}),
+						[]*gofastly.Director{&directorDeveloper, &directorApps}),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "director.#", "2"),
 				),
@@ -205,8 +184,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(
 						&service,
-						[]*gofastly.Director{&directorDeveloperUpdated, &directorApps, &directorWWWDemo},
-						[]*gofastly.DirectorBackend{&directorBackendDeveloperUpdated, &directorBackendApps, &directorBackendWWW, &directorBackendDemo}),
+						[]*gofastly.Director{&directorDeveloperUpdated, &directorApps, &directorWWWDemo}),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "director.#", "3"),
 				),
@@ -215,7 +193,7 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director, _ []*gofastly.DirectorBackend) resource.TestCheckFunc {
+func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{

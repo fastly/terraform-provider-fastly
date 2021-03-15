@@ -228,6 +228,7 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
+- **backend** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--backend))
 - **domain** (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - **name** (String) The unique name for the Service to create
 
@@ -235,7 +236,6 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 
 - **acl** (Block Set) (see [below for nested schema](#nestedblock--acl))
 - **activate** (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
-- **backend** (Block Set) (see [below for nested schema](#nestedblock--backend))
 - **bigquerylogging** (Block Set) (see [below for nested schema](#nestedblock--bigquerylogging))
 - **blobstoragelogging** (Block Set) (see [below for nested schema](#nestedblock--blobstoragelogging))
 - **cache_setting** (Block Set) (see [below for nested schema](#nestedblock--cache_setting))
@@ -287,34 +287,6 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 - **active_version** (Number) The currently active version of your Fastly Service
 - **cloned_version** (Number) The latest cloned version by the provider. The value gets only set after running `terraform apply`
 
-<a id="nestedblock--domain"></a>
-### Nested Schema for `domain`
-
-Required:
-
-- **name** (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
-
-Optional:
-
-- **comment** (String) An optional comment about the Domain.
-
-
-<a id="nestedblock--acl"></a>
-### Nested Schema for `acl`
-
-Required:
-
-- **name** (String) A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL
-
-Optional:
-
-- **force_destroy** (Boolean) Allow the ACL to be deleted, even if it contains entries. Defaults to false.
-
-Read-Only:
-
-- **acl_id** (String) The ID of the ACL
-
-
 <a id="nestedblock--backend"></a>
 ### Nested Schema for `backend`
 
@@ -348,6 +320,34 @@ Optional:
 - **ssl_sni_hostname** (String) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all
 - **use_ssl** (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
 - **weight** (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`
+
+
+<a id="nestedblock--domain"></a>
+### Nested Schema for `domain`
+
+Required:
+
+- **name** (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- **comment** (String) An optional comment about the Domain.
+
+
+<a id="nestedblock--acl"></a>
+### Nested Schema for `acl`
+
+Required:
+
+- **name** (String) A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL
+
+Optional:
+
+- **force_destroy** (Boolean) Allow the ACL to be deleted, even if it contains entries. Defaults to false.
+
+Read-Only:
+
+- **acl_id** (String) The ID of the ACL
 
 
 <a id="nestedblock--bigquerylogging"></a>

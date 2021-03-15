@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,11 +19,11 @@ func TestAccFastlyDataSourceTLSCertificate_withName(t *testing.T) {
 	dataSourceName := "data.fastly_tls_certificate.test"
 	resourceName := "fastly_tls_certificate.cert"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceTlsCertificate(name, key, cert, domain),
+				Config: testAccDataSourceTLSCertificate(name, key, cert, domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
 						dataSourceName, "id", resourceName, "id"),
@@ -51,7 +51,7 @@ func TestAccFastlyDataSourceTLSCertificate_withName(t *testing.T) {
 	})
 }
 
-func testAccDataSourceTlsCertificate(keyName string, key string, cert string, domain string) string {
+func testAccDataSourceTLSCertificate(keyName string, key string, cert string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "key" {
   name = "%[1]s"

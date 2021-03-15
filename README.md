@@ -8,8 +8,10 @@
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
+-	[Terraform](https://www.terraform.io/downloads.html) 0.12.x or higher 
 -	[Go](https://golang.org/doc/install) 1.14 (to build the provider plugin)
+
+> NOTE: the last version of the Fastly provider to support Terraform 0.11.x and below was [v0.26.0](https://github.com/fastly/terraform-provider-fastly/releases/tag/v0.26.0)
 
 ## Building The Provider
 

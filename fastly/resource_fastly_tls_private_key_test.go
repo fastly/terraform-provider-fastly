@@ -3,9 +3,9 @@ package fastly
 import (
 	"fmt"
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
 )
@@ -28,9 +28,9 @@ func TestAccFastlyResourceTLSPrivateKey_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPrivateKeyDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckPrivateKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyTLSPrivateKeyConfig_simple_private_key(key, name),
@@ -110,9 +110,9 @@ func testAccCheckPrivateKeyExists(resourceName string) resource.TestCheckFunc {
 }
 
 func testSweepTLSPrivateKeys(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	keys, err := client.ListPrivateKeys(&fastly.ListPrivateKeysInput{PageSize: 1000})

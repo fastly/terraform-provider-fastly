@@ -1,21 +1,23 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceServiceAclEntriesV1() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServiceAclEntriesV1Create,
-		Read:   resourceServiceAclEntriesV1Read,
-		Update: resourceServiceAclEntriesV1Update,
-		Delete: resourceServiceAclEntriesV1Delete,
+		CreateContext: resourceServiceAclEntriesV1Create,
+		ReadContext:   resourceServiceAclEntriesV1Read,
+		UpdateContext: resourceServiceAclEntriesV1Update,
+		DeleteContext: resourceServiceAclEntriesV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceServiceACLEntriesV1Import,
+			StateContext: resourceServiceACLEntriesV1Import,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -41,7 +43,7 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeString,
-							Description: "",
+							Description: "The unique ID of the entry",
 							Computed:    true,
 						},
 						"ip": {
@@ -72,7 +74,7 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 	}
 }
 
-func resourceServiceAclEntriesV1Create(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceAclEntriesV1Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -96,14 +98,14 @@ func resourceServiceAclEntriesV1Create(d *schema.ResourceData, meta interface{})
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return fmt.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclID))
-	return resourceServiceAclEntriesV1Read(d, meta)
+	return resourceServiceAclEntriesV1Read(ctx, d, meta)
 }
 
-func resourceServiceAclEntriesV1Read(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceAclEntriesV1Read(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -115,14 +117,18 @@ func resourceServiceAclEntriesV1Read(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	d.Set("entry", flattenAclEntries(aclEntries))
+	err = d.Set("entry", flattenAclEntries(aclEntries))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
-func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceAclEntriesV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	conn := meta.(*FastlyClient).conn
 
@@ -154,7 +160,7 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 
 		diffResult, err := setDiff.Diff(oldSet, newSet)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		// DELETE removed resources
@@ -199,13 +205,13 @@ func resourceServiceAclEntriesV1Update(d *schema.ResourceData, meta interface{})
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return fmt.Errorf("Error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("Error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
-	return resourceServiceAclEntriesV1Read(d, meta)
+	return resourceServiceAclEntriesV1Read(ctx, d, meta)
 }
 
-func resourceServiceAclEntriesV1Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceAclEntriesV1Delete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -226,7 +232,7 @@ func resourceServiceAclEntriesV1Delete(d *schema.ResourceData, meta interface{})
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return fmt.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	d.SetId("")
@@ -258,7 +264,7 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 	return resultList
 }
 
-func resourceServiceACLEntriesV1Import(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceACLEntriesV1Import(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

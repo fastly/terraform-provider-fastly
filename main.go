@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/fastly/terraform-provider-fastly/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/plugin"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
 func main() {

@@ -3,78 +3,76 @@ package fastly
 import (
 	"encoding/pem"
 	"fmt"
-	"strings"
-
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func validateLoggingFormatVersion() schema.SchemaValidateFunc {
-	return validation.IntBetween(1, 2)
+func validateLoggingFormatVersion() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.IntBetween(1, 2))
 }
 
-func validateLoggingMessageType() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateLoggingMessageType() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"classic",
 		"loggly",
 		"logplex",
 		"blank",
-	}, false)
+	}, false))
 }
 
-func validateLoggingPlacement() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateLoggingPlacement() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"none",
 		"waf_debug",
-	}, false)
+	}, false))
 }
 
-func validateLoggingServerSideEncryption() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateLoggingServerSideEncryption() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		string(gofastly.S3ServerSideEncryptionAES),
 		string(gofastly.S3ServerSideEncryptionKMS),
-	}, false)
+	}, false))
 }
 
-func validateDirectorQuorum() schema.SchemaValidateFunc {
-	return validation.IntBetween(0, 100)
+func validateDirectorQuorum() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.IntBetween(0, 100))
 }
 
-func validateDirectorType() schema.SchemaValidateFunc {
-	return validation.IntInSlice([]int{1, 3, 4})
+func validateDirectorType() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.IntInSlice([]int{1, 3, 4}))
 }
 
-func validateConditionType() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateConditionType() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"REQUEST",
 		"RESPONSE",
 		"CACHE",
 		"PREFETCH",
-	}, false)
+	}, false))
 }
 
-func validateHeaderAction() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateHeaderAction() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"set",
 		"append",
 		"delete",
 		"regex",
 		"regex_repeat",
-	}, false)
+	}, false))
 }
 
-func validateHeaderType() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateHeaderType() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"request",
 		"fetch",
 		"cache",
 		"response",
-	}, false)
+	}, false))
 }
 
-func validateSnippetType() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateSnippetType() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"init",
 		"recv",
 		"hash",
@@ -86,22 +84,21 @@ func validateSnippetType() schema.SchemaValidateFunc {
 		"deliver",
 		"log",
 		"none",
-	}, false)
+	}, false))
 }
 
-func validateRuleStatusType() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
+func validateRuleStatusType() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"log",
 		"score",
 		"block",
-	}, false)
+	}, false))
 }
 
-func validateDictionaryItems() schema.SchemaValidateFunc {
-
+func validateDictionaryItems() schema.SchemaValidateDiagFunc {
 	max := gofastly.MaximumDictionarySize
 
-	return func(i interface{}, k string) (s []string, es []error) {
+	return validation.ToDiagFunc(func(i interface{}, k string) (s []string, es []error) {
 
 		v, ok := i.(map[string]interface{})
 		if !ok {
@@ -115,12 +112,11 @@ func validateDictionaryItems() schema.SchemaValidateFunc {
 		}
 
 		return
-	}
-
+	})
 }
 
-func validateUserRole() schema.SchemaValidateFunc {
-	return validation.StringInSlice(
+func validateUserRole() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice(
 		[]string{
 			"user",
 			"billing",
@@ -128,24 +124,13 @@ func validateUserRole() schema.SchemaValidateFunc {
 			"superuser",
 		},
 		false,
-	)
-}
-
-// TODO: Use SDK's validation.IsURLWithHTTPS() after we upgrade
-func validateHTTPSURL() schema.SchemaValidateFunc {
-	return func(val interface{}, key string) (warns []string, errs []error) {
-		v := val.(string)
-		if !strings.HasPrefix(v, "https://") {
-			errs = append(errs, fmt.Errorf("%q must be https URL, got: %s", key, v))
-		}
-		return
-	}
+	))
 }
 
 // validatePEMBlock returns a schema validation function that checks whether a string contains a single PEM block of
 // type `pemType`.
-func validatePEMBlock(pemType string) schema.SchemaValidateFunc {
-	return func(val interface{}, key string) ([]string, []error) {
+func validatePEMBlock(pemType string) schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(func(val interface{}, key string) ([]string, []error) {
 		b, rest := pem.Decode([]byte(val.(string)))
 		if b == nil {
 			return nil, []error{fmt.Errorf("expected %s to be a valid PEM-format block", key)}
@@ -157,13 +142,13 @@ func validatePEMBlock(pemType string) schema.SchemaValidateFunc {
 			return nil, []error{fmt.Errorf("expected %s to only contain one PEM-format block", key)}
 		}
 		return nil, nil
-	}
+	})
 }
 
 // validatePEMBlocks returns a schema validation function that checks whether a string contains multiple PEM blocks of
 // type `pemType`.
-func validatePEMBlocks(pemType string) schema.SchemaValidateFunc {
-	return func(val interface{}, key string) ([]string, []error) {
+func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(func(val interface{}, key string) ([]string, []error) {
 		pemRest := []byte(val.(string))
 		numBlocks := 0
 		for {
@@ -183,5 +168,5 @@ func validatePEMBlocks(pemType string) schema.SchemaValidateFunc {
 		}
 
 		return nil, nil
-	}
+	})
 }

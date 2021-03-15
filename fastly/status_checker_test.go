@@ -1,11 +1,12 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestAccFastlyServiceWAFVersionDeploymentStatus(t *testing.T) {
@@ -44,7 +45,7 @@ func TestAccFastlyServiceWAFVersionDeploymentStatus(t *testing.T) {
 					}, nil
 				},
 			}
-			err := statusCheck.waitForDeployment(wafID, latestVersion)
+			err := statusCheck.waitForDeployment(context.Background(), wafID, latestVersion)
 			hasErrored := err != nil
 			if c.ExpectError && !hasErrored {
 				t.Fatalf("Error expected to be %v but wan't", c.ExpectError)

@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var serviceRef = "fastly_service_v1.foo"
@@ -66,9 +66,9 @@ func TestAccFastlyServiceV1WAFAdd(t *testing.T) {
 	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceV1WAF(name, "", waf, ""),
@@ -87,9 +87,9 @@ func TestAccFastlyServiceV1WAFAddAndRemove(t *testing.T) {
 	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceV1WAF(name, "", "", ""),
@@ -123,9 +123,9 @@ func TestAccFastlyServiceV1WAFUpdateResponse(t *testing.T) {
 	updatedWaf := composeWAF(condition, updateResponse)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceV1WAF(name, "", waf, ""),
@@ -153,9 +153,9 @@ func TestAccFastlyServiceV1WAFUpdateCondition(t *testing.T) {
 	updatedWaf := composeWAF(updatedCondition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceV1WAF(name, "", waf, ""),

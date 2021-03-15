@@ -2,9 +2,8 @@ package fastly
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
@@ -19,45 +18,21 @@ func TestAccDataSourceFastlyTLSActivationIds_basic(t *testing.T) {
 
 	datasourceName := "data.fastly_tls_activation_ids.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceFastlyTLSActivationIdsConfig(key, cert, domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "ids.#", "1"),
-					testAccTLSActivationIDIncluded(datasourceName, "fastly_tls_activation.test"),
+					resource.TestCheckTypeSetElemAttrPair(
+						datasourceName, "ids.*",
+						"fastly_tls_activation.test", "id",
+					),
 				),
 			},
 		},
 	})
-}
-
-func testAccTLSActivationIDIncluded(dataSourceName string, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		r, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-		d, ok := s.RootModule().Resources[dataSourceName]
-		if !ok {
-			return fmt.Errorf("data source not found: %s", dataSourceName)
-		}
-
-		for k, v := range d.Primary.Attributes {
-			if k == "ids.#" {
-				continue
-			}
-			if !strings.HasPrefix(k, "ids.") {
-				continue
-			}
-			if v == r.Primary.ID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("unable to find private key %s in list of private key ids", r.Primary.ID)
-	}
 }
 
 func testAccDataSourceFastlyTLSActivationIdsConfig(key, cert, domain string) string {

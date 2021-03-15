@@ -2,8 +2,8 @@ package fastly
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -16,8 +16,8 @@ func TestAccFastlyDataSourceTLSPlatformCertificateIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resources(name, key, cert, ca),
@@ -25,7 +25,10 @@ func TestAccFastlyDataSourceTLSPlatformCertificateIDs(t *testing.T) {
 			{
 				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resourcesAndData(name, key, cert, ca),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckOutput("result", "true"),
+					resource.TestCheckTypeSetElemAttrPair(
+						"data.fastly_tls_platform_certificate_ids.subject", "ids.*",
+						"fastly_tls_platform_certificate.cert", "id",
+					),
 				),
 			},
 		},
@@ -63,10 +66,5 @@ func testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resourcesAndData(nam
 	return fmt.Sprintf(`
 %s
 data "fastly_tls_platform_certificate_ids" "subject" {}
-output "result" {
-  value = tostring(contains(
-    data.fastly_tls_platform_certificate_ids.subject.ids, fastly_tls_platform_certificate.cert.id
-  ))
-}
 `, testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resources(name, key, cert, ca))
 }

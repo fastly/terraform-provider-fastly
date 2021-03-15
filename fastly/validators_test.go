@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -21,7 +22,7 @@ func TestValidateLoggingFormatVersion(t *testing.T) {
 		"5": {5, 0, 1},
 	} {
 		t.Run(name, func(t *testing.T) {
-			actualWarns, actualErrors := validateLoggingFormatVersion()(testcase.value, "format_version")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateLoggingFormatVersion()(testcase.value, cty.GetAttrPath("format_version")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -48,7 +49,7 @@ func TestValidateLoggingMessageType(t *testing.T) {
 		{"BLANK", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateLoggingMessageType()(testcase.value, "message_type")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateLoggingMessageType()(testcase.value, cty.GetAttrPath("message_type")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -71,7 +72,7 @@ func TestValidateLoggingPlacement(t *testing.T) {
 		{"WAF_DEBUG", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateLoggingPlacement()(testcase.value, "placement")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateLoggingPlacement()(testcase.value, cty.GetAttrPath("placement")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -96,7 +97,7 @@ func TestValidateLoggingServerSideEncryption(t *testing.T) {
 		{"AWS:kms", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateLoggingServerSideEncryption()(testcase.value, "server_side_encryption")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateLoggingServerSideEncryption()(testcase.value, cty.GetAttrPath("server_side_encryption")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -121,7 +122,7 @@ func TestValidateDirectorQuorum(t *testing.T) {
 		"150": {150, 0, 1},
 	} {
 		t.Run(name, func(t *testing.T) {
-			actualWarns, actualErrors := validateDirectorQuorum()(testcase.value, "quorum")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateDirectorQuorum()(testcase.value, cty.GetAttrPath("quorum")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -146,7 +147,7 @@ func TestValidateDirectorType(t *testing.T) {
 		"5": {5, 0, 1},
 	} {
 		t.Run(name, func(t *testing.T) {
-			actualWarns, actualErrors := validateDirectorType()(testcase.value, "type")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateDirectorType()(testcase.value, cty.GetAttrPath("type")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -173,7 +174,7 @@ func TestValidateConditionType(t *testing.T) {
 		{"prefetch", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateConditionType()(testcase.value, "type")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateConditionType()(testcase.value, cty.GetAttrPath("type")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -202,7 +203,7 @@ func TestValidateHeaderAction(t *testing.T) {
 		{"REGEX_REPEAT", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateHeaderAction()(testcase.value, "action")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateHeaderAction()(testcase.value, cty.GetAttrPath("action")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -229,7 +230,7 @@ func TestValidateHeaderType(t *testing.T) {
 		{"RESPONSE", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateHeaderType()(testcase.value, "type")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateHeaderType()(testcase.value, cty.GetAttrPath("type")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -254,7 +255,7 @@ func TestValidateRuleStatusType(t *testing.T) {
 		{"???", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateRuleStatusType()(testcase.value, "type")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateRuleStatusType()(testcase.value, cty.GetAttrPath("type")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -295,7 +296,7 @@ func TestValidateSnippetType(t *testing.T) {
 		{"NONE", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateSnippetType()(testcase.value, "type")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateSnippetType()(testcase.value, cty.GetAttrPath("type")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -318,7 +319,7 @@ func TestValidateDictionaryItemMaxSize(t *testing.T) {
 		"Ten thousand and one dictionary items": {createTestDictionaryItems(gofastly.MaximumDictionarySize + 1), 0, 1},
 	} {
 		t.Run(name, func(t *testing.T) {
-			actualWarns, actualErrors := validateDictionaryItems()(testcase.value, "dictionary_items")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateDictionaryItems()(testcase.value, cty.GetAttrPath("dictionary_items")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -356,28 +357,7 @@ func TestValidateUserRole(t *testing.T) {
 		{"SUPERUSER", 0, 1},
 	} {
 		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateUserRole()(testcase.value, "role")
-			if len(actualWarns) != testcase.expectedWarns {
-				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
-			}
-			if len(actualErrors) != testcase.expectedErrors {
-				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
-			}
-		})
-	}
-}
-
-func TestValidateHTTPSURL(t *testing.T) {
-	for _, testcase := range []struct {
-		value          string
-		expectedWarns  int
-		expectedErrors int
-	}{
-		{"https://api.fastly.com", 0, 0},
-		{"http://example.com", 0, 1},
-	} {
-		t.Run(testcase.value, func(t *testing.T) {
-			actualWarns, actualErrors := validateHTTPSURL()(testcase.value, "url")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateUserRole()(testcase.value, cty.GetAttrPath("role")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -409,7 +389,7 @@ func TestValidatePEMCertificate(t *testing.T) {
 		{"", "", 0, 1},
 	} {
 		t.Run(fmt.Sprintf("%s - %s", testcase.expectedPemType, testcase.value), func(t *testing.T) {
-			actualWarns, actualErrors := validatePEMBlock(testcase.expectedPemType)(testcase.value, "certificate_blob")
+			actualWarns, actualErrors := diagToWarnsAndErrs(validatePEMBlock(testcase.expectedPemType)(testcase.value, cty.GetAttrPath("certificate_blob")))
 			if len(actualWarns) != testcase.expectedWarns {
 				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
 			}
@@ -439,7 +419,7 @@ func TestValidateMultiplePEMBlocks(t *testing.T) {
 		"gibberish":                    {"jkljansdfj\nasldfjhadskjfh\nlshakdjf", "", 0, 1},
 	} {
 		t.Run(fmt.Sprintf(name), func(t *testing.T) {
-			actualWarnings, actualErrors := validatePEMBlocks(testCase.expectedPemType)(testCase.value, "intermediates_blob")
+			actualWarnings, actualErrors := diagToWarnsAndErrs(validatePEMBlocks(testCase.expectedPemType)(testCase.value, cty.GetAttrPath("intermediates_blob")))
 
 			if len(actualWarnings) != testCase.expectedWarnings {
 				t.Errorf("expected %d warnings, got %d", testCase.expectedWarnings, len(actualWarnings))

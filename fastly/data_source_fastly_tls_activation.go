@@ -1,15 +1,16 @@
 package fastly
 
 import (
-	"fmt"
+	"context"
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"time"
 )
 
 func dataSourceFastlyTLSActivation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFastlyTLSActivationRead,
+		ReadContext: dataSourceFastlyTLSActivationRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:          schema.TypeString,
@@ -48,7 +49,7 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSActivationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	var activation *fastly.TLSActivation
@@ -58,7 +59,7 @@ func dataSourceFastlyTLSActivationRead(d *schema.ResourceData, meta interface{})
 			ID: v.(string),
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		activation = foundActivation
 	} else {
@@ -66,21 +67,26 @@ func dataSourceFastlyTLSActivationRead(d *schema.ResourceData, meta interface{})
 
 		activations, err := listTLSActivations(conn, filters...)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if len(activations) == 0 {
-			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
+			return diag.Errorf("Your query returned no results. Please change your search criteria and try again")
 		}
 
 		if len(activations) > 1 {
-			return fmt.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
+			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
 		}
 
 		activation = activations[0]
 	}
 
-	return dataSourceFastlyTLSActivationSetAttributes(activation, d)
+	err := dataSourceFastlyTLSActivationSetAttributes(activation, d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 type TLSActivationPredicate func(activation *fastly.TLSActivation) bool

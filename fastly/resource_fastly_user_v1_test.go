@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccFastlyUserV1_basic(t *testing.T) {
@@ -19,9 +19,9 @@ func TestAccFastlyUserV1_basic(t *testing.T) {
 	role2 := "superuser"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckUserV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckUserV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserV1Config(login, name, role),
@@ -58,9 +58,9 @@ func TestAccFastlyUserV1_updateLogin(t *testing.T) {
 	role := "engineer"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckUserV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckUserV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserV1Config(login, name, role),

@@ -1,13 +1,17 @@
 package fastly
 
 import (
+	"context"
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/fastly/terraform-provider-fastly/version"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Provider returns a terraform.ResourceProvider.
-func Provider() terraform.ResourceProvider {
+const TerraformProviderProductUserAgent = "terraform-provider-fastly"
+
+// Provider returns a *schema.Provider.
+func Provider() *schema.Provider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_key": {
@@ -57,24 +61,14 @@ func Provider() terraform.ResourceProvider {
 		},
 	}
 
-	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
-		terraformVersion := provider.TerraformVersion
-		if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
+	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		config := Config{
+			ApiKey:    d.Get("api_key").(string),
+			BaseURL:   d.Get("base_url").(string),
+			UserAgent: provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
 		}
-		return providerConfigure(d, terraformVersion)
+		return config.Client()
 	}
 
 	return provider
-}
-
-func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
-	config := Config{
-		ApiKey:           d.Get("api_key").(string),
-		BaseURL:          d.Get("base_url").(string),
-		terraformVersion: terraformVersion,
-	}
-	return config.Client()
 }

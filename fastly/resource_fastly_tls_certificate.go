@@ -1,20 +1,23 @@
 package fastly
 
 import (
+	"context"
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceFastlyTLSCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFastlyTLSCertificateCreate,
-		Read:   resourceFastlyTLSCertificateRead,
-		Update: resourceFastlyTLSCertificateUpdate,
-		Delete: resourceFastlyTLSCertificateDelete,
+		CreateContext: resourceFastlyTLSCertificateCreate,
+		ReadContext:   resourceFastlyTLSCertificateRead,
+		UpdateContext: resourceFastlyTLSCertificateUpdate,
+		DeleteContext: resourceFastlyTLSCertificateDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -25,10 +28,10 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 				Computed:    true,
 			},
 			"certificate_body": {
-				Type:         schema.TypeString,
-				Description:  "PEM-formatted certificate.",
-				Required:     true,
-				ValidateFunc: validatePEMBlock("CERTIFICATE"),
+				Type:             schema.TypeString,
+				Description:      "PEM-formatted certificate.",
+				Required:         true,
+				ValidateDiagFunc: validatePEMBlock("CERTIFICATE"),
 			},
 			"created_at": {
 				Type:        schema.TypeString,
@@ -75,7 +78,7 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	input := &fastly.CreateCustomTLSCertificateInput{
@@ -88,22 +91,24 @@ func resourceFastlyTLSCertificateCreate(d *schema.ResourceData, meta interface{}
 
 	output, err := conn.CreateCustomTLSCertificate(input)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(output.ID)
 
-	return resourceFastlyTLSCertificateRead(d, meta)
+	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
+
+	var diags diag.Diagnostics
 
 	cert, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
 		ID: d.Id(),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	var domains []string
@@ -111,38 +116,45 @@ func resourceFastlyTLSCertificateRead(d *schema.ResourceData, meta interface{}) 
 		domains = append(domains, domain.ID)
 	}
 
+	if cert.Replace {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Fastly recommends that this certificate (%s) be replaced", cert.ID),
+		})
+	}
+
 	if err := d.Set("name", cert.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("created_at", cert.CreatedAt.Format(time.RFC3339)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("updated_at", cert.UpdatedAt.Format(time.RFC3339)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("issued_to", cert.IssuedTo); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("issuer", cert.Issuer); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("replace", cert.Replace); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("serial_number", cert.SerialNumber); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("signature_algorithm", cert.SignatureAlgorithm); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("domains", domains); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFastlyTLSCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	input := &fastly.UpdateCustomTLSCertificateInput{
@@ -156,13 +168,13 @@ func resourceFastlyTLSCertificateUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.UpdateCustomTLSCertificate(input)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceFastlyTLSCertificateRead(d, meta)
+	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSCertificateDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	err := conn.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{
@@ -170,7 +182,7 @@ func resourceFastlyTLSCertificateDelete(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

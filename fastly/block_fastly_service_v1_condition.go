@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type ConditionServiceAttributeHandler struct {
@@ -181,10 +181,10 @@ func (h *ConditionServiceAttributeHandler) Register(s *schema.Resource) error {
 					Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`",
 				},
 				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					Description:  "Type of condition, either `REQUEST` (req), `RESPONSE` (req, resp), or `CACHE` (req, beresp)",
-					ValidateFunc: validateConditionType(),
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "Type of condition, either `REQUEST` (req), `RESPONSE` (req, resp), or `CACHE` (req, beresp)",
+					ValidateDiagFunc: validateConditionType(),
 				},
 			},
 		},

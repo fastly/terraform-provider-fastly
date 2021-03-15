@@ -1,18 +1,20 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"time"
 )
 
 func resourceFastlyTLSSubscriptionValidation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFastlyTLSSubscriptionValidationCreate,
-		Read:   resourceFastlyTLSSubscriptionValidationRead,
-		Delete: resourceFastlyTLSSubscriptionValidationDelete,
+		CreateContext: resourceFastlyTLSSubscriptionValidationCreate,
+		ReadContext:   resourceFastlyTLSSubscriptionValidationRead,
+		DeleteContext: resourceFastlyTLSSubscriptionValidationDelete,
 		Schema: map[string]*schema.Schema{
 			"subscription_id": {
 				Type:        schema.TypeString,
@@ -31,10 +33,10 @@ const (
 	subscriptionStateIssued = "issued"
 )
 
-func resourceFastlyTLSSubscriptionValidationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
 			ID: d.Get("subscription_id").(string),
 		})
@@ -46,16 +48,22 @@ func resourceFastlyTLSSubscriptionValidationCreate(d *schema.ResourceData, meta 
 			return resource.RetryableError(fmt.Errorf("Expected subscription state to be %s but it was %s", subscriptionStateIssued, subscription.State))
 		}
 
-		err = resourceFastlyTLSSubscriptionValidationRead(d, meta)
+		err = diagToErr(resourceFastlyTLSSubscriptionValidationRead(ctx, d, meta))
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
-func resourceFastlyTLSSubscriptionValidationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	subscriptionID := d.Get("subscription_id").(string)
@@ -63,7 +71,7 @@ func resourceFastlyTLSSubscriptionValidationRead(d *schema.ResourceData, meta in
 		ID: subscriptionID,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if subscription.State != subscriptionStateIssued {
@@ -75,7 +83,7 @@ func resourceFastlyTLSSubscriptionValidationRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceFastlyTLSSubscriptionValidationDelete(_ *schema.ResourceData, _ interface{}) error {
+func resourceFastlyTLSSubscriptionValidationDelete(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
 	// Virtual resource so doesn't need deleting
 	return nil
 }

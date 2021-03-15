@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,9 +30,9 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 
 	resourceName := "fastly_tls_certificate.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTLSCertificateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSCertificateWithName(name, key, name, cert),
@@ -72,9 +72,9 @@ func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
 
 	resourceName := "fastly_tls_certificate.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTLSCertificateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTlsCertificateWithoutName(name, key, cert),
@@ -175,9 +175,9 @@ func testAccCheckTLSCertificateDestroy(s *terraform.State) error {
 }
 
 func testSweepTLSCertificates(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	certificates, err := client.ListCustomTLSCertificates(&fastly.ListCustomTLSCertificatesInput{PageSize: 1000})

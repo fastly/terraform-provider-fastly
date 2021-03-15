@@ -5,7 +5,7 @@ import (
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type BigQueryLoggingServiceAttributeHandler struct {
@@ -185,6 +185,11 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s 
 	}
 
 	bql := flattenBigQuery(BQList)
+
+	for _, element := range bql {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), bql); err != nil {
 		log.Printf("[WARN] Error setting bigquerylogging for (%s): %s", d.Id(), err)
 	}
@@ -254,10 +259,10 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 			Description: "Name of a condition to apply this logging.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

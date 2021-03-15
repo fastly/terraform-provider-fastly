@@ -5,7 +5,7 @@ import (
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type OpenstackServiceAttributeHandler struct {
@@ -179,6 +179,10 @@ func (h *OpenstackServiceAttributeHandler) Read(d *schema.ResourceData, s *gofas
 
 	ell := flattenOpenstack(openstackList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting OpenStack logging endpoints for (%s): %s", d.Id(), err)
 	}
@@ -342,11 +346,11 @@ func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
 		},
 
 		"message_type": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "classic",
-			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
-			ValidateFunc: validateLoggingMessageType(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
+			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 
 		"timestamp_format": {
@@ -364,17 +368,17 @@ func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "Apache style log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      2,
-			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-			ValidateFunc: validateLoggingFormatVersion(),
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,

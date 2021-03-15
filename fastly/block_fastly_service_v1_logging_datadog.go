@@ -5,7 +5,7 @@ import (
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type DatadogServiceAttributeHandler struct {
@@ -137,6 +137,10 @@ func (h *DatadogServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 
 	dll := flattenDatadog(datadogList)
 
+	for _, element := range dll {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), dll); err != nil {
 		log.Printf("[WARN] Error setting Datadog logging endpoints for (%s): %s", d.Id(), err)
 	}
@@ -198,11 +202,11 @@ func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "Apache-style string or VCL variables to use for log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      2,
-			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-			ValidateFunc: validateLoggingFormatVersion(),
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
@@ -210,10 +214,10 @@ func (h *DatadogServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "The name of the condition to apply.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

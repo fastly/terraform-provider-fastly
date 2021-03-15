@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var wafRuleExclusion = &schema.Schema{
@@ -26,10 +26,10 @@ var wafRuleExclusion = &schema.Schema{
 				Description: "A conditional expression in VCL used to determine if the condition is met",
 			},
 			"exclusion_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall",
-				ValidateFunc: validateExecutionType(),
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall",
+				ValidateDiagFunc: validateExecutionType(),
 			},
 			"modsec_rule_ids": {
 				Type:        schema.TypeSet,
@@ -188,14 +188,14 @@ func createWAFRuleExclusion(add []interface{}, meta interface{}, wafID string, w
 	return nil
 }
 
-func validateExecutionType() schema.SchemaValidateFunc {
-	return validation.StringInSlice(
+func validateExecutionType() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice(
 		[]string{
 			gofastly.WAFRuleExclusionTypeRule,
 			gofastly.WAFRuleExclusionTypeWAF,
 		},
 		false,
-	)
+	))
 }
 
 func validateWAFRuleExclusion(d *schema.ResourceDiff) error {

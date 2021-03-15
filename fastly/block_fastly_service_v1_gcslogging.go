@@ -5,7 +5,7 @@ import (
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type GCSLoggingServiceAttributeHandler struct {
@@ -178,6 +178,11 @@ func (h *GCSLoggingServiceAttributeHandler) Read(d *schema.ResourceData, s *gofa
 	}
 
 	gcsl := flattenGCS(GCSList)
+
+	for _, element := range gcsl {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), gcsl); err != nil {
 		log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
 	}
@@ -236,11 +241,11 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
 		},
 		"message_type": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "classic",
-			Description:  "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
-			ValidateFunc: validateLoggingMessageType(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
+			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 	}
 
@@ -258,10 +263,10 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description: "Name of a condition to apply this logging.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestResourceFastlyFlattenAclEntries(t *testing.T) {
@@ -78,9 +78,9 @@ func TestAccFastlyServiceAclEntriesV1_create(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
@@ -89,6 +89,11 @@ func TestAccFastlyServiceAclEntriesV1_create(t *testing.T) {
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
 					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
 				),
+			},
+			{
+				ResourceName:      "fastly_service_acl_entries_v1.entries",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -120,9 +125,9 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
@@ -170,9 +175,9 @@ func TestAccFastlyServiceAclEntriesV1_update_additional_fields(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
@@ -180,10 +185,12 @@ func TestAccFastlyServiceAclEntriesV1_update_additional_fields(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
 					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.ip", "127.0.0.1"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.subnet", "24"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.negated", "false"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.2838444859.comment", "ACL Entry 1"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_acl_entries_v1.entries", "entry.*", map[string]string{
+						"ip":      "127.0.0.1",
+						"subnet":  "24",
+						"negated": "false",
+						"comment": "ACL Entry 1",
+					}),
 				),
 			},
 			{
@@ -192,10 +199,12 @@ func TestAccFastlyServiceAclEntriesV1_update_additional_fields(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntriesAfterUpdate),
 					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.ip", "127.0.0.1"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.subnet", "20"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.negated", "true"),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.1817859044.comment", "ACL Entry 1 Updated"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_acl_entries_v1.entries", "entry.*", map[string]string{
+						"ip":      "127.0.0.1",
+						"subnet":  "20",
+						"negated": "true",
+						"comment": "ACL Entry 1 Updated",
+					}),
 				),
 			},
 		},
@@ -218,9 +227,9 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
@@ -236,43 +245,6 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					resource.TestCheckNoResourceAttr("fastly_service_v1.foo", "entry"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccFastlyServiceAclEntriesV1_import(t *testing.T) {
-
-	var service gofastly.ServiceDetail
-
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	aclName := fmt.Sprintf("acl %s", acctest.RandString(10))
-
-	expectedRemoteEntries := []map[string]interface{}{
-		{
-			"id":      "",
-			"ip":      "127.0.0.1",
-			"subnet":  "24",
-			"negated": false,
-			"comment": "ALC Entry 1",
-		},
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(name, aclName, expectedRemoteEntries),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-				),
-			},
-			{
-				ResourceName:      "fastly_service_acl_entries_v1.entries",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -310,9 +282,9 @@ func TestAccFastlyServiceAclEntriesV1_process_1001_entries(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(name, aclName, expectedRemoteEntries),

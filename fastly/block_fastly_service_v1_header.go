@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type HeaderServiceAttributeHandler struct {
@@ -183,16 +183,16 @@ func (h *HeaderServiceAttributeHandler) Register(s *schema.Resource) error {
 					Description: "Unique name for this header attribute. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"action": {
-					Type:         schema.TypeString,
-					Required:     true,
-					Description:  "The Header manipulation action to take; must be one of `set`, `append`, `delete`, `regex`, or `regex_repeat`",
-					ValidateFunc: validateHeaderAction(),
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "The Header manipulation action to take; must be one of `set`, `append`, `delete`, `regex`, or `regex_repeat`",
+					ValidateDiagFunc: validateHeaderAction(),
 				},
 				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					Description:  "The Request type on which to apply the selected Action; must be one of `request`, `fetch`, `cache` or `response`",
-					ValidateFunc: validateHeaderType(),
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "The Request type on which to apply the selected Action; must be one of `request`, `fetch`, `cache` or `response`",
+					ValidateDiagFunc: validateHeaderType(),
 				},
 				"destination": {
 					Type:        schema.TypeString,

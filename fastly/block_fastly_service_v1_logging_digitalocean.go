@@ -5,7 +5,7 @@ import (
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type DigitalOceanServiceAttributeHandler struct {
@@ -176,6 +176,10 @@ func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 
 	ell := flattenDigitalOcean(digitaloceanList)
 
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
+
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting DigitalOcean Spaces logging endpoints for (%s): %s", d.Id(), err)
 	}
@@ -345,11 +349,11 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 		},
 
 		"message_type": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "classic",
-			Description:  "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
-			ValidateFunc: validateLoggingMessageType(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
+			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 	}
 
@@ -360,11 +364,11 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 			Description: "Apache style log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      2,
-			Description:  "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-			ValidateFunc: validateLoggingFormatVersion(),
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
@@ -372,10 +376,10 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Description:  "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-			ValidateFunc: validateLoggingPlacement(),
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

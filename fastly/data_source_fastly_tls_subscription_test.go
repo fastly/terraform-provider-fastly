@@ -2,8 +2,8 @@ package fastly
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"testing"
 )
 
@@ -12,8 +12,8 @@ func TestAccDataSourceFastlyTLSSubscription_basic(t *testing.T) {
 
 	resourceName := "data.fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceFastlyTLSSubscriptionConfig_basic(domain),
@@ -34,8 +34,8 @@ func TestAccDataSourceFastlyTLSSubscription_byID(t *testing.T) {
 
 	resourceName := "data.fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceFastlyTLSSubscriptionConfig_byID(domain),

@@ -2,7 +2,7 @@ package fastly
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -127,12 +127,14 @@ func testCreateSet(items []map[string]interface{}) *schema.Set {
 	return schema.NewSet(schema.HashResource(&schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Description: "test name",
+				Required:    true,
 			},
 			"value": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Description: "test value",
+				Required:    true,
 			},
 		},
 	}), toArrayInterface(items))

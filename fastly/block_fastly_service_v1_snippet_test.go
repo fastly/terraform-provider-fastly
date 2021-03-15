@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestResourceFastlyFlattenSnippets(t *testing.T) {
@@ -84,9 +84,9 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceV1Snippet(name, domainName1),
@@ -95,9 +95,11 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 					testAccCheckFastlyServiceV1SnippetAttributes(&service, []*gofastly.Snippet{&s1}),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.#", "1"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.name", "recv_test"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.type", "recv"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3857668632.priority", "110"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_v1.foo", "snippet.*", map[string]string{
+						"name":     "recv_test",
+						"type":     "recv",
+						"priority": "110",
+					}),
 				),
 			},
 
@@ -107,12 +109,16 @@ func TestAccFastlyServiceV1Snippet_basic(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1SnippetAttributes(&service, []*gofastly.Snippet{&updatedS1, &updatedS2}),
 					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.#", "2"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.name", "recv_test"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.type", "recv"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.2530245990.priority", "110"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.name", "fetch_test"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.type", "fetch"),
-					resource.TestCheckResourceAttr("fastly_service_v1.foo", "snippet.3393534761.priority", "50"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_v1.foo", "snippet.*", map[string]string{
+						"name":     "recv_test",
+						"type":     "recv",
+						"priority": "110",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_v1.foo", "snippet.*", map[string]string{
+						"name":     "fetch_test",
+						"type":     "fetch",
+						"priority": "50",
+					}),
 				),
 			},
 		},

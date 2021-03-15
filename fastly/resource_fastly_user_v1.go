@@ -1,18 +1,20 @@
 package fastly
 
 import (
+	"context"
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceUserV1() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserV1Create,
-		Read:   resourceUserV1Read,
-		Update: resourceUserV1Update,
-		Delete: resourceUserV1Delete,
+		CreateContext: resourceUserV1Create,
+		ReadContext:   resourceUserV1Read,
+		UpdateContext: resourceUserV1Update,
+		DeleteContext: resourceUserV1Delete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,17 +32,17 @@ func resourceUserV1() *schema.Resource {
 			},
 
 			"role": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "user",
-				Description:  "The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do)",
-				ValidateFunc: validateUserRole(),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "user",
+				Description:      "The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do)",
+				ValidateDiagFunc: validateUserRole(),
 			},
 		},
 	}
 }
 
-func resourceUserV1Create(d *schema.ResourceData, meta interface{}) error {
+func resourceUserV1Create(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	u, err := conn.CreateUser(&gofastly.CreateUserInput{
@@ -50,7 +52,7 @@ func resourceUserV1Create(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(u.ID)
@@ -58,7 +60,7 @@ func resourceUserV1Create(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceUserV1Read(d *schema.ResourceData, meta interface{}) error {
+func resourceUserV1Read(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	u, err := conn.GetUser(&gofastly.GetUserInput{
@@ -66,7 +68,7 @@ func resourceUserV1Read(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("login", u.Login)
@@ -76,11 +78,11 @@ func resourceUserV1Read(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceUserV1Update(d *schema.ResourceData, meta interface{}) error {
+func resourceUserV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	// Update Name and/or Role.
-	if d.HasChange("name") || d.HasChange("role") {
+	if d.HasChanges("name", "role") {
 		_, err := conn.UpdateUser(&gofastly.UpdateUserInput{
 			ID:   d.Id(),
 			Name: gofastly.String(d.Get("name").(string)),
@@ -88,14 +90,14 @@ func resourceUserV1Update(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return resourceUserV1Read(d, meta)
+	return resourceUserV1Read(ctx, d, meta)
 }
 
-func resourceUserV1Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserV1Delete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	err := conn.DeleteUser(&gofastly.DeleteUserInput{
@@ -103,7 +105,7 @@ func resourceUserV1Delete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

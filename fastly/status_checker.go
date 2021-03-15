@@ -1,11 +1,12 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
@@ -36,7 +37,7 @@ func DefaultWAFDeploymentChecker(conn *gofastly.Client) func(wafID string, versi
 	return checkDeploymentStatus
 }
 
-func (c *WAFDeploymentChecker) waitForDeployment(wafID string, latestVersion *gofastly.WAFVersion) error {
+func (c *WAFDeploymentChecker) waitForDeployment(ctx context.Context, wafID string, latestVersion *gofastly.WAFVersion) error {
 	createStateConf := &resource.StateChangeConf{
 		Pending: []string{
 			gofastly.WAFVersionDeploymentStatusPending,
@@ -62,7 +63,7 @@ func (c *WAFDeploymentChecker) waitForDeployment(wafID string, latestVersion *go
 		NotFoundChecks:            1,
 	}
 
-	_, err := createStateConf.WaitForState()
+	_, err := createStateConf.WaitForStateContext(ctx)
 	if err != nil {
 		return fmt.Errorf("Error waiting for WAF Version (%s) to be updated: %v", wafID, err)
 	}

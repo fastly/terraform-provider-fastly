@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestResourceFastlyFlattenVCLs(t *testing.T) {
@@ -48,14 +48,15 @@ func TestAccFastlyServiceV1_VCL_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceV1Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1VCLConfig(name, domainName1),
+				Config: testAccServiceV1VCLConfig(name, domainName1, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1VCLAttributes(&service, name, 1),
@@ -67,7 +68,7 @@ func TestAccFastlyServiceV1_VCL_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceV1VCLConfig_update(name, domainName1),
+				Config: testAccServiceV1VCLConfig_update(name, domainName1, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1VCLAttributes(&service, name, 2),
@@ -106,7 +107,7 @@ func testAccCheckFastlyServiceV1VCLAttributes(service *gofastly.ServiceDetail, n
 	}
 }
 
-func testAccServiceV1VCLConfig(name, domain string) string {
+func testAccServiceV1VCLConfig(name, domain, backendName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -114,6 +115,11 @@ resource "fastly_service_v1" "foo" {
   domain {
     name    = "%s"
     comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "%s"
+    name    = "tf-test backend"
   }
 
   vcl {
@@ -138,10 +144,10 @@ EOF
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, backendName)
 }
 
-func testAccServiceV1VCLConfig_update(name, domain string) string {
+func testAccServiceV1VCLConfig_update(name, domain, backendName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -149,6 +155,11 @@ resource "fastly_service_v1" "foo" {
   domain {
     name    = "%s"
     comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "%s"
+    name    = "tf-test backend"
   }
 
   vcl {
@@ -187,5 +198,5 @@ EOF
         }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, backendName)
 }

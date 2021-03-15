@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,9 +28,9 @@ func TestAccFastlyTLSPlatformCertificate_basic(t *testing.T) {
 
 	resourceName := "fastly_tls_platform_certificate.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTLSPlatformCertificateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckTLSPlatformCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSPlatformCertificateWithName(name, key, cert, ca),
@@ -124,9 +124,9 @@ EOF
 }
 
 func testSweepTLSPlatformCertificates(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return err
+	client, diagnostics := sharedClientForRegion(region)
+	if diagnostics.HasError() {
+		return diagToErr(diagnostics)
 	}
 
 	certificates, err := client.ListBulkCertificates(&fastly.ListBulkCertificatesInput{PageSize: 1000})

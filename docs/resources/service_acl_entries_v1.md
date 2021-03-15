@@ -230,7 +230,7 @@ $ terraform state rm fastly_service_acl_entries_v1.entries
 
 ### Optional
 
-- **entry** (Block Set, Max: 10000) (see [below for nested schema](#nestedblock--entry))
+- **entry** (Block Set, Max: 10000) ACL Entries (see [below for nested schema](#nestedblock--entry))
 - **id** (String) The ID of this resource.
 
 <a id="nestedblock--entry"></a>
@@ -248,4 +248,4 @@ Optional:
 
 Read-Only:
 
-- **id** (String) The ID of this resource.
+- **id** (String) The unique ID of the entry

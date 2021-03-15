@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type BackendServiceAttributeHandler struct {
@@ -414,7 +414,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
-		Optional: true,
+		Required: true,
 		Elem: &schema.Resource{
 			Schema: blockAttributes,
 		},

@@ -16,7 +16,8 @@ TEST_PARALLELISM?=4
 default: build
 
 build:
-	go install -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(VERSION)"
+	go build -o bin/terraform-provider-$(PKG_NAME)_$(VERSION) -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(VERSION)"
+	@sh -c "'$(CURDIR)/scripts/generate-dev-overrides.sh'"
 
 test:
 	go test -i $(TEST) || exit 1
@@ -80,4 +81,7 @@ sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs
+clean:
+	rm -rf ./bin
+
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs clean

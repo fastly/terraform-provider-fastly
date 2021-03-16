@@ -1,4 +1,11 @@
-## 0.27.0 (Unreleased)
+## 0.28.0 (Unreleased)
+
+## 0.27.0 (March 16, 2021)
+
+ENHANCEMENTS:
+
+* Terraform Plugin SDK Upgrade [#379](https://github.com/fastly/terraform-provider-fastly/pull/379)
+* Automate developer override for testing locally built provider [#382](https://github.com/fastly/terraform-provider-fastly/pull/382)
 
 ## 0.26.0 (March 5, 2021)
 

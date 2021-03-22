@@ -22,8 +22,8 @@ resource "aws_security_group" "from_fastly" {
     from_port         = "443"
     to_port           = "443"
     protocol          = "tcp"
-    cidr_blocks       = [data.fastly_ip_ranges.fastly.cidr_blocks]
-    ipv6_cidr_blocks  = [data.fastly_ip_ranges.fastly.ipv6_cidr_blocks]
+    cidr_blocks       = data.fastly_ip_ranges.fastly.cidr_blocks
+    ipv6_cidr_blocks  = data.fastly_ip_ranges.fastly.ipv6_cidr_blocks
   }
 }
 ```

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -76,7 +77,7 @@ func TestAccFastlyServiceV1_bigquerylogging_env(t *testing.T) {
 	}
 
 	// set env Vars to something we expect
-	resetEnv := setBQEnv("someEnv", secretKey, t)
+	resetEnv := setBQEnv("someEnv", strings.TrimSpace(secretKey), t)
 	defer resetEnv()
 
 	resource.ParallelTest(t, resource.TestCase{

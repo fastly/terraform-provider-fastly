@@ -44,6 +44,23 @@ Alongside the newly built binary a file called `developer_overrides.tfrc` will b
 back details for setting the `TF_CLI_CONFIG_FILE` environment variable that will enable Terraform to use your locally built provider binary.
 * HashiCorp - [Development Overrides for Provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers). 
 
+Alternatively, you can run the provider directly and tell Terraform how to communicate it with an environment variable.
+This is useful for attaching a debugger like [delve](https://github.com/go-delve/delve) to the provider.
+To do this, make sure the provider is built and present in the local `bin` directory (see above).
+Then, run the provider executable directly with the `--debug` flag.
+
+```sh
+$ ./bin/terraform-provider-fastly_v99.99.99 --debug
+{"@level":"debug","@message":"plugin address","@timestamp":"2021-03-25T14:35:39.743300Z","address":"/var/folders/qm/swg2hbnsjeutpyoansditmb6m0000gn/T/plugin276728528","network":"unix"}
+Provider started, to attach Terraform set the TF_REATTACH_PROVIDERS env var:
+
+        TF_REATTACH_PROVIDERS='{"fastly/fastly":{"Protocol":"grpc","Pid":78541,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/qm/swg2hbnsjeutpyoansditmb6m0000gn/T/plugin276728528"}}}'
+
+```
+
+As the message instructs, set the `TF_REATTACH_PROVIDERS` environment variable in the shell where `terraform` will be run.
+This should enable the locally built version of the provider to be used instead of the officially released one.
+
 ## Testing
 
 In order to test the provider, you can simply run `make test`.

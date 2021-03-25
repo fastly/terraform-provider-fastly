@@ -70,20 +70,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
 
-		// @HACK for a TF SDK Issue.
-		//
-		// This ensures that the required, `name`, field is present.
-		//
-		// If we have made it this far and `name` is not present, it is most-likely due
-		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
-		//
-		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
-		// properly handles setting state with the StateFunc, it returns extra entries
-		// during state Gets, specifically `GetChange("bigquerylogging")` in this case.
-		if v, ok := resource["name"]; !ok || v.(string) == "" {
-			continue
-		}
-
 		var vla = h.getVCLLoggingAttributes(resource)
 		opts := gofastly.CreateBigQueryInput{
 			ServiceID:         d.Id(),
@@ -233,8 +219,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) Register(s *schema.Resource) er
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
 			Description: "The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines",
 			Sensitive:   true,
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
 		},
 		// Optional fields
 		"template": {

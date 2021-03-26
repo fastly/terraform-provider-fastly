@@ -44,22 +44,47 @@ Alongside the newly built binary a file called `developer_overrides.tfrc` will b
 back details for setting the `TF_CLI_CONFIG_FILE` environment variable that will enable Terraform to use your locally built provider binary.
 * HashiCorp - [Development Overrides for Provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers). 
 
-Alternatively, you can run the provider directly and tell Terraform how to communicate it with an environment variable.
-This is useful for attaching a debugger like [delve](https://github.com/go-delve/delve) to the provider.
-To do this, make sure the provider is built and present in the local `bin` directory (see above).
-Then, run the provider executable directly with the `--debug` flag.
+### Debugging the provider
+
+The previous method with `dev_overrides` should be sufficient for most development use including testing your local changes with actual Terraform code.
+However, sometimes it can be helpful to run the provider in debug mode if you need to attach a debugger like [delve](https://github.com/go-delve/delve) to solve a particular issue.
+
+The way Terraform normally works is that it starts the provider in a subprocess and connects to it using GRPC over a local socket.
+(For more information on this, see [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin#architecture)).
+For debugging, it is possible to bypass this and execute the provider in a separate process, then tell Terraform how to communicate with it.
+The benefit of this is that the provider can be launched with a debugger attached in the same way that the debugger would attach to any normal executable.
+
+There are a few ways to do this depending on which debugger is being used, but we will use [delve](https://github.com/go-delve/delve) here as the process should be pretty similar for other debuggers.
+The two things that need to be configured are that the provider is compiled without optimisations, and the executable is run with the `--debug` flag.
+Compiling without optimisations ensures that the debugger can access all of the symbols in the binary that it needs to, and the `--debug` flag tells the Terraform plugin SDK to expect to be run in its own process, and to display the instructions for connecting to it after it starts up.
+
+With [delve](https://github.com/go-delve/delve) this can be done in a single command:
 
 ```sh
-$ ./bin/terraform-provider-fastly_v99.99.99 --debug
-{"@level":"debug","@message":"plugin address","@timestamp":"2021-03-25T14:35:39.743300Z","address":"/var/folders/qm/swg2hbnsjeutpyoansditmb6m0000gn/T/plugin276728528","network":"unix"}
+$ dlv debug . -- --debug
+Type 'help' for list of commands.
+(dlv) continue
+{"@level":"debug","@message":"plugin address","@timestamp":"2021-03-26T12:10:13.320981Z","address":"/var/folders/qm/swg2hf4h5t8sdht8yhds4dg6m0000gn/T/plugin865249851","network":"unix"}
 Provider started, to attach Terraform set the TF_REATTACH_PROVIDERS env var:
 
-        TF_REATTACH_PROVIDERS='{"fastly/fastly":{"Protocol":"grpc","Pid":78541,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/qm/swg2hbnsjeutpyoansditmb6m0000gn/T/plugin276728528"}}}'
-
+        TF_REATTACH_PROVIDERS='{"fastly/fastly":{"Protocol":"grpc","Pid":54132,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/qm/swg2hf4h5t8sdht8yhds4dg6m0000gn/T/plugin865249851"}}}'
 ```
 
-As the message instructs, set the `TF_REATTACH_PROVIDERS` environment variable in the shell where `terraform` will be run.
-This should enable the locally built version of the provider to be used instead of the officially released one.
+This can also be done in two separate steps. The `-gcflags` disables optimisations (`-N`) and inlining (`-l`).
+
+```sh
+$ go build -gcflags="all=-N -l" -o terraform-provider-fastly_debug
+$ dlv exec terraform-provider-fastly_debug -- --debug
+```
+
+As the message instructs, go to another shell and export the `TF_REATTACH_PROVIDERS` environment variable.
+Then use Terraform as usual, and it will automatically use the provider in the debugger.
+
+```sh
+$ export TF_REATTACH_PROVIDERS='{"fastly/fastly":{"Protocol":"grpc","Pid":54132,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/qm/swg2hf4h5t8sdht8yhds4dg6m0000gn/T/plugin865249851"}}}'
+$ terraform plan
+```
+You will then be able to set breakpoints and trace the provider's execution using the debugger as you would expect.
 
 ## Testing
 

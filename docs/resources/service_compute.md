@@ -453,7 +453,7 @@ Optional:
 - **auth_method** (String) SASL authentication method. One of: plain, scram-sha-256, scram-sha-512
 - **compression_codec** (String) The codec used for compression of your logs. One of: `gzip`, `snappy`, `lz4`
 - **parse_log_keyvals** (Boolean) Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers
-- **password** (String) SASL Pass
+- **password** (String, Sensitive) SASL Pass
 - **request_max_bytes** (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
 - **required_acks** (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1`	Wait for all in-sync replicas to respond
 - **tls_ca_cert** (String, Sensitive) A secure certificate to authenticate the server with. Must be in PEM format

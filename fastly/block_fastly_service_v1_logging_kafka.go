@@ -124,6 +124,7 @@ func (h *KafkaServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "SASL Pass",
+			Sensitive:   true,
 		},
 	}
 

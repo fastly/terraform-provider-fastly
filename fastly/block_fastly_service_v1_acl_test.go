@@ -45,6 +45,7 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 	var service gofastly.ServiceDetail
 	var acl gofastly.ACL
 	name := acctest.RandomWithPrefix(testResourcePrefix)
+	domain := fmt.Sprintf("%s.test", name)
 	aclName := fmt.Sprintf("acl_%s", acctest.RandString(10))
 	aclNameUpdated := fmt.Sprintf("acl_updated_%s", acctest.RandString(10))
 
@@ -61,7 +62,7 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1Config_acl(name, aclName),
+				Config: testAccServiceV1Config_acl(name, aclName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "a_"+aclName, &acl),
@@ -69,7 +70,7 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceV1Config_acl(name, aclNameUpdated),
+				Config: testAccServiceV1Config_acl(name, aclNameUpdated, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "a_"+aclNameUpdated, &acl),
@@ -77,15 +78,15 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceV1Config_acl(name, aclNameUpdated),
+				Config: testAccServiceV1Config_acl(name, aclNameUpdated, domain),
 				Check:  testAccAddACLEntries(&acl), // triggers side-effect of adding an ACL Entry
 			},
 			{
-				Config:      testAccServiceV1Config_acl(name, aclName),
+				Config:      testAccServiceV1Config_acl(name, aclName, domain),
 				ExpectError: regexp.MustCompile("Cannot delete.*list is not empty.*"),
 			},
 			{
-				Config: testAccServiceV1Config_aclForceDestroy(name, aclNameUpdated),
+				Config: testAccServiceV1Config_aclForceDestroy(name, aclNameUpdated, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "a_"+aclNameUpdated, &acl),
@@ -93,7 +94,7 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceV1Config_aclForceDestroy(name, aclName),
+				Config: testAccServiceV1Config_aclForceDestroy(name, aclName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "a_"+aclName, &acl),
@@ -150,10 +151,7 @@ func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 	}
 }
 
-func testAccServiceV1Config_acl(name, aclName string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
+func testAccServiceV1Config_acl(name, aclName, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -164,7 +162,7 @@ resource "fastly_service_v1" "foo" {
 	}
 
   backend {
-    address = "%s"
+    address = "127.0.0.1"
     name    = "tf-test-backend"
   }
 
@@ -177,13 +175,10 @@ resource "fastly_service_v1" "foo" {
   }
 
   force_destroy = true
-}`, name, domainName, backendName, aclName, aclName)
+}`, name, domain, aclName, aclName)
 }
 
-func testAccServiceV1Config_aclForceDestroy(name, aclName string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
+func testAccServiceV1Config_aclForceDestroy(name, aclName, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -194,7 +189,7 @@ resource "fastly_service_v1" "foo" {
 	}
 
   backend {
-    address = "%s"
+    address = "127.0.0.1"
     name    = "tf-test-backend"
   }
 
@@ -209,5 +204,5 @@ resource "fastly_service_v1" "foo" {
   }
 
   force_destroy = true
-}`, name, domainName, backendName, aclName, aclName)
+}`, name, domain, aclName, aclName)
 }

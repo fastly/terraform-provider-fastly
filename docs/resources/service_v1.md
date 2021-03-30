@@ -787,7 +787,7 @@ Optional:
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - **parse_log_keyvals** (Boolean) Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers
-- **password** (String) SASL Pass
+- **password** (String, Sensitive) SASL Pass
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **request_max_bytes** (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
 - **required_acks** (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1`	Wait for all in-sync replicas to respond

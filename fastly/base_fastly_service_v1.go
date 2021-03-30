@@ -340,7 +340,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	initialVersion := false
 
 	if needsChange {
-		latestVersion := d.Get("active_version").(int)
+		latestVersion := d.Get("cloned_version").(int)
 		if latestVersion == 0 {
 			initialVersion = true
 			// If the service was just created, there is an empty Version 1 available
@@ -461,10 +461,26 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("[ERR] Service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
 	}
 
-	d.Set("name", s.Name)
-	d.Set("comment", s.Comment)
-	d.Set("version_comment", s.Version.Comment)
-	d.Set("active_version", s.ActiveVersion.Number)
+	err = d.Set("name", s.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("comment", s.Comment)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("version_comment", s.Version.Comment)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("active_version", s.ActiveVersion.Number)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("cloned_version", s.Version.Number)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// If we are importing or `activate` is set to false, temporarily set the
 	// service.ActiveVersion number to the latest version supplied via the get

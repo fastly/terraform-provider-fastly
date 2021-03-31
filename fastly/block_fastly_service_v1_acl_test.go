@@ -54,8 +54,9 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 	// 2. Rename both the ACLs, should succeed because the ACLs are empty
 	// 3. Keep both ACLs the same and add an entry to one of them
 	// 4. Try to rename the ACLs, expect to fail with "list not empty error"
-	// 5. Without renaming the ACLs, set force_destroy=true to skip the deletion check
-	// 6. Try to rename the ACLs again, expect to succeed
+	// 5. Reset config to step 3 and check the result is the same
+	// 6. Without renaming the ACLs, set force_destroy=true to skip the deletion check
+	// 7. Try to rename the ACLs again, expect to succeed
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
@@ -84,6 +85,14 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 			{
 				Config:      testAccServiceV1Config_acl(name, aclName, domain),
 				ExpectError: regexp.MustCompile("Cannot delete.*list is not empty.*"),
+			},
+			{
+				Config: testAccServiceV1Config_acl(name, aclNameUpdated, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "a_"+aclNameUpdated, &acl),
+					testAccCheckFastlyServiceV1Attributes_acl(&service, name, "b_"+aclNameUpdated, &acl),
+				),
 			},
 			{
 				Config: testAccServiceV1Config_aclForceDestroy(name, aclNameUpdated, domain),

@@ -346,6 +346,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// If the service was just created, there is an empty Version 1 available
 			// that is unlocked and can be updated.
 			latestVersion = 1
+			err := d.Set("cloned_version", latestVersion)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		} else {
 			// Clone the latest version, giving us an unlocked version we can modify.
 			log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
@@ -474,10 +478,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 	err = d.Set("active_version", s.ActiveVersion.Number)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	err = d.Set("cloned_version", s.Version.Number)
 	if err != nil {
 		return diag.FromErr(err)
 	}

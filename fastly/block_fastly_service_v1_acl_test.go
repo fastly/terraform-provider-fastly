@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -116,27 +117,40 @@ func TestAccFastlyServiceV1_acl(t *testing.T) {
 
 func testAccCheckFastlyServiceV1Attributes_acl(service *gofastly.ServiceDetail, name, aclName string, acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*FastlyClient).conn
 
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
-		remoteACL, err := conn.GetACL(&gofastly.GetACLInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
-			Name:           aclName,
-		})
+		// Run in a loop to allow retrying if the ACL isn't found yet
+		for i := 0; i < 10; i++ {
+			remoteACL, err := conn.GetACL(&gofastly.GetACLInput{
+				ServiceID:      service.ID,
+				ServiceVersion: service.ActiveVersion.Number,
+				Name:           aclName,
+			})
 
-		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			if err != nil {
+				// Check if we got a 404 error and retry because the ACL might still be being created
+				if errRes, ok := err.(*gofastly.HTTPError); ok {
+					if errRes.StatusCode != 404 {
+						// Sleep a bit to give it time to be created
+						time.Sleep(time.Duration((i+1)*(i+1)) * time.Second)
+						continue
+					}
+				}
+
+				return fmt.Errorf("[ERR] Error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			}
+
+			if remoteACL.Name != aclName {
+				return fmt.Errorf("ACL logging endpoint name mismatch, expected: %s, got: %#v", aclName, remoteACL.Name)
+			}
+
+			*acl = *remoteACL
+			break
 		}
-
-		if remoteACL.Name != aclName {
-			return fmt.Errorf("ACL logging endpoint name mismatch, expected: %s, got: %#v", aclName, remoteACL.Name)
-		}
-
-		*acl = *remoteACL
 
 		return nil
 	}

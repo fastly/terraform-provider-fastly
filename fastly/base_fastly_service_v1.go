@@ -182,12 +182,11 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			// gets set whenever Terraform detects changes and clones the currently
 			// activated version in order to modify it. Active Version and Cloned
 			// Version can be different if the Activate field is set to false in order
-			// to prevent the service from being activated. It is not used internally,
-			// but it is exported for users to see after running `terraform apply`.
+			// to prevent the service from being activated.
 			"cloned_version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "The latest cloned version by the provider. The value gets only set after running `terraform apply`",
+				Description: "The latest cloned version by the provider",
 			},
 
 			"activate": {
@@ -207,7 +206,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 
 	// This loops over all the attribute handlers in the service definition and calls Register.
 	// Register adds schema attributes to the overall schema for the resource. This allows each AttributeHandler to
-	// define it's own attributes while allowing the overall set to be composed.
+	// define its own attributes while allowing the overall set to be composed.
 	for _, a := range serviceDef.GetAttributeHandler() {
 		a.Register(s) // Mutates s, adding handler-specific schema items to the list.
 	}
@@ -482,13 +481,25 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	// If we are importing or `activate` is set to false, temporarily set the
-	// service.ActiveVersion number to the latest version supplied via the get
-	// service version details call. This is to ensure we still read all of the
-	// state below.
-	isInactive := d.Get("activate").(bool) == false
-	if s.ActiveVersion.Number == 0 && isImport || isInactive {
-		s.ActiveVersion.Number = s.Version.Number
+	// If we are importing, temporarily set the service.ActiveVersion number to
+	// the latest version supplied via the get service version details call.
+	// This is to ensure we still read all of the state below. Then set the
+	// cloned_version to this version.
+	if isImport {
+		if s.ActiveVersion.Number == 0 {
+			s.ActiveVersion.Number = s.Version.Number
+		}
+
+		err = d.Set("cloned_version", s.ActiveVersion.Number)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	// If activate is false, then read the state from cloned_version instead of
+	// the active version.
+	if d.Get("activate") == false {
+		s.ActiveVersion.Number = d.Get("cloned_version").(int)
 	}
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll

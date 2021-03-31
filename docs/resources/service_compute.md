@@ -114,7 +114,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 ### Read-Only
 
 - **active_version** (Number) The currently active version of your Fastly Service
-- **cloned_version** (Number) The latest cloned version by the provider. The value gets only set after running `terraform apply`
+- **cloned_version** (Number) The latest cloned version by the provider
 
 <a id="nestedblock--backend"></a>
 ### Nested Schema for `backend`

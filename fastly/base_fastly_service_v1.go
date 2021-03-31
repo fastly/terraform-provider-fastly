@@ -339,8 +339,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	initialVersion := false
 
 	if needsChange {
-		latestVersion := d.Get("cloned_version").(int)
-		if latestVersion == 0 {
+		var latestVersion int
+		// If the service has not yet been activated then we do not need to clone a version as version 1 will be
+		// unlocked and we can apply changes to that instead
+		if d.Get("active_version") == 0 {
 			initialVersion = true
 			// If the service was just created, there is an empty Version 1 available
 			// that is unlocked and can be updated.
@@ -350,6 +352,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return diag.FromErr(err)
 			}
 		} else {
+			latestVersion = d.Get("cloned_version").(int)
 			// Clone the latest version, giving us an unlocked version we can modify.
 			log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
 			newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
@@ -424,7 +427,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			// Only if the version is valid and activated do we set the active_version.
 			// This prevents us from getting stuck in cloning an invalid version.
-			d.Set("active_version", latestVersion)
+			err := d.Set("active_version", latestVersion)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		} else {
 			log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
 			log.Print("[INFO] The Terraform definition is explicitly specified to not activate the changes on Fastly")

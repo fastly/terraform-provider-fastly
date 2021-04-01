@@ -234,7 +234,7 @@ func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
 // while injecting the ServiceDefinition into the true Update functionality.
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-		return resourceServiceUpdate(ctx, d, meta, serviceDef)
+		return resourceServiceUpdate(ctx, d, meta, serviceDef, false)
 	}
 }
 
@@ -278,11 +278,19 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(service.ID)
-	return resourceServiceUpdate(ctx, d, meta, serviceDef)
+
+	// If the service was just created, there is an empty Version 1 available
+	// that is unlocked and can be updated.
+	err = d.Set("cloned_version", 1)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return resourceServiceUpdate(ctx, d, meta, serviceDef, true)
 }
 
 // resourceServiceUpdate provides service resource Update functionality.
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isCreate bool) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -314,18 +322,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	// Update the active version's comment. No new version is required for this.
+	// Update the cloned version's comment. No new version is required for this.
 	if d.HasChange("version_comment") && !needsChange {
-		latestVersion := d.Get("active_version").(int)
-		if latestVersion == 0 {
-			// If the service was just created, there is an empty Version 1 available
-			// that is unlocked and can be updated.
-			latestVersion = 1
-		}
-
 		opts := gofastly.UpdateVersionInput{
 			ServiceID:      d.Id(),
-			ServiceVersion: latestVersion,
+			ServiceVersion: d.Get("cloned_version").(int),
 			Comment:        gofastly.String(d.Get("version_comment").(string)),
 		}
 
@@ -340,17 +341,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if needsChange {
 		var latestVersion int
-		// If the service has not yet been activated then we do not need to clone a version as version 1 will be
-		// unlocked and we can apply changes to that instead
-		if d.Get("active_version") == 0 {
+		if isCreate {
 			initialVersion = true
 			// If the service was just created, there is an empty Version 1 available
 			// that is unlocked and can be updated.
 			latestVersion = 1
-			err := d.Set("cloned_version", latestVersion)
-			if err != nil {
-				return diag.FromErr(err)
-			}
 		} else {
 			latestVersion = d.Get("cloned_version").(int)
 			// Clone the latest version, giving us an unlocked version we can modify.

@@ -111,7 +111,8 @@ func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceD
 
 	if v, ok := d.GetOk("id"); ok {
 		config, err := conn.GetCustomTLSConfiguration(&fastly.GetCustomTLSConfigurationInput{
-			ID: v.(string),
+			ID:      v.(string),
+			Include: "dns_records",
 		})
 		if err != nil {
 			return diag.FromErr(err)

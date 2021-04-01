@@ -409,29 +409,32 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
-		shouldActivate := d.Get("activate").(bool)
-		if shouldActivate {
-			log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-			_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-				ServiceID:      d.Id(),
-				ServiceVersion: latestVersion,
-			})
-			if err != nil {
-				return diag.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
-			}
+	}
 
-			// Only if the version is valid and activated do we set the active_version.
-			// This prevents us from getting stuck in cloning an invalid version.
-			err := d.Set("active_version", latestVersion)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		} else {
-			log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-			log.Print("[INFO] The Terraform definition is explicitly specified to not activate the changes on Fastly")
-			log.Printf("[INFO] Version (%v) has been pushed and validated", latestVersion)
-			log.Printf("[INFO] Visit https://manage.fastly.com/configure/services/%s/versions/%v and activate it manually", d.Id(), latestVersion)
+	shouldActivate := d.Get("activate").(bool)
+	versionNotYetActivated := d.Get("cloned_version") != d.Get("active_version")
+	latestVersion := d.Get("cloned_version").(int)
+	if shouldActivate && versionNotYetActivated {
+		log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+		_, err := conn.ActivateVersion(&gofastly.ActivateVersionInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+		})
+		if err != nil {
+			return diag.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
 		}
+
+		// Only if the version is valid and activated do we set the active_version.
+		// This prevents us from getting stuck in cloning an invalid version.
+		err = d.Set("active_version", latestVersion)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+		log.Print("[INFO] The Terraform definition is explicitly specified to not activate the changes on Fastly")
+		log.Printf("[INFO] Version (%v) has been pushed and validated", latestVersion)
+		log.Printf("[INFO] Visit https://manage.fastly.com/configure/services/%s/versions/%v and activate it manually", d.Id(), latestVersion)
 	}
 
 	return resourceServiceRead(ctx, d, meta, serviceDef, false)

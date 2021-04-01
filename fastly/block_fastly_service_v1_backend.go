@@ -318,6 +318,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 		"override_host": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     "",
 			Description: "The hostname to override the Host header",
 		},
 		"shield": {

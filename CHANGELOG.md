@@ -1,4 +1,21 @@
-## 0.28.0 (Unreleased)
+## 0.29.0 (Unreleased)
+
+## 0.28.0 (April 6, 2021)
+
+ENHANCEMENTS:
+
+* PATCH endpoint for TLS subscriptions [#370](https://github.com/fastly/terraform-provider-fastly/pull/370)
+* Ensure passwords are marked as sensitive [#389](https://github.com/fastly/terraform-provider-fastly/pull/389)
+* Add debug mode [#386](https://github.com/fastly/terraform-provider-fastly/pull/386)
+
+BUG FIXES:
+
+* Fix custom TLS configuration incorrectly omitting DNS records data [#392](https://github.com/fastly/terraform-provider-fastly/pull/392)
+* Fix backend diff output incorrectly showing multiple resources being updated [#387](https://github.com/fastly/terraform-provider-fastly/pull/387)
+
+DOCUMENTATION:
+
+* Terraform 0.12+ no longer uses interpolation syntax for non-constant expressions [#384](https://github.com/fastly/terraform-provider-fastly/pull/384)
 
 ## 0.27.0 (March 16, 2021)
 

@@ -182,12 +182,11 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			// gets set whenever Terraform detects changes and clones the currently
 			// activated version in order to modify it. Active Version and Cloned
 			// Version can be different if the Activate field is set to false in order
-			// to prevent the service from being activated. It is not used internally,
-			// but it is exported for users to see after running `terraform apply`.
+			// to prevent the service from being activated.
 			"cloned_version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "The latest cloned version by the provider. The value gets only set after running `terraform apply`",
+				Description: "The latest cloned version by the provider",
 			},
 
 			"activate": {
@@ -207,7 +206,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 
 	// This loops over all the attribute handlers in the service definition and calls Register.
 	// Register adds schema attributes to the overall schema for the resource. This allows each AttributeHandler to
-	// define it's own attributes while allowing the overall set to be composed.
+	// define its own attributes while allowing the overall set to be composed.
 	for _, a := range serviceDef.GetAttributeHandler() {
 		a.Register(s) // Mutates s, adding handler-specific schema items to the list.
 	}
@@ -235,7 +234,7 @@ func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
 // while injecting the ServiceDefinition into the true Update functionality.
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-		return resourceServiceUpdate(ctx, d, meta, serviceDef)
+		return resourceServiceUpdate(ctx, d, meta, serviceDef, false)
 	}
 }
 
@@ -279,11 +278,19 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(service.ID)
-	return resourceServiceUpdate(ctx, d, meta, serviceDef)
+
+	// If the service was just created, there is an empty Version 1 available
+	// that is unlocked and can be updated.
+	err = d.Set("cloned_version", 1)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return resourceServiceUpdate(ctx, d, meta, serviceDef, true)
 }
 
 // resourceServiceUpdate provides service resource Update functionality.
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isCreate bool) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -315,18 +322,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	// Update the active version's comment. No new version is required for this.
+	// Update the cloned version's comment. No new version is required for this.
 	if d.HasChange("version_comment") && !needsChange {
-		latestVersion := d.Get("active_version").(int)
-		if latestVersion == 0 {
-			// If the service was just created, there is an empty Version 1 available
-			// that is unlocked and can be updated.
-			latestVersion = 1
-		}
-
 		opts := gofastly.UpdateVersionInput{
 			ServiceID:      d.Id(),
-			ServiceVersion: latestVersion,
+			ServiceVersion: d.Get("cloned_version").(int),
 			Comment:        gofastly.String(d.Get("version_comment").(string)),
 		}
 
@@ -340,13 +340,14 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	initialVersion := false
 
 	if needsChange {
-		latestVersion := d.Get("active_version").(int)
-		if latestVersion == 0 {
+		var latestVersion int
+		if isCreate {
 			initialVersion = true
 			// If the service was just created, there is an empty Version 1 available
 			// that is unlocked and can be updated.
 			latestVersion = 1
 		} else {
+			latestVersion = d.Get("cloned_version").(int)
 			// Clone the latest version, giving us an unlocked version we can modify.
 			log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
 			newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
@@ -408,26 +409,32 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
-		shouldActivate := d.Get("activate").(bool)
-		if shouldActivate {
-			log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-			_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-				ServiceID:      d.Id(),
-				ServiceVersion: latestVersion,
-			})
-			if err != nil {
-				return diag.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
-			}
+	}
 
-			// Only if the version is valid and activated do we set the active_version.
-			// This prevents us from getting stuck in cloning an invalid version.
-			d.Set("active_version", latestVersion)
-		} else {
-			log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-			log.Print("[INFO] The Terraform definition is explicitly specified to not activate the changes on Fastly")
-			log.Printf("[INFO] Version (%v) has been pushed and validated", latestVersion)
-			log.Printf("[INFO] Visit https://manage.fastly.com/configure/services/%s/versions/%v and activate it manually", d.Id(), latestVersion)
+	shouldActivate := d.Get("activate").(bool)
+	versionNotYetActivated := d.Get("cloned_version") != d.Get("active_version")
+	latestVersion := d.Get("cloned_version").(int)
+	if shouldActivate && versionNotYetActivated {
+		log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+		_, err := conn.ActivateVersion(&gofastly.ActivateVersionInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+		})
+		if err != nil {
+			return diag.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
 		}
+
+		// Only if the version is valid and activated do we set the active_version.
+		// This prevents us from getting stuck in cloning an invalid version.
+		err = d.Set("active_version", latestVersion)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		log.Printf("[INFO] Skipping activation of Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+		log.Print("[INFO] The Terraform definition is explicitly specified to not activate the changes on Fastly")
+		log.Printf("[INFO] Version (%v) has been pushed and validated", latestVersion)
+		log.Printf("[INFO] Visit https://manage.fastly.com/configure/services/%s/versions/%v and activate it manually", d.Id(), latestVersion)
 	}
 
 	return resourceServiceRead(ctx, d, meta, serviceDef, false)
@@ -461,18 +468,42 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("[ERR] Service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
 	}
 
-	d.Set("name", s.Name)
-	d.Set("comment", s.Comment)
-	d.Set("version_comment", s.Version.Comment)
-	d.Set("active_version", s.ActiveVersion.Number)
+	err = d.Set("name", s.Name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("comment", s.Comment)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("version_comment", s.Version.Comment)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("active_version", s.ActiveVersion.Number)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	// If we are importing or `activate` is set to false, temporarily set the
-	// service.ActiveVersion number to the latest version supplied via the get
-	// service version details call. This is to ensure we still read all of the
-	// state below.
-	isInactive := d.Get("activate").(bool) == false
-	if s.ActiveVersion.Number == 0 && isImport || isInactive {
-		s.ActiveVersion.Number = s.Version.Number
+	// If we are importing, temporarily set the service.ActiveVersion number to
+	// the latest version supplied via the get service version details call.
+	// This is to ensure we still read all of the state below. Then set the
+	// cloned_version to this version.
+	if isImport {
+		if s.ActiveVersion.Number == 0 {
+			s.ActiveVersion.Number = s.Version.Number
+		}
+
+		err = d.Set("cloned_version", s.ActiveVersion.Number)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	// If activate is false, then read the state from cloned_version instead of
+	// the active version.
+	if d.Get("activate") == false {
+		s.ActiveVersion.Number = d.Get("cloned_version").(int)
 	}
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll

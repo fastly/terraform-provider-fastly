@@ -1,5 +1,11 @@
 ## 0.29.0 (Unreleased)
 
+## 0.28.1 (April 8, 2021)
+
+BUG FIXES:
+
+* Clone from `cloned_version` not `active_version` [#390](https://github.com/fastly/terraform-provider-fastly/pull/390)
+
 ## 0.28.0 (April 6, 2021)
 
 ENHANCEMENTS:

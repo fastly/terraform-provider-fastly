@@ -1,5 +1,11 @@
 ## 0.29.0 (Unreleased)
 
+## 0.28.2 (April 9, 2021)
+
+BUG FIXES:
+
+* Catch case where state from older version could be unexpected [#396](https://github.com/fastly/terraform-provider-fastly/pull/396)
+
 ## 0.28.1 (April 8, 2021)
 
 BUG FIXES:

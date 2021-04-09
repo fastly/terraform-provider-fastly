@@ -489,7 +489,14 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// the latest version supplied via the get service version details call.
 	// This is to ensure we still read all of the state below. Then set the
 	// cloned_version to this version.
-	if isImport {
+	// In addition to this, we need to do the same thing if cloned_version is
+	// not yet set to anything. This could happen if the current state was from
+	// v0.28.0 of the provider or lower, i.e. the user has upgraded from an
+	// earlier version. This prevents us from getting into the state where the
+	// attribute has never been set and gets passed into CloneVersion in the
+	// Update function and fails.
+	clonedVersionNotSet := d.Get("cloned_version") == 0
+	if isImport || clonedVersionNotSet {
 		if s.ActiveVersion.Number == 0 {
 			s.ActiveVersion.Number = s.Version.Number
 		}

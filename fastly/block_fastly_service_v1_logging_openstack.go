@@ -232,6 +232,7 @@ func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]interfac
 			"format_version":     ll.FormatVersion,
 			"placement":          ll.Placement,
 			"response_condition": ll.ResponseCondition,
+			"compression_codec":  ll.CompressionCodec,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -265,6 +266,7 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{},
 		Path:              df["path"].(string),
 		Period:            uint(df["period"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
+		CompressionCodec:  df["compression_codec"].(string),
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
@@ -358,6 +360,12 @@ func (h *OpenstackServiceAttributeHandler) Register(s *schema.Resource) error {
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
 			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 	}
 

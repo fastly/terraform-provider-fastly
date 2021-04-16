@@ -82,6 +82,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 			GzipLevel:         uint8(resource["gzip_level"].(int)),
 			TimestampFormat:   resource["timestamp_format"].(string),
 			MessageType:       resource["message_type"].(string),
+			CompressionCodec:  resource["compression_codec"].(string),
 			Format:            vla.format,
 			ResponseCondition: vla.responseCondition,
 			Placement:         vla.placement,
@@ -247,6 +248,12 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -297,6 +304,7 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 			"format":             currentGCS.Format,
 			"timestamp_format":   currentGCS.TimestampFormat,
 			"placement":          currentGCS.Placement,
+			"compression_codec":  currentGCS.CompressionCodec,
 		}
 
 		// prune any empty values that come from the default string value in structs

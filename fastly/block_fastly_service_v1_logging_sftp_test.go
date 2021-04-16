@@ -31,7 +31,6 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					SSHKnownHosts:     "sftp.example.com",
 					Format:            "%h %l %u %t \"%r\" %>s %b",
 					Password:          "password",
-					GzipLevel:         5,
 					MessageType:       "classic",
 					FormatVersion:     2,
 					Period:            3600,
@@ -39,6 +38,8 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
 					ResponseCondition: "response_condition",
 					Placement:         "none",
+					GzipLevel:         0,
+					CompressionCodec:  "zstd",
 				},
 			},
 			local: []map[string]interface{}{
@@ -53,13 +54,14 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"password":           "password",
 					"message_type":       "classic",
-					"gzip_level":         uint8(5),
+					"gzip_level":         uint8(0),
 					"format_version":     uint(2),
 					"period":             uint(3600),
 					"port":               uint(22),
 					"response_condition": "response_condition",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"placement":          "none",
+					"compression_codec":  "zstd",
 				},
 			},
 		},
@@ -91,6 +93,7 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		SSHKnownHosts:     "sftp.example.com",
 		Placement:         "none",
 		ResponseCondition: "response_condition_test",
+		CompressionCodec:  "zstd",
 
 		// Defaults
 		Port:            22,
@@ -116,10 +119,10 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		Format:            "%h %l %u %t \"%r\" %>s %b %T",
 		Placement:         "waf_debug",
 		ResponseCondition: "response_condition_test",
+		GzipLevel:         3,
 
 		// Defaults
 		Period:          3600,
-		GzipLevel:       0,
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 		FormatVersion:   2,
 	}
@@ -136,6 +139,7 @@ func TestAccFastlyServiceV1_logging_sftp_basic(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 		MessageType:       "loggly",
 		Placement:         "none",
+		CompressionCodec:  "zstd",
 
 		// Defaults
 		Port:            22,
@@ -188,13 +192,14 @@ func TestAccFastlyServiceV1_logging_sftp_basic_compute(t *testing.T) {
 		ServiceVersion: 1,
 
 		// Configured
-		Name:          "sftp-endpoint",
-		Address:       "sftp.example.com",
-		User:          "username",
-		Password:      "password",
-		PublicKey:     pgpPublicKey(t),
-		Path:          "/",
-		SSHKnownHosts: "sftp.example.com",
+		Name:             "sftp-endpoint",
+		Address:          "sftp.example.com",
+		User:             "username",
+		Password:         "password",
+		PublicKey:        pgpPublicKey(t),
+		Path:             "/",
+		SSHKnownHosts:    "sftp.example.com",
+		CompressionCodec: "zstd",
 
 		// Defaults
 		Port:            22,
@@ -299,158 +304,158 @@ func testAccCheckFastlyServiceV1SFTPAttributes(service *gofastly.ServiceDetail, 
 func testAccServiceV1SFTPComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
-	name = "%s"
+  name = "%s"
 
-	domain {
-		name		= "%s"
-		comment = "tf-sftp-logging"
-	}
+  domain {
+    name = "%s"
+    comment = "tf-sftp-logging"
+  }
 
-	backend {
-		address = "aws.amazon.com"
-		name		= "amazon docs"
-	}
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
 
-	logging_sftp {
-		name						= "sftp-endpoint"
-		address					= "sftp.example.com"
-		user						= "username"
-		password				= "password"
-		public_key      = file("test_fixtures/fastly_test_publickey")
-		path						   = "/"
-		ssh_known_hosts    = "sftp.example.com"
-		message_type       = "classic"
-	}
+  logging_sftp {
+    name = "sftp-endpoint"
+    address = "sftp.example.com"
+    user = "username"
+    password  = "password"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    path = "/"
+    ssh_known_hosts = "sftp.example.com"
+    message_type = "classic"
+    compression_codec = "zstd"
+  }
 
-	package {
-      	filename = "test_fixtures/package/valid.tar.gz"
-	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
-   	}
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
 
-	force_destroy = true
-}
-`, name, domain)
+  force_destroy = true
+}`, name, domain)
 }
 
 func testAccServiceV1SFTPConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-	name = "%s"
+  name = "%s"
 
-	domain {
-		name		= "%s"
-		comment = "tf-sftp-logging"
-	}
+  domain {
+    name = "%s"
+    comment = "tf-sftp-logging"
+  }
 
-	backend {
-		address = "aws.amazon.com"
-		name		= "amazon docs"
-	}
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
 
-	condition {
-    name      = "response_condition_test"
-    type      = "RESPONSE"
-    priority  = 8
+  condition {
+    name = "response_condition_test"
+    type = "RESPONSE"
+    priority = 8
     statement = "resp.status == 418"
   }
 
-	logging_sftp {
-		name						= "sftp-endpoint"
-		address					= "sftp.example.com"
-		user						= "username"
-		password				= "password"
-		public_key      = file("test_fixtures/fastly_test_publickey")
-		path						   = "/"
-		ssh_known_hosts    = "sftp.example.com"
-		message_type       = "classic"
-		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-		placement          = "none"
-		response_condition = "response_condition_test"
-	}
-	force_destroy = true
-}
-`, name, domain)
+  logging_sftp {
+    name = "sftp-endpoint"
+    address = "sftp.example.com"
+    user = "username"
+    password = "password"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    path = "/"
+    ssh_known_hosts = "sftp.example.com"
+    message_type = "classic"
+    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    placement = "none"
+    response_condition = "response_condition_test"
+    compression_codec = "zstd"
+  }
+  force_destroy = true
+}`, name, domain)
 }
 
 func testAccServiceV1SFTPConfig_update(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-	name = "%s"
+  name = "%s"
 
-	domain {
-		name		= "%s"
-		comment = "tf-sftp-logging"
-	}
+  domain {
+    name = "%s"
+    comment = "tf-sftp-logging"
+  }
 
-	backend {
-		address = "aws.amazon.com"
-		name		= "amazon docs"
-	}
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
 
-	condition {
-    name      = "response_condition_test"
-    type      = "RESPONSE"
-    priority  = 8
+  condition {
+    name = "response_condition_test"
+    type = "RESPONSE"
+    priority = 8
     statement = "resp.status == 418"
   }
 
-	logging_sftp {
-		name						= "sftp-endpoint"
-		address					= "sftp.example.com"
-		port						= 2600
-		user						= "user"
-		public_key      = file("test_fixtures/fastly_test_publickey")
-		secret_key      = file("test_fixtures/fastly_test_privatekey")
-		path						   = "/logs/"
-		ssh_known_hosts    = "sftp.example.com"
-		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
-		message_type       = "blank"
-		response_condition = "response_condition_test"
-		placement          = "waf_debug"
-	}
+  logging_sftp {
+    name = "sftp-endpoint"
+    address = "sftp.example.com"
+    port = 2600
+    user = "user"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    secret_key = file("test_fixtures/fastly_test_privatekey")
+    path = "/logs/"
+    ssh_known_hosts = "sftp.example.com"
+    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    message_type = "blank"
+    response_condition = "response_condition_test"
+    placement = "waf_debug"
+    gzip_level = 3
+  }
 
-	logging_sftp {
-		name						= "another-sftp-endpoint"
-		address					= "sftp2.example.com"
-		user						= "user"
-		public_key      = file("test_fixtures/fastly_test_publickey")
-		secret_key      = file("test_fixtures/fastly_test_privatekey")
-		path						   = "/dir/"
-		ssh_known_hosts    = "sftp2.example.com"
-		format					   = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-		message_type       = "loggly"
-		response_condition = "response_condition_test"
-		placement          = "none"
-	}
-	force_destroy = true
-}
-`, name, domain)
+  logging_sftp {
+    name = "another-sftp-endpoint"
+    address = "sftp2.example.com"
+    user = "user"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    secret_key = file("test_fixtures/fastly_test_privatekey")
+    path = "/dir/"
+    ssh_known_hosts = "sftp2.example.com"
+    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    message_type = "loggly"
+    response_condition = "response_condition_test"
+    placement = "none"
+    compression_codec = "zstd"
+  }
+  force_destroy = true
+}`, name, domain)
 }
 
 func testAccServiceV1SFTPConfig_no_password_secret_key(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
-	name = "%s"
+  name = "%s"
 
-	domain {
-		name		= "%s"
-		comment = "tf-sftp-logging"
-	}
+  domain {
+    name = "%s"
+    comment = "tf-sftp-logging"
+  }
 
-	backend {
-		address = "aws.amazon.com"
-		name		= "amazon docs"
-	}
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
 
-	logging_sftp {
-		name						= "sftp-endpoint"
-		address					= "sftp.example.com"
-		user						= "username"
-		path						= "/"
-		ssh_known_hosts = "sftp.example.com"
-	}
-	force_destroy = true
+  logging_sftp {
+    name = "sftp-endpoint"
+    address = "sftp.example.com"
+    user = "username"
+    path = "/"
+    ssh_known_hosts = "sftp.example.com"
+  }
+  force_destroy = true
 
-}
-`, name, domain)
+}`, name, domain)
 }

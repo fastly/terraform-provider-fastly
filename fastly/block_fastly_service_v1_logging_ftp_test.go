@@ -20,39 +20,41 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 		{
 			remote: []*gofastly.FTP{
 				{
-					ServiceVersion:  1,
-					Name:            "ftp-endpoint",
-					Address:         "ftp.example.com",
-					Username:        "username",
-					Password:        "password",
-					PublicKey:       pgpPublicKey(t),
-					Path:            "/path",
-					Port:            21,
-					Period:          3600,
-					GzipLevel:       3,
-					Format:          "%h %l %u %t \"%r\" %>s %b",
-					FormatVersion:   2,
-					TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-					Placement:       "none",
-					MessageType:     "classic",
+					ServiceVersion:   1,
+					Name:             "ftp-endpoint",
+					Address:          "ftp.example.com",
+					Username:         "username",
+					Password:         "password",
+					PublicKey:        pgpPublicKey(t),
+					Path:             "/path",
+					Port:             21,
+					Period:           3600,
+					GzipLevel:        0,
+					Format:           "%h %l %u %t \"%r\" %>s %b",
+					FormatVersion:    2,
+					TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
+					Placement:        "none",
+					MessageType:      "classic",
+					CompressionCodec: "zstd",
 				},
 			},
 			local: []map[string]interface{}{
 				{
-					"name":             "ftp-endpoint",
-					"address":          "ftp.example.com",
-					"user":             "username",
-					"password":         "password",
-					"public_key":       pgpPublicKey(t),
-					"path":             "/path",
-					"period":           uint(3600),
-					"port":             uint(21),
-					"gzip_level":       uint8(3),
-					"format_version":   uint(2),
-					"format":           "%h %l %u %t \"%r\" %>s %b",
-					"timestamp_format": "%Y-%m-%dT%H:%M:%S.000",
-					"placement":        "none",
-					"message_type":     "classic",
+					"name":              "ftp-endpoint",
+					"address":           "ftp.example.com",
+					"user":              "username",
+					"password":          "password",
+					"public_key":        pgpPublicKey(t),
+					"path":              "/path",
+					"period":            uint(3600),
+					"port":              uint(21),
+					"gzip_level":        uint8(0),
+					"format_version":    uint(2),
+					"format":            "%h %l %u %t \"%r\" %>s %b",
+					"timestamp_format":  "%Y-%m-%dT%H:%M:%S.000",
+					"placement":         "none",
+					"message_type":      "classic",
+					"compression_codec": "zstd",
 				},
 			},
 		},
@@ -72,21 +74,21 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.FTP{
-		ServiceVersion:  1,
-		Name:            "ftp-endpoint",
-		Address:         "ftp.example.com",
-		Username:        "user",
-		Password:        "p@ssw0rd",
-		PublicKey:       pgpPublicKey(t),
-		Path:            "/path",
-		Port:            27,
-		GzipLevel:       3,
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		Format:          "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:   2,
-		Placement:       "none",
-		MessageType:     "classic",
+		ServiceVersion:   1,
+		Name:             "ftp-endpoint",
+		Address:          "ftp.example.com",
+		Username:         "user",
+		Password:         "p@ssw0rd",
+		PublicKey:        pgpPublicKey(t),
+		Path:             "/path",
+		Port:             27,
+		Period:           3600,
+		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
+		Format:           "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:    2,
+		Placement:        "none",
+		MessageType:      "classic",
+		CompressionCodec: "zstd",
 	}
 
 	log1_after_update := gofastly.FTP{
@@ -108,21 +110,21 @@ func TestAccFastlyServiceV1_logging_ftp_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.FTP{
-		ServiceVersion:  1,
-		Name:            "another-ftp-endpoint",
-		Address:         "ftp.example.com",
-		Username:        "user",
-		Password:        "p@ssw0rd",
-		Path:            "/",
-		PublicKey:       pgpPublicKey(t),
-		Port:            21,
-		GzipLevel:       3,
-		Period:          360,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		Format:          "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:   2,
-		Placement:       "none",
-		MessageType:     "classic",
+		ServiceVersion:   1,
+		Name:             "another-ftp-endpoint",
+		Address:          "ftp.example.com",
+		Username:         "user",
+		Password:         "p@ssw0rd",
+		Path:             "/",
+		PublicKey:        pgpPublicKey(t),
+		Port:             21,
+		Period:           360,
+		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
+		Format:           "%h %l %u %t \"%r\" %>s %b",
+		FormatVersion:    2,
+		Placement:        "none",
+		MessageType:      "classic",
+		CompressionCodec: "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -163,17 +165,17 @@ func TestAccFastlyServiceV1_logging_ftp_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.FTP{
-		ServiceVersion:  1,
-		Name:            "ftp-endpoint",
-		Address:         "ftp.example.com",
-		Username:        "user",
-		Password:        "p@ssw0rd",
-		PublicKey:       pgpPublicKey(t),
-		Path:            "/path",
-		Port:            27,
-		GzipLevel:       3,
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		ServiceVersion:   1,
+		Name:             "ftp-endpoint",
+		Address:          "ftp.example.com",
+		Username:         "user",
+		Password:         "p@ssw0rd",
+		PublicKey:        pgpPublicKey(t),
+		Path:             "/path",
+		Port:             27,
+		Period:           3600,
+		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
+		CompressionCodec: "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -258,26 +260,26 @@ resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-ftp-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   logging_ftp {
-    name       = "ftp-endpoint"
-    address    = "ftp.example.com"
-    user       = "user"
+    name = "ftp-endpoint"
+    address = "ftp.example.com"
+    user = "user"
     public_key = file("test_fixtures/fastly_test_publickey")
-    password         = "p@ssw0rd"
-    path             = "/path"
-    port             = 27
-    gzip_level       = 3
+    password = "p@ssw0rd"
+    path = "/path"
+    port = 27
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    message_type     = "classic"
+    message_type = "classic"
+    compression_codec = "zstd"
   }
 
   package {
@@ -286,8 +288,7 @@ resource "fastly_service_compute" "foo" {
   }
 
   force_destroy = true
-}
-`, name, domain)
+}`, name, domain)
 }
 
 func testAccServiceV1FTPConfig(name string, domain string) string {
@@ -296,32 +297,31 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-ftp-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   logging_ftp {
-    name       = "ftp-endpoint"
-    address    = "ftp.example.com"
-    user       = "user"
+    name = "ftp-endpoint"
+    address = "ftp.example.com"
+    user = "user"
     public_key = file("test_fixtures/fastly_test_publickey")
-    password         = "p@ssw0rd"
-    path             = "/path"
-    port             = 27
-    format           = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-    gzip_level       = 3
+    password = "p@ssw0rd"
+    path = "/path"
+    port = 27
+    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    placement        = "none"
+    placement = "none"
+    compression_codec = "zstd"
   }
 
   force_destroy = true
-}
-`, name, domain)
+}`, name, domain)
 }
 
 func testAccServiceV1FTPConfig_update(name, domain string) string {
@@ -330,43 +330,42 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-ftp-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   logging_ftp {
-    name       = "ftp-endpoint"
-    address    = "ftp2.example.com"
-    user       = "user"
-    password   = "p@ssw0rd2"
+    name = "ftp-endpoint"
+    address = "ftp2.example.com"
+    user = "user"
+    password = "p@ssw0rd2"
     public_key = file("test_fixtures/fastly_test_publickey")
-    path             = "/path"
-    format           = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
-    gzip_level       = 4
+    path = "/path"
+    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    gzip_level = 4
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    placement        = "waf_debug"
+    placement = "waf_debug"
   }
 
   logging_ftp {
-    name       = "another-ftp-endpoint"
-    address    = "ftp.example.com"
-    user       = "user"
-    password   = "p@ssw0rd"
+    name = "another-ftp-endpoint"
+    address = "ftp.example.com"
+    user = "user"
+    password = "p@ssw0rd"
     public_key = file("test_fixtures/fastly_test_publickey")
-    path             = "/"
-    period           = 360
-    format           = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-    gzip_level       = 3
+    path = "/"
+    period = 360
+    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    placement        = "none"
+    placement = "none"
+    compression_codec = "zstd"
   }
 
   force_destroy = true
-}
-`, name, domain)
+}`, name, domain)
 }

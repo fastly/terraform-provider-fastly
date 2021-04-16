@@ -381,6 +381,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **file_max_bytes** (Number) Maximum size of an uploaded log file, if non-zero.
 - **format** (String) Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t "%r" %>s %b`)
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)
@@ -486,6 +487,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **email** (String) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`
 - **format** (String) Apache-style string or VCL variables to use for log formatting
 - **gzip_level** (Number) Level of Gzip compression, from `0-9`. `0` is no compression. `1` is fastest and least compressed, `9` is slowest and most compressed. Default `0`
@@ -613,6 +615,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - **gzip_level** (Number) What level of GZIP encoding to have when dumping logs (default `0`, no compression)
@@ -655,6 +658,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **domain** (String) The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
@@ -707,6 +711,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - **gzip_level** (Number) Gzip Compression level. Default `0`
@@ -883,6 +888,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
@@ -925,6 +931,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
@@ -1005,6 +1012,7 @@ Required:
 
 Optional:
 
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **domain** (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).

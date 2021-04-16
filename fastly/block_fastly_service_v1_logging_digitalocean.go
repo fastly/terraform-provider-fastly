@@ -229,6 +229,7 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string
 			"message_type":       ll.MessageType,
 			"placement":          ll.Placement,
 			"response_condition": ll.ResponseCondition,
+			"compression_codec":  ll.CompressionCodec,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -262,6 +263,7 @@ func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interf
 		GzipLevel:         uint(df["gzip_level"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
 		MessageType:       df["message_type"].(string),
+		CompressionCodec:  df["compression_codec"].(string),
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
@@ -354,6 +356,12 @@ func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error
 			Default:          "classic",
 			Description:      "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
 			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 	}
 

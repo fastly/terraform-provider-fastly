@@ -25,24 +25,26 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 		{
 			remote: []*gofastly.GCS{
 				{
-					Name:      "GCS collector",
-					User:      "email@example.com",
-					Bucket:    "bucketname",
-					SecretKey: secretKey,
-					Format:    "log format",
-					Period:    3600,
-					GzipLevel: 0,
+					Name:             "GCS collector",
+					User:             "email@example.com",
+					Bucket:           "bucketname",
+					SecretKey:        secretKey,
+					Format:           "log format",
+					Period:           3600,
+					GzipLevel:        0,
+					CompressionCodec: "zstd",
 				},
 			},
 			local: []map[string]interface{}{
 				{
-					"name":        "GCS collector",
-					"email":       "email@example.com",
-					"bucket_name": "bucketname",
-					"secret_key":  secretKey,
-					"format":      "log format",
-					"period":      3600,
-					"gzip_level":  0,
+					"name":              "GCS collector",
+					"email":             "email@example.com",
+					"bucket_name":       "bucketname",
+					"secret_key":        secretKey,
+					"format":            "log format",
+					"period":            3600,
+					"gzip_level":        0,
+					"compression_codec": "zstd",
 				},
 			},
 		},
@@ -173,23 +175,24 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name = "tf -test backend"
   }
 
-	gcslogging {
-	  name =  "%s"
-		email = "email@example.com"
-		bucket_name = "bucketname"
-		secret_key = %q
-		format = "log format"
-		response_condition = ""
-	}
+  gcslogging {
+    name = "%s"
+    email = "email@example.com"
+    bucket_name = "bucketname"
+    secret_key = %q
+    format = "log format"
+    response_condition = ""
+    compression_codec = "zstd"
+  }
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName, secretKey)
@@ -204,25 +207,26 @@ resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name = "tf -test backend"
   }
 
-	gcslogging {
-	  name =  "%s"
-		email = "email@example.com"
-		bucket_name = "bucketname"
-		secret_key = %q
-	}
+  gcslogging {
+    name = "%s"
+    email = "email@example.com"
+    bucket_name = "bucketname"
+    secret_key = %q
+    compression_codec = "zstd"
+  }
 
  package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
@@ -238,21 +242,21 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name = "tf -test backend"
   }
 
-	gcslogging {
-	  name =  "%s"
-		bucket_name = "bucketname"
-		format = "log format"
-		response_condition = ""
-	}
+  gcslogging {
+    name = "%s"
+    bucket_name = "bucketname"
+    format = "log format"
+    response_condition = ""
+  }
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName)

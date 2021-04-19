@@ -102,6 +102,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 			FormatVersion:     uintOrDefault(vla.formatVersion),
 			Placement:         vla.placement,
 			ResponseCondition: vla.responseCondition,
+			FileMaxBytes:      uint(resource["file_max_bytes"].(int)),
 		}
 
 		log.Printf("[DEBUG] Blob Storage logging create opts: %#v", opts)
@@ -174,6 +175,9 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 		}
 		if v, ok := modified["response_condition"]; ok {
 			opts.ResponseCondition = gofastly.String(v.(string))
+		}
+		if v, ok := modified["file_max_bytes"]; ok {
+			opts.FileMaxBytes = gofastly.Uint(uint(v.(int)))
 		}
 
 		log.Printf("[DEBUG] Update Blob Storage Opts: %#v", opts)
@@ -272,6 +276,11 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 			Description:      "How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default `classic`",
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
+		"file_max_bytes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Maximum size of an uploaded log file, if non-zero.",
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -331,6 +340,7 @@ func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]i
 			"message_type":       bs.MessageType,
 			"placement":          bs.Placement,
 			"response_condition": bs.ResponseCondition,
+			"file_max_bytes":     bs.FileMaxBytes,
 		}
 
 		// prune any empty values that come from the default string value in structs

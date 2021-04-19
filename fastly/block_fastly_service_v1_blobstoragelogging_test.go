@@ -34,6 +34,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					MessageType:       "classic",
 					Placement:         "waf_debug",
 					ResponseCondition: "error_response",
+					FileMaxBytes:      1048576,
 				},
 			},
 			local: []map[string]interface{}{
@@ -52,6 +53,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					"message_type":       "classic",
 					"placement":          "waf_debug",
 					"response_condition": "error_response",
+					"file_max_bytes":     uint(1048576),
 				},
 			},
 		},
@@ -84,6 +86,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		MessageType:       "blank",
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
+		FileMaxBytes:      1048576,
 	}
 
 	blobStorageLogOneUpdated := gofastly.BlobStorage{
@@ -101,6 +104,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		MessageType:       "blank",
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
+		FileMaxBytes:      1048576,
 	}
 
 	blobStorageLogTwo := gofastly.BlobStorage{
@@ -118,6 +122,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		MessageType:       "blank",
 		Placement:         "waf_debug",
 		ResponseCondition: "ok_response_2XX",
+		FileMaxBytes:      2097152,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -167,6 +172,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic_compute(t *testing.T) {
 		GzipLevel:       9,
 		PublicKey:       pgpPublicKey(t),
 		MessageType:     "blank",
+		FileMaxBytes:    1048576,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -360,6 +366,7 @@ resource "fastly_service_v1" "foo" {
     message_type       = "blank"
     placement          = "waf_debug"
     response_condition = "error_response_5XX"
+    file_max_bytes     = 1048576
   }
 
   force_destroy = true
@@ -394,6 +401,7 @@ resource "fastly_service_compute" "foo" {
     gzip_level         = 9
     public_key         = file("test_fixtures/fastly_test_publickey")
     message_type       = "blank"
+    file_max_bytes     = 1048576
   }
 
   package {
@@ -452,6 +460,7 @@ resource "fastly_service_v1" "foo" {
     message_type       = "blank"
     placement          = "waf_debug"
     response_condition = "error_response_5XX"
+    file_max_bytes     = 1048576
   }
 
   blobstoragelogging {
@@ -469,6 +478,7 @@ resource "fastly_service_v1" "foo" {
     message_type       = "blank"
     placement          = "waf_debug"
     response_condition = "ok_response_2XX"
+    file_max_bytes     = 2097152
   }
 
   force_destroy = true

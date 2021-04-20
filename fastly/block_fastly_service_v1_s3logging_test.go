@@ -18,6 +18,8 @@ const testAwsPrimarySecretKey = "SECRET0123456789012345678901234567890123"
 const testAwsOtherAccessKey = "KEYQPONMLKJIHGFEDCBA"
 const testAwsOtherSecretKey = "SECRETOTHER01234567890123456789012345678"
 
+const testS3IAMRole = "arn:aws:iam::123456789012:role/S3Access"
+
 func TestResourceFastlyFlattenS3(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.S3
@@ -53,6 +55,50 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"domain":                            "domain",
 					"s3_access_key":                     testAwsPrimaryAccessKey,
 					"s3_secret_key":                     testAwsPrimarySecretKey,
+					"path":                              "/",
+					"period":                            uint(3600),
+					"gzip_level":                        uint(5),
+					"format":                            "%h %l %u %t %r %>s",
+					"format_version":                    uint(2),
+					"response_condition":                "response_condition_test",
+					"message_type":                      "classic",
+					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
+					"placement":                         "none",
+					"public_key":                        pgpPublicKey(t),
+					"redundancy":                        gofastly.S3RedundancyReduced,
+					"server_side_encryption":            gofastly.S3ServerSideEncryptionAES,
+					"server_side_encryption_kms_key_id": "kmskey",
+				},
+			},
+		},
+		{
+			remote: []*gofastly.S3{
+				{
+					Name:                         "s3-endpoint",
+					BucketName:                   "bucket",
+					Domain:                       "domain",
+					IAMRole:                      testS3IAMRole,
+					Path:                         "/",
+					Period:                       3600,
+					GzipLevel:                    5,
+					Format:                       "%h %l %u %t %r %>s",
+					FormatVersion:                2,
+					ResponseCondition:            "response_condition_test",
+					MessageType:                  "classic",
+					TimestampFormat:              "%Y-%m-%dT%H:%M:%S.000",
+					Placement:                    "none",
+					PublicKey:                    pgpPublicKey(t),
+					Redundancy:                   "reduced_redundancy",
+					ServerSideEncryptionKMSKeyID: "kmskey",
+					ServerSideEncryption:         gofastly.S3ServerSideEncryptionAES,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":                              "s3-endpoint",
+					"bucket_name":                       "bucket",
+					"domain":                            "domain",
+					"s3_iam_role":                       testS3IAMRole,
 					"path":                              "/",
 					"period":                            uint(3600),
 					"gzip_level":                        uint(5),
@@ -106,8 +152,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3-us-west-2.amazonaws.com",
-		AccessKey:         testAwsPrimaryAccessKey,
-		SecretKey:         testAwsPrimarySecretKey,
+		IAMRole:           testS3IAMRole,
 		Period:            uint(3600),
 		PublicKey:         pgpPublicKey(t),
 		GzipLevel:         uint(0),
@@ -124,8 +169,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Name:            "someotherbucketlog",
 		BucketName:      "fastlytestlogging2",
 		Domain:          "s3-us-west-2.amazonaws.com",
-		AccessKey:       testAwsOtherAccessKey,
-		SecretKey:       testAwsOtherSecretKey,
+		IAMRole:         testS3IAMRole,
 		GzipLevel:       uint(3),
 		Period:          uint(60),
 		Format:          "%h %l %u %t %r %>s",
@@ -514,8 +558,7 @@ resource "fastly_service_v1" "foo" {
     name               = "somebucketlog"
     bucket_name        = "fastlytestlogging"
     domain             = "s3-us-west-2.amazonaws.com"
-    s3_access_key      = "%s"
-    s3_secret_key      = "%s"
+    s3_iam_role        = "%s"
     response_condition = "response_condition_test"
     message_type       = "blank"
     public_key         = file("test_fixtures/fastly_test_publickey")
@@ -526,14 +569,13 @@ resource "fastly_service_v1" "foo" {
     name          = "someotherbucketlog"
     bucket_name   = "fastlytestlogging2"
     domain        = "s3-us-west-2.amazonaws.com"
-    s3_access_key = "%s"
-    s3_secret_key = "%s"
+    s3_iam_role   = "%s"
     period        = 60
     gzip_level    = 3
   }
 
   force_destroy = true
-}`, name, domain, testAwsPrimaryAccessKey, testAwsPrimarySecretKey, testAwsOtherAccessKey, testAwsOtherSecretKey)
+}`, name, domain, testS3IAMRole, testS3IAMRole)
 }
 
 func testAccServiceV1S3LoggingConfig_env(name, domain string) string {

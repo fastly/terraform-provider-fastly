@@ -113,11 +113,14 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 		if v, ok := modified["domain"]; ok {
 			opts.Domain = gofastly.String(v.(string))
 		}
-		if v, ok := modified["access_key"]; ok {
+		if v, ok := modified["s3_access_key"]; ok {
 			opts.AccessKey = gofastly.String(v.(string))
 		}
-		if v, ok := modified["secret_key"]; ok {
+		if v, ok := modified["s3_secret_key"]; ok {
 			opts.SecretKey = gofastly.String(v.(string))
+		}
+		if v, ok := modified["s3_iam_role"]; ok {
+			opts.IAMRole = gofastly.String(v.(string))
 		}
 		if v, ok := modified["path"]; ok {
 			opts.Path = gofastly.String(v.(string))
@@ -213,15 +216,22 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
-			Description: "AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`",
+			Description: "AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`",
 			Sensitive:   true,
 		},
 		"s3_secret_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
-			Description: "AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`",
+			Description: "AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`",
 			Sensitive:   true,
+		},
+		"s3_iam_role": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_IAM_ROLE", ""),
+			Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`",
+			Sensitive:   false,
 		},
 		// Optional fields
 		"path": {
@@ -357,6 +367,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"bucket_name":                       s.BucketName,
 			"s3_access_key":                     s.AccessKey,
 			"s3_secret_key":                     s.SecretKey,
+			"s3_iam_role":                       s.IAMRole,
 			"path":                              s.Path,
 			"period":                            s.Period,
 			"domain":                            s.Domain,
@@ -388,13 +399,6 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 
 func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
 	df := s3Map.(map[string]interface{})
-	// The Fastly API will not error if these are omitted, so we throw an error
-	// if any of these are empty.
-	for _, sk := range []string{"s3_access_key", "s3_secret_key"} {
-		if df[sk].(string) == "" {
-			return nil, fmt.Errorf("[ERR] No %s found for S3 Log stream setup for Service (%s)", sk, serviceID)
-		}
-	}
 
 	var vla = h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateS3Input{
@@ -404,6 +408,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, servic
 		BucketName:                   df["bucket_name"].(string),
 		AccessKey:                    df["s3_access_key"].(string),
 		SecretKey:                    df["s3_secret_key"].(string),
+		IAMRole:                      df["s3_iam_role"].(string),
 		Period:                       uint(df["period"].(int)),
 		GzipLevel:                    uint(df["gzip_level"].(int)),
 		Domain:                       df["domain"].(string),

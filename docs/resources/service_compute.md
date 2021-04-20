@@ -470,14 +470,15 @@ Optional:
 
 Required:
 
-- **access_key** (String, Sensitive) The AWS access key to be used to write to the stream
 - **name** (String) The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **secret_key** (String, Sensitive) The AWS secret access key to authenticate with
 - **topic** (String) The Kinesis stream name
 
 Optional:
 
+- **access_key** (String, Sensitive) The AWS access key to be used to write to the stream
+- **iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.
 - **region** (String) The AWS region the stream resides in. (Default: `us-east-1`)
+- **secret_key** (String, Sensitive) The AWS secret access key to authenticate with
 
 
 <a id="nestedblock--logging_loggly"></a>
@@ -592,8 +593,9 @@ Optional:
 - **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - **redundancy** (String) The S3 redundancy level. Should be formatted; one of: `standard`, `reduced_redundancy` or null. Default `null`
-- **s3_access_key** (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
-- **s3_secret_key** (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
+- **s3_access_key** (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
+- **s3_iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`
+- **s3_secret_key** (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
 - **server_side_encryption** (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
 - **server_side_encryption_kms_key_id** (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
 - **timestamp_format** (String) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)

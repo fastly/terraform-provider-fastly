@@ -35,6 +35,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					ResponseCondition: "always",
 					Period:            3600,
 					GzipLevel:         0,
+					CompressionCodec:  "zstd",
 				},
 			},
 			local: []map[string]interface{}{
@@ -54,6 +55,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					"response_condition": "always",
 					"period":             uint(3600),
 					"gzip_level":         uint(0),
+					"compression_codec":  "zstd",
 				},
 			},
 		},
@@ -88,7 +90,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 		TimestampFormat:   `%Y-%m-%dT%H:%M:%S.000`,
 		ResponseCondition: "response_condition_test",
 		Period:            3600,
-		GzipLevel:         0,
+		CompressionCodec:  "zstd",
 	}
 
 	log1_after_update := gofastly.Openstack{
@@ -126,7 +128,7 @@ func TestAccFastlyServiceV1_logging_openstack_basic(t *testing.T) {
 		TimestampFormat:   `%Y-%m-%dT%H:%M:%S.000`,
 		ResponseCondition: "response_condition_test",
 		Period:            3600,
-		GzipLevel:         0,
+		CompressionCodec:  "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -167,18 +169,18 @@ func TestAccFastlyServiceV1_logging_openstack_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Openstack{
-		ServiceVersion:  1,
-		Name:            "openstack-endpoint",
-		URL:             "https://auth.example.com/v1", // /v1, /v2 or /v3 are required to be in the path.
-		User:            "user",
-		BucketName:      "bucket",
-		AccessKey:       "s3cr3t",
-		PublicKey:       pgpPublicKey(t),
-		MessageType:     "classic",
-		Path:            "/",
-		TimestampFormat: `%Y-%m-%dT%H:%M:%S.000`,
-		Period:          3600,
-		GzipLevel:       0,
+		ServiceVersion:   1,
+		Name:             "openstack-endpoint",
+		URL:              "https://auth.example.com/v1", // /v1, /v2 or /v3 are required to be in the path.
+		User:             "user",
+		BucketName:       "bucket",
+		AccessKey:        "s3cr3t",
+		PublicKey:        pgpPublicKey(t),
+		MessageType:      "classic",
+		Path:             "/",
+		TimestampFormat:  `%Y-%m-%dT%H:%M:%S.000`,
+		Period:           3600,
+		CompressionCodec: "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -284,11 +286,11 @@ resource "fastly_service_v1" "foo" {
     placement = "none"
 		timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
+    compression_codec = "zstd"
   }
 
   force_destroy = true
-}
-`, name, domain)
+}`, name, domain)
 }
 
 func testAccServiceV1OpenstackConfig_update(name, domain string) string {
@@ -297,43 +299,43 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-openstack-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   condition {
-    name      = "response_condition_test"
-    type      = "RESPONSE"
-    priority  = 8
+    name = "response_condition_test"
+    type = "RESPONSE"
+    priority = 8
     statement = "resp.status == 418"
   }
 
   logging_openstack {
-    name   = "openstack-endpoint"
-    user   = "userupdate"
-		url    = "https://auth.example.com/v2"
+    name = "openstack-endpoint"
+    user = "userupdate"
+    url = "https://auth.example.com/v2"
     bucket_name = "bucketupdate"
     access_key = "s3cr3tupdate"
     public_key = file("test_fixtures/fastly_test_publickey")
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
     path = "new/"
     placement = "none"
-		timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
-		message_type = "blank"
-		gzip_level = 1
+    message_type = "blank"
+    gzip_level = 1
     period = 3601
   }
 
   logging_openstack {
-    name   = "another-openstack-endpoint"
-		url    = "https://auth.example.com/v3"
-    user   = "user2"
+    name = "another-openstack-endpoint"
+    url = "https://auth.example.com/v3"
+    user = "user2"
     bucket_name = "bucket2"
     access_key = "s3cr3t2"
     public_key = file("test_fixtures/fastly_test_publickey")
@@ -342,11 +344,11 @@ resource "fastly_service_v1" "foo" {
     placement = "none"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
+    compression_codec = "zstd"
   }
 
   force_destroy = true
-}
-`, name, domain)
+}`, name, domain)
 }
 
 func testAccServiceV1OpenstackComputeConfig(name string, domain string) string {
@@ -355,32 +357,32 @@ resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-openstack-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   logging_openstack {
-    name   = "openstack-endpoint"
-    url    = "https://auth.example.com/v1"
-    user   = "user"
+    name = "openstack-endpoint"
+    url = "https://auth.example.com/v1"
+    user = "user"
     bucket_name = "bucket"
     access_key = "s3cr3t"
     public_key = file("test_fixtures/fastly_test_publickey")
     path = "/"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    compression_codec = "zstd"
   }
 
   package {
-      	filename = "test_fixtures/package/valid.tar.gz"
-	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
-}
-`, name, domain)
+}`, name, domain)
 }

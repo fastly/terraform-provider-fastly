@@ -27,7 +27,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					SASToken:          "test-sas-token",
 					Period:            12,
 					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-					GzipLevel:         9,
+					GzipLevel:         0,
 					PublicKey:         "test-public-key",
 					Format:            "%h %l %u %t \"%r\" %>s %b",
 					FormatVersion:     1,
@@ -35,6 +35,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					Placement:         "waf_debug",
 					ResponseCondition: "error_response",
 					FileMaxBytes:      1048576,
+					CompressionCodec:  "zstd",
 				},
 			},
 			local: []map[string]interface{}{
@@ -46,14 +47,15 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					"sas_token":          "test-sas-token",
 					"period":             uint(12),
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"gzip_level":         uint(9),
 					"public_key":         "test-public-key",
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"format_version":     uint(1),
+					"gzip_level":         uint(0),
 					"message_type":       "classic",
 					"placement":          "waf_debug",
 					"response_condition": "error_response",
 					"file_max_bytes":     uint(1048576),
+					"compression_codec":  "zstd",
 				},
 			},
 		},
@@ -79,7 +81,6 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		SASToken:          "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
 		Period:            12,
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         9,
 		PublicKey:         pgpPublicKey(t),
 		Format:            "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion:     1,
@@ -87,6 +88,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
 		FileMaxBytes:      1048576,
+		CompressionCodec:  "zstd",
 	}
 
 	blobStorageLogOneUpdated := gofastly.BlobStorage{
@@ -97,10 +99,10 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		SASToken:          "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
 		Period:            12,
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         9,
 		PublicKey:         pgpPublicKey(t),
 		Format:            "%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V",
 		FormatVersion:     2,
+		GzipLevel:         1,
 		MessageType:       "blank",
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
@@ -115,7 +117,6 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		SASToken:          "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
 		Period:            12,
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         9,
 		PublicKey:         pgpPublicKey(t),
 		Format:            "%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V",
 		FormatVersion:     2,
@@ -123,6 +124,7 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic(t *testing.T) {
 		Placement:         "waf_debug",
 		ResponseCondition: "ok_response_2XX",
 		FileMaxBytes:      2097152,
+		CompressionCodec:  "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,17 +164,17 @@ func TestAccFastlyServiceV1_blobstoragelogging_basic_compute(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	blobStorageLogOne := gofastly.BlobStorage{
-		Name:            "test-blobstorage-1",
-		Path:            "/5XX/",
-		AccountName:     "test",
-		Container:       "fastly",
-		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:          12,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:       9,
-		PublicKey:       pgpPublicKey(t),
-		MessageType:     "blank",
-		FileMaxBytes:    1048576,
+		Name:             "test-blobstorage-1",
+		Path:             "/5XX/",
+		AccountName:      "test",
+		Container:        "fastly",
+		SASToken:         "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
+		Period:           12,
+		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
+		PublicKey:        pgpPublicKey(t),
+		MessageType:      "blank",
+		FileMaxBytes:     1048576,
+		CompressionCodec: "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -206,7 +208,6 @@ func TestAccFastlyServiceV1_blobstoragelogging_default(t *testing.T) {
 		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
 		Period:          3600,
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:       0,
 		Format:          "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion:   2,
 		MessageType:     "classic",
@@ -247,7 +248,6 @@ func TestAccFastlyServiceV1_blobstoragelogging_env(t *testing.T) {
 		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
 		Period:          3600,
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:       0,
 		Format:          "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion:   2,
 		MessageType:     "classic",
@@ -335,38 +335,38 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "tf-test-backend"
+    name = "tf-test-backend"
   }
 
   condition {
-    name      = "error_response_5XX"
+    name = "error_response_5XX"
     statement = "resp.status >= 500 && resp.status < 600"
-    priority  = 10
-    type      = "RESPONSE"
+    priority = 10
+    type = "RESPONSE"
   }
 
   blobstoragelogging {
-    name               = "test-blobstorage-1"
-    path               = "/5XX/"
-    account_name       = "test"
-    container          = "fastly"
-    sas_token          = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
-    period             = 12
-    timestamp_format   = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level         = 9
-    public_key         = file("test_fixtures/fastly_test_publickey")
-    format             = %q
-    format_version     = 1
-    message_type       = "blank"
-    placement          = "waf_debug"
+    name = "test-blobstorage-1"
+    path = "/5XX/"
+    account_name = "test"
+    container = "fastly"
+    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    period = 12
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    format = %q
+    format_version = 1
+    message_type = "blank"
+    placement = "waf_debug"
     response_condition = "error_response_5XX"
     file_max_bytes     = 1048576
+    compression_codec = "zstd"
   }
 
   force_destroy = true
@@ -381,32 +381,32 @@ resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "tf-test-backend"
+    name = "tf-test-backend"
   }
 
   blobstoragelogging {
-    name               = "test-blobstorage-1"
-    path               = "/5XX/"
-    account_name       = "test"
-    container          = "fastly"
-    sas_token          = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
-    period             = 12
-    timestamp_format   = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level         = 9
-    public_key         = file("test_fixtures/fastly_test_publickey")
-    message_type       = "blank"
+    name = "test-blobstorage-1"
+    path = "/5XX/"
+    account_name = "test"
+    container = "fastly"
+    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    period = 12
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    message_type = "blank"
     file_max_bytes     = 1048576
+    compression_codec = "zstd"
   }
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
@@ -422,63 +422,63 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "tf-test-backend"
+    name = "tf-test-backend"
   }
 
   condition {
-    name      = "error_response_5XX"
+    name = "error_response_5XX"
     statement = "resp.status >= 500 && resp.status < 600"
-    priority  = 10
-    type      = "RESPONSE"
+    priority = 10
+    type = "RESPONSE"
   }
 
   condition {
-    name      = "ok_response_2XX"
+    name = "ok_response_2XX"
     statement = "resp.status >= 200 && resp.status < 300"
-    priority  = 10
-    type      = "RESPONSE"
+    priority = 10
+    type = "RESPONSE"
   }
 
   blobstoragelogging {
-    name               = "test-blobstorage-1"
-    path               = "/5XX/"
-    account_name       = "test"
-    container          = "fastly"
-    sas_token          = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
-    period             = 12
-    timestamp_format   = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level         = 9
-    public_key         = file("test_fixtures/fastly_test_publickey")
-    format             = %q
-    format_version     = 2
-    message_type       = "blank"
-    placement          = "waf_debug"
+    name = "test-blobstorage-1"
+    path = "/5XX/"
+    account_name = "test"
+    container = "fastly"
+    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    period = 12
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    format = %q
+    gzip_level = 1
+    format_version = 2
+    message_type = "blank"
+    placement = "waf_debug"
     response_condition = "error_response_5XX"
     file_max_bytes     = 1048576
   }
 
   blobstoragelogging {
-    name               = "test-blobstorage-2"
-    path               = "/2XX/"
-    account_name       = "test"
-    container          = "fastly"
-    sas_token          = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
-    period             = 12
-    timestamp_format   = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level         = 9
-    public_key         = file("test_fixtures/fastly_test_publickey")
-    format             = %q
-    format_version     = 2
-    message_type       = "blank"
-    placement          = "waf_debug"
+    name = "test-blobstorage-2"
+    path = "/2XX/"
+    account_name = "test"
+    container = "fastly"
+    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    period = 12
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    format = %q
+    format_version = 2
+    message_type = "blank"
+    placement = "waf_debug"
     response_condition = "ok_response_2XX"
     file_max_bytes     = 2097152
+    compression_codec  = "zstd"
   }
 
   force_destroy = true
@@ -493,20 +493,20 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "tf-test-backend"
+    name = "tf-test-backend"
   }
 
   blobstoragelogging {
-    name         = "test-blobstorage"
+    name = "test-blobstorage"
     account_name = "test"
-    container    = "fastly"
-    sas_token    = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    container = "fastly"
+    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
   }
 
   force_destroy = true
@@ -521,19 +521,19 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "tf-test-backend"
+    name = "tf-test-backend"
   }
 
   blobstoragelogging {
-    name         = "test-blobstorage"
+    name = "test-blobstorage"
     account_name = "test"
-    container    = "fastly"
+    container = "fastly"
   }
 
   force_destroy = true

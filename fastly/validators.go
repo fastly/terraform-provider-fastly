@@ -3,6 +3,7 @@ package fastly
 import (
 	"encoding/pem"
 	"fmt"
+
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,6 +19,14 @@ func validateLoggingMessageType() schema.SchemaValidateDiagFunc {
 		"loggly",
 		"logplex",
 		"blank",
+	}, false))
+}
+
+func validateLoggingCompressionCodec() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
+		"zstd",
+		"snappy",
+		"gzip",
 	}, false))
 }
 

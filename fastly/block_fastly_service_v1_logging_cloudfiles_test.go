@@ -36,6 +36,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					Placement:         "none",
 					ResponseCondition: "response_condition",
 					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
+					CompressionCodec:  "zstd",
 				},
 			},
 			local: []map[string]interface{}{
@@ -55,6 +56,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					"placement":          "none",
 					"response_condition": "response_condition",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
+					"compression_codec":  "zstd",
 				},
 			},
 		},
@@ -90,6 +92,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 		Placement:         "none",
 		ResponseCondition: "response_condition_test",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
+		CompressionCodec:  "zstd",
 	}
 
 	log1_after_update := gofastly.Cloudfiles{
@@ -109,6 +112,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 		Placement:         "none",
 		ResponseCondition: "response_condition_test",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
+		CompressionCodec:  "",
 	}
 
 	log2 := gofastly.Cloudfiles{
@@ -128,6 +132,7 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic(t *testing.T) {
 		Placement:         "none",
 		ResponseCondition: "response_condition_test",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
+		CompressionCodec:  "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -168,18 +173,19 @@ func TestAccFastlyServiceV1_logging_cloudfiles_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1Compute := gofastly.Cloudfiles{
-		ServiceVersion:  1,
-		Name:            "cloudfiles-endpoint",
-		BucketName:      "bucket",
-		User:            "user",
-		AccessKey:       "secret",
-		PublicKey:       pgpPublicKey(t),
-		GzipLevel:       0,
-		MessageType:     "classic",
-		Path:            "/",
-		Region:          "ORD",
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		ServiceVersion:   1,
+		Name:             "cloudfiles-endpoint",
+		BucketName:       "bucket",
+		User:             "user",
+		AccessKey:        "secret",
+		PublicKey:        pgpPublicKey(t),
+		GzipLevel:        0,
+		MessageType:      "classic",
+		Path:             "/",
+		Region:           "ORD",
+		Period:           3600,
+		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
+		CompressionCodec: "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -257,32 +263,32 @@ resource "fastly_service_compute" "none" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-cloudfiles-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   logging_cloudfiles {
-    name   = "cloudfiles-endpoint"
+    name = "cloudfiles-endpoint"
     bucket_name = "bucket"
     user = "user"
     access_key = "secret"
     public_key = file("test_fixtures/fastly_test_publickey")
     message_type = "classic"
-	path = "/"
-	region = "ORD"
-	period = 3600
-	gzip_level = 0
-	timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    path = "/"
+    region = "ORD"
+    period = 3600
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    compression_codec = "zstd"
   }
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
@@ -296,38 +302,38 @@ resource "fastly_service_v1" "none" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-cloudfiles-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   condition {
-    name      = "response_condition_test"
-    type      = "RESPONSE"
+    name = "response_condition_test"
+    type = "RESPONSE"
     priority  = 8
     statement = "resp.status == 418"
   }
 
   logging_cloudfiles {
-    name   = "cloudfiles-endpoint"
+    name = "cloudfiles-endpoint"
     bucket_name = "bucket"
     user = "user"
     access_key = "secret"
     public_key = file("test_fixtures/fastly_test_publickey")
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-		message_type = "classic"
-		path = "/"
-		region = "ORD"
-		period = 3600
-		placement = "none"
-		response_condition = "response_condition_test"
-    gzip_level = 0
+    message_type = "classic"
+    path = "/"
+    region = "ORD"
+    period = 3600
+    placement = "none"
+    response_condition = "response_condition_test"
     format_version = 2
-		timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    compression_codec = "zstd"
   }
 
   force_destroy = true
@@ -341,56 +347,56 @@ resource "fastly_service_v1" "none" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-cloudfiles-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   condition {
-    name      = "response_condition_test"
-    type      = "RESPONSE"
-    priority  = 8
+    name = "response_condition_test"
+    type = "RESPONSE"
+    priority = 8
     statement = "resp.status == 418"
   }
 
   logging_cloudfiles {
-    name   = "cloudfiles-endpoint"
+    name = "cloudfiles-endpoint"
     bucket_name = "bucketupdate"
     user = "userupdate"
     access_key = "secretupdate"
     public_key = file("test_fixtures/fastly_test_publickey")
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
-		message_type = "blank"
-		path = "new/"
-		region = "LON"
-		period = 3601
-		placement = "none"
-		response_condition = "response_condition_test"
+    message_type = "blank"
+    path = "new/"
+    region = "LON"
+    period = 3601
+    placement = "none"
+    response_condition = "response_condition_test"
     gzip_level = 1
     format_version = 2
-		timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
   }
 
   logging_cloudfiles {
-    name   = "another-cloudfiles-endpoint"
+    name = "another-cloudfiles-endpoint"
     bucket_name = "bucket2"
     user = "user2"
     access_key = "secret2"
     public_key = file("test_fixtures/fastly_test_publickey")
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
-		message_type = "classic"
-		path = "two/"
-		region = "SYD"
-		period = 3600
-		placement = "none"
-		response_condition = "response_condition_test"
-    gzip_level = 0
+    message_type = "classic"
+    path = "two/"
+    region = "SYD"
+    period = 3600
+    placement = "none"
+    response_condition = "response_condition_test"
     format_version = 2
-		timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    compression_codec = "zstd"
   }
 
   force_destroy = true

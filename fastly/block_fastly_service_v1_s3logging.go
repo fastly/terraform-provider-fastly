@@ -293,6 +293,12 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Optional:    true,
 			Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`",
 		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -382,6 +388,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"placement":                         s.Placement,
 			"server_side_encryption":            s.ServerSideEncryption,
 			"server_side_encryption_kms_key_id": s.ServerSideEncryptionKMSKeyID,
+			"compression_codec":                 s.CompressionCodec,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -417,6 +424,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, servic
 		MessageType:                  df["message_type"].(string),
 		PublicKey:                    df["public_key"].(string),
 		ServerSideEncryptionKMSKeyID: df["server_side_encryption_kms_key_id"].(string),
+		CompressionCodec:             df["compression_codec"].(string),
 		Format:                       vla.format,
 		FormatVersion:                uintOrDefault(vla.formatVersion),
 		ResponseCondition:            vla.responseCondition,

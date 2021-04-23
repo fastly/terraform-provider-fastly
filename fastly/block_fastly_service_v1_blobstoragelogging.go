@@ -103,6 +103,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Process(d *schema.ResourceDa
 			Placement:         vla.placement,
 			ResponseCondition: vla.responseCondition,
 			FileMaxBytes:      uint(resource["file_max_bytes"].(int)),
+			CompressionCodec:  resource["compression_codec"].(string),
 		}
 
 		log.Printf("[DEBUG] Blob Storage logging create opts: %#v", opts)
@@ -281,6 +282,12 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Register(s *schema.Resource)
 			Optional:    true,
 			Description: "Maximum size of an uploaded log file, if non-zero.",
 		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -341,6 +348,7 @@ func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]i
 			"placement":          bs.Placement,
 			"response_condition": bs.ResponseCondition,
 			"file_max_bytes":     bs.FileMaxBytes,
+			"compression_codec":  bs.CompressionCodec,
 		}
 
 		// prune any empty values that come from the default string value in structs

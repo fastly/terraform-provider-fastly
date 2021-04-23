@@ -145,7 +145,7 @@ BUG FIXES:
 
 NOTES:
 
-* provider: Add a [CONTRIBUTING.md](https://github.com/fastly/terraform-provider-fastly/blob/master/CONTRIBUTING.md) containing contributing guidlines and documentation. ([#305](https://github.com/fastly/terraform-provider-fastly/pull/307))
+* provider: Add a [CONTRIBUTING.md](https://github.com/fastly/terraform-provider-fastly/blob/main/CONTRIBUTING.md) containing contributing guidlines and documentation. ([#305](https://github.com/fastly/terraform-provider-fastly/pull/307))
 
 ## 0.20.0 (August 10, 2020)
 

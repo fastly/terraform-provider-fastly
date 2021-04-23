@@ -106,6 +106,9 @@ func (h *KinesisServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 		if v, ok := modified["secret_key"]; ok {
 			opts.SecretKey = gofastly.String(v.(string))
 		}
+		if v, ok := modified["iam_role"]; ok {
+			opts.IAMRole = gofastly.String(v.(string))
+		}
 		if v, ok := modified["format"]; ok {
 			opts.Format = gofastly.String(v.(string))
 		}
@@ -142,6 +145,10 @@ func (h *KinesisServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 	}
 
 	ell := flattenKinesis(kinesisList)
+
+	for _, element := range ell {
+		element = h.pruneVCLLoggingAttributes(element)
+	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
 		log.Printf("[WARN] Error setting Kinesis logging endpoints for (%s): %s", d.Id(), err)
@@ -182,6 +189,7 @@ func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]interface{} {
 			"region":             ll.Region,
 			"access_key":         ll.AccessKey,
 			"secret_key":         ll.SecretKey,
+			"iam_role":           ll.IAMRole,
 			"format":             ll.Format,
 			"format_version":     ll.FormatVersion,
 			"placement":          ll.Placement,
@@ -213,6 +221,7 @@ func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap interface{}, ser
 		Region:            df["region"].(string),
 		AccessKey:         df["access_key"].(string),
 		SecretKey:         df["secret_key"].(string),
+		IAMRole:           df["iam_role"].(string),
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
@@ -254,16 +263,23 @@ func (h *KinesisServiceAttributeHandler) Register(s *schema.Resource) error {
 
 		"access_key": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "The AWS access key to be used to write to the stream",
 		},
 
 		"secret_key": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "The AWS secret access key to authenticate with",
+		},
+
+		"iam_role": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.",
+			Sensitive:   false,
 		},
 	}
 

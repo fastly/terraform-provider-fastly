@@ -86,6 +86,8 @@ $ terraform plan
 ```
 You will then be able to set breakpoints and trace the provider's execution using the debugger as you would expect.
 
+The implementation for setting up debug mode presumes Terraform 0.13.x is being used. If you're using Terraform 0.12.x you'll need to manually modify the value assigned to `TF_REATTACH_PROVIDERS` so that the key `"fastly/fastly"` becomes `"registry.terraform.io/-/fastly"`. See HashiCorp's ["Support for Debuggable Provider Binaries"](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html#support-for-debuggable-provider-binaries) for more details.
+
 ## Testing
 
 In order to test the provider, you can simply run `make test`.

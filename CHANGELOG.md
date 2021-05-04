@@ -12,7 +12,7 @@ DOCUMENTATION:
 
 * Update debug mode instructions for Terraform 0.12.x [#405](https://github.com/fastly/terraform-provider-fastly/pull/405)
 
-TECH DEBT:
+OTHER:
 
 * Replace `master` with `main`. [#404](https://github.com/fastly/terraform-provider-fastly/pull/404)
 

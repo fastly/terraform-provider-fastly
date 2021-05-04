@@ -1,4 +1,20 @@
-## 0.29.0 (Unreleased)
+## 0.30.0 (Unreleased)
+
+## 0.29.0 (May 4, 2021)
+
+ENHANCEMENTS:
+
+* Add support for file_max_bytes configuration for azure logging endpoint [#398](https://github.com/fastly/terraform-provider-fastly/pull/398)
+* Support usage of IAM role in S3 and Kinesis logging endpoints [#403](https://github.com/fastly/terraform-provider-fastly/pull/403)
+* Add support for compression_codec to logging file sink endpoints [#402](https://github.com/fastly/terraform-provider-fastly/pull/402)
+
+DOCUMENTATION:
+
+* Update debug mode instructions for TF 0.12.x [#405](https://github.com/fastly/terraform-provider-fastly/pull/405)
+
+TECH DEBT:
+
+* Replace master with main. [#404](https://github.com/fastly/terraform-provider-fastly/pull/404)
 
 ## 0.28.2 (April 9, 2021)
 

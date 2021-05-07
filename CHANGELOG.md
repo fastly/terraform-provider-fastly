@@ -1,5 +1,11 @@
 ## 0.30.0 (Unreleased)
 
+## 0.29.1 (May 7, 2021)
+
+BUG FIXES:
+
+* Fix Header resource key names [#407](https://github.com/fastly/terraform-provider-fastly/pull/407)
+
 ## 0.29.0 (May 4, 2021)
 
 ENHANCEMENTS:

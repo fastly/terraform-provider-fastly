@@ -115,10 +115,10 @@ func (h *HeaderServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 		if v, ok := modified["type"]; ok {
 			opts.Type = gofastly.PHeaderType(gofastly.HeaderType(v.(string)))
 		}
-		if v, ok := modified["dst"]; ok {
+		if v, ok := modified["destination"]; ok {
 			opts.Destination = gofastly.String(v.(string))
 		}
-		if v, ok := modified["src"]; ok {
+		if v, ok := modified["source"]; ok {
 			opts.Source = gofastly.String(v.(string))
 		}
 		if v, ok := modified["regex"]; ok {

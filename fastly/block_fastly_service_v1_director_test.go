@@ -193,6 +193,86 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_directors_basic_compute(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+
+	createdDir1 := gofastly.Director{
+		ServiceVersion: 1,
+		Name:           "mydirector",
+		Type:           3,
+		Quorum:         75,
+		Capacity:       100,
+		Retries:        5,
+	}
+
+	updatedDir1 := gofastly.Director{
+		ServiceVersion: 1,
+		Name:           "mydirector",
+		Type:           4,
+		Quorum:         30,
+		Capacity:       25,
+		Retries:        10,
+	}
+
+	createdDir2 := gofastly.Director{
+		ServiceVersion: 1,
+		Name:           "unchangeddirector",
+		Type:           3,
+		Quorum:         75,
+		Capacity:       100,
+		Retries:        5,
+	}
+
+	// Updated director should be the same as the created ones
+	updatedDir2 := createdDir2
+
+	updatedDir3 := gofastly.Director{
+		ServiceVersion: 1,
+		Name:           "myotherdirector",
+		Type:           3,
+		Quorum:         75,
+		Capacity:       100,
+		Retries:        5,
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDirectorsComputeConfig(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1DirectorsAttributes(
+						&service,
+						[]*gofastly.Director{&createdDir1, &createdDir2}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "director.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceV1DirectorsComputeConfig_update(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceV1DirectorsAttributes(
+						&service,
+						[]*gofastly.Director{&updatedDir1, &updatedDir2, &updatedDir3}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "director.#", "3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyServiceV1DirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -321,6 +401,109 @@ resource "fastly_service_v1" "foo" {
     name = "director_www_demo"
     type = 3
     backends = [ "www", "demo" ]
+  }
+
+  force_destroy = true
+}`, name, domain)
+}
+
+func testAccServiceDirectorsComputeConfig(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "developer.fastly.com"
+    name    = "origin old"
+  }
+
+  backend {
+    address = "apps.fastly.com"
+    name    = "origin apps"
+    weight  = 1
+  }
+
+  director {
+    name = "mydirector"
+    type = 3
+    backends = [ "origin old" ]
+  }
+
+  director {
+    name = "unchangeddirector"
+    type = 3
+    backends = [ "origin apps" ]
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+
+  force_destroy = true
+}`, name, domain)
+}
+
+func testAccServiceV1DirectorsComputeConfig_update(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "developer.fastly.com"
+    name    = "origin new"
+  }
+
+  backend {
+    address = "apps.fastly.com"
+    name    = "origin apps"
+    weight  = 9
+  }
+
+  backend {
+    address = "www.fastly.com"
+    name    = "origin x"
+  }
+
+  backend {
+    address = "www.fastlydemo.net"
+    name    = "origin y"
+  }
+
+  director {
+    name = "mydirector"
+    type = 4
+    quorum = 30
+    retries = 10
+    capacity = 25
+    backends = [ "origin new" ]
+  }
+
+  director {
+    name = "unchangeddirector"
+    type = 3
+    backends = [ "origin apps" ]
+  }
+
+  director {
+    name = "myotherdirector"
+    type = 3
+    backends = [ "origin x", "origin y" ]
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true

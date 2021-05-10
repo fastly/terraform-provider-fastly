@@ -42,39 +42,6 @@ resource "fastly_service_compute" "demo" {
 }
 ```
 
-Basic usage with [custom Director](https://developer.fastly.com/reference/api/load-balancing/directors/director/):
-
-```hcl
-resource "fastly_service_compute" "demo" {
-    name = "demofastly"
-
-    domain {
-      name    = "demo.notexample.com"
-      comment = "demo"
-    }
-
-    backend {
-      address = "127.0.0.1"
-      name    = "localhost"
-      port    = 80
-    }
-
-    package {
-      filename = "package.tar.gz"
-      source_code_hash = filesha512("package.tar.gz")
-    }
-
-    director {
-      name = "mydirector"
-      quorum = 0
-      type = 3
-      backends = [ "origin1", "origin2" ]
-    }
-
-    force_destroy = true
-}
-```
-
 
 
 ### package block

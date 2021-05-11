@@ -193,12 +193,16 @@ func TestAccFastlyServiceV1_directors_basic(t *testing.T) {
 	})
 }
 
+// This test validates that two directors are created successfully
+// (dir1 and dir2), and in the next Terraform run the first
+// director is updated (dir1Update) while the second director is unchanged
+// and a third director is added (dir3).
 func TestAccFastlyServiceV1_directors_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	createdDir1 := gofastly.Director{
+	dir1 := gofastly.Director{
 		ServiceVersion: 1,
 		Name:           "mydirector",
 		Type:           3,
@@ -207,7 +211,7 @@ func TestAccFastlyServiceV1_directors_basic_compute(t *testing.T) {
 		Retries:        5,
 	}
 
-	updatedDir1 := gofastly.Director{
+	dir1Update := gofastly.Director{
 		ServiceVersion: 1,
 		Name:           "mydirector",
 		Type:           4,
@@ -216,7 +220,7 @@ func TestAccFastlyServiceV1_directors_basic_compute(t *testing.T) {
 		Retries:        10,
 	}
 
-	createdDir2 := gofastly.Director{
+	dir2 := gofastly.Director{
 		ServiceVersion: 1,
 		Name:           "unchangeddirector",
 		Type:           3,
@@ -225,10 +229,7 @@ func TestAccFastlyServiceV1_directors_basic_compute(t *testing.T) {
 		Retries:        5,
 	}
 
-	// Updated director should be the same as the created ones
-	updatedDir2 := createdDir2
-
-	updatedDir3 := gofastly.Director{
+	dir3 := gofastly.Director{
 		ServiceVersion: 1,
 		Name:           "myotherdirector",
 		Type:           3,
@@ -243,12 +244,12 @@ func TestAccFastlyServiceV1_directors_basic_compute(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDirectorsComputeConfig(name, domainName1),
+				Config: testAccServiceV1DirectorsComputeConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(
 						&service,
-						[]*gofastly.Director{&createdDir1, &createdDir2}),
+						[]*gofastly.Director{&dir1, &dir2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -262,7 +263,7 @@ func TestAccFastlyServiceV1_directors_basic_compute(t *testing.T) {
 					testAccCheckServiceV1Exists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceV1DirectorsAttributes(
 						&service,
-						[]*gofastly.Director{&updatedDir1, &updatedDir2, &updatedDir3}),
+						[]*gofastly.Director{&dir1Update, &dir2, &dir3}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -407,7 +408,7 @@ resource "fastly_service_v1" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceDirectorsComputeConfig(name, domain string) string {
+func testAccServiceV1DirectorsComputeConfig(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"
@@ -442,7 +443,7 @@ resource "fastly_service_compute" "foo" {
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
@@ -503,7 +504,7 @@ resource "fastly_service_compute" "foo" {
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true

@@ -82,6 +82,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 - **blobstoragelogging** (Block Set) (see [below for nested schema](#nestedblock--blobstoragelogging))
 - **comment** (String) Description field for the service. Default `Managed by Terraform`
 - **dictionary** (Block Set) (see [below for nested schema](#nestedblock--dictionary))
+- **director** (Block Set) (see [below for nested schema](#nestedblock--director))
 - **force_destroy** (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - **gcslogging** (Block Set) (see [below for nested schema](#nestedblock--gcslogging))
 - **healthcheck** (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
@@ -228,6 +229,24 @@ Optional:
 Read-Only:
 
 - **dictionary_id** (String) The ID of the dictionary
+
+
+<a id="nestedblock--director"></a>
+### Nested Schema for `director`
+
+Required:
+
+- **backends** (Set of String) Names of defined backends to map the director to. Example: `[ "origin1", "origin2" ]`
+- **name** (String) Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource
+
+Optional:
+
+- **capacity** (Number) Load balancing weight for the backends. Default `100`
+- **comment** (String) An optional comment about the Director
+- **quorum** (Number) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`
+- **retries** (Number) How many backends to search if it fails. Default `5`
+- **shield** (String) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response
+- **type** (Number) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`
 
 
 <a id="nestedblock--gcslogging"></a>

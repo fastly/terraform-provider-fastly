@@ -1,4 +1,10 @@
-## 0.30.0 (Unreleased)
+## 0.31.0 (Unreleased)
+
+## 0.30.0 (May 12, 2021)
+
+ENHANCEMENTS:
+
+* Add director support for compute resource [#410](https://github.com/fastly/terraform-provider-fastly/pull/410)
 
 ## 0.29.1 (May 7, 2021)
 

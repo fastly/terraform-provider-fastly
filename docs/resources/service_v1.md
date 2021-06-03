@@ -550,7 +550,7 @@ Optional:
 - **check_interval** (Number) How often to run the Healthcheck in milliseconds. Default `5000`
 - **expected_response** (Number) The status code expected from the host. Default `200`
 - **http_version** (String) Whether to use version 1.0 or 1.1 HTTP. Default `1.1`
-- **initial** (Number) When loading a config, the initial number of probes to be seen as OK. Default `2`
+- **initial** (Number) When loading a config, the initial number of probes to be seen as OK. Default `3`
 - **method** (String) Which HTTP method to use. Default `HEAD`
 - **threshold** (Number) How many Healthchecks must succeed to be considered healthy. Default `3`
 - **timeout** (Number) Timeout in milliseconds. Default `500`

@@ -223,8 +223,8 @@ func (h *HealthCheckServiceAttributeHandler) Register(s *schema.Resource) error 
 				"initial": {
 					Type:        schema.TypeInt,
 					Optional:    true,
-					Default:     2,
-					Description: "When loading a config, the initial number of probes to be seen as OK. Default `2`",
+					Default:     3,
+					Description: "When loading a config, the initial number of probes to be seen as OK. Default `3`",
 				},
 				"method": {
 					Type:        schema.TypeString,

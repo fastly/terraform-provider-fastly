@@ -551,6 +551,42 @@ func TestAccFastlyServiceV1_createDefaultTTL(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_brokenSnippet(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.test", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_brokenSnippet(name, domain, "backend1", `if (req.url !~ "^/anything") {
+                       set req.url = "/anything" req.url;
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+				),
+			},
+			{
+				Config: testAccServiceV1Config_brokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {
+                       set req.url = "/anything" req.url
+                     }`),
+				ExpectError: regexp.MustCompile(`Invalid configuration for Fastly Service`),
+			},
+			{
+				Config: testAccServiceV1Config_brokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {
+                       set req.url = "/anything" req.url;
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceV1_createZeroDefaultTTL(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -773,6 +809,33 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, name, ttl, domain, backend, backend2)
+}
+
+func testAccServiceV1Config_brokenSnippet(name, domain, backendName, snippet string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+    name           = "%s"
+    activate       = true
+    force_destroy = true
+
+    backend {
+        address = "httpbin.org"
+        name = "%s"
+    }
+
+    domain {
+        name = "%s"
+    }
+
+    snippet {
+        content  = <<-EOT
+            %s
+        EOT
+        name     = "url rewrite"
+        priority = 100
+        type     = "recv"
+    }
+}`, name, backendName, domain, snippet)
 }
 
 func testSweepServices(region string) error {

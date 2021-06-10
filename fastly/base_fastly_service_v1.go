@@ -3,9 +3,10 @@ package fastly
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -360,7 +361,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			// The new version number is named "Number", but it's actually a string.
 			latestVersion = newVersion.Number
-			d.Set("cloned_version", latestVersion)
 
 			// New versions are not immediately found in the API, or are not
 			// immediately mutable, so we need to sleep a few and let Fastly ready
@@ -409,6 +409,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
+		err = d.Set("cloned_version", latestVersion)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	shouldActivate := d.Get("activate").(bool)

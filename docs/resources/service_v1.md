@@ -1012,6 +1012,7 @@ Required:
 
 Optional:
 
+- **acl** (String) The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **domain** (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
@@ -1022,7 +1023,7 @@ Optional:
 - **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **redundancy** (String) The S3 redundancy level. Should be formatted; one of: `standard`, `reduced_redundancy` or null. Default `null`
+- **redundancy** (String) The S3 storage class (redundancy level). Should be one of: `standard`, `reduced_redundancy`, `standard_ia`, or `onezone_ia`
 - **response_condition** (String) Name of blockAttributes condition to apply this logging.
 - **s3_access_key** (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
 - **s3_iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`

@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -70,6 +71,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"server_side_encryption":            gofastly.S3ServerSideEncryptionAES,
 					"server_side_encryption_kms_key_id": "kmskey",
 					"compression_codec":                 "zstd",
+					"acl":                               gofastly.S3AccessControlList(""),
 				},
 			},
 		},
@@ -93,6 +95,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					Redundancy:                   "reduced_redundancy",
 					ServerSideEncryptionKMSKeyID: "kmskey",
 					ServerSideEncryption:         gofastly.S3ServerSideEncryptionAES,
+					ACL:                          gofastly.S3AccessControlListPrivate,
 				},
 			},
 			local: []map[string]interface{}{
@@ -114,16 +117,19 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"redundancy":                        gofastly.S3RedundancyReduced,
 					"server_side_encryption":            gofastly.S3ServerSideEncryptionAES,
 					"server_side_encryption_kms_key_id": "kmskey",
+					"acl":                               gofastly.S3AccessControlListPrivate,
 				},
 			},
 		},
 	}
 
-	for _, c := range cases {
-		out := flattenS3s(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching:%s", diff)
-		}
+	for i, c := range cases {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			out := flattenS3s(c.remote)
+			if diff := cmp.Diff(out, c.local); diff != "" {
+				t.Fatalf("Error matching:%s", diff)
+			}
+		})
 	}
 }
 
@@ -164,6 +170,7 @@ func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
 		Redundancy:        "reduced_redundancy",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
 		ResponseCondition: "response_condition_test",
+		ACL:               gofastly.S3AccessControlListAWSExecRead,
 	}
 
 	log2 := gofastly.S3{
@@ -569,6 +576,7 @@ resource "fastly_service_v1" "foo" {
     message_type = "blank"
     public_key = file("test_fixtures/fastly_test_publickey")
     redundancy = "reduced_redundancy"
+	acl = "aws-exec-read"
     gzip_level = 3
   }
 

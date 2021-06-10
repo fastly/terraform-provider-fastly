@@ -12,3 +12,5 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.4
 	github.com/stretchr/testify v1.6.1
 )
+
+replace github.com/fastly/go-fastly/v3 => github.com/opencredo/go-fastly/v3 v3.0.0-20210610083644-cf703e5fd36b

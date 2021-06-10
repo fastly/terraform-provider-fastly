@@ -3,10 +3,10 @@ package fastly
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 type S3LoggingServiceAttributeHandler struct {
@@ -150,7 +150,7 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 			opts.TimestampFormat = gofastly.String(v.(string))
 		}
 		if v, ok := modified["redundancy"]; ok {
-			opts.Redundancy = gofastly.S3Redundancy(v.(string))
+			opts.Redundancy = gofastly.S3RedundancyPtr(gofastly.S3Redundancy(v.(string)))
 		}
 		if v, ok := modified["placement"]; ok {
 			opts.Placement = gofastly.String(v.(string))
@@ -162,7 +162,10 @@ func (h *S3LoggingServiceAttributeHandler) Process(d *schema.ResourceData, lates
 			opts.ServerSideEncryptionKMSKeyID = gofastly.String(v.(string))
 		}
 		if v, ok := modified["server_side_encryption"]; ok {
-			opts.ServerSideEncryption = gofastly.S3ServerSideEncryption(v.(string))
+			opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionPtr(gofastly.S3ServerSideEncryption(v.(string)))
+		}
+		if v, ok := modified["acl"]; ok {
+			opts.ACL = gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(v.(string)))
 		}
 
 		log.Printf("[DEBUG] Update S3 Opts: %#v", opts)
@@ -234,6 +237,31 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Sensitive:   false,
 		},
 		// Optional fields
+		"acl": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Description: fmt.Sprintf("The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `%s`, `%s`, `%s`, `%s`, `%s`, `%s`, `%s`",
+				gofastly.S3AccessControlListPrivate,
+				gofastly.S3AccessControlListPublicRead,
+				gofastly.S3AccessControlListPublicReadWrite,
+				gofastly.S3AccessControlListAWSExecRead,
+				gofastly.S3AccessControlListAuthenticatedRead,
+				gofastly.S3AccessControlListBucketOwnerRead,
+				gofastly.S3AccessControlListBucketOwnerFullControl,
+			),
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+				[]string{
+					string(gofastly.S3AccessControlListPrivate),
+					string(gofastly.S3AccessControlListPublicRead),
+					string(gofastly.S3AccessControlListPublicReadWrite),
+					string(gofastly.S3AccessControlListAWSExecRead),
+					string(gofastly.S3AccessControlListAuthenticatedRead),
+					string(gofastly.S3AccessControlListBucketOwnerRead),
+					string(gofastly.S3AccessControlListBucketOwnerFullControl),
+				},
+				false,
+			)),
+		},
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -266,7 +294,16 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 		"redundancy": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "The S3 redundancy level. Should be formatted; one of: `standard`, `reduced_redundancy` or null. Default `null`",
+			Description: fmt.Sprintf("The S3 storage class (redundancy level). Should be one of: `%s`, `%s`, `%s`, or `%s`", gofastly.S3RedundancyStandard, gofastly.S3RedundancyReduced, gofastly.S3RedundancyStandardIA, gofastly.S3RedundancyOneZoneIA),
+			ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+				[]string{
+					string(gofastly.S3RedundancyStandard),
+					string(gofastly.S3RedundancyReduced),
+					string(gofastly.S3RedundancyStandardIA),
+					string(gofastly.S3RedundancyOneZoneIA),
+				},
+				false,
+			)),
 		},
 		"public_key": {
 			Type:        schema.TypeString,
@@ -389,6 +426,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 			"server_side_encryption":            s.ServerSideEncryption,
 			"server_side_encryption_kms_key_id": s.ServerSideEncryptionKMSKeyID,
 			"compression_codec":                 s.CompressionCodec,
+			"acl":                               s.ACL,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -429,14 +467,8 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, servic
 		FormatVersion:                uintOrDefault(vla.formatVersion),
 		ResponseCondition:            vla.responseCondition,
 		Placement:                    vla.placement,
-	}
-
-	redundancy := strings.ToLower(df["redundancy"].(string))
-	switch redundancy {
-	case "standard":
-		opts.Redundancy = gofastly.S3RedundancyStandard
-	case "reduced_redundancy":
-		opts.Redundancy = gofastly.S3RedundancyReduced
+		Redundancy:                   gofastly.S3Redundancy(df["redundancy"].(string)),
+		ACL:                          gofastly.S3AccessControlList(df["acl"].(string)),
 	}
 
 	encryption := df["server_side_encryption"].(string)

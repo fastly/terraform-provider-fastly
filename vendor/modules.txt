@@ -211,7 +211,7 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v3 v3.6.0 => github.com/opencredo/go-fastly/v3 v3.0.0-20210610083644-cf703e5fd36b
+# github.com/fastly/go-fastly/v3 v3.7.0
 ## explicit
 github.com/fastly/go-fastly/v3/fastly
 # github.com/fatih/color v1.7.0
@@ -593,4 +593,3 @@ google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/pluginpb
 # gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 gopkg.in/yaml.v3
-# github.com/fastly/go-fastly/v3 => github.com/opencredo/go-fastly/v3 v3.0.0-20210610083644-cf703e5fd36b

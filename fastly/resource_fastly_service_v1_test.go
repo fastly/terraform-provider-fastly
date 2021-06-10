@@ -551,6 +551,11 @@ func TestAccFastlyServiceV1_createDefaultTTL(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceV1_brokenSnippet tests that a service can still be updated after it has failed during an apply.
+// This avoids a bug when activate=true, where setting an invalid snippet causes the resourceServiceUpdate function to
+// return early before activating the version. This broke the assumption that cloned_version always tracks the active
+// version when activate=true, and means that the version we read from, and the one we clone from in order to make changes,
+// are different, meaning the plan is applied to a different version and 409 conflict errors can occur.
 func TestAccFastlyServiceV1_brokenSnippet(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

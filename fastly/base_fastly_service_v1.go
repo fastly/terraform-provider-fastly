@@ -513,8 +513,14 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// If activate is false, then read the state from cloned_version instead of
 	// the active version.
+	// Otherwise, cloned_version should track the active version
 	if d.Get("activate") == false {
 		s.ActiveVersion.Number = d.Get("cloned_version").(int)
+	} else {
+		err := d.Set("cloned_version", s.ActiveVersion.Number)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll

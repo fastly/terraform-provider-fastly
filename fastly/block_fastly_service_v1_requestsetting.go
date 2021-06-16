@@ -119,7 +119,7 @@ func (h *RequestSettingServiceAttributeHandler) Process(d *schema.ResourceData, 
 			opts.BypassBusyWait = gofastly.CBool(v.(bool))
 		}
 		if v, ok := modified["max_stale_age"]; ok {
-			opts.MaxStaleAge = gofastly.Uint(v.(uint))
+			opts.MaxStaleAge = gofastly.Uint(uint(v.(int)))
 		}
 		if v, ok := modified["hash_keys"]; ok {
 			opts.HashKeys = gofastly.String(v.(string))

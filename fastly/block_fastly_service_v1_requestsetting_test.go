@@ -67,6 +67,13 @@ func TestAccFastlyServiceV1RequestSetting_basic(t *testing.T) {
 		XForwardedFor:    "append",
 		MaxStaleAge:      uint(90),
 	}
+	rq2 := gofastly.RequestSetting{
+		Name:             "alt_backend",
+		RequestCondition: "serve_alt_backend",
+		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
+		XForwardedFor:    "append",
+		MaxStaleAge:      uint(900),
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -74,10 +81,23 @@ func TestAccFastlyServiceV1RequestSetting_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1RequestSetting(name, domainName1),
+				Config: testAccServiceV1RequestSetting(name, domainName1, "90"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1RequestSettingsAttributes(&service, []*gofastly.RequestSetting{&rq1}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "request_setting.#", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "condition.#", "1"),
+				),
+			},
+			{
+				Config: testAccServiceV1RequestSetting(name, domainName1, "900"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1RequestSettingsAttributes(&service, []*gofastly.RequestSetting{&rq2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -134,7 +154,7 @@ func testAccCheckFastlyServiceV1RequestSettingsAttributes(service *gofastly.Serv
 	}
 }
 
-func testAccServiceV1RequestSetting(name, domain string) string {
+func testAccServiceV1RequestSetting(name, domain, maxStaleAge string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
@@ -167,11 +187,11 @@ resource "fastly_service_v1" "foo" {
     default_host      = "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"
     name              = "alt_backend"
     request_condition = "serve_alt_backend"
-    max_stale_age     = 90
+    max_stale_age     = %s
   }
 
   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, maxStaleAge)
 }

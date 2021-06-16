@@ -456,7 +456,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] %s for ID (%s)", fastlyNoServiceFoundErr, d.Id())
 			d.SetId("")
-			return nil
+			return diag.FromErr(err)
 		}
 		return diag.FromErr(err)
 	}

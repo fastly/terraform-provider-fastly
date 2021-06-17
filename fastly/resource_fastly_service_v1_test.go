@@ -244,6 +244,74 @@ func TestAccFastlyServiceV1_updateBackend(t *testing.T) {
 	})
 }
 
+// TestAccFastlyServiceV1_activateNewVersionExternally tests whether things break when a new version is cloned and
+// activated outside of Terraform. There has been a bug where the version used for reading the state, and the version
+// that gets cloned in order to make updates, are different when a new version is activated externally. In this case, a
+// 409 conflict error is produced by this test because it reads the new version when making a plan, plans to re-add in
+// the deleted backend, but clones the original version which still had the backend and fails with a conflict.
+func TestAccFastlyServiceV1_activateNewVersionExternally(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+
+	activateNewVersion := func(*terraform.State) error {
+		conn := testAccProvider.Meta().(*FastlyClient).conn
+		version, err := conn.CloneVersion(&gofastly.CloneVersionInput{
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
+		})
+		if err != nil {
+			return err
+		}
+
+		err = conn.DeleteBackend(&gofastly.DeleteBackendInput{
+			ServiceID:      service.ID,
+			ServiceVersion: version.Number,
+			Name:           "tf-test-backend",
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
+			ServiceID:      service.ID,
+			ServiceVersion: version.Number,
+		})
+		return err
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_backend_update(name, domain, backendName, backendName2, 3400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName, backendName2}),
+					activateNewVersion,
+				),
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: testAccServiceV1Config_backend_update(name, domain, backendName, backendName2, 3400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName, backendName2}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "active_version", "3"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "backend.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceV1_updateInvalidBackend(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

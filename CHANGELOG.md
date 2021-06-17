@@ -1,4 +1,15 @@
-## 0.32.0 (Unreleased)
+## 0.33.0 (Unreleased)
+
+## 0.32.0 (June 17, 2021)
+
+ENHANCEMENTS:
+
+* Return 404 for non-existent service instead of a low-level nil entry error [#422](https://github.com/fastly/terraform-provider-fastly/pull/422)
+
+BUG FIXES:
+
+* Fix runtime panic in request-settings caused by incorrect type cast [#424](https://github.com/fastly/terraform-provider-fastly/pull/424)
+* When `activate=true`, always read and clone from the active version [#423](https://github.com/fastly/terraform-provider-fastly/pull/423)
 
 ## 0.31.0 (June 14, 2021)
 

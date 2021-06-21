@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyWAFRulesDetermineRevision(t *testing.T) {
+func TestFastlyWAFRulesDetermineRevision(t *testing.T) {
 
 	cases := []struct {
 		remote  []*gofastly.WAFRuleRevision
@@ -63,7 +63,7 @@ func TestAccFastlyWAFRulesDetermineRevision(t *testing.T) {
 	}
 }
 
-func TestAccFastlyWAFRulesFlattenWAFRules(t *testing.T) {
+func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFRule
 		local  []map[string]interface{}

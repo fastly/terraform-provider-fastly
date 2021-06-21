@@ -3,13 +3,13 @@ package fastly
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"sort"
 	"strconv"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -67,7 +67,9 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	conn := meta.(*FastlyClient).conn
-	input := &gofastly.ListAllWAFRulesInput{}
+	input := &gofastly.ListAllWAFRulesInput{
+		Include: "waf_rule_revisions",
+	}
 
 	if v, ok := d.GetOk("publishers"); ok {
 		l := v.([]interface{})

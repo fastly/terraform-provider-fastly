@@ -28,6 +28,14 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		opts.DefaultHost = gofastly.String(attr.(string))
 	}
 
+	if attr, ok := d.GetOk("stale_if_error"); ok {
+		opts.StaleIfError = gofastly.Bool(attr.(bool))
+	}
+
+	if attr, ok := d.GetOk("stale_if_error_ttl"); ok {
+		opts.StaleIfErrorTTL = gofastly.Uint(uint(attr.(int)))
+	}
+
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
 	_, err := conn.UpdateSettings(&opts)
 
@@ -42,6 +50,8 @@ func (h *SettingsServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 	if settings, err := conn.GetSettings(&settingsOpts); err == nil {
 		d.Set("default_host", settings.DefaultHost)
 		d.Set("default_ttl", int(settings.DefaultTTL))
+		d.Set("stale_if_error", bool(settings.StaleIfError))
+		d.Set("stale_if_error_ttl", int(settings.StaleIfErrorTTL))
 	} else {
 		return fmt.Errorf("[ERR] Error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
@@ -49,7 +59,7 @@ func (h *SettingsServiceAttributeHandler) Read(d *schema.ResourceData, s *gofast
 }
 
 func (h *SettingsServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
-	return d.HasChanges("default_ttl", "default_host")
+	return d.HasChanges("default_ttl", "default_host", "stale_if_error", "stale_if_error_ttl")
 }
 
 // If the requested default_ttl is 0, and this is the first
@@ -71,6 +81,18 @@ func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Computed:    true,
+		Description: "The default hostname",
+	}
+	s.Schema["stale_if_error"] = &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "The default hostname",
+	}
+	s.Schema["stale_if_error_ttl"] = &schema.Schema{
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     43200,
 		Description: "The default hostname",
 	}
 	return nil

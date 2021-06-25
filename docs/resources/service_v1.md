@@ -276,6 +276,8 @@ $ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
 - **s3logging** (Block Set) (see [below for nested schema](#nestedblock--s3logging))
 - **snippet** (Block Set) (see [below for nested schema](#nestedblock--snippet))
 - **splunk** (Block Set) (see [below for nested schema](#nestedblock--splunk))
+- **stale_if_error** (Boolean) The default hostname
+- **stale_if_error_ttl** (Number) The default hostname
 - **sumologic** (Block Set) (see [below for nested schema](#nestedblock--sumologic))
 - **syslog** (Block Set) (see [below for nested schema](#nestedblock--syslog))
 - **vcl** (Block Set) (see [below for nested schema](#nestedblock--vcl))

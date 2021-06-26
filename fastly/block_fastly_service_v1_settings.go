@@ -26,6 +26,8 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 
 	if attr, ok := d.GetOk("default_host"); ok {
 		opts.DefaultHost = gofastly.String(attr.(string))
+	} else if d.HasChanges("default_host") {
+		opts.DefaultHost = gofastly.String("")
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
@@ -70,7 +72,6 @@ func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema["default_host"] = &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
-		Computed:    true,
 		Description: "The default hostname",
 	}
 	return nil

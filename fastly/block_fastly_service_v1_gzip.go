@@ -78,23 +78,21 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		}
 
 		if v, ok := resource["content_types"]; ok {
-			if len(v.(*schema.Set).List()) > 0 {
-				var cl []string
-				for _, c := range v.(*schema.Set).List() {
-					cl = append(cl, c.(string))
-				}
-				opts.ContentTypes = strings.Join(cl, " ")
+			var cl []string
+			d := v.([]interface{})
+			for _, elem := range d {
+				cl = append(cl, elem.(string))
 			}
+			opts.ContentTypes = strings.Join(cl, " ")
 		}
 
 		if v, ok := resource["extensions"]; ok {
-			if len(v.(*schema.Set).List()) > 0 {
-				var el []string
-				for _, e := range v.(*schema.Set).List() {
-					el = append(el, e.(string))
-				}
-				opts.Extensions = strings.Join(el, " ")
+			var el []string
+			d := v.([]interface{})
+			for _, elem := range d {
+				el = append(el, elem.(string))
 			}
+			opts.Extensions = strings.Join(el, " ")
 		}
 
 		log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
@@ -118,8 +116,30 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 			Name:           resource["name"].(string),
 		}
 
+		// NOTE: []interface{} is not comparable in Filter function
+		// covert it into string in advance and restore the original state after Filter
+		origContentTypes := make([]interface{}, len(resource["content_types"].([]interface{})))
+		origExtensions := make([]interface{}, len(resource["extensions"].([]interface{})))
+		copy(origContentTypes, resource["content_types"].([]interface{}))
+		copy(origExtensions, resource["extensions"].([]interface{}))
+
+		var cl []string
+		for _, elem := range resource["content_types"].([]interface{}) {
+			cl = append(cl, elem.(string))
+		}
+		resource["content_types"] = strings.Join(cl, " ")
+
+		var el []string
+		for _, elem := range resource["extensions"].([]interface{}) {
+			el = append(el, elem.(string))
+		}
+		resource["extensions"] = strings.Join(el, " ")
+
 		// only attempt to update attributes that have changed
 		modified := setDiff.Filter(resource, oldSet)
+
+		resource["content_types"] = origContentTypes
+		resource["extensions"] = origExtensions
 
 		// NOTE: where we transition between interface{} we lose the ability to
 		// infer the underlying type being either a uint vs an int. This
@@ -127,24 +147,10 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		// this and so we've updated the below code to convert the type asserted
 		// int into a uint before passing the value to gofastly.Uint().
 		if v, ok := modified["content_types"]; ok {
-			set := v.(*schema.Set)
-			if len(set.List()) > 0 {
-				var s []string
-				for _, elem := range set.List() {
-					s = append(s, elem.(string))
-				}
-				opts.ContentTypes = gofastly.String(strings.Join(s, " "))
-			}
+			opts.ContentTypes = gofastly.String(v.(string))
 		}
 		if v, ok := modified["extensions"]; ok {
-			set := v.(*schema.Set)
-			if len(set.List()) > 0 {
-				var s []string
-				for _, elem := range set.List() {
-					s = append(s, elem.(string))
-				}
-				opts.Extensions = gofastly.String(strings.Join(s, " "))
-			}
+			opts.Extensions = gofastly.String(v.(string))
 		}
 		if v, ok := modified["cache_condition"]; ok {
 			opts.CacheCondition = gofastly.String(v.(string))
@@ -194,13 +200,13 @@ func (h *GzipServiceAttributeHandler) Register(s *schema.Resource) error {
 				},
 				// optional fields
 				"content_types": {
-					Type:        schema.TypeSet,
+					Type:        schema.TypeList,
 					Optional:    true,
 					Description: "The content-type for each type of content you wish to have dynamically gzip'ed. Example: `[\"text/html\", \"text/css\"]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 				"extensions": {
-					Type:        schema.TypeSet,
+					Type:        schema.TypeList,
 					Optional:    true,
 					Description: "File extensions for each file type to dynamically gzip. Example: `[\"css\", \"js\"]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},

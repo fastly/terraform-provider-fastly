@@ -2,10 +2,10 @@ package fastly
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
 	"github.com/fastly/go-fastly/v3/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -68,11 +68,29 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Description: "The current state of the subscription. The list of possible states are: `pending`, `processing`, `issued`, and `renewing`.",
 				Computed:    true,
 			},
-			"managed_dns_challenge": {
-				Type:        schema.TypeMap,
-				Description: "The details required to configure DNS to respond to ACME DNS challenge in order to verify domain ownership.",
+			"managed_dns_challenges": {
+				Type:        schema.TypeSet,
+				Description: "A list of options for configuring DNS to respond to ACME DNS challenge in order to verify domain ownership.",
 				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"record_name": {
+							Type:        schema.TypeString,
+							Description: "The name of the DNS record to add. For example `_acme-challenge.example.com`.",
+							Computed:    true,
+						},
+						"record_type": {
+							Type:        schema.TypeString,
+							Description: "The type of DNS record to add, e.g. `A`, or `CNAME`.",
+							Computed:    true,
+						},
+						"record_value": {
+							Type:        schema.TypeString,
+							Description: "The value to which the DNS record should point, e.g. `xxxxx.fastly-validations.com`.",
+							Computed:    true,
+						},
+					},
+				},
 			},
 			"managed_http_challenges": {
 				Type:        schema.TypeSet,
@@ -172,24 +190,26 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	}
 
 	var managedHTTPChallenges []map[string]interface{}
-	var managedDNSChallenge map[string]string
-	for _, challenge := range subscription.Authorizations[0].Challenges {
-		if challenge.Type == "managed-dns" {
-			if len(challenge.Values) < 1 {
-				return diag.Errorf("Fastly API returned no record values for Managed DNS Challenge")
-			}
+	var managedDNSChallenges []map[string]interface{}
+	for _, domain := range subscription.Authorizations {
+		for _, challenge := range domain.Challenges {
+			if challenge.Type == "managed-dns" {
+				if len(challenge.Values) < 1 {
+					return diag.Errorf("Fastly API returned no record values for Managed DNS Challenges")
+				}
 
-			managedDNSChallenge = map[string]string{
-				"record_type":  challenge.RecordType,
-				"record_name":  challenge.RecordName,
-				"record_value": challenge.Values[0],
+				managedDNSChallenges = append(managedDNSChallenges, map[string]interface{}{
+					"record_type":  challenge.RecordType,
+					"record_name":  challenge.RecordName,
+					"record_value": challenge.Values[0],
+				})
+			} else {
+				managedHTTPChallenges = append(managedHTTPChallenges, map[string]interface{}{
+					"record_type":   challenge.RecordType,
+					"record_name":   challenge.RecordName,
+					"record_values": challenge.Values,
+				})
 			}
-		} else {
-			managedHTTPChallenges = append(managedHTTPChallenges, map[string]interface{}{
-				"record_type":   challenge.RecordType,
-				"record_name":   challenge.RecordName,
-				"record_values": challenge.Values,
-			})
 		}
 	}
 
@@ -221,7 +241,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("managed_dns_challenge", managedDNSChallenge)
+	err = d.Set("managed_dns_challenges", managedDNSChallenges)
 	if err != nil {
 		return diag.FromErr(err)
 	}

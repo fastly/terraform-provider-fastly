@@ -109,6 +109,8 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "stale_if_error", "true"),
 					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "stale_if_error_ttl", "43200"),
+					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "comment", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "version_comment", ""),

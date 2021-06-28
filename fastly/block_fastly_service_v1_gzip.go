@@ -78,21 +78,11 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		}
 
 		if v, ok := resource["content_types"]; ok {
-			var cl []string
-			d := v.([]interface{})
-			for _, elem := range d {
-				cl = append(cl, elem.(string))
-			}
-			opts.ContentTypes = strings.Join(cl, " ")
+			opts.ContentTypes = sliceToString(v.([]interface{}))
 		}
 
 		if v, ok := resource["extensions"]; ok {
-			var el []string
-			d := v.([]interface{})
-			for _, elem := range d {
-				el = append(el, elem.(string))
-			}
-			opts.Extensions = strings.Join(el, " ")
+			opts.Extensions = sliceToString(v.([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
@@ -117,35 +107,13 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		}
 
 		// NOTE: []interface{} is not comparable in Filter function
-		// covert it into string in advance and restore the original state after Filter
-		origContentTypes := make([]interface{}, len(resource["content_types"].([]interface{})))
-		origExtensions := make([]interface{}, len(resource["extensions"].([]interface{})))
-		copy(origContentTypes, resource["content_types"].([]interface{}))
-		copy(origExtensions, resource["extensions"].([]interface{}))
-
-		var cl []string
-		for _, elem := range resource["content_types"].([]interface{}) {
-			cl = append(cl, elem.(string))
-		}
-		resource["content_types"] = strings.Join(cl, " ")
-
-		var el []string
-		for _, elem := range resource["extensions"].([]interface{}) {
-			el = append(el, elem.(string))
-		}
-		resource["extensions"] = strings.Join(el, " ")
+		// covert it into string in advance
+		resource["content_types"] = sliceToString(resource["content_types"].([]interface{}))
+		resource["extensions"] = sliceToString(resource["extensions"].([]interface{}))
 
 		// only attempt to update attributes that have changed
 		modified := setDiff.Filter(resource, oldSet)
 
-		resource["content_types"] = origContentTypes
-		resource["extensions"] = origExtensions
-
-		// NOTE: where we transition between interface{} we lose the ability to
-		// infer the underlying type being either a uint vs an int. This
-		// materializes as a panic (yay) and so it's only at runtime we discover
-		// this and so we've updated the below code to convert the type asserted
-		// int into a uint before passing the value to gofastly.Uint().
 		if v, ok := modified["content_types"]; ok {
 			opts.ContentTypes = gofastly.String(v.(string))
 		}
@@ -238,7 +206,7 @@ func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]interface{} {
 			for _, ev := range e {
 				et = append(et, ev)
 			}
-			ng["extensions"] = schema.NewSet(schema.HashString, et)
+			ng["extensions"] = et
 		}
 
 		if g.ContentTypes != "" {
@@ -247,7 +215,7 @@ func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]interface{} {
 			for _, cv := range c {
 				ct = append(ct, cv)
 			}
-			ng["content_types"] = schema.NewSet(schema.HashString, ct)
+			ng["content_types"] = ct
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -261,4 +229,12 @@ func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]interface{} {
 	}
 
 	return gl
+}
+
+func sliceToString(src []interface{}) string {
+	var result []string
+	for _, el := range src {
+		result = append(result, el.(string))
+	}
+	return strings.Join(result, " ")
 }

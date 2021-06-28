@@ -19,15 +19,10 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 	opts := gofastly.UpdateSettingsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: latestVersion,
+		DefaultHost:    gofastly.String(d.Get("default_host").(string)),
 		// default_ttl has the same default value of 3600 that is provided by
 		// the Fastly API, so it's safe to include here
 		DefaultTTL: uint(d.Get("default_ttl").(int)),
-	}
-
-	if attr, ok := d.GetOk("default_host"); ok {
-		opts.DefaultHost = gofastly.String(attr.(string))
-	} else if d.HasChanges("default_host") {
-		opts.DefaultHost = gofastly.String("")
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)

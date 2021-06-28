@@ -107,7 +107,7 @@ func (h *GzipServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 		}
 
 		// NOTE: []interface{} is not comparable in Filter function
-		// covert it into string in advance
+		// convert it into string in advance
 		resource["content_types"] = sliceToString(resource["content_types"].([]interface{}))
 		resource["extensions"] = sliceToString(resource["extensions"].([]interface{}))
 

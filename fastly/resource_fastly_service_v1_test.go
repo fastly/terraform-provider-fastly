@@ -619,6 +619,40 @@ func TestAccFastlyServiceV1_createDefaultTTL(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_defaultHost(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	defaultHost := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_default_host(name, domain, defaultHost),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "default_host", defaultHost),
+				),
+			},
+			// remove default_host
+			{
+				Config: testAccServiceV1Config_default_host(name, domain, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "default_host", ""),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "active_version", "2"),
+				),
+			},
+		},
+	})
+}
+
 // TestAccFastlyServiceV1_brokenSnippet tests that a service can still be updated after it has failed during an apply.
 // This avoids a bug when activate=true, where setting an invalid snippet causes the resourceServiceUpdate function to
 // return early before activating the version. This broke the assumption that cloned_version always tracks the active
@@ -723,6 +757,27 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, name, domain)
+}
+
+func testAccServiceV1Config_default_host(name, domain, defaultHost string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  default_host = "%s"
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  force_destroy = true
+}`, name, domain, defaultHost)
 }
 
 func testAccServiceV1Config_basicUpdate(name, comment, versionComment, domain string) string {

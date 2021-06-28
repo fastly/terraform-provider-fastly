@@ -24,16 +24,15 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		DefaultTTL: uint(d.Get("default_ttl").(int)),
 	}
 
+	val := uint(d.Get("stale_if_error_ttl").(int))
+	opts.StaleIfErrorTTL = &val
+
 	if attr, ok := d.GetOk("default_host"); ok {
 		opts.DefaultHost = gofastly.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("stale_if_error"); ok {
 		opts.StaleIfError = gofastly.Bool(attr.(bool))
-	}
-
-	if attr, ok := d.GetOk("stale_if_error_ttl"); ok {
-		opts.StaleIfErrorTTL = gofastly.Uint(uint(attr.(int)))
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)

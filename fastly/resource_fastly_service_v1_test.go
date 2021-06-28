@@ -613,6 +613,8 @@ func TestAccFastlyServiceV1_createDefaultTTL(t *testing.T) {
 					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "default_ttl", "3400"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "stale_if_error_ttl", "43200"),
 				),
 			},
 		},
@@ -672,12 +674,16 @@ func TestAccFastlyServiceV1_createZeroDefaultTTL(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceV1Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceV1Config_backendTTL(name, domain, backendName, 0),
+				Config: testAccServiceV1Config_backendZeroTTL(name, domain, backendName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{backendName}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "default_ttl", "0"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "stale_if_error", "true"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "stale_if_error_ttl", "0"),
 				),
 			},
 		},
@@ -843,6 +849,7 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   default_ttl = %d
+  stale_if_error = true
 
   domain {
     name    = "%s"
@@ -858,12 +865,37 @@ resource "fastly_service_v1" "foo" {
 }`, name, ttl, domain, backend)
 }
 
+func testAccServiceV1Config_backendZeroTTL(name, domain, backend string, ttl uint) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  default_ttl = %d
+  stale_if_error = true
+  stale_if_error_ttl = 0
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  force_destroy = true
+}`, name, ttl, domain, backend)
+}
+
+
 func testAccServiceV1Config_backend_update(name, domain, backend, backend2 string, ttl uint) string {
 	return fmt.Sprintf(`
 resource "fastly_service_v1" "foo" {
   name = "%s"
 
-	default_ttl = %d
+  default_ttl = %d
+  stale_if_error = true
 
   domain {
     name    = "%s"

@@ -86,13 +86,13 @@ func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Whether or not stale if error should be true",
+		Description: "Enables serving a stale object if there is an error",
 	}
 	s.Schema["stale_if_error_ttl"] = &schema.Schema{
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Default:     43200,
-		Description: "The TTL for stale if error",
+		Description: "The default time-to-live (TTL) for serving the stale object for the version",
 	}
 	return nil
 }

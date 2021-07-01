@@ -614,6 +614,7 @@ func TestAccFastlyServiceV1_defaultHost(t *testing.T) {
 						"fastly_service_v1.foo", "default_ttl", "3400"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "stale_if_error_ttl", "43200"),
+					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "default_host", defaultHost),
 				),
 			},
@@ -919,7 +920,6 @@ resource "fastly_service_v1" "foo" {
   force_destroy = true
 }`, name, ttl, domain, backend)
 }
-
 
 func testAccServiceV1Config_backend_update(name, domain, backend, backend2 string, ttl uint) string {
 	return fmt.Sprintf(`

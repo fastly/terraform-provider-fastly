@@ -295,7 +295,7 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed(),
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 		"message_type": {
 			Type:             schema.TypeString,

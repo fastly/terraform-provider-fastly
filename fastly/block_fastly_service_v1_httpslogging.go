@@ -250,7 +250,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Optional:         true,
 			Description:      "A secure certificate to authenticate the server with. Must be in PEM format",
 			Sensitive:        true,
-			ValidateDiagFunc: validateStringTrimmed(),
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"tls_client_cert": {
@@ -258,7 +258,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Optional:         true,
 			Description:      "The client certificate used to make authenticated requests. Must be in PEM format",
 			Sensitive:        true,
-			ValidateDiagFunc: validateStringTrimmed(),
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"tls_client_key": {
@@ -266,7 +266,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Optional:         true,
 			Description:      "The client private key used to make authenticated requests. Must be in PEM format",
 			Sensitive:        true,
-			ValidateDiagFunc: validateStringTrimmed(),
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"tls_hostname": {

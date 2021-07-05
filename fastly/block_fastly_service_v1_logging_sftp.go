@@ -74,14 +74,14 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 			Optional:         true,
 			Description:      "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
 			Sensitive:        true,
-			ValidateDiagFunc: validateStringTrimmed(),
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"public_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed(),
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"period": {

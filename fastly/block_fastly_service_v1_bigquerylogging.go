@@ -44,10 +44,19 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 	// properly handles setting state with the StateFunc, it returns extra entries
 	// during state Gets, specifically `GetChange("bigquerylogging")` in this case.
 	filteredNewSet := schema.CopySet(newSet)
+	isRealDiff := true
 	for _, elem := range newSet.List() {
 		if v, ok := elem.(map[string]interface{})["name"]; !ok || v.(string) == "" {
 			filteredNewSet.Remove(elem)
 		}
+		if len(filteredNewSet.List()) == 0 {
+			isRealDiff = false
+		}
+	}
+
+	// newSet has no real diff other than extra entreis returned by StateFunc
+	if !isRealDiff {
+		return nil
 	}
 
 	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {

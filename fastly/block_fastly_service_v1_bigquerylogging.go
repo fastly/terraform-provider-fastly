@@ -54,7 +54,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Process(d *schema.ResourceData,
 		}
 	}
 
-	// newSet has no real diff other than extra entreis returned by StateFunc
+	// newSet has no real diff other than extra entries returned by StateFunc
 	if !isRealDiff {
 		return nil
 	}

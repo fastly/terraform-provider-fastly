@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -30,6 +31,23 @@ func TestAccFastlyServiceV1_bigquerylogging(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceV1Config_bigquery(name, bqName, secretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_bq(&service, name, bqName),
+				),
+			},
+			// update backend/domain, ensure logging config is still there
+			{
+				Config: testAccServiceV1Config_bigquery(name, bqName, secretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_bq(&service, name, bqName),
+				),
+			},
+			// delete logging config
+			{
+				Config:      testAccServiceV1Config_bigquery_delete(name),
+				ExpectError: regexp.MustCompile("BigQuery logging endpoint missing, expected: 1, got: 0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					testAccCheckFastlyServiceV1Attributes_bq(&service, name, bqName),
@@ -154,6 +172,27 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName, secretKey)
+}
+
+func testAccServiceV1Config_bigquery_delete(name string) string {
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+	}
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  force_destroy = true
+}`, name, domainName, backendName)
 }
 
 func testAccServiceV1Config_bigquery_compute(name, gcsName, secretKey string) string {

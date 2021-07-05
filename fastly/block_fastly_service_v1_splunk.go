@@ -69,21 +69,6 @@ func (h *SplunkServiceAttributeHandler) Process(d *schema.ResourceData, latestVe
 	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
-
-		// @HACK for a TF SDK Issue.
-		//
-		// This ensures that the required, `name`, field is present.
-		//
-		// If we have made it this far and `name` is not present, it is most-likely due
-		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
-		//
-		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
-		// properly handles setting state with the StateFunc, it returns extra entries
-		// during state Gets, specifically `GetChange("splunk")` in this case.
-		if v, ok := resource["name"]; !ok || v.(string) == "" {
-			continue
-		}
-
 		var vla = h.getVCLLoggingAttributes(resource)
 		opts := gofastly.CreateSplunkInput{
 			ServiceID:         d.Id(),

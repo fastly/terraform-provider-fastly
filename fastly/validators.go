@@ -3,6 +3,7 @@ package fastly
 import (
 	"encoding/pem"
 	"fmt"
+	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -174,6 +175,17 @@ func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
 
 		if numBlocks < 1 {
 			return nil, []error{fmt.Errorf("expected %s to be valid PEM-format blocks of type '%s'", key, pemType)}
+		}
+
+		return nil, nil
+	})
+}
+
+func validateStringTrimmed() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(func(val interface{}, key string) ([]string, []error) {
+		d := val.(string)
+		if d != strings.TrimSpace(d) {
+			return nil, []error{fmt.Errorf("%s must not contain trailing space characters (e.g., \\n\\t\\r\\f). Consider using trimspace() function", key)}
 		}
 
 		return nil, nil

@@ -28,7 +28,7 @@ func generateKey() (string, error) {
 
 	bytes := pem.EncodeToMemory(privateKey)
 
-	return string(bytes), nil
+	return strings.TrimSpace(string(bytes)), nil
 }
 
 func generateKeyAndCert(SANs ...string) (string, string, error) {

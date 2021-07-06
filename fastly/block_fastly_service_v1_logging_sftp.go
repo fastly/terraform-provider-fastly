@@ -70,20 +70,18 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		},
 
 		"secret_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
-			Sensitive:   true,
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
+			Sensitive:        true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"public_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"period": {
@@ -201,21 +199,6 @@ func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVers
 	// CREATE new resources
 	for _, resource := range diffResult.Added {
 		resource := resource.(map[string]interface{})
-
-		// @HACK for a TF SDK Issue.
-		//
-		// This ensures that the required, `name`, field is present.
-		//
-		// If we have made it this far and `name` is not present, it is most-likely due
-		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
-		//
-		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
-		// properly handles setting state with the StateFunc, it returns extra entries
-		// during state Gets, specifically `GetChange("logging_sftp")` in this case.
-		if v, ok := resource["name"]; !ok || v.(string) == "" {
-			continue
-		}
-
 		opts := h.buildCreate(resource, serviceID, latestVersion)
 
 		if opts.Password == "" && opts.SecretKey == "" {

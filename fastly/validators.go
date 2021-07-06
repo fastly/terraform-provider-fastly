@@ -3,8 +3,11 @@ package fastly
 import (
 	"encoding/pem"
 	"fmt"
+	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -178,4 +181,14 @@ func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
 
 		return nil, nil
 	})
+}
+
+func validateStringTrimmed(i interface{}, path cty.Path) diag.Diagnostics {
+	v := i.(string)
+	attr := path[len(path)-1].(cty.GetAttrStep)
+	if v != strings.TrimSpace(v) {
+		return diag.Errorf("%s must not contain trailing space characters (e.g., \\n\\t\\r\\f). Consider using trimspace() function", attr.Name)
+	}
+
+	return nil
 }

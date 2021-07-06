@@ -246,30 +246,27 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 		},
 
 		"tls_ca_cert": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "A secure certificate to authenticate the server with. Must be in PEM format",
-			Sensitive:   true,
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "A secure certificate to authenticate the server with. Must be in PEM format",
+			Sensitive:        true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"tls_client_cert": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The client certificate used to make authenticated requests. Must be in PEM format",
-			Sensitive:   true,
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The client certificate used to make authenticated requests. Must be in PEM format",
+			Sensitive:        true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"tls_client_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The client private key used to make authenticated requests. Must be in PEM format",
-			Sensitive:   true,
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The client private key used to make authenticated requests. Must be in PEM format",
+			Sensitive:        true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"tls_hostname": {

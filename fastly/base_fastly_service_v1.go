@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -148,6 +148,25 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		UpdateContext: resourceUpdate(serviceDef),
 		DeleteContext: resourceDelete(serviceDef),
 		Importer:      resourceImport(serviceDef),
+		CustomizeDiff: customdiff.All(
+			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+				// If anything other than name, comment and version_comment has changed, the current version will be
+				// cloned in resourceServiceUpdate so set it as recomputed. These three fields can be updated without
+				// creating a new version
+				for _, changedKey := range d.GetChangedKeysPrefix("") {
+					if changedKey == "name" || changedKey == "comment" || changedKey == "version_comment" {
+						continue
+					}
+					return true
+				}
+				return false
+			}),
+			customdiff.ComputedIf("active_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+				// If cloned_version is recomputed and we are automatically activating new versions (controlled with the
+				// activate flag) then the active_version will be recomputed too.
+				return d.HasChange("cloned_version") && d.Get("activate") == true
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -388,6 +407,15 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		// for their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
 			if a.MustProcess(d, initialVersion) {
+				// Check if the Update has been cancelled and return early if so
+				if err := ctx.Err(); err != nil {
+					if errors.Is(err, context.Canceled) {
+						return nil
+					}
+
+					return diag.FromErr(err)
+				}
+
 				if err := a.Process(d, latestVersion, conn); err != nil {
 					return diag.FromErr(err)
 				}

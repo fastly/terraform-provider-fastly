@@ -18,6 +18,9 @@ func main() {
 
 	opts := &plugin.ServeOpts{ProviderFunc: fastly.Provider}
 
+	// Prevent logger from prepending date/time to logs, which breaks log-level parsing/filtering
+	log.SetFlags(0)
+
 	if debugMode {
 		err := plugin.Debug(context.Background(), "fastly/fastly", opts)
 		if err != nil {

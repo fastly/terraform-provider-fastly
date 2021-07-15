@@ -68,6 +68,12 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Description: "The current state of the subscription. The list of possible states are: `pending`, `processing`, `issued`, and `renewing`.",
 				Computed:    true,
 			},
+			"managed_dns_challenge": {
+				Type:        schema.TypeMap,
+				Description: "(DEPRECATED) The details required to configure DNS to respond to ACME DNS challenge in order to verify domain ownership.",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"managed_dns_challenges": {
 				Type:        schema.TypeSet,
 				Description: "A list of options for configuring DNS to respond to ACME DNS challenge in order to verify domain ownership.",
@@ -210,6 +216,33 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 					"record_values": challenge.Values,
 				})
 			}
+		}
+	}
+
+	// NOTE: This block of code contains a bug where the state file will only include
+	// the first domain's challenge data in the case of multi-SAN cert subscriptions.
+	// Users should use the new "managed_dns_challenges" attribute instead.
+	// We're leaving this for backward compatibility but is planned to be removed in v1.0.0.
+	// https://github.com/fastly/terraform-provider-fastly/pull/435
+	{
+		var managedDNSChallengeOld map[string]string
+		for _, challenge := range subscription.Authorizations[0].Challenges {
+			if challenge.Type == "managed-dns" {
+				if len(challenge.Values) < 1 {
+					return diag.Errorf("Fastly API returned no record values for Managed DNS Challenge")
+				}
+
+				managedDNSChallengeOld = map[string]string{
+					"record_type":  challenge.RecordType,
+					"record_name":  challenge.RecordName,
+					"record_value": challenge.Values[0],
+				}
+			}
+		}
+
+		err = d.Set("managed_dns_challenge", managedDNSChallengeOld)
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 

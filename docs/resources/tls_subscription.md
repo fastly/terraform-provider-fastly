@@ -161,6 +161,7 @@ $ terraform import fastly_tls_subscription.demo xxxxxxxxxxx
 ### Read-Only
 
 - **created_at** (String) Timestamp (GMT) when the subscription was created.
+- **managed_dns_challenge** (Map of String) (DEPRECATED) The details required to configure DNS to respond to ACME DNS challenge in order to verify domain ownership.
 - **managed_dns_challenges** (Set of Object) A list of options for configuring DNS to respond to ACME DNS challenge in order to verify domain ownership. (see [below for nested schema](#nestedatt--managed_dns_challenges))
 - **managed_http_challenges** (Set of Object) A list of options for configuring DNS to respond to ACME HTTP challenge in order to verify domain ownership. Best accessed through a `for` expression to filter the relevant record. (see [below for nested schema](#nestedatt--managed_http_challenges))
 - **state** (String) The current state of the subscription. The list of possible states are: `pending`, `processing`, `issued`, and `renewing`.

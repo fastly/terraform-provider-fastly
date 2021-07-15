@@ -219,7 +219,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		}
 	}
 
-	// NOTE: This block of code contains a bug where the state file will only include
+	// TODO: This block of code contains a bug where the state file will only include
 	// the first domain's challenge data in the case of multi-SAN cert subscriptions.
 	// Users should use the new "managed_dns_challenges" attribute instead.
 	// We're leaving this for backward compatibility but is planned to be removed in v1.0.0.

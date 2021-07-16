@@ -13,7 +13,6 @@ import (
 
 func TestAccFastlyIPRanges(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -94,6 +93,10 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 }
 
 const testAccFastlyIPRangesConfig = `
+provider "fastly" {
+  api_key = ""
+  no_auth = true
+}
 data "fastly_ip_ranges" "some" {
 }
 `

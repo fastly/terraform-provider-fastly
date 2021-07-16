@@ -92,3 +92,5 @@ The following arguments are supported in the `provider` block:
   if using a private instance of the API and otherwise defaults to the
   public Fastly production service. It can also be sourced from the
   `FASTLY_API_URL` environment variable
+
+* `no_auth` - (Optional) Set this to `true` if you only need data source that does not require authentication such as `fastly_ip_ranges`. Default: `false`

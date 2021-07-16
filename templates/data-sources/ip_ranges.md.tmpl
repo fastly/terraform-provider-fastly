@@ -13,6 +13,10 @@ Use this data source to get the [IP ranges][1] of Fastly edge nodes.
 ## Example Usage
 
 ```hcl
+provider "fastly" {
+  no_auth = true
+}
+
 data "fastly_ip_ranges" "fastly" {}
 
 resource "aws_security_group" "from_fastly" {

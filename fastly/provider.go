@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
 	"github.com/fastly/terraform-provider-fastly/version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -25,6 +26,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("FASTLY_API_URL", gofastly.DefaultEndpoint),
 				Description: "Fastly API URL",
+			},
+			"no_auth": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set this to `true` if you only need data source that does not require authentication such as `fastly_ip_ranges`",
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -65,6 +72,7 @@ func Provider() *schema.Provider {
 		config := Config{
 			ApiKey:    d.Get("api_key").(string),
 			BaseURL:   d.Get("base_url").(string),
+			NoAuth:    d.Get("no_auth").(bool),
 			UserAgent: provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
 		}
 		return config.Client()

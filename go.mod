@@ -1,6 +1,6 @@
 module github.com/fastly/terraform-provider-fastly
 
-go 1.14
+go 1.16
 
 require (
 	github.com/ajg/form v0.0.0-20160822230020-523a5da1a92f // indirect

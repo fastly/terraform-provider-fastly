@@ -73,7 +73,7 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Description: "The details required to configure DNS to respond to ACME DNS challenge in order to verify domain ownership.",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				Deprecated:  "Use 'managed_http_challenges' attribute instead",
+				Deprecated:  "Use 'managed_dns_challenges' attribute instead",
 			},
 			"managed_dns_challenges": {
 				Type:        schema.TypeSet,

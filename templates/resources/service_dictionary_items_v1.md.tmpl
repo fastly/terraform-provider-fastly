@@ -15,6 +15,9 @@ Defines a map of Fastly dictionary items that can be used to populate a service 
 
 If Terraform is being used to populate the initial content of a dictionary which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
 
+## Limitations
+
+- `write_only` dictionaries are not supported
 
 ## Example Usage (Terraform >= 0.12.6)
 

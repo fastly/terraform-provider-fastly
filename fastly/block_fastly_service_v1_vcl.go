@@ -77,27 +77,13 @@ func (h *VCLServiceAttributeHandler) Process(d *schema.ResourceData, latestVersi
 			ServiceVersion: latestVersion,
 			Name:           resource["name"].(string),
 			Content:        resource["content"].(string),
+			Main:           resource["main"].(bool),
 		}
 
 		log.Printf("[DEBUG] Fastly VCL Addition opts: %#v", opts)
 		_, err := conn.CreateVCL(&opts)
 		if err != nil {
 			return err
-		}
-
-		// if this new VCL is the main
-		if resource["main"].(bool) {
-			opts := gofastly.ActivateVCLInput{
-				ServiceID:      d.Id(),
-				ServiceVersion: latestVersion,
-				Name:           resource["name"].(string),
-			}
-			log.Printf("[DEBUG] Fastly VCL activation opts: %#v", opts)
-			_, err := conn.ActivateVCL(&opts)
-			if err != nil {
-				return err
-			}
-
 		}
 	}
 

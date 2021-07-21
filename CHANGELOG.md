@@ -11,6 +11,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* Don't use `ParallelTest` for `no_auth` data source [#449](https://github.com/fastly/terraform-provider-fastly/pull/449)
 * Introduce `no_auth` provider option [#444](https://github.com/fastly/terraform-provider-fastly/pull/444)
 * Suppress gzip diff unless fields are explicitly set [#441](https://github.com/fastly/terraform-provider-fastly/pull/441)
 * Fix parsing of log-levels by removing date/time prefix [#440](https://github.com/fastly/terraform-provider-fastly/pull/440)

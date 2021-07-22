@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccFastlyIPRanges(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

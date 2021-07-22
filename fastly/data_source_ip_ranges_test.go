@@ -12,6 +12,10 @@ import (
 )
 
 func TestAccFastlyIPRanges(t *testing.T) {
+	// NOTE: due to how providers are instantiated during ParallelTest
+	// there may be a case where some tests get polluted with an instance of the provider
+	// with no API key created in this particular test (ie., the "no_auth" option).
+	// Using Test instead.
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
@@ -94,11 +98,9 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 
 const testAccFastlyIPRangesConfig = `
 provider "fastly" {
-  alias   = "noauth"
   api_key = ""
   no_auth = true
 }
 data "fastly_ip_ranges" "some" {
-  provider = fastly.noauth
 }
 `

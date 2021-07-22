@@ -94,9 +94,11 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 
 const testAccFastlyIPRangesConfig = `
 provider "fastly" {
+  alias   = "noauth"
   api_key = ""
   no_auth = true
 }
 data "fastly_ip_ranges" "some" {
+  provider = fastly.noauth
 }
 `

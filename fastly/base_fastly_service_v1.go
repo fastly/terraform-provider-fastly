@@ -3,7 +3,10 @@ package fastly
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -147,7 +150,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		ReadContext:   resourceRead(serviceDef),
 		UpdateContext: resourceUpdate(serviceDef),
 		DeleteContext: resourceDelete(serviceDef),
-		Importer:      resourceImport(serviceDef),
+		Importer:      resourceImport(),
 		CustomizeDiff: customdiff.All(
 			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
 				// If anything other than name, comment and version_comment has changed, the current version will be
@@ -246,7 +249,7 @@ func resourceCreate(serviceDef ServiceDefinition) schema.CreateContextFunc {
 // while injecting the ServiceDefinition into the true Read functionality.
 func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-		return resourceServiceRead(ctx, d, meta, serviceDef, false)
+		return resourceServiceRead(ctx, d, meta, serviceDef)
 	}
 }
 
@@ -267,14 +270,29 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 }
 
 // resourceImport satisfies the Terraform resource schema Importer "interface"
-// while injecting the ServiceDefinition into the true Import functionality.
-func resourceImport(serviceDef ServiceDefinition) *schema.ResourceImporter {
+func resourceImport() *schema.ResourceImporter {
 	return &schema.ResourceImporter{
 		StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-			err := diagToErr(resourceServiceRead(ctx, d, meta, serviceDef, true))
-			if err != nil {
-				return nil, err
+			parts := strings.Split(d.Id(), "@")
+			if len(parts) > 2 {
+				return nil, fmt.Errorf("expected import ID to either be the service ID, or be specified as <service id>@<service version>, e.g. nci48cow8ncw8ocn75@3")
 			}
+
+			id := parts[0]
+			d.SetId(id)
+
+			if len(parts) == 2 {
+				version, err := strconv.Atoi(parts[1])
+				if err != nil {
+					return nil, fmt.Errorf("error parsing %s an integer", parts[1])
+				}
+
+				err = d.Set("cloned_version", version)
+				if err != nil {
+					return nil, err
+				}
+			}
+
 			return []*schema.ResourceData{d}, nil
 		},
 	}
@@ -469,11 +487,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[INFO] Visit https://manage.fastly.com/configure/services/%s/versions/%v and activate it manually", d.Id(), latestVersion)
 	}
 
-	return resourceServiceRead(ctx, d, meta, serviceDef, false)
+	return resourceServiceRead(ctx, d, meta, serviceDef)
 }
 
 // resourceServiceRead provides service resource Read functionality.
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isImport bool) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
@@ -517,18 +535,18 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	// If we are importing, temporarily set the service.ActiveVersion number to
-	// the latest version supplied via the get service version details call.
-	// This is to ensure we still read all of the state below. Then set the
-	// cloned_version to this version.
-	// In addition to this, we need to do the same thing if cloned_version is
-	// not yet set to anything. This could happen if the current state was from
-	// v0.28.0 of the provider or lower, i.e. the user has upgraded from an
-	// earlier version. This prevents us from getting into the state where the
-	// attribute has never been set and gets passed into CloneVersion in the
-	// Update function and fails.
+	// If cloned_version is not set, and there is no active version, temporarily
+	// set the service.ActiveVersion number to the latest version supplied via
+	// the get service version details call. This is to ensure we still read all
+	// of the state below. Then set the cloned_version to this version.
+	// This could either happen if the current state was from v0.28.0 of the
+	// provider or lower, i.e. the user has upgraded from an earlier version, or
+	// if the service is being imported and no version was specified. This
+	// prevents us from getting into the state where the attribute has never
+	// been set and gets passed into CloneVersion in the Update function and
+	// fails.
 	clonedVersionNotSet := d.Get("cloned_version") == 0
-	if isImport || clonedVersionNotSet {
+	if clonedVersionNotSet {
 		if s.ActiveVersion.Number == 0 {
 			s.ActiveVersion.Number = s.Version.Number
 		}
@@ -572,7 +590,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 				return diag.FromErr(err)
 			}
 		}
-	} else if !isImport {
+	} else {
 		log.Printf("[DEBUG] Active Version for Service (%s) is empty, no state to refresh", d.Id())
 	}
 

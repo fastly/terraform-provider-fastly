@@ -1,4 +1,25 @@
-## 0.33.0 (Unreleased)
+## 0.34.0 (Unreleased)
+
+## 0.33.0 (July 16, 2021)
+
+ENHANCEMENTS:
+
+* Upgrade to Go 1.16 to allow `darwin/arm64` builds [#447](https://github.com/fastly/terraform-provider-fastly/pull/447)
+* Replace `ActivateVCL` call with `Main` field on `CreateVCL` [#446](https://github.com/fastly/terraform-provider-fastly/pull/446)
+* Add limitations for `write_only` dictionaries [#445](https://github.com/fastly/terraform-provider-fastly/pull/445)
+* Replace `StateFunc` with `ValidateDiagFunc` [#439](https://github.com/fastly/terraform-provider-fastly/pull/439) 
+
+BUG FIXES:
+
+* Don't use `ParallelTest` for `no_auth` data source [#449](https://github.com/fastly/terraform-provider-fastly/pull/449)
+* Introduce `no_auth` provider option [#444](https://github.com/fastly/terraform-provider-fastly/pull/444)
+* Suppress gzip diff unless fields are explicitly set [#441](https://github.com/fastly/terraform-provider-fastly/pull/441)
+* Fix parsing of log-levels by removing date/time prefix [#440](https://github.com/fastly/terraform-provider-fastly/pull/440)
+* Fix bug with `fastly_tls_subscription` multi-SAN challenge [#435](https://github.com/fastly/terraform-provider-fastly/pull/435)
+* Output variable refresh bug [#388](https://github.com/fastly/terraform-provider-fastly/pull/388)
+* Use correct 'shield' value [#437](https://github.com/fastly/terraform-provider-fastly/pull/437)
+* Fix `default_host` not being removed [#434](https://github.com/fastly/terraform-provider-fastly/pull/434)
+* In `fastly_waf_rules` data source, request rule revisions from API [#428](https://github.com/fastly/terraform-provider-fastly/pull/428)
 
 ## 0.32.0 (June 17, 2021)
 

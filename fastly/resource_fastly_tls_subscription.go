@@ -25,6 +25,7 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 			customdiff.ForceNewIf("configuration_id", resourceFastlyTLSSubscriptionStateNotIssued),
 			customdiff.ForceNewIf("domains", resourceFastlyTLSSubscriptionStateNotIssued),
 			customdiff.ForceNewIf("common_name", resourceFastlyTLSSubscriptionStateNotIssued),
+			resourceFastlyTLSSubscriptionSetNewComputed,
 		),
 		Schema: map[string]*schema.Schema{
 			"domains": {
@@ -329,4 +330,18 @@ func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceDa
 
 func resourceFastlyTLSSubscriptionStateNotIssued(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
 	return d.Get("state").(string) != "issued"
+}
+
+func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// NOTE: This is a workaround for a bug in Terraform core
+	// where TypeSet computed attributes are not being updated with the new values upon applying (in an update action).
+	// This means that they will not be updated until the second "refresh" or "apply" after the first apply.
+	// We should work around this and set the new values immediately upon applying so that other resources
+	// that are dependent on this resource can properly see the diff and trigger updates accordingly upon applying.
+	if d.HasChange("domains") {
+		d.SetNewComputed("managed_dns_challenges")
+		d.SetNewComputed("managed_http_challenges")
+	}
+
+	return nil
 }

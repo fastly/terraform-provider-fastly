@@ -267,7 +267,7 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:             schema.TypeInt,
 			Optional:         true,
 			Default:          2,
-			Description:      "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)",
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)",
 			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{

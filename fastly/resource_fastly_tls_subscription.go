@@ -332,7 +332,7 @@ func resourceFastlyTLSSubscriptionStateNotIssued(_ context.Context, d *schema.Re
 	return d.Get("state").(string) != "issued"
 }
 
-func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
 	// NOTE: This is a workaround for a bug in Terraform core
 	// where TypeSet computed attributes are not being updated with the new values upon applying (in an update action).
 	// This means that they will not be updated until the second "refresh" or "apply" after the first apply.

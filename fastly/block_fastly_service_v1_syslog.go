@@ -274,7 +274,7 @@ func (h *SyslogServiceAttributeHandler) Register(s *schema.Resource) error {
 		blockAttributes["format_version"] = &schema.Schema{
 			Type:             schema.TypeInt,
 			Optional:         true,
-			Default:          1,
+			Default:          2,
 			Description:      "The version of the custom logging format. Can be either 1 or 2. (Default: 1)",
 			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}

@@ -84,7 +84,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		IPV4:              "127.0.0.1",
 		Port:              uint(514),
 		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     1,
+		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
 		MessageType:       "classic",
 	}
@@ -96,7 +96,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		IPV4:              "127.0.0.1",
 		Port:              uint(514),
 		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     1,
+		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
 		MessageType:       "blank",
 	}
@@ -108,7 +108,7 @@ func TestAccFastlyServiceV1_syslog_basic(t *testing.T) {
 		IPV4:           "127.0.0.2",
 		Port:           uint(10514),
 		Format:         "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:  1,
+		FormatVersion:  2,
 		MessageType:    "classic",
 	}
 
@@ -237,7 +237,7 @@ func TestAccFastlyServiceV1_syslog_useTLS(t *testing.T) {
 		IPV4:           "127.0.0.1",
 		Port:           uint(514),
 		Format:         "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:  1,
+		FormatVersion:  2,
 		MessageType:    "classic",
 		UseTLS:         true,
 		TLSCACert:      cert,

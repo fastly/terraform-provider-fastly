@@ -84,6 +84,7 @@ func (h *GCSLoggingServiceAttributeHandler) Process(d *schema.ResourceData, late
 			MessageType:       resource["message_type"].(string),
 			CompressionCodec:  resource["compression_codec"].(string),
 			Format:            vla.format,
+			FormatVersion:     uintOrDefault(vla.formatVersion),
 			ResponseCondition: vla.responseCondition,
 			Placement:         vla.placement,
 		}
@@ -309,6 +310,7 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 			"response_condition": currentGCS.ResponseCondition,
 			"message_type":       currentGCS.MessageType,
 			"format":             currentGCS.Format,
+			"format_version":     currentGCS.FormatVersion,
 			"timestamp_format":   currentGCS.TimestampFormat,
 			"placement":          currentGCS.Placement,
 			"compression_codec":  currentGCS.CompressionCodec,

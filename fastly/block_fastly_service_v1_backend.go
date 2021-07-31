@@ -404,19 +404,18 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 		},
 	}
 
+	required := true
+
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		// backend is optional in VCL service
+		required = false
+
 		blockAttributes["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
 			Description: "Name of a condition, which if met, will select this backend during a request.",
 		}
-	}
-
-	// backend is optional in VCL service
-	required := true
-	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		required = false
 	}
 
 	s.Schema[h.GetKey()] = &schema.Schema{

@@ -349,6 +349,62 @@ func TestAccFastlyServiceV1_updateInvalidBackend(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceV1_createServiceWithStaticBackend(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	snippet1 := `
+	backend F_httpbin_org {
+		.always_use_host_header = true;
+		.between_bytes_timeout = 1s;
+		.connect_timeout = 1s;
+		.dynamic = true;
+		.first_byte_timeout = 1s;
+		.host = "httpbin.org";
+		.host_header = "httpbin.org";
+		.max_connections = 200;
+		.port = "443";
+		.share_key = "foo";
+		.ssl = true;
+		.ssl_cert_hostname = "httpbin.org";
+		.ssl_check_cert = always;
+		.ssl_sni_hostname = "httpbin.org";
+		.probe = {
+			.dummy = true;
+			.initial = 5;
+			.request = "HEAD / HTTP/1.1"  "Host: httpbin.org" "Connection: close";
+			.threshold = 1;
+			.timeout = 2s;
+			.window = 5;
+		  }
+	}
+	`
+	snippet2 := "# just a comment line"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceV1Config_staticBackend(name, domain, snippet1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1Attributes_backends(&service, name, []string{}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "active_version", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "backend.#", "0"),
+				),
+			},
+			{
+				Config:      testAccServiceV1Config_staticBackend(name, domain, snippet2),
+				ExpectError: regexp.MustCompile("No backends"),
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceV1_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -845,6 +901,27 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, name, domain, backend)
+}
+
+func testAccServiceV1Config_staticBackend(name, domain, snippet string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+    name           = "%s"
+    force_destroy = true
+
+    domain {
+        name = "%s"
+    }
+
+    snippet {
+        content  = <<-EOT
+            %s
+        EOT
+        name     = "vcl_init"
+        priority = 50
+        type     = "init"
+    }
+}`, name, domain, snippet)
 }
 
 func testAccServiceV1Config_backendTTL(name, domain, backend string, ttl uint) string {

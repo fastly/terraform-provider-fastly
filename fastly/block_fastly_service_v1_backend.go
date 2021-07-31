@@ -415,7 +415,7 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeSet,
-		Required: true,
+		Optional: true,
 		Elem: &schema.Resource{
 			Schema: blockAttributes,
 		},

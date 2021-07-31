@@ -78,7 +78,15 @@ data "aws_route53_zone" "demo" {
 
 # Set up DNS record for managed DNS domain validation method
 resource "aws_route53_record" "domain_validation" {
-  for_each = { for domain in fastly_tls_subscription.example.managed_dns_challenges : domain.record_name => domain }
+  depends_on = [fastly_tls_subscription.example]
+
+  for_each = {
+    for domain in fastly_tls_subscription.example.domains :
+    domain => element([
+      for obj in fastly_tls_subscription.example.managed_dns_challenges :
+      obj if obj.record_name == "_acme-challenge.${domain}"
+    ], 0)
+  }
   name            = each.value.record_name
   type            = each.value.record_type
   zone_id         = data.aws_route53_zone.demo.id

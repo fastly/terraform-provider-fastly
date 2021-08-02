@@ -216,12 +216,16 @@ func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CA_CERT", ""),
 			Description: "A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`",
+			Sensitive: 	 true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 		"tls_client_cert": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CLIENT_CERT", ""),
 			Description: "The client certificate used to make authenticated requests. Must be in PEM format.",
+			Sensitive: 	 true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 		"tls_client_key": {
 			Type:        schema.TypeString,
@@ -229,6 +233,7 @@ func (h *SplunkServiceAttributeHandler) Register(s *schema.Resource) error {
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CLIENT_KEY", ""),
 			Description: "The client private key used to make authenticated requests. Must be in PEM format.",
 			Sensitive:   true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 	}
 

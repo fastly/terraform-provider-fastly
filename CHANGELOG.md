@@ -1,4 +1,14 @@
-## 0.34.0 (Unreleased)
+## 0.35.0 (Unreleased)
+
+## 0.34.0 (August 9, 2021)
+
+ENHANCEMENTS:
+
+* Avoid unnecessary state refresh when importing (and enable service version selection) [#448](https://github.com/fastly/terraform-provider-fastly/pull/448)
+
+BUG FIXES:
+
+* Fix TLS Subscription updates not triggering update to managed DNS Challenges [#453](https://github.com/fastly/terraform-provider-fastly/pull/453)
 
 ## 0.33.0 (July 16, 2021)
 

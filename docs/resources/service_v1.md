@@ -587,8 +587,8 @@ Optional:
 - **request_max_bytes** (Number) The maximum number of bytes sent in one request
 - **request_max_entries** (Number) The maximum number of logs sent in one request
 - **response_condition** (String) The name of the condition to apply
-- **tls_ca_cert** (String, Sensitive) A secure certificate to authenticate the server with. Must be in PEM format
-- **tls_client_cert** (String, Sensitive) The client certificate used to make authenticated requests. Must be in PEM format
+- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
+- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
 - **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
 - **tls_hostname** (String) Used during the TLS handshake to validate the certificate
 

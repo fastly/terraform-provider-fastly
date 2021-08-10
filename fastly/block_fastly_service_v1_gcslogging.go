@@ -204,7 +204,7 @@ func (h *GCSLoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_EMAIL", ""),
 			Description: "The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`",
-			Sensitive: true,
+			Sensitive:   true,
 		},
 		"bucket_name": {
 			Type:        schema.TypeString,

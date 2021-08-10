@@ -147,7 +147,7 @@ Optional:
 - **override_host** (String) The hostname to override the Host header
 - **port** (Number) The port number on which the Backend responds. Default `80`
 - **shield** (String) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response
-- **ssl_ca_cert** (String, Sensitive) CA certificate attached to origin.
+- **ssl_ca_cert** (String) CA certificate attached to origin.
 - **ssl_cert_hostname** (String) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all
 - **ssl_check_cert** (Boolean) Be strict about checking SSL certs. Default `true`
 - **ssl_ciphers** (String) Comma separated list of OpenSSL Ciphers to try when negotiating to the backend
@@ -647,8 +647,8 @@ Required:
 
 Optional:
 
-- **tls_ca_cert** (String, Sensitive) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
-- **tls_client_cert** (String, Sensitive) The client certificate used to make authenticated requests. Must be in PEM format.
+- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
+- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format.
 - **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
 - **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
 - **token** (String, Sensitive) The Splunk token to be used for authentication
@@ -679,8 +679,8 @@ Optional:
 
 - **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`
 - **port** (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`
-- **tls_ca_cert** (String, Sensitive) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`
-- **tls_client_cert** (String, Sensitive) The client certificate used to make authenticated requests. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CLIENT_CERT`
+- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`
+- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CLIENT_CERT`
 - **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`
 - **tls_hostname** (String) Used during the TLS handshake to validate the certificate
 - **token** (String) Whether to prepend each message with a specific token

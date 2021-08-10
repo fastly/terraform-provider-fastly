@@ -369,7 +369,6 @@ func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
 			Optional:    true,
 			Default:     "",
 			Description: "CA certificate attached to origin.",
-			Sensitive:   true,
 		},
 		"ssl_cert_hostname": {
 			Type:        schema.TypeString,

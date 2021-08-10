@@ -985,7 +985,7 @@ Optional:
 - **default_host** (String) Sets the host header
 - **force_miss** (Boolean) Force a cache miss for the request. If specified, can be `true` or `false`
 - **force_ssl** (Boolean) Forces the request to use SSL (Redirects a non-SSL request to SSL)
-- **geo_headers** (Boolean) Injects Fastly-Geo-Country, Fastly-Geo-City, and Fastly-Geo-Region into the request headers
+- **geo_headers** (Boolean, Deprecated) Injects Fastly-Geo-Country, Fastly-Geo-City, and Fastly-Geo-Region into the request headers
 - **hash_keys** (String) Comma separated list of varnish request object fields that should be in the hash key
 - **max_stale_age** (Number) How old an object is allowed to be to serve `stale-if-error` or `stale-while-revalidate`, in seconds
 - **request_condition** (String) Name of already defined `condition` to determine if this request setting should be applied

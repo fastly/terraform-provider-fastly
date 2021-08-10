@@ -240,9 +240,12 @@ func (h *RequestSettingServiceAttributeHandler) Register(s *schema.Resource) err
 					Optional:    true,
 					Description: "Injects the X-Timer info into the request for viewing origin fetch durations",
 				},
+				// TODO: Although Fastly API has been exposing this parameter over years
+				// it turned out that setting this parameter does nothing. We should remove this attribute in v1.0.0
 				"geo_headers": {
 					Type:        schema.TypeBool,
 					Optional:    true,
+					Deprecated:  "'geo_headers' attribute has been deprecated and will be removed in the next major version release",
 					Description: "Injects Fastly-Geo-Country, Fastly-Geo-City, and Fastly-Geo-Region into the request headers",
 				},
 				"default_host": {

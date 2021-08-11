@@ -327,7 +327,7 @@ func (h *S3LoggingServiceAttributeHandler) Register(s *schema.Resource) error {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "%h %l %u %t \"%r\" %>s %b",
+			Default:     `%h %l %u %t "%r" %>s %b`,
 			Description: "Apache-style string or VCL variables to use for log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

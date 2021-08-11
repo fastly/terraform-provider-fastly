@@ -408,8 +408,8 @@ Optional:
 - **pipeline** (String) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing
 - **request_max_bytes** (Number) The maximum number of logs sent in one request. Defaults to `0` for unbounded
 - **request_max_entries** (Number) The maximum number of bytes sent in one request. Defaults to `0` for unbounded
-- **tls_ca_cert** (String, Sensitive) A secure certificate to authenticate the server with. Must be in PEM format
-- **tls_client_cert** (String, Sensitive) The client certificate used to make authenticated requests. Must be in PEM format
+- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
+- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
 - **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
 - **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN)
 - **user** (String) BasicAuth username for Elasticsearch
@@ -489,8 +489,8 @@ Optional:
 - **password** (String, Sensitive) SASL Pass
 - **request_max_bytes** (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
 - **required_acks** (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1`	Wait for all in-sync replicas to respond
-- **tls_ca_cert** (String, Sensitive) A secure certificate to authenticate the server with. Must be in PEM format
-- **tls_client_cert** (String, Sensitive) The client certificate used to make authenticated requests. Must be in PEM format
+- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
+- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
 - **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
 - **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
 - **use_tls** (Boolean) Whether to use TLS for secure logging. Can be either `true` or `false`

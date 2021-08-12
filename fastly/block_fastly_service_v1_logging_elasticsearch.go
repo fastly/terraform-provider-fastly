@@ -233,7 +233,6 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A secure certificate to authenticate the server with. Must be in PEM format",
-			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
 
@@ -241,7 +240,6 @@ func (h *ElasticSearchServiceAttributeHandler) Register(s *schema.Resource) erro
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "The client certificate used to make authenticated requests. Must be in PEM format",
-			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
 

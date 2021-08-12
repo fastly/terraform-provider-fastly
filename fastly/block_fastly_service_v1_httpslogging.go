@@ -249,7 +249,6 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A secure certificate to authenticate the server with. Must be in PEM format",
-			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
 
@@ -257,7 +256,6 @@ func (h *HTTPSLoggingServiceAttributeHandler) Register(s *schema.Resource) error
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "The client certificate used to make authenticated requests. Must be in PEM format",
-			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
 

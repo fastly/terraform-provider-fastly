@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"fmt"
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/v3/fastly"
@@ -45,15 +46,36 @@ func updateRules(d *schema.ResourceData, meta interface{}, wafID string, Number 
 		ns = new(schema.Set)
 	}
 
-	oss := os.(*schema.Set)
-	nss := ns.(*schema.Set)
+	oldSet := os.(*schema.Set)
+	newSet := ns.(*schema.Set)
 
-	add := nss.Difference(oss).List()
-	remove := deleteByModSecID(oss.Difference(nss), add).List()
+	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
+		t, ok := resource.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
+		}
+		// NOTE: WAF rule block doesn't have a "name" attribute.
+		return t["modsec_rule_id"], nil
+	})
+
+	diffResult, err := setDiff.Diff(oldSet, newSet)
+	if err != nil {
+		return err
+	}
+
+	// NOTE: Fastly WAF (WAF 2020) API doesn't have a proper "bulk" upsert endpoint.
+	// go-fastly uses the below endpoint for UpsertBatchOperation:
+	// "POST /waf/firewalls/:firewall_id/versions/:version_id/active-rules"
+	// but this endpoint only updates "status" when it comes to upsert and "revision" field is ignored.
+	// Therefore, when one of the rule attributes changes we must delete it first and create it as a new rule.
 
 	log.Print("[INFO] WAF rules update")
-	if len(remove) > 0 {
-		deleteOpts := buildBatchDeleteWAFActiveRulesInput(remove, wafID, Number)
+	// DELETE removed rules
+	if len(diffResult.Deleted) > 0 || len(diffResult.Modified) > 0 {
+		var items []interface{}
+		items = append(items, diffResult.Deleted...)
+		items = append(items, diffResult.Modified...)
+		deleteOpts := buildBatchDeleteWAFActiveRulesInput(items, wafID, Number)
 		log.Printf("[DEBUG] WAF rules delete opts: %#v", deleteOpts)
 		err := executeBatchWAFActiveRulesOperations(conn, &deleteOpts)
 		if err != nil {
@@ -61,8 +83,12 @@ func updateRules(d *schema.ResourceData, meta interface{}, wafID string, Number 
 		}
 	}
 
-	if len(add) > 0 {
-		createOpts := buildBatchCreateWAFActiveRulesInput(add, wafID, Number)
+	// CREATE new rules
+	if len(diffResult.Added) > 0 || len(diffResult.Modified) > 0 {
+		var items []interface{}
+		items = append(items, diffResult.Added...)
+		items = append(items, diffResult.Modified...)
+		createOpts := buildBatchCreateWAFActiveRulesInput(items, wafID, Number)
 		log.Printf("[DEBUG] WAF rules create opts: %#v", createOpts)
 		err := executeBatchWAFActiveRulesOperations(conn, &createOpts)
 		if err != nil {

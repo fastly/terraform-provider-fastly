@@ -114,8 +114,14 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteRules(t *testing.T) {
 			Status:   "log",
 			Revision: 1,
 		},
+		{
+			ModSecID: 910100,
+			Status:   "score",
+			Revision: 1,
+		},
 	}
 	rules2 := []gofastly.WAFActiveRule{
+		// update status
 		{
 			ModSecID: 1010080,
 			Status:   "block",
@@ -130,6 +136,12 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteRules(t *testing.T) {
 			ModSecID: 2037405,
 			Status:   "block",
 			Revision: 1,
+		},
+		// update revision
+		{
+			ModSecID: 910100,
+			Status:   "score",
+			Revision: 2,
 		},
 	}
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
@@ -204,6 +216,9 @@ func testAccCheckFastlyServiceWAFVersionV1CheckRules(service *gofastly.ServiceDe
 			}
 			if expected[i].Status != actual[i].Status {
 				return fmt.Errorf("Error matching:\nexpected: %#v\ngot: %#v", expected[i].Status, actual[i].Status)
+			}
+			if expected[i].Revision != actual[i].Revision {
+				return fmt.Errorf("Error matching:\nexpected: %#v\ngot: %#v", expected[i].Revision, actual[i].Revision)
 			}
 		}
 		return nil

@@ -11,7 +11,6 @@ import (
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -41,55 +40,6 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 		out := flattenWAFActiveRules(c.remote)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
-		}
-	}
-}
-
-func TestAccFastlyServiceWAFVersionV1FlattenWAFDeleteByModSecID(t *testing.T) {
-
-	addInput := []map[string]interface{}{{"modsec_rule_id": 1}, {"modsec_rule_id": 12}, {"modsec_rule_id": 123}}
-	add := make([]interface{}, len(addInput), len(addInput))
-	for i := range addInput {
-		add[i] = addInput[i]
-	}
-
-	deleteInput := []map[string]interface{}{{"modsec_rule_id": 12}, {"modsec_rule_id": 123}, {"modsec_rule_id": 1234}}
-	remove := make([]interface{}, len(deleteInput), len(deleteInput))
-	for i := range deleteInput {
-		remove[i] = deleteInput[i]
-	}
-
-	expectedInput := []map[string]interface{}{{"modsec_rule_id": 1234}}
-	expected := make([]interface{}, len(expectedInput), len(expectedInput))
-	for i := range expectedInput {
-		expected[i] = expectedInput[i]
-	}
-
-	cases := []struct {
-		add      []interface{}
-		remove   *schema.Set
-		expected *schema.Set
-	}{
-		{
-			add:      []interface{}{},
-			remove:   schema.NewSet(testHashFunc, []interface{}{}),
-			expected: schema.NewSet(testHashFunc, []interface{}{}),
-		},
-		{
-			add:      add,
-			remove:   schema.NewSet(testHashFunc, []interface{}{}),
-			expected: schema.NewSet(testHashFunc, []interface{}{}),
-		},
-		{
-			add:      add,
-			remove:   schema.NewSet(testHashFunc, remove),
-			expected: schema.NewSet(testHashFunc, expected),
-		},
-	}
-	for _, c := range cases {
-		out := deleteByModSecID(c.remove, c.add)
-		if !c.expected.Equal(out) {
-			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.expected, c.remove)
 		}
 	}
 }

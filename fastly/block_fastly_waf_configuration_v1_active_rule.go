@@ -200,25 +200,3 @@ func flattenWAFActiveRules(rules []*gofastly.WAFActiveRule) []map[string]interfa
 	}
 	return rl
 }
-
-// deleteByModSecID returns a copy of the argument "remove" with all common (with the same modsec_rule_id) elements with argument "add" removed.
-func deleteByModSecID(remove *schema.Set, add []interface{}) *schema.Set {
-
-	modSecIDs := make(map[int]interface{}, remove.Len())
-	result := schema.CopySet(remove)
-
-	for _, rv := range remove.List() {
-		r := rv.(map[string]interface{})
-		modSecIDs[r["modsec_rule_id"].(int)] = r
-	}
-
-	if len(modSecIDs) > 0 {
-		for _, av := range add {
-			a := av.(map[string]interface{})
-			if v, ok := modSecIDs[a["modsec_rule_id"].(int)]; ok {
-				result.Remove(v)
-			}
-		}
-	}
-	return result
-}

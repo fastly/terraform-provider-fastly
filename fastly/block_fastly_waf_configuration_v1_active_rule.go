@@ -63,11 +63,11 @@ func updateRules(d *schema.ResourceData, meta interface{}, wafID string, Number 
 		return err
 	}
 
-	// NOTE: Fastly WAF (WAF 2020) API doesn't have a proper "bulk" upsert endpoint.
+	// NOTE: Fastly WAF (WAF 2020) API doesn't have a proper batch update endpoint.
 	// go-fastly uses the below endpoint for UpsertBatchOperation:
 	// "POST /waf/firewalls/:firewall_id/versions/:version_id/active-rules"
-	// but this endpoint only updates "status" when it comes to upsert and "revision" field is ignored.
-	// Therefore, when one of the rule attributes changes we must delete it first and create it as a new rule.
+	// but this endpoint only updates "status" when it comes to upsert operation and "revision" field is ignored.
+	// Therefore, when one of the rule attributes is changed we must delete it first and create it as a new rule.
 
 	log.Print("[INFO] WAF rules update")
 	// DELETE removed rules

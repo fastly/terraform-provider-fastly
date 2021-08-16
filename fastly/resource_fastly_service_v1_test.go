@@ -379,7 +379,6 @@ func TestAccFastlyServiceV1_createServiceWithStaticBackend(t *testing.T) {
 		  }
 	}
 	`
-	snippet2 := "# just a comment line"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -396,10 +395,6 @@ func TestAccFastlyServiceV1_createServiceWithStaticBackend(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "backend.#", "0"),
 				),
-			},
-			{
-				Config:      testAccServiceV1Config_staticBackend(name, domain, snippet2),
-				ExpectError: regexp.MustCompile("No backends"),
 			},
 		},
 	})

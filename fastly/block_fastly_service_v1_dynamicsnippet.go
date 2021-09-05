@@ -109,16 +109,13 @@ func (h *DynamicSnippetServiceAttributeHandler) Process(d *schema.ResourceData, 
 		// this and so we've updated the below code to convert the type asserted
 		// int into a uint before passing the value to gofastly.Uint().
 		if v, ok := modified["priority"]; ok {
-			opts.Priority = v.(int)
-		}
-		if v, ok := modified["dynamic"]; ok {
-			opts.Dynamic = v.(int)
+			opts.Priority = gofastly.Int(v.(int))
 		}
 		if v, ok := modified["content"]; ok {
-			opts.Content = v.(string)
+			opts.Content = gofastly.String(v.(string))
 		}
 		if v, ok := modified["type"]; ok {
-			opts.Type = v.(gofastly.SnippetType)
+			opts.Type = gofastly.SnippetTypeToString(v.(string))
 		}
 
 		log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)

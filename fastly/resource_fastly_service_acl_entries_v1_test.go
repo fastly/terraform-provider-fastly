@@ -24,7 +24,7 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					ServiceID: "service-id",
 					ACLID:     "1234567890",
 					IP:        "127.0.0.1",
-					Subnet:    "24",
+					Subnet:    24,
 					Negated:   false,
 					Comment:   "ALC Entry 1",
 				},
@@ -32,7 +32,7 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					ServiceID: "service-id",
 					ACLID:     "0987654321",
 					IP:        "192.168.0.1",
-					Subnet:    "16",
+					Subnet:    16,
 					Negated:   true,
 					Comment:   "ALC Entry 2",
 				},
@@ -40,13 +40,13 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 			local: []map[string]interface{}{
 				{
 					"ip":      "127.0.0.1",
-					"subnet":  "24",
+					"subnet":  24,
 					"negated": false,
 					"comment": "ALC Entry 1",
 				},
 				{
 					"ip":      "192.168.0.1",
-					"subnet":  "16",
+					"subnet":  16,
 					"negated": true,
 					"comment": "ALC Entry 2",
 				},

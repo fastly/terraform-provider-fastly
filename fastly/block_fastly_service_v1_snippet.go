@@ -109,7 +109,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		NewName:        gofastly.String(name),
 		Priority:       gofastly.Int(priority),
 		Content:        gofastly.String(content),
-	  Type:           gofastly.SnippetTypeToString(stype),
+		Type:           gofastly.SnippetTypeToString(stype),
 	}
 
 	// NOTE: where we transition between interface{} we lose the ability to

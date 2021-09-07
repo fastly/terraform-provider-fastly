@@ -154,30 +154,7 @@ func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippet
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))
-	switch snippetType {
-	case "init":
-		opts.Type = gofastly.SnippetTypeInit
-	case "recv":
-		opts.Type = gofastly.SnippetTypeRecv
-	case "hash":
-		opts.Type = gofastly.SnippetTypeHash
-	case "hit":
-		opts.Type = gofastly.SnippetTypeHit
-	case "miss":
-		opts.Type = gofastly.SnippetTypeMiss
-	case "pass":
-		opts.Type = gofastly.SnippetTypePass
-	case "fetch":
-		opts.Type = gofastly.SnippetTypeFetch
-	case "error":
-		opts.Type = gofastly.SnippetTypeError
-	case "deliver":
-		opts.Type = gofastly.SnippetTypeDeliver
-	case "log":
-		opts.Type = gofastly.SnippetTypeLog
-	case "none":
-		opts.Type = gofastly.SnippetTypeNone
-	}
+	opts.Type = gofastly.SnippetType(snippetType)
 
 	return &opts, nil
 }

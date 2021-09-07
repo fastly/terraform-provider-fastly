@@ -10,14 +10,17 @@ import (
 
 // ServiceCRUDAttributeDefinition is an interface for most ServiceAttributeDefinition implementations which can be
 // represented by the four CRUD operations. Most service attributes will fall into this category and should implement
-// this interface instead of ServiceAttributeDefinition directly. An attribute that implements
-// ServiceCRUDAttributeDefinition can use the ToServiceAttributeDefinition function defined below in its constructor to
-// convert it to the ServiceAttributeDefinition that the service resources expect.
+// this interface instead of ServiceAttributeDefinition directly.
+//
+// An attribute that implements ServiceCRUDAttributeDefinition can use the ToServiceAttributeDefinition function defined
+// below in its constructor to convert it to the ServiceAttributeDefinition that the service resources expect.
+//
 // The requirements for a service attribute to be defined in terms of this interface are:
 // - the attribute must be a nested block with a schema type of schema.TypeSet
 // - the nested block must have its own "name" attribute which uniquely defines the nested resource
 // - the block must support all four of the CRUD operations, or at least Create, Read, and Delete if updating the
-//   resource is not supported
+// resource is not supported
+//
 // Some service attributes don't fit into these constraints are better suited to implementing the
 // ServiceAttributeDefinition directly. One example is the "package" block in block_fastly_service_v1_package.go, which
 // only uses an Update operation, and therefore implements ServiceAttributeDefinition directly without
@@ -36,12 +39,15 @@ type ServiceCRUDAttributeDefinition interface {
 	// to decide which version of the service to make updates to. This will be an unlocked version that the base service
 	// update function created.
 	Create(ctx context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error
+
 	// Read should refresh the state of all of the instance of the nested blocks. See the description of Create for more
 	// details about the arguments.
 	Read(ctx context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error
+
 	// Update should make changes to an existing instance of the nested block. The arguments are as described in the
 	// Create comments, with the exception of modified which will contain only the attributes that have changed.
 	Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error
+
 	// Delete should remove the instance of the nested block. See the description of Create for more details about the
 	// arguments.
 	Delete(ctx context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error

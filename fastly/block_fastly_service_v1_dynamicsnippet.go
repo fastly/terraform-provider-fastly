@@ -46,7 +46,7 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     100,
-					Description: "determines the ordering for multiple snippets. Lower numbers execute first. Defaults to `100`",
+					Description: "Priority determines the ordering for multiple snippets. Lower numbers execute first. Defaults to `100`",
 				},
 				"snippet_id": {
 					Type:        schema.TypeString,

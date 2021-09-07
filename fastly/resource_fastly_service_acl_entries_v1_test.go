@@ -40,13 +40,13 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 			local: []map[string]interface{}{
 				{
 					"ip":      "127.0.0.1",
-					"subnet":  24,
+					"subnet":  "24",
 					"negated": false,
 					"comment": "ALC Entry 1",
 				},
 				{
 					"ip":      "192.168.0.1",
-					"subnet":  16,
+					"subnet":  "16",
 					"negated": true,
 					"comment": "ALC Entry 2",
 				},

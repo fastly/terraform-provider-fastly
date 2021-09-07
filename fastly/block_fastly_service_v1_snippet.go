@@ -100,7 +100,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	name, _ := resource["name"].(string)
 	priority, _ := resource["priority"].(int)
 	content, _ := resource["content"].(string)
-	stype := resource["type"].(string)
+	stype, _ := resource["type"].(string)
 
 	opts := gofastly.UpdateSnippetInput{
 		ServiceID:      d.Id(),

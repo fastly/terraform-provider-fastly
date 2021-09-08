@@ -32,12 +32,18 @@ func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "The Insert API key from the Account page of your New Relic account",
+		},
+		// Optional
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "US",
+			Description: "The region that log data will be sent to. Default: `US`",
 		},
 	}
 
@@ -141,6 +147,9 @@ func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.String(v.(string))
 	}
+	if v, ok := modified["region"]; ok {
+		opts.Region = gofastly.String(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update New Relic Opts: %#v", opts)
 	_, err := conn.UpdateNewRelic(&opts)
@@ -192,6 +201,7 @@ func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]interface{}
 			"format":             dl.Format,
 			"format_version":     dl.FormatVersion,
 			"placement":          dl.Placement,
+			"region":             dl.Region,
 			"response_condition": dl.ResponseCondition,
 		}
 
@@ -220,6 +230,7 @@ func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, s
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
+		Region:            df["region"].(string),
 		ResponseCondition: vla.responseCondition,
 	}
 }

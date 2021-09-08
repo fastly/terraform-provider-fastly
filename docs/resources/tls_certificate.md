@@ -65,7 +65,7 @@ $ terraform import fastly_tls_certificate.demo xxxxxxxxxxx
 
 ### Required
 
-- **certificate_body** (String) PEM-formatted certificate.
+- **certificate_body** (String) PEM-formatted certificate, optionally including any intermediary certificates.
 
 ### Optional
 

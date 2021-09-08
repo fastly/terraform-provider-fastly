@@ -29,9 +29,9 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 			},
 			"certificate_body": {
 				Type:             schema.TypeString,
-				Description:      "PEM-formatted certificate.",
+				Description:      "PEM-formatted certificate, optionally including any intermediary certificates.",
 				Required:         true,
-				ValidateDiagFunc: validatePEMBlock("CERTIFICATE"),
+				ValidateDiagFunc: validatePEMBlocks("CERTIFICATE"),
 			},
 			"created_at": {
 				Type:        schema.TypeString,

@@ -79,6 +79,10 @@ var ErrMissingCertBlob = NewFieldError("CertBlob")
 // requires a "Content" key, but one was not set.
 var ErrMissingContent = NewFieldError("Content")
 
+// ErrMissingType is an error that is returned when an input struct
+// requires a "Type" key, but one was not set.
+var ErrMissingType = NewFieldError("Type")
+
 // ErrMissingCustomerID is an error that is returned when an input struct
 // requires a "CustomerID" key, but one was not set.
 var ErrMissingCustomerID = NewFieldError("CustomerID")
@@ -122,6 +126,10 @@ var ErrMissingItemKey = NewFieldError("ItemKey")
 // ErrMissingKey is an error that is returned when an input struct
 // requires a "Key" key, but one was not set.
 var ErrMissingKey = NewFieldError("Key")
+
+// ErrMissingKeys is an error that is returned when an input struct
+// requires a "Keys" key, but one was not set.
+var ErrMissingKeys = NewFieldError("Keys")
 
 // ErrMissingLogin is an error that is returned when an input struct
 // requires a "Login" key, but one was not set.

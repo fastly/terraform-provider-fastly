@@ -76,11 +76,6 @@ func resourceServiceAclEntriesV1() *schema.Resource {
 	}
 }
 
-func convertSubnetToInt(s string) int {
-	subnet, _ := strconv.Atoi(s)
-	return subnet
-}
-
 func resourceServiceAclEntriesV1Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
@@ -317,4 +312,9 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 	}
 
 	return nil
+}
+
+func convertSubnetToInt(s string) int {
+	subnet, _ := strconv.Atoi(s)
+	return subnet
 }

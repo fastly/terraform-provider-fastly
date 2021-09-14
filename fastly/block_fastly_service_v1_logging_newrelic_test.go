@@ -23,6 +23,7 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 					ServiceVersion: 1,
 					Name:           "newrelic-endpoint",
 					Token:          "token",
+					Region:         "US",
 					FormatVersion:  2,
 				},
 			},
@@ -30,6 +31,7 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 				{
 					"name":           "newrelic-endpoint",
 					"token":          "token",
+					"region":         "US",
 					"format_version": uint(2),
 				},
 			},
@@ -69,6 +71,7 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "newrelic-endpoint",
 		Token:          "token",
+		Region:         "US",
 		FormatVersion:  2,
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
@@ -77,6 +80,7 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "newrelic-endpoint",
 		Token:          "t0k3n",
+		Region:         "EU",
 		FormatVersion:  2,
 		Format:         "%h %l %u %t \"%r\" %>s %b %T",
 	}
@@ -85,6 +89,7 @@ func TestAccFastlyServiceV1_logging_newrelic_basic(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "another-newrelic-endpoint",
 		Token:          "another-token",
+		Region:         "US",
 		FormatVersion:  2,
 		Format:         appendNewLine(newrelicDefaultFormat),
 	}
@@ -131,6 +136,7 @@ func TestAccFastlyServiceV1_logging_newrelic_basic_compute(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "newrelic-endpoint",
 		Token:          "token",
+		Region:         "US",
 		FormatVersion:  2,
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
@@ -285,6 +291,7 @@ resource "fastly_service_v1" "foo" {
     name   = "newrelic-endpoint"
     token  = "t0k3n"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    region = "EU"
   }
 
   logging_newrelic {

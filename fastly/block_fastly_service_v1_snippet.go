@@ -99,7 +99,6 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	// Safety check in case keys aren't actually set in the HCL.
 	name, _ := resource["name"].(string)
 	priority, _ := resource["priority"].(int)
-	dynamic, _ := resource["dynamic"].(int)
 	content, _ := resource["content"].(string)
 	stype, _ := resource["type"].(string)
 
@@ -107,11 +106,10 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           name,
-		NewName:        name,
-		Priority:       priority,
-		Dynamic:        dynamic,
-		Content:        content,
-		Type:           gofastly.SnippetType(stype),
+		NewName:        gofastly.String(name),
+		Priority:       gofastly.Int(priority),
+		Content:        gofastly.String(content),
+		Type:           gofastly.SnippetTypeToString(stype),
 	}
 
 	// NOTE: where we transition between interface{} we lose the ability to
@@ -120,40 +118,14 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	// this and so we've updated the below code to convert the type asserted
 	// int into a uint before passing the value to gofastly.Uint().
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = v.(int)
-	}
-	if v, ok := modified["dynamic"]; ok {
-		opts.Dynamic = v.(int)
+		opts.Priority = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["content"]; ok {
-		opts.Content = v.(string)
+		opts.Content = gofastly.String(v.(string))
 	}
 	if v, ok := modified["type"]; ok {
 		snippetType := strings.ToLower(v.(string))
-		switch snippetType {
-		case "init":
-			opts.Type = gofastly.SnippetTypeInit
-		case "recv":
-			opts.Type = gofastly.SnippetTypeRecv
-		case "hash":
-			opts.Type = gofastly.SnippetTypeHash
-		case "hit":
-			opts.Type = gofastly.SnippetTypeHit
-		case "miss":
-			opts.Type = gofastly.SnippetTypeMiss
-		case "pass":
-			opts.Type = gofastly.SnippetTypePass
-		case "fetch":
-			opts.Type = gofastly.SnippetTypeFetch
-		case "error":
-			opts.Type = gofastly.SnippetTypeError
-		case "deliver":
-			opts.Type = gofastly.SnippetTypeDeliver
-		case "log":
-			opts.Type = gofastly.SnippetTypeLog
-		case "none":
-			opts.Type = gofastly.SnippetTypeNone
-		}
+		opts.Type = gofastly.SnippetTypeToString(snippetType)
 	}
 
 	log.Printf("[DEBUG] Update VCL Snippet Opts: %#v", opts)
@@ -193,30 +165,7 @@ func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) 
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))
-	switch snippetType {
-	case "init":
-		opts.Type = gofastly.SnippetTypeInit
-	case "recv":
-		opts.Type = gofastly.SnippetTypeRecv
-	case "hash":
-		opts.Type = gofastly.SnippetTypeHash
-	case "hit":
-		opts.Type = gofastly.SnippetTypeHit
-	case "miss":
-		opts.Type = gofastly.SnippetTypeMiss
-	case "pass":
-		opts.Type = gofastly.SnippetTypePass
-	case "fetch":
-		opts.Type = gofastly.SnippetTypeFetch
-	case "error":
-		opts.Type = gofastly.SnippetTypeError
-	case "deliver":
-		opts.Type = gofastly.SnippetTypeDeliver
-	case "log":
-		opts.Type = gofastly.SnippetTypeLog
-	case "none":
-		opts.Type = gofastly.SnippetTypeNone
-	}
+	opts.Type = gofastly.SnippetType(snippetType)
 
 	return &opts, nil
 }

@@ -540,6 +540,10 @@ Required:
 - **name** (String) The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The Insert API key from the Account page of your New Relic account
 
+Optional:
+
+- **region** (String) The region that log data will be sent to. Default: `US`
+
 
 <a id="nestedblock--logging_openstack"></a>
 ### Nested Schema for `logging_openstack`

@@ -22,7 +22,8 @@ func init() {
 func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain1 := fmt.Sprintf("%s.test", name)
-	domain2 := fmt.Sprintf("%sALT.test", name)
+	domain2 := fmt.Sprintf("%salt.test", name)
+	domain2_bad := fmt.Sprintf("%sALT.test", name)
 	commonName1 := domain1
 	commonName2 := domain2
 
@@ -58,6 +59,10 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfig_invalidCommonName(),
 				ExpectError: regexp.MustCompile("Domain specified as common_name.*"),
+			},
+			{
+				Config:      testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2_bad, commonName2),
+				ExpectError: regexp.MustCompile("must not contain uppercase letters"),
 			},
 		},
 	})

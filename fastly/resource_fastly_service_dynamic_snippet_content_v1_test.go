@@ -259,7 +259,7 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	_, err = conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 		ServiceID: service.ID,
 		ID:        dynamicSnippet.ID,
-		Content:   content,
+		Content:   gofastly.String(content),
 	})
 
 	if err != nil {

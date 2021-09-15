@@ -1,4 +1,24 @@
-## 0.35.0 (Unreleased)
+## 0.36.0 (Unreleased)
+
+## 0.35.0 (September 15, 2021)
+
+ENHANCEMENTS:
+
+* Make `backend` block optional [#457](https://github.com/fastly/terraform-provider-fastly/pull/457)
+* Audit `sensitive` attributes [#458](https://github.com/fastly/terraform-provider-fastly/pull/458)
+* Tests should not error when no backends defined (now considered as warning) [#462](https://github.com/fastly/terraform-provider-fastly/pull/462)
+* Refactor service attribute handlers into CRUD-style functions [#463](https://github.com/fastly/terraform-provider-fastly/pull/463)
+* Change to accept multi-pem blocks [#469](https://github.com/fastly/terraform-provider-fastly/pull/469)
+* Bump go-fastly version [#467](https://github.com/fastly/terraform-provider-fastly/pull/467)
+
+BUG FIXES:
+
+* Fix `fastly_service_waf_configuration` not updating `rule` attributes correctly [#464](https://github.com/fastly/terraform-provider-fastly/pull/464)
+* Correctly update `version_comment` [#466](https://github.com/fastly/terraform-provider-fastly/pull/466)
+
+DEPRECATED:
+
+* Deprecate `geo_headers` attribute [#456](https://github.com/fastly/terraform-provider-fastly/pull/456)
 
 ## 0.34.0 (August 9, 2021)
 

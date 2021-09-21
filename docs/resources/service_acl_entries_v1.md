@@ -56,7 +56,7 @@ resource "fastly_service_acl_entries_v1" "entries" {
     ip = "127.0.0.1"
     subnet = "24"
     negated = false
-    comment = "ALC Entry 1"
+    comment = "ACL Entry 1"
   }
 }
 ```
@@ -166,7 +166,7 @@ resource "fastly_service_acl_entries_v1" "entries" {
     ip = "127.0.0.1"
     subnet = "24"
     negated = false
-    comment = "ALC Entry 1"
+    comment = "ACL Entry 1"
   }
 }
 ```
@@ -189,7 +189,7 @@ resource "fastly_service_acl_entries_v1" "entries" {
     ip = "127.0.0.1"
     subnet = "24"
     negated = false
-    comment = "ALC Entry 1"
+    comment = "ACL Entry 1"
   }
   
   lifecycle {

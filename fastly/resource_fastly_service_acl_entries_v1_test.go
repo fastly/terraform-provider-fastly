@@ -26,7 +26,7 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					IP:        "127.0.0.1",
 					Subnet:    24,
 					Negated:   false,
-					Comment:   "ALC Entry 1",
+					Comment:   "ACL Entry 1",
 				},
 				{
 					ServiceID: "service-id",
@@ -34,7 +34,7 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					IP:        "192.168.0.1",
 					Subnet:    16,
 					Negated:   true,
-					Comment:   "ALC Entry 2",
+					Comment:   "ACL Entry 2",
 				},
 			},
 			local: []map[string]interface{}{
@@ -42,13 +42,13 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					"ip":      "127.0.0.1",
 					"subnet":  "24",
 					"negated": false,
-					"comment": "ALC Entry 1",
+					"comment": "ACL Entry 1",
 				},
 				{
 					"ip":      "192.168.0.1",
 					"subnet":  "16",
 					"negated": true,
-					"comment": "ALC Entry 2",
+					"comment": "ACL Entry 2",
 				},
 			},
 		},
@@ -73,7 +73,7 @@ func TestAccFastlyServiceAclEntriesV1_create(t *testing.T) {
 			"ip":      "127.0.0.1",
 			"subnet":  "24",
 			"negated": false,
-			"comment": "ALC Entry 1",
+			"comment": "ACL Entry 1",
 		},
 	}
 
@@ -110,7 +110,7 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 			"ip":      "127.0.0.1",
 			"subnet":  "24",
 			"negated": false,
-			"comment": "ALC Entry 1",
+			"comment": "ACL Entry 1",
 		},
 	}
 
@@ -120,7 +120,7 @@ func TestAccFastlyServiceAclEntriesV1_update(t *testing.T) {
 			"ip":      "127.0.0.2",
 			"subnet":  "24",
 			"negated": false,
-			"comment": "ALC Entry 1",
+			"comment": "ACL Entry 1",
 		},
 	}
 
@@ -222,7 +222,7 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 			"ip":      "127.0.0.1",
 			"subnet":  "24",
 			"negated": false,
-			"comment": "ALC Entry 1",
+			"comment": "ACL Entry 1",
 		},
 	}
 
@@ -275,7 +275,7 @@ func TestAccFastlyServiceAclEntriesV1_process_1001_entries(t *testing.T) {
 			"ip":      fmt.Sprintf("127.0.%d.%d", ipPart3, ipPart4),
 			"subnet":  "22",
 			"negated": false,
-			"comment": fmt.Sprintf("ALC Entry %d %d", ipPart3, ipPart4),
+			"comment": fmt.Sprintf("ACL Entry %d %d", ipPart3, ipPart4),
 		})
 
 		ipPart4++

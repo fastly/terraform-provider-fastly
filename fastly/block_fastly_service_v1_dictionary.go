@@ -46,7 +46,7 @@ func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Default:     false,
-					Description: "If `true`, the dictionary is a private dictionary, and items are not readable in the UI or via API. Default is `false`. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. Using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
+					Description: "If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_v1` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items_v1`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items_v1#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
 				},
 				"force_destroy": {
 					Type:        schema.TypeBool,

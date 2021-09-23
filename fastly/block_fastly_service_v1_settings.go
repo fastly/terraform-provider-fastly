@@ -17,13 +17,21 @@ func NewServiceSettings() ServiceAttributeDefinition {
 }
 
 func (h *SettingsServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+	// NOTE: DefaultTTL uses the same default value as provided by the Fastly API.
 	opts := gofastly.UpdateSettingsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: latestVersion,
-		DefaultHost:    gofastly.String(d.Get("default_host").(string)),
-		// default_ttl has the same default value of 3600 that is provided by
-		// the Fastly API, so it's safe to include here
-		DefaultTTL: uint(d.Get("default_ttl").(int)),
+		ServiceID:       d.Id(),
+		ServiceVersion:  latestVersion,
+		DefaultHost:     gofastly.String(d.Get("default_host").(string)),
+		DefaultTTL:      uint(d.Get("default_ttl").(int)),
+		StaleIfErrorTTL: gofastly.Uint(uint(d.Get("stale_if_error_ttl").(int))),
+	}
+
+	if attr, ok := d.GetOk("default_host"); ok {
+		opts.DefaultHost = gofastly.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("stale_if_error"); ok {
+		opts.StaleIfError = gofastly.Bool(attr.(bool))
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
@@ -40,6 +48,8 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	if settings, err := conn.GetSettings(&settingsOpts); err == nil {
 		d.Set("default_host", settings.DefaultHost)
 		d.Set("default_ttl", int(settings.DefaultTTL))
+		d.Set("stale_if_error", bool(settings.StaleIfError))
+		d.Set("stale_if_error_ttl", int(settings.StaleIfErrorTTL))
 	} else {
 		return fmt.Errorf("[ERR] Error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
@@ -47,7 +57,7 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 }
 
 func (h *SettingsServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
-	return d.HasChanges("default_ttl", "default_host")
+	return d.HasChanges("default_ttl", "default_host", "stale_if_error", "stale_if_error_ttl")
 }
 
 // If the requested default_ttl is 0, and this is the first
@@ -69,6 +79,18 @@ func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The default hostname",
+	}
+	s.Schema["stale_if_error"] = &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enables serving a stale object if there is an error",
+	}
+	s.Schema["stale_if_error_ttl"] = &schema.Schema{
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     43200,
+		Description: "The default time-to-live (TTL) for serving the stale object for the version",
 	}
 	return nil
 }

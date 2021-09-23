@@ -26,8 +26,6 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		StaleIfErrorTTL: gofastly.Uint(uint(d.Get("stale_if_error_ttl").(int))),
 	}
 
-	val := uint(d.Get("stale_if_error_ttl").(int))
-	opts.StaleIfErrorTTL = &val
 
 	if attr, ok := d.GetOk("default_host"); ok {
 		opts.DefaultHost = gofastly.String(attr.(string))

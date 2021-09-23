@@ -611,7 +611,7 @@ func TestAccFastlyServiceV1_defaultHost(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
 					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "default_ttl", "3400"),
+						"fastly_service_v1.foo", "default_ttl", "3600"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "stale_if_error_ttl", "43200"),
 					resource.TestCheckResourceAttr(

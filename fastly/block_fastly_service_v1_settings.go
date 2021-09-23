@@ -22,7 +22,8 @@ func (h *SettingsServiceAttributeHandler) Process(d *schema.ResourceData, latest
 		DefaultHost:    gofastly.String(d.Get("default_host").(string)),
 		// default_ttl has the same default value of 3600 that is provided by
 		// the Fastly API, so it's safe to include here
-		DefaultTTL: uint(d.Get("default_ttl").(int)),
+		DefaultTTL:      uint(d.Get("default_ttl").(int)),
+		StaleIfErrorTTL: gofastly.Uint(uint(d.Get("stale_if_error_ttl").(int))),
 	}
 
 	val := uint(d.Get("stale_if_error_ttl").(int))

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -285,7 +284,7 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		SSLClientCert:       df["ssl_client_cert"].(string),
 		MaxTLSVersion:       df["max_tls_version"].(string),
 		MinTLSVersion:       df["min_tls_version"].(string),
-		SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
+		SSLCiphers:          df["ssl_ciphers"].(string),
 		Shield:              df["shield"].(string),
 		Port:                uint(df["port"].(int)),
 		BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
@@ -390,7 +389,7 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 		opts.MaxTLSVersion = gofastly.String(v.(string))
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
-		opts.SSLCiphers = strings.Split(v.(string), ",")
+		opts.SSLCiphers = v.(string)
 	}
 
 	return opts
@@ -420,7 +419,7 @@ func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[s
 			"ssl_client_cert":       b.SSLClientCert,
 			"max_tls_version":       b.MaxTLSVersion,
 			"min_tls_version":       b.MinTLSVersion,
-			"ssl_ciphers":           strings.Join(b.SSLCiphers, ","),
+			"ssl_ciphers":           b.SSLCiphers,
 			"use_ssl":               b.UseSSL,
 			"ssl_cert_hostname":     b.SSLCertHostname,
 			"ssl_sni_hostname":      b.SSLSNIHostname,

@@ -92,7 +92,7 @@ func resourceServiceAclEntriesV1Create(ctx context.Context, d *schema.ResourceDa
 			Operation: gofastly.CreateBatchOperation,
 			IP:        gofastly.String(val["ip"].(string)),
 			Subnet:    gofastly.Int(convertSubnetToInt(val["subnet"].(string))),
-			Negated:   gofastly.Bool(val["negated"].(bool)),
+			Negated:   gofastly.CBool(val["negated"].(bool)),
 			Comment:   gofastly.String(val["comment"].(string)),
 		})
 	}
@@ -184,7 +184,7 @@ func resourceServiceAclEntriesV1Update(ctx context.Context, d *schema.ResourceDa
 				ID:        gofastly.String(resource["id"].(string)),
 				IP:        gofastly.String(resource["ip"].(string)),
 				Subnet:    gofastly.Int(convertSubnetToInt(resource["subnet"].(string))),
-				Negated:   gofastly.Bool(resource["negated"].(bool)),
+				Negated:   gofastly.CBool(resource["negated"].(bool)),
 				Comment:   gofastly.String(resource["comment"].(string)),
 			})
 		}
@@ -198,7 +198,7 @@ func resourceServiceAclEntriesV1Update(ctx context.Context, d *schema.ResourceDa
 				ID:        gofastly.String(resource["id"].(string)),
 				IP:        gofastly.String(resource["ip"].(string)),
 				Subnet:    gofastly.Int(convertSubnetToInt(resource["subnet"].(string))),
-				Negated:   gofastly.Bool(resource["negated"].(bool)),
+				Negated:   gofastly.CBool(resource["negated"].(bool)),
 				Comment:   gofastly.String(resource["comment"].(string)),
 			})
 		}

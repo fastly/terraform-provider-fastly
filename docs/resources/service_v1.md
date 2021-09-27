@@ -351,7 +351,7 @@ Optional:
 - **ssl_ca_cert** (String) CA certificate attached to origin.
 - **ssl_cert_hostname** (String) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all
 - **ssl_check_cert** (Boolean) Be strict about checking SSL certs. Default `true`
-- **ssl_ciphers** (String) Comma separated list of OpenSSL Ciphers to try when negotiating to the backend
+- **ssl_ciphers** (String) Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.
 - **ssl_client_cert** (String, Sensitive) Client certificate attached to origin. Used when connecting to the backend
 - **ssl_client_key** (String, Sensitive) Client key attached to origin. Used when connecting to the backend
 - **ssl_hostname** (String, Deprecated) Used for both SNI during the TLS handshake and to validate the cert

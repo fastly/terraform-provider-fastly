@@ -122,7 +122,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Comma separated list of OpenSSL Ciphers to try when negotiating to the backend",
+			Description: "Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.",
 		},
 		"ssl_check_cert": {
 			Type:        schema.TypeBool,

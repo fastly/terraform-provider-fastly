@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -96,7 +96,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					SSLClientCert:       "",
 					MaxTLSVersion:       "",
 					MinTLSVersion:       "",
-					SSLCiphers:          []string{"foo", "bar", "baz"},
+					SSLCiphers:          "foo:bar:baz",
 					Shield:              "lga-ny-us",
 					Weight:              uint(100),
 				},
@@ -125,7 +125,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"ssl_client_cert":       "",
 					"max_tls_version":       "",
 					"min_tls_version":       "",
-					"ssl_ciphers":           "foo,bar,baz",
+					"ssl_ciphers":           "foo:bar:baz",
 					"shield":                "lga-ny-us",
 					"weight":                100,
 				},

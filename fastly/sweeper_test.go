@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/fastly/go-fastly/v3/fastly"
+	"github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 

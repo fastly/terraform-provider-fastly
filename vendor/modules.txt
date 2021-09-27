@@ -237,9 +237,9 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v3 v3.9.5
+# github.com/fastly/go-fastly/v5 v5.0.0
 ## explicit
-github.com/fastly/go-fastly/v3/fastly
+github.com/fastly/go-fastly/v5/fastly
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e

@@ -3,10 +3,12 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/fastly/go-fastly/v5/fastly"
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -193,6 +195,12 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		Include: &include,
 	})
 	if err != nil {
+		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+			log.Printf("[WARN] No TLS subscription found for ID (%s)", d.Id())
+			d.SetId("")
+			return nil
+		}
+
 		return diag.FromErr(err)
 	}
 

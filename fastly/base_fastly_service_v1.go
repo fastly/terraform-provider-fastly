@@ -241,8 +241,9 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*FastlyClient).conn
 
+	shouldActivate := d.Get("activate").(bool)
 	// Update Name and/or Comment. No new version is required for this.
-	if d.HasChanges("name", "comment") {
+	if d.HasChanges("name", "comment") && shouldActivate {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
 			Name:      gofastly.String(d.Get("name").(string)),
@@ -367,7 +368,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	shouldActivate := d.Get("activate").(bool)
 	versionNotYetActivated := d.Get("cloned_version") != d.Get("active_version")
 	latestVersion := d.Get("cloned_version").(int)
 	if shouldActivate && versionNotYetActivated {
@@ -399,6 +399,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 // resourceServiceRead provides service resource Read functionality.
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
+
+	var diags diag.Diagnostics
 
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 		ID: d.Id(),
@@ -439,6 +441,14 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	err = d.Set("active_version", s.ActiveVersion.Number)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if d.HasChanges("name", "comment") && !d.Get("activate").(bool) {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Some changes are ignored",
+			Detail:   "'name' and 'comment' attirbutes can only be updated with 'activate = true'",
+		})
 	}
 
 	// If cloned_version is not set, and there is no active version, temporarily
@@ -500,7 +510,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		log.Printf("[DEBUG] Active Version for Service (%s) is empty, no state to refresh", d.Id())
 	}
 
-	return nil
+	return diags
 }
 
 // resourceServiceDelete provides service resource Delete functionality.

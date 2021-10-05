@@ -69,6 +69,12 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The client private key used to make authenticated requests. Must be in PEM format.",
 			Sensitive:   true,
 		},
+		"use_tls": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Whether to use TLS for secure logging. Default: `false`",
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -120,6 +126,7 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 		TLSCACert:         resource["tls_ca_cert"].(string),
 		TLSClientCert:     resource["tls_client_cert"].(string),
 		TLSClientKey:      resource["tls_client_key"].(string),
+		UseTLS:            gofastly.Compatibool(resource["use_tls"].(bool)),
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		ResponseCondition: vla.responseCondition,
@@ -206,6 +213,9 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	if v, ok := modified["tls_client_key"]; ok {
 		opts.TLSClientKey = gofastly.String(v.(string))
 	}
+	if v, ok := modified["use_tls"]; ok {
+		opts.UseTLS = gofastly.CBool(v.(bool))
+	}
 
 	log.Printf("[DEBUG] Update Splunk Opts: %#v", opts)
 	_, err := conn.UpdateSplunk(&opts)
@@ -247,6 +257,7 @@ func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
 			"response_condition": s.ResponseCondition,
 			"placement":          s.Placement,
 			"token":              s.Token,
+			"use_tls":            s.UseTLS,
 			"tls_hostname":       s.TLSHostname,
 			"tls_ca_cert":        s.TLSCACert,
 			"tls_client_cert":    s.TLSClientCert,

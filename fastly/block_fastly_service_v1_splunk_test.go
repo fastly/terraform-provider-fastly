@@ -61,6 +61,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"tls_ca_cert":     cert,
 					"tls_client_cert": cert,
 					"tls_client_key":  key,
+					"use_tls":         false,
 				},
 			},
 		},
@@ -86,6 +87,7 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 		FormatVersion:     1,
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
+		UseTLS:            true,
 	}
 
 	splunkLogOneUpdated := gofastly.Splunk{
@@ -96,6 +98,7 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 		FormatVersion:     2,
 		Placement:         "waf_debug",
 		ResponseCondition: "error_response_5XX",
+		UseTLS:            false,
 	}
 
 	splunkLogTwo := gofastly.Splunk{
@@ -106,6 +109,7 @@ func TestAccFastlyServiceV1_splunk_basic(t *testing.T) {
 		FormatVersion:     2,
 		Placement:         "waf_debug",
 		ResponseCondition: "ok_response_2XX",
+		UseTLS:            false,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -464,6 +468,7 @@ resource "fastly_service_v1" "foo" {
     format_version     = 1
     placement          = "waf_debug"
     response_condition = "error_response_5XX"
+	use_tls            = true
   }
 
   force_destroy = true

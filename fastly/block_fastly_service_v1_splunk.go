@@ -73,7 +73,7 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Whether to use TLS for secure logging. Defult: `false`",
+			Description: "Whether to use TLS for secure logging. Default: `false`",
 		},
 	}
 

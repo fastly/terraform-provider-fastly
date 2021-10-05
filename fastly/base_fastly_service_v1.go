@@ -443,6 +443,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
+	// NOTE: service "name" and "comment" are versionless (mutable).
+	// Therefore, we only allow them to be updated if "activate = true".
+	// Unfortunately, with our current resource design, it's not easy to show
+	// a warning message upon plan, and so this warning will only appear upon applying.
 	if d.HasChanges("name", "comment") && !d.Get("activate").(bool) {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,

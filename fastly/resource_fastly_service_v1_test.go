@@ -433,6 +433,18 @@ func TestAccFastlyServiceV1_basic(t *testing.T) {
 				),
 			},
 			{
+				// updating service comment with "activate = false" will be ignored
+				Config: testAccServiceV1Config_updateServiceComment(name, "new service comment", domainName1, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "active_version", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_v1.foo", "comment", "Managed by Terraform"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
 				Config: testAccServiceV1Config_basicUpdate(name, comment, versionComment2, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
@@ -796,6 +808,27 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, name, domain)
+}
+
+func testAccServiceV1Config_updateServiceComment(name, comment string, domain string, activate bool) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+  comment = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  activate = %t
+  force_destroy = true
+}`, name, comment, domain, activate)
 }
 
 func testAccServiceV1Config_initWithVerstionComment(name, versionComment, domain string) string {

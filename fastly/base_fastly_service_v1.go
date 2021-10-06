@@ -451,7 +451,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "Some changes are ignored",
-			Detail:   "'name' and 'comment' attirbutes can only be updated with 'activate = true'",
+			Detail:   "'name' and 'comment' attributes can only be updated with 'activate = true'",
 		})
 	}
 

@@ -6,6 +6,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
+	"golang.org/x/net/http2"
 )
 
 type Config struct {
@@ -33,6 +34,11 @@ func (c *Config) Client() (*FastlyClient, diag.Diagnostics) {
 		return nil, diag.FromErr(err)
 	}
 
+	// explicitly assigning http2.Transport so there will be just one TLS-ALPN negotiation happens
+	// amoung all Fastly provider resources against the same api.fastly.com:443 destination.
+	// otherwise, each resource would consume a different source port due to TLS handshake.
+	// see also: https://github.com/fastly/terraform-provider-fastly/issues/484
+	fastlyClient.HTTPClient.Transport = &http2.Transport{}
 	fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", fastlyClient.HTTPClient.Transport)
 
 	client.conn = fastlyClient

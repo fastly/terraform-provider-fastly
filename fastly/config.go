@@ -47,8 +47,8 @@ func (c *Config) Client() (*FastlyClient, diag.Diagnostics) {
 	// 2 (minor). while http.Transport supports HTTP/2 by default, it does TLS-ALPN negotiation
 	// in order to support HTTP/1.x fallback. This means each new client connection initiated
 	// by each resource will start TLS handshake regardless of the existing connection pool status.
-	// explicitly assigning http2.Transport so there will be just one TLS-ALPN negotiation happens
-	// amoung all Fastly provider resources against the same api.fastly.com:443 destination.
+	// explicitly assigning http2.Transport so there will be just one TLS-ALPN negotiation happening
+	// (across all Fastly provider resources) against the same api.fastly.com:443 destination.
 	if c.ForceHttp2 {
 		fastlyClient.HTTPClient.Transport = &http2.Transport{}
 	} else {

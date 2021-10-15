@@ -76,16 +76,16 @@ func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.Res
 		ServiceVersion: s.ActiveVersion.Number,
 	})
 
-	isNewImport := false
 	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
-		isNewImport = true
 		log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+		d.Set(h.GetKey(), nil)
+		return nil
 	} else if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
 
 	filename := d.Get("package.0.filename").(string)
-	wp := flattenPackage(Package, filename, isNewImport)
+	wp := flattenPackage(Package, filename)
 	if err := d.Set(h.GetKey(), wp); err != nil {
 		log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
 	}
@@ -98,15 +98,10 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 	return err
 }
 
-func flattenPackage(Package *gofastly.Package, filename string, isNewImport bool) []map[string]interface{} {
+func flattenPackage(Package *gofastly.Package, filename string) []map[string]interface{} {
 	var pa []map[string]interface{}
-	var hashSum string
-
-	if !isNewImport {
-		hashSum = Package.Metadata.HashSum
-	}
 	p := map[string]interface{}{
-		"source_code_hash": hashSum,
+		"source_code_hash": Package.Metadata.HashSum,
 		"filename":         filename,
 	}
 

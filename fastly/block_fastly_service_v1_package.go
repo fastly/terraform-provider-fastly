@@ -62,7 +62,7 @@ func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.
 			PackagePath:    packageFilename,
 		})
 		if err != nil {
-			return fmt.Errorf("Error modifying package %s: %s", d.Id(), err)
+			return fmt.Errorf("[ERR] Error modifying package %s: %s", d.Id(), err)
 		}
 	}
 
@@ -77,6 +77,11 @@ func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.Res
 	})
 
 	if err != nil {
+		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+			d.Set(h.GetKey(), nil)
+			return nil
+		}
 		return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
 

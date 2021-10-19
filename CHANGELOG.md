@@ -1,4 +1,23 @@
-## 0.37.0 (Unreleased)
+## 0.38.0 (Unreleased)
+
+## 0.37.0 (November 1, 2021)
+
+BUG FIXES:
+
+* Ignore 404 on GetPackage when importing wasm service [#487](https://github.com/fastly/terraform-provider-fastly/pull/487)
+* Properly set `IdleConnTimeout` to prevent resource exhaustion on tests [#491](https://github.com/fastly/terraform-provider-fastly/pull/491)
+
+ENHANCEMENTS:
+
+* Remove TLS subscriptions that 404 from state [#479](https://github.com/fastly/terraform-provider-fastly/pull/479)
+* Override `Transport` to enable keepalive and add new `force_http2` provider option [#485](https://github.com/fastly/terraform-provider-fastly/pull/485)
+* Rename GNUmakefile to Makefile [#483](https://github.com/fastly/terraform-provider-fastly/pull/483)
+* Only update service `name` and `comment` if `activate` is true [#481](https://github.com/fastly/terraform-provider-fastly/pull/481)
+* Add `use_tls` attribute for Splunk logging [#482](https://github.com/fastly/terraform-provider-fastly/pull/482)
+
+DOCUMENTATION:
+
+* Convert `index.md` to template to inject provider version [#492](https://github.com/fastly/terraform-provider-fastly/pull/492)
 
 ## 0.36.0 (September 27, 2021)
 

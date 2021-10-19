@@ -76,11 +76,12 @@ func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.Res
 		ServiceVersion: s.ActiveVersion.Number,
 	})
 
-	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
-		log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
-		d.Set(h.GetKey(), nil)
-		return nil
-	} else if err != nil {
+	if err != nil {
+		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+			d.Set(h.GetKey(), nil)
+			return nil
+		}
 		return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
 

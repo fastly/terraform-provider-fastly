@@ -2,7 +2,9 @@ package fastly
 
 import (
 	"fmt"
+	"net"
 	"net/http"
+	"time"
 
 	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -49,13 +51,28 @@ func (c *Config) Client() (*FastlyClient, diag.Diagnostics) {
 	// by each resource will start TLS handshake regardless of the existing connection pool status.
 	// explicitly assigning http2.Transport so there will be just one TLS-ALPN negotiation happening
 	// (across all Fastly provider resources) against the same api.fastly.com:443 destination.
-	if c.ForceHttp2 {
-		fastlyClient.HTTPClient.Transport = &http2.Transport{}
-	} else {
-		fastlyClient.HTTPClient.Transport = &http.Transport{}
+	httpDefaultTransport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 	}
+	// NOTE: "force_http2" provider option is an experimental feature.
+	// http2.Transport struct fields are largely different than http.Transport
+	// so leave it to default values for now.
+	http2DefaultTransport := &http2.Transport{}
 
-	fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", fastlyClient.HTTPClient.Transport)
+	if c.ForceHttp2 {
+		fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", http2DefaultTransport)
+	} else {
+		fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", httpDefaultTransport)
+	}
 
 	client.conn = fastlyClient
 	return &client, nil

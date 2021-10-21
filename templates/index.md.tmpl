@@ -1,4 +1,4 @@
----
+{{define "index"}}---
 page_title: "fastly Provider"
 subcategory: ""
 description: |-
@@ -20,6 +20,16 @@ The Fastly provider prior to version v0.13.0 requires using
 ## Example Usage
 
 ```hcl
+# Terraform 0.13+ requires providers to be declared in a "required_providers" block
+terraform {
+  required_providers {
+    fastly = {
+      source = "fastly/fastly"
+      version >= "{{ .Data.ProviderVersion }}"
+    }
+  }
+}
+
 # Configure the Fastly Provider
 provider "fastly" {
   api_key = "test"
@@ -80,17 +90,4 @@ Usage:
 $ export FASTLY_API_KEY="afastlyapikey"
 $ terraform plan
 ```
-
-## Argument Reference
-
-The following arguments are supported in the `provider` block:
-
-* `api_key` - (Optional) This is the API key. It must be provided, but
-  it can also be sourced from the `FASTLY_API_KEY` environment variable
-
-* `base_url` - (Optional) This is the API server hostname. It is required
-  if using a private instance of the API and otherwise defaults to the
-  public Fastly production service. It can also be sourced from the
-  `FASTLY_API_URL` environment variable
-
-* `no_auth` - (Optional) Set this to `true` if you only need data source that does not require authentication such as `fastly_ip_ranges`. Default: `false`
+{{end}}

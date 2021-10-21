@@ -66,7 +66,7 @@ $(BIN)/%:
 	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} go install {}
 
 generate-docs: $(BIN)/tfplugindocs
-	go run scripts/generate-docs.go -tfplugindocsPath=$(BIN)/tfplugindocs
+	go run -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(shell git describe --tags --always --abbrev=0)" scripts/generate-docs.go -tfplugindocsPath=$(BIN)/tfplugindocs
 
 validate-docs: $(BIN)/tfplugindocs
 	$(BIN)/tfplugindocs validate

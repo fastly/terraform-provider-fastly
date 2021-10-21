@@ -30,18 +30,21 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+
+	"github.com/fastly/terraform-provider-fastly/version"
 )
 
 // PageData represents a type of service and enables a template to render
 // different content depending on the service type.
 type PageData struct {
-	ServiceType string
+	ServiceType     string
+	ProviderVersion string
 }
 
 // Page represents a template page to be rendered.
@@ -145,14 +148,14 @@ func main() {
 			name: "service_v1",
 			path: tempDir + "/resources/service_v1.md.tmpl",
 			Data: PageData{
-				"vcl",
+				ServiceType: "vcl",
 			},
 		},
 		{
 			name: "service_compute",
 			path: tempDir + "/resources/service_compute.md.tmpl",
 			Data: PageData{
-				"wasm",
+				ServiceType: "wasm",
 			},
 		},
 		{
@@ -201,13 +204,21 @@ func main() {
 		},
 	}
 
-	pages := append(resourcePages, dataPages...)
+	var indexPages = []Page{
+		{
+			name: "index",
+			path: tempDir + "/index.md.tmpl",
+			Data: PageData{
+				ProviderVersion: strings.Replace(version.ProviderVersion, "v", "", 1),
+			},
+		},
+	}
+
+	pages := append(append(indexPages, resourcePages...), dataPages...)
 
 	renderPages(getTemplate(tmplDir), pages)
 
 	appendSyntaxToFiles(tempDir)
-
-	copyIndexToTempDir(tmplDir, tempDir)
 
 	backupTemplatesDir(tmplDir)
 
@@ -309,38 +320,6 @@ func appendSyntaxToFiles(tempDir string) {
 		}
 		return nil
 	})
-}
-
-// copyIndexToTempDir copies the non-templated index.md into our temporary
-// directory so that when we come to replace the repo's /templates with our
-// pre-compiled version, then the tfplugindocs command will be able to include
-// the index.md in the generated output in the /docs directory.
-//
-// The reason the index.md isn't already in our temporary directory of
-// pre-compiled Markdown templates is because the renderPages function is
-// designed to include only files with a .tmpl extension, where as index.md
-// doesn't require any templating.
-func copyIndexToTempDir(tmplDir string, tempDir string) {
-	filename := "/index.md"
-	srcFile := tmplDir + filename
-	dstFile := tempDir + filename
-
-	src, err := os.Open(srcFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer src.Close()
-
-	dst, err := os.Create(dstFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer dst.Close()
-
-	_, err = io.Copy(dst, src)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 // backupTemplatesDir renames the /templates directory.

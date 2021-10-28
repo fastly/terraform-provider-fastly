@@ -19,19 +19,7 @@ The Fastly provider prior to version v0.13.0 requires using
 
 ## Example Usage
 
-```hcl
-# Configure the Fastly Provider
-provider "fastly" {
-  api_key = "test"
-}
-
-# Create a Service
-resource "fastly_service_v1" "myservice" {
-  name = "myawesometestservice"
-
-  # ...
-}
-```
+{{ tffile "examples/index-fastly-provider.tf" }}
 
 ## Authentication
 
@@ -50,15 +38,7 @@ Fastly provider block:
 
 Usage:
 
-```hcl
-provider "fastly" {
-  api_key = "test"
-}
-
-resource "fastly_service_v1" "myservice" {
-  # ...
-}
-```
+{{ tffile "examples/index-api-key.tf" }}
 
 You can create a credential on the Personal API Tokens page: https://manage.fastly.com/account/personal/tokens
 
@@ -68,18 +48,11 @@ You can provide your API key via `FASTLY_API_KEY` environment variable,
 representing your Fastly API key. When using this method, you may omit the
 Fastly `provider` block entirely:
 
-```hcl
-resource "fastly_service_v1" "myservice" {
-  # ...
-}
-```
+{{ tffile "examples/index-fastly-service.tf" }}
 
 Usage:
 
-```
-$ export FASTLY_API_KEY="afastlyapikey"
-$ terraform plan
-```
+{{ codefile "sh" "examples/index-env-var-tf-plan.txt" }}
 
 ## Argument Reference
 

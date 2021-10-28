@@ -1,4 +1,4 @@
-{{define "data_source_tls_private_key"}}---
+---
 
 layout: "fastly"
 page_title: "Fastly: fastly_tls_private_key"
@@ -20,13 +20,4 @@ Use this data source to get information on a TLS Private Key uploaded to Fastly.
 
 ## Example Usage
 
-```hcl
-data "fastly_tls_private_key" "demo" {
-  name = "demo-private-key"
-}
-
-output "private_key_needs_replacing" {
-  value = data.fastly_tls_private_key.demo.replace
-}
-```
-{{end}}
+{{ tffile "examples/data-sources/tls_private_key.tf" }}

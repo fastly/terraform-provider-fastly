@@ -20,7 +20,7 @@ Defines a set of Web Application Firewall configuration options that can be used
 
 Basic usage:
 
-```hcl
+```terraform
 resource "fastly_service_v1" "demo" {
   name = "demofastly"
 
@@ -68,14 +68,14 @@ resource "fastly_service_v1" "demo" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 100
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 100
 }
 ```
 
 Usage with rules:
 
-```hcl
+```terraform
 resource "fastly_service_v1" "demo" {
   name = "demofastly"
 
@@ -138,7 +138,7 @@ Usage with rule exclusions:
 
 ~> **Warning:** Rule exclusions are part of a **beta release**, which may be subject to breaking changes and improvements over time. For more information, see our [product and feature lifecycle](https://docs.fastly.com/products/fastly-product-lifecycle#beta) descriptions.
 
-```hcl
+```terraform
 resource "fastly_service_v1" "demo" {
   name = "demofastly"
 
@@ -186,8 +186,8 @@ resource "fastly_service_v1" "demo" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 100
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 100
 
   rule {
     modsec_rule_id = 2029718
@@ -196,9 +196,9 @@ resource "fastly_service_waf_configuration" "waf" {
   }
 
   rule_exclusion {
-    name = "index page"
-    exclusion_type = "rule"
-    condition = "req.url.basename == \"index.html\""
+    name            = "index page"
+    exclusion_type  = "rule"
+    condition       = "req.url.basename == \"index.html\""
     modsec_rule_ids = [2029718]
   }
 }
@@ -206,7 +206,7 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage with rules from data source:
 
-```hcl
+```terraform
 variable "type_status" {
   type = map(string)
   default = {
@@ -282,10 +282,10 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage with support for individual rule configuration (this is the suggested pattern):
 
-```hcl
+```terraform
 # this variable is used for rule configuration in bulk
 variable "type_status" {
-  type = map(string)
+  type    = map(string)
   default = {
     score     = "score"
     threshold = "log"
@@ -294,7 +294,7 @@ variable "type_status" {
 }
 # this variable is used for individual rule configuration
 variable "individual_rules" {
-  type = map(string)
+  type    = map(string)
   default = {
     1010020 = "block"
   }
@@ -351,8 +351,8 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 202
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 202
 
   dynamic "rule" {
     for_each = data.fastly_waf_rules.owasp.rules
@@ -368,10 +368,10 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage with support for specific rule revision configuration:
 
-```hcl
+```terraform
 # this variable is used for rule configuration in bulk
 variable "type_status" {
-  type = map(string)
+  type    = map(string)
   default = {
     score     = "score"
     threshold = "log"
@@ -381,7 +381,7 @@ variable "type_status" {
 
 # This variable is used for individual rule revision configuration.
 variable "specific_rule_revisions" {
-  type = map(string)
+  type    = map(string)
   default = {
     #  If the revision requested is not found, the server will return a 404 response code.
     1010020 = 1
@@ -439,8 +439,8 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 202
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 202
 
   dynamic "rule" {
     for_each = data.fastly_waf_rules.owasp.rules
@@ -455,10 +455,10 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage omitting rule revision field. The first time Terraform is applied, the latest rule revisions are associated with the WAF. Any subsequent apply would not alter the rule revisions.
 
-```hcl
+```terraform
 # This variable is used for rule configuration in bulk.
 variable "type_status" {
-  type = map(string)
+  type    = map(string)
   default = {
     score     = "score"
     threshold = "log"
@@ -467,7 +467,7 @@ variable "type_status" {
 }
 # This variable is used for individual rule configuration.
 variable "individual_rules" {
-  type = map(string)
+  type    = map(string)
   default = {
     1010020 = "block"
   }
@@ -524,8 +524,8 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 202
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 202
 
   dynamic "rule" {
     for_each = data.fastly_waf_rules.owasp.rules
@@ -561,83 +561,13 @@ For this scenario, it's recommended to split the changes into two distinct steps
 This is an example of the import command being applied to the resource named `fastly_service_waf_configuration.waf`
 The resource ID should be the WAF ID.
 
-```
+```txt
 $ terraform import fastly_service_waf_configuration.waf xxxxxxxxxxxxxxxxxxxx
 ```
 
 If Terraform is already managing a remote WAF configurations against a resource being imported then the user will be asked to remove it from the existing Terraform state.
 The following is an example of the Terraform state command to remove the resource named `fastly_service_waf_configuration.waf` from the Terraform state file.
 
-```
+```txt
 $ terraform state rm fastly_service_waf_configuration.waf
 ```
-<!-- schema generated by tfplugindocs -->
-## Schema
-
-### Required
-
-- **waf_id** (String) The ID of the Web Application Firewall that the configuration belongs to
-
-### Optional
-
-- **allowed_http_versions** (String) Allowed HTTP versions
-- **allowed_methods** (String) A space-separated list of HTTP method names
-- **allowed_request_content_type** (String) Allowed request content types
-- **allowed_request_content_type_charset** (String) Allowed request content type charset
-- **arg_length** (Number) The maximum number of arguments allowed
-- **arg_name_length** (Number) The maximum allowed argument name length
-- **combined_file_sizes** (Number) The maximum allowed size of all files
-- **critical_anomaly_score** (Number) Score value to add for critical anomalies
-- **crs_validate_utf8_encoding** (Boolean) CRS validate UTF8 encoding
-- **error_anomaly_score** (Number) Score value to add for error anomalies
-- **high_risk_country_codes** (String) A space-separated list of country codes in ISO 3166-1 (two-letter) format
-- **http_violation_score_threshold** (Number) HTTP violation threshold
-- **id** (String) The ID of this resource.
-- **inbound_anomaly_score_threshold** (Number) Inbound anomaly threshold
-- **lfi_score_threshold** (Number) Local file inclusion attack threshold
-- **max_file_size** (Number) The maximum allowed file size, in bytes
-- **max_num_args** (Number) The maximum number of arguments allowed
-- **notice_anomaly_score** (Number) Score value to add for notice anomalies
-- **paranoia_level** (Number) The configured paranoia level
-- **php_injection_score_threshold** (Number) PHP injection threshold
-- **rce_score_threshold** (Number) Remote code execution threshold
-- **restricted_extensions** (String) A space-separated list of allowed file extensions
-- **restricted_headers** (String) A space-separated list of allowed header names
-- **rfi_score_threshold** (Number) Remote file inclusion attack threshold
-- **rule** (Block Set) (see [below for nested schema](#nestedblock--rule))
-- **rule_exclusion** (Block Set) (see [below for nested schema](#nestedblock--rule_exclusion))
-- **session_fixation_score_threshold** (Number) Session fixation attack threshold
-- **sql_injection_score_threshold** (Number) SQL injection attack threshold
-- **total_arg_length** (Number) The maximum size of argument names and values
-- **warning_anomaly_score** (Number) Score value to add for warning anomalies
-- **xss_score_threshold** (Number) XSS attack threshold
-
-<a id="nestedblock--rule"></a>
-### Nested Schema for `rule`
-
-Required:
-
-- **modsec_rule_id** (Number) The Web Application Firewall rule's modsecurity ID
-- **status** (String) The Web Application Firewall rule's status. Allowed values are (`log`, `block` and `score`)
-
-Optional:
-
-- **revision** (Number) The Web Application Firewall rule's revision. The latest revision will be used if this is not provided
-
-
-<a id="nestedblock--rule_exclusion"></a>
-### Nested Schema for `rule_exclusion`
-
-Required:
-
-- **condition** (String) A conditional expression in VCL used to determine if the condition is met
-- **exclusion_type** (String) The type of rule exclusion. Values are `rule` to exclude the specified rule(s), or `waf` to disable the Web Application Firewall
-- **name** (String) The name of rule exclusion
-
-Optional:
-
-- **modsec_rule_ids** (Set of Number) Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded
-
-Read-Only:
-
-- **number** (Number) The numeric ID assigned to the WAF Rule Exclusion

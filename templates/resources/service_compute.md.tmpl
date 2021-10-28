@@ -1,4 +1,4 @@
-{{define "service_compute"}}---
+---
 layout: "fastly"
 page_title: "Fastly: service_compute"
 sidebar_current: "docs-fastly-resource-service-compute"
@@ -18,32 +18,26 @@ on their documentation site for guidance.
 
 Basic usage:
 
-```hcl
-resource "fastly_service_compute" "demo" {
-    name = "demofastly"
+{{ tffile "examples/resources/service_compute_basic_usage.tf" }}
 
-    domain {
-      name    = "demo.notexample.com"
-      comment = "demo"
-    }
+<!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
+### package block
 
-    backend {
-      address = "127.0.0.1"
-      name    = "localhost"
-      port    = 80
-    }
+The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
+[Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
 
-    package {
-      filename = "package.tar.gz"
-      source_code_hash = filesha512("package.tar.gz")
-    }
+[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
+[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
+[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
+[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
 
-    force_destroy = true
-}
-```
+## Import
 
-{{ template "package_block" . }}
+Fastly Services can be imported using their service ID, e.g.
 
-{{ template "footer" .}}
+{{ codefile "txt" "examples/resources/components/service_compute_import_cmd.txt" }}
 
-{{end}}
+By default, either the active version will be imported, or the latest version if no version is active.
+Alternatively, a specific version of the service can be selected by appending an `@` followed by the version number to the service ID, e.g.
+
+{{ codefile "txt" "examples/resources/components/service_compute_import_cmd_with_version.txt" }}

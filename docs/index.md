@@ -19,17 +19,17 @@ The Fastly provider prior to version v0.13.0 requires using
 
 ## Example Usage
 
-```hcl
+```terraform
 # Configure the Fastly Provider
 provider "fastly" {
-  api_key = "test"
+api_key = "test"
 }
 
 # Create a Service
 resource "fastly_service_v1" "myservice" {
-  name = "myawesometestservice"
+name = "myawesometestservice"
 
-  # ...
+# ...
 }
 ```
 
@@ -50,7 +50,7 @@ Fastly provider block:
 
 Usage:
 
-```hcl
+```terraform
 provider "fastly" {
   api_key = "test"
 }
@@ -68,15 +68,15 @@ You can provide your API key via `FASTLY_API_KEY` environment variable,
 representing your Fastly API key. When using this method, you may omit the
 Fastly `provider` block entirely:
 
-```hcl
+```terraform
 resource "fastly_service_v1" "myservice" {
-  # ...
+# ...
 }
 ```
 
 Usage:
 
-```
+```sh
 $ export FASTLY_API_KEY="afastlyapikey"
 $ terraform plan
 ```

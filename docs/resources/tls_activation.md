@@ -54,6 +54,6 @@ resource "fastly_tls_activation" "test" {
 
 A TLS activation can be imported using its ID, e.g.
 
-```txt
+```sh
 $ terraform import fastly_tls_activation.demo xxxxxxxx
 ```

@@ -234,13 +234,13 @@ resource "fastly_service_dictionary_items_v1" "items" {
 This is an example of the import command being applied to the resource named `fastly_service_dictionary_items_v1.items`
 The resource ID is a combined value of the `service_id` and `dictionary_id` separated by a forward slash.
 
-```txt
+```sh
 $ terraform import fastly_service_dictionary_items_v1.items xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx
 ```
 
 If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
 The following is an example of the Terraform state command to remove the resource named `fastly_service_dictionary_items_v1.items` from the Terraform state file.
 
-```txt
+```sh
 $ terraform state rm fastly_service_dictionary_items_v1.items
 ```

@@ -561,13 +561,13 @@ For this scenario, it's recommended to split the changes into two distinct steps
 This is an example of the import command being applied to the resource named `fastly_service_waf_configuration.waf`
 The resource ID should be the WAF ID.
 
-```txt
+```sh
 $ terraform import fastly_service_waf_configuration.waf xxxxxxxxxxxxxxxxxxxx
 ```
 
 If Terraform is already managing a remote WAF configurations against a resource being imported then the user will be asked to remove it from the existing Terraform state.
 The following is an example of the Terraform state command to remove the resource named `fastly_service_waf_configuration.waf` from the Terraform state file.
 
-```txt
+```sh
 $ terraform state rm fastly_service_waf_configuration.waf
 ```

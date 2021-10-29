@@ -57,6 +57,6 @@ resource "fastly_tls_certificate" "example" {
 
 A certificate can be imported using its Fastly certificate ID, e.g.
 
-```txt
+```sh
 $ terraform import fastly_tls_certificate.demo xxxxxxxxxxx
 ```

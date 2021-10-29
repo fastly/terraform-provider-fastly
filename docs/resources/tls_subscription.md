@@ -147,6 +147,6 @@ Each record in the set has the following attributes:
 
 A subscription can be imported using its Fastly subscription ID, e.g.
 
-```txt
+```sh
 $ terraform import fastly_tls_subscription.demo xxxxxxxxxxx
 ```

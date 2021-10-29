@@ -27,6 +27,6 @@ resource "fastly_user_v1" "demo" {
 
 A Fastly User can be imported using their user ID, e.g.
 
-```txt
+```sh
 $ terraform import fastly_user_v1.demo xxxxxxxxxxxxxxxxxxxx
 ```

@@ -21,7 +21,7 @@ Basic usage:
 
 ```terraform
 variable "myacl_name" {
-  type    = string
+  type = string
   default = "My ACL"
 }
 
@@ -29,14 +29,14 @@ resource "fastly_service_v1" "myservice" {
   name = "demofastly"
 
   domain {
-    name    = "demo.notexample.com"
+    name = "demo.notexample.com"
     comment = "demo"
   }
 
   backend {
     address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
-    port    = 80
+    name = "AWS S3 hosting"
+    port = 80
   }
 
   acl {
@@ -47,14 +47,14 @@ resource "fastly_service_v1" "myservice" {
 }
 
 resource "fastly_service_acl_entries_v1" "entries" {
-  for_each   = {
+  for_each = {
   for d in fastly_service_v1.myservice.acl : d.name => d if d.name == var.myacl_name
   }
   service_id = fastly_service_v1.myservice.id
-  acl_id     = each.value.acl_id
+  acl_id = each.value.acl_id
   entry {
-    ip      = "127.0.0.1"
-    subnet  = "24"
+    ip = "127.0.0.1"
+    subnet = "24"
     negated = false
     comment = "ACL Entry 1"
   }
@@ -161,9 +161,7 @@ resource "fastly_service_v1" "myservice" {
 
 resource "fastly_service_acl_entries_v1" "entries" {
   service_id = fastly_service_v1.myservice.id
-  acl_id     = {for d in fastly_service_v1.myservice.acl : d.name => d.acl_id}[
-  var.myacl_name
-  ]
+  acl_id     = {for d in fastly_service_v1.myservice.acl : d.name => d.acl_id}[var.myacl_name]
   entry {
     ip      = "127.0.0.1"
     subnet  = "24"
@@ -211,13 +209,13 @@ resource "fastly_service_acl_entries_v1" "entries" {
 This is an example of the import command being applied to the resource named `fastly_service_acl_entries_v1.entries`
 The resource ID is a combined value of the `service_id` and `acl_id` separated by a forward slash.
 
-```txt
+```sh
 $ terraform import fastly_service_acl_entries_v1.entries xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx
 ```
 
 If Terraform is already managing remote acl entries against a resource being imported then the user will be asked to remove it from the existing Terraform state.
 The following is an example of the Terraform state command to remove the resource named `fastly_service_acl_entries_v1.entries` from the Terraform state file.
 
-```txt
+```sh
 $ terraform state rm fastly_service_acl_entries_v1.entries
 ```

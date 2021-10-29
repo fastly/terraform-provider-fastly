@@ -31,6 +31,6 @@ resource "fastly_tls_private_key" "demo" {
 
 A Private Key can be imported using its ID, e.g.
 
-```txt
+```sh
 $ terraform import fastly_tls_private_key.demo xxxxxxxxxxx
 ```

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -259,7 +259,7 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	_, err = conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 		ServiceID: service.ID,
 		ID:        dynamicSnippet.ID,
-		Content:   content,
+		Content:   gofastly.String(content),
 	})
 
 	if err != nil {

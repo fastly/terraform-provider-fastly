@@ -3,11 +3,14 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/fastly/go-fastly/v3/fastly"
+	"time"
+
+	"github.com/fastly/go-fastly/v5/fastly"
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"time"
 )
 
 func resourceFastlyTLSSubscriptionValidation() *schema.Resource {
@@ -70,7 +73,17 @@ func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.Re
 	subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
 		ID: subscriptionID,
 	})
-	if err != nil {
+	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+		id := d.Id()
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity:      diag.Warning,
+				Summary:       fmt.Sprintf("TLS subscription (%s) not found - removing from state", id),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: id}},
+			},
+		}
+	} else if err != nil {
 		return diag.FromErr(err)
 	}
 

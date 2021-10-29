@@ -1,11 +1,11 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -14,85 +14,245 @@ type BackendServiceAttributeHandler struct {
 }
 
 func NewServiceBackend(sa ServiceMetadata) ServiceAttributeDefinition {
-	return &BackendServiceAttributeHandler{
+	return ToServiceAttributeDefinition(&BackendServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			key:             "backend",
 			serviceMetadata: sa,
 		},
+	})
+}
+
+func (h *BackendServiceAttributeHandler) Key() string {
+	return h.key
+}
+
+func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
+	var blockAttributes = map[string]*schema.Schema{
+		// required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"address": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "An IPv4, hostname, or IPv6 address for the Backend",
+		},
+		// Optional fields, defaults where they exist
+		"auto_loadbalance": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `true`",
+		},
+		"between_bytes_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     10000,
+			Description: "How long to wait between bytes in milliseconds. Default `10000`",
+		},
+		"connect_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1000,
+			Description: "How long to wait for a timeout in milliseconds. Default `1000`",
+		},
+		"error_threshold": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "Number of errors to allow before the Backend is marked as down. Default `0`",
+		},
+		"first_byte_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     15000,
+			Description: "How long to wait for the first bytes in milliseconds. Default `15000`",
+		},
+		"healthcheck": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of a defined `healthcheck` to assign to this backend",
+		},
+		"max_conn": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     200,
+			Description: "Maximum number of connections for this Backend. Default `200`",
+		},
+		"port": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     80,
+			Description: "The port number on which the Backend responds. Default `80`",
+		},
+		"override_host": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "The hostname to override the Host header",
+		},
+		"shield": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response",
+		},
+		"use_ssl": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Whether or not to use SSL to reach the Backend. Default `false`",
+		},
+		"max_tls_version": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Maximum allowed TLS version on SSL connections to this backend.",
+		},
+		"min_tls_version": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Minimum allowed TLS version on SSL connections to this backend.",
+		},
+		"ssl_ciphers": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.",
+		},
+		"ssl_check_cert": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Be strict about checking SSL certs. Default `true`",
+		},
+		"ssl_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Used for both SNI during the TLS handshake and to validate the cert",
+			Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
+		},
+		"ssl_ca_cert": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "CA certificate attached to origin.",
+		},
+		"ssl_cert_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all",
+		},
+		"ssl_sni_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all",
+		},
+		"ssl_client_cert": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Client certificate attached to origin. Used when connecting to the backend",
+			Sensitive:   true,
+		},
+		"ssl_client_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Client key attached to origin. Used when connecting to the backend",
+			Sensitive:   true,
+		},
+		"weight": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     100,
+			Description: "The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`",
+		},
+	}
+
+	required := true
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		// backend is optional in VCL service
+		required = false
+
+		blockAttributes["request_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Name of a condition, which if met, will select this backend during a request.",
+		}
+	}
+
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: required,
+		Optional: !required,
+		Elem: &schema.Resource{
+			Schema: blockAttributes,
+		},
 	}
 }
 
-func (h *BackendServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	ob, nb := d.GetChange(h.GetKey())
-	if ob == nil {
-		ob = new(schema.Set)
-	}
-	if nb == nil {
-		nb = new(schema.Set)
-	}
+func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	opts := h.buildCreateBackendInput(d.Id(), serviceVersion, resource)
 
-	oldSet := ob.(*schema.Set)
-	newSet := nb.(*schema.Set)
-
-	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		t, ok := resource.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
-		}
-		return t["name"], nil
-	})
-
-	diffResult, err := setDiff.Diff(oldSet, newSet)
+	log.Printf("[DEBUG] Create Backend Opts: %#v", opts)
+	_, err := conn.CreateBackend(&opts)
 	if err != nil {
 		return err
 	}
 
-	// DELETE removed resources
-	for _, resource := range diffResult.Deleted {
-		resource := resource.(map[string]interface{})
-		opts := h.createDeleteBackendInput(d.Id(), latestVersion, resource)
+	return nil
+}
 
-		log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
-		err := conn.DeleteBackend(&opts)
-		if errRes, ok := err.(*gofastly.HTTPError); ok {
-			if errRes.StatusCode != 404 {
-				return err
-			}
-		} else if err != nil {
-			return err
-		}
+func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
+	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
-	// CREATE new resources
-	for _, resource := range diffResult.Added {
-		resource := resource.(map[string]interface{})
-		opts := h.buildCreateBackendInput(d.Id(), latestVersion, resource)
-
-		log.Printf("[DEBUG] Create Backend Opts: %#v", opts)
-		_, err := conn.CreateBackend(&opts)
-		if err != nil {
-			return err
-		}
+	bl := flattenBackend(backendList, h.GetServiceMetadata())
+	if err := d.Set(h.GetKey(), bl); err != nil {
+		log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
 	}
+	return nil
+}
 
-	// UPDATE modified resources
-	//
-	// NOTE: although the go-fastly API client enables updating of a resource by
-	// its 'name' attribute, this isn't possible within terraform due to
-	// constraints in the data model/schema of the resources not having a uid.
-	for _, resource := range diffResult.Modified {
-		resource := resource.(map[string]interface{})
+func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	opts := h.buildUpdateBackendInput(d.Id(), serviceVersion, resource, modified)
 
-		// only attempt to update attributes that have changed
-		modified := setDiff.Filter(resource, oldSet)
+	log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
+	_, err := conn.UpdateBackend(&opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-		opts := h.buildUpdateBackendInput(d.Id(), latestVersion, resource, modified)
+func (h *BackendServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	opts := h.createDeleteBackendInput(d.Id(), serviceVersion, resource)
 
-		log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
-		_, err := conn.UpdateBackend(&opts)
-		if err != nil {
+	log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
+	err := conn.DeleteBackend(&opts)
+	if errRes, ok := err.(*gofastly.HTTPError); ok {
+		if errRes.StatusCode != 404 {
 			return err
 		}
+	} else if err != nil {
+		return err
 	}
 
 	return nil
@@ -124,7 +284,7 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		SSLClientCert:       df["ssl_client_cert"].(string),
 		MaxTLSVersion:       df["max_tls_version"].(string),
 		MinTLSVersion:       df["min_tls_version"].(string),
-		SSLCiphers:          strings.Split(df["ssl_ciphers"].(string), ","),
+		SSLCiphers:          df["ssl_ciphers"].(string),
 		Shield:              df["shield"].(string),
 		Port:                uint(df["port"].(int)),
 		BetweenBytesTimeout: uint(df["between_bytes_timeout"].(int)),
@@ -229,205 +389,10 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 		opts.MaxTLSVersion = gofastly.String(v.(string))
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
-		opts.SSLCiphers = strings.Split(v.(string), ",")
+		opts.SSLCiphers = v.(string)
 	}
 
 	return opts
-}
-
-func (h *BackendServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
-	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
-	})
-
-	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
-	}
-
-	bl := flattenBackend(backendList, h.GetServiceMetadata())
-	if err := d.Set(h.GetKey(), bl); err != nil {
-		log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
-	}
-	return nil
-}
-
-func (h *BackendServiceAttributeHandler) Register(s *schema.Resource) error {
-	var blockAttributes = map[string]*schema.Schema{
-		// required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-		"address": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "An IPv4, hostname, or IPv6 address for the Backend",
-		},
-		// Optional fields, defaults where they exist
-		"auto_loadbalance": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `true`",
-		},
-		"between_bytes_timeout": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     10000,
-			Description: "How long to wait between bytes in milliseconds. Default `10000`",
-		},
-		"connect_timeout": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     1000,
-			Description: "How long to wait for a timeout in milliseconds. Default `1000`",
-		},
-		"error_threshold": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
-			Description: "Number of errors to allow before the Backend is marked as down. Default `0`",
-		},
-		"first_byte_timeout": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     15000,
-			Description: "How long to wait for the first bytes in milliseconds. Default `15000`",
-		},
-		"healthcheck": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Name of a defined `healthcheck` to assign to this backend",
-		},
-		"max_conn": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     200,
-			Description: "Maximum number of connections for this Backend. Default `200`",
-		},
-		"port": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     80,
-			Description: "The port number on which the Backend responds. Default `80`",
-		},
-		"override_host": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "The hostname to override the Host header",
-		},
-		"shield": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response",
-		},
-		"use_ssl": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether or not to use SSL to reach the Backend. Default `false`",
-		},
-		"max_tls_version": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Maximum allowed TLS version on SSL connections to this backend.",
-		},
-		"min_tls_version": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Minimum allowed TLS version on SSL connections to this backend.",
-		},
-		"ssl_ciphers": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Comma separated list of OpenSSL Ciphers to try when negotiating to the backend",
-		},
-		"ssl_check_cert": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Be strict about checking SSL certs. Default `true`",
-		},
-		"ssl_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Used for both SNI during the TLS handshake and to validate the cert",
-			Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
-		},
-		"ssl_ca_cert": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "CA certificate attached to origin.",
-		},
-		"ssl_cert_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all",
-		},
-		"ssl_sni_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all",
-		},
-		"ssl_client_cert": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Client certificate attached to origin. Used when connecting to the backend",
-			Sensitive:   true,
-		},
-		"ssl_client_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Client key attached to origin. Used when connecting to the backend",
-			Sensitive:   true,
-		},
-		"weight": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     100,
-			Description: "The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`",
-		},
-	}
-
-	required := true
-
-	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		// backend is optional in VCL service
-		required = false
-
-		blockAttributes["request_condition"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Name of a condition, which if met, will select this backend during a request.",
-		}
-	}
-
-	s.Schema[h.GetKey()] = &schema.Schema{
-		Type:     schema.TypeSet,
-		Required: required,
-		Optional: !required,
-		Elem: &schema.Resource{
-			Schema: blockAttributes,
-		},
-	}
-
-	return nil
 }
 
 func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[string]interface{} {
@@ -454,7 +419,7 @@ func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[s
 			"ssl_client_cert":       b.SSLClientCert,
 			"max_tls_version":       b.MaxTLSVersion,
 			"min_tls_version":       b.MinTLSVersion,
-			"ssl_ciphers":           strings.Join(b.SSLCiphers, ","),
+			"ssl_ciphers":           b.SSLCiphers,
 			"use_ssl":               b.UseSSL,
 			"ssl_cert_hostname":     b.SSLCertHostname,
 			"ssl_sni_hostname":      b.SSLSNIHostname,

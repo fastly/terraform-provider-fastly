@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,100 +23,6 @@ const (
 	// ServiceTypeCompute is the type for Compute services.
 	ServiceTypeCompute = "wasm"
 )
-
-// ServiceAttributeDefinition provides an interface for service attributes.
-// We compose a service resource out of attribute objects to allow us to construct both the VCL and Compute service
-// resources from common components.
-type ServiceAttributeDefinition interface {
-	// Register add the attribute to the resource schema.
-	Register(s *schema.Resource) error
-
-	// Read refreshes the attribute state against the Fastly API.
-	Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error
-
-	// Process creates or updates the attribute against the Fastly API.
-	Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error
-
-	// HasChange returns whether the state of the attribute has changed against Terraform stored state.
-	HasChange(d *schema.ResourceData) bool
-
-	// MustProcess returns whether we must process the resource (usually HasChange==true but allowing exceptions).
-	// For example: at present, the settings attributeHandler (block_fastly_service_v1_settings.go) must process when
-	// default_ttl==0 and it is the initialVersion - as well as when default_ttl or default_host have changed.
-	MustProcess(d *schema.ResourceData, initialVersion bool) bool
-}
-
-// ServiceMetadata provides a container to pass service attributes into an Attribute handler.
-type ServiceMetadata struct {
-	serviceType string
-}
-
-// DefaultServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
-type DefaultServiceAttributeHandler struct {
-	key             string
-	serviceMetadata ServiceMetadata
-}
-
-// GetKey is provided since most attributes will just use their private "key" for interacting with the service.
-func (h *DefaultServiceAttributeHandler) GetKey() string {
-	return h.key
-}
-
-// GetServiceMetadata is provided to allow internal methods to get the service Metadata
-func (h *DefaultServiceAttributeHandler) GetServiceMetadata() ServiceMetadata {
-	return h.serviceMetadata
-}
-
-// See interface definition for comments.
-func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
-	return d.HasChange(h.key)
-}
-
-// See interface definition for comments.
-func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, _ bool) bool {
-	return h.HasChange(d)
-}
-
-type VCLLoggingAttributes struct {
-	format            string
-	formatVersion     *uint
-	placement         string
-	responseCondition string
-}
-
-// getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
-func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]interface{}) VCLLoggingAttributes {
-	var vla = VCLLoggingAttributes{
-		placement: "none",
-	}
-	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		if val, ok := data["format"]; ok {
-			vla.format = val.(string)
-		}
-		if val, ok := data["format_version"]; ok {
-			vla.formatVersion = gofastly.Uint(uint(val.(int)))
-		}
-		if val, ok := data["placement"]; ok {
-			vla.placement = val.(string)
-		}
-		if val, ok := data["response_condition"]; ok {
-			vla.responseCondition = val.(string)
-		}
-	}
-	return vla
-}
-
-// pruneVCLLoggingAttributes deletes the keys corresponding to VCL-only logging attributes which aren't present for
-// Compute services.
-func (h *DefaultServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]interface{}) map[string]interface{} {
-	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
-		delete(data, "format")
-		delete(data, "format_version")
-		delete(data, "placement")
-		delete(data, "response_condition")
-	}
-	return data
-}
 
 // ServiceDefinition defines the data model for service definitions
 // There are two types of service: VCL and Compute. This interface specifies the data object from which service resources
@@ -257,7 +163,7 @@ func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
 // while injecting the ServiceDefinition into the true Update functionality.
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-		return resourceServiceUpdate(ctx, d, meta, serviceDef, false)
+		return resourceServiceUpdate(ctx, d, meta, serviceDef)
 	}
 }
 
@@ -324,19 +230,20 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	return resourceServiceUpdate(ctx, d, meta, serviceDef, true)
+	return resourceServiceUpdate(ctx, d, meta, serviceDef)
 }
 
 // resourceServiceUpdate provides service resource Update functionality.
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition, isCreate bool) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
 		return diag.FromErr(err)
 	}
 
 	conn := meta.(*FastlyClient).conn
 
+	shouldActivate := d.Get("activate").(bool)
 	// Update Name and/or Comment. No new version is required for this.
-	if d.HasChanges("name", "comment") {
+	if d.HasChanges("name", "comment") && shouldActivate {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
 			Name:      gofastly.String(d.Get("name").(string)),
@@ -361,7 +268,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Update the cloned version's comment. No new version is required for this.
-	if d.HasChange("version_comment") && (!needsChange || isCreate) {
+	if d.HasChange("version_comment") && (!needsChange || d.IsNewResource()) {
 		opts := gofastly.UpdateVersionInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: d.Get("cloned_version").(int),
@@ -379,7 +286,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if needsChange {
 		var latestVersion int
-		if isCreate {
+		if d.IsNewResource() {
 			initialVersion = true
 			// If the service was just created, there is an empty Version 1 available
 			// that is unlocked and can be updated.
@@ -434,7 +341,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return diag.FromErr(err)
 				}
 
-				if err := a.Process(d, latestVersion, conn); err != nil {
+				if err := a.Process(ctx, d, latestVersion, conn); err != nil {
 					return diag.FromErr(err)
 				}
 			}
@@ -461,7 +368,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	shouldActivate := d.Get("activate").(bool)
 	versionNotYetActivated := d.Get("cloned_version") != d.Get("active_version")
 	latestVersion := d.Get("cloned_version").(int)
 	if shouldActivate && versionNotYetActivated {
@@ -493,6 +399,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 // resourceServiceRead provides service resource Read functionality.
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
+
+	var diags diag.Diagnostics
 
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 		ID: d.Id(),
@@ -533,6 +441,18 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	err = d.Set("active_version", s.ActiveVersion.Number)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// NOTE: service "name" and "comment" are versionless (mutable).
+	// Therefore, we only allow them to be updated if "activate = true".
+	// Unfortunately, with our current resource design, it's not easy to show
+	// a warning message upon plan, and so this warning will only appear upon applying.
+	if d.HasChanges("name", "comment") && !d.Get("activate").(bool) {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Some changes are ignored",
+			Detail:   "'name' and 'comment' attributes can only be updated with 'activate = true'",
+		})
 	}
 
 	// If cloned_version is not set, and there is no active version, temporarily
@@ -586,7 +506,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 				return diag.FromErr(err)
 			}
 
-			if err := a.Read(d, s, conn); err != nil {
+			if err := a.Read(ctx, d, s, conn); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -594,7 +514,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		log.Printf("[DEBUG] Active Version for Service (%s) is empty, no state to refresh", d.Id())
 	}
 
-	return nil
+	return diags
 }
 
 // resourceServiceDelete provides service resource Delete functionality.

@@ -3,10 +3,12 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"strconv"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -89,8 +91,8 @@ func resourceServiceAclEntriesV1Create(ctx context.Context, d *schema.ResourceDa
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 			Operation: gofastly.CreateBatchOperation,
 			IP:        gofastly.String(val["ip"].(string)),
-			Subnet:    gofastly.String(val["subnet"].(string)),
-			Negated:   gofastly.Bool(val["negated"].(bool)),
+			Subnet:    gofastly.Int(convertSubnetToInt(val["subnet"].(string))),
+			Negated:   gofastly.CBool(val["negated"].(bool)),
 			Comment:   gofastly.String(val["comment"].(string)),
 		})
 	}
@@ -181,8 +183,8 @@ func resourceServiceAclEntriesV1Update(ctx context.Context, d *schema.ResourceDa
 				Operation: gofastly.CreateBatchOperation,
 				ID:        gofastly.String(resource["id"].(string)),
 				IP:        gofastly.String(resource["ip"].(string)),
-				Subnet:    gofastly.String(resource["subnet"].(string)),
-				Negated:   gofastly.Bool(resource["negated"].(bool)),
+				Subnet:    gofastly.Int(convertSubnetToInt(resource["subnet"].(string))),
+				Negated:   gofastly.CBool(resource["negated"].(bool)),
 				Comment:   gofastly.String(resource["comment"].(string)),
 			})
 		}
@@ -195,8 +197,8 @@ func resourceServiceAclEntriesV1Update(ctx context.Context, d *schema.ResourceDa
 				Operation: gofastly.UpdateBatchOperation,
 				ID:        gofastly.String(resource["id"].(string)),
 				IP:        gofastly.String(resource["ip"].(string)),
-				Subnet:    gofastly.String(resource["subnet"].(string)),
-				Negated:   gofastly.Bool(resource["negated"].(bool)),
+				Subnet:    gofastly.Int(convertSubnetToInt(resource["subnet"].(string))),
+				Negated:   gofastly.CBool(resource["negated"].(bool)),
 				Comment:   gofastly.String(resource["comment"].(string)),
 			})
 		}
@@ -247,7 +249,7 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 		aes := map[string]interface{}{
 			"id":      currentAclEntry.ID,
 			"ip":      currentAclEntry.IP,
-			"subnet":  currentAclEntry.Subnet,
+			"subnet":  strconv.Itoa(currentAclEntry.Subnet),
 			"negated": currentAclEntry.Negated,
 			"comment": currentAclEntry.Comment,
 		}
@@ -310,4 +312,9 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 	}
 
 	return nil
+}
+
+func convertSubnetToInt(s string) int {
+	subnet, _ := strconv.Atoi(s)
+	return subnet
 }

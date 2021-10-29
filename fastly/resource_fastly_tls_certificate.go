@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
-	"github.com/fastly/go-fastly/v3/fastly"
+	"github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -29,9 +29,9 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 			},
 			"certificate_body": {
 				Type:             schema.TypeString,
-				Description:      "PEM-formatted certificate.",
+				Description:      "PEM-formatted certificate, optionally including any intermediary certificates.",
 				Required:         true,
-				ValidateDiagFunc: validatePEMBlock("CERTIFICATE"),
+				ValidateDiagFunc: validatePEMBlocks("CERTIFICATE"),
 			},
 			"created_at": {
 				Type:        schema.TypeString,

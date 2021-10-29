@@ -3,10 +3,11 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -52,7 +53,7 @@ func resourceServiceDynamicSnippetV1Create(ctx context.Context, d *schema.Resour
 	_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 		ServiceID: serviceID,
 		ID:        snippetID,
-		Content:   content,
+		Content:   gofastly.String(content),
 	})
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
@@ -81,7 +82,7 @@ func resourceServiceDynamicSnippetV1Update(ctx context.Context, d *schema.Resour
 		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 			ServiceID: serviceID,
 			ID:        snippetID,
-			Content:   content,
+			Content:   gofastly.String(content),
 		})
 
 		if err != nil {

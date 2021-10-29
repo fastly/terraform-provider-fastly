@@ -2,9 +2,13 @@ package fastly
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
-	"github.com/fastly/go-fastly/v3/fastly"
+	"github.com/fastly/go-fastly/v5/fastly"
+	gofastly "github.com/fastly/go-fastly/v5/fastly"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,6 +29,8 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 			customdiff.ForceNewIf("configuration_id", resourceFastlyTLSSubscriptionStateNotIssued),
 			customdiff.ForceNewIf("domains", resourceFastlyTLSSubscriptionStateNotIssued),
 			customdiff.ForceNewIf("common_name", resourceFastlyTLSSubscriptionStateNotIssued),
+			customdiff.ValidateValue("domains", resourceFastlyTLSSubscriptionValidateDomains),
+			customdiff.ValidateValue("common_name", resourceFastlyTLSSubscriptionValidateCommonName),
 			resourceFastlyTLSSubscriptionSetNewComputed,
 		),
 		Schema: map[string]*schema.Schema{
@@ -188,7 +194,17 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		ID:      d.Id(),
 		Include: &include,
 	})
-	if err != nil {
+	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+		id := d.Id()
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity:      diag.Warning,
+				Summary:       fmt.Sprintf("TLS subscription (%s) not found - removing from state", id),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: id}},
+			},
+		}
+	} else if err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -343,5 +359,25 @@ func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.Re
 		d.SetNewComputed("managed_http_challenges")
 	}
 
+	return nil
+}
+
+// NOTE: Although the RFC spec says it’s case-insensitive, the implementation is varied depending on the software.
+// For example, Let's Encrypt doesn't allow uppercase letters. For this reason, Fastly TLS also doesn't support
+// uppercase letters in domains. But, Fastly API accepts such inputs and silently converts them to lowercase.
+// This would cause state mismatch and diff loop, so we explicitly raise an error to eliminate any confusion.
+func resourceFastlyTLSSubscriptionValidateDomains(_ context.Context, v, _ interface{}) error {
+	for _, domain := range v.(*schema.Set).List() {
+		if domain.(string) != strings.ToLower(domain.(string)) {
+			return fmt.Errorf("TLS subscription 'domains' must not contain uppercase letters: %s", v.(*schema.Set).List())
+		}
+	}
+	return nil
+}
+
+func resourceFastlyTLSSubscriptionValidateCommonName(_ context.Context, v, _ interface{}) error {
+	if v.(string) != strings.ToLower(v.(string)) {
+		return fmt.Errorf("TLS subscription 'common_name' must not contain uppercase letters: %s", v.(string))
+	}
 	return nil
 }

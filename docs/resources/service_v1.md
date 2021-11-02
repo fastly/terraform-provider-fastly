@@ -396,7 +396,7 @@ Optional:
 - **format** (String) Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t "%r" %>s %b`)
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)
 - **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default `classic`
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **path** (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
 - **period** (Number) How frequently the logs should be transferred in seconds. Default `3600`
 - **placement** (String) Where in the generated VCL the logging call should be placed
@@ -501,7 +501,7 @@ Optional:
 - **email** (String) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`
 - **format** (String) Apache-style string or VCL variables to use for log formatting
 - **gzip_level** (Number) Level of Gzip compression, from `0-9`. `0` is no compression. `1` is fastest and least compressed, `9` is slowest and most compressed. Default `0`
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds (Default 3600)
 - **placement** (String) Where in the generated VCL the logging call should be placed.
@@ -583,7 +583,7 @@ Optional:
 - **header_name** (String) Custom header sent with the request
 - **header_value** (String) Value of the custom header sent with the request
 - **json_format** (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `blank`
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **method** (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
 - **placement** (String) Where in the generated VCL the logging call should be placed
 - **request_max_bytes** (Number) The maximum number of bytes sent in one request
@@ -629,7 +629,7 @@ Optional:
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - **gzip_level** (Number) What level of GZIP encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **path** (String) The path to upload logs to
 - **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
@@ -673,7 +673,7 @@ Optional:
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **path** (String) The path to upload logs to
 - **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
@@ -725,7 +725,7 @@ Optional:
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - **gzip_level** (Number) Gzip Compression level. Default `0`
-- **message_type** (String) How the message should be formatted (default: `classic`)
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **period** (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **port** (Number) The port number. Default: `21`
@@ -903,7 +903,7 @@ Optional:
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
 - **placement** (String) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
@@ -946,7 +946,7 @@ Optional:
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **password** (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed.
@@ -1029,7 +1029,7 @@ Optional:
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).
 - **gzip_level** (Number) Level of Gzip compression, from `0-9`. `0` is no compression. `1` is fastest and least compressed, `9` is slowest and most compressed. Default `0`
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
 - **placement** (String) Where in the generated VCL the logging call should be placed.
@@ -1092,7 +1092,7 @@ Optional:
 
 - **format** (String) Apache-style string or VCL variables to use for log formatting
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic](https://developer.fastly.com/reference/api/logging/sumologic/)
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **response_condition** (String) Name of blockAttributes condition to apply this logging.
 
@@ -1109,7 +1109,7 @@ Optional:
 
 - **format** (String) Apache-style string or VCL variables to use for log formatting
 - **format_version** (Number) The version of the custom logging format. Can be either 1 or 2. (Default: 1)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`
+- **message_type** (String) How the message should be formatted. Can be either `classic` (default), `loggly`, `logplex` or `blank`.
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **port** (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`
 - **response_condition** (String) Name of blockAttributes condition to apply this logging.

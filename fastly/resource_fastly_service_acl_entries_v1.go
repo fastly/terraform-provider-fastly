@@ -88,13 +88,8 @@ func resourceServiceAclEntriesV1Create(ctx context.Context, d *schema.ResourceDa
 	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]interface{})
 
-		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-			Operation: gofastly.CreateBatchOperation,
-			IP:        gofastly.String(val["ip"].(string)),
-			Subnet:    gofastly.Int(convertSubnetToInt(val["subnet"].(string))),
-			Negated:   gofastly.CBool(val["negated"].(bool)),
-			Comment:   gofastly.String(val["comment"].(string)),
-		})
+		entry := buildBatchACLEntry(val, gofastly.CreateBatchOperation)
+		batchACLEntries = append(batchACLEntries, entry)
 	}
 
 	// Process the batch operations
@@ -179,28 +174,16 @@ func resourceServiceAclEntriesV1Update(ctx context.Context, d *schema.ResourceDa
 		for _, resource := range diffResult.Added {
 			resource := resource.(map[string]interface{})
 
-			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-				Operation: gofastly.CreateBatchOperation,
-				ID:        gofastly.String(resource["id"].(string)),
-				IP:        gofastly.String(resource["ip"].(string)),
-				Subnet:    gofastly.Int(convertSubnetToInt(resource["subnet"].(string))),
-				Negated:   gofastly.CBool(resource["negated"].(bool)),
-				Comment:   gofastly.String(resource["comment"].(string)),
-			})
+			entry := buildBatchACLEntry(resource, gofastly.CreateBatchOperation)
+			batchACLEntries = append(batchACLEntries, entry)
 		}
 
 		// UPDATE modified resources
 		for _, resource := range diffResult.Modified {
 			resource := resource.(map[string]interface{})
 
-			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-				Operation: gofastly.UpdateBatchOperation,
-				ID:        gofastly.String(resource["id"].(string)),
-				IP:        gofastly.String(resource["ip"].(string)),
-				Subnet:    gofastly.Int(convertSubnetToInt(resource["subnet"].(string))),
-				Negated:   gofastly.CBool(resource["negated"].(bool)),
-				Comment:   gofastly.String(resource["comment"].(string)),
-			})
+			entry := buildBatchACLEntry(resource, gofastly.UpdateBatchOperation)
+			batchACLEntries = append(batchACLEntries, entry)
 		}
 	}
 
@@ -249,9 +232,14 @@ func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 		aes := map[string]interface{}{
 			"id":      currentAclEntry.ID,
 			"ip":      currentAclEntry.IP,
-			"subnet":  strconv.Itoa(currentAclEntry.Subnet),
 			"negated": currentAclEntry.Negated,
 			"comment": currentAclEntry.Comment,
+		}
+
+		// NOTE: Fastly API may return "null" or int value
+		// we only want to set the value if subnet is not null
+		if currentAclEntry.Subnet != nil {
+			aes["subnet"] = strconv.Itoa(*currentAclEntry.Subnet)
 		}
 
 		for k, v := range aes {
@@ -314,7 +302,31 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 	return nil
 }
 
+func buildBatchACLEntry(v map[string]interface{}, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
+	entry := &gofastly.BatchACLEntry{
+		Operation: op,
+		ID:        gofastly.String(v["id"].(string)),
+		IP:        gofastly.String(v["ip"].(string)),
+		Negated:   gofastly.CBool(v["negated"].(bool)),
+		Comment:   gofastly.String(v["comment"].(string)),
+	}
+
+	subnet := convertSubnetToInt(v["subnet"].(string))
+	// only set zero subnet if the attribute is explicitly set
+	cond1 := isZeroSubnet(v["ip"].(string)) && v["subnet"].(string) == "0"
+	cond2 := subnet != 0
+	if cond1 || cond2 {
+		entry.Subnet = gofastly.Int(subnet)
+	}
+
+	return entry
+}
+
 func convertSubnetToInt(s string) int {
 	subnet, _ := strconv.Atoi(s)
 	return subnet
+}
+
+func isZeroSubnet(ip string) bool {
+	return ip == "0.0.0.0" || ip == "::"
 }

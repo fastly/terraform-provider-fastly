@@ -313,9 +313,7 @@ func buildBatchACLEntry(v map[string]interface{}, op gofastly.BatchOperation) *g
 
 	subnet := convertSubnetToInt(v["subnet"].(string))
 	// only set zero subnet if the attribute is explicitly set
-	cond1 := isZeroSubnet(v["ip"].(string)) && v["subnet"].(string) == "0"
-	cond2 := subnet != 0
-	if cond1 || cond2 {
+	if v["subnet"].(string) == "0" || subnet != 0 {
 		entry.Subnet = gofastly.Int(subnet)
 	}
 
@@ -325,8 +323,4 @@ func buildBatchACLEntry(v map[string]interface{}, op gofastly.BatchOperation) *g
 func convertSubnetToInt(s string) int {
 	subnet, _ := strconv.Atoi(s)
 	return subnet
-}
-
-func isZeroSubnet(ip string) bool {
-	return ip == "0.0.0.0" || ip == "::"
 }

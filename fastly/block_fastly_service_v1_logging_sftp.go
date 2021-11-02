@@ -98,7 +98,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
+			Description: GzipLevelDescription,
 		},
 
 		"timestamp_format": {
@@ -112,7 +112,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      message_type_description,
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"compression_codec": {

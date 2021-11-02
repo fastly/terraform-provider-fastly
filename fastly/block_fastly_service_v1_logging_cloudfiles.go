@@ -64,14 +64,14 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of GZIP encoding to have when dumping logs (default `0`, no compression)",
+			Description: GzipLevelDescription,
 		},
 
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      message_type_description,
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 

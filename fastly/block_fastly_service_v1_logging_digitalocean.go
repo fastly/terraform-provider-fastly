@@ -89,14 +89,14 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
+			Description: GzipLevelDescription,
 		},
 
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      message_type_description,
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"compression_codec": {

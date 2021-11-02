@@ -60,7 +60,7 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "Level of Gzip compression, from `0-9`. `0` is no compression. `1` is fastest and least compressed, `9` is slowest and most compressed. Default `0`",
+			Description: GzipLevelDescription,
 		},
 		"period": {
 			Type:        schema.TypeInt,
@@ -78,7 +78,7 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      message_type_description,
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"compression_codec": {

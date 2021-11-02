@@ -42,7 +42,7 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic](https://developer.fastly.com/reference/api/logging/sumologic/)",
+			Description:      message_type_description,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 	}

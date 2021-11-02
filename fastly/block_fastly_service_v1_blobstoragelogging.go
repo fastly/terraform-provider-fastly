@@ -83,7 +83,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default `classic`",
+			Description:      message_type_description,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"file_max_bytes": {

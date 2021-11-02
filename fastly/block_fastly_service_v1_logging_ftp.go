@@ -98,7 +98,7 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted (default: `classic`)",
+			Description:      message_type_description,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"compression_codec": {

@@ -138,7 +138,7 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`",
+			Description:      message_type_description,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"server_side_encryption": {

@@ -112,7 +112,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
+			Description:      message_type_description,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"compression_codec": {

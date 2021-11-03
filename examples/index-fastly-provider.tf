@@ -3,7 +3,7 @@ terraform {
   required_providers {
     fastly = {
       source = "fastly/fastly"
-      version >= "{{ .Data.ProviderVersion }}"
+      version >= "0.36.0"
     }
   }
 }

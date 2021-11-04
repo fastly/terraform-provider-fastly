@@ -105,7 +105,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 
 		"message_type": {

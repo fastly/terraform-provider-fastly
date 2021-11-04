@@ -65,7 +65,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "`strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`",
+			Description: TimestampFormatDescription,
 		},
 		"gzip_level": {
 			Type:        schema.TypeInt,

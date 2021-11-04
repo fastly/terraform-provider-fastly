@@ -223,7 +223,7 @@ Optional:
 - **period** (Number) How frequently the logs should be transferred in seconds. Default `3600`
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - **sas_token** (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
-- **timestamp_format** (String) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--dictionary"></a>
@@ -278,7 +278,7 @@ Optional:
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds (Default 3600)
 - **secret_key** (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
-- **timestamp_format** (String) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--healthcheck"></a>
@@ -394,7 +394,7 @@ Optional:
 - **path** (String) The path to upload logs to
 - **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **timestamp_format** (String) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_elasticsearch"></a>
@@ -438,7 +438,7 @@ Optional:
 - **period** (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
 - **port** (Number) The port number. Default: `21`
 - **public_key** (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **timestamp_format** (String) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_googlepubsub"></a>
@@ -568,7 +568,7 @@ Optional:
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **timestamp_format** (String) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_scalyr"></a>
@@ -642,7 +642,7 @@ Optional:
 - **s3_secret_key** (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
 - **server_side_encryption** (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
 - **server_side_encryption_kms_key_id** (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
-- **timestamp_format** (String) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--splunk"></a>

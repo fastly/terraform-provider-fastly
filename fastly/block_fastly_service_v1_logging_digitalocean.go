@@ -83,7 +83,7 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "`strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 
 		"gzip_level": {

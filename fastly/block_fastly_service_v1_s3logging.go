@@ -112,7 +112,7 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "`strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 		"redundancy": {
 			Type:        schema.TypeString,

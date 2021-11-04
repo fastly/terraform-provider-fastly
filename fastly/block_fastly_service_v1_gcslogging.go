@@ -72,7 +72,7 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 		"message_type": {
 			Type:             schema.TypeString,

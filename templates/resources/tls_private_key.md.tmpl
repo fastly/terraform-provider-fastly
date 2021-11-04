@@ -1,4 +1,4 @@
-{{define "tls_private_key"}}---
+---
 layout: "fastly"
 page_title: "Fastly: tls_private_key"
 sidebar_current: "docs-fastly-resource-tls_private_key"
@@ -16,22 +16,12 @@ The Private Key resource requires a key in PEM format, and a name to identify it
 
 Basic usage:
 
-```hcl
-resource "tls_private_key" "demo" {
-  algorithm = "RSA"
-}
-
-resource "fastly_tls_private_key" "demo" {
-  key_pem = tls_private_key.demo.private_key_pem
-  name    = "tf-demo"
-}
-```
+{{ tffile "examples/resources/tls_private_key_basic_usage.tf" }}
 
 ## Import
 
 A Private Key can be imported using its ID, e.g.
 
-```
-$ terraform import fastly_tls_private_key.demo xxxxxxxxxxx
-```
-{{end}}
+{{ codefile "sh" "examples/resources/tls_private_key_import.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

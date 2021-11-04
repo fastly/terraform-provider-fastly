@@ -1,4 +1,4 @@
-{{define "data_source_tls_activation"}}---
+---
 layout: "fastly"
 page_title: "Fastly: fastly_tls_activation"
 sidebar_current: "docs-fastly-datasource-tls_activation"
@@ -18,9 +18,6 @@ with any of the others.
 
 ## Example Usage
 
-```hcl
-data "fastly_tls_activation" "example" {
-  domain = "example.com"
-}
-```
-{{end}}
+{{ tffile "examples/data-sources/tls-activation.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

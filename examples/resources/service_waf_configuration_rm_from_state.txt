@@ -1,0 +1,1 @@
+$ terraform state rm fastly_service_waf_configuration.waf

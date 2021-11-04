@@ -17,7 +17,7 @@ They offer protection from injection attacks and cross site scripting amongst ot
 
 Usage with publishers Filter:
 
-```hcl
+```terraform
 data "fastly_waf_rules" "owasp" {
   publishers = ["owasp"]
 }
@@ -25,7 +25,7 @@ data "fastly_waf_rules" "owasp" {
 
 Usage with tags filter:
 
-```hcl
+```terraform
 data "fastly_waf_rules" "tag" {
   tags = ["language-html", "language-jsp"]
 }
@@ -33,16 +33,16 @@ data "fastly_waf_rules" "tag" {
 
 Usage with exclude filter:
 
-```hcl
+```terraform
 data "fastly_waf_rules" "owasp_with_exclusions" {
-  publishers = ["owasp"]
+  publishers              = ["owasp"]
   exclude_modsec_rule_ids = [1010090]
 }
 ```
 
 Usage without filters:
 
-```hcl
+```terraform
 data "fastly_waf_rules" "all" {
   # This will retrieve the entire list of rules available from the API at the time.
 }
@@ -50,9 +50,9 @@ data "fastly_waf_rules" "all" {
 
 Usage with WAF configuration resource:
 
-```hcl
+```terraform
 variable "type_status" {
-  type = map(string)
+  type    = map(string)
   default = {
     score     = "score"
     threshold = "log"
@@ -111,8 +111,8 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 100
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 100
 
   dynamic "rule" {
     for_each = data.fastly_waf_rules.owasp.rules
@@ -125,7 +125,7 @@ resource "fastly_service_waf_configuration" "waf" {
 }
 ```
 
-
+<!-- remove our curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
 
 ## Argument Reference
 

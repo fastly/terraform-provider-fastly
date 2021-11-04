@@ -12,7 +12,7 @@ type ACLEntry struct {
 
 	ID        string     `mapstructure:"id"`
 	IP        string     `mapstructure:"ip"`
-	Subnet    int        `mapstructure:"subnet"`
+	Subnet    *int       `mapstructure:"subnet"`
 	Negated   bool       `mapstructure:"negated"`
 	Comment   string     `mapstructure:"comment"`
 	CreatedAt *time.Time `mapstructure:"created_at"`
@@ -104,12 +104,12 @@ type CreateACLEntryInput struct {
 	// Required fields
 	ServiceID string
 	ACLID     string
-	IP        string `form:"ip"`
+	IP        string `url:"ip"`
 
 	// Optional fields
-	Subnet  int         `form:"subnet,omitempty"`
-	Negated Compatibool `form:"negated,omitempty"`
-	Comment string      `form:"comment,omitempty"`
+	Subnet  int         `url:"subnet,omitempty"`
+	Negated Compatibool `url:"negated,omitempty"`
+	Comment string      `url:"comment,omitempty"`
 }
 
 // CreateACLEntry creates and returns a new ACL entry.
@@ -190,10 +190,10 @@ type UpdateACLEntryInput struct {
 	ID        string
 
 	// Optional fields
-	IP      *string      `form:"ip,omitempty"`
-	Subnet  *int         `form:"subnet,omitempty"`
-	Negated *Compatibool `form:"negated,omitempty"`
-	Comment *string      `form:"comment,omitempty"`
+	IP      *string      `url:"ip,omitempty"`
+	Subnet  *int         `url:"subnet,omitempty"`
+	Negated *Compatibool `url:"negated,omitempty"`
+	Comment *string      `url:"comment,omitempty"`
 }
 
 // UpdateACLEntry updates an ACL entry

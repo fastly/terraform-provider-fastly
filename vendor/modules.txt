@@ -16,9 +16,6 @@ github.com/Masterminds/semver
 github.com/Masterminds/sprig
 # github.com/agext/levenshtein v1.2.2
 github.com/agext/levenshtein
-# github.com/ajg/form v0.0.0-20160822230020-523a5da1a92f
-## explicit
-github.com/ajg/form
 # github.com/apparentlymart/go-cidr v1.1.0
 github.com/apparentlymart/go-cidr/cidr
 # github.com/apparentlymart/go-textseg/v12 v12.0.0
@@ -237,7 +234,7 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v5 v5.1.0
+# github.com/fastly/go-fastly/v5 v5.1.2
 ## explicit
 github.com/fastly/go-fastly/v5/fastly
 # github.com/fatih/color v1.7.0
@@ -261,6 +258,8 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
+# github.com/google/go-querystring v1.1.0
+github.com/google/go-querystring/query
 # github.com/google/jsonapi v0.0.0-20201022225600-f822737867f6
 github.com/google/jsonapi
 # github.com/google/uuid v1.1.2

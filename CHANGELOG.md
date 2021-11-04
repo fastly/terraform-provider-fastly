@@ -1,4 +1,14 @@
-## 0.38.0 (Unreleased)
+## 0.39.0 (Unreleased)
+
+## 0.38.0 (November 4, 2021)
+
+BUG FIXES:
+
+* Do not send 0 `subnet` value unless explicitly set [#496](https://github.com/fastly/terraform-provider-fastly/pull/496)
+
+DOCUMENTATION:
+
+* Utilise `codefile` and `tffile` functions from tfplugindocs [#497](https://github.com/fastly/terraform-provider-fastly/pull/497)
 
 ## 0.37.0 (November 1, 2021)
 

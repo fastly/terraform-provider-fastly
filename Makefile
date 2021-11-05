@@ -5,6 +5,7 @@ PKG_NAME=fastly
 FULL_PKG_NAME=github.com/fastly/terraform-provider-fastly
 VERSION_PLACEHOLDER=version.ProviderVersion
 VERSION=$(shell git describe --tags --always)
+DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION))
 
 # Use a parallelism of 4 by default for tests, overriding whatever GOMAXPROCS is
 # set to. For the acceptance tests especially, the main bottleneck affecting the
@@ -66,7 +67,9 @@ $(BIN)/%:
 	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} go install {}
 
 generate-docs: $(BIN)/tfplugindocs
+	$(shell sed -e "s/__VERSION__/$(DOCS_PROVIDER_VERSION)/g" examples/index-fastly-provider.tf.tmpl > examples/index-fastly-provider.tf)
 	$(BIN)/tfplugindocs generate
+	rm examples/index-fastly-provider.tf
 
 validate-docs: $(BIN)/tfplugindocs
 	$(BIN)/tfplugindocs validate

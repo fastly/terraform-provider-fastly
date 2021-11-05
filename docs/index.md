@@ -25,7 +25,7 @@ terraform {
   required_providers {
     fastly = {
       source = "fastly/fastly"
-      version >= "0.6.1-848-ga3553a7c"
+      version >= "0.6.1"
     }
   }
 }

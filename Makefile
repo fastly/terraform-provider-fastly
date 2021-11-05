@@ -5,7 +5,8 @@ PKG_NAME=fastly
 FULL_PKG_NAME=github.com/fastly/terraform-provider-fastly
 VERSION_PLACEHOLDER=version.ProviderVersion
 VERSION=$(shell git describe --tags --always)
-DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION))
+VERSION_SHORT=$(shell git describe --tags --always --abbrev=0)
+DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION_SHORT))
 
 # Use a parallelism of 4 by default for tests, overriding whatever GOMAXPROCS is
 # set to. For the acceptance tests especially, the main bottleneck affecting the

@@ -3,7 +3,7 @@
 1. Merge all PRs intended for the release.
 2. Rebase latest remote main branch locally (`git pull --rebase origin main`).
 3. Ensure all analysis checks and tests are passing (`TEST_PARALLELISM=8 make testacc`).
-4. Open a new PR to update CHANGELOG ([example](https://github.com/fastly/terraform-provider-fastly/pull/348))<sup>[1](#note1)</sup>.
+4. Open a new PR to update CHANGELOG ([example](https://github.com/fastly/terraform-provider-fastly/pull/498/files))<sup>[1](#note1)</sup>.
 5. Merge CHANGELOG.
 6. Rebase latest remote main branch locally (`git pull --rebase origin main`).
 7. Tag a new release (`tag=vX.Y.Z && git tag -s $tag -m "$tag" && git push origin $tag`)<sup>[2](#note2)</sup>.

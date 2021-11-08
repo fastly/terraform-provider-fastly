@@ -64,14 +64,14 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of GZIP encoding to have when dumping logs (default `0`, no compression)",
+			Description: GzipLevelDescription,
 		},
 
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 
@@ -98,7 +98,7 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 		"compression_codec": {
 			Type:             schema.TypeString,

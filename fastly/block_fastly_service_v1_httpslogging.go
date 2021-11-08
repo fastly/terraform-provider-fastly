@@ -120,7 +120,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "blank",
-			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `blank`",
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 	}

@@ -65,13 +65,13 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "`strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`",
+			Description: TimestampFormatDescription,
 		},
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`",
+			Description: GzipLevelDescription,
 		},
 		"public_key": {
 			Type:             schema.TypeString,
@@ -83,7 +83,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default `classic`",
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"file_max_bytes": {

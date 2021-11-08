@@ -393,14 +393,14 @@ Optional:
 - **format** (String) Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t "%r" %>s %b`)
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)
 - **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default `classic`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
 - **period** (Number) How frequently the logs should be transferred in seconds. Default `3600`
 - **placement** (String) Where in the generated VCL the logging call should be placed
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - **response_condition** (String) The name of the condition to apply
 - **sas_token** (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
-- **timestamp_format** (String) `strftime` specified timestamp formatting. Default `%Y-%m-%dT%H:%M:%S.000`
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--cache_setting"></a>
@@ -497,14 +497,14 @@ Optional:
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **email** (String) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`
 - **format** (String) Apache-style string or VCL variables to use for log formatting
-- **gzip_level** (Number) Level of Gzip compression, from `0-9`. `0` is no compression. `1` is fastest and least compressed, `9` is slowest and most compressed. Default `0`
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds (Default 3600)
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **response_condition** (String) Name of a condition to apply this logging.
 - **secret_key** (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
-- **timestamp_format** (String) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--gzip"></a>
@@ -580,7 +580,7 @@ Optional:
 - **header_name** (String) Custom header sent with the request
 - **header_value** (String) Value of the custom header sent with the request
 - **json_format** (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `blank`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **method** (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
 - **placement** (String) Where in the generated VCL the logging call should be placed
 - **request_max_bytes** (Number) The maximum number of bytes sent in one request
@@ -625,8 +625,8 @@ Optional:
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- **gzip_level** (Number) What level of GZIP encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) The path to upload logs to
 - **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
@@ -669,14 +669,14 @@ Optional:
 - **domain** (String) The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) The path to upload logs to
 - **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - **response_condition** (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-- **timestamp_format** (String) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_elasticsearch"></a>
@@ -721,14 +721,14 @@ Optional:
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
-- **gzip_level** (Number) Gzip Compression level. Default `0`
-- **message_type** (String) How the message should be formatted (default: `classic`)
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **period** (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **port** (Number) The port number. Default: `21`
 - **public_key** (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - **response_condition** (String) The name of the condition to apply.
-- **timestamp_format** (String) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_googlepubsub"></a>
@@ -899,14 +899,14 @@ Optional:
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache style log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
 - **placement** (String) Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.
 - **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - **response_condition** (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-- **timestamp_format** (String) specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_scalyr"></a>
@@ -942,8 +942,8 @@ Optional:
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
-- **gzip_level** (Number) What level of Gzip encoding to have when dumping logs (default `0`, no compression)
-- **message_type** (String) How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **password** (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - **placement** (String) Where in the generated VCL the logging call should be placed.
@@ -1025,8 +1025,8 @@ Optional:
 - **domain** (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).
-- **gzip_level** (Number) Level of Gzip compression, from `0-9`. `0` is no compression. `1` is fastest and least compressed, `9` is slowest and most compressed. Default `0`
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
 - **placement** (String) Where in the generated VCL the logging call should be placed.
@@ -1038,7 +1038,7 @@ Optional:
 - **s3_secret_key** (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
 - **server_side_encryption** (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
 - **server_side_encryption_kms_key_id** (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
-- **timestamp_format** (String) `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--snippet"></a>
@@ -1089,7 +1089,7 @@ Optional:
 
 - **format** (String) Apache-style string or VCL variables to use for log formatting
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. See [Fastly's Documentation on Sumologic](https://developer.fastly.com/reference/api/logging/sumologic/)
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **response_condition** (String) Name of blockAttributes condition to apply this logging.
 
@@ -1106,7 +1106,7 @@ Optional:
 
 - **format** (String) Apache-style string or VCL variables to use for log formatting
 - **format_version** (Number) The version of the custom logging format. Can be either 1 or 2. (Default: 1)
-- **message_type** (String) How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **port** (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`
 - **response_condition** (String) Name of blockAttributes condition to apply this logging.

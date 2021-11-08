@@ -70,7 +70,7 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
+			Description: GzipLevelDescription,
 		},
 
 		"period": {
@@ -90,7 +90,7 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted; one of: `classic`, `loggly`, `logplex` or `blank`. Default `classic`. [Fastly Documentation](https://developer.fastly.com/reference/api/logging/gcs/)",
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 
@@ -98,7 +98,7 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 		"compression_codec": {
 			Type:             schema.TypeString,

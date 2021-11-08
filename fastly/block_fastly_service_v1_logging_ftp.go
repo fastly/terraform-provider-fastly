@@ -84,21 +84,21 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "Gzip Compression level. Default `0`",
+			Description: GzipLevelDescription,
 		},
 
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted (default: `classic`)",
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 		"compression_codec": {

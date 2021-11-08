@@ -134,6 +134,11 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 }
 
 func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
+	err := os.Setenv("TF_LOG", "debug")
+	if err != nil {
+		panic(fmt.Sprintf("Failed to set TF_LOG: %v", err))
+	}
+
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

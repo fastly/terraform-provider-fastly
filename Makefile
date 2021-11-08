@@ -22,7 +22,7 @@ build:
 test:
 	go test -i $(TEST) || exit 1
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=$(TEST_PARALLELISM)
+		xargs -t -n4 go test -v $(TESTARGS) -timeout=90s -parallel=$(TEST_PARALLELISM)
 
 # prefix `go test` with TF_LOG=debug or 'trace' for additional terraform output
 # such as all the requests and responses it handles.

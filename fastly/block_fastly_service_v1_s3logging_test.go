@@ -134,6 +134,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 }
 
 func TestAccFastlyServiceV1_s3logging_basic(t *testing.T) {
+	// We set TF_LOG to analyse logs and have more context on an error that seems to be caused by a race condition
 	err := os.Setenv("TF_LOG", "debug")
 	if err != nil {
 		panic(fmt.Sprintf("Failed to set TF_LOG: %v", err))

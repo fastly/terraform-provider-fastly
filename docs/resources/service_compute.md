@@ -18,39 +18,36 @@ on their documentation site for guidance.
 
 Basic usage:
 
-```hcl
+```terraform
 resource "fastly_service_compute" "demo" {
-    name = "demofastly"
+  name = "demofastly"
 
-    domain {
-      name    = "demo.notexample.com"
-      comment = "demo"
-    }
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
 
-    backend {
-      address = "127.0.0.1"
-      name    = "localhost"
-      port    = 80
-    }
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+    port    = 80
+  }
 
-    package {
-      filename = "package.tar.gz"
-      source_code_hash = filesha512("package.tar.gz")
-    }
+  package {
+    filename = "package.tar.gz"
+    source_code_hash = filesha512("package.tar.gz")
+  }
 
-    force_destroy = true
+  force_destroy = true
 }
 ```
 
-
-
+<!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
 ### package block
 
 The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
 [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
 
-
-[fastly-s3]: https://docs.fastly.com/en/guides/amazon-s3
 [fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
 [fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
 [fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
@@ -60,16 +57,14 @@ The `package` block supports uploading or modifying Wasm packages for use in a F
 
 Fastly Services can be imported using their service ID, e.g.
 
-
-```
+```sh
 $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx
 ```
 
 By default, either the active version will be imported, or the latest version if no version is active.
 Alternatively, a specific version of the service can be selected by appending an `@` followed by the version number to the service ID, e.g.
 
-
-```
+```sh
 $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 ```
 

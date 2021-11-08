@@ -1,4 +1,4 @@
-{{define "service_dictionary_items_v1"}}---
+---
 layout: "fastly"
 page_title: "Fastly: service_dictionary_items_v1"
 sidebar_current: "docs-fastly-resource-service-dictionary-items-v1"
@@ -23,137 +23,15 @@ If Terraform is being used to populate the initial content of a dictionary which
 
 Basic usage:
 
-```hcl
-variable "mydict_name" {
-	type = string
-	default = "My Dictionary"
-}
-
-resource "fastly_service_v1" "myservice" {
-  name = "demofastly"
-
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
-  backend {
-    address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
-    port    = 80
-  }
-
-  dictionary {
-	name       = var.mydict_name
-  }
-
-  force_destroy = true
-}
-
-resource "fastly_service_dictionary_items_v1" "items" {
-  for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict_name
-  }
-  service_id = fastly_service_v1.myservice.id
-  dictionary_id = each.value.dictionary_id
-
-  items = {
-    key1: "value1"
-    key2: "value2"
-  }
-}
-```
+{{ tffile "examples/resources/service_dictionary_items_v1_basic_usage.tf" }}
 
 Complex object usage:
 
-```hcl
-variable "mydict" {
-  type = object({ name=string, items=map(string) })
-  default = {
-    name = "My Dictionary"
-    items = {
-      key1: "value1x"
-      key2: "value2x"
-    }
-  }
-}
-
-resource "fastly_service_v1" "myservice" {
-  name = "demofastly"
-
-  domain {
-    name    = "demo.notexample.com"
-    comment = "demo"
-  }
-
-  backend {
-    address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
-    port    = 80
-  }
-
-  dictionary {
-    name = var.mydict.name
-  }
-
-  force_destroy = true
-}
-
-resource "fastly_service_dictionary_items_v1" "items" {
-  for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict.name
-  }
-  service_id = fastly_service_v1.myservice.id
-  dictionary_id = each.value.dictionary_id
-  items = var.mydict.items
-}
-```
+{{ tffile "examples/resources/service_dictionary_items_v1_complex_usage.tf" }}
 
 Expression and functions usage:
 
-```hcl
-// Local variables used when formatting values for the "My Project Dictionary" example
-locals {
-  dictionary_name = "My Project Dictionary"
-  host_base = "demo.ocnotexample.com"
-  host_divisions = ["alpha", "beta", "gamma", "delta"]
-}
-
-// Define the standard service that will be used to manage the dictionaries.
-resource "fastly_service_v1" "myservice" {
-  name = "demofastly"
-
-  domain {
-    name = "demo.ocnotexample.com"
-    comment = "demo"
-  }
-
-  backend {
-    address = "demo.ocnotexample.com.s3-website-us-west-2.amazonaws.com"
-    name = "AWS S3 hosting"
-    port = 80
-  }
-
-  dictionary {
-    name = local.dictionary_name
-  }
-
-  force_destroy = true
-}
-
-// This resource is dynamically creating the items from the local variables through for expressions and functions.
-resource "fastly_service_dictionary_items_v1" "project" {
-  for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == local.dictionary_name
-  }
-  service_id = fastly_service_v1.myservice.id
-  dictionary_id = each.value.dictionary_id
-  items = {
-    for division in local.host_divisions:
-      division => format("%s.%s", division, local.host_base)
-  }
-}
-```
+{{ tffile "examples/resources/service_dictionary_items_v1_functions_usage.tf" }}
 
 ## Example Usage (Terraform >= 0.12.0 && < 0.12.6)
 
@@ -173,56 +51,14 @@ For those scenarios, it's recommended to split the changes into two distinct ste
 
 Usage:
 
-```hcl
-variable "mydict_name" {
-	type = string
-	default = "My Dictionary"
-}
-
-resource "fastly_service_v1" "myservice" {
-  ...
-  dictionary {
-	name       = var.mydict_name
-  }
-  ...
-}
-
-resource "fastly_service_dictionary_items_v1" "items" {
-  service_id = fastly_service_v1.myservice.id
-  dictionary_id = {for s in fastly_service_v1.myservice.dictionary : s.name => s.dictionary_id}[var.mydict_name]
-
-  items = {
-    key1: "value1"
-    key2: "value2"
-  }
-}
-```
+{{ tffile "examples/resources/service_dictionary_items_v1_usage_with_service.tf" }}
 
 ### Supporting API and UI dictionary updates with ignore_changes
 
 The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
 items in a dictionary.  If, after your first deploy, the Fastly API or UI is to be used to manage items in a dictionary, then this will stop Terraform realigning the remote state with the initial set of dictionary items defined in your HCL.
 
-```hcl
-...
-
-resource "fastly_service_dictionary_items_v1" "items" {
-  for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict_name
-  }
-  service_id = fastly_service_v1.myservice.id
-  dictionary_id = each.value.dictionary_id
-
-  items = {
-    key1: "value1"
-    key2: "value2"
-  }
-
-  lifecycle {
-    ignore_changes = [items,]
-  }
-}
-```
+{{ tffile "examples/resources/service_dictionary_items_v1_ignore_changes.tf" }}
 
 ## Attributes Reference
 
@@ -234,14 +70,11 @@ resource "fastly_service_dictionary_items_v1" "items" {
 This is an example of the import command being applied to the resource named `fastly_service_dictionary_items_v1.items`
 The resource ID is a combined value of the `service_id` and `dictionary_id` separated by a forward slash.
 
-```
-$ terraform import fastly_service_dictionary_items_v1.items xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx
-```
+{{ codefile "sh" "examples/resources/service_dictionary_items_v1_import_with_id.txt" }}
 
 If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
 The following is an example of the Terraform state command to remove the resource named `fastly_service_dictionary_items_v1.items` from the Terraform state file.
 
-```
-$ terraform state rm fastly_service_dictionary_items_v1.items
-``` 
-{{end}}
+{{ codefile "sh" "examples/resources/service_dictionary_items_v1_import_from_state.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

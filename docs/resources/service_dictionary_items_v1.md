@@ -23,10 +23,10 @@ If Terraform is being used to populate the initial content of a dictionary which
 
 Basic usage:
 
-```hcl
+```terraform
 variable "mydict_name" {
-	type = string
-	default = "My Dictionary"
+  type = string
+  default = "My Dictionary"
 }
 
 resource "fastly_service_v1" "myservice" {
@@ -44,7 +44,7 @@ resource "fastly_service_v1" "myservice" {
   }
 
   dictionary {
-	name       = var.mydict_name
+    name       = var.mydict_name
   }
 
   force_destroy = true
@@ -52,7 +52,7 @@ resource "fastly_service_v1" "myservice" {
 
 resource "fastly_service_dictionary_items_v1" "items" {
   for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict_name
+  for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict_name
   }
   service_id = fastly_service_v1.myservice.id
   dictionary_id = each.value.dictionary_id
@@ -66,14 +66,14 @@ resource "fastly_service_dictionary_items_v1" "items" {
 
 Complex object usage:
 
-```hcl
+```terraform
 variable "mydict" {
-  type = object({ name=string, items=map(string) })
+  type    = object({ name = string, items = map(string) })
   default = {
-    name = "My Dictionary"
+    name  = "My Dictionary"
     items = {
-      key1: "value1x"
-      key2: "value2x"
+      key1 : "value1x"
+      key2 : "value2x"
     }
   }
 }
@@ -100,23 +100,23 @@ resource "fastly_service_v1" "myservice" {
 }
 
 resource "fastly_service_dictionary_items_v1" "items" {
-  for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict.name
+  for_each      = {
+  for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict.name
   }
-  service_id = fastly_service_v1.myservice.id
+  service_id    = fastly_service_v1.myservice.id
   dictionary_id = each.value.dictionary_id
-  items = var.mydict.items
+  items         = var.mydict.items
 }
 ```
 
 Expression and functions usage:
 
-```hcl
+```terraform
 // Local variables used when formatting values for the "My Project Dictionary" example
 locals {
   dictionary_name = "My Project Dictionary"
-  host_base = "demo.ocnotexample.com"
-  host_divisions = ["alpha", "beta", "gamma", "delta"]
+  host_base       = "demo.ocnotexample.com"
+  host_divisions  = ["alpha", "beta", "gamma", "delta"]
 }
 
 // Define the standard service that will be used to manage the dictionaries.
@@ -124,14 +124,14 @@ resource "fastly_service_v1" "myservice" {
   name = "demofastly"
 
   domain {
-    name = "demo.ocnotexample.com"
+    name    = "demo.ocnotexample.com"
     comment = "demo"
   }
 
   backend {
     address = "demo.ocnotexample.com.s3-website-us-west-2.amazonaws.com"
-    name = "AWS S3 hosting"
-    port = 80
+    name    = "AWS S3 hosting"
+    port    = 80
   }
 
   dictionary {
@@ -143,19 +143,19 @@ resource "fastly_service_v1" "myservice" {
 
 // This resource is dynamically creating the items from the local variables through for expressions and functions.
 resource "fastly_service_dictionary_items_v1" "project" {
-  for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == local.dictionary_name
+  for_each      = {
+  for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == local.dictionary_name
   }
-  service_id = fastly_service_v1.myservice.id
+  service_id    = fastly_service_v1.myservice.id
   dictionary_id = each.value.dictionary_id
-  items = {
-    for division in local.host_divisions:
-      division => format("%s.%s", division, local.host_base)
+  items         = {
+  for division in local.host_divisions :
+  division => format("%s.%s", division, local.host_base)
   }
 }
 ```
 
-## Example Usage (Terraform >= 0.12.0 && &lt; 0.12.6)
+## Example Usage (Terraform >= 0.12.0 && < 0.12.6)
 
 `for_each` attributes were not available in Terraform before 0.12.6, however, users can still use `for` expressions to achieve
 similar behaviour as seen in the example below.
@@ -173,27 +173,27 @@ For those scenarios, it's recommended to split the changes into two distinct ste
 
 Usage:
 
-```hcl
+```terraform
 variable "mydict_name" {
-	type = string
-	default = "My Dictionary"
+  type    = string
+  default = "My Dictionary"
 }
 
 resource "fastly_service_v1" "myservice" {
-  ...
+  #...
   dictionary {
-	name       = var.mydict_name
+    name = var.mydict_name
   }
-  ...
+  #...
 }
 
 resource "fastly_service_dictionary_items_v1" "items" {
-  service_id = fastly_service_v1.myservice.id
+  service_id    = fastly_service_v1.myservice.id
   dictionary_id = {for s in fastly_service_v1.myservice.dictionary : s.name => s.dictionary_id}[var.mydict_name]
 
   items = {
-    key1: "value1"
-    key2: "value2"
+    key1 : "value1"
+    key2 : "value2"
   }
 }
 ```
@@ -203,19 +203,19 @@ resource "fastly_service_dictionary_items_v1" "items" {
 The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
 items in a dictionary.  If, after your first deploy, the Fastly API or UI is to be used to manage items in a dictionary, then this will stop Terraform realigning the remote state with the initial set of dictionary items defined in your HCL.
 
-```hcl
-...
+```terraform
+#...
 
 resource "fastly_service_dictionary_items_v1" "items" {
-  for_each = {
-    for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict_name
+  for_each      = {
+  for d in fastly_service_v1.myservice.dictionary : d.name => d if d.name == var.mydict_name
   }
-  service_id = fastly_service_v1.myservice.id
+  service_id    = fastly_service_v1.myservice.id
   dictionary_id = each.value.dictionary_id
 
   items = {
-    key1: "value1"
-    key2: "value2"
+    key1 : "value1"
+    key2 : "value2"
   }
 
   lifecycle {
@@ -234,16 +234,17 @@ resource "fastly_service_dictionary_items_v1" "items" {
 This is an example of the import command being applied to the resource named `fastly_service_dictionary_items_v1.items`
 The resource ID is a combined value of the `service_id` and `dictionary_id` separated by a forward slash.
 
-```
+```sh
 $ terraform import fastly_service_dictionary_items_v1.items xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx
 ```
 
 If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
 The following is an example of the Terraform state command to remove the resource named `fastly_service_dictionary_items_v1.items` from the Terraform state file.
 
-```
+```sh
 $ terraform state rm fastly_service_dictionary_items_v1.items
-``` 
+```
+
 <!-- schema generated by tfplugindocs -->
 ## Schema
 

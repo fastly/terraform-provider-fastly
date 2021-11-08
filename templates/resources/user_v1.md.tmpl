@@ -1,4 +1,4 @@
-{{define "user_v1"}}---
+---
 layout: "fastly"
 page_title: "Fastly: user_v1"
 sidebar_current: "docs-fastly-resource-user-v1"
@@ -16,18 +16,12 @@ The User resource requires a login and name, and optionally a role.
 
 Basic usage:
 
-```hcl
-resource "fastly_user_v1" "demo" {
-  login = "demo@example.com"
-  name  = "Demo User"
-}
-```
+{{ tffile "examples/resources/user_v1_basic_usage.tf" }}
 
 ## Import
 
 A Fastly User can be imported using their user ID, e.g.
 
-```
-$ terraform import fastly_user_v1.demo xxxxxxxxxxxxxxxxxxxx
-```
-{{end}}
+{{ codefile "sh" "examples/resources/user_v1_import.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

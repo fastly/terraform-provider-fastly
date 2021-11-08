@@ -76,9 +76,9 @@ func (c *Client) ListServices(i *ListServicesInput) ([]*Service, error) {
 
 // CreateServiceInput is used as input to the CreateService function.
 type CreateServiceInput struct {
-	Name    string `form:"name,omitempty"`
-	Type    string `form:"type,omitempty"`
-	Comment string `form:"comment,omitempty"`
+	Name    string `url:"name,omitempty"`
+	Type    string `url:"type,omitempty"`
+	Comment string `url:"comment,omitempty"`
 }
 
 // CreateService creates a new service with the given information.
@@ -119,6 +119,18 @@ func (c *Client) GetService(i *GetServiceInput) (*Service, error) {
 		return nil, err
 	}
 
+	// NOTE: GET /service/:service_id endpoint does not return the "version" field
+	// unlike other GET service endpoints (/service, /service/:service_id/details).
+	// Therefore, ActiveVersion is always zero value when GetService is called.
+	// We work around this by manually finding the active version number from the
+	// "versions" array in the returned JSON response.
+	for i := range s.Versions {
+		if s.Versions[i].Active {
+			s.ActiveVersion = uint(s.Versions[i].Number)
+			break
+		}
+	}
+
 	return s, nil
 }
 
@@ -147,8 +159,8 @@ func (c *Client) GetServiceDetails(i *GetServiceInput) (*ServiceDetail, error) {
 type UpdateServiceInput struct {
 	ServiceID string
 
-	Name    *string `form:"name,omitempty"`
-	Comment *string `form:"comment,omitempty"`
+	Name    *string `url:"name,omitempty"`
+	Comment *string `url:"comment,omitempty"`
 }
 
 // UpdateService updates the service with the given input.

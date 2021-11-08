@@ -20,7 +20,7 @@ Defines a set of Web Application Firewall configuration options that can be used
 
 Basic usage:
 
-```hcl
+```terraform
 resource "fastly_service_v1" "demo" {
   name = "demofastly"
 
@@ -68,14 +68,14 @@ resource "fastly_service_v1" "demo" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 100
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 100
 }
 ```
 
 Usage with rules:
 
-```hcl
+```terraform
 resource "fastly_service_v1" "demo" {
   name = "demofastly"
 
@@ -138,7 +138,7 @@ Usage with rule exclusions:
 
 ~> **Warning:** Rule exclusions are part of a **beta release**, which may be subject to breaking changes and improvements over time. For more information, see our [product and feature lifecycle](https://docs.fastly.com/products/fastly-product-lifecycle#beta) descriptions.
 
-```hcl
+```terraform
 resource "fastly_service_v1" "demo" {
   name = "demofastly"
 
@@ -186,8 +186,8 @@ resource "fastly_service_v1" "demo" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 100
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 100
 
   rule {
     modsec_rule_id = 2029718
@@ -196,9 +196,9 @@ resource "fastly_service_waf_configuration" "waf" {
   }
 
   rule_exclusion {
-    name = "index page"
-    exclusion_type = "rule"
-    condition = "req.url.basename == \"index.html\""
+    name            = "index page"
+    exclusion_type  = "rule"
+    condition       = "req.url.basename == \"index.html\""
     modsec_rule_ids = [2029718]
   }
 }
@@ -206,7 +206,7 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage with rules from data source:
 
-```hcl
+```terraform
 variable "type_status" {
   type = map(string)
   default = {
@@ -282,10 +282,10 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage with support for individual rule configuration (this is the suggested pattern):
 
-```hcl
+```terraform
 # this variable is used for rule configuration in bulk
 variable "type_status" {
-  type = map(string)
+  type    = map(string)
   default = {
     score     = "score"
     threshold = "log"
@@ -294,7 +294,7 @@ variable "type_status" {
 }
 # this variable is used for individual rule configuration
 variable "individual_rules" {
-  type = map(string)
+  type    = map(string)
   default = {
     1010020 = "block"
   }
@@ -351,8 +351,8 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 202
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 202
 
   dynamic "rule" {
     for_each = data.fastly_waf_rules.owasp.rules
@@ -368,10 +368,10 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage with support for specific rule revision configuration:
 
-```hcl
+```terraform
 # this variable is used for rule configuration in bulk
 variable "type_status" {
-  type = map(string)
+  type    = map(string)
   default = {
     score     = "score"
     threshold = "log"
@@ -381,7 +381,7 @@ variable "type_status" {
 
 # This variable is used for individual rule revision configuration.
 variable "specific_rule_revisions" {
-  type = map(string)
+  type    = map(string)
   default = {
     #  If the revision requested is not found, the server will return a 404 response code.
     1010020 = 1
@@ -439,8 +439,8 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 202
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 202
 
   dynamic "rule" {
     for_each = data.fastly_waf_rules.owasp.rules
@@ -455,10 +455,10 @@ resource "fastly_service_waf_configuration" "waf" {
 
 Usage omitting rule revision field. The first time Terraform is applied, the latest rule revisions are associated with the WAF. Any subsequent apply would not alter the rule revisions.
 
-```hcl
+```terraform
 # This variable is used for rule configuration in bulk.
 variable "type_status" {
-  type = map(string)
+  type    = map(string)
   default = {
     score     = "score"
     threshold = "log"
@@ -467,7 +467,7 @@ variable "type_status" {
 }
 # This variable is used for individual rule configuration.
 variable "individual_rules" {
-  type = map(string)
+  type    = map(string)
   default = {
     1010020 = "block"
   }
@@ -524,8 +524,8 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
-  http_violation_score_threshold  = 202
+  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  http_violation_score_threshold = 202
 
   dynamic "rule" {
     for_each = data.fastly_waf_rules.owasp.rules
@@ -561,16 +561,17 @@ For this scenario, it's recommended to split the changes into two distinct steps
 This is an example of the import command being applied to the resource named `fastly_service_waf_configuration.waf`
 The resource ID should be the WAF ID.
 
-```
+```sh
 $ terraform import fastly_service_waf_configuration.waf xxxxxxxxxxxxxxxxxxxx
 ```
 
 If Terraform is already managing a remote WAF configurations against a resource being imported then the user will be asked to remove it from the existing Terraform state.
 The following is an example of the Terraform state command to remove the resource named `fastly_service_waf_configuration.waf` from the Terraform state file.
 
-```
+```sh
 $ terraform state rm fastly_service_waf_configuration.waf
 ```
+
 <!-- schema generated by tfplugindocs -->
 ## Schema
 

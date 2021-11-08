@@ -1,0 +1,1 @@
+$ terraform import fastly_tls_certificate.demo xxxxxxxxxxx

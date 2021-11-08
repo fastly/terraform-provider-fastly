@@ -1,4 +1,4 @@
-{{define "data_source_tls_domain"}}---
+---
 layout: "fastly"
 page_title: "Fastly: fastly_tls_domain"
 sidebar_current: "docs-fastly-datasource-tls_domain"
@@ -12,9 +12,6 @@ Use this data source to get the IDs of activations, certificates and subscriptio
 
 ## Example Usage
 
-```hcl
-data "fastly_tls_domain" "domain" {
-  domain = "example.com"
-}
-```
-{{end}}
+{{ tffile "examples/data-sources/tls_domain.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

@@ -1,4 +1,4 @@
-{{define "index"}}---
+---
 page_title: "fastly Provider"
 subcategory: ""
 description: |-
@@ -19,29 +19,7 @@ The Fastly provider prior to version v0.13.0 requires using
 
 ## Example Usage
 
-```hcl
-# Terraform 0.13+ requires providers to be declared in a "required_providers" block
-terraform {
-  required_providers {
-    fastly = {
-      source = "fastly/fastly"
-      version >= "{{ .Data.ProviderVersion }}"
-    }
-  }
-}
-
-# Configure the Fastly Provider
-provider "fastly" {
-  api_key = "test"
-}
-
-# Create a Service
-resource "fastly_service_v1" "myservice" {
-  name = "myawesometestservice"
-
-  # ...
-}
-```
+{{ tffile "examples/index-fastly-provider.tf" }}
 
 ## Authentication
 
@@ -60,15 +38,7 @@ Fastly provider block:
 
 Usage:
 
-```hcl
-provider "fastly" {
-  api_key = "test"
-}
-
-resource "fastly_service_v1" "myservice" {
-  # ...
-}
-```
+{{ tffile "examples/index-api-key.tf" }}
 
 You can create a credential on the Personal API Tokens page: https://manage.fastly.com/account/personal/tokens
 
@@ -78,16 +48,24 @@ You can provide your API key via `FASTLY_API_KEY` environment variable,
 representing your Fastly API key. When using this method, you may omit the
 Fastly `provider` block entirely:
 
-```hcl
-resource "fastly_service_v1" "myservice" {
-  # ...
-}
-```
+{{ tffile "examples/index-fastly-service.tf" }}
 
 Usage:
 
-```
-$ export FASTLY_API_KEY="afastlyapikey"
-$ terraform plan
-```
-{{end}}
+{{ codefile "sh" "examples/index-env-var-tf-plan.txt" }}
+
+## Argument Reference
+
+The following arguments are supported in the `provider` block:
+
+* `api_key` - (Optional) This is the API key. It must be provided, but
+  it can also be sourced from the `FASTLY_API_KEY` environment variable
+
+* `base_url` - (Optional) This is the API server hostname. It is required
+  if using a private instance of the API and otherwise defaults to the
+  public Fastly production service. It can also be sourced from the
+  `FASTLY_API_URL` environment variable
+
+* `no_auth` - (Optional) Set this to `true` if you only need data source that does not require authentication such as `fastly_ip_ranges`. Default: `false`
+
+{{ .SchemaMarkdown | trimspace }}

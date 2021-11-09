@@ -22,7 +22,7 @@ build:
 	@sh -c "'$(CURDIR)/scripts/generate-dev-overrides.sh'"
 
 test:
-	go test -i $(TEST) || exit 1
+	go test $(TEST) || exit 1
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=$(TEST_PARALLELISM)
 
@@ -31,6 +31,11 @@ test:
 #
 # reference:
 # https://www.terraform.io/docs/internals/debugging.html
+#
+# TF_ACC is a recognised Terraform configuration that indicates we want to run an acceptance test, and which will result in creating REAL resources.
+#
+# reference:
+# https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#running-acceptance-tests
 #
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -parallel=$(TEST_PARALLELISM) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"

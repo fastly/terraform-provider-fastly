@@ -169,6 +169,7 @@ $ terraform import fastly_tls_subscription.demo xxxxxxxxxxx
 
 ### Read-Only
 
+- **certificate_id** (String) The certificate ID associated with the subscription.
 - **created_at** (String) Timestamp (GMT) when the subscription was created.
 - **managed_dns_challenge** (Map of String, Deprecated) The details required to configure DNS to respond to ACME DNS challenge in order to verify domain ownership.
 - **managed_dns_challenges** (Set of Object) A list of options for configuring DNS to respond to ACME DNS challenge in order to verify domain ownership. (see [below for nested schema](#nestedatt--managed_dns_challenges))

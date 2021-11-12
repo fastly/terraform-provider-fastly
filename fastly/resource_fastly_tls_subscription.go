@@ -219,7 +219,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	}
 
 	// NOTE: there must be only one certificate id included per subscription
-	var certificateId = subscription.Certificates[len(subscription.Certificates)-1].ID
+	var certificateId = subscription.Certificates[0].ID
 
 	var managedHTTPChallenges []map[string]interface{}
 	var managedDNSChallenges []map[string]interface{}

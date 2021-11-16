@@ -60,6 +60,11 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
+			"certificate_id": {
+				Type:        schema.TypeString,
+				Description: "The certificate ID associated with the subscription.",
+				Computed:    true,
+			},
 			"created_at": {
 				Type:        schema.TypeString,
 				Description: "Timestamp (GMT) when the subscription was created.",
@@ -213,6 +218,13 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		domains = append(domains, domain.ID)
 	}
 
+	// NOTE: there must be only one certificate id included per subscription
+	// "pending" and "processing" state may not include the id (for new subscriptions)
+	var certificateId = ""
+	if len(subscription.Certificates) > 0 {
+		certificateId = subscription.Certificates[0].ID
+	}
+
 	var managedHTTPChallenges []map[string]interface{}
 	var managedDNSChallenges []map[string]interface{}
 	for _, domain := range subscription.Authorizations {
@@ -269,6 +281,10 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	err = d.Set("common_name", subscription.CommonName.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("certificate_id", certificateId)
 	if err != nil {
 		return diag.FromErr(err)
 	}

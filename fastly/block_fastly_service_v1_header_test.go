@@ -68,7 +68,7 @@ func TestFastlyServiceV1_BuildHeaders(t *testing.T) {
 				IgnoreIfSet: true,
 				Type:        gofastly.HeaderTypeCache,
 				Destination: "http.aws-id",
-				Priority:    uint(100),
+				Priority:    gofastly.Uint(uint(100)),
 			},
 			local: map[string]interface{}{
 				"name":               "someheadder",
@@ -92,7 +92,7 @@ func TestFastlyServiceV1_BuildHeaders(t *testing.T) {
 				IgnoreIfSet: false,
 				Type:        gofastly.HeaderTypeCache,
 				Destination: "http.aws-id",
-				Priority:    uint(100),
+				Priority:    gofastly.Uint(uint(100)),
 				Source:      "http.server-name",
 			},
 			local: map[string]interface{}{

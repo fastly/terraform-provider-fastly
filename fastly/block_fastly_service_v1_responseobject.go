@@ -84,7 +84,7 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
 		Name:             resource["name"].(string),
-		Status:           uint(resource["status"].(int)),
+		Status:           gofastly.Uint(uint(resource["status"].(int))),
 		Response:         resource["response"].(string),
 		Content:          resource["content"].(string),
 		ContentType:      resource["content_type"].(string),

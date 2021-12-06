@@ -161,7 +161,7 @@ func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) 
 	opts := gofastly.CreateSnippetInput{
 		Name:     df["name"].(string),
 		Content:  df["content"].(string),
-		Priority: df["priority"].(int),
+		Priority: gofastly.Int(df["priority"].(int)),
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))

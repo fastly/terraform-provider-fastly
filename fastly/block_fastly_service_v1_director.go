@@ -93,9 +93,9 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 		Name:           resource["name"].(string),
 		Comment:        resource["comment"].(string),
 		Shield:         resource["shield"].(string),
-		Capacity:       uint(resource["capacity"].(int)),
-		Quorum:         uint(resource["quorum"].(int)),
-		Retries:        uint(resource["retries"].(int)),
+		Capacity:       gofastly.Uint(uint(resource["capacity"].(int))),
+		Quorum:         gofastly.Uint(uint(resource["quorum"].(int))),
+		Retries:        gofastly.Uint(uint(resource["retries"].(int))),
 	}
 
 	switch resource["type"].(int) {

@@ -362,41 +362,24 @@ func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 		t.Fatalf("Expected s3_secret_key to be marked as a Sensitive value")
 	}
 
-	// Defaults to "" if no environment variable is set
+	// Actually set env var and expect it to be used to determine the values
+	resetEnv := setEnv(testAwsPrimaryAccessKey, testAwsPrimarySecretKey, t)
+	defer resetEnv()
+
 	result1, err1 := loggingResourceSchema["s3_access_key"].DefaultFunc()
 	if err1 != nil {
 		t.Fatalf("Unexpected err %#v when calling s3_access_key DefaultFunc", err1)
 	}
-	if result1 != "" {
-		t.Fatalf("Error matching:\nexpected: \"\"\ngot: %#v", result1)
+	if result1 != testAwsPrimaryAccessKey {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", testAwsPrimaryAccessKey, result1)
 	}
 
 	result2, err2 := loggingResourceSchema["s3_secret_key"].DefaultFunc()
 	if err2 != nil {
 		t.Fatalf("Unexpected err %#v when calling s3_secret_key DefaultFunc", err2)
 	}
-	if result2 != "" {
-		t.Fatalf("Error matching:\nexpected: \"\"\ngot: %#v", result2)
-	}
-
-	// Actually set env var and expect it to be used to determine the values
-	resetEnv := setEnv(testAwsPrimaryAccessKey, testAwsPrimarySecretKey, t)
-	defer resetEnv()
-
-	result3, err3 := loggingResourceSchema["s3_access_key"].DefaultFunc()
-	if err3 != nil {
-		t.Fatalf("Unexpected err %#v when calling s3_access_key DefaultFunc", err3)
-	}
-	if result3 != testAwsPrimaryAccessKey {
-		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", testAwsPrimaryAccessKey, result3)
-	}
-
-	result4, err4 := loggingResourceSchema["s3_secret_key"].DefaultFunc()
-	if err4 != nil {
-		t.Fatalf("Unexpected err %#v when calling s3_secret_key DefaultFunc", err4)
-	}
-	if result4 != testAwsPrimarySecretKey {
-		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", testAwsPrimarySecretKey, result4)
+	if result2 != testAwsPrimarySecretKey {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", testAwsPrimarySecretKey, result2)
 	}
 }
 

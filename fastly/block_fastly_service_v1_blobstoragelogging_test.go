@@ -249,26 +249,17 @@ func TestBlobstorageloggingEnvDefaultFuncAttributes(t *testing.T) {
 		t.Fatalf("Expected sas_token to be marked as a Sensitive value")
 	}
 
-	// Defaults to "" if no environment variable is set
-	result1, err1 := loggingResourceSchema["sas_token"].DefaultFunc()
-	if err1 != nil {
-		t.Fatalf("Unexpected err %#v when calling sas_token DefaultFunc", err1)
-	}
-	if result1 != "" {
-		t.Fatalf("Error matching:\nexpected: \"\"\ngot: %#v", result1)
-	}
-
 	// Actually set env var and expect it to be used to determine the values
 	token := "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"
 	resetEnv := setBlobStorageEnv(token, t)
 	defer resetEnv()
 
-	result2, err2 := loggingResourceSchema["sas_token"].DefaultFunc()
-	if err2 != nil {
-		t.Fatalf("Unexpected err %#v when calling sas_token DefaultFunc", err2)
+	result1, err1 := loggingResourceSchema["sas_token"].DefaultFunc()
+	if err1 != nil {
+		t.Fatalf("Unexpected err %#v when calling sas_token DefaultFunc", err1)
 	}
-	if result2 != token {
-		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, result2)
+	if result1 != token {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, result1)
 	}
 }
 

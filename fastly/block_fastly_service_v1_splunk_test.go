@@ -320,23 +320,6 @@ func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 		t.Fatalf("Expected token to be marked as a Sensitive value")
 	}
 
-	// Defaults to "" if no environment variable is set
-	result1, err1 := loggingResourceSchema["token"].DefaultFunc()
-	if err1 != nil {
-		t.Fatalf("Unexpected err %#v when calling token DefaultFunc", err1)
-	}
-	if result1 != "" {
-		t.Fatalf("Error matching:\nexpected: \"\"\ngot: %#v", result1)
-	}
-
-	result2, err2 := loggingResourceSchema["tls_ca_cert"].DefaultFunc()
-	if err2 != nil {
-		t.Fatalf("Unexpected err %#v when calling tls_ca_cert DefaultFunc", err2)
-	}
-	if result2 != "" {
-		t.Fatalf("Error matching:\nexpected: \"\"\ngot: %#v", result2)
-	}
-
 	// Actually set env var and expect it to be used to determine the values
 	_, cert, err := generateKeyAndCert()
 	if err != nil {
@@ -346,20 +329,20 @@ func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 	resetEnv := setSplunkEnv(token, cert, t)
 	defer resetEnv()
 
-	result3, err3 := loggingResourceSchema["token"].DefaultFunc()
-	if err3 != nil {
-		t.Fatalf("Unexpected err %#v when calling token DefaultFunc", err3)
+	result1, err1 := loggingResourceSchema["token"].DefaultFunc()
+	if err1 != nil {
+		t.Fatalf("Unexpected err %#v when calling token DefaultFunc", err1)
 	}
-	if result3 != token {
-		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, result3)
+	if result1 != token {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, result1)
 	}
 
-	result4, err4 := loggingResourceSchema["tls_ca_cert"].DefaultFunc()
-	if err4 != nil {
-		t.Fatalf("Unexpected err %#v when calling tls_ca_cert DefaultFunc", err4)
+	result2, err2 := loggingResourceSchema["tls_ca_cert"].DefaultFunc()
+	if err2 != nil {
+		t.Fatalf("Unexpected err %#v when calling tls_ca_cert DefaultFunc", err2)
 	}
-	if result4 != cert {
-		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", cert, result4)
+	if result2 != cert {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", cert, result2)
 	}
 }
 

@@ -68,7 +68,7 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 		// need to trim leading/tailing spaces, incase the config has HEREDOC
 		// formatting and contains a trailing new line
 		Statement: strings.TrimSpace(resource["statement"].(string)),
-		Priority:  resource["priority"].(int),
+		Priority:  gofastly.Int(resource["priority"].(int)),
 	}
 
 	log.Printf("[DEBUG] Create Conditions Opts: %#v", opts)

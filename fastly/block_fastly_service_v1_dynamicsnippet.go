@@ -149,7 +149,7 @@ func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippet
 	df := dynamicSnippetMap.(map[string]interface{})
 	opts := gofastly.CreateSnippetInput{
 		Name:     df["name"].(string),
-		Priority: df["priority"].(int),
+		Priority: gofastly.Int(df["priority"].(int)),
 		Dynamic:  1,
 	}
 

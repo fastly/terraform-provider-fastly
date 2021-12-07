@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -302,51 +303,6 @@ func TestAccFastlyServiceV1_s3logging_domain_default(t *testing.T) {
 	})
 }
 
-// Tests that s3_access_key and s3_secret_key are read from the env
-func TestAccFastlyServiceV1_s3logging_s3_env(t *testing.T) {
-	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	// set env Vars to something we expect
-	resetEnv := setEnv(testAwsPrimaryAccessKey, testAwsPrimarySecretKey, t)
-	defer resetEnv()
-
-	log3 := gofastly.S3{
-		ServiceVersion:  1,
-		Name:            "somebucketlog",
-		BucketName:      "fastlytestlogging",
-		Domain:          "s3-us-west-2.amazonaws.com",
-		AccessKey:       testAwsPrimaryAccessKey,
-		SecretKey:       testAwsPrimarySecretKey,
-		Period:          uint(3600),
-		GzipLevel:       uint(0),
-		Format:          "%h %l %u %t %r %>s",
-		FormatVersion:   1,
-		MessageType:     "classic",
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1S3LoggingConfig_env(name, domainName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1S3LoggingAttributes(&service, []*gofastly.S3{&log3}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "s3logging.#", "1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -385,6 +341,46 @@ func TestAccFastlyServiceV1_s3logging_formatVersion(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
+	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
+	v := NewServiceS3Logging(serviceAttributes)
+	resource := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	}
+	v.Register(resource)
+	loggingResource := resource.Schema["s3logging"]
+	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
+
+	// Expect attributes to be sensitive
+	if !loggingResourceSchema["s3_access_key"].Sensitive {
+		t.Fatalf("Expected s3_access_key to be marked as a Sensitive value")
+	}
+
+	if !loggingResourceSchema["s3_secret_key"].Sensitive {
+		t.Fatalf("Expected s3_secret_key to be marked as a Sensitive value")
+	}
+
+	// Actually set env var and expect it to be used to determine the values
+	resetEnv := setEnv(testAwsPrimaryAccessKey, testAwsPrimarySecretKey, t)
+	defer resetEnv()
+
+	result1, err1 := loggingResourceSchema["s3_access_key"].DefaultFunc()
+	if err1 != nil {
+		t.Fatalf("Unexpected err %#v when calling s3_access_key DefaultFunc", err1)
+	}
+	if result1 != testAwsPrimaryAccessKey {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", testAwsPrimaryAccessKey, result1)
+	}
+
+	result2, err2 := loggingResourceSchema["s3_secret_key"].DefaultFunc()
+	if err2 != nil {
+		t.Fatalf("Unexpected err %#v when calling s3_secret_key DefaultFunc", err2)
+	}
+	if result2 != testAwsPrimarySecretKey {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", testAwsPrimarySecretKey, result2)
+	}
 }
 
 func testAccCheckFastlyServiceV1S3LoggingAttributes(service *gofastly.ServiceDetail, s3s []*gofastly.S3, serviceType string) resource.TestCheckFunc {
@@ -647,6 +643,11 @@ resource "fastly_service_v1" "foo" {
 }`, name, domain, key, secret)
 }
 
+// struct to preserve the current environment
+type currentEnv struct {
+	Key, Secret string
+}
+
 func setEnv(key, secret string, t *testing.T) func() {
 	e := getEnv()
 	// Set all the envs to a dummy value
@@ -666,11 +667,6 @@ func setEnv(key, secret string, t *testing.T) func() {
 			t.Fatalf("Error resetting env var FASTLY_S3_SECRET_KEY: %s", err)
 		}
 	}
-}
-
-// struct to preserve the current environment
-type currentEnv struct {
-	Key, Secret string
 }
 
 func getEnv() *currentEnv {

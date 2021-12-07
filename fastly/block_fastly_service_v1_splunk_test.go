@@ -9,6 +9,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -304,48 +305,45 @@ func TestAccFastlyServiceV1_splunk_complete(t *testing.T) {
 	})
 }
 
-// This test should not be run in parallel due to its use of schema.EnvDefaultFunc to set/reset environment variables,
-// which conflicts with other running tests.
-func TestAccFastlyServiceV1_splunk_env(t *testing.T) {
-	var service gofastly.ServiceDetail
-	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
+	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
+	v := NewServiceSplunk(serviceAttributes)
+	resource := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	}
+	v.Register(resource)
+	loggingResource := resource.Schema["splunk"]
+	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
+	// Expect attributes to be sensitive
+	if !loggingResourceSchema["token"].Sensitive {
+		t.Fatalf("Expected token to be marked as a Sensitive value")
+	}
+
+	// Actually set env var and expect it to be used to determine the values
 	_, cert, err := generateKeyAndCert()
 	if err != nil {
 		t.Errorf("Failed to generate key and cert: %s", err)
 	}
-
-	// set env variable to something we expect
-	resetEnv := setSplunkEnv("test-token", cert, t)
+	token := "test-token"
+	resetEnv := setSplunkEnv(token, cert, t)
 	defer resetEnv()
 
-	splunkLog := gofastly.Splunk{
-		Name:          "test-splunk",
-		URL:           "https://mysplunkendpoint.example.com/services/collector/event",
-		Token:         "test-token",
-		TLSCACert:     cert,
-		Format:        "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion: 2,
+	result1, err1 := loggingResourceSchema["token"].DefaultFunc()
+	if err1 != nil {
+		t.Fatalf("Unexpected err %#v when calling token DefaultFunc", err1)
+	}
+	if result1 != token {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, result1)
 	}
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1SplunkConfig_env(serviceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1SplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "splunk.#", "1"),
-				),
-			},
-		},
-	})
+	result2, err2 := loggingResourceSchema["tls_ca_cert"].DefaultFunc()
+	if err2 != nil {
+		t.Fatalf("Unexpected err %#v when calling tls_ca_cert DefaultFunc", err2)
+	}
+	if result2 != cert {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", cert, result2)
+	}
 }
 
 func testAccCheckFastlyServiceV1SplunkAttributes(service *gofastly.ServiceDetail, localSplunkList []*gofastly.Splunk, serviceType string) resource.TestCheckFunc {

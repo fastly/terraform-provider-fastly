@@ -108,14 +108,14 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 		Name:             resource["name"].(string),
 		Host:             resource["host"].(string),
 		Path:             resource["path"].(string),
-		CheckInterval:    uint(resource["check_interval"].(int)),
-		ExpectedResponse: uint(resource["expected_response"].(int)),
+		CheckInterval:    gofastly.Uint(uint(resource["check_interval"].(int))),
+		ExpectedResponse: gofastly.Uint(uint(resource["expected_response"].(int))),
 		HTTPVersion:      resource["http_version"].(string),
-		Initial:          uint(resource["initial"].(int)),
+		Initial:          gofastly.Uint(uint(resource["initial"].(int))),
 		Method:           resource["method"].(string),
-		Threshold:        uint(resource["threshold"].(int)),
-		Timeout:          uint(resource["timeout"].(int)),
-		Window:           uint(resource["window"].(int)),
+		Threshold:        gofastly.Uint(uint(resource["threshold"].(int))),
+		Timeout:          gofastly.Uint(uint(resource["timeout"].(int))),
+		Window:           gofastly.Uint(uint(resource["window"].(int))),
 	}
 
 	log.Printf("[DEBUG] Create Healthcheck Opts: %#v", opts)

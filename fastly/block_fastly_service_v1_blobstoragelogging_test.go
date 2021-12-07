@@ -9,6 +9,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v5/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -233,44 +234,33 @@ func TestAccFastlyServiceV1_blobstoragelogging_default(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_blobstoragelogging_env(t *testing.T) {
-	var service gofastly.ServiceDetail
-	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+func TestBlobstorageloggingEnvDefaultFuncAttributes(t *testing.T) {
+	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
+	v := NewServiceBlobStorageLogging(serviceAttributes)
+	resource := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	}
+	v.Register(resource)
+	loggingResource := resource.Schema["blobstoragelogging"]
+	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
-	// set env variable to something we expect
-	resetEnv := setBlobStorageEnv("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D", t)
-	defer resetEnv()
-
-	blobStorageLog := gofastly.BlobStorage{
-		Name:            "test-blobstorage",
-		AccountName:     "test",
-		Container:       "fastly",
-		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		Format:          "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:   2,
-		MessageType:     "classic",
+	// Expect attributes to be sensitive
+	if !loggingResourceSchema["sas_token"].Sensitive {
+		t.Fatalf("Expected sas_token to be marked as a Sensitive value")
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1BlobStorageLoggingConfig_env(serviceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLog}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_v1.foo", "blobstoragelogging.#", "1"),
-				),
-			},
-		},
-	})
+	// Actually set env var and expect it to be used to determine the values
+	token := "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"
+	resetEnv := setBlobStorageEnv(token, t)
+	defer resetEnv()
+
+	result1, err1 := loggingResourceSchema["sas_token"].DefaultFunc()
+	if err1 != nil {
+		t.Fatalf("Unexpected err %#v when calling sas_token DefaultFunc", err1)
+	}
+	if result1 != token {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, result1)
+	}
 }
 
 func testAccCheckFastlyServiceV1BlobStorageLoggingAttributes(service *gofastly.ServiceDetail, localBlobStorageList []*gofastly.BlobStorage, serviceType string) resource.TestCheckFunc {

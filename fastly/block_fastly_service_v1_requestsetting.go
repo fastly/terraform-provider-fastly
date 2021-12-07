@@ -262,7 +262,7 @@ func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequest
 	resource := requestSettingMap.(map[string]interface{})
 	opts := gofastly.CreateRequestSettingInput{
 		Name:             resource["name"].(string),
-		MaxStaleAge:      uint(resource["max_stale_age"].(int)),
+		MaxStaleAge:      gofastly.Uint(uint(resource["max_stale_age"].(int))),
 		ForceMiss:        gofastly.Compatibool(resource["force_miss"].(bool)),
 		ForceSSL:         gofastly.Compatibool(resource["force_ssl"].(bool)),
 		BypassBusyWait:   gofastly.Compatibool(resource["bypass_busy_wait"].(bool)),

@@ -1,4 +1,22 @@
-## 0.39.0 (Unreleased)
+## 0.40.0 (Unreleased)
+
+## 0.39.0 (December 8, 2021)
+
+ENHANCEMENTS:
+
+* Bump go-fastly to v5.1.3 [#511](https://github.com/fastly/terraform-provider-fastly/pull/511)
+* Expose `certificate_id` read-only attribute from `fastly_tls_subscription` [#506](https://github.com/fastly/terraform-provider-fastly/pull/506)
+* Dynamically generate provider version [#500](https://github.com/fastly/terraform-provider-fastly/pull/500)
+
+BUG FIXES:
+
+* Fix constants formatting [#504](https://github.com/fastly/terraform-provider-fastly/pull/504)
+* Remove `-i` flag from `go test` [#503](https://github.com/fastly/terraform-provider-fastly/pull/503)
+
+DOCUMENTATION:
+
+* Consistent description for attributes using constants [#502](https://github.com/fastly/terraform-provider-fastly/pull/502)
+* Update `RELEASE.md` [#499](https://github.com/fastly/terraform-provider-fastly/pull/499)
 
 ## 0.38.0 (November 4, 2021)
 

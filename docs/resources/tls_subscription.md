@@ -81,11 +81,8 @@ resource "aws_route53_record" "domain_validation" {
   depends_on = [fastly_tls_subscription.example]
 
   for_each        = {
-  for domain in fastly_tls_subscription.example.domains :
-  domain => element([
-  for obj in fastly_tls_subscription.example.managed_dns_challenges :
-  obj if obj.record_name == "_acme-challenge.${domain}"
-  ], 0)
+    for challenge in fastly_tls_subscription.example.managed_dns_challenges :
+    trimprefix(challenge.record_name, "_acme-challenge.") => challenge
   }
   name            = each.value.record_name
   type            = each.value.record_type

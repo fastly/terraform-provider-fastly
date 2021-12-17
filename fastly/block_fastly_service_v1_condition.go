@@ -100,7 +100,16 @@ func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 
 func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
 }, serviceVersion int, conn *gofastly.Client) error {
-	opts := gofastly.UpdateConditionInput{
+	optsCreate := gofastly.CreateConditionInput{
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           resource["name"].(string),
+		Type:           resource["type"].(string),
+		Statement:      strings.TrimSpace(resource["statement"].(string)),
+		Priority:       gofastly.Int(resource["priority"].(int)),
+	}
+
+	optsUpdate := gofastly.UpdateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
@@ -112,20 +121,40 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	// this and so we've updated the below code to convert the type asserted
 	// int into a uint before passing the value to gofastly.Uint().
 	if v, ok := modified["comment"]; ok {
-		opts.Comment = gofastly.String(v.(string))
+		optsUpdate.Comment = gofastly.String(v.(string))
 	}
 	if v, ok := modified["statement"]; ok {
-		opts.Statement = gofastly.String(v.(string))
-	}
-	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.String(v.(string))
+		optsCreate.Statement = v.(string)
+		optsUpdate.Statement = gofastly.String(v.(string))
 	}
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.Int(v.(int))
+		optsCreate.Priority = gofastly.Int(v.(int))
+		optsUpdate.Priority = gofastly.Int(v.(int))
+	}
+	// NOTE: Fastly API doesn't support updating the condition "type".
+	// Therefore, we need to DELETE and CREATE if "type" attribute is changed.
+	if v, ok := modified["type"]; ok {
+		optsCreate.Type = v.(string)
+		log.Printf("[DEBUG] Delete Condition: %s (type changed)", resource["name"].(string))
+		err := conn.DeleteCondition(&gofastly.DeleteConditionInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+			Name:           resource["name"].(string),
+		})
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Create Condition Opts: %#v", optsCreate)
+		_, err = conn.CreateCondition(&optsCreate)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
-	log.Printf("[DEBUG] Update Condition Opts: %#v", opts)
-	_, err := conn.UpdateCondition(&opts)
+	log.Printf("[DEBUG] Update Condition Opts: %#v", optsUpdate)
+	_, err := conn.UpdateCondition(&optsUpdate)
 	if err != nil {
 		return err
 	}

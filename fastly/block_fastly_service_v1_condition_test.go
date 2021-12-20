@@ -156,11 +156,11 @@ resource "fastly_service_v1" "foo" {
 
   header {
     destination         = "http.x-foo"
-	source              = "\"bar\""
+    source              = "\"bar\""
     type                = "request"
     action              = "set"
     name                = "set x-foo"
-	request_condition   = "some test condition"
+    request_condition   = "some test condition"
   }
 
   condition {
@@ -193,11 +193,11 @@ resource "fastly_service_v1" "foo" {
 
   header {
     destination       = "http.x-foo"
-	source            = "\"bar\""
+    source            = "\"bar\""
     type              = "cache"
     action            = "set"
     name              = "set x-foo"
-	cache_condition   = "some test condition"
+    cache_condition   = "some test condition"
   }
 
   condition {

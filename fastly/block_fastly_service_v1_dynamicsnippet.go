@@ -39,7 +39,7 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 				"type": {
 					Type:             schema.TypeString,
 					Required:         true,
-					Description:      "The location in generated VCL where the snippet should be placed (can be one of `init`, `recv`, `hit`, `miss`, `pass`, `fetch`, `error`, `deliver`, `log` or `none`)",
+					Description:      SnippetTypeDescription,
 					ValidateDiagFunc: validateSnippetType(),
 				},
 				"priority": {

@@ -30,6 +30,12 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 				Description: "A list of tags to be used as filters for the data set.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"modsec_rule_ids": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of modsecurity rules IDs to be used as filters for the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+			},
 			"exclude_modsec_rule_ids": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -82,6 +88,13 @@ func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, met
 		l := v.([]interface{})
 		for i := range l {
 			input.FilterTagNames = append(input.FilterTagNames, l[i].(string))
+		}
+	}
+
+	if v, ok := d.GetOk("modsec_rule_ids"); ok {
+		l := v.([]interface{})
+		for i := range l {
+			input.FilterModSecIDs = append(input.FilterModSecIDs, l[i].(int))
 		}
 	}
 

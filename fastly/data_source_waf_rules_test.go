@@ -124,6 +124,25 @@ func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
 	})
 }
 
+func TestAccFastlyWAFRulesModSecIDsFilter(t *testing.T) {
+
+	wafrulesHCL := `
+    modsec_rule_ids = [1010060, 1010070]
+    `
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFastlyWAFRules(wafrulesHCL),
+				Check:  resource.TestCheckResourceAttr("data.fastly_waf_rules.r1", "rules.#", "2"),
+			},
+		},
+	})
+}
+
 func TestAccFastlyWAFRulesExcludeFilter(t *testing.T) {
 
 	wafrulesHCL := `

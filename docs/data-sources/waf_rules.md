@@ -156,6 +156,7 @@ The `rules` block supports:
 
 - **exclude_modsec_rule_ids** (List of Number) A list of modsecurity rules IDs to be excluded from the data set.
 - **id** (String) The ID of this resource.
+- **modsec_rule_ids** (List of Number) A list of modsecurity rules IDs to be used as filters for the data set.
 - **publishers** (List of String) A list of publishers to be used as filters for the data set.
 - **tags** (List of String) A list of tags to be used as filters for the data set.
 

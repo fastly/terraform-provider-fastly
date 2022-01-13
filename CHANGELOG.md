@@ -4,11 +4,14 @@
 
 ENHANCEMENTS:
 
-* x [#](https://github.com/fastly/terraform-provider-fastly/pull/)
+* Bump go-fastly to v6.0.0 [#525](https://github.com/fastly/terraform-provider-fastly/pull/525)
+* Add new `modsec_rule_ids` filter to `fastly_waf_rules` [#521](https://github.com/fastly/terraform-provider-fastly/pull/521)
+* Force creation of new condition if type changed [#518](https://github.com/fastly/terraform-provider-fastly/pull/518)
 
-BUG FIXES:
+DOCUMENTATION:
 
-* x [#](https://github.com/fastly/terraform-provider-fastly/pull/)
+* Simplify example in `fastly_tls_subscription` [#516](https://github.com/fastly/terraform-provider-fastly/pull/516)
+* Update VCL snippet type description [#519](https://github.com/fastly/terraform-provider-fastly/pull/519)
 
 ## 0.39.0 (December 8, 2021)
 

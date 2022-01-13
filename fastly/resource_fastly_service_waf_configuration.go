@@ -9,7 +9,7 @@ import (
 	"log"
 	"sort"
 
-	gofastly "github.com/fastly/go-fastly/v5/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )

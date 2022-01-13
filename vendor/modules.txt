@@ -234,9 +234,9 @@ github.com/bgentry/go-netrc/netrc
 github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v5 v5.2.0
+# github.com/fastly/go-fastly/v6 v6.0.0
 ## explicit
-github.com/fastly/go-fastly/v5/fastly
+github.com/fastly/go-fastly/v6/fastly
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
@@ -260,7 +260,7 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/google/go-querystring v1.1.0
 github.com/google/go-querystring/query
-# github.com/google/jsonapi v0.0.0-20201022225600-f822737867f6
+# github.com/google/jsonapi v1.0.0
 github.com/google/jsonapi
 # github.com/google/uuid v1.1.2
 github.com/google/uuid
@@ -381,7 +381,7 @@ github.com/mitchellh/go-homedir
 github.com/mitchellh/go-testing-interface
 # github.com/mitchellh/go-wordwrap v1.0.0
 github.com/mitchellh/go-wordwrap
-# github.com/mitchellh/mapstructure v1.1.2
+# github.com/mitchellh/mapstructure v1.4.3
 github.com/mitchellh/mapstructure
 # github.com/mitchellh/reflectwalk v1.0.2
 github.com/mitchellh/reflectwalk
@@ -457,10 +457,11 @@ golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 # golang.org/x/lint v0.0.0-20200302205851-738671d3881b
 golang.org/x/lint
 golang.org/x/lint/golint
-# golang.org/x/mod v0.3.0
+# golang.org/x/mod v0.5.1
+golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20210326060303-6b1517762897
+# golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 ## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -476,16 +477,17 @@ golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sys v0.0.0-20210502180810-71e4cd670f79
+# golang.org/x/sys v0.0.0-20211019181941-9d821ace8654
 golang.org/x/sys/cpu
+golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# golang.org/x/text v0.3.5
+# golang.org/x/text v0.3.7
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/tools v0.0.0-20201028111035-eafbe7b904eb
+# golang.org/x/tools v0.1.8
 golang.org/x/tools/cmd/goimports
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/internal/analysisflags
@@ -513,6 +515,7 @@ golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/lsp/fuzzy
 golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/span
+golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 golang.org/x/xerrors

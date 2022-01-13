@@ -1,4 +1,14 @@
-## 0.40.0 (Unreleased)
+## 0.41.0 (Unreleased)
+
+## 0.40.0 (January 13, 2022)
+
+ENHANCEMENTS:
+
+* x [#](https://github.com/fastly/terraform-provider-fastly/pull/)
+
+BUG FIXES:
+
+* x [#](https://github.com/fastly/terraform-provider-fastly/pull/)
 
 ## 0.39.0 (December 8, 2021)
 

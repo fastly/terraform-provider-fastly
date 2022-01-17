@@ -86,7 +86,7 @@ resource "aws_route53_record" "domain_validation" {
   # The "managed_dns_challenges" read-only attribute only includes one object
   # for "_acme-challenge.example.com" as the challenge record is common in these two domains.
   # 
-  # In order to process a cert contains wildcard entries, remove wildcard prefix "*." from the key
+  # In order to process a cert containing wildcard entries, remove wildcard prefix "*." from the key
   # and use ellipsis (...) to group results by key to avoid "Duplicate object key" error.
   # Therefore, a key may have multiple elements. For example, domains "example.com" and "*.example.com"
   # find the exact same object in the "managed_dns_challenges" attribute due to the "if" statement below.
@@ -99,7 +99,7 @@ resource "aws_route53_record" "domain_validation" {
   # }
   # ```
   # but since the "managed_dns_challenges" attribute is only known after apply,
-  # you will need to create this resource separately ("--target" option) and may not be ideal.
+  # you will need to create this resource separately ("-target" option) and may not be ideal.
   for_each = {
     for domain in fastly_tls_subscription.example.domains :
     replace(domain, "*.", "") => element([

@@ -518,8 +518,8 @@ Required:
 Optional:
 
 - **cache_condition** (String) Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)
-- **content_types** (Set of String) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`
-- **extensions** (Set of String) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`
+- **content_types** (List of String) The content-type for each type of content you wish to have dynamically gzip'ed. Example: `["text/html", "text/css"]`
+- **extensions** (List of String) File extensions for each file type to dynamically gzip. Example: `["css", "js"]`
 
 
 <a id="nestedblock--header"></a>

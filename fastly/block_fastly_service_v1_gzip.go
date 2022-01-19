@@ -39,13 +39,13 @@ func (h *GzipServiceAttributeHandler) GetSchema() *schema.Schema {
 				},
 				// optional fields
 				"content_types": {
-					Type:        schema.TypeSet,
+					Type:        schema.TypeList,
 					Optional:    true,
 					Description: "The content-type for each type of content you wish to have dynamically gzip'ed. Example: `[\"text/html\", \"text/css\"]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 				"extensions": {
-					Type:        schema.TypeSet,
+					Type:        schema.TypeList,
 					Optional:    true,
 					Description: "File extensions for each file type to dynamically gzip. Example: `[\"css\", \"js\"]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
@@ -71,23 +71,11 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 	}
 
 	if v, ok := resource["content_types"]; ok {
-		if len(v.(*schema.Set).List()) > 0 {
-			var cl []string
-			for _, c := range v.(*schema.Set).List() {
-				cl = append(cl, c.(string))
-			}
-			opts.ContentTypes = strings.Join(cl, " ")
-		}
+		opts.ContentTypes = sliceToString(v.([]interface{}))
 	}
 
 	if v, ok := resource["extensions"]; ok {
-		if len(v.(*schema.Set).List()) > 0 {
-			var el []string
-			for _, e := range v.(*schema.Set).List() {
-				el = append(el, e.(string))
-			}
-			opts.Extensions = strings.Join(el, " ")
-		}
+		opts.Extensions = sliceToString(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
@@ -124,10 +112,10 @@ func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 		for _, elem := range d.Get("gzip").(*schema.Set).List() {
 			m := elem.(map[string]interface{})
 			name := m["name"].(string)
-			if m["content_types"].(*schema.Set).Len() == 0 {
+			if len(m["content_types"].([]interface{})) == 0 {
 				ignoreList[name] = append(ignoreList[name], IgnoreFields{Name: "content_types"})
 			}
-			if m["extensions"].(*schema.Set).Len() == 0 {
+			if len(m["extensions"].([]interface{})) == 0 {
 				ignoreList[name] = append(ignoreList[name], IgnoreFields{Name: "extensions"})
 			}
 		}
@@ -168,24 +156,16 @@ func (h *GzipServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		// we always default to sending an empty string
 		opts.ContentTypes = gofastly.String("")
 
-		set := v.(*schema.Set)
-		if len(set.List()) > 0 {
-			var s []string
-			for _, elem := range set.List() {
-				s = append(s, elem.(string))
-			}
-			opts.ContentTypes = gofastly.String(strings.Join(s, " "))
+		list := v.([]interface{})
+		if len(list) > 0 {
+			opts.ContentTypes = gofastly.String(sliceToString(list))
 		}
 	}
 	if v, ok := modified["extensions"]; ok {
 		opts.Extensions = gofastly.String("")
-		set := v.(*schema.Set)
-		if len(set.List()) > 0 {
-			var s []string
-			for _, elem := range set.List() {
-				s = append(s, elem.(string))
-			}
-			opts.Extensions = gofastly.String(strings.Join(s, " "))
+		list := v.([]interface{})
+		if len(list) > 0 {
+			opts.Extensions = gofastly.String(sliceToString(list))
 		}
 	}
 	if v, ok := modified["cache_condition"]; ok {
@@ -235,7 +215,7 @@ func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]interface{} {
 			for _, ev := range e {
 				et = append(et, ev)
 			}
-			ng["extensions"] = schema.NewSet(schema.HashString, et)
+			ng["extensions"] = et
 		}
 
 		if g.ContentTypes != "" {
@@ -244,7 +224,7 @@ func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]interface{} {
 			for _, cv := range c {
 				ct = append(ct, cv)
 			}
-			ng["content_types"] = schema.NewSet(schema.HashString, ct)
+			ng["content_types"] = ct
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -258,4 +238,12 @@ func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]interface{} {
 	}
 
 	return gl
+}
+
+func sliceToString(src []interface{}) string {
+	var result []string
+	for _, el := range src {
+		result = append(result, el.(string))
+	}
+	return strings.Join(result, " ")
 }

@@ -8,7 +8,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -27,7 +26,7 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 			local: []map[string]interface{}{
 				{
 					"name":       "somegzip",
-					"extensions": schema.NewSet(schema.HashString, []interface{}{"css"}),
+					"extensions": []interface{}{"css"},
 				},
 			},
 		},
@@ -47,13 +46,13 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 			local: []map[string]interface{}{
 				{
 					"name":          "somegzip",
-					"extensions":    schema.NewSet(schema.HashString, []interface{}{"css", "json", "js"}),
-					"content_types": schema.NewSet(schema.HashString, []interface{}{"text/html"}),
+					"extensions":    []interface{}{"css", "json", "js"},
+					"content_types": []interface{}{"text/html"},
 				},
 				{
 					"name":          "someothergzip",
-					"extensions":    schema.NewSet(schema.HashString, []interface{}{"css", "js"}),
-					"content_types": schema.NewSet(schema.HashString, []interface{}{"text/html", "text/xml"}),
+					"extensions":    []interface{}{"css", "js"},
+					"content_types": []interface{}{"text/html", "text/xml"},
 				},
 			},
 		},
@@ -61,43 +60,8 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 
 	for _, c := range cases {
 		out := flattenGzips(c.remote)
-		// loop, because deepequal wont work with our sets
-		expectedCount := len(c.local)
-		var found int
-		for _, o := range out {
-			for _, l := range c.local {
-				if o["name"].(string) == l["name"].(string) {
-					found++
-					if o["extensions"] == nil && l["extensions"] != nil {
-						t.Fatalf("output extensions are nil, local are not")
-					}
-
-					if o["extensions"] != nil {
-						oex := o["extensions"].(*schema.Set)
-						lex := l["extensions"].(*schema.Set)
-						if !oex.Equal(lex) {
-							t.Fatalf("Extensions don't match, expected: %#v, got: %#v", lex, oex)
-						}
-					}
-
-					if o["content_types"] == nil && l["content_types"] != nil {
-						t.Fatalf("output content types are nil, local are not")
-					}
-
-					if o["content_types"] != nil {
-						oct := o["content_types"].(*schema.Set)
-						lct := l["content_types"].(*schema.Set)
-						if !oct.Equal(lct) {
-							t.Fatalf("ContentTypes don't match, expected: %#v, got: %#v", lct, oct)
-						}
-					}
-
-				}
-			}
-		}
-
-		if found != expectedCount {
-			t.Fatalf("Found and expected mismatch: %d / %d", found, expectedCount)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}
 	}
 }
@@ -110,7 +74,7 @@ func TestAccFastlyServiceV1_gzips_basic(t *testing.T) {
 	log1 := gofastly.Gzip{
 		ServiceVersion: 1,
 		Name:           "gzip file types",
-		Extensions:     "js css",
+		Extensions:     "css js",
 		CacheCondition: "testing_condition",
 	}
 
@@ -123,7 +87,7 @@ func TestAccFastlyServiceV1_gzips_basic(t *testing.T) {
 	log3 := gofastly.Gzip{
 		ServiceVersion: 1,
 		Name:           "all",
-		Extensions:     "js html css",
+		Extensions:     "css js html",
 		ContentTypes:   "text/javascript application/x-javascript application/javascript text/css text/html",
 	}
 
@@ -131,7 +95,7 @@ func TestAccFastlyServiceV1_gzips_basic(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "all",
 		Extensions:     "css",
-		ContentTypes:   "text/javascript application/x-javascript",
+		ContentTypes:   "application/x-javascript text/javascript",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -260,7 +224,7 @@ resource "fastly_service_v1" "foo" {
 
   gzip {
     name          = "gzip extensions"
-    content_types = ["text/html", "text/css"]
+    content_types = ["text/css", "text/html"]
   }
 
   force_destroy = true
@@ -287,12 +251,11 @@ resource "fastly_service_v1" "foo" {
     extensions = ["css", "js", "html"]
 
     content_types = [
-      "text/html",
-      "text/css",
-      "application/x-javascript",
-      "text/css",
-      "application/javascript",
-      "text/javascript",
+	  "text/javascript",
+	  "application/x-javascript",
+	  "application/javascript",
+	  "text/css",
+	  "text/html",
     ]
   }
 

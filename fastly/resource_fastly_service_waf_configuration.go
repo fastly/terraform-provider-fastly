@@ -236,8 +236,7 @@ func resourceServiceWAFConfigurationV1Create(ctx context.Context, d *schema.Reso
 func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	// If attributes other than any computed or the "activate" attribute in this resource are changed
-	// we need to clone a new firewall version.
+	// If any attributes other than Computed or "activate" are changed, clone a new firewall version.
 	// Otherwise, don't clone but activate a draft version that was previously created with "activate = false".
 	var needsChange bool
 	for k, v := range resourceServiceWAFConfigurationV1().Schema {
@@ -595,7 +594,7 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 	})
 
 	// Find the current active firewall version
-	// or, pink the most recent version if there's no active version yet
+	// or, pick the most recent version if there's no active version yet
 	latest := versions[0]
 	for _, v := range versions {
 		if v.Active {

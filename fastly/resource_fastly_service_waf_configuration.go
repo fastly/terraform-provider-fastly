@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"sort"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -25,6 +25,17 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 		},
 		CustomizeDiff: validateWAFConfigurationResource,
 		Schema: map[string]*schema.Schema{
+			"activate": {
+				Type:        schema.TypeBool,
+				Description: "Conditionally prevents a new firewall version from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
+				Default:     true,
+				Optional:    true,
+			},
+			"cloned_version": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The latest cloned firewall version by the provider",
+			},
 			"waf_id": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -225,61 +236,99 @@ func resourceServiceWAFConfigurationV1Create(ctx context.Context, d *schema.Reso
 func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	latestVersion, err := getLatestVersion(d, meta)
-	if err != nil {
-		return diag.FromErr(err)
+	// If attributes other than any computed or the "activate" attribute in this resource are changed
+	// we need to clone a new firewall version.
+	// Otherwise, don't clone but activate a draft version that was previously created with "activate = false".
+	var needsChange bool
+	for k, v := range resourceServiceWAFConfigurationV1().Schema {
+		if v.Computed || k == "activate" {
+			continue
+		}
+		if d.HasChange(k) {
+			needsChange = true
+			break
+		}
 	}
 
 	wafID := d.Get("waf_id").(string)
 	log.Printf("[INFO] updating configuration for WAF: %s", wafID)
-	if latestVersion.Locked {
-		latestVersion, err = conn.CloneWAFVersion(&gofastly.CloneWAFVersionInput{
+
+	var latestVersion *gofastly.WAFVersion
+	var err error
+	if needsChange {
+		latestVersion, err = getLatestVersion(d, meta)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if latestVersion.Locked {
+			latestVersion, err = conn.CloneWAFVersion(&gofastly.CloneWAFVersionInput{
+				WAFID:            wafID,
+				WAFVersionNumber: latestVersion.Number,
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		err = d.Set("cloned_version", latestVersion.Number)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		input := buildUpdateInput(d, latestVersion.ID, latestVersion.Number)
+		if input.HasChanges() {
+			latestVersion, err = conn.UpdateWAFVersion(input)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if d.HasChange("rule") {
+			if err := updateRules(d, meta, wafID, latestVersion.Number); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if d.HasChange("rule_exclusion") {
+			if err := updateWAFRuleExclusions(d, meta, wafID, latestVersion.Number); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	} else {
+		// Retrieve draft version
+		versionToRead := d.Get("cloned_version").(int)
+		latestVersion, err = conn.GetWAFVersion(&gofastly.GetWAFVersionInput{
 			WAFID:            wafID,
-			WAFVersionNumber: latestVersion.Number,
+			WAFVersionNumber: versionToRead,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
-	input := buildUpdateInput(d, latestVersion.ID, latestVersion.Number)
-	if input.HasChanges() {
-		latestVersion, err = conn.UpdateWAFVersion(input)
+	shouldActivate := d.Get("activate").(bool)
+	versionNotYetActivated := !needsChange && (!latestVersion.Locked && !latestVersion.Active)
+	if shouldActivate && (needsChange || versionNotYetActivated) {
+		err := conn.DeployWAFVersion(&gofastly.DeployWAFVersionInput{
+			WAFID:            wafID,
+			WAFVersionNumber: d.Get("cloned_version").(int),
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		statusCheck := &WAFDeploymentChecker{
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      WAFStatusCheckDelay,
+			MinTimeout: WAFStatusCheckMinTimeout,
+			Check:      DefaultWAFDeploymentChecker(conn),
+		}
+		err = statusCheck.waitForDeployment(ctx, wafID, latestVersion)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
-	if d.HasChange("rule") {
-		if err := updateRules(d, meta, wafID, latestVersion.Number); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if d.HasChange("rule_exclusion") {
-		if err := updateWAFRuleExclusions(d, meta, wafID, latestVersion.Number); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	err = conn.DeployWAFVersion(&gofastly.DeployWAFVersionInput{
-		WAFID:            wafID,
-		WAFVersionNumber: latestVersion.Number,
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	statusCheck := &WAFDeploymentChecker{
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      WAFStatusCheckDelay,
-		MinTimeout: WAFStatusCheckMinTimeout,
-		Check:      DefaultWAFDeploymentChecker(conn),
-	}
-	err = statusCheck.waitForDeployment(ctx, wafID, latestVersion)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 	return resourceServiceWAFConfigurationV1Read(ctx, d, meta)
 }
 
@@ -300,6 +349,31 @@ func resourceServiceWAFConfigurationV1Read(_ context.Context, d *schema.Resource
 			}
 		}
 		return diag.FromErr(err)
+	}
+
+	if d.Get("cloned_version").(int) == 0 {
+		err := d.Set("cloned_version", latestVersion.Number)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.Get("activate") == false {
+		conn := meta.(*FastlyClient).conn
+		wafID := d.Get("waf_id").(string)
+		versionToRead := d.Get("cloned_version").(int)
+		latestVersion, err = conn.GetWAFVersion(&gofastly.GetWAFVersionInput{
+			WAFID:            wafID,
+			WAFVersionNumber: versionToRead,
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		err := d.Set("cloned_version", latestVersion.Number)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	log.Printf("[INFO] retrieving WAF version number: %d", latestVersion.Number)
@@ -520,7 +594,17 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 		return versions[i].Number > versions[j].Number
 	})
 
-	return versions[0], nil
+	// Find the current active firewall version
+	// or, pink the most recent version if there's no active version yet
+	latest := versions[0]
+	for _, v := range versions {
+		if v.Active {
+			latest = v
+			break
+		}
+	}
+
+	return latest, nil
 }
 
 func validateWAFConfigurationResource(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {

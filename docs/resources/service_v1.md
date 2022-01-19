@@ -495,7 +495,6 @@ Required:
 Optional:
 
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **email** (String) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`
 - **format** (String) Apache-style string or VCL variables to use for log formatting
 - **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
 - **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
@@ -506,6 +505,7 @@ Optional:
 - **response_condition** (String) Name of a condition to apply this logging.
 - **secret_key** (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
 - **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **user** (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.
 
 
 <a id="nestedblock--gzip"></a>

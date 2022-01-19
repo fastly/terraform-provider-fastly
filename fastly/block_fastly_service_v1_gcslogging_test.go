@@ -40,7 +40,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 			local: []map[string]interface{}{
 				{
 					"name":              "GCS collector",
-					"email":             "email@example.com",
+					"user":             "email@example.com",
 					"bucket_name":       "bucketname",
 					"secret_key":        secretKey,
 					"format":            "log format",
@@ -132,7 +132,7 @@ func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 	resetEnv := setGcsEnv(email, secretKey, t)
 	defer resetEnv()
 
-	result1, err1 := loggingResourceSchema["email"].DefaultFunc()
+	result1, err1 := loggingResourceSchema["user"].DefaultFunc()
 	if err1 != nil {
 		t.Fatalf("Unexpected err %#v when calling email DefaultFunc", err1)
 	}

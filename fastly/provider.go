@@ -2,7 +2,8 @@ package fastly
 
 import (
 	"context"
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/fastly/terraform-provider-fastly/version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,6 +26,18 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("FASTLY_API_URL", gofastly.DefaultEndpoint),
 				Description: "Fastly API URL",
+			},
+			"no_auth": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set this to `true` if you only need data source that does not require authentication such as `fastly_ip_ranges`",
+			},
+			"force_http2": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set this to `true` to disable HTTP/1.x fallback mechanism that the underlying Go library will attempt upon connection to `api.fastly.com:443` by default. This may slightly improve the provider's performance and reduce unnecessary TLS handshakes. Default: `false`",
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -63,9 +76,11 @@ func Provider() *schema.Provider {
 
 	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		config := Config{
-			ApiKey:    d.Get("api_key").(string),
-			BaseURL:   d.Get("base_url").(string),
-			UserAgent: provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
+			ApiKey:     d.Get("api_key").(string),
+			BaseURL:    d.Get("base_url").(string),
+			NoAuth:     d.Get("no_auth").(bool),
+			ForceHttp2: d.Get("force_http2").(bool),
+			UserAgent:  provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
 		}
 		return config.Client()
 	}

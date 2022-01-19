@@ -1,10 +1,11 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -48,7 +49,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *PackageServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		// Schema guarantees one package block.
@@ -61,14 +62,14 @@ func (h *PackageServiceAttributeHandler) Process(d *schema.ResourceData, latestV
 			PackagePath:    packageFilename,
 		})
 		if err != nil {
-			return fmt.Errorf("Error modifying package %s: %s", d.Id(), err)
+			return fmt.Errorf("[ERR] Error modifying package %s: %s", d.Id(), err)
 		}
 	}
 
 	return nil
 }
 
-func (h *PackageServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
 	Package, err := conn.GetPackage(&gofastly.GetPackageInput{
 		ServiceID:      d.Id(),
@@ -76,6 +77,11 @@ func (h *PackageServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastl
 	})
 
 	if err != nil {
+		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+			d.Set(h.GetKey(), nil)
+			return nil
+		}
 		return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
 

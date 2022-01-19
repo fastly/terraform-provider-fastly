@@ -3,13 +3,13 @@ package fastly
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"sort"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -29,6 +29,12 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 				Optional:    true,
 				Description: "A list of tags to be used as filters for the data set.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"modsec_rule_ids": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of modsecurity rules IDs to be used as filters for the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"exclude_modsec_rule_ids": {
 				Type:        schema.TypeList,
@@ -67,7 +73,9 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	conn := meta.(*FastlyClient).conn
-	input := &gofastly.ListAllWAFRulesInput{}
+	input := &gofastly.ListAllWAFRulesInput{
+		Include: "waf_rule_revisions",
+	}
 
 	if v, ok := d.GetOk("publishers"); ok {
 		l := v.([]interface{})
@@ -80,6 +88,13 @@ func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, met
 		l := v.([]interface{})
 		for i := range l {
 			input.FilterTagNames = append(input.FilterTagNames, l[i].(string))
+		}
+	}
+
+	if v, ok := d.GetOk("modsec_rule_ids"); ok {
+		l := v.([]interface{})
+		for i := range l {
+			input.FilterModSecIDs = append(input.FilterModSecIDs, l[i].(int))
 		}
 	}
 

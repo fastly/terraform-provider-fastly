@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyWAFRulesDetermineRevision(t *testing.T) {
+func TestFastlyWAFRulesDetermineRevision(t *testing.T) {
 
 	cases := []struct {
 		remote  []*gofastly.WAFRuleRevision
@@ -63,7 +63,7 @@ func TestAccFastlyWAFRulesDetermineRevision(t *testing.T) {
 	}
 }
 
-func TestAccFastlyWAFRulesFlattenWAFRules(t *testing.T) {
+func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFRule
 		local  []map[string]interface{}
@@ -119,6 +119,25 @@ func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccFastlyWAFRulesCheckByPublisherFilter([]string{"owasp", "fastly"}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFastlyWAFRulesModSecIDsFilter(t *testing.T) {
+
+	wafrulesHCL := `
+    modsec_rule_ids = [1010060, 1010070]
+    `
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFastlyWAFRules(wafrulesHCL),
+				Check:  resource.TestCheckResourceAttr("data.fastly_waf_rules.r1", "rules.#", "2"),
 			},
 		},
 	})

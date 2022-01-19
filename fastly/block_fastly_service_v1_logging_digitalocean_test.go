@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -30,12 +30,13 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					Path:              "/",
 					Period:            3600,
 					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-					GzipLevel:         1,
+					GzipLevel:         0,
 					Format:            "%h %l %u %t \"%r\" %>s %b",
 					FormatVersion:     2,
 					MessageType:       "classic",
 					Placement:         "none",
 					ResponseCondition: "always",
+					CompressionCodec:  "zstd",
 				},
 			},
 			local: []map[string]interface{}{
@@ -49,12 +50,13 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					"path":               "/",
 					"period":             uint(3600),
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"gzip_level":         uint(1),
+					"gzip_level":         uint(0),
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"format_version":     uint(2),
 					"message_type":       "classic",
 					"placement":          "none",
 					"response_condition": "always",
+					"compression_codec":  "zstd",
 				},
 			},
 		},
@@ -84,12 +86,12 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic(t *testing.T) {
 		Path:              "/",
 		Period:            3600,
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         0,
 		Format:            "%h %l %u %t \"%r\" %>s %b",
 		FormatVersion:     2,
 		MessageType:       "classic",
 		Placement:         "none",
 		ResponseCondition: "response_condition_test",
+		CompressionCodec:  "zstd",
 	}
 
 	log1_after_update := gofastly.DigitalOcean{
@@ -123,11 +125,12 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic(t *testing.T) {
 		Period:            3600,
 		Format:            "%h %l %u %t \"%r\" %>s %b",
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         1,
+		GzipLevel:         0,
 		FormatVersion:     2,
 		MessageType:       "classic",
 		Placement:         "none",
 		ResponseCondition: "response_condition_test",
+		CompressionCodec:  "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -168,18 +171,18 @@ func TestAccFastlyServiceV1_logging_digitalocean_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.DigitalOcean{
-		ServiceVersion:  1,
-		Name:            "digitalocean-endpoint",
-		BucketName:      "bucket",
-		AccessKey:       "access",
-		SecretKey:       "secret",
-		Domain:          "nyc3.digitaloceanspaces.com",
-		PublicKey:       pgpPublicKey(t),
-		Path:            "/",
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:       0,
-		MessageType:     "classic",
+		ServiceVersion:   1,
+		Name:             "digitalocean-endpoint",
+		BucketName:       "bucket",
+		AccessKey:        "access",
+		SecretKey:        "secret",
+		Domain:           "nyc3.digitaloceanspaces.com",
+		PublicKey:        pgpPublicKey(t),
+		Path:             "/",
+		Period:           3600,
+		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
+		MessageType:      "classic",
+		CompressionCodec: "zstd",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -257,24 +260,24 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-digitalocean-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   condition {
-    name      = "response_condition_test"
-    type      = "RESPONSE"
-    priority  = 8
+    name = "response_condition_test"
+    type = "RESPONSE"
+    priority = 8
     statement = "resp.status == 418"
   }
 
   logging_digitalocean {
-    name   = "digitalocean-endpoint"
+    name = "digitalocean-endpoint"
     bucket_name = "bucket"
     access_key = "access"
     secret_key = "secret"
@@ -283,11 +286,11 @@ resource "fastly_service_v1" "foo" {
     path = "/"
     period = 3600
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level = 0
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     message_type = "classic"
     placement = "none"
     response_condition = "response_condition_test"
+    compression_codec = "zstd"
   }
 
   force_destroy = true
@@ -301,24 +304,24 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-digitalocean-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   condition {
-    name      = "response_condition_test"
-    type      = "RESPONSE"
-    priority  = 8
+    name = "response_condition_test"
+    type = "RESPONSE"
+    priority = 8
     statement = "resp.status == 418"
   }
 
   logging_digitalocean {
-    name   = "digitalocean-endpoint"
+    name = "digitalocean-endpoint"
     bucket_name = "bucketupdate"
     access_key = "accessupdate"
     secret_key = "secretupdate"
@@ -335,7 +338,7 @@ resource "fastly_service_v1" "foo" {
   }
 
   logging_digitalocean {
-    name   = "another-digitalocean-endpoint"
+    name = "another-digitalocean-endpoint"
     bucket_name = "bucket2"
     access_key = "access2"
     secret_key = "secret2"
@@ -344,11 +347,11 @@ resource "fastly_service_v1" "foo" {
     path = "two/"
     period = 3600
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level = 1
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     message_type = "classic"
     placement = "none"
     response_condition = "response_condition_test"
+    compression_codec = "zstd"
   }
 
   force_destroy = true
@@ -362,17 +365,17 @@ resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-digitalocean-logging"
   }
 
   backend {
     address = "aws.amazon.com"
-    name    = "amazon docs"
+    name = "amazon docs"
   }
 
   logging_digitalocean {
-    name   = "digitalocean-endpoint"
+    name = "digitalocean-endpoint"
     bucket_name = "bucket"
     access_key = "access"
     secret_key = "secret"
@@ -381,13 +384,13 @@ resource "fastly_service_compute" "foo" {
     path = "/"
     period = 3600
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level = 0
     message_type = "classic"
+    compression_codec = "zstd"
   }
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true

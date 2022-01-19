@@ -1,0 +1,2 @@
+$ export FASTLY_API_KEY="afastlyapikey"
+$ terraform plan

@@ -6,9 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -25,24 +26,26 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 		{
 			remote: []*gofastly.GCS{
 				{
-					Name:      "GCS collector",
-					User:      "email@example.com",
-					Bucket:    "bucketname",
-					SecretKey: secretKey,
-					Format:    "log format",
-					Period:    3600,
-					GzipLevel: 0,
+					Name:             "GCS collector",
+					User:             "email@example.com",
+					Bucket:           "bucketname",
+					SecretKey:        secretKey,
+					Format:           "log format",
+					Period:           3600,
+					GzipLevel:        0,
+					CompressionCodec: "zstd",
 				},
 			},
 			local: []map[string]interface{}{
 				{
-					"name":        "GCS collector",
-					"email":       "email@example.com",
-					"bucket_name": "bucketname",
-					"secret_key":  secretKey,
-					"format":      "log format",
-					"period":      3600,
-					"gzip_level":  0,
+					"name":              "GCS collector",
+					"email":             "email@example.com",
+					"bucket_name":       "bucketname",
+					"secret_key":        secretKey,
+					"format":            "log format",
+					"period":            3600,
+					"gzip_level":        0,
+					"compression_codec": "zstd",
 				},
 			},
 		},
@@ -106,33 +109,42 @@ func TestAccFastlyServiceV1_gcslogging_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_gcslogging_env(t *testing.T) {
-	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
-	secretKey, err := generateKey()
-	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
+	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
+	v := NewServiceGCSLogging(serviceAttributes)
+	resource := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	}
+	v.Register(resource)
+	loggingResource := resource.Schema["gcslogging"]
+	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
+
+	// Expect attributes to be sensitive
+	if !loggingResourceSchema["secret_key"].Sensitive {
+		t.Fatalf("Expected secret_key to be marked as a Sensitive value")
 	}
 
-	// set env Vars to something we expect
-	resetEnv := setGcsEnv("someEnv", secretKey, t)
+	// Actually set env var and expect it to be used to determine the values
+	email := "tf-test@fastly.com"
+	secretKey, _ := generateKey()
+	resetEnv := setGcsEnv(email, secretKey, t)
 	defer resetEnv()
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1Config_gcs_env(name, gcsName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_gcs(&service, name, gcsName),
-				),
-			},
-		},
-	})
+	result1, err1 := loggingResourceSchema["email"].DefaultFunc()
+	if err1 != nil {
+		t.Fatalf("Unexpected err %#v when calling email DefaultFunc", err1)
+	}
+	if result1 != email {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", email, result1)
+	}
+
+	result2, err2 := loggingResourceSchema["secret_key"].DefaultFunc()
+	if err2 != nil {
+		t.Fatalf("Unexpected err %#v when calling secret_key DefaultFunc", err2)
+	}
+	if result2 != secretKey {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", secretKey, result2)
+	}
 }
 
 func testAccCheckFastlyServiceV1Attributes_gcs(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
@@ -173,23 +185,24 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name = "tf -test backend"
   }
 
-	gcslogging {
-	  name =  "%s"
-		email = "email@example.com"
-		bucket_name = "bucketname"
-		secret_key = %q
-		format = "log format"
-		response_condition = ""
-	}
+  gcslogging {
+    name = "%s"
+    email = "email@example.com"
+    bucket_name = "bucketname"
+    secret_key = %q
+    format = "log format"
+    response_condition = ""
+    compression_codec = "zstd"
+  }
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName, secretKey)
@@ -204,25 +217,26 @@ resource "fastly_service_compute" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name = "tf -test backend"
   }
 
-	gcslogging {
-	  name =  "%s"
-		email = "email@example.com"
-		bucket_name = "bucketname"
-		secret_key = %q
-	}
+  gcslogging {
+    name = "%s"
+    email = "email@example.com"
+    bucket_name = "bucketname"
+    secret_key = %q
+    compression_codec = "zstd"
+  }
 
  package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
   }
 
   force_destroy = true
@@ -238,21 +252,21 @@ resource "fastly_service_v1" "foo" {
   name = "%s"
 
   domain {
-    name    = "%s"
+    name = "%s"
     comment = "tf-testing-domain"
   }
 
   backend {
     address = "%s"
-    name    = "tf -test backend"
+    name = "tf -test backend"
   }
 
-	gcslogging {
-	  name =  "%s"
-		bucket_name = "bucketname"
-		format = "log format"
-		response_condition = ""
-	}
+  gcslogging {
+    name = "%s"
+    bucket_name = "bucketname"
+    format = "log format"
+    response_condition = ""
+  }
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName)

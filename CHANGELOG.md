@@ -1,4 +1,181 @@
-## 0.29.0 (Unreleased)
+## 0.41.0 (Unreleased)
+
+## 0.40.0 (January 13, 2022)
+
+ENHANCEMENTS:
+
+* Bump go-fastly to v6.0.0 [#525](https://github.com/fastly/terraform-provider-fastly/pull/525)
+* Add new `modsec_rule_ids` filter to `fastly_waf_rules` [#521](https://github.com/fastly/terraform-provider-fastly/pull/521)
+* Force creation of new condition if type changed [#518](https://github.com/fastly/terraform-provider-fastly/pull/518)
+
+DOCUMENTATION:
+
+* Simplify example in `fastly_tls_subscription` [#516](https://github.com/fastly/terraform-provider-fastly/pull/516)
+* Update VCL snippet type description [#519](https://github.com/fastly/terraform-provider-fastly/pull/519)
+
+## 0.39.0 (December 8, 2021)
+
+ENHANCEMENTS:
+
+* Bump go-fastly to v5.1.3 [#511](https://github.com/fastly/terraform-provider-fastly/pull/511)
+* Expose `certificate_id` read-only attribute from `fastly_tls_subscription` [#506](https://github.com/fastly/terraform-provider-fastly/pull/506)
+* Dynamically generate provider version [#500](https://github.com/fastly/terraform-provider-fastly/pull/500)
+
+BUG FIXES:
+
+* Fix constants formatting [#504](https://github.com/fastly/terraform-provider-fastly/pull/504)
+* Remove `-i` flag from `go test` [#503](https://github.com/fastly/terraform-provider-fastly/pull/503)
+
+DOCUMENTATION:
+
+* Consistent description for attributes using constants [#502](https://github.com/fastly/terraform-provider-fastly/pull/502)
+* Update `RELEASE.md` [#499](https://github.com/fastly/terraform-provider-fastly/pull/499)
+
+## 0.38.0 (November 4, 2021)
+
+BUG FIXES:
+
+* Do not send 0 `subnet` value unless explicitly set [#496](https://github.com/fastly/terraform-provider-fastly/pull/496)
+
+DOCUMENTATION:
+
+* Utilise `codefile` and `tffile` functions from tfplugindocs [#497](https://github.com/fastly/terraform-provider-fastly/pull/497)
+
+## 0.37.0 (November 1, 2021)
+
+BUG FIXES:
+
+* Ignore 404 on GetPackage when importing wasm service [#487](https://github.com/fastly/terraform-provider-fastly/pull/487)
+* Properly set `IdleConnTimeout` to prevent resource exhaustion on tests [#491](https://github.com/fastly/terraform-provider-fastly/pull/491)
+
+ENHANCEMENTS:
+
+* Remove TLS subscriptions that 404 from state [#479](https://github.com/fastly/terraform-provider-fastly/pull/479)
+* Override `Transport` to enable keepalive and add new `force_http2` provider option [#485](https://github.com/fastly/terraform-provider-fastly/pull/485)
+* Rename GNUmakefile to Makefile [#483](https://github.com/fastly/terraform-provider-fastly/pull/483)
+* Only update service `name` and `comment` if `activate` is true [#481](https://github.com/fastly/terraform-provider-fastly/pull/481)
+* Add `use_tls` attribute for Splunk logging [#482](https://github.com/fastly/terraform-provider-fastly/pull/482)
+
+DOCUMENTATION:
+
+* Convert `index.md` to template to inject provider version [#492](https://github.com/fastly/terraform-provider-fastly/pull/492)
+
+## 0.36.0 (September 27, 2021)
+
+BUG FIXES:
+
+* Bump go-fastly to v5 to fix API client bugs [#477](https://github.com/fastly/terraform-provider-fastly/pull/477)
+* Update `terraform-json` dependency so test suite runs successfully with Terraform v1 [#474](https://github.com/fastly/terraform-provider-fastly/pull/474)
+
+ENHANCEMENTS:
+
+* Add support for `stale-if-error` [#475](https://github.com/fastly/terraform-provider-fastly/pull/475)
+
+DOCUMENTATION:
+
+* Clarify edge private dictionary usage [#472](https://github.com/fastly/terraform-provider-fastly/pull/472)
+* Correct ACL typos [#473](https://github.com/fastly/terraform-provider-fastly/pull/473)
+
+## 0.35.0 (September 15, 2021)
+
+ENHANCEMENTS:
+
+* Make `backend` block optional [#457](https://github.com/fastly/terraform-provider-fastly/pull/457)
+* Audit `sensitive` attributes [#458](https://github.com/fastly/terraform-provider-fastly/pull/458)
+* Tests should not error when no backends defined (now considered as warning) [#462](https://github.com/fastly/terraform-provider-fastly/pull/462)
+* Refactor service attribute handlers into CRUD-style functions [#463](https://github.com/fastly/terraform-provider-fastly/pull/463)
+* Change to accept multi-pem blocks [#469](https://github.com/fastly/terraform-provider-fastly/pull/469)
+* Bump go-fastly version [#467](https://github.com/fastly/terraform-provider-fastly/pull/467)
+
+BUG FIXES:
+
+* Fix `fastly_service_waf_configuration` not updating `rule` attributes correctly [#464](https://github.com/fastly/terraform-provider-fastly/pull/464)
+* Correctly update `version_comment` [#466](https://github.com/fastly/terraform-provider-fastly/pull/466)
+
+DEPRECATED:
+
+* Deprecate `geo_headers` attribute [#456](https://github.com/fastly/terraform-provider-fastly/pull/456)
+
+## 0.34.0 (August 9, 2021)
+
+ENHANCEMENTS:
+
+* Avoid unnecessary state refresh when importing (and enable service version selection) [#448](https://github.com/fastly/terraform-provider-fastly/pull/448)
+
+BUG FIXES:
+
+* Fix TLS Subscription updates not triggering update to managed DNS Challenges [#453](https://github.com/fastly/terraform-provider-fastly/pull/453)
+
+## 0.33.0 (July 16, 2021)
+
+ENHANCEMENTS:
+
+* Upgrade to Go 1.16 to allow `darwin/arm64` builds [#447](https://github.com/fastly/terraform-provider-fastly/pull/447)
+* Replace `ActivateVCL` call with `Main` field on `CreateVCL` [#446](https://github.com/fastly/terraform-provider-fastly/pull/446)
+* Add limitations for `write_only` dictionaries [#445](https://github.com/fastly/terraform-provider-fastly/pull/445)
+* Replace `StateFunc` with `ValidateDiagFunc` [#439](https://github.com/fastly/terraform-provider-fastly/pull/439) 
+
+BUG FIXES:
+
+* Don't use `ParallelTest` for `no_auth` data source [#449](https://github.com/fastly/terraform-provider-fastly/pull/449)
+* Introduce `no_auth` provider option [#444](https://github.com/fastly/terraform-provider-fastly/pull/444)
+* Suppress gzip diff unless fields are explicitly set [#441](https://github.com/fastly/terraform-provider-fastly/pull/441)
+* Fix parsing of log-levels by removing date/time prefix [#440](https://github.com/fastly/terraform-provider-fastly/pull/440)
+* Fix bug with `fastly_tls_subscription` multi-SAN challenge [#435](https://github.com/fastly/terraform-provider-fastly/pull/435)
+* Output variable refresh bug [#388](https://github.com/fastly/terraform-provider-fastly/pull/388)
+* Use correct 'shield' value [#437](https://github.com/fastly/terraform-provider-fastly/pull/437)
+* Fix `default_host` not being removed [#434](https://github.com/fastly/terraform-provider-fastly/pull/434)
+* In `fastly_waf_rules` data source, request rule revisions from API [#428](https://github.com/fastly/terraform-provider-fastly/pull/428)
+
+## 0.32.0 (June 17, 2021)
+
+ENHANCEMENTS:
+
+* Return 404 for non-existent service instead of a low-level nil entry error [#422](https://github.com/fastly/terraform-provider-fastly/pull/422)
+
+BUG FIXES:
+
+* Fix runtime panic in request-settings caused by incorrect type cast [#424](https://github.com/fastly/terraform-provider-fastly/pull/424)
+* When `activate=true`, always read and clone from the active version [#423](https://github.com/fastly/terraform-provider-fastly/pull/423)
+
+## 0.31.0 (June 14, 2021)
+
+ENHANCEMENTS:
+
+* Add support for ACL and extra redundancy options in S3 logging block [#417](https://github.com/fastly/terraform-provider-fastly/pull/417)
+* Update default initial value for health check [#414](https://github.com/fastly/terraform-provider-fastly/pull/414)
+
+BUG FIXES:
+
+* Only set `cloned_version` after the version has been successfully validated [#418](https://github.com/fastly/terraform-provider-fastly/pull/418)
+
+## 0.30.0 (May 12, 2021)
+
+ENHANCEMENTS:
+
+* Add director support for compute resource [#410](https://github.com/fastly/terraform-provider-fastly/pull/410)
+
+## 0.29.1 (May 7, 2021)
+
+BUG FIXES:
+
+* Fix Header resource key names [#407](https://github.com/fastly/terraform-provider-fastly/pull/407)
+
+## 0.29.0 (May 4, 2021)
+
+ENHANCEMENTS:
+
+* Add support for `file_max_bytes` configuration for Azure logging endpoint [#398](https://github.com/fastly/terraform-provider-fastly/pull/398)
+* Support usage of IAM role in S3 and Kinesis logging endpoints [#403](https://github.com/fastly/terraform-provider-fastly/pull/403)
+* Add support for `compression_codec` to logging file sink endpoints [#402](https://github.com/fastly/terraform-provider-fastly/pull/402)
+
+DOCUMENTATION:
+
+* Update debug mode instructions for Terraform 0.12.x [#405](https://github.com/fastly/terraform-provider-fastly/pull/405)
+
+OTHER:
+
+* Replace `master` with `main`. [#404](https://github.com/fastly/terraform-provider-fastly/pull/404)
 
 ## 0.28.2 (April 9, 2021)
 
@@ -145,7 +322,7 @@ BUG FIXES:
 
 NOTES:
 
-* provider: Add a [CONTRIBUTING.md](https://github.com/fastly/terraform-provider-fastly/blob/master/CONTRIBUTING.md) containing contributing guidlines and documentation. ([#305](https://github.com/fastly/terraform-provider-fastly/pull/307))
+* provider: Add a [CONTRIBUTING.md](https://github.com/fastly/terraform-provider-fastly/blob/main/CONTRIBUTING.md) containing contributing guidlines and documentation. ([#305](https://github.com/fastly/terraform-provider-fastly/pull/307))
 
 ## 0.20.0 (August 10, 2020)
 

@@ -1,4 +1,4 @@
-{{define "data_source_tls_platform_certificate"}}---
+---
 layout: "fastly"
 page_title: "Fastly: fastly_tls_platform_certificate"
 sidebar_current: "docs-fastly-datasource-tls_platform_certificate"
@@ -18,9 +18,6 @@ with any of the others.
 
 ## Example Usage
 
-```hcl
-data "fastly_tls_platform_certificate" "example" {
-  domains = ["example.com"]
-}
-```
-{{end}}
+{{ tffile "examples/data-sources/tls_platform_certificate.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

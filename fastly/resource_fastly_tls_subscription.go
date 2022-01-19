@@ -2,10 +2,14 @@ package fastly
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"fmt"
+	"strings"
 	"time"
 
-	"github.com/fastly/go-fastly/v3/fastly"
+	"github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,6 +29,9 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 			customdiff.ForceNewIf("configuration_id", resourceFastlyTLSSubscriptionStateNotIssued),
 			customdiff.ForceNewIf("domains", resourceFastlyTLSSubscriptionStateNotIssued),
 			customdiff.ForceNewIf("common_name", resourceFastlyTLSSubscriptionStateNotIssued),
+			customdiff.ValidateValue("domains", resourceFastlyTLSSubscriptionValidateDomains),
+			customdiff.ValidateValue("common_name", resourceFastlyTLSSubscriptionValidateCommonName),
+			resourceFastlyTLSSubscriptionSetNewComputed,
 		),
 		Schema: map[string]*schema.Schema{
 			"domains": {
@@ -53,6 +60,11 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
+			"certificate_id": {
+				Type:        schema.TypeString,
+				Description: "The certificate ID associated with the subscription.",
+				Computed:    true,
+			},
 			"created_at": {
 				Type:        schema.TypeString,
 				Description: "Timestamp (GMT) when the subscription was created.",
@@ -73,6 +85,31 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 				Description: "The details required to configure DNS to respond to ACME DNS challenge in order to verify domain ownership.",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
+				Deprecated:  "Use 'managed_dns_challenges' attribute instead",
+			},
+			"managed_dns_challenges": {
+				Type:        schema.TypeSet,
+				Description: "A list of options for configuring DNS to respond to ACME DNS challenge in order to verify domain ownership.",
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"record_name": {
+							Type:        schema.TypeString,
+							Description: "The name of the DNS record to add. For example `_acme-challenge.example.com`.",
+							Computed:    true,
+						},
+						"record_type": {
+							Type:        schema.TypeString,
+							Description: "The type of DNS record to add, e.g. `A`, or `CNAME`.",
+							Computed:    true,
+						},
+						"record_value": {
+							Type:        schema.TypeString,
+							Description: "The value to which the DNS record should point, e.g. `xxxxx.fastly-validations.com`.",
+							Computed:    true,
+						},
+					},
+				},
 			},
 			"managed_http_challenges": {
 				Type:        schema.TypeSet,
@@ -162,7 +199,17 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		ID:      d.Id(),
 		Include: &include,
 	})
-	if err != nil {
+	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+		id := d.Id()
+		d.SetId("")
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity:      diag.Warning,
+				Summary:       fmt.Sprintf("TLS subscription (%s) not found - removing from state", id),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: id}},
+			},
+		}
+	} else if err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -171,25 +218,61 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		domains = append(domains, domain.ID)
 	}
 
-	var managedHTTPChallenges []map[string]interface{}
-	var managedDNSChallenge map[string]string
-	for _, challenge := range subscription.Authorizations[0].Challenges {
-		if challenge.Type == "managed-dns" {
-			if len(challenge.Values) < 1 {
-				return diag.Errorf("Fastly API returned no record values for Managed DNS Challenge")
-			}
+	// NOTE: there must be only one certificate id included per subscription
+	// "pending" and "processing" state may not include the id (for new subscriptions)
+	var certificateId = ""
+	if len(subscription.Certificates) > 0 {
+		certificateId = subscription.Certificates[0].ID
+	}
 
-			managedDNSChallenge = map[string]string{
-				"record_type":  challenge.RecordType,
-				"record_name":  challenge.RecordName,
-				"record_value": challenge.Values[0],
+	var managedHTTPChallenges []map[string]interface{}
+	var managedDNSChallenges []map[string]interface{}
+	for _, domain := range subscription.Authorizations {
+		for _, challenge := range domain.Challenges {
+			if challenge.Type == "managed-dns" {
+				if len(challenge.Values) < 1 {
+					return diag.Errorf("Fastly API returned no record values for Managed DNS Challenges")
+				}
+
+				managedDNSChallenges = append(managedDNSChallenges, map[string]interface{}{
+					"record_type":  challenge.RecordType,
+					"record_name":  challenge.RecordName,
+					"record_value": challenge.Values[0],
+				})
+			} else {
+				managedHTTPChallenges = append(managedHTTPChallenges, map[string]interface{}{
+					"record_type":   challenge.RecordType,
+					"record_name":   challenge.RecordName,
+					"record_values": challenge.Values,
+				})
 			}
-		} else {
-			managedHTTPChallenges = append(managedHTTPChallenges, map[string]interface{}{
-				"record_type":   challenge.RecordType,
-				"record_name":   challenge.RecordName,
-				"record_values": challenge.Values,
-			})
+		}
+	}
+
+	// TODO: This block of code contains a bug where the state file will only include
+	// the first domain's challenge data in the case of multi-SAN cert subscriptions.
+	// Users should use the new "managed_dns_challenges" attribute instead.
+	// We're leaving this for backward compatibility but is planned to be removed in v1.0.0.
+	// https://github.com/fastly/terraform-provider-fastly/pull/435
+	{
+		var managedDNSChallengeOld map[string]string
+		for _, challenge := range subscription.Authorizations[0].Challenges {
+			if challenge.Type == "managed-dns" {
+				if len(challenge.Values) < 1 {
+					return diag.Errorf("Fastly API returned no record values for Managed DNS Challenge")
+				}
+
+				managedDNSChallengeOld = map[string]string{
+					"record_type":  challenge.RecordType,
+					"record_name":  challenge.RecordName,
+					"record_value": challenge.Values[0],
+				}
+			}
+		}
+
+		err = d.Set("managed_dns_challenge", managedDNSChallengeOld)
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
@@ -198,6 +281,10 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	err = d.Set("common_name", subscription.CommonName.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("certificate_id", certificateId)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -221,7 +308,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("managed_dns_challenge", managedDNSChallenge)
+	err = d.Set("managed_dns_challenges", managedDNSChallenges)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -275,4 +362,38 @@ func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceDa
 
 func resourceFastlyTLSSubscriptionStateNotIssued(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
 	return d.Get("state").(string) != "issued"
+}
+
+func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	// NOTE: This is a workaround for a bug in Terraform core (hashicorp/terraform-plugin-sdk#195)
+	// where TypeSet computed attributes are not being updated with the new values upon applying (in an update action).
+	// This means that they will not be updated until the second "refresh" or "apply" after the first apply.
+	// We should work around this and set the new values immediately upon applying so that other resources
+	// that are dependent on this resource can properly see the diff and trigger updates accordingly upon applying.
+	if d.HasChange("domains") {
+		d.SetNewComputed("managed_dns_challenges")
+		d.SetNewComputed("managed_http_challenges")
+	}
+
+	return nil
+}
+
+// NOTE: Although the RFC spec says it’s case-insensitive, the implementation is varied depending on the software.
+// For example, Let's Encrypt doesn't allow uppercase letters. For this reason, Fastly TLS also doesn't support
+// uppercase letters in domains. But, Fastly API accepts such inputs and silently converts them to lowercase.
+// This would cause state mismatch and diff loop, so we explicitly raise an error to eliminate any confusion.
+func resourceFastlyTLSSubscriptionValidateDomains(_ context.Context, v, _ interface{}) error {
+	for _, domain := range v.(*schema.Set).List() {
+		if domain.(string) != strings.ToLower(domain.(string)) {
+			return fmt.Errorf("TLS subscription 'domains' must not contain uppercase letters: %s", v.(*schema.Set).List())
+		}
+	}
+	return nil
+}
+
+func resourceFastlyTLSSubscriptionValidateCommonName(_ context.Context, v, _ interface{}) error {
+	if v.(string) != strings.ToLower(v.(string)) {
+		return fmt.Errorf("TLS subscription 'common_name' must not contain uppercase letters: %s", v.(string))
+	}
+	return nil
 }

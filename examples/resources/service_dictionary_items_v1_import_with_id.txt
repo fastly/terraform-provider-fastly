@@ -1,0 +1,1 @@
+$ terraform import fastly_service_dictionary_items_v1.items xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx

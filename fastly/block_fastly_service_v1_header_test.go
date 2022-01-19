@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -68,7 +68,7 @@ func TestFastlyServiceV1_BuildHeaders(t *testing.T) {
 				IgnoreIfSet: true,
 				Type:        gofastly.HeaderTypeCache,
 				Destination: "http.aws-id",
-				Priority:    uint(100),
+				Priority:    gofastly.Uint(uint(100)),
 			},
 			local: map[string]interface{}{
 				"name":               "someheadder",
@@ -92,7 +92,7 @@ func TestFastlyServiceV1_BuildHeaders(t *testing.T) {
 				IgnoreIfSet: false,
 				Type:        gofastly.HeaderTypeCache,
 				Destination: "http.aws-id",
-				Priority:    uint(100),
+				Priority:    gofastly.Uint(uint(100)),
 				Source:      "http.server-name",
 			},
 			local: map[string]interface{}{

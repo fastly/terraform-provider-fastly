@@ -1,10 +1,11 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -13,15 +14,17 @@ type SFTPServiceAttributeHandler struct {
 }
 
 func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
-	return &SFTPServiceAttributeHandler{
+	return ToServiceAttributeDefinition(&SFTPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			key:             "logging_sftp",
 			serviceMetadata: sa,
 		},
-	}
+	})
 }
 
-func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
+func (h *SFTPServiceAttributeHandler) Key() string { return h.key }
+
+func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	var blockAttributes = map[string]*schema.Schema{
 		// Required fields
 		"name": {
@@ -70,20 +73,18 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		},
 
 		"secret_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
-			Sensitive:   true,
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
+			Sensitive:        true,
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"public_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 
 		"period": {
@@ -97,22 +98,28 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
-			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
+			Description: GzipLevelDescription,
 		},
 
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: "The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
+			Description: TimestampFormatDescription,
 		},
 
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          "classic",
-			Description:      "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
+			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 	}
 
@@ -143,180 +150,41 @@ func (h *SFTPServiceAttributeHandler) Register(s *schema.Resource) error {
 		}
 	}
 
-	s.Schema[h.GetKey()] = &schema.Schema{
+	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: blockAttributes,
 		},
 	}
-	return nil
 }
 
-func (h *SFTPServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	serviceID := d.Id()
-	os, ns := d.GetChange(h.GetKey())
+func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
+}, serviceVersion int, conn *gofastly.Client) error {
+	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
-	if os == nil {
-		os = new(schema.Set)
-	}
-	if ns == nil {
-		ns = new(schema.Set)
+	if opts.Password == "" && opts.SecretKey == "" {
+		return fmt.Errorf("[ERR] Either password or secret_key must be set")
 	}
 
-	oldSet := os.(*schema.Set)
-	newSet := ns.(*schema.Set)
+	log.Printf("[DEBUG] Fastly SFTP logging addition opts: %#v", opts)
 
-	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		t, ok := resource.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
-		}
-		return t["name"], nil
-	})
-
-	diffResult, err := setDiff.Diff(oldSet, newSet)
-	if err != nil {
+	if err := createSFTP(conn, opts); err != nil {
 		return err
 	}
-
-	// DELETE removed resources
-	for _, resource := range diffResult.Deleted {
-		resource := resource.(map[string]interface{})
-		opts := h.buildDelete(resource, serviceID, latestVersion)
-
-		log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
-
-		if err := deleteSFTP(conn, opts); err != nil {
-			return err
-		}
-	}
-
-	// CREATE new resources
-	for _, resource := range diffResult.Added {
-		resource := resource.(map[string]interface{})
-
-		// @HACK for a TF SDK Issue.
-		//
-		// This ensures that the required, `name`, field is present.
-		//
-		// If we have made it this far and `name` is not present, it is most-likely due
-		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
-		//
-		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
-		// properly handles setting state with the StateFunc, it returns extra entries
-		// during state Gets, specifically `GetChange("logging_sftp")` in this case.
-		if v, ok := resource["name"]; !ok || v.(string) == "" {
-			continue
-		}
-
-		opts := h.buildCreate(resource, serviceID, latestVersion)
-
-		if opts.Password == "" && opts.SecretKey == "" {
-			return fmt.Errorf("[ERR] Either password or secret_key must be set")
-		}
-
-		log.Printf("[DEBUG] Fastly SFTP logging addition opts: %#v", opts)
-
-		if err := createSFTP(conn, opts); err != nil {
-			return err
-		}
-	}
-
-	// UPDATE modified resources
-	//
-	// NOTE: although the go-fastly API client enables updating of a resource by
-	// its 'name' attribute, this isn't possible within terraform due to
-	// constraints in the data model/schema of the resources not having a uid.
-	for _, resource := range diffResult.Modified {
-		resource := resource.(map[string]interface{})
-
-		opts := gofastly.UpdateSFTPInput{
-			ServiceID:      d.Id(),
-			ServiceVersion: latestVersion,
-			Name:           resource["name"].(string),
-		}
-
-		// only attempt to update attributes that have changed
-		modified := setDiff.Filter(resource, oldSet)
-
-		// NOTE: where we transition between interface{} we lose the ability to
-		// infer the underlying type being either a uint vs an int. This
-		// materializes as a panic (yay) and so it's only at runtime we discover
-		// this and so we've updated the below code to convert the type asserted
-		// int into a uint before passing the value to gofastly.Uint().
-		if v, ok := modified["address"]; ok {
-			opts.Address = gofastly.String(v.(string))
-		}
-		if v, ok := modified["port"]; ok {
-			opts.Port = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["public_key"]; ok {
-			opts.PublicKey = gofastly.String(v.(string))
-		}
-		if v, ok := modified["secret_key"]; ok {
-			opts.SecretKey = gofastly.String(v.(string))
-		}
-		if v, ok := modified["ssh_known_hosts"]; ok {
-			opts.SSHKnownHosts = gofastly.String(v.(string))
-		}
-		if v, ok := modified["user"]; ok {
-			opts.User = gofastly.String(v.(string))
-		}
-		if v, ok := modified["password"]; ok {
-			opts.Password = gofastly.String(v.(string))
-		}
-		if v, ok := modified["path"]; ok {
-			opts.Path = gofastly.String(v.(string))
-		}
-		if v, ok := modified["period"]; ok {
-			opts.Period = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["format_version"]; ok {
-			opts.FormatVersion = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["compression_codec"]; ok {
-			opts.CompressionCodec = gofastly.String(v.(string))
-		}
-		if v, ok := modified["gzip_level"]; ok {
-			opts.GzipLevel = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["format"]; ok {
-			opts.Format = gofastly.String(v.(string))
-		}
-		if v, ok := modified["response_condition"]; ok {
-			opts.ResponseCondition = gofastly.String(v.(string))
-		}
-		if v, ok := modified["timestamp_format"]; ok {
-			opts.TimestampFormat = gofastly.String(v.(string))
-		}
-		if v, ok := modified["message_type"]; ok {
-			opts.MessageType = gofastly.String(v.(string))
-		}
-		if v, ok := modified["placement"]; ok {
-			opts.Placement = gofastly.String(v.(string))
-		}
-
-		log.Printf("[DEBUG] Update SFTP Opts: %#v", opts)
-		_, err := conn.UpdateSFTP(&opts)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh SFTP.
 	log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
 	sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
 		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
+		ServiceVersion: serviceVersion,
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("[ERR] Error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenSFTP(sftpList)
@@ -329,6 +197,91 @@ func (h *SFTPServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.S
 		log.Printf("[WARN] Error setting SFTP logging endpoints for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
+}, serviceVersion int, conn *gofastly.Client) error {
+	opts := gofastly.UpdateSFTPInput{
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           resource["name"].(string),
+	}
+
+	// NOTE: where we transition between interface{} we lose the ability to
+	// infer the underlying type being either a uint vs an int. This
+	// materializes as a panic (yay) and so it's only at runtime we discover
+	// this and so we've updated the below code to convert the type asserted
+	// int into a uint before passing the value to gofastly.Uint().
+	if v, ok := modified["address"]; ok {
+		opts.Address = gofastly.String(v.(string))
+	}
+	if v, ok := modified["port"]; ok {
+		opts.Port = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["public_key"]; ok {
+		opts.PublicKey = gofastly.String(v.(string))
+	}
+	if v, ok := modified["secret_key"]; ok {
+		opts.SecretKey = gofastly.String(v.(string))
+	}
+	if v, ok := modified["ssh_known_hosts"]; ok {
+		opts.SSHKnownHosts = gofastly.String(v.(string))
+	}
+	if v, ok := modified["user"]; ok {
+		opts.User = gofastly.String(v.(string))
+	}
+	if v, ok := modified["password"]; ok {
+		opts.Password = gofastly.String(v.(string))
+	}
+	if v, ok := modified["path"]; ok {
+		opts.Path = gofastly.String(v.(string))
+	}
+	if v, ok := modified["period"]; ok {
+		opts.Period = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["format_version"]; ok {
+		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["compression_codec"]; ok {
+		opts.CompressionCodec = gofastly.String(v.(string))
+	}
+	if v, ok := modified["gzip_level"]; ok {
+		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["format"]; ok {
+		opts.Format = gofastly.String(v.(string))
+	}
+	if v, ok := modified["response_condition"]; ok {
+		opts.ResponseCondition = gofastly.String(v.(string))
+	}
+	if v, ok := modified["timestamp_format"]; ok {
+		opts.TimestampFormat = gofastly.String(v.(string))
+	}
+	if v, ok := modified["message_type"]; ok {
+		opts.MessageType = gofastly.String(v.(string))
+	}
+	if v, ok := modified["placement"]; ok {
+		opts.Placement = gofastly.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Update SFTP Opts: %#v", opts)
+	_, err := conn.UpdateSFTP(&opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
+}, serviceVersion int, conn *gofastly.Client) error {
+	opts := h.buildDelete(resource, d.Id(), serviceVersion)
+
+	log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
+
+	if err := deleteSFTP(conn, opts); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -376,6 +329,7 @@ func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
 			"format_version":     sl.FormatVersion,
 			"response_condition": sl.ResponseCondition,
 			"placement":          sl.Placement,
+			"compression_codec":  sl.CompressionCodec,
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -410,6 +364,7 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID
 		GzipLevel:         uint(df["gzip_level"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
 		MessageType:       df["message_type"].(string),
+		CompressionCodec:  df["compression_codec"].(string),
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,

@@ -1,4 +1,4 @@
-{{define "tls_subscription"}}---
+---
 layout: "fastly"
 page_title: "Fastly: tls_subscription"
 sidebar_current: "docs-fastly-resource-tls_subscription"
@@ -12,7 +12,7 @@ Enables TLS on a domain using a certificate managed by Fastly.
 
 DNS records need to be modified on the domain being secured, in order to respond to the ACME domain ownership challenge.
 
-There are two options for doing this: the `managed_dns_challenge`, which is the default method; and the `managed_http_challenges`, which points production traffic to Fastly.
+There are two options for doing this: the `managed_dns_challenges`, which is the default method; and the `managed_http_challenges`, which points production traffic to Fastly.
 
 ~> See the [Fastly documentation](https://docs.fastly.com/en/guides/serving-https-traffic-using-fastly-managed-certificates#verifying-domain-ownership) for more information on verifying domain ownership.
 
@@ -22,76 +22,11 @@ The example below demonstrates usage with AWS Route53 to configure DNS, and the 
 
 Basic usage:
 
-```hcl
-resource "fastly_service_v1" "example" {
-  name = "example-service"
-
-  domain {
-    name = "example.com"
-  }
-
-  backend {
-    address = "127.0.0.1"
-    name    = "localhost"
-  }
-
-  force_destroy = true
-}
-
-resource "fastly_tls_subscription" "example" {
-  domains = [for domain in fastly_service_v1.example.domain : domain.name]
-  certificate_authority = "lets-encrypt"
-}
-```
+{{ tffile "examples/resources/tls_subscription_basic_usage.tf" }}
 
 Usage with AWS Route 53:
 
-```hcl
-locals {
-  domain_name = "example.com"
-}
-
-resource "fastly_service_v1" "example" {
-  name = "example-service"
-
-  domain {
-    name = local.domain_name
-  }
-
-  backend {
-    address = "127.0.0.1"
-    name    = "localhost"
-  }
-
-  force_destroy = true
-}
-
-resource "fastly_tls_subscription" "example" {
-  domains               = [for domain in fastly_service_v1.example.domain : domain.name]
-  certificate_authority = "lets-encrypt"
-}
-
-data "aws_route53_zone" "demo" {
-  name         = local.domain_name
-  private_zone = false
-}
-
-# Set up DNS record for managed DNS domain validation method
-resource "aws_route53_record" "domain_validation" {
-  name            = fastly_tls_subscription.example.managed_dns_challenge.record_name
-  type            = fastly_tls_subscription.example.managed_dns_challenge.record_type
-  zone_id         = data.aws_route53_zone.demo.id
-  allow_overwrite = true
-  records         = [fastly_tls_subscription.example.managed_dns_challenge.record_value]
-  ttl             = 60
-}
-
-# Resource that other resources can depend on if they require the certificate to be issued
-resource "fastly_tls_subscription_validation" "example" {
-  subscription_id = fastly_tls_subscription.example.id
-  depends_on      = [aws_route53_record.domain_validation]
-}
-```
+{{ tffile "examples/resources/tls_subscription_with_route53.tf" }}
 
 ## Argument Reference
 
@@ -112,14 +47,14 @@ In addition to the arguments listed above, the following attributes are exported
 * `created_at` - Timestamp (GMT) when the subscription was created.
 * `updated_at` - Timestamp (GMT) when the subscription was last updated.
 * `state` - The current state of the subscription. The list of possible states are: `pending`, `processing`, `issued`, and `renewing`.
-* `managed_dns_challenge` - The details required to configure DNS to respond to ACME DNS challenge in order to verify domain ownership. See Managed DNS Challenge below for details.
+* `managed_dns_challenges` - A list of options for configuring DNS to respond to ACME DNS challenge in order to verify domain ownership. See Managed DNS Challenge below for details.
 * `managed_http_challenges` - A list of options for configuring DNS to respond to ACME HTTP challenge in order to verify domain ownership. See Managed HTTP Challenges below for details.
 
 ### Managed DNS Challenge
 
-The available attributes in the `managed_dns_challenge` block are:
+The available attributes in the `managed_dns_challenges` block are:
 
-* `record_name` - The name of the DNS record to add. For example `_acme-challenge.example.com`. Accessed like this, `fastly_tls_subscription.tls.managed_dns_challenge.record_name`.
+* `record_name` - The name of the DNS record to add. For example `_acme-challenge.example.com`. Accessed like this, `fastly_tls_subscription.tls.managed_dns_challenges.record_name`.
 * `record_type` - The type of DNS record to add, e.g. `A`, or `CNAME`.
 * `record_value` - The value to which the DNS record should point, e.g. `xxxxx.fastly-validations.com`.
 
@@ -138,7 +73,6 @@ Each record in the set has the following attributes:
 
 A subscription can be imported using its Fastly subscription ID, e.g.
 
-```
-$ terraform import fastly_tls_subscription.demo xxxxxxxxxxx
-```
-{{end}}
+{{ codefile "sh" "examples/resources/tls_subscription_import.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -206,6 +206,14 @@ func testAccCheckFastlyServiceV1GzipsAttributes(service *gofastly.ServiceDetail,
 					// these ahead of time
 					lg.CreatedAt = nil
 					lg.UpdatedAt = nil
+					// If empty value is sent, default value is assigned automatically by the API
+					// and so we ignore these fields in response
+					if g.Extensions == "" {
+						lg.Extensions = ""
+					}
+					if g.ContentTypes == "" {
+						lg.ContentTypes = ""
+					}
 					if !reflect.DeepEqual(g, lg) {
 						return fmt.Errorf("Bad match Gzip match, expected (%#v), got (%#v)", g, lg)
 					}

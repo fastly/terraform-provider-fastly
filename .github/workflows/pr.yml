@@ -9,7 +9,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.14.x
+        go-version: 1.16.x
     - name: Restore cache
       uses: actions/cache@v2
       with:
@@ -24,7 +24,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.14.x]
+        go-version: [1.16.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -48,10 +48,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.14.x
+        go-version: 1.16.x
     - name: Generate Docs
       run: |
         make generate-docs

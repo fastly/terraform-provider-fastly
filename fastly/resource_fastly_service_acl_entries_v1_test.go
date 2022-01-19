@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,17 +24,17 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					ServiceID: "service-id",
 					ACLID:     "1234567890",
 					IP:        "127.0.0.1",
-					Subnet:    "24",
+					Subnet:    gofastly.Int(24),
 					Negated:   false,
-					Comment:   "ALC Entry 1",
+					Comment:   "ACL Entry 1",
 				},
 				{
 					ServiceID: "service-id",
 					ACLID:     "0987654321",
 					IP:        "192.168.0.1",
-					Subnet:    "16",
+					Subnet:    gofastly.Int(16),
 					Negated:   true,
-					Comment:   "ALC Entry 2",
+					Comment:   "ACL Entry 2",
 				},
 			},
 			local: []map[string]interface{}{
@@ -42,13 +42,13 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					"ip":      "127.0.0.1",
 					"subnet":  "24",
 					"negated": false,
-					"comment": "ALC Entry 1",
+					"comment": "ACL Entry 1",
 				},
 				{
 					"ip":      "192.168.0.1",
 					"subnet":  "16",
 					"negated": true,
-					"comment": "ALC Entry 2",
+					"comment": "ACL Entry 2",
 				},
 			},
 		},
@@ -60,6 +60,43 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}
 	}
+}
+
+func TestAccFastlyServiceAclEntriesV1_create(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
+
+	expectedRemoteEntries := []map[string]interface{}{
+		{
+			"id":      "",
+			"ip":      "127.0.0.1",
+			"subnet":  "24",
+			"negated": false,
+			"comment": "ACL Entry 1",
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceV1Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceACLEntriesV1Config_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceAclEntriesV1RemoteState(&service, serviceName, aclName, expectedRemoteEntries),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries_v1.entries", "entry.#", "1"),
+				),
+			},
+			{
+				ResourceName:      "fastly_service_acl_entries_v1.entries",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccFastlyServiceAclEntriesV1_create_update_import(t *testing.T) {
@@ -191,7 +228,7 @@ func TestAccFastlyServiceAclEntriesV1_delete(t *testing.T) {
 			"ip":      "127.0.0.1",
 			"subnet":  "24",
 			"negated": false,
-			"comment": "ALC Entry 1",
+			"comment": "ACL Entry 1",
 		},
 	}
 
@@ -244,7 +281,7 @@ func TestAccFastlyServiceAclEntriesV1_process_1001_entries(t *testing.T) {
 			"ip":      fmt.Sprintf("127.0.%d.%d", ipPart3, ipPart4),
 			"subnet":  "22",
 			"negated": false,
-			"comment": fmt.Sprintf("ALC Entry %d %d", ipPart3, ipPart4),
+			"comment": fmt.Sprintf("ACL Entry %d %d", ipPart3, ipPart4),
 		})
 
 		ipPart4++

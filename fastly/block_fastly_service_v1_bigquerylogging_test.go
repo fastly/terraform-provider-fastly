@@ -6,9 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -66,33 +67,46 @@ func TestAccFastlyServiceV1_bigquerylogging_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceV1_bigquerylogging_env(t *testing.T) {
-	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
-	secretKey, err := generateKey()
-	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
+	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
+	v := NewServiceBigQueryLogging(serviceAttributes)
+	resource := &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	}
+	v.Register(resource)
+	loggingResource := resource.Schema["bigquerylogging"]
+	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
+
+	// Expect attributes to be sensitive
+	if !loggingResourceSchema["email"].Sensitive {
+		t.Fatalf("Expected email to be marked as a Sensitive value")
 	}
 
-	// set env Vars to something we expect
-	resetEnv := setBQEnv("someEnv", secretKey, t)
+	if !loggingResourceSchema["secret_key"].Sensitive {
+		t.Fatalf("Expected secret_key to be marked as a Sensitive value")
+	}
+
+	// Actually set env var and expect it to be used to determine the values
+	email := "tf-test@fastly.com"
+	secretKey, _ := generateKey()
+	resetEnv := setBQEnv(email, secretKey, t)
 	defer resetEnv()
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceV1Config_bigquery_env(name, bqName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
-					testAccCheckFastlyServiceV1Attributes_bq(&service, name, bqName),
-				),
-			},
-		},
-	})
+	result1, err1 := loggingResourceSchema["email"].DefaultFunc()
+	if err1 != nil {
+		t.Fatalf("Unexpected err %#v when calling email DefaultFunc", err1)
+	}
+	if result1 != email {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", email, result1)
+	}
+
+	result2, err2 := loggingResourceSchema["secret_key"].DefaultFunc()
+	if err2 != nil {
+		t.Fatalf("Unexpected err %#v when calling secret_key DefaultFunc", err2)
+	}
+	if result2 != secretKey {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", secretKey, result2)
+	}
 }
 
 func testAccCheckFastlyServiceV1Attributes_bq(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
@@ -144,7 +158,7 @@ resource "fastly_service_v1" "foo" {
   bigquerylogging {
     name       = "%s"
     email      = "email@example.com"
-    secret_key = %q
+    secret_key = trimspace(%q)
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
@@ -176,7 +190,7 @@ resource "fastly_service_compute" "foo" {
   bigquerylogging {
     name       = "%s"
     email      = "email@example.com"
-    secret_key = %q
+    secret_key = trimspace(%q)
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"

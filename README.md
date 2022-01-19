@@ -8,8 +8,8 @@
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.12.x or higher 
--	[Go](https://golang.org/doc/install) 1.14 (to build the provider plugin)
+-	[Terraform](https://www.terraform.io/downloads.html) 0.12.x or higher
+-	[Go](https://golang.org/doc/install) 1.16 (to build the provider plugin)
 
 > NOTE: the last version of the Fastly provider to support Terraform 0.11.x and below was [v0.26.0](https://github.com/fastly/terraform-provider-fastly/releases/tag/v0.26.0)
 
@@ -31,7 +31,7 @@ $ make build
 
 ## Developing the Provider
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.14+ is *required*).
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.16+ is *required*).
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in a local `bin` directory.
 
@@ -40,9 +40,9 @@ $ make build
 ...
 ```
 
-Alongside the newly built binary a file called `developer_overrides.tfrc` will be created.  The `make build` target will communicate 
+Alongside the newly built binary a file called `developer_overrides.tfrc` will be created.  The `make build` target will communicate
 back details for setting the `TF_CLI_CONFIG_FILE` environment variable that will enable Terraform to use your locally built provider binary.
-* HashiCorp - [Development Overrides for Provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers). 
+* HashiCorp - [Development Overrides for Provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers).
 
 ### Debugging the provider
 
@@ -85,6 +85,8 @@ $ export TF_REATTACH_PROVIDERS='{"fastly/fastly":{"Protocol":"grpc","Pid":54132,
 $ terraform plan
 ```
 You will then be able to set breakpoints and trace the provider's execution using the debugger as you would expect.
+
+The implementation for setting up debug mode presumes Terraform 0.13.x is being used. If you're using Terraform 0.12.x you'll need to manually modify the value assigned to `TF_REATTACH_PROVIDERS` so that the key `"fastly/fastly"` becomes `"registry.terraform.io/-/fastly"`. See HashiCorp's ["Support for Debuggable Provider Binaries"](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html#support-for-debuggable-provider-binaries) for more details.
 
 ## Testing
 
@@ -132,7 +134,7 @@ $ TEST_PARALLELISM=8 make testacc
 Depending on the Fastly account used, some features may not be enabled (e.g. Platform TLS).
 This may result in some tests failing, potentially with `403 Unauthorised` errors, when the full test suite is being run.
 Check the [Fastly API documentation](https://developer.fastly.com/reference/api/) to confirm if the failing tests use features in Limited Availability or only available to certain customers.
-If this is the case, either use the `TESTARGS` regular expressions described above, or temporarily add `t.SkipNow()` to the top of any tests that should be excluded. 
+If this is the case, either use the `TESTARGS` regular expressions described above, or temporarily add `t.SkipNow()` to the top of any tests that should be excluded.
 
 ## Building The Documentation
 

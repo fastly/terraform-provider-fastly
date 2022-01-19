@@ -3,44 +3,44 @@ layout: "fastly"
 page_title: "Fastly: service_acl_entries_v1"
 sidebar_current: "docs-fastly-resource-service-acl-entries-v1"
 description: |-
-  Defines a set of Fastly ACL entries that can be used to populate a service ACL. 
+  Defines a set of Fastly ACL entries that can be used to populate a service ACL.
 ---
 
 # fastly_service_acl_entries_v1
 
 Defines a set of Fastly ACL entries that can be used to populate a service ACL.  This resource will populate an ACL with the entries and will track their state.
 
-~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.  
+~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.
 
-If Terraform is being used to populate the initial content of an ACL which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
+If Terraform is being used to populate the initial content of an ACL which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.
 
 
 ## Example Usage (Terraform >= 0.12.6)
 
 Basic usage:
 
-```hcl
+```terraform
 variable "myacl_name" {
-	type = string
-	default = "My ACL"
+  type = string
+  default = "My ACL"
 }
 
 resource "fastly_service_v1" "myservice" {
   name = "demofastly"
 
   domain {
-      name = "demo.notexample.com"
-      comment = "demo"
+    name = "demo.notexample.com"
+    comment = "demo"
   }
 
   backend {
-      address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-      name = "AWS S3 hosting"
-      port = 80
-    }
+    address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
+    name = "AWS S3 hosting"
+    port = 80
+  }
 
   acl {
-	name = var.myacl_name
+    name = var.myacl_name
   }
 
   force_destroy = true
@@ -48,7 +48,7 @@ resource "fastly_service_v1" "myservice" {
 
 resource "fastly_service_acl_entries_v1" "entries" {
   for_each = {
-    for d in fastly_service_v1.myservice.acl : d.name => d if d.name == var.myacl_name
+  for d in fastly_service_v1.myservice.acl : d.name => d if d.name == var.myacl_name
   }
   service_id = fastly_service_v1.myservice.id
   acl_id = each.value.acl_id
@@ -56,7 +56,7 @@ resource "fastly_service_acl_entries_v1" "entries" {
     ip = "127.0.0.1"
     subnet = "24"
     negated = false
-    comment = "ALC Entry 1"
+    comment = "ACL Entry 1"
   }
 }
 ```
@@ -65,7 +65,7 @@ Complex object usage:
 
 The following example demonstrates the use of dynamic nested blocks to create ACL entries.
 
-```hcl
+```terraform
 locals {
   acl_name = "my_acl"
   acl_entries = [
@@ -107,7 +107,7 @@ resource "fastly_service_v1" "myservice" {
 
 resource "fastly_service_acl_entries_v1" "entries" {
   for_each = {
-    for d in fastly_service_v1.myservice.acl : d.name => d if d.name == local.acl_name
+  for d in fastly_service_v1.myservice.acl : d.name => d if d.name == local.acl_name
   }
   service_id = fastly_service_v1.myservice.id
   acl_id = each.value.acl_id
@@ -127,7 +127,7 @@ resource "fastly_service_acl_entries_v1" "entries" {
 }
 ```
 
-## Example Usage (Terraform >= 0.12.0 && &lt; 0.12.6)
+## Example Usage (Terraform >= 0.12.0 && < 0.12.6)
 
 `for_each` attributes were not available in Terraform before 0.12.6, however, users can still use `for` expressions to achieve
 similar behaviour as seen in the example below.
@@ -145,57 +145,57 @@ For those scenarios, it's recommended to split the changes into two distinct ste
 
 Usage:
 
-```hcl
+```terraform
 variable "myacl_name" {
-	type = string
-	default = "My ACL"
+  type    = string
+  default = "My ACL"
 }
 
 resource "fastly_service_v1" "myservice" {
-  ...
+  #...
   acl {
-	name = var.myacl_name
+    name = var.myacl_name
   }
-  ...
+  #...
 }
 
 resource "fastly_service_acl_entries_v1" "entries" {
   service_id = fastly_service_v1.myservice.id
-  acl_id = {for d in fastly_service_v1.myservice.acl : d.name => d.acl_id}[var.myacl_name]
+  acl_id     = {for d in fastly_service_v1.myservice.acl : d.name => d.acl_id}[var.myacl_name]
   entry {
-    ip = "127.0.0.1"
-    subnet = "24"
+    ip      = "127.0.0.1"
+    subnet  = "24"
     negated = false
-    comment = "ALC Entry 1"
+    comment = "ACL Entry 1"
   }
 }
 ```
 
 ### Supporting API and UI ACL updates with ignore_changes
 
-The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
+The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the
 entries in an ACL.  If, after your first deploy, the Fastly API or UI is to be used to manage entries in an ACL, then this will stop Terraform realigning the remote state with the initial set of ACL entries defined in your HCL.
 
-```hcl
-...
+```terraform
+#...
 
 resource "fastly_service_acl_entries_v1" "entries" {
-  for_each = {
-    for d in fastly_service_v1.myservice.acl : d.name => d if d.name == var.myacl_name
+  for_each   = {
+  for d in fastly_service_v1.myservice.acl : d.name => d if d.name == var.myacl_name
   }
   service_id = fastly_service_v1.myservice.id
-  acl_id = each.value.acl_id
+  acl_id     = each.value.acl_id
   entry {
-    ip = "127.0.0.1"
-    subnet = "24"
+    ip      = "127.0.0.1"
+    subnet  = "24"
     negated = false
-    comment = "ALC Entry 1"
+    comment = "ACL Entry 1"
   }
-  
+
   lifecycle {
     ignore_changes = [entry,]
   }
-  
+
 }
 ```
 
@@ -209,16 +209,16 @@ resource "fastly_service_acl_entries_v1" "entries" {
 This is an example of the import command being applied to the resource named `fastly_service_acl_entries_v1.entries`
 The resource ID is a combined value of the `service_id` and `acl_id` separated by a forward slash.
 
-```
+```sh
 $ terraform import fastly_service_acl_entries_v1.entries xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx
 ```
 
-If Terraform is already managing remote acl entries against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
+If Terraform is already managing remote acl entries against a resource being imported then the user will be asked to remove it from the existing Terraform state.
 The following is an example of the Terraform state command to remove the resource named `fastly_service_acl_entries_v1.entries` from the Terraform state file.
 
-```
+```sh
 $ terraform state rm fastly_service_acl_entries_v1.entries
-``` 
+```
 
 <!-- schema generated by tfplugindocs -->
 ## Schema

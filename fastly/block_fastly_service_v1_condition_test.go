@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -52,9 +52,16 @@ func TestAccFastlyServiceV1_conditional_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	con1 := gofastly.Condition{
-		Name:      "some amz condition",
+		Name:      "some test condition",
 		Priority:  10,
 		Type:      "REQUEST",
+		Statement: `req.url ~ "^/yolo/"`,
+	}
+
+	con2 := gofastly.Condition{
+		Name:      "some test condition",
+		Priority:  10,
+		Type:      "CACHE",
 		Statement: `req.url ~ "^/yolo/"`,
 	}
 
@@ -72,6 +79,13 @@ func TestAccFastlyServiceV1_conditional_basic(t *testing.T) {
 						"fastly_service_v1.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_v1.foo", "condition.#", "1"),
+				),
+			},
+			{
+				Config: testAccServiceV1ConditionConfig_update(name, domainName1, "CACHE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists("fastly_service_v1.foo", &service),
+					testAccCheckFastlyServiceV1ConditionalAttributes(&service, name, []*gofastly.Condition{&con2}),
 				),
 			},
 		},
@@ -141,14 +155,16 @@ resource "fastly_service_v1" "foo" {
   }
 
   header {
-    destination = "http.x-amz-request-id"
-    type        = "cache"
-    action      = "delete"
-    name        = "remove x-amz-request-id"
+    destination         = "http.x-foo"
+    source              = "\"bar\""
+    type                = "request"
+    action              = "set"
+    name                = "set x-foo"
+    request_condition   = "some test condition"
   }
 
   condition {
-    name = "some amz condition"
+    name = "some test condition"
     type = "REQUEST"
 
     statement = "req.url ~ \"^/yolo/\""
@@ -158,4 +174,41 @@ resource "fastly_service_v1" "foo" {
 
   force_destroy = true
 }`, name, domain)
+}
+
+func testAccServiceV1ConditionConfig_update(name, domain, condType string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_v1" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  header {
+    destination       = "http.x-foo"
+    source            = "\"bar\""
+    type              = "cache"
+    action            = "set"
+    name              = "set x-foo"
+    cache_condition   = "some test condition"
+  }
+
+  condition {
+    name = "some test condition"
+    type = "%s"
+
+    statement = "req.url ~ \"^/yolo/\""
+
+    priority = 10
+  }
+
+  force_destroy = true
+}`, name, domain, condType)
 }

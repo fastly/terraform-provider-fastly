@@ -14,9 +14,11 @@ var computeAttributes = ServiceMetadata{
 var computeService = &BaseServiceDefinition{
 	Type: computeAttributes.serviceType,
 	Attributes: []ServiceAttributeDefinition{
+		NewServiceSettings(),
 		NewServiceDomain(computeAttributes),
 		NewServiceHealthCheck(computeAttributes),
 		NewServiceBackend(computeAttributes),
+		NewServiceDirector(computeAttributes),
 		NewServiceS3Logging(computeAttributes),
 		NewServicePaperTrail(computeAttributes),
 		NewServiceSumologic(computeAttributes),

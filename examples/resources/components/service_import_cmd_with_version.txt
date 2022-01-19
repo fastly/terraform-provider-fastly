@@ -1,0 +1,1 @@
+$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx@2

@@ -1,10 +1,11 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -13,165 +14,156 @@ type DigitalOceanServiceAttributeHandler struct {
 }
 
 func NewServiceLoggingDigitalOcean(sa ServiceMetadata) ServiceAttributeDefinition {
-	return &DigitalOceanServiceAttributeHandler{
+	return ToServiceAttributeDefinition(&DigitalOceanServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
 			key:             "logging_digitalocean",
 			serviceMetadata: sa,
 		},
+	})
+}
+
+func (h *DigitalOceanServiceAttributeHandler) Key() string { return h.key }
+
+func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
+	var blockAttributes = map[string]*schema.Schema{
+		// Required fields
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+
+		"bucket_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of the DigitalOcean Space",
+		},
+
+		"access_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Your DigitalOcean Spaces account access key",
+		},
+
+		"secret_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Your DigitalOcean Spaces account secret key",
+		},
+
+		// Optional fields
+		"domain": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)",
+			Default:     "nyc3.digitaloceanspaces.com",
+		},
+
+		"public_key": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+
+		"path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The path to upload logs to",
+		},
+
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
+		},
+
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: TimestampFormatDescription,
+		},
+
+		"gzip_level": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: GzipLevelDescription,
+		},
+
+		"message_type": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      MessageTypeDescription,
+			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		},
+	}
+
+	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["format"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting.",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
+		}
+		blockAttributes["response_condition"] = &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
+		}
+		blockAttributes["placement"] = &schema.Schema{
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
+			ValidateDiagFunc: validateLoggingPlacement(),
+		}
+	}
+
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: blockAttributes,
+		},
 	}
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Process(d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-	serviceID := d.Id()
-	ol, nl := d.GetChange(h.GetKey())
+func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
+}, serviceVersion int, conn *gofastly.Client) error {
+	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
-	if ol == nil {
-		ol = new(schema.Set)
-	}
-	if nl == nil {
-		nl = new(schema.Set)
-	}
+	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
 
-	oldSet := ol.(*schema.Set)
-	newSet := nl.(*schema.Set)
-
-	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		t, ok := resource.(map[string]interface{})
-		if !ok {
-			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
-		}
-		return t["name"], nil
-	})
-
-	diffResult, err := setDiff.Diff(oldSet, newSet)
-	if err != nil {
+	if err := createDigitalOcean(conn, opts); err != nil {
 		return err
 	}
-
-	// DELETE removed resources
-	for _, resource := range diffResult.Deleted {
-		resource := resource.(map[string]interface{})
-		opts := h.buildDelete(resource, serviceID, latestVersion)
-
-		log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging endpoint removal opts: %#v", opts)
-
-		if err := deleteDigitalOcean(conn, opts); err != nil {
-			return err
-		}
-	}
-
-	// CREATE new resources
-	for _, resource := range diffResult.Added {
-		resource := resource.(map[string]interface{})
-
-		// @HACK for a TF SDK Issue.
-		//
-		// This ensures that the required, `name`, field is present.
-		//
-		// If we have made it this far and `name` is not present, it is most-likely due
-		// to a defunct diff as noted here - https://github.com/hashicorp/terraform-plugin-sdk/issues/160#issuecomment-522935697.
-		//
-		// This is caused by using a StateFunc in a nested TypeSet. While the StateFunc
-		// properly handles setting state with the StateFunc, it returns extra entries
-		// during state Gets, specifically `GetChange("logging_digitalocean")` in this case.
-		if v, ok := resource["name"]; !ok || v.(string) == "" {
-			continue
-		}
-
-		opts := h.buildCreate(resource, serviceID, latestVersion)
-
-		log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
-
-		if err := createDigitalOcean(conn, opts); err != nil {
-			return err
-		}
-	}
-
-	// UPDATE modified resources
-	//
-	// NOTE: although the go-fastly API client enables updating of a resource by
-	// its 'name' attribute, this isn't possible within terraform due to
-	// constraints in the data model/schema of the resources not having a uid.
-	for _, resource := range diffResult.Modified {
-		resource := resource.(map[string]interface{})
-
-		opts := gofastly.UpdateDigitalOceanInput{
-			ServiceID:      d.Id(),
-			ServiceVersion: latestVersion,
-			Name:           resource["name"].(string),
-		}
-
-		// only attempt to update attributes that have changed
-		modified := setDiff.Filter(resource, oldSet)
-
-		// NOTE: where we transition between interface{} we lose the ability to
-		// infer the underlying type being either a uint vs an int. This
-		// materializes as a panic (yay) and so it's only at runtime we discover
-		// this and so we've updated the below code to convert the type asserted
-		// int into a uint before passing the value to gofastly.Uint().
-		if v, ok := modified["bucket_name"]; ok {
-			opts.BucketName = gofastly.String(v.(string))
-		}
-		if v, ok := modified["domain"]; ok {
-			opts.Domain = gofastly.String(v.(string))
-		}
-		if v, ok := modified["access_key"]; ok {
-			opts.AccessKey = gofastly.String(v.(string))
-		}
-		if v, ok := modified["secret_key"]; ok {
-			opts.SecretKey = gofastly.String(v.(string))
-		}
-		if v, ok := modified["path"]; ok {
-			opts.Path = gofastly.String(v.(string))
-		}
-		if v, ok := modified["period"]; ok {
-			opts.Period = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["gzip_level"]; ok {
-			opts.GzipLevel = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["format"]; ok {
-			opts.Format = gofastly.String(v.(string))
-		}
-		if v, ok := modified["format_version"]; ok {
-			opts.FormatVersion = gofastly.Uint(uint(v.(int)))
-		}
-		if v, ok := modified["response_condition"]; ok {
-			opts.ResponseCondition = gofastly.String(v.(string))
-		}
-		if v, ok := modified["message_type"]; ok {
-			opts.MessageType = gofastly.String(v.(string))
-		}
-		if v, ok := modified["timestamp_format"]; ok {
-			opts.TimestampFormat = gofastly.String(v.(string))
-		}
-		if v, ok := modified["placement"]; ok {
-			opts.Placement = gofastly.String(v.(string))
-		}
-		if v, ok := modified["public_key"]; ok {
-			opts.PublicKey = gofastly.String(v.(string))
-		}
-
-		log.Printf("[DEBUG] Update DigitalOcean Opts: %#v", opts)
-		_, err := conn.UpdateDigitalOcean(&opts)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh DigitalOcean Spaces.
 	log.Printf("[DEBUG] Refreshing DigitalOcean Spaces logging endpoints for (%s)", d.Id())
 	digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
 		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
+		ServiceVersion: serviceVersion,
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up DigitalOcean Spaces logging endpoints for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("[ERR] Error looking up DigitalOcean Spaces logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenDigitalOcean(digitaloceanList)
@@ -184,6 +176,82 @@ func (h *DigitalOceanServiceAttributeHandler) Read(d *schema.ResourceData, s *go
 		log.Printf("[WARN] Error setting DigitalOcean Spaces logging endpoints for (%s): %s", d.Id(), err)
 	}
 
+	return nil
+}
+
+func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
+}, serviceVersion int, conn *gofastly.Client) error {
+	opts := gofastly.UpdateDigitalOceanInput{
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           resource["name"].(string),
+	}
+
+	// NOTE: where we transition between interface{} we lose the ability to
+	// infer the underlying type being either a uint vs an int. This
+	// materializes as a panic (yay) and so it's only at runtime we discover
+	// this and so we've updated the below code to convert the type asserted
+	// int into a uint before passing the value to gofastly.Uint().
+	if v, ok := modified["bucket_name"]; ok {
+		opts.BucketName = gofastly.String(v.(string))
+	}
+	if v, ok := modified["domain"]; ok {
+		opts.Domain = gofastly.String(v.(string))
+	}
+	if v, ok := modified["access_key"]; ok {
+		opts.AccessKey = gofastly.String(v.(string))
+	}
+	if v, ok := modified["secret_key"]; ok {
+		opts.SecretKey = gofastly.String(v.(string))
+	}
+	if v, ok := modified["path"]; ok {
+		opts.Path = gofastly.String(v.(string))
+	}
+	if v, ok := modified["period"]; ok {
+		opts.Period = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["gzip_level"]; ok {
+		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["format"]; ok {
+		opts.Format = gofastly.String(v.(string))
+	}
+	if v, ok := modified["format_version"]; ok {
+		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+	}
+	if v, ok := modified["response_condition"]; ok {
+		opts.ResponseCondition = gofastly.String(v.(string))
+	}
+	if v, ok := modified["message_type"]; ok {
+		opts.MessageType = gofastly.String(v.(string))
+	}
+	if v, ok := modified["timestamp_format"]; ok {
+		opts.TimestampFormat = gofastly.String(v.(string))
+	}
+	if v, ok := modified["placement"]; ok {
+		opts.Placement = gofastly.String(v.(string))
+	}
+	if v, ok := modified["public_key"]; ok {
+		opts.PublicKey = gofastly.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Update DigitalOcean Opts: %#v", opts)
+	_, err := conn.UpdateDigitalOcean(&opts)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
+}, serviceVersion int, conn *gofastly.Client) error {
+	opts := h.buildDelete(resource, d.Id(), serviceVersion)
+
+	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging endpoint removal opts: %#v", opts)
+
+	if err := deleteDigitalOcean(conn, opts); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -229,6 +297,7 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string
 			"message_type":       ll.MessageType,
 			"placement":          ll.Placement,
 			"response_condition": ll.ResponseCondition,
+			"compression_codec":  ll.CompressionCodec,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -262,6 +331,7 @@ func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interf
 		GzipLevel:         uint(df["gzip_level"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
 		MessageType:       df["message_type"].(string),
+		CompressionCodec:  df["compression_codec"].(string),
 		Format:            vla.format,
 		FormatVersion:     uintOrDefault(vla.formatVersion),
 		Placement:         vla.placement,
@@ -277,118 +347,4 @@ func (h *DigitalOceanServiceAttributeHandler) buildDelete(digitaloceanMap interf
 		ServiceVersion: serviceVersion,
 		Name:           df["name"].(string),
 	}
-}
-
-func (h *DigitalOceanServiceAttributeHandler) Register(s *schema.Resource) error {
-	var blockAttributes = map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
-		"bucket_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of the DigitalOcean Space",
-		},
-
-		"access_key": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Sensitive:   true,
-			Description: "Your DigitalOcean Spaces account access key",
-		},
-
-		"secret_key": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Sensitive:   true,
-			Description: "Your DigitalOcean Spaces account secret key",
-		},
-
-		// Optional fields
-		"domain": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)",
-			Default:     "nyc3.digitaloceanspaces.com",
-		},
-
-		"public_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			// Related issue for weird behavior - https://github.com/hashicorp/terraform-plugin-sdk/issues/160
-			StateFunc: trimSpaceStateFunc,
-		},
-
-		"path": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The path to upload logs to",
-		},
-
-		"period": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
-		},
-
-		"timestamp_format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "`strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)",
-		},
-
-		"gzip_level": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Description: "What level of Gzip encoding to have when dumping logs (default `0`, no compression)",
-		},
-
-		"message_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "classic",
-			Description:      "How the message should be formatted. One of: `classic` (default), `loggly`, `logplex` or `blank`",
-			ValidateDiagFunc: validateLoggingMessageType(),
-		},
-	}
-
-	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Apache style log formatting.",
-		}
-		blockAttributes["format_version"] = &schema.Schema{
-			Type:             schema.TypeInt,
-			Optional:         true,
-			Default:          2,
-			Description:      "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-			ValidateDiagFunc: validateLoggingFormatVersion(),
-		}
-		blockAttributes["response_condition"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
-		}
-		blockAttributes["placement"] = &schema.Schema{
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "Where in the generated VCL the logging call should be placed. Can be `none` or `waf_debug`.",
-			ValidateDiagFunc: validateLoggingPlacement(),
-		}
-	}
-
-	s.Schema[h.GetKey()] = &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: blockAttributes,
-		},
-	}
-	return nil
 }

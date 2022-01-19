@@ -5,12 +5,14 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v3/fastly"
+	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+const testKinesisIAMRole = "arn:aws:iam::123456789012:role/KinesisAccess"
 
 func TestResourceFastlyFlattenKinesis(t *testing.T) {
 	cases := []struct {
@@ -46,6 +48,33 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 				},
 			},
 		},
+		{
+			remote: []*gofastly.Kinesis{
+				{
+					ServiceVersion:    1,
+					Name:              "kinesis-endpoint",
+					StreamName:        "stream-name",
+					Region:            "us-east-1",
+					IAMRole:           testKinesisIAMRole,
+					Format:            "%h %l %u %t \"%r\" %>s %b %T",
+					Placement:         "none",
+					ResponseCondition: "always",
+					FormatVersion:     2,
+				},
+			},
+			local: []map[string]interface{}{
+				{
+					"name":               "kinesis-endpoint",
+					"topic":              "stream-name",
+					"region":             "us-east-1",
+					"iam_role":           testKinesisIAMRole,
+					"format":             "%h %l %u %t \"%r\" %>s %b %T",
+					"placement":          "none",
+					"response_condition": "always",
+					"format_version":     uint(2),
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {
@@ -57,7 +86,6 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 }
 
 func TestAccFastlyServiceV1_logging_kinesis_basic(t *testing.T) {
-	t.SkipNow()
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -78,8 +106,7 @@ func TestAccFastlyServiceV1_logging_kinesis_basic(t *testing.T) {
 		Name:           "kinesis-endpoint",
 		StreamName:     "new-stream-name",
 		Region:         "us-east-1",
-		AccessKey:      "whywouldyoucheckthis",
-		SecretKey:      "thisisthesecretthatneedstobe40characters",
+		IAMRole:        testKinesisIAMRole,
 		FormatVersion:  2,
 		Format:         "%h %l %u %t \"%r\" %>s %b %T",
 	}
@@ -89,8 +116,7 @@ func TestAccFastlyServiceV1_logging_kinesis_basic(t *testing.T) {
 		Name:           "another-kinesis-endpoint",
 		StreamName:     "another-stream-name",
 		Region:         "us-east-1",
-		AccessKey:      "whywouldyoucheckthis",
-		SecretKey:      "thisisthesecretthatneedstobe40characters",
+		IAMRole:        testKinesisIAMRole,
 		FormatVersion:  2,
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
@@ -128,7 +154,6 @@ func TestAccFastlyServiceV1_logging_kinesis_basic(t *testing.T) {
 }
 
 func TestAccFastlyServiceV1_logging_kinesis_basic_compute(t *testing.T) {
-	t.SkipNow()
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -266,8 +291,7 @@ resource "fastly_service_v1" "foo" {
     name        = "kinesis-endpoint"
     topic       = "new-stream-name"
     region      = "us-east-1"
-    access_key  = "whywouldyoucheckthis"
-    secret_key  = "thisisthesecretthatneedstobe40characters"
+    iam_role    = "%s"
     format      = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
   }
 
@@ -275,14 +299,13 @@ resource "fastly_service_v1" "foo" {
     name        = "another-kinesis-endpoint"
     topic       = "another-stream-name"
     region      = "us-east-1"
-    access_key  = "whywouldyoucheckthis"
-    secret_key  = "thisisthesecretthatneedstobe40characters"
+    iam_role    = "%s"
     format      = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
   }
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, testKinesisIAMRole, testKinesisIAMRole)
 }
 
 func testAccServiceV1KinesisComputeConfig(name string, domain string) string {

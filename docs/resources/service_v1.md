@@ -497,6 +497,7 @@ Optional:
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **email** (String) The email address associated with the target GCS bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_EMAIL`
 - **format** (String) Apache-style string or VCL variables to use for log formatting
+- **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
 - **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
 - **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
@@ -603,7 +604,7 @@ Required:
 Optional:
 
 - **format** (String) Apache-style string or VCL variables to use for log formatting
-- **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)
+- **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **port** (Number) The port number configured in Logentries
 - **response_condition** (String) Name of blockAttributes condition to apply this logging.
@@ -1024,7 +1025,7 @@ Optional:
 - **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - **domain** (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
 - **format** (String) Apache-style string or VCL variables to use for log formatting.
-- **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1).
+- **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2).
 - **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
 - **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
@@ -1088,7 +1089,7 @@ Required:
 Optional:
 
 - **format** (String) Apache-style string or VCL variables to use for log formatting
-- **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 1)
+- **format_version** (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
 - **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **response_condition** (String) Name of blockAttributes condition to apply this logging.
@@ -1105,7 +1106,7 @@ Required:
 Optional:
 
 - **format** (String) Apache-style string or VCL variables to use for log formatting
-- **format_version** (Number) The version of the custom logging format. Can be either 1 or 2. (Default: 1)
+- **format_version** (Number) The version of the custom logging format. Can be either 1 or 2. (Default: 2)
 - **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - **placement** (String) Where in the generated VCL the logging call should be placed.
 - **port** (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`

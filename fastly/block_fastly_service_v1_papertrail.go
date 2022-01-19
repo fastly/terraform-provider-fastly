@@ -48,7 +48,7 @@ func (h *PaperTrailServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "%h %l %u %t %r %>s",
+			Default:     `%h %l %u %t "%r" %>s %b`,
 			Description: "A Fastly [log format string](https://docs.fastly.com/en/guides/custom-log-formats)",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

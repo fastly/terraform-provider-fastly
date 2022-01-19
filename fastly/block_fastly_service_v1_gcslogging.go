@@ -93,8 +93,15 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "%h %l %u %t %r %>s",
+			Default:     `%h %l %u %t "%r" %>s %b`,
 			Description: "Apache-style string or VCL variables to use for log formatting",
+		}
+		blockAttributes["format_version"] = &schema.Schema{
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
@@ -268,6 +275,7 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 			"response_condition": currentGCS.ResponseCondition,
 			"message_type":       currentGCS.MessageType,
 			"format":             currentGCS.Format,
+			"format_version":     currentGCS.FormatVersion,
 			"timestamp_format":   currentGCS.TimestampFormat,
 			"placement":          currentGCS.Placement,
 			"compression_codec":  currentGCS.CompressionCodec,

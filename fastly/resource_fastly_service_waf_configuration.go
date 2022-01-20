@@ -39,6 +39,12 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 			}),
 		),
 		Schema: map[string]*schema.Schema{
+			"waf_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The ID of the Web Application Firewall that the configuration belongs to",
+			},
 			"activate": {
 				Type:        schema.TypeBool,
 				Description: "Conditionally prevents a new firewall version from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
@@ -49,12 +55,6 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "The latest cloned firewall version by the provider",
-			},
-			"waf_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ID of the Web Application Firewall that the configuration belongs to",
 			},
 			"allowed_http_versions": {
 				Type:        schema.TypeString,
@@ -154,6 +154,11 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "The maximum number of arguments allowed",
+			},
+			"number": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The WAF firewall version",
 			},
 			"notice_anomaly_score": {
 				Type:        schema.TypeInt,
@@ -583,6 +588,7 @@ func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) {
 	d.Set("lfi_score_threshold", version.LFIScoreThreshold)
 	d.Set("max_file_size", version.MaxFileSize)
 	d.Set("max_num_args", version.MaxNumArgs)
+	d.Set("number", version.Number)
 	d.Set("notice_anomaly_score", version.NoticeAnomalyScore)
 	d.Set("paranoia_level", version.ParanoiaLevel)
 	d.Set("php_injection_score_threshold", version.PHPInjectionScoreThreshold)

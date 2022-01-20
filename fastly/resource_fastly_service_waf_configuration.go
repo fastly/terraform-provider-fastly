@@ -10,6 +10,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -23,7 +24,20 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceWAFConfigurationV1Import,
 		},
-		CustomizeDiff: validateWAFConfigurationResource,
+		CustomizeDiff: customdiff.All(
+			validateWAFConfigurationResource,
+			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+				// If anything other than "activate" has changed, the current version will be
+				// cloned in resourceServiceWAFConfigurationV1Update so set it as recomputed.
+				for _, changedKey := range d.GetChangedKeysPrefix("") {
+					if changedKey == "activate" {
+						continue
+					}
+					return true
+				}
+				return false
+			}),
+		),
 		Schema: map[string]*schema.Schema{
 			"activate": {
 				Type:        schema.TypeBool,
@@ -236,7 +250,7 @@ func resourceServiceWAFConfigurationV1Create(ctx context.Context, d *schema.Reso
 func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	// If any attributes other than Computed or "activate" are changed, clone a new firewall version.
+	// If any attributes other than Computed or "activate" have changed, clone a new firewall version.
 	// Otherwise, don't clone but activate a draft version that was previously created with "activate = false".
 	var needsChange bool
 	for k, v := range resourceServiceWAFConfigurationV1().Schema {

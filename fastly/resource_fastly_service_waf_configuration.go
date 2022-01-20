@@ -51,6 +51,11 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 				Default:     true,
 				Optional:    true,
 			},
+			"active": {
+				Type:        schema.TypeBool,
+				Description: "Whether a specific firewall version is currently deployed",
+				Computed:    true,
+			},
 			"cloned_version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -572,6 +577,7 @@ func buildUpdateInput(d *schema.ResourceData, id string, number int) *gofastly.U
 }
 
 func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) {
+	d.Set("active", version.Active)
 	d.Set("allowed_http_versions", version.AllowedHTTPVersions)
 	d.Set("allowed_methods", version.AllowedMethods)
 	d.Set("allowed_request_content_type", version.AllowedRequestContentType)

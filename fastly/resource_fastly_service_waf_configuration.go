@@ -260,11 +260,11 @@ func resourceServiceWAFConfigurationV1Create(ctx context.Context, d *schema.Reso
 func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	// If any attributes other than Computed or "activate" have changed, clone a new firewall version.
+	// If any attributes other than Computed (unconfigurable) or "activate" have changed, clone a new firewall version.
 	// Otherwise, don't clone but activate a draft version that was previously created with "activate = false".
 	var needsChange bool
 	for k, v := range resourceServiceWAFConfigurationV1().Schema {
-		if v.Computed || k == "activate" {
+		if (v.Computed && !v.Optional) || k == "activate" {
 			continue
 		}
 		if d.HasChange(k) {

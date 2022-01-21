@@ -1,4 +1,15 @@
-## 0.41.0 (Unreleased)
+## 0.42.0 (Unreleased)
+
+## 0.41.0 (January 21, 2022)
+
+ENHANCEMENTS:
+
+* Add activate attribute support for `fastly_service_waf_configuration` resource [#530](https://github.com/fastly/terraform-provider-fastly/pull/530)
+* Support updating TLS subscriptions in pending state [#528](https://github.com/fastly/terraform-provider-fastly/pull/528)
+
+DOCUMENTATION:
+
+* Revamp fastly_tls_subscription examples [#527](https://github.com/fastly/terraform-provider-fastly/pull/527)
 
 ## 0.40.0 (January 13, 2022)
 

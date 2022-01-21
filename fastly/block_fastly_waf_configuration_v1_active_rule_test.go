@@ -94,7 +94,7 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteRules(t *testing.T) {
 			Revision: 2,
 		},
 	}
-	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	rulesTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules1)
 	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF1, "")
 

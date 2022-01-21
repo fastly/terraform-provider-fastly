@@ -39,12 +39,13 @@ func TestAccFastlyServiceWAFVersionV1DetermineVersion(t *testing.T) {
 			Errored: false,
 		},
 		{
+			// active version should be selected
 			remote: []*gofastly.WAFVersion{
 				{Number: 3},
-				{Number: 2},
+				{Number: 2, Active: true},
 				{Number: 1},
 			},
-			local:   3,
+			local:   2,
 			Errored: false,
 		},
 	}
@@ -66,7 +67,7 @@ func TestAccFastlyServiceWAFVersionV1DetermineVersion(t *testing.T) {
 func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,7 +89,7 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -117,12 +118,16 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
-	wafVerInput1 := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+	wafVerInput1 := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput1, "", "")
 
-	wafVerInput2 := testAccFastlyServiceWAFVersionV1BuildConfig(22)
+	wafVerInput2 := testAccFastlyServiceWAFVersionV1BuildConfig(22, false)
 	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput2, "", "")
 
+	wafVerInput3 := testAccFastlyServiceWAFVersionV1BuildConfig(22, true)
+	wafVer3 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput3, "", "")
+
+	resourceName := "fastly_service_waf_configuration.waf"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
@@ -140,6 +145,17 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceV1Exists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput2, 2),
+					resource.TestCheckResourceAttr(resourceName, "active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number", "2"),
+				),
+			},
+			{
+				Config: testAccFastlyServiceWAFVersionV1(name, wafVer3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput3, 2),
+					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "number", "2"),
 				),
 			},
 		},
@@ -149,7 +165,7 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -249,8 +265,9 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 
-				// Rule Exclusion should be ignored until it is in GA.
-				ImportStateVerifyIgnore: []string{"rule_exclusion"},
+				// - The "activate" attribute is not stored on the Fastly API and must be ignored.
+				// - Rule Exclusion should be ignored until it is in GA.
+				ImportStateVerifyIgnore: []string{"activate", "rule_exclusion"},
 			},
 			{
 				Config:   wafSvcCfg,
@@ -263,6 +280,8 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.ServiceDetail, local map[string]interface{}, latestVersion int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
+		// The "activate" attribute is not stored on the Fastly API and must be ignored.
+		delete(local, "activate")
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
@@ -460,8 +479,9 @@ resource "fastly_service_v1" "foo" {
 `, name, domainName, backendName, extraHCL)
 }
 
-func testAccFastlyServiceWAFVersionV1BuildConfig(threshold int) map[string]interface{} {
+func testAccFastlyServiceWAFVersionV1BuildConfig(threshold int, activate bool) map[string]interface{} {
 	return map[string]interface{}{
+		"activate":                             activate,
 		"allowed_http_versions":                "HTTP/1.0 HTTP/1.1",
 		"allowed_methods":                      "GET HEAD POST",
 		"allowed_request_content_type":         "application/x-www-form-urlencoded|multipart/form-data|text/xml|application/xml",

@@ -633,6 +633,5 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 }
 
 func validateWAFConfigurationResource(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
-	err := validateWAFRuleExclusion(d)
-	return err
+	return validateWAFRuleExclusion(d)
 }

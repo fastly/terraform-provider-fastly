@@ -72,12 +72,12 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput, 1),
 				),
 			},
@@ -94,18 +94,18 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput, 1),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
+func TestAccFastlyServiceWAFVersionUpdate(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -126,19 +126,19 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput1, 1),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput2, 2),
 				),
 			},
@@ -146,7 +146,7 @@ func TestAccFastlyServiceWAFVersionV1Update(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
+func TestAccFastlyServiceWAFVersionDelete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
@@ -155,19 +155,19 @@ func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput, 1),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckEmpty(&service, 2),
 				),
 			},
@@ -175,7 +175,7 @@ func TestAccFastlyServiceWAFVersionV1Delete(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
+func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
 
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -236,12 +236,12 @@ func TestAccFastlyServiceWAFVersionV1Import(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: wafSvcCfg,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 				),
 			},
 			{
@@ -364,7 +364,7 @@ func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface
 
 	hcl := `
         resource "fastly_service_waf_configuration" "waf" {
-          waf_id = fastly_service_v1.foo.waf[0].waf_id
+          waf_id = fastly_service_vcl.foo.waf[0].waf_id
          `
 	for k, v := range m {
 
@@ -393,7 +393,7 @@ func testAccFastlyServiceWAFVersionV1(name, extraHCL string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
-resource "fastly_service_v1" "foo" {
+resource "fastly_service_vcl" "foo" {
   name = "%s"
 
   domain {

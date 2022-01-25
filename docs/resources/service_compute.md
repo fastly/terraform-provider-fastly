@@ -81,42 +81,42 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 ### Optional
 
 - **activate** (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
-- **bigquerylogging** (Block Set) (see [below for nested schema](#nestedblock--bigquerylogging))
-- **blobstoragelogging** (Block Set) (see [below for nested schema](#nestedblock--blobstoragelogging))
 - **comment** (String) Description field for the service. Default `Managed by Terraform`
 - **default_host** (String) The default hostname
 - **default_ttl** (Number) The default Time-to-live (TTL) for requests
 - **dictionary** (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - **director** (Block Set) (see [below for nested schema](#nestedblock--director))
 - **force_destroy** (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
-- **gcslogging** (Block Set) (see [below for nested schema](#nestedblock--gcslogging))
 - **healthcheck** (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
-- **httpslogging** (Block Set) (see [below for nested schema](#nestedblock--httpslogging))
 - **id** (String) The ID of this resource.
-- **logentries** (Block Set) (see [below for nested schema](#nestedblock--logentries))
+- **logging_bigquery** (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
+- **logging_blobstorage** (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
 - **logging_cloudfiles** (Block Set) (see [below for nested schema](#nestedblock--logging_cloudfiles))
 - **logging_datadog** (Block Set) (see [below for nested schema](#nestedblock--logging_datadog))
 - **logging_digitalocean** (Block Set) (see [below for nested schema](#nestedblock--logging_digitalocean))
 - **logging_elasticsearch** (Block Set) (see [below for nested schema](#nestedblock--logging_elasticsearch))
 - **logging_ftp** (Block Set) (see [below for nested schema](#nestedblock--logging_ftp))
+- **logging_gcs** (Block Set) (see [below for nested schema](#nestedblock--logging_gcs))
 - **logging_googlepubsub** (Block Set) (see [below for nested schema](#nestedblock--logging_googlepubsub))
 - **logging_heroku** (Block Set) (see [below for nested schema](#nestedblock--logging_heroku))
 - **logging_honeycomb** (Block Set) (see [below for nested schema](#nestedblock--logging_honeycomb))
+- **logging_https** (Block Set) (see [below for nested schema](#nestedblock--logging_https))
 - **logging_kafka** (Block Set) (see [below for nested schema](#nestedblock--logging_kafka))
 - **logging_kinesis** (Block Set) (see [below for nested schema](#nestedblock--logging_kinesis))
+- **logging_logentries** (Block Set) (see [below for nested schema](#nestedblock--logging_logentries))
 - **logging_loggly** (Block Set) (see [below for nested schema](#nestedblock--logging_loggly))
 - **logging_logshuttle** (Block Set) (see [below for nested schema](#nestedblock--logging_logshuttle))
 - **logging_newrelic** (Block Set) (see [below for nested schema](#nestedblock--logging_newrelic))
 - **logging_openstack** (Block Set) (see [below for nested schema](#nestedblock--logging_openstack))
+- **logging_papertrail** (Block Set) (see [below for nested schema](#nestedblock--logging_papertrail))
+- **logging_s3** (Block Set) (see [below for nested schema](#nestedblock--logging_s3))
 - **logging_scalyr** (Block Set) (see [below for nested schema](#nestedblock--logging_scalyr))
 - **logging_sftp** (Block Set) (see [below for nested schema](#nestedblock--logging_sftp))
-- **papertrail** (Block Set) (see [below for nested schema](#nestedblock--papertrail))
-- **s3logging** (Block Set) (see [below for nested schema](#nestedblock--s3logging))
-- **splunk** (Block Set) (see [below for nested schema](#nestedblock--splunk))
+- **logging_splunk** (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
+- **logging_sumologic** (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
+- **logging_syslog** (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
 - **stale_if_error** (Boolean) Enables serving a stale object if there is an error
 - **stale_if_error_ttl** (Number) The default time-to-live (TTL) for serving the stale object for the version
-- **sumologic** (Block Set) (see [below for nested schema](#nestedblock--sumologic))
-- **syslog** (Block Set) (see [below for nested schema](#nestedblock--syslog))
 - **version_comment** (String) Description field for the version
 
 ### Read-Only
@@ -182,45 +182,6 @@ Optional:
 - **source_code_hash** (String) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package
 
 
-<a id="nestedblock--bigquerylogging"></a>
-### Nested Schema for `bigquerylogging`
-
-Required:
-
-- **dataset** (String) The ID of your BigQuery dataset
-- **name** (String) A unique name to identify this BigQuery logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **project_id** (String) The ID of your GCP project
-- **table** (String) The ID of your BigQuery table
-
-Optional:
-
-- **email** (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
-- **secret_key** (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
-- **template** (String) BigQuery table name suffix template
-
-
-<a id="nestedblock--blobstoragelogging"></a>
-### Nested Schema for `blobstoragelogging`
-
-Required:
-
-- **account_name** (String) The unique Azure Blob Storage namespace in which your data objects are stored
-- **container** (String) The name of the Azure Blob Storage container in which to store logs
-- **name** (String) A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource
-
-Optional:
-
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **file_max_bytes** (Number) Maximum size of an uploaded log file, if non-zero.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
-- **period** (Number) How frequently the logs should be transferred in seconds. Default `3600`
-- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **sas_token** (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
-
-
 <a id="nestedblock--dictionary"></a>
 ### Nested Schema for `dictionary`
 
@@ -231,7 +192,7 @@ Required:
 Optional:
 
 - **force_destroy** (Boolean) Allow the dictionary to be deleted, even if it contains entries. Defaults to false.
-- **write_only** (Boolean) If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_v1` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items_v1`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items_v1#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform
+- **write_only** (Boolean) If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_vcl` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform
 
 Read-Only:
 
@@ -256,26 +217,6 @@ Optional:
 - **type** (Number) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`
 
 
-<a id="nestedblock--gcslogging"></a>
-### Nested Schema for `gcslogging`
-
-Required:
-
-- **bucket_name** (String) The name of the bucket in which to store the logs
-- **name** (String) A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource
-
-Optional:
-
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
-- **period** (Number) How frequently the logs should be transferred, in seconds (Default 3600)
-- **secret_key** (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
-- **user** (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.
-
-
 <a id="nestedblock--healthcheck"></a>
 ### Nested Schema for `healthcheck`
 
@@ -297,42 +238,43 @@ Optional:
 - **window** (Number) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`
 
 
-<a id="nestedblock--httpslogging"></a>
-### Nested Schema for `httpslogging`
+<a id="nestedblock--logging_bigquery"></a>
+### Nested Schema for `logging_bigquery`
 
 Required:
 
-- **name** (String) The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **url** (String) URL that log data will be sent to. Must use the https protocol
+- **dataset** (String) The ID of your BigQuery dataset
+- **name** (String) A unique name to identify this BigQuery logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- **project_id** (String) The ID of your GCP project
+- **table** (String) The ID of your BigQuery table
 
 Optional:
 
-- **content_type** (String) Value of the `Content-Type` header sent with the request
-- **header_name** (String) Custom header sent with the request
-- **header_value** (String) Value of the custom header sent with the request
-- **json_format** (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
+- **email** (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
+- **secret_key** (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
+- **template** (String) BigQuery table name suffix template
+
+
+<a id="nestedblock--logging_blobstorage"></a>
+### Nested Schema for `logging_blobstorage`
+
+Required:
+
+- **account_name** (String) The unique Azure Blob Storage namespace in which your data objects are stored
+- **container** (String) The name of the Azure Blob Storage container in which to store logs
+- **name** (String) A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource
+
+Optional:
+
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- **file_max_bytes** (Number) Maximum size of an uploaded log file, if non-zero.
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
 - **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **method** (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
-- **request_max_bytes** (Number) The maximum number of bytes sent in one request
-- **request_max_entries** (Number) The maximum number of logs sent in one request
-- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
-- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
-- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
-- **tls_hostname** (String) Used during the TLS handshake to validate the certificate
-
-
-<a id="nestedblock--logentries"></a>
-### Nested Schema for `logentries`
-
-Required:
-
-- **name** (String) The unique name of the Logentries logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String) Use token based authentication (https://logentries.com/doc/input-token/)
-
-Optional:
-
-- **port** (Number) The port number configured in Logentries
-- **use_tls** (Boolean) Whether to use TLS for secure logging
+- **path** (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
+- **period** (Number) How frequently the logs should be transferred in seconds. Default `3600`
+- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- **sas_token** (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_cloudfiles"></a>
@@ -436,6 +378,26 @@ Optional:
 - **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
+<a id="nestedblock--logging_gcs"></a>
+### Nested Schema for `logging_gcs`
+
+Required:
+
+- **bucket_name** (String) The name of the bucket in which to store the logs
+- **name** (String) A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource
+
+Optional:
+
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
+- **period** (Number) How frequently the logs should be transferred, in seconds (Default 3600)
+- **secret_key** (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- **user** (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.
+
+
 <a id="nestedblock--logging_googlepubsub"></a>
 ### Nested Schema for `logging_googlepubsub`
 
@@ -469,6 +431,30 @@ Required:
 - **dataset** (String) The Honeycomb Dataset you want to log to
 - **name** (String) The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - **token** (String, Sensitive) The Write Key from the Account page of your Honeycomb account
+
+
+<a id="nestedblock--logging_https"></a>
+### Nested Schema for `logging_https`
+
+Required:
+
+- **name** (String) The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- **url** (String) URL that log data will be sent to. Must use the https protocol
+
+Optional:
+
+- **content_type** (String) Value of the `Content-Type` header sent with the request
+- **header_name** (String) Custom header sent with the request
+- **header_value** (String) Value of the custom header sent with the request
+- **json_format** (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- **method** (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
+- **request_max_bytes** (Number) The maximum number of bytes sent in one request
+- **request_max_entries** (Number) The maximum number of logs sent in one request
+- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
+- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
+- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
+- **tls_hostname** (String) Used during the TLS handshake to validate the certificate
 
 
 <a id="nestedblock--logging_kafka"></a>
@@ -510,6 +496,20 @@ Optional:
 - **iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.
 - **region** (String) The AWS region the stream resides in. (Default: `us-east-1`)
 - **secret_key** (String, Sensitive) The AWS secret access key to authenticate with
+
+
+<a id="nestedblock--logging_logentries"></a>
+### Nested Schema for `logging_logentries`
+
+Required:
+
+- **name** (String) The unique name of the Logentries logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- **token** (String) Use token based authentication (https://logentries.com/doc/input-token/)
+
+Optional:
+
+- **port** (Number) The port number configured in Logentries
+- **use_tls** (Boolean) Whether to use TLS for secure logging
 
 
 <a id="nestedblock--logging_loggly"></a>
@@ -566,6 +566,43 @@ Optional:
 - **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
+<a id="nestedblock--logging_papertrail"></a>
+### Nested Schema for `logging_papertrail`
+
+Required:
+
+- **address** (String) The address of the Papertrail endpoint
+- **name** (String) A unique name to identify this Papertrail endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- **port** (Number) The port associated with the address where the Papertrail endpoint can be accessed
+
+
+<a id="nestedblock--logging_s3"></a>
+### Nested Schema for `logging_s3`
+
+Required:
+
+- **bucket_name** (String) The name of the bucket in which to store the logs
+- **name** (String) The unique name of the S3 logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+
+Optional:
+
+- **acl** (String) The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
+- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- **domain** (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
+- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
+- **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
+- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- **redundancy** (String) The S3 storage class (redundancy level). Should be one of: `standard`, `reduced_redundancy`, `standard_ia`, or `onezone_ia`
+- **s3_access_key** (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
+- **s3_iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`
+- **s3_secret_key** (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
+- **server_side_encryption** (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
+- **server_side_encryption_kms_key_id** (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
+- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+
+
 <a id="nestedblock--logging_scalyr"></a>
 ### Nested Schema for `logging_scalyr`
 
@@ -603,45 +640,8 @@ Optional:
 - **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
-<a id="nestedblock--papertrail"></a>
-### Nested Schema for `papertrail`
-
-Required:
-
-- **address** (String) The address of the Papertrail endpoint
-- **name** (String) A unique name to identify this Papertrail endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **port** (Number) The port associated with the address where the Papertrail endpoint can be accessed
-
-
-<a id="nestedblock--s3logging"></a>
-### Nested Schema for `s3logging`
-
-Required:
-
-- **bucket_name** (String) The name of the bucket in which to store the logs
-- **name** (String) The unique name of the S3 logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-
-Optional:
-
-- **acl** (String) The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **domain** (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
-- **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
-- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **redundancy** (String) The S3 storage class (redundancy level). Should be one of: `standard`, `reduced_redundancy`, `standard_ia`, or `onezone_ia`
-- **s3_access_key** (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
-- **s3_iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`
-- **s3_secret_key** (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
-- **server_side_encryption** (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
-- **server_side_encryption_kms_key_id** (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
-
-
-<a id="nestedblock--splunk"></a>
-### Nested Schema for `splunk`
+<a id="nestedblock--logging_splunk"></a>
+### Nested Schema for `logging_splunk`
 
 Required:
 
@@ -658,8 +658,8 @@ Optional:
 - **use_tls** (Boolean) Whether to use TLS for secure logging. Default: `false`
 
 
-<a id="nestedblock--sumologic"></a>
-### Nested Schema for `sumologic`
+<a id="nestedblock--logging_sumologic"></a>
+### Nested Schema for `logging_sumologic`
 
 Required:
 
@@ -671,8 +671,8 @@ Optional:
 - **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 
 
-<a id="nestedblock--syslog"></a>
-### Nested Schema for `syslog`
+<a id="nestedblock--logging_syslog"></a>
+### Nested Schema for `logging_syslog`
 
 Required:
 

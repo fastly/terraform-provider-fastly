@@ -60,7 +60,7 @@ func testAccDataSourceFastlyTLSActivationConfig(key, cert, domain string) string
 
 	return fmt.Sprintf(
 		`
-resource "fastly_service_v1" "test" {
+resource "fastly_service_vcl" "test" {
   name = "%s"
 
   domain {
@@ -89,7 +89,7 @@ resource "fastly_tls_certificate" "test" {
 resource "fastly_tls_activation" "test" {
   certificate_id = fastly_tls_certificate.test.id
   domain = "%s"
-  depends_on = [fastly_service_v1.test]
+  depends_on = [fastly_service_vcl.test]
 }
 
 data "fastly_tls_activation" "test" {
@@ -111,7 +111,7 @@ func testAccFastlyDataSourceTLSActivationConfigByID(key, cert, domain string) st
 
 	return fmt.Sprintf(
 		`
-resource "fastly_service_v1" "test" {
+resource "fastly_service_vcl" "test" {
   name = "%s"
 
   domain {
@@ -140,7 +140,7 @@ resource "fastly_tls_certificate" "test" {
 resource "fastly_tls_activation" "test" {
   certificate_id = fastly_tls_certificate.test.id
   domain = "%s"
-  depends_on = [fastly_service_v1.test]
+  depends_on = [fastly_service_vcl.test]
 }
 
 data "fastly_tls_activation" "subject" {

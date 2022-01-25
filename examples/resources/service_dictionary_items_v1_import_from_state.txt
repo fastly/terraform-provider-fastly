@@ -1,1 +1,0 @@
-$ terraform state rm fastly_service_dictionary_items_v1.items

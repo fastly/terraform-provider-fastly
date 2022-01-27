@@ -22,11 +22,10 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 		{
 			remote_director: []*gofastly.Director{
 				{
-					Name:     "somedirector",
-					Type:     3,
-					Quorum:   75,
-					Capacity: 25,
-					Retries:  10,
+					Name:    "somedirector",
+					Type:    3,
+					Quorum:  75,
+					Retries: 10,
 				},
 			},
 			remote_directorbackend: []*gofastly.DirectorBackend{
@@ -40,7 +39,6 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 					"name":     "somedirector",
 					"type":     3,
 					"quorum":   75,
-					"capacity": 25,
 					"retries":  10,
 					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend"}),
 				},
@@ -127,7 +125,6 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_developer",
 		Type:           3,
 		Quorum:         75,
-		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -137,7 +134,6 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_developer",
 		Type:           4,
 		Quorum:         30,
-		Capacity:       25,
 		Retries:        10,
 	}
 
@@ -147,7 +143,6 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_apps",
 		Type:           3,
 		Quorum:         75,
-		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -157,7 +152,6 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_www_demo",
 		Type:           3,
 		Quorum:         75,
-		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -207,7 +201,6 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "mydirector",
 		Type:           3,
 		Quorum:         75,
-		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -216,7 +209,6 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "mydirector",
 		Type:           4,
 		Quorum:         30,
-		Capacity:       25,
 		Retries:        10,
 	}
 
@@ -225,7 +217,6 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "unchangeddirector",
 		Type:           3,
 		Quorum:         75,
-		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -234,7 +225,6 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "myotherdirector",
 		Type:           3,
 		Quorum:         75,
-		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -388,7 +378,6 @@ resource "fastly_service_vcl" "foo" {
     type = 4
     quorum = 30
     retries = 10
-    capacity = 25
     backends = [ "developer_updated" ]
   }
 
@@ -486,7 +475,6 @@ resource "fastly_service_compute" "foo" {
     type = 4
     quorum = 30
     retries = 10
-    capacity = 25
     backends = [ "origin new" ]
   }
 

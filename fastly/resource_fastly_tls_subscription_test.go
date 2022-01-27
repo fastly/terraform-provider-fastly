@@ -26,6 +26,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	domain2_bad := fmt.Sprintf("%sALT.test", name)
 	commonName1 := domain1
 	commonName2 := domain2
+	var subscriptionId string
 
 	resourceName := "fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
@@ -43,12 +44,16 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "managed_dns_challenge.%", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "managed_http_challenges.#"),
 					resource.TestCheckResourceAttr(resourceName, "common_name", domain1),
-					testAccResourceFastlyTLSSubscriptionExists(resourceName),
+					testAccResourceFastlyTLSSubscriptionExists(resourceName, &subscriptionId),
 				),
 			},
 			{
 				Config: testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2, commonName2),
-				Check:  resource.TestCheckResourceAttr(resourceName, "common_name", domain2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "common_name", domain2),
+					// subscription is "updated" so the subscription ID should remain the same
+					resource.TestCheckResourceAttrPtr(resourceName, "id", &subscriptionId),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -58,7 +63,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 			},
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfig_invalidCommonName(),
-				ExpectError: regexp.MustCompile("Domain specified as common_name.*"),
+				ExpectError: regexp.MustCompile("Please add \\S+ to an active service to begin TLS enablement"),
 			},
 			{
 				Config:      testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2_bad, commonName2),
@@ -96,13 +101,14 @@ resource "fastly_tls_subscription" "subject" {
 `, name, domain1, domain2, commonName)
 }
 
-func testAccResourceFastlyTLSSubscriptionExists(resourceName string) resource.TestCheckFunc {
+func testAccResourceFastlyTLSSubscriptionExists(resourceName string, id *string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		r, ok := state.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
+		*id = r.Primary.ID
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 
 		_, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{

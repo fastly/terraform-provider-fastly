@@ -24,11 +24,11 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		// Subscription can only be updated when in "issued" state, otherwise needs to delete/recreate
+		// Subscription can only be updated when in "issued" or "pending" state, otherwise needs to delete/recreate
 		CustomizeDiff: customdiff.All(
-			customdiff.ForceNewIf("configuration_id", resourceFastlyTLSSubscriptionStateNotIssued),
-			customdiff.ForceNewIf("domains", resourceFastlyTLSSubscriptionStateNotIssued),
-			customdiff.ForceNewIf("common_name", resourceFastlyTLSSubscriptionStateNotIssued),
+			customdiff.ForceNewIf("configuration_id", resourceFastlyTLSSubscriptionIsStateImmutable),
+			customdiff.ForceNewIf("domains", resourceFastlyTLSSubscriptionIsStateImmutable),
+			customdiff.ForceNewIf("common_name", resourceFastlyTLSSubscriptionIsStateImmutable),
 			customdiff.ValidateValue("domains", resourceFastlyTLSSubscriptionValidateDomains),
 			customdiff.ValidateValue("common_name", resourceFastlyTLSSubscriptionValidateCommonName),
 			resourceFastlyTLSSubscriptionSetNewComputed,
@@ -360,8 +360,9 @@ func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceDa
 	return diag.FromErr(err)
 }
 
-func resourceFastlyTLSSubscriptionStateNotIssued(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
-	return d.Get("state").(string) != "issued"
+func resourceFastlyTLSSubscriptionIsStateImmutable(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+	state := d.Get("state").(string)
+	return state != "issued" && state != "pending"
 }
 
 func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {

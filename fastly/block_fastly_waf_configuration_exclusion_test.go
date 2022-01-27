@@ -132,7 +132,7 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 
 	for _, c := range cases {
 
-		wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+		wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 		exclusionsTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(c.exclusions)
 
 		wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", exclusionsTF1)
@@ -238,7 +238,7 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 		},
 	}
 
-	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20)
+	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	rulesTF := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules)
 	exclusionsTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions1)
 	exclusionsTF2 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions2)

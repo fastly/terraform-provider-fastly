@@ -581,6 +581,7 @@ $ terraform state rm fastly_service_waf_configuration.waf
 
 ### Optional
 
+- **activate** (Boolean) Conditionally prevents a new firewall version from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
 - **allowed_http_versions** (String) Allowed HTTP versions
 - **allowed_methods** (String) A space-separated list of HTTP method names
 - **allowed_request_content_type** (String) Allowed request content types
@@ -612,6 +613,12 @@ $ terraform state rm fastly_service_waf_configuration.waf
 - **total_arg_length** (Number) The maximum size of argument names and values
 - **warning_anomaly_score** (Number) Score value to add for warning anomalies
 - **xss_score_threshold** (Number) XSS attack threshold
+
+### Read-Only
+
+- **active** (Boolean) Whether a specific firewall version is currently deployed
+- **cloned_version** (Number) The latest cloned firewall version by the provider
+- **number** (Number) The WAF firewall version
 
 <a id="nestedblock--rule"></a>
 ### Nested Schema for `rule`

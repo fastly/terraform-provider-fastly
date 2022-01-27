@@ -24,8 +24,8 @@ The Fastly provider prior to version v0.13.0 requires using
 terraform {
   required_providers {
     fastly = {
-      source = "fastly/fastly"
-      version >= "0.40.0"
+      source  = "fastly/fastly"
+      version = ">= 0.40.0"
     }
   }
 }

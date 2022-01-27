@@ -152,7 +152,7 @@ func TestAccFastlyServiceWAFVersionUpdate(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceV1Exists(serviceRef, &service),
+					testAccCheckServiceVCLExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput3, 2),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "number", "2"),

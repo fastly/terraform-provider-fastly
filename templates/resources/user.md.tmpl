@@ -1,0 +1,27 @@
+---
+layout: "fastly"
+page_title: "Fastly: user"
+sidebar_current: "docs-fastly-resource-user"
+description: |-
+  Provides a Fastly User
+---
+
+# fastly_user
+
+Provides a Fastly User, representing the configuration for a user account for interacting with Fastly.
+
+The User resource requires a login and name, and optionally a role.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/user_basic_usage.tf" }}
+
+## Import
+
+A Fastly User can be imported using their user ID, e.g.
+
+{{ codefile "sh" "examples/resources/user_import.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

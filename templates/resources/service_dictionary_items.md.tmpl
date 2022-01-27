@@ -1,0 +1,80 @@
+---
+layout: "fastly"
+page_title: "Fastly: service_dictionary_items"
+sidebar_current: "docs-fastly-resource-service-dictionary-items"
+description: |-
+  Provides a grouping of Fastly dictionary items that can be applied to a service. 
+---
+
+# fastly_service_dictionary_items
+
+Defines a map of Fastly dictionary items that can be used to populate a service dictionary.  This resource will populate a dictionary with the items and will track their state.
+
+
+~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.  
+
+If Terraform is being used to populate the initial content of a dictionary which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
+
+## Limitations
+
+- `write_only` dictionaries are not supported
+
+## Example Usage (Terraform >= 0.12.6)
+
+Basic usage:
+
+{{ tffile "examples/resources/service_dictionary_items_basic_usage.tf" }}
+
+Complex object usage:
+
+{{ tffile "examples/resources/service_dictionary_items_complex_usage.tf" }}
+
+Expression and functions usage:
+
+{{ tffile "examples/resources/service_dictionary_items_functions_usage.tf" }}
+
+## Example Usage (Terraform >= 0.12.0 && < 0.12.6)
+
+`for_each` attributes were not available in Terraform before 0.12.6, however, users can still use `for` expressions to achieve
+similar behaviour as seen in the example below.
+
+~> **Warning:** Terraform might not properly calculate implicit dependencies on computed attributes when using `for` expressions
+
+For scenarios such as adding a Dictionary to a service and at the same time, creating the Dictionary entries (`fastly_service_dictionary_items`)
+resource, Terraform will not calculate implicit dependencies correctly on `for` expressions. This will result in index lookup
+problems and the execution will fail.
+
+For those scenarios, it's recommended to split the changes into two distinct steps:
+
+1. Add the `dictionary` block to the `fastly_service_vcl` and apply the changes
+2. Add the `fastly_service_dictionary_items` resource with the `for` expressions to the HCL and apply the changes
+
+Usage:
+
+{{ tffile "examples/resources/service_dictionary_items_usage_with_service.tf" }}
+
+### Supporting API and UI dictionary updates with ignore_changes
+
+The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
+items in a dictionary.  If, after your first deploy, the Fastly API or UI is to be used to manage items in a dictionary, then this will stop Terraform realigning the remote state with the initial set of dictionary items defined in your HCL.
+
+{{ tffile "examples/resources/service_dictionary_items_ignore_changes.tf" }}
+
+## Attributes Reference
+
+* [fastly-dictionary](https://developer.fastly.com/reference/api/dictionaries/dictionary/)
+* [fastly-dictionary_item](https://developer.fastly.com/reference/api/dictionaries/dictionary-item/)
+
+## Import
+
+This is an example of the import command being applied to the resource named `fastly_service_dictionary_items.items`
+The resource ID is a combined value of the `service_id` and `dictionary_id` separated by a forward slash.
+
+{{ codefile "sh" "examples/resources/service_dictionary_items_import_with_id.txt" }}
+
+If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
+The following is an example of the Terraform state command to remove the resource named `fastly_service_dictionary_items.items` from the Terraform state file.
+
+{{ codefile "sh" "examples/resources/service_dictionary_items_import_from_state.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

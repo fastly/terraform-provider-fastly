@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -132,7 +133,7 @@ func (h *SetDiff) Filter(modified map[string]interface{}, oldSet *schema.Set) ma
 
 		if m["name"].(string) == modified["name"].(string) {
 			for k, v := range m {
-				if v != modified[k] {
+				if !reflect.DeepEqual(v, modified[k]) {
 					filtered[k] = modified[k]
 				}
 			}

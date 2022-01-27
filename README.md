@@ -105,16 +105,16 @@ $ make testacc
 ```
 
 In order to run an individual acceptance test, the '-run' flag can be used together with a regular expression.
-The following example uses a regular expression matching single test called 'TestAccFastlyServiceV1_basic'.
+The following example uses a regular expression matching single test called 'TestAccFastlyServiceVCL_basic'.
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccFastlyServiceV1_basic'
+$ make testacc TESTARGS='-run=TestAccFastlyServiceVCL_basic'
 ```
 
 The following example uses a regular expression to execute a grouping of basic acceptance tests.
 
 ```sh
-$ make testacc TESTARGS='-run=TestAccFastlyServiceV1_.*_basic'
+$ make testacc TESTARGS='-run=TestAccFastlyServiceVCL.*_basic'
 ```
 
 In order to run the tests with extra debugging context, prefix the `make` command with `TF_LOG` (see the [terraform documentation](https://www.terraform.io/docs/internals/debugging.html) for details).

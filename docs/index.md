@@ -36,7 +36,7 @@ provider "fastly" {
 }
 
 # Create a Service
-resource "fastly_service_v1" "myservice" {
+resource "fastly_service_vcl" "myservice" {
   name = "myawesometestservice"
 
   # ...
@@ -65,7 +65,7 @@ provider "fastly" {
   api_key = "test"
 }
 
-resource "fastly_service_v1" "myservice" {
+resource "fastly_service_vcl" "myservice" {
   # ...
 }
 ```
@@ -79,7 +79,7 @@ representing your Fastly API key. When using this method, you may omit the
 Fastly `provider` block entirely:
 
 ```terraform
-resource "fastly_service_v1" "myservice" {
+resource "fastly_service_vcl" "myservice" {
 # ...
 }
 ```

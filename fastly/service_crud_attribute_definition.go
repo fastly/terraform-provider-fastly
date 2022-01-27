@@ -22,7 +22,7 @@ import (
 // resource is not supported
 //
 // Some service attributes don't fit into these constraints are better suited to implementing the
-// ServiceAttributeDefinition directly. One example is the "package" block in block_fastly_service_v1_package.go, which
+// ServiceAttributeDefinition directly. One example is the "package" block in block_fastly_service_package.go, which
 // only uses an Update operation, and therefore implements ServiceAttributeDefinition directly without
 // ServiceCRUDAttributeDefinition.
 type ServiceCRUDAttributeDefinition interface {

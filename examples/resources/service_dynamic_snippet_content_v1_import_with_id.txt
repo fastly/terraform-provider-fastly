@@ -1,1 +1,0 @@
-$ terraform import fastly_service_dynamic_snippet_content_v1.content xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx

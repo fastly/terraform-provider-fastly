@@ -21,7 +21,7 @@ Defines a set of Web Application Firewall configuration options that can be used
 Basic usage:
 
 ```terraform
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -68,7 +68,7 @@ resource "fastly_service_v1" "demo" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                         = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold = 100
 }
 ```
@@ -76,7 +76,7 @@ resource "fastly_service_waf_configuration" "waf" {
 Usage with rules:
 
 ```terraform
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -123,7 +123,7 @@ resource "fastly_service_v1" "demo" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                          = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold  = 100
 
   rule {
@@ -139,7 +139,7 @@ Usage with rule exclusions:
 ~> **Warning:** Rule exclusions are part of a **beta release**, which may be subject to breaking changes and improvements over time. For more information, see our [product and feature lifecycle](https://docs.fastly.com/products/fastly-product-lifecycle#beta) descriptions.
 
 ```terraform
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -186,7 +186,7 @@ resource "fastly_service_v1" "demo" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                         = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold = 100
 
   rule {
@@ -216,7 +216,7 @@ variable "type_status" {
   }
 }
 
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -266,7 +266,7 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                          = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold  = 100
 
   dynamic "rule" {
@@ -300,7 +300,7 @@ variable "individual_rules" {
   }
 }
 
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -351,7 +351,7 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                         = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold = 202
 
   dynamic "rule" {
@@ -388,7 +388,7 @@ variable "specific_rule_revisions" {
   }
 }
 
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -439,7 +439,7 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                         = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold = 202
 
   dynamic "rule" {
@@ -473,7 +473,7 @@ variable "individual_rules" {
   }
 }
 
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -524,7 +524,7 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                         = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                         = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold = 202
 
   dynamic "rule" {
@@ -546,14 +546,14 @@ output "rules" {
 
 ~> **Warning:** A two-phase change is required when adding a WAF to an existing service
 
-When adding a `waf` to an existing `fastly_service_v1` and at the same time adding a `fastly_service_waf_configuration`
-resource with `waf_id = fastly_service_v1.demo.waf[0].waf_id` might result with the in the following error:
+When adding a `waf` to an existing `fastly_service_vcl` and at the same time adding a `fastly_service_waf_configuration`
+resource with `waf_id = fastly_service_vcl.demo.waf[0].waf_id` might result with the in the following error:
 
-> fastly_service_v1.demo.waf is empty list of object
+> fastly_service_vcl.demo.waf is empty list of object
 
 For this scenario, it's recommended to split the changes into two distinct steps:
 
-1. Add the `waf` block to the `fastly_service_v1` and apply the changes
+1. Add the `waf` block to the `fastly_service_vcl` and apply the changes
 2. Add the `fastly_service_waf_configuration` to the HCL and apply the changes
 
 ## Import

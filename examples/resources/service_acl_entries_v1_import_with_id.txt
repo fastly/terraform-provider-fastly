@@ -1,1 +1,0 @@
-$ terraform import fastly_service_acl_entries_v1.entries xxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxx

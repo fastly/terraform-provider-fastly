@@ -224,6 +224,31 @@ resource "fastly_service_dictionary_items" "items" {
 }
 ```
 
+### Reapplying original items with `managed_items` if the state of the items drifts
+
+By default the user is opted out from reapplying the original changes if the items are managed externally.
+The following example demonstrates how the `manage_items` field can be used to reapply the changes defined in the HCL if the state of the items drifts.
+When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
+
+~> **Warning:** You will lose externally managed items if `manage_items=true`.
+
+```terraform
+#...
+
+resource "fastly_service_dictionary_items" "items" {
+  for_each      = {
+  for d in fastly_service_vcl.myservice.dictionary : d.name => d if d.name == var.mydict_name
+  }
+  service_id    = fastly_service_vcl.myservice.id
+  dictionary_id = each.value.dictionary_id
+  manage_items  = true
+  items = {
+    key1 : "value1"
+    key2 : "value2"
+  }
+}
+```
+
 ## Attributes Reference
 
 * [fastly-dictionary](https://developer.fastly.com/reference/api/dictionaries/dictionary/)

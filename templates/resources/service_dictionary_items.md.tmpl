@@ -60,6 +60,16 @@ items in a dictionary.  If, after your first deploy, the Fastly API or UI is to 
 
 {{ tffile "examples/resources/service_dictionary_items_ignore_changes.tf" }}
 
+### Reapplying original items with `managed_items` if the state of the items drifts
+
+By default the user is opted out from reapplying the original changes if the items are managed externally.
+The following example demonstrates how the `manage_items` field can be used to reapply the changes defined in the HCL if the state of the items drifts.
+When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
+
+~> **Warning:** You will lose externally managed items if `manage_items=true`.
+
+{{ tffile "examples/resources/service_dictionary_items_manage_items.tf" }}
+
 ## Attributes Reference
 
 * [fastly-dictionary](https://developer.fastly.com/reference/api/dictionaries/dictionary/)

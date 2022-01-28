@@ -199,6 +199,33 @@ resource "fastly_service_acl_entries" "entries" {
 }
 ```
 
+### Reapplying original entries with `managed_entries` if the state of the entries drifts
+
+By default the user is opted out from reapplying the original changes if the entries are managed externally.
+The following example demonstrates how the `manage_entries` field can be used to reapply the changes defined in the HCL if the state of the entries drifts.
+When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
+
+~> **Warning:** You will lose externally managed entries if `manage_entries=true`.
+
+```terraform
+#...
+
+resource "fastly_service_acl_entries" "entries" {
+  for_each = {
+    for d in fastly_service_vcl.myservice.acl : d.name => d if d.name == var.myacl_name
+  }
+  service_id     = fastly_service_vcl.myservice.id
+  acl_id         = each.value.acl_id
+  manage_entries = true
+  entry {
+    ip      = "127.0.0.1"
+    subnet  = "24"
+    negated = false
+    comment = "ACL Entry 1"
+  }
+}
+```
+
 ## Attributes Reference
 
 * [fastly-acl](https://developer.fastly.com/reference/api/acls/acl/)

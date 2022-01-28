@@ -180,6 +180,32 @@ resource "fastly_service_dynamic_snippet_content" "my_dyn_content" {
 }
 ```
 
+### Reapplying original snippets with `managed_snippets` if the state of the snippets drifts
+
+By default the user is opted out from reapplying the original changes if the snippets are managed externally.
+The following example demonstrates how the `manage_snippets` field can be used to reapply the changes defined in the HCL if the state of the snippets drifts.
+When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
+
+~> **Warning:** You will lose externally managed snippets if `manage_snippets=true`.
+
+```terraform
+#...
+
+resource "fastly_service_dynamic_snippet_content" "my_dyn_content" {
+  for_each = {
+    for d in fastly_service_vcl.myservice.dynamicsnippet : d.name => d if d.name == "My Dynamic Snippet"
+  }
+  service_id       = fastly_service_vcl.myservice.id
+  snippet_id       = each.value.snippet_id
+  manage_snippets = true
+  content          = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+
+  lifecycle {
+    ignore_changes = [content, ]
+  }
+}
+```
+
 ## Attributes Reference
 
 * [fastly-vcl](https://developer.fastly.com/reference/api/vcl-services/vcl/)
@@ -213,3 +239,4 @@ $ terraform state rm fastly_service_dynamic_snippet_content.content
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **manage_snippets** (Boolean) Whether to reapply changes if the state of the snippets drifts, i.e. if snippets are managed externally

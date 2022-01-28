@@ -209,7 +209,6 @@ Required:
 
 Optional:
 
-- **capacity** (Number) Load balancing weight for the backends. Default `100`
 - **comment** (String) An optional comment about the Director
 - **quorum** (Number) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`
 - **retries** (Number) How many backends to search if it fails. Default `5`

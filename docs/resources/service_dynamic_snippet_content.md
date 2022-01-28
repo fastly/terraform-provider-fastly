@@ -180,7 +180,7 @@ resource "fastly_service_dynamic_snippet_content" "my_dyn_content" {
 }
 ```
 
-### Reapplying original snippets with `managed_snippets` if the state of the snippets drifts
+### Reapplying original snippets with `manage_snippets` if the state of the snippets drifts
 
 By default the user is opted out from reapplying the original changes if the snippets are managed externally.
 The following example demonstrates how the `manage_snippets` field can be used to reapply the changes defined in the HCL if the state of the snippets drifts.

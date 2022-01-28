@@ -125,6 +125,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_developer",
 		Type:           3,
 		Quorum:         75,
+		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -134,6 +135,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_developer",
 		Type:           4,
 		Quorum:         30,
+		Capacity:       100,
 		Retries:        10,
 	}
 
@@ -143,6 +145,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_apps",
 		Type:           3,
 		Quorum:         75,
+		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -152,6 +155,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Name:           "director_www_demo",
 		Type:           3,
 		Quorum:         75,
+		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -201,6 +205,7 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "mydirector",
 		Type:           3,
 		Quorum:         75,
+		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -209,6 +214,7 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "mydirector",
 		Type:           4,
 		Quorum:         30,
+		Capacity:       100,
 		Retries:        10,
 	}
 
@@ -217,6 +223,7 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "unchangeddirector",
 		Type:           3,
 		Quorum:         75,
+		Capacity:       100,
 		Retries:        5,
 	}
 
@@ -225,6 +232,7 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Name:           "myotherdirector",
 		Type:           3,
 		Quorum:         75,
+		Capacity:       100,
 		Retries:        5,
 	}
 

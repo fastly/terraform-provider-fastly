@@ -389,9 +389,9 @@ resource "fastly_service_vcl" "foo" {
 }
 
 resource "fastly_service_dynamic_snippet_content" "content" {
-    service_id = fastly_service_vcl.foo.id
-    snippet_id = {for s in fastly_service_vcl.foo.dynamicsnippet : s.name => s.snippet_id}[var.mydynamicsnippet.name]
-	manage_snippets = %t
-    content = var.mydynamicsnippet.content
+  service_id      = fastly_service_vcl.foo.id
+  snippet_id      = { for s in fastly_service_vcl.foo.dynamicsnippet : s.name => s.snippet_id }[var.mydynamicsnippet.name]
+  manage_snippets = %t
+  content         = var.mydynamicsnippet.content
 }`, dynamicSnippetName, content, serviceName, domainName, backendName, manageSnippets)
 }

@@ -12,7 +12,8 @@ Defines content that represents blocks of VCL logic that is inserted into your s
  
 ~> **Warning:** Terraform will take precedence over any changes you make through the API. Such changes are likely to be reversed if you run Terraform again.  
 
-If Terraform is being used to populate the initial content of a dynamic snippet which you intend to manage via the API, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.
+~> **Note:** By default the Terraform provider allows you to externally manage the snippets via API or UI.
+If you wish to apply your changes in the HCL, then you should explicitly set the `manage_snipptes` attribute. An example of this configuration is provided below.
 
 
 ## Example Usage (Terraform >= 0.12.6)
@@ -155,28 +156,27 @@ resource "fastly_service_dynamic_snippet_content" "my_dyn_content" {
 }
 ```
 
-### Supporting API dynamic snippet updates with ignore_changes
+### Reapplying original snippets with `manage_snippets` if the state of the snippets drifts
 
-The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
-content in a dynamic snippet.  If, after your first deploy, the Fastly API is to be used to manage items in a dynamic snippet, then this will stop Terraform realigning the remote state with the initial content defined in your HCL.
+By default the user is opted out from reapplying the original changes if the snippets are managed externally.
+The following example demonstrates how the `manage_snippets` field can be used to reapply the changes defined in the HCL if the state of the snippets drifts.
+When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
+
+~> **Warning:** You will lose externally managed snippets if `manage_snippets=true`.
+
+~> **Note:** The `ignore_changes` built-in meta-argument takes precedence over `manage_snippets` regardless of its value.
 
 ```terraform
-resource "fastly_service_vcl" "myservice" {
-  #...
-  dynamicsnippet {
-    name     = "My Dynamic Snippet"
-    type     = "recv"
-    priority = 110
-  }
-  #...
-}
+#...
 
 resource "fastly_service_dynamic_snippet_content" "my_dyn_content" {
-  service_id = fastly_service_vcl.myservice.id
-  snippet_id = {for s in fastly_service_vcl.myservice.dynamicsnippet : s.name => s.snippet_id}["My Dynamic Snippet"]
-
-  content = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
-
+  for_each = {
+    for d in fastly_service_vcl.myservice.dynamicsnippet : d.name => d if d.name == "My Dynamic Snippet"
+  }
+  service_id       = fastly_service_vcl.myservice.id
+  snippet_id       = each.value.snippet_id
+  manage_snippets = true
+  content          = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
 }
 ```
 
@@ -213,3 +213,4 @@ $ terraform state rm fastly_service_dynamic_snippet_content.content
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **manage_snippets** (Boolean) Whether to reapply changes if the state of the snippets drifts, i.e. if snippets are managed externally

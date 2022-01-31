@@ -32,11 +32,19 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 				Required:    true,
 				Description: "The ID of the dynamic snippet that the content belong to",
 			},
-
+			"manage_snippets": {
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				Description: "Whether to reapply changes if the state of the snippets drifts, i.e. if snippets are managed externally",
+			},
 			"content": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The VCL code that specifies exactly what the snippet does",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.HasChange("snippet_id") == false && d.Get("manage_snippets") == false
+				},
 			},
 		},
 	}

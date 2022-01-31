@@ -6,13 +6,9 @@ resource "fastly_service_dictionary_items" "items" {
   }
   service_id    = fastly_service_vcl.myservice.id
   dictionary_id = each.value.dictionary_id
-
+  manage_items  = true
   items = {
     key1 : "value1"
     key2 : "value2"
-  }
-
-  lifecycle {
-    ignore_changes = [items,]
   }
 }

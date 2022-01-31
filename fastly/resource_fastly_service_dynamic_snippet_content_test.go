@@ -26,7 +26,7 @@ func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(serviceName, expectedSnippetName, expectedSnippetContent),
+				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(serviceName, expectedSnippetName, expectedSnippetContent, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDynamicSnippetContentRemoteState(&service, serviceName, expectedSnippetName, expectedSnippetContent),
@@ -40,9 +40,10 @@ func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "fastly_service_dynamic_snippet_content.content",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "fastly_service_dynamic_snippet_content.content",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"manage_snippets"},
 			},
 		},
 	})
@@ -63,7 +64,7 @@ func TestAccFastlyServiceDynamicSnippetContent_update(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, dynamicSnippetName, expectedRemoteItems),
+				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, dynamicSnippetName, expectedRemoteItems, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDynamicSnippetContentRemoteState(&service, name, dynamicSnippetName, expectedRemoteItems),
@@ -72,7 +73,7 @@ func TestAccFastlyServiceDynamicSnippetContent_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, dynamicSnippetName, expectedRemoteItemsAfterUpdate),
+				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, dynamicSnippetName, expectedRemoteItemsAfterUpdate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDynamicSnippetContentRemoteState(&service, name, dynamicSnippetName, expectedRemoteItemsAfterUpdate),
@@ -100,7 +101,7 @@ func TestAccFastlyServiceDynamicSnippetContent_external_snippet_is_removed(t *te
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, managedDynamicSnippetName, managedContent),
+				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, managedDynamicSnippetName, managedContent, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "dynamicsnippet.#", "1"),
@@ -110,7 +111,7 @@ func TestAccFastlyServiceDynamicSnippetContent_external_snippet_is_removed(t *te
 				PreConfig: func() {
 					createDynamicSnippetThroughApi(t, &service, externalDynamicSnippetName, gofastly.SnippetTypeHit, externalContent)
 				},
-				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, managedDynamicSnippetName, managedContent),
+				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, managedDynamicSnippetName, managedContent, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDynamicSnippetContentRemoteState(&service, name, managedDynamicSnippetName, managedContent),
@@ -353,7 +354,7 @@ resource "fastly_service_dynamic_snippet_content" "content" {
 }`, dynamicSnippetName, dynamicSnippetContent, serviceName, domainName, backendName, snippetName, snippetContent)
 }
 
-func testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(serviceName, dynamicSnippetName, content string) string {
+func testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(serviceName, dynamicSnippetName, content string, manageSnippets bool) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -388,8 +389,9 @@ resource "fastly_service_vcl" "foo" {
 }
 
 resource "fastly_service_dynamic_snippet_content" "content" {
-    service_id = fastly_service_vcl.foo.id
-    snippet_id = {for s in fastly_service_vcl.foo.dynamicsnippet : s.name => s.snippet_id}[var.mydynamicsnippet.name]
-    content = var.mydynamicsnippet.content
-}`, dynamicSnippetName, content, serviceName, domainName, backendName)
+  service_id      = fastly_service_vcl.foo.id
+  snippet_id      = { for s in fastly_service_vcl.foo.dynamicsnippet : s.name => s.snippet_id }[var.mydynamicsnippet.name]
+  manage_snippets = %t
+  content         = var.mydynamicsnippet.content
+}`, dynamicSnippetName, content, serviceName, domainName, backendName, manageSnippets)
 }

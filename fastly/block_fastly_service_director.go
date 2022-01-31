@@ -42,13 +42,6 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 					Description: "Names of defined backends to map the director to. Example: `[ \"origin1\", \"origin2\" ]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
-				// optional fields
-				"capacity": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     100,
-					Description: "Load balancing weight for the backends. Default `100`",
-				},
 				"comment": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -93,7 +86,6 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 		Name:           resource["name"].(string),
 		Comment:        resource["comment"].(string),
 		Shield:         resource["shield"].(string),
-		Capacity:       gofastly.Uint(uint(resource["capacity"].(int))),
 		Quorum:         gofastly.Uint(uint(resource["quorum"].(int))),
 		Retries:        gofastly.Uint(uint(resource["retries"].(int))),
 	}
@@ -221,9 +213,6 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 	if v, ok := modified["retries"]; ok {
 		opts.Retries = gofastly.Uint(uint(v.(int)))
 	}
-	if v, ok := modified["capacity"]; ok {
-		opts.Capacity = gofastly.Uint(uint(v.(int)))
-	}
 
 	log.Printf("[DEBUG] Update Director Opts: %#v", opts)
 	_, err := conn.UpdateDirector(&opts)
@@ -283,13 +272,12 @@ func flattenDirectors(directorList []*gofastly.Director, directorBackendList []*
 	for _, d := range directorList {
 		// Convert Director to a map for saving to state.
 		nd := map[string]interface{}{
-			"name":     d.Name,
-			"comment":  d.Comment,
-			"shield":   d.Shield,
-			"type":     d.Type,
-			"quorum":   int(d.Quorum),
-			"capacity": int(d.Capacity),
-			"retries":  int(d.Retries),
+			"name":    d.Name,
+			"comment": d.Comment,
+			"shield":  d.Shield,
+			"type":    d.Type,
+			"quorum":  int(d.Quorum),
+			"retries": int(d.Retries),
 		}
 
 		var b []interface{}

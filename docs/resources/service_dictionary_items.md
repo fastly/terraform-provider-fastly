@@ -13,7 +13,8 @@ Defines a map of Fastly dictionary items that can be used to populate a service 
 
 ~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.  
 
-If Terraform is being used to populate the initial content of a dictionary which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.    
+~> **Note:** By default the Terraform provider allows you to externally manage the items via API or UI.
+If you wish to apply your changes in the HCL, then you should explicitly set the `manage_items` attribute. An example of this configuration is provided below.
 
 ## Limitations
 
@@ -198,32 +199,6 @@ resource "fastly_service_dictionary_items" "items" {
 }
 ```
 
-### Supporting API and UI dictionary updates with ignore_changes
-
-The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the 
-items in a dictionary.  If, after your first deploy, the Fastly API or UI is to be used to manage items in a dictionary, then this will stop Terraform realigning the remote state with the initial set of dictionary items defined in your HCL.
-
-```terraform
-#...
-
-resource "fastly_service_dictionary_items" "items" {
-  for_each      = {
-  for d in fastly_service_vcl.myservice.dictionary : d.name => d if d.name == var.mydict_name
-  }
-  service_id    = fastly_service_vcl.myservice.id
-  dictionary_id = each.value.dictionary_id
-
-  items = {
-    key1 : "value1"
-    key2 : "value2"
-  }
-
-  lifecycle {
-    ignore_changes = [items,]
-  }
-}
-```
-
 ### Reapplying original items with `managed_items` if the state of the items drifts
 
 By default the user is opted out from reapplying the original changes if the items are managed externally.
@@ -231,6 +206,8 @@ The following example demonstrates how the `manage_items` field can be used to r
 When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
 
 ~> **Warning:** You will lose externally managed items if `manage_items=true`.
+
+~> **Note:** The `ignore_changes` built-in meta-argument takes precedence over `manage_items` regardless of its value.
 
 ```terraform
 #...

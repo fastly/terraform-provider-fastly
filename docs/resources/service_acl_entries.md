@@ -12,8 +12,8 @@ Defines a set of Fastly ACL entries that can be used to populate a service ACL. 
 
 ~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.
 
-If Terraform is being used to populate the initial content of an ACL which you intend to manage via API or UI, then the lifecycle `ignore_changes` field can be used with the resource.  An example of this configuration is provided below.
-
+~> **Note:** By default the Terraform provider allows you to externally manage the entries via API or UI.
+If you wish to apply your changes in the HCL, then you should explicitly set the `manage_entries` attribute. An example of this configuration is provided below.
 
 ## Example Usage (Terraform >= 0.12.6)
 
@@ -171,34 +171,6 @@ resource "fastly_service_acl_entries" "entries" {
 }
 ```
 
-### Supporting API and UI ACL updates with ignore_changes
-
-The following example demonstrates how the lifecycle `ignore_changes` field can be used to suppress updates against the
-entries in an ACL.  If, after your first deploy, the Fastly API or UI is to be used to manage entries in an ACL, then this will stop Terraform realigning the remote state with the initial set of ACL entries defined in your HCL.
-
-```terraform
-#...
-
-resource "fastly_service_acl_entries" "entries" {
-  for_each   = {
-  for d in fastly_service_vcl.myservice.acl : d.name => d if d.name == var.myacl_name
-  }
-  service_id = fastly_service_vcl.myservice.id
-  acl_id     = each.value.acl_id
-  entry {
-    ip      = "127.0.0.1"
-    subnet  = "24"
-    negated = false
-    comment = "ACL Entry 1"
-  }
-
-  lifecycle {
-    ignore_changes = [entry,]
-  }
-
-}
-```
-
 ### Reapplying original entries with `managed_entries` if the state of the entries drifts
 
 By default the user is opted out from reapplying the original changes if the entries are managed externally.
@@ -206,6 +178,8 @@ The following example demonstrates how the `manage_entries` field can be used to
 When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
 
 ~> **Warning:** You will lose externally managed entries if `manage_entries=true`.
+
+~> **Note:** The `ignore_changes` built-in meta-argument takes precedence over `manage_entries` regardless of its value.
 
 ```terraform
 #...

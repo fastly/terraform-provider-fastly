@@ -8,8 +8,4 @@ resource "fastly_service_dynamic_snippet_content" "my_dyn_content" {
   snippet_id       = each.value.snippet_id
   manage_snippets = true
   content          = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
-
-  lifecycle {
-    ignore_changes = [content, ]
-  }
 }

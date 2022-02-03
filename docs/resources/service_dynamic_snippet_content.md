@@ -13,7 +13,7 @@ Defines content that represents blocks of VCL logic that is inserted into your s
 ~> **Warning:** Terraform will take precedence over any changes you make through the API. Such changes are likely to be reversed if you run Terraform again.  
 
 ~> **Note:** By default the Terraform provider allows you to externally manage the snippets via API or UI.
-If you wish to apply your changes in the HCL, then you should explicitly set the `manage_snipptes` attribute. An example of this configuration is provided below.
+If you wish to apply your changes in the HCL, then you should explicitly set the `manage_snippets` attribute. An example of this configuration is provided below.
 
 
 ## Example Usage (Terraform >= 0.12.6)
@@ -173,10 +173,10 @@ resource "fastly_service_dynamic_snippet_content" "my_dyn_content" {
   for_each = {
     for d in fastly_service_vcl.myservice.dynamicsnippet : d.name => d if d.name == "My Dynamic Snippet"
   }
-  service_id       = fastly_service_vcl.myservice.id
-  snippet_id       = each.value.snippet_id
+  service_id      = fastly_service_vcl.myservice.id
+  snippet_id      = each.value.snippet_id
   manage_snippets = true
-  content          = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
+  content         = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
 }
 ```
 

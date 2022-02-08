@@ -15,14 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceServiceWAFConfigurationV1() *schema.Resource {
+func resourceServiceWAFConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceServiceWAFConfigurationV1Create,
-		ReadContext:   resourceServiceWAFConfigurationV1Read,
-		UpdateContext: resourceServiceWAFConfigurationV1Update,
-		DeleteContext: resourceServiceWAFConfigurationV1Delete,
+		CreateContext: resourceServiceWAFConfigurationCreate,
+		ReadContext:   resourceServiceWAFConfigurationRead,
+		UpdateContext: resourceServiceWAFConfigurationUpdate,
+		DeleteContext: resourceServiceWAFConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceServiceWAFConfigurationV1Import,
+			StateContext: resourceServiceWAFConfigurationImport,
 		},
 		CustomizeDiff: customdiff.All(
 			validateWAFConfigurationResource,
@@ -251,19 +251,19 @@ func resourceServiceWAFConfigurationV1() *schema.Resource {
 
 // this method calls update because the creation of the waf (within the service resource) automatically creates
 // the first waf version, and this makes both a create and an updating exactly the same operation.
-func resourceServiceWAFConfigurationV1Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] creating configuration for WAF: %s", d.Get("waf_id").(string))
 	d.SetId(d.Get("waf_id").(string))
-	return resourceServiceWAFConfigurationV1Update(ctx, d, meta)
+	return resourceServiceWAFConfigurationUpdate(ctx, d, meta)
 }
 
-func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	// If any attributes other than Computed (unconfigurable) or "activate" have changed, clone a new firewall version.
 	// Otherwise, don't clone but activate a draft version that was previously created with "activate = false".
 	var needsChange bool
-	for k, v := range resourceServiceWAFConfigurationV1().Schema {
+	for k, v := range resourceServiceWAFConfiguration().Schema {
 		if (v.Computed && !v.Optional) || k == "activate" {
 			continue
 		}
@@ -352,10 +352,10 @@ func resourceServiceWAFConfigurationV1Update(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	return resourceServiceWAFConfigurationV1Read(ctx, d, meta)
+	return resourceServiceWAFConfigurationRead(ctx, d, meta)
 }
 
-func resourceServiceWAFConfigurationV1Read(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	latestVersion, err := getLatestVersion(d, meta)
 	if err != nil {
@@ -419,7 +419,7 @@ func resourceServiceWAFConfigurationV1Read(_ context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceServiceWAFConfigurationV1Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
 	wafID := d.Get("waf_id").(string)
@@ -453,7 +453,7 @@ func resourceServiceWAFConfigurationV1Delete(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceServiceWAFConfigurationV1Import(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceWAFConfigurationImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 
 	wafID := d.Id()
 	err := d.Set("waf_id", wafID)

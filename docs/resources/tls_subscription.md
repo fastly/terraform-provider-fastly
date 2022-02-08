@@ -23,7 +23,7 @@ The example below demonstrates usage with AWS Route53 to configure DNS, and the 
 Basic usage:
 
 ```terraform
-resource "fastly_service_v1" "example" {
+resource "fastly_service_vcl" "example" {
   name = "example-service"
 
   domain {
@@ -39,7 +39,7 @@ resource "fastly_service_v1" "example" {
 }
 
 resource "fastly_tls_subscription" "example" {
-  domains = [for domain in fastly_service_v1.example.domain : domain.name]
+  domains = [for domain in fastly_service_vcl.example.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 ```
@@ -55,7 +55,7 @@ locals {
   aws_route53_zone_id = "your_route53_zone_id"
 }
 
-resource "fastly_service_v1" "example" {
+resource "fastly_service_vcl" "example" {
   name = "example-service"
 
   dynamic domain {
@@ -74,7 +74,7 @@ resource "fastly_service_v1" "example" {
 }
 
 resource "fastly_tls_subscription" "example" {
-  domains               = [for domain in fastly_service_v1.example.domain : domain.name]
+  domains               = [for domain in fastly_service_vcl.example.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 

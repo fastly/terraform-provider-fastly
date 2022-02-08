@@ -53,7 +53,7 @@ func testAccDataSourceFastlyTLSSubscriptionConfig_basic(domain string) string {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	return fmt.Sprintf(`
-resource "fastly_service_v1" "test" {
+resource "fastly_service_vcl" "test" {
   name = "%s"
 
   domain {
@@ -68,7 +68,7 @@ resource "fastly_service_v1" "test" {
   force_destroy = true
 }
 resource "fastly_tls_subscription" "test" {
-  domains = [for domain in fastly_service_v1.test.domain : domain.name]
+  domains = [for domain in fastly_service_vcl.test.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 data "fastly_tls_subscription" "subject" {
@@ -84,7 +84,7 @@ func testAccDataSourceFastlyTLSSubscriptionConfig_byID(domain string) string {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	return fmt.Sprintf(`
-resource "fastly_service_v1" "test" {
+resource "fastly_service_vcl" "test" {
   name = "%s"
 
   domain {
@@ -99,7 +99,7 @@ resource "fastly_service_v1" "test" {
   force_destroy = true
 }
 resource "fastly_tls_subscription" "test" {
-  domains = [for domain in fastly_service_v1.test.domain : domain.name]
+  domains = [for domain in fastly_service_vcl.test.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 data "fastly_tls_subscription" "subject" {

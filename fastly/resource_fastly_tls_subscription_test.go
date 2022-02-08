@@ -32,7 +32,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2, commonName1),
@@ -75,7 +75,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 
 func testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2, commonName string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_v1" "test" {
+resource "fastly_service_vcl" "test" {
   name = "%s"
 
   domain {
@@ -94,7 +94,7 @@ resource "fastly_service_v1" "test" {
   force_destroy = true
 }
 resource "fastly_tls_subscription" "subject" {
-  domains = [for domain in fastly_service_v1.test.domain : domain.name]
+  domains = [for domain in fastly_service_vcl.test.domain : domain.name]
   common_name = "%s"
   certificate_authority = "lets-encrypt"
 }

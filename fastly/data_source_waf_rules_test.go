@@ -106,7 +106,7 @@ func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyWAFRules(wafrulesHCL),
@@ -133,7 +133,7 @@ func TestAccFastlyWAFRulesModSecIDsFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyWAFRules(wafrulesHCL),
@@ -152,7 +152,7 @@ func TestAccFastlyWAFRulesExcludeFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyWAFRules(wafrulesHCL),
@@ -175,7 +175,7 @@ func TestAccFastlyWAFRulesTagFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceV1Destroy,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFastlyWAFRules(wafrulesHCL),

@@ -24,7 +24,7 @@ type ServiceAttributeDefinition interface {
 	HasChange(d *schema.ResourceData) bool
 
 	// MustProcess returns whether we must process the resource (usually HasChange==true but allowing exceptions).
-	// For example: at present, the settings attributeHandler (block_fastly_service_v1_settings.go) must process when
+	// For example: at present, the settings attributeHandler (block_fastly_service_settings.go) must process when
 	// default_ttl==0 and it is the initialVersion - as well as when default_ttl or default_host have changed.
 	MustProcess(d *schema.ResourceData, initialVersion bool) bool
 }

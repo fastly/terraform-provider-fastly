@@ -33,7 +33,7 @@ func TestAccDataSourceFastlyTLSSubscriptionIds_basic(t *testing.T) {
 func testAccDataSourceFastlyTLSSubscriptionIdsConfigResources(name, domain string) string {
 	return fmt.Sprintf(
 		`
-resource "fastly_service_v1" "test" {
+resource "fastly_service_vcl" "test" {
   name = "%s"
 
   domain {
@@ -48,7 +48,7 @@ resource "fastly_service_v1" "test" {
   force_destroy = true
 }
 resource "fastly_tls_subscription" "test" {
-  domains = [for domain in fastly_service_v1.test.domain : domain.name]
+  domains = [for domain in fastly_service_vcl.test.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 `,

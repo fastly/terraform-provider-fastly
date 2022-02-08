@@ -1,1 +1,1 @@
-$ terraform import fastly_service_v1.demo xxxxxxxxxxxxxxxxxxxx
+$ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx

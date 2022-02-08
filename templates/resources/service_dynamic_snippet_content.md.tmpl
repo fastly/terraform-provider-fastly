@@ -1,0 +1,79 @@
+---
+layout: "fastly"
+page_title: "Fastly: service_dynamic_snippet_content"
+sidebar_current: "docs-fastly-resource-service-dynamic-snippet-content"
+description: |-
+  Provides a means to define blocks of VCL logic that is inserted into your service through Fastly dynamic snippets.
+---
+
+# fastly_service_dynamic_snippet_content
+
+Defines content that represents blocks of VCL logic that is inserted into your service.  This resource will populate the content of a dynamic snippet and allow it to be manged without the creation of a new service verison. 
+ 
+~> **Warning:** Terraform will take precedence over any changes you make through the API. Such changes are likely to be reversed if you run Terraform again.  
+
+~> **Note:** By default the Terraform provider allows you to externally manage the snippets via API or UI.
+If you wish to apply your changes in the HCL, then you should explicitly set the `manage_snippets` attribute. An example of this configuration is provided below.
+
+
+## Example Usage (Terraform >= 0.12.6)
+
+Basic usage:
+
+{{ tffile "examples/resources/service_dynamic_snippet_content_basic_usage.tf" }}
+
+Multiple dynamic snippets:
+
+{{ tffile "examples/resources/service_dynamic_snippet_content_multiple.tf" }}
+
+
+## Example Usage (Terraform >= 0.12.0 && < 0.12.6)
+
+`for_each` attributes were not available in Terraform before 0.12.6, however, users can still use `for` expressions to achieve
+similar behaviour as seen in the example below.
+
+~> **Warning:** Terraform might not properly calculate implicit dependencies on computed attributes when using `for` expressions
+
+For scenarios such as adding a Dynamic Snippet to a service and at the same time, creating the Dynamic Snippets (`fastly_service_dynamic_snippet_content`)
+resource, Terraform will not calculate implicit dependencies correctly on `for` expressions. This will result in index lookup
+problems and the execution will fail.
+
+For those scenarios, it's recommended to split the changes into two distinct steps:
+
+1. Add the `dynamicsnippet` block to the `fastly_service_vcl` and apply the changes
+2. Add the `fastly_service_dynamic_snippet_content` resource with the `for` expressions to the HCL and apply the changes
+
+Usage:
+
+{{ tffile "examples/resources/service_dynamic_snippet_content_with_service.tf" }}
+
+### Reapplying original snippets with `manage_snippets` if the state of the snippets drifts
+
+By default the user is opted out from reapplying the original changes if the snippets are managed externally.
+The following example demonstrates how the `manage_snippets` field can be used to reapply the changes defined in the HCL if the state of the snippets drifts.
+When the value is explicitly set to 'true', Terraform will keep the original changes and discard any other changes made under this resource outside of Terraform.
+
+~> **Warning:** You will lose externally managed snippets if `manage_snippets=true`.
+
+~> **Note:** The `ignore_changes` built-in meta-argument takes precedence over `manage_snippets` regardless of its value.
+
+{{ tffile "examples/resources/service_dynamic_snippet_content_manage_snippets.tf" }}
+
+## Attributes Reference
+
+* [fastly-vcl](https://developer.fastly.com/reference/api/vcl-services/vcl/)
+* [fastly-vcl-snippets](https://developer.fastly.com/reference/api/vcl-services/snippet/)
+
+## Import
+
+This is an example of the import command being applied to the resource named `fastly_service_dynamic_snippet_content.content`
+The resource ID is a combined value of the `service_id` and `snippet_id` separated by a forward slash.
+
+{{ codefile "sh" "examples/resources/service_dynamic_snippet_content_import_with_id.txt" }}
+
+If Terraform is already managing remote content against a resource being imported then the user will be asked to remove it from the existing Terraform state.
+The following is an example of the Terraform state command to remove the resource named `fastly_service_dynamic_snippet_content.content` from the Terraform state file.
+
+{{ codefile "sh" "examples/resources/service_dynamic_snippet_content_rm_from_state.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

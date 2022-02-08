@@ -23,7 +23,7 @@ locals {
   domain_name = "example.com"
 }
 
-resource "fastly_service_v1" "example" {
+resource "fastly_service_vcl" "example" {
   name = "example-service"
 
   domain {
@@ -39,7 +39,7 @@ resource "fastly_service_v1" "example" {
 }
 
 resource "fastly_tls_subscription" "example" {
-  domains               = [for domain in fastly_service_v1.example.domain : domain.name]
+  domains               = [for domain in fastly_service_vcl.example.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 

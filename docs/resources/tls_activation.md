@@ -17,7 +17,7 @@ Enables TLS on a domain using a specified custom TLS certificate.
 Basic usage:
 
 ```terraform
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "my-service"
 
   domain {
@@ -46,7 +46,7 @@ resource "fastly_tls_certificate" "demo" {
 resource "fastly_tls_activation" "test" {
   certificate_id = fastly_tls_certificate.demo.id
   domain         = "example.com"
-  depends_on     = [fastly_service_v1.demo]
+  depends_on     = [fastly_service_vcl.demo]
 }
 ```
 

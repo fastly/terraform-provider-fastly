@@ -7,7 +7,7 @@ variable "type_status" {
   }
 }
 
-resource "fastly_service_v1" "demo" {
+resource "fastly_service_vcl" "demo" {
   name = "demofastly"
 
   domain {
@@ -57,7 +57,7 @@ data "fastly_waf_rules" "owasp" {
 }
 
 resource "fastly_service_waf_configuration" "waf" {
-  waf_id                          = fastly_service_v1.demo.waf[0].waf_id
+  waf_id                          = fastly_service_vcl.demo.waf[0].waf_id
   http_violation_score_threshold  = 100
 
   dynamic "rule" {

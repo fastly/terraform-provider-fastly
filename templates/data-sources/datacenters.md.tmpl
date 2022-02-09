@@ -1,0 +1,19 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_datacenters"
+sidebar_current: "docs-fastly-datasource-fastly_datacenters"
+description: |-
+  Get information on Fastly datacenters.
+---
+
+# fastly_datacenters
+
+Use this data source to get the list of the [Fastly datacenters][1].
+
+## Example Usage
+
+{{ tffile "examples/data-sources/datacenters.tf"}}
+
+[1]: https://developer.fastly.com/reference/api/utils/pops/
+
+{{ .SchemaMarkdown | trimspace }}

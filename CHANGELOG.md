@@ -1,4 +1,15 @@
-## 0.42.0 (Unreleased)
+## 1.1.0 (Unreleased)
+
+## 1.0.0 (February 8, 2022)
+
+ENHANCEMENTS:
+
+* Changes for v1.0.0 [#534](https://github.com/fastly/terraform-provider-fastly/pull/534)
+
+BUG FIXES:
+
+* Fix the example usage in docs/index.md [#533](https://github.com/fastly/terraform-provider-fastly/pull/533)
+* Support Terraform CLI 1.1.4 [#536](https://github.com/fastly/terraform-provider-fastly/pull/536)
 
 ## 0.41.0 (January 21, 2022)
 

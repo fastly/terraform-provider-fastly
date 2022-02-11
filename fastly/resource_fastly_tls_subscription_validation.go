@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fastly/go-fastly/v6/fastly"
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -40,7 +39,7 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 	conn := meta.(*FastlyClient).conn
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
+		subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
 			ID: d.Get("subscription_id").(string),
 		})
 		if err != nil {
@@ -70,7 +69,7 @@ func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.Re
 	conn := meta.(*FastlyClient).conn
 
 	subscriptionID := d.Get("subscription_id").(string)
-	subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
+	subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
 		ID: subscriptionID,
 	})
 	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {

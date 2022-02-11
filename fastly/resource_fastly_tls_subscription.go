@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fastly/go-fastly/v6/fastly"
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -155,28 +154,28 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	var configuration *fastly.TLSConfiguration
+	var configuration *gofastly.TLSConfiguration
 	if v, ok := d.GetOk("configuration_id"); ok {
-		configuration = &fastly.TLSConfiguration{ID: v.(string)}
+		configuration = &gofastly.TLSConfiguration{ID: v.(string)}
 	}
 
-	var domains []*fastly.TLSDomain
+	var domains []*gofastly.TLSDomain
 	var domainStrings []string
 	for _, domain := range d.Get("domains").(*schema.Set).List() {
-		domains = append(domains, &fastly.TLSDomain{ID: domain.(string)})
+		domains = append(domains, &gofastly.TLSDomain{ID: domain.(string)})
 		domainStrings = append(domainStrings, domain.(string))
 	}
 
-	var commonName *fastly.TLSDomain
+	var commonName *gofastly.TLSDomain
 	if v, ok := d.GetOk("common_name"); ok {
 		if !contains(domainStrings, v.(string)) {
 			return diag.Errorf("Domain specified as common_name (%s) must also be in domains (%v)", v, domainStrings)
 		}
 
-		commonName = &fastly.TLSDomain{ID: v.(string)}
+		commonName = &gofastly.TLSDomain{ID: v.(string)}
 	}
 
-	subscription, err := conn.CreateTLSSubscription(&fastly.CreateTLSSubscriptionInput{
+	subscription, err := conn.CreateTLSSubscription(&gofastly.CreateTLSSubscriptionInput{
 		CertificateAuthority: d.Get("certificate_authority").(string),
 		Configuration:        configuration,
 		Domains:              domains,
@@ -195,7 +194,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	conn := meta.(*FastlyClient).conn
 
 	include := "tls_authorizations"
-	subscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
+	subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
 		ID:      d.Id(),
 		Include: &include,
 	})
@@ -323,23 +322,23 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	updates := &fastly.UpdateTLSSubscriptionInput{
+	updates := &gofastly.UpdateTLSSubscriptionInput{
 		ID:    d.Id(),
 		Force: d.Get("force_update").(bool),
 	}
 
 	if d.HasChange("domains") {
-		var domains []*fastly.TLSDomain
+		var domains []*gofastly.TLSDomain
 		for _, domain := range d.Get("domains").(*schema.Set).List() {
-			domains = append(domains, &fastly.TLSDomain{ID: domain.(string)})
+			domains = append(domains, &gofastly.TLSDomain{ID: domain.(string)})
 		}
 		updates.Domains = domains
 	}
 	if d.HasChange("common_name") {
-		updates.CommonName = &fastly.TLSDomain{ID: d.Get("common_name").(string)}
+		updates.CommonName = &gofastly.TLSDomain{ID: d.Get("common_name").(string)}
 	}
 	if d.HasChange("configuration_id") {
-		updates.Configuration = &fastly.TLSConfiguration{ID: d.Get("configuration_id").(string)}
+		updates.Configuration = &gofastly.TLSConfiguration{ID: d.Get("configuration_id").(string)}
 	}
 
 	_, err := conn.UpdateTLSSubscription(updates)
@@ -353,7 +352,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	err := conn.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
+	err := conn.DeleteTLSSubscription(&gofastly.DeleteTLSSubscriptionInput{
 		ID:    d.Id(),
 		Force: d.Get("force_destroy").(bool),
 	})

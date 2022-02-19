@@ -45,6 +45,7 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 				"comment": {
 					Type:        schema.TypeString,
 					Optional:    true,
+					Default:     "",
 					Description: "An optional comment about the Director",
 				},
 				"shield": {
@@ -220,27 +221,43 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		return err
 	}
 
-	if v, ok := modified["backends"]; ok {
-		backends := v.(*schema.Set).List()
-		if len(backends) > 0 {
-			for _, backend := range backends {
-				opts := gofastly.CreateDirectorBackendInput{
-					ServiceID:      d.Id(),
-					ServiceVersion: serviceVersion,
-					Director:       resource["name"].(string),
-					Backend:        backend.(string),
-				}
+	if _, ok := modified["backends"]; ok {
+		odb, ndb := getDirectorBackendChange(d, resource)
 
-				log.Printf("[DEBUG] Director Backend Update opts: %#v", opts)
-				_, err := conn.CreateDirectorBackend(&opts)
-				if err != nil {
-					// If we end up trying to create a backend that already exists, then the
-					// API will return a '409 Conflict'. We don't want to return those errors
-					// as they ultimately don't mean anything useful to the user.
-					if !strings.Contains(err.Error(), "409 - Conflict") {
-						return err
-					}
+		remove := odb.Difference(ndb).List()
+		for _, b := range remove {
+			opts := gofastly.DeleteDirectorBackendInput{
+				ServiceID:      d.Id(),
+				ServiceVersion: serviceVersion,
+				Director:       resource["name"].(string),
+				Backend:        b.(string),
+			}
+			log.Printf("[DEBUG] Director Backend Update opts: %#v", opts)
+			err := conn.DeleteDirectorBackend(&opts)
+
+			if err != nil {
+				// If we end up trying to remove a backend that no longer exists, then the
+				// API will return a '404 Not Found'. We don't want to return those errors
+				// as they ultimately don't mean anything useful to the user.
+				if !strings.Contains(err.Error(), "404 - Not Found") {
+					return err
 				}
+			}
+		}
+
+		add := ndb.Difference(odb).List()
+		for _, b := range add {
+			opts := gofastly.CreateDirectorBackendInput{
+				ServiceID:      d.Id(),
+				ServiceVersion: serviceVersion,
+				Director:       resource["name"].(string),
+				Backend:        b.(string),
+			}
+			log.Printf("[DEBUG] Director Backend Update opts: %#v", opts)
+			_, err := conn.CreateDirectorBackend(&opts)
+
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -300,4 +317,32 @@ func flattenDirectors(directorList []*gofastly.Director, directorBackendList []*
 		dl = append(dl, nd)
 	}
 	return dl
+}
+
+func getDirectorBackendChange(d *schema.ResourceData, resource map[string]interface{}) (odb *schema.Set, ndb *schema.Set) {
+	name := resource["name"]
+	od, nd := d.GetChange("director")
+
+	if od == nil {
+		od = new(schema.Set)
+	}
+	if nd == nil {
+		nd = new(schema.Set)
+	}
+
+	get := func(targetDirectorName string, directorsSet *schema.Set) *schema.Set {
+		for _, director := range directorsSet.List() {
+			director := director.(map[string]interface{})
+
+			if director["name"] == targetDirectorName {
+				return director["backends"].(*schema.Set)
+			}
+		}
+		return new(schema.Set)
+	}
+
+	odb = get(name.(string), od.(*schema.Set))
+	ndb = get(name.(string), nd.(*schema.Set))
+
+	return
 }

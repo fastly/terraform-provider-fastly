@@ -114,6 +114,11 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 	}
 }
 
+// This test validates that two directors are created successfully,
+// and in the next Terraform run the first director is updated while
+// the second director is unchanged and a third director is added.
+// In the final test, the first director is removed while the second
+// director is unchanged and one backend for the third director is removed.
 func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -159,6 +164,31 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Retries:        5,
 	}
 
+	dbDeveloper := gofastly.DirectorBackend{
+		Director: "director_developer",
+		Backend:  "developer",
+	}
+
+	dbApps := gofastly.DirectorBackend{
+		Director: "director_apps",
+		Backend:  "apps",
+	}
+
+	dbDeveloperUpdated := gofastly.DirectorBackend{
+		Director: "director_developer",
+		Backend:  "developer_updated",
+	}
+
+	dbWWW := gofastly.DirectorBackend{
+		Director: "director_www_demo",
+		Backend:  "www",
+	}
+
+	dbDemo := gofastly.DirectorBackend{
+		Director: "director_www_demo",
+		Backend:  "demo",
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
@@ -171,30 +201,52 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
 						&service,
 						[]*gofastly.Director{&directorDeveloper, &directorApps}),
+					testAccCheckFastlyServiceVCLDirectorBackends(
+						&service,
+						[]*gofastly.DirectorBackend{&dbDeveloper, &dbApps}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "director.#", "2"),
 				),
 			},
 
 			{
-				Config: testAccServiceVCLDirectorsConfig_update(name, domainName1),
+				Config: testAccServiceVCLDirectorsConfig_update1(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
 						&service,
 						[]*gofastly.Director{&directorDeveloperUpdated, &directorApps, &directorWWWDemo}),
+					testAccCheckFastlyServiceVCLDirectorBackends(
+						&service,
+						[]*gofastly.DirectorBackend{&dbDeveloperUpdated, &dbApps, &dbWWW, &dbDemo}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "director.#", "3"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLDirectorsConfig_update2(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLDirectorsAttributes(
+						&service,
+						[]*gofastly.Director{&directorApps, &directorWWWDemo}),
+					testAccCheckFastlyServiceVCLDirectorBackends(
+						&service,
+						[]*gofastly.DirectorBackend{&dbApps, &dbWWW}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "director.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-// This test validates that two directors are created successfully
-// (dir1 and dir2), and in the next Terraform run the first
-// director is updated (dir1Update) while the second director is unchanged
-// and a third director is added (dir3).
+// This test validates that two directors are created successfully,
+// and in the next Terraform run the first director is updated while
+// the second director is unchanged and a third director is added.
+// In the final test, the first director is removed while the second
+// director is unchanged and one backend for the third director is removed.
 func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -236,6 +288,31 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 		Retries:        5,
 	}
 
+	dbOld := gofastly.DirectorBackend{
+		Director: "mydirector",
+		Backend:  "origin old",
+	}
+
+	dbNew := gofastly.DirectorBackend{
+		Director: "mydirector",
+		Backend:  "origin new",
+	}
+
+	dbApps := gofastly.DirectorBackend{
+		Director: "unchangeddirector",
+		Backend:  "origin apps",
+	}
+
+	dbX := gofastly.DirectorBackend{
+		Director: "myotherdirector",
+		Backend:  "origin x",
+	}
+
+	dbY := gofastly.DirectorBackend{
+		Director: "myotherdirector",
+		Backend:  "origin y",
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
@@ -248,6 +325,9 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
 						&service,
 						[]*gofastly.Director{&dir1, &dir2}),
+					testAccCheckFastlyServiceVCLDirectorBackends(
+						&service,
+						[]*gofastly.DirectorBackend{&dbOld, &dbApps}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -256,16 +336,36 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDirectorsComputeConfig_update(name, domainName1),
+				Config: testAccServiceVCLDirectorsComputeConfig_update1(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
 						&service,
 						[]*gofastly.Director{&dir1Update, &dir2, &dir3}),
+					testAccCheckFastlyServiceVCLDirectorBackends(
+						&service,
+						[]*gofastly.DirectorBackend{&dbNew, &dbApps, &dbX, &dbY}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "director.#", "3"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLDirectorsComputeConfig_update2(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceVCLDirectorsAttributes(
+						&service,
+						[]*gofastly.Director{&dir2, &dir3}),
+					testAccCheckFastlyServiceVCLDirectorBackends(
+						&service,
+						[]*gofastly.DirectorBackend{&dbApps, &dbY}),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "director.#", "2"),
 				),
 			},
 		},
@@ -313,6 +413,73 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 	}
 }
 
+func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetail, directorBackends []*gofastly.DirectorBackend) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*FastlyClient).conn
+
+		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		}
+
+		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
+		})
+
+		if err != nil {
+			return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion, err)
+		}
+
+		var directorBackendList []*gofastly.DirectorBackend
+
+		for _, director := range directorList {
+			for _, backend := range backendList {
+				directorBackendGet, err := conn.GetDirectorBackend(&gofastly.GetDirectorBackendInput{
+					ServiceID:      service.ID,
+					ServiceVersion: service.ActiveVersion.Number,
+					Director:       director.Name,
+					Backend:        backend.Name,
+				})
+				if err == nil {
+					directorBackendList = append(directorBackendList, directorBackendGet)
+				}
+			}
+		}
+
+		if len(directorBackends) != len(directorBackendList) {
+			return fmt.Errorf("Director count mismatch, expected (%d), got (%d)", len(directorBackends), len(directorBackendList))
+		}
+
+		var found int
+		for _, db := range directorBackends {
+			for _, ldb := range directorBackendList {
+				if db.Director == ldb.Director && db.Backend == ldb.Backend {
+					// we don't know these things ahead of time, so populate them now
+					db.ServiceID = service.ID
+					db.ServiceVersion = service.ActiveVersion.Number
+					ldb.CreatedAt = nil
+					ldb.UpdatedAt = nil
+					if !reflect.DeepEqual(db, ldb) {
+						return fmt.Errorf("Bad Director Backend match, expected (%#v), got (%#v)", db, ldb)
+					}
+					found++
+				}
+			}
+		}
+
+		if found != len(directorBackends) {
+			return fmt.Errorf("Error matching Director Backend rules, expected (%#v), got (%#v)", len(directorBackendList), found)
+		}
+
+		return nil
+	}
+}
+
 func testAccServiceVCLDirectorsConfig(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
@@ -350,7 +517,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLDirectorsConfig_update(name, domain string) string {
+func testAccServiceVCLDirectorsConfig_update1(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -405,6 +572,43 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
+func testAccServiceVCLDirectorsConfig_update2(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "apps.fastly.com"
+    name    = "apps"
+    weight  = 9
+  }
+
+  backend {
+    address = "www.fastly.com"
+    name    = "www"
+  }
+
+  director {
+    name = "director_apps"
+    type = 3
+    backends = [ "apps" ]
+  }
+
+  director {
+    name = "director_www_demo"
+    type = 3
+    backends = [ "www" ]
+  }
+
+  force_destroy = true
+}`, name, domain)
+}
+
 func testAccServiceVCLDirectorsComputeConfig(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
@@ -447,7 +651,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLDirectorsComputeConfig_update(name, domain string) string {
+func testAccServiceVCLDirectorsComputeConfig_update1(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"
@@ -496,6 +700,48 @@ resource "fastly_service_compute" "foo" {
     name = "myotherdirector"
     type = 3
     backends = [ "origin x", "origin y" ]
+  }
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+  }
+
+  force_destroy = true
+}`, name, domain)
+}
+
+func testAccServiceVCLDirectorsComputeConfig_update2(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "apps.fastly.com"
+    name    = "origin apps"
+    weight  = 9
+  }
+
+  backend {
+    address = "www.fastlydemo.net"
+    name    = "origin y"
+  }
+
+  director {
+    name = "unchangeddirector"
+    type = 3
+    backends = [ "origin apps" ]
+  }
+
+  director {
+    name = "myotherdirector"
+    type = 3
+    backends = [ "origin y" ]
   }
 
   package {

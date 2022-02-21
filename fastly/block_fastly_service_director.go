@@ -320,7 +320,6 @@ func flattenDirectors(directorList []*gofastly.Director, directorBackendList []*
 }
 
 func getDirectorBackendChange(d *schema.ResourceData, resource map[string]interface{}) (odb *schema.Set, ndb *schema.Set) {
-	name := resource["name"]
 	od, nd := d.GetChange("director")
 
 	if od == nil {
@@ -341,6 +340,7 @@ func getDirectorBackendChange(d *schema.ResourceData, resource map[string]interf
 		return new(schema.Set)
 	}
 
+	name := resource["name"]
 	odb = get(name.(string), od.(*schema.Set))
 	ndb = get(name.(string), nd.(*schema.Set))
 

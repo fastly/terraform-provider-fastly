@@ -1,4 +1,18 @@
-## 1.1.0 (Unreleased)
+## 1.2.0 (Unreleased)
+
+## 1.1.0 (February 23, 2022)
+
+ENHANCEMENTS:
+
+* Add `fastly_datacenters` data resource [#540](https://github.com/fastly/terraform-provider-fastly/pull/540)
+
+BUG FIXES:
+
+* Support removing backends from a `director` [#547](https://github.com/fastly/terraform-provider-fastly/pull/547)
+
+DOCUMENTATION:
+
+* Fix `fastly-s3` hyperlinks [#542](https://github.com/fastly/terraform-provider-fastly/pull/542)
 
 ## 1.0.0 (February 8, 2022)
 

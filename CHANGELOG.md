@@ -1,5 +1,11 @@
 ## 1.2.0 (Unreleased)
 
+## 1.1.1 (March 3, 2022)
+
+DOCUMENTATION:
+
+* Add 1.0.0 Migration Guide to Documentation [#551](https://github.com/fastly/terraform-provider-fastly/pull/551)
+
 ## 1.1.0 (February 23, 2022)
 
 ENHANCEMENTS:

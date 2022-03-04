@@ -1,5 +1,11 @@
 ## 1.2.0 (Unreleased)
 
+## 1.1.2 (March 4, 2022)
+
+BUG FIXES:
+
+* Add Terraform provider version to User-Agent [#553](https://github.com/fastly/terraform-provider-fastly/pull/553)
+
 ## 1.1.1 (March 3, 2022)
 
 DOCUMENTATION:

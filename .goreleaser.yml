@@ -8,7 +8,7 @@ builds:
   flags:
     - -trimpath
   ldflags:
-    - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+    - -s -w -X "github.com/fastly/terraform-provider-fastly/version.ProviderVersion={{.Version}}"
   goos:
     - freebsd
     - windows

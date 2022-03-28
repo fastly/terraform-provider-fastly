@@ -171,7 +171,7 @@ resource "fastly_service_acl_entries" "entries" {
 }
 ```
 
-### Reapplying original entries with `managed_entries` if the state of the entries drifts
+### Reapplying original entries with `manage_entries` if the state of the entries drifts
 
 By default the user is opted out from reapplying the original changes if the entries are managed externally.
 The following example demonstrates how the `manage_entries` field can be used to reapply the changes defined in the HCL if the state of the entries drifts.

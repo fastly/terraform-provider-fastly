@@ -8,7 +8,7 @@ Uploads a Custom TLS Private Key
 
 # fastly_tls_private_key
 
-Uploads a Custom TLS Private Key to Fastly. This can be combined with a `fastly_tls_custom_certificate` resource to provide a TLS Certificate able to be applied to a Fastly Service.
+Uploads a Custom TLS Private Key to Fastly. This can be combined with a `fastly_tls_certificate` resource to provide a TLS Certificate able to be applied to a Fastly Service.
 
 The Private Key resource requires a key in PEM format, and a name to identify it.
 

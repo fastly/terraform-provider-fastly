@@ -53,6 +53,8 @@ resource "fastly_tls_certificate" "example" {
 }
 ```
 
+~> **Warning:** To avoid potential downtime when needing to update `fastly_tls_private_key`/`fastly_tls_certificate` resources, the new key/cert must first be created so they exist alongside the current resources. Once the new resources have been created, then the `fastly_tls_activation` can be updated to point to the new resources, and the original key/cert resources can be deleted.
+
 ## Import
 
 A certificate can be imported using its Fastly certificate ID, e.g.

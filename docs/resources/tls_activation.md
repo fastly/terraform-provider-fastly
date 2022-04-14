@@ -50,7 +50,7 @@ resource "fastly_tls_activation" "test" {
 }
 ```
 
-~> **Warning:** To avoid potential downtime when needing to update `fastly_tls_private_key`/`fastly_tls_certificate` resources, the new key/cert must first be created so they exist alongside the current resources. Once the new resources have been created, then the `fastly_tls_activation` can be updated to point to the new resources, and the original key/cert resources can be deleted.
+~> **Warning:** Updating the `fastly_tls_private_key`/`fastly_tls_certificate` resources should be done in multiple plan/apply steps to avoid potential downtime. The new certificate and associated private key must first be created so they exist alongside the currently active resources. Once the new resources have been created, then the `fastly_tls_activation` can be updated to point to the new certificate. Finally, the original key/certificate resources can be deleted.
 
 ## Import
 

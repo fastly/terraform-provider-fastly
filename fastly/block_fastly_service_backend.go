@@ -177,11 +177,10 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		},
 	}
 
-	required := true
+	// backend is optional in both VCL and C@E
+	required := false
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		// backend is optional in VCL service
-		required = false
 
 		blockAttributes["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,

@@ -27,12 +27,6 @@ resource "fastly_service_compute" "demo" {
     comment = "demo"
   }
 
-  backend {
-    address = "127.0.0.1"
-    name    = "localhost"
-    port    = 80
-  }
-
   package {
     filename = "package.tar.gz"
     source_code_hash = filesha512("package.tar.gz")
@@ -73,7 +67,6 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Required
 
-- **backend** (Block Set, Min: 1) (see [below for nested schema](#nestedblock--backend))
 - **domain** (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - **name** (String) The unique name for the Service to create
 - **package** (Block List, Min: 1, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
@@ -81,6 +74,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 ### Optional
 
 - **activate** (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
+- **backend** (Block Set) (see [below for nested schema](#nestedblock--backend))
 - **comment** (String) Description field for the service. Default `Managed by Terraform`
 - **default_host** (String) The default hostname
 - **default_ttl** (Number) The default Time-to-live (TTL) for requests
@@ -124,6 +118,30 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - **active_version** (Number) The currently active version of your Fastly Service
 - **cloned_version** (Number) The latest cloned version by the provider
 
+<a id="nestedblock--domain"></a>
+### Nested Schema for `domain`
+
+Required:
+
+- **name** (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- **comment** (String) An optional comment about the Domain.
+
+
+<a id="nestedblock--package"></a>
+### Nested Schema for `package`
+
+Required:
+
+- **filename** (String) The path to the Wasm deployment package within your local filesystem
+
+Optional:
+
+- **source_code_hash** (String) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package
+
+
 <a id="nestedblock--backend"></a>
 ### Nested Schema for `backend`
 
@@ -156,30 +174,6 @@ Optional:
 - **ssl_sni_hostname** (String) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all
 - **use_ssl** (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
 - **weight** (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`
-
-
-<a id="nestedblock--domain"></a>
-### Nested Schema for `domain`
-
-Required:
-
-- **name** (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
-
-Optional:
-
-- **comment** (String) An optional comment about the Domain.
-
-
-<a id="nestedblock--package"></a>
-### Nested Schema for `package`
-
-Required:
-
-- **filename** (String) The path to the Wasm deployment package within your local filesystem
-
-Optional:
-
-- **source_code_hash** (String) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package
 
 
 <a id="nestedblock--dictionary"></a>

@@ -1,5 +1,17 @@
 ## 1.2.0 (Unreleased)
 
+## 1.1.3 (April 25, 2022)
+
+ENHANCEMENTS:
+
+* The `backend` block is no longer required within the `fastly_service_compute` resource [#563](https://github.com/fastly/terraform-provider-fastly/pull/563)
+
+DOCUMENTATION:
+
+* Clarify key/cert update flow [#561](https://github.com/fastly/terraform-provider-fastly/pull/562)
+* Typo in `fastly_tls_certificate` resource [#560](https://github.com/fastly/terraform-provider-fastly/pull/560)
+* Typo in `manage_entries` attribute [#559](https://github.com/fastly/terraform-provider-fastly/pull/559)
+
 ## 1.1.2 (March 4, 2022)
 
 BUG FIXES:

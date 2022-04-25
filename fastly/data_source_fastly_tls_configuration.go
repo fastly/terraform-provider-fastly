@@ -184,7 +184,7 @@ func getTLSConfigurationFilters(d *schema.ResourceData) []func(*fastly.CustomTLS
 
 func listTLSConfigurations(conn *fastly.Client, filters ...func(*fastly.CustomTLSConfiguration) bool) ([]*fastly.CustomTLSConfiguration, error) {
 	var configurations []*fastly.CustomTLSConfiguration
-	cursor := 0
+	cursor := 1
 	for {
 		list, err := conn.ListCustomTLSConfigurations(&fastly.ListCustomTLSConfigurationsInput{
 			PageNumber: cursor,
@@ -196,7 +196,7 @@ func listTLSConfigurations(conn *fastly.Client, filters ...func(*fastly.CustomTL
 		if len(list) == 0 {
 			break
 		}
-		cursor += len(list)
+		cursor += 1
 
 		for _, configuration := range list {
 			if filterTLSConfiguration(configuration, filters) {

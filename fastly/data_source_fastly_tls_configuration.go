@@ -132,7 +132,7 @@ func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceD
 		}
 
 		if len(configurations) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+			return diag.Errorf("Your query returned more than one result. Please use a more specific search criteria and try again.")
 		}
 
 		configuration = configurations[0]

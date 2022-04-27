@@ -14,10 +14,8 @@ import (
 
 func TestResourceFastlyFlattenDirectors(t *testing.T) {
 	cases := []struct {
-		remoteDirector        []*gofastly.Director
-		remoteDirectorBackend []*gofastly.DirectorBackend
-
-		local []map[string]interface{}
+		remoteDirector []*gofastly.Director
+		local          []map[string]interface{}
 	}{
 		{
 			remoteDirector: []*gofastly.Director{
@@ -26,12 +24,9 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 					Type:    3,
 					Quorum:  75,
 					Retries: 10,
-				},
-			},
-			remoteDirectorBackend: []*gofastly.DirectorBackend{
-				{
-					Director: "somedirector",
-					Backend:  "somebackend",
+					Backends: []string{
+						"somebackend",
+					},
 				},
 			},
 			local: []map[string]interface{}{
@@ -48,27 +43,17 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 			remoteDirector: []*gofastly.Director{
 				{
 					Name: "somedirector",
+					Backends: []string{
+						"somebackend",
+						"someotherbackend",
+					},
 				},
 				{
 					Name: "someotherdirector",
-				},
-			},
-			remoteDirectorBackend: []*gofastly.DirectorBackend{
-				{
-					Director: "somedirector",
-					Backend:  "somebackend",
-				},
-				{
-					Director: "somedirector",
-					Backend:  "someotherbackend",
-				},
-				{
-					Director: "someotherdirector",
-					Backend:  "somebackend",
-				},
-				{
-					Director: "someotherdirector",
-					Backend:  "someotherbackend",
+					Backends: []string{
+						"somebackend",
+						"someotherbackend",
+					},
 				},
 			},
 			local: []map[string]interface{}{

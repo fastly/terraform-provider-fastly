@@ -14,13 +14,13 @@ import (
 
 func TestResourceFastlyFlattenDirectors(t *testing.T) {
 	cases := []struct {
-		remote_director        []*gofastly.Director
-		remote_directorbackend []*gofastly.DirectorBackend
+		remoteDirector        []*gofastly.Director
+		remoteDirectorBackend []*gofastly.DirectorBackend
 
 		local []map[string]interface{}
 	}{
 		{
-			remote_director: []*gofastly.Director{
+			remoteDirector: []*gofastly.Director{
 				{
 					Name:    "somedirector",
 					Type:    3,
@@ -28,7 +28,7 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 					Retries: 10,
 				},
 			},
-			remote_directorbackend: []*gofastly.DirectorBackend{
+			remoteDirectorBackend: []*gofastly.DirectorBackend{
 				{
 					Director: "somedirector",
 					Backend:  "somebackend",
@@ -45,7 +45,7 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 			},
 		},
 		{
-			remote_director: []*gofastly.Director{
+			remoteDirector: []*gofastly.Director{
 				{
 					Name: "somedirector",
 				},
@@ -53,7 +53,7 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 					Name: "someotherdirector",
 				},
 			},
-			remote_directorbackend: []*gofastly.DirectorBackend{
+			remoteDirectorBackend: []*gofastly.DirectorBackend{
 				{
 					Director: "somedirector",
 					Backend:  "somebackend",
@@ -85,7 +85,7 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenDirectors(c.remote_director, c.remote_directorbackend)
+		out := flattenDirectors(c.remoteDirector)
 		// loop, because deepequal wont work with our sets
 		expectedCount := len(c.local)
 		var found int
@@ -210,7 +210,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDirectorsConfig_update1(name, domainName1),
+				Config: testAccServiceVCLDirectorsConfigUpdate1(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
@@ -225,7 +225,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDirectorsConfig_update2(name, domainName1),
+				Config: testAccServiceVCLDirectorsConfigUpdate2(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
@@ -336,7 +336,7 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDirectorsComputeConfig_update1(name, domainName1),
+				Config: testAccServiceVCLDirectorsComputeConfigUpdate1(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
@@ -353,7 +353,7 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDirectorsComputeConfig_update2(name, domainName1),
+				Config: testAccServiceVCLDirectorsComputeConfigUpdate2(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(
@@ -373,13 +373,12 @@ func TestAccFastlyServiceVCL_directors_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -414,14 +413,13 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 }
 
 func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetail, directorBackends []*gofastly.DirectorBackend) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -430,7 +428,6 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion, err)
 		}
@@ -517,7 +514,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLDirectorsConfig_update1(name, domain string) string {
+func testAccServiceVCLDirectorsConfigUpdate1(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -572,7 +569,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLDirectorsConfig_update2(name, domain string) string {
+func testAccServiceVCLDirectorsConfigUpdate2(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -651,7 +648,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLDirectorsComputeConfig_update1(name, domain string) string {
+func testAccServiceVCLDirectorsComputeConfigUpdate1(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"
@@ -711,7 +708,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLDirectorsComputeConfig_update2(name, domain string) string {
+func testAccServiceVCLDirectorsComputeConfigUpdate2(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

@@ -1,5 +1,15 @@
 ## 1.2.0 (Unreleased)
 
+## 1.1.4 (April 28, 2022)
+
+ENHANCEMENTS:
+
+* Avoid unnecessary API calls for `director` block. [#567](https://github.com/fastly/terraform-provider-fastly/pull/567)
+
+BUG FIXES:
+
+* Fix `fastly_tls_configuration` pagination logic [#565](https://github.com/fastly/terraform-provider-fastly/pull/565)
+
 ## 1.1.3 (April 25, 2022)
 
 ENHANCEMENTS:

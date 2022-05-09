@@ -76,12 +76,8 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - **activate** (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
 - **backend** (Block Set) (see [below for nested schema](#nestedblock--backend))
 - **comment** (String) Description field for the service. Default `Managed by Terraform`
-- **default_host** (String) The default hostname
-- **default_ttl** (Number) The default Time-to-live (TTL) for requests
 - **dictionary** (Block Set) (see [below for nested schema](#nestedblock--dictionary))
-- **director** (Block Set) (see [below for nested schema](#nestedblock--director))
 - **force_destroy** (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
-- **healthcheck** (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
 - **id** (String) The ID of this resource.
 - **logging_bigquery** (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
 - **logging_blobstorage** (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
@@ -109,8 +105,6 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - **logging_splunk** (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
 - **logging_sumologic** (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
 - **logging_syslog** (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
-- **stale_if_error** (Boolean) Enables serving a stale object if there is an error
-- **stale_if_error_ttl** (Number) The default time-to-live (TTL) for serving the stale object for the version
 - **version_comment** (String) Description field for the version
 
 ### Read-Only
@@ -191,44 +185,6 @@ Optional:
 Read-Only:
 
 - **dictionary_id** (String) The ID of the dictionary
-
-
-<a id="nestedblock--director"></a>
-### Nested Schema for `director`
-
-Required:
-
-- **backends** (Set of String) Names of defined backends to map the director to. Example: `[ "origin1", "origin2" ]`
-- **name** (String) Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource
-
-Optional:
-
-- **comment** (String) An optional comment about the Director
-- **quorum** (Number) Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`
-- **retries** (Number) How many backends to search if it fails. Default `5`
-- **shield** (String) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response
-- **type** (Number) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`
-
-
-<a id="nestedblock--healthcheck"></a>
-### Nested Schema for `healthcheck`
-
-Required:
-
-- **host** (String) The Host header to send for this Healthcheck
-- **name** (String) A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource
-- **path** (String) The path to check
-
-Optional:
-
-- **check_interval** (Number) How often to run the Healthcheck in milliseconds. Default `5000`
-- **expected_response** (Number) The status code expected from the host. Default `200`
-- **http_version** (String) Whether to use version 1.0 or 1.1 HTTP. Default `1.1`
-- **initial** (Number) When loading a config, the initial number of probes to be seen as OK. Default `3`
-- **method** (String) Which HTTP method to use. Default `HEAD`
-- **threshold** (Number) How many Healthchecks must succeed to be considered healthy. Default `3`
-- **timeout** (Number) Timeout in milliseconds. Default `500`
-- **window** (Number) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`
 
 
 <a id="nestedblock--logging_bigquery"></a>

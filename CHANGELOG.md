@@ -1,4 +1,10 @@
-## 1.2.0 (Unreleased)
+## 2.1.0 (Unreleased)
+
+## 2.0.0 (May 10, 2022)
+
+BUG FIXES:
+
+* Remove unsupported features (Healthchecks, Directors and VCL settings) from `fastly_service_compute` [#569](https://github.com/fastly/terraform-provider-fastly/pull/569)
 
 ## 1.1.4 (April 28, 2022)
 

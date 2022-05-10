@@ -33,7 +33,7 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Set to `true` only if your configuration consumes data sources that do not require authentication, such as `fastly_ip_ranges`",
+				Description: "Set to `true` if your configuration only consumes data sources that do not require authentication, such as `fastly_ip_ranges`",
 			},
 			"force_http2": {
 				Type:        schema.TypeBool,

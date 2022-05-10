@@ -8,7 +8,7 @@ description: |-
 
 # fastly_service_compute
 
-Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target, which is run at the edge using [Wasmtime](https://github.com/bytecodealliance/wasmtime), an open-source WebAssembly runtime. A compute service encompasses Domains and Backends.
+Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target. A compute service encompasses Domains and Backends.
 
 The Service resource requires a domain name that is correctly set up to direct
 traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]

@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// TerraformProviderProductUserAgent is included in the User-Agent header for
+// any API requests made by the provider.
 const TerraformProviderProductUserAgent = "terraform-provider-fastly"
 
 // Provider returns a *schema.Provider.
@@ -31,7 +33,7 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Set this to `true` if you only need data source that does not require authentication such as `fastly_ip_ranges`",
+				Description: "Set to `true` if your configuration only consumes data sources that do not require authentication, such as `fastly_ip_ranges`",
 			},
 			"force_http2": {
 				Type:        schema.TypeBool,

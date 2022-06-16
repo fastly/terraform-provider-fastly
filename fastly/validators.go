@@ -127,6 +127,18 @@ func validateDictionaryItems() schema.SchemaValidateDiagFunc {
 	})
 }
 
+func validateServiceAuthorizationPermission() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice(
+		[]string{
+			"full",
+			"read_only",
+			"purge_select",
+			"purge_all",
+		},
+		false,
+	))
+}
+
 func validateUserRole() schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(validation.StringInSlice(
 		[]string{

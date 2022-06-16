@@ -12,3 +12,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 )
+
+replace github.com/fastly/go-fastly/v6 => github.com/noseglid/go-fastly/v6 v6.0.0-20220615131558-6b72cc694806

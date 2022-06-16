@@ -64,6 +64,7 @@ func Provider() *schema.Provider {
 			"fastly_service_vcl":                     resourceServiceVCL(),
 			"fastly_service_compute":                 resourceServiceCompute(),
 			"fastly_service_acl_entries":             resourceServiceAclEntries(),
+			"fastly_service_authorization":           resourceServiceAuthorization(),
 			"fastly_service_dictionary_items":        resourceServiceDictionaryItems(),
 			"fastly_service_dynamic_snippet_content": resourceServiceDynamicSnippetContent(),
 			"fastly_service_waf_configuration":       resourceServiceWAFConfiguration(),

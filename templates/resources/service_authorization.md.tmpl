@@ -1,0 +1,27 @@
+---
+layout: "fastly"
+page_title: "Fastly: Service Authorization"
+sidebar_current: "docs-fastly-resource-service_authorization"
+description: |-
+  Grants user access to service
+---
+
+# service_authorization
+
+Configures authorization with granular permissions to services. Users can be granted rights for services on different levels.
+
+The Service Authorization resource requires a user id, service id and an optional permission.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/service_authorization_basic_usage.tf" }}
+
+## Import
+
+A Fastly Service Authorization can be imported using their user ID, e.g.
+
+{{ codefile "sh" "examples/resources/service_authorization_import.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

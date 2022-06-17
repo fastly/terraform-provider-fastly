@@ -2,73 +2,36 @@ package fastly
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/google/jsonapi"
 )
 
-type ServiceAuthorizationPermission string
-type ServiceAuthorizationType string
+type SAUser struct {
+	ID string `jsonapi:"primary,user"`
+}
 
-const (
-	PermissionFull        = "full"
-	PermissionReadOnly    = "read_only"
-	PermissionPurgeSelect = "purge_select"
-	PermissionPurgeAll    = "purge_all"
-)
-
-const (
-	ServiceAuthorizationTypeServiceAuthorization = "service_authorization"
-)
+type SAService struct {
+	ID string `jsonapi:"primary,service"`
+}
 
 type ServiceAuthorization struct {
-	ID         string                         `mapstructure:"id"`
-	Permission ServiceAuthorizationPermission `mapstructure:"permission"`
-	UserID     string                         `mapstructure:"relationships.user.data.id"`
-	ServiceID  string                         `mapstructure:"relationships.service.data.id"`
-	Type       ServiceAuthorizationType       `mapstructure:"type"`
+	ID         string     `jsonapi:"primary,service_authorization"`
+	Permission string     `jsonapi:"attr,permission,omitempty"`
+	CreatedAt  *time.Time `jsonapi:"attr,created_at,iso8601"`
+	UpdatedAt  *time.Time `jsonapi:"attr,updated_at,iso8601"`
+	DeltedAt   *time.Time `jsonapi:"attr,deleted_at,iso8601"`
+	User       *SAUser    `jsonapi:"relation,user,omitempty"`
+	Service    *SAService `jsonapi:"relation,service,omitempty"`
 }
 
-type serviceAuthorizationAttributesModel struct {
-	Permission ServiceAuthorizationPermission `mapstructure:"permission,omitempty" json:"permission,omitempty"`
-}
-
-type serviceAuthorizationRelationshipDataModel struct {
-	ID   string `mapstructure:"id" json:"id,omitempty"`
-	Type string `mapstructure:"type" json:"type,omitempty"`
-}
-
-type serviceAuthorizationRelationshipsAPIModel struct {
-	Data serviceAuthorizationRelationshipDataModel `mapstructure:"data" json:"data,omitempty"`
-}
-
-type serviceAuthorizationRelationshipsModel struct {
-	Service serviceAuthorizationRelationshipsAPIModel `mapstructure:"service" json:"service,omitempty"`
-	User    serviceAuthorizationRelationshipsAPIModel `mapstructure:"user" json:"user,omitempty"`
-}
-
-type serviceAuthorizationDataModel struct {
-	ID            string                                  `mapstructure:"id,omitempty" json:"id,omitempty"`
-	Attributes    serviceAuthorizationAttributesModel     `mapstructure:"attributes" json:"attributes,omitempty"`
-	Relationships *serviceAuthorizationRelationshipsModel `mapstructure:"relationships" json:"relationships,omitempty"`
-	Type          ServiceAuthorizationType                `mapstructure:"type" json:"type,omitempty"`
-}
-
-type serviceAuthorizationAPIModel struct {
-	Data serviceAuthorizationDataModel `mapstructure:"data" json:"data"`
-}
-
-func (a serviceAuthorizationAPIModel) ToServiceAuthorization() *ServiceAuthorization {
-	return &ServiceAuthorization{
-		ID:         a.Data.ID,
-		Permission: a.Data.Attributes.Permission,
-		UserID:     a.Data.Relationships.User.Data.ID,
-		ServiceID:  a.Data.Relationships.Service.Data.ID,
-		Type:       a.Data.Type,
-	}
-}
-
+// GetServiceAuthorizationInput is used as input to the GetServiceAuthorization function.
 type GetServiceAuthorizationInput struct {
+	// ID of the service authorization to retrieve.
 	ID string
 }
 
+// GetServiceAuthorization retrieves an existing service authorization using its ID.
 func (c *Client) GetServiceAuthorization(i *GetServiceAuthorizationInput) (*ServiceAuthorization, error) {
 	if i.ID == "" {
 		return nil, ErrMissingID
@@ -80,69 +43,61 @@ func (c *Client) GetServiceAuthorization(i *GetServiceAuthorizationInput) (*Serv
 		return nil, err
 	}
 
-	var a *serviceAuthorizationAPIModel
-	if err := decodeBodyMap(resp.Body, &a); err != nil {
+	var sa ServiceAuthorization
+	if err := jsonapi.UnmarshalPayload(resp.Body, &sa); err != nil {
 		return nil, err
 	}
 
-	return a.ToServiceAuthorization(), nil
+	return &sa, nil
 }
 
+// CreateServiceAuthorizationInput is used as input to the CreateServiceAuthorization function.
 type CreateServiceAuthorizationInput struct {
-	ServiceID  string
-	UserID     string
-	Permission ServiceAuthorizationPermission
+	// ID value is ignored and should not be set, needed to make JSONAPI work correctly.
+	ID string `jsonapi:"primary,service_authorization"`
+
+	// Permission is the level of permissions to grant the user to the service. Valid values are "full", "read_only", "purge_select" or "purge_all".
+	Permission string `jsonapi:"attr,permission,omitempty"`
+
+	// ServiceID is the ID of the service to grant permissions for.
+	Service *SAService `jsonapi:"relation,service,omitempty"`
+
+	// UserID is the ID of the user which should have its permissions set.
+	User *SAUser `jsonapi:"relation,user,omitempty"`
 }
 
+// CreateServiceAuthorization creates a new service authorization granting granular service and user permissions.
 func (c *Client) CreateServiceAuthorization(i *CreateServiceAuthorizationInput) (*ServiceAuthorization, error) {
-	if i.ServiceID == "" {
+	if i.Service == nil || i.Service.ID == "" {
 		return nil, ErrMissingServiceID
 	}
-	if i.UserID == "" {
+	if i.User == nil || i.User.ID == "" {
 		return nil, ErrMissingUserID
 	}
 
-	out := serviceAuthorizationAPIModel{
-		Data: serviceAuthorizationDataModel{
-			Attributes: serviceAuthorizationAttributesModel{
-				Permission: i.Permission,
-			},
-			Relationships: &serviceAuthorizationRelationshipsModel{
-				Service: serviceAuthorizationRelationshipsAPIModel{
-					Data: serviceAuthorizationRelationshipDataModel{
-						ID:   i.ServiceID,
-						Type: "service",
-					},
-				},
-				User: serviceAuthorizationRelationshipsAPIModel{
-					Data: serviceAuthorizationRelationshipDataModel{
-						ID:   i.UserID,
-						Type: "user",
-					},
-				},
-			},
-			Type: ServiceAuthorizationTypeServiceAuthorization,
-		},
-	}
-
-	resp, err := c.PostJSON("/service-authorizations", &out, nil)
+	resp, err := c.PostJSONAPI("/service-authorizations", i, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var a *serviceAuthorizationAPIModel
-	if err := decodeBodyMap(resp.Body, &a); err != nil {
+	var sa ServiceAuthorization
+	if err := jsonapi.UnmarshalPayload(resp.Body, &sa); err != nil {
 		return nil, err
 	}
 
-	return a.ToServiceAuthorization(), nil
+	return &sa, nil
 }
 
+// UpdateServiceAuthorizationInput is used as input to the UpdateServiceAuthorization function.
 type UpdateServiceAuthorizationInput struct {
-	ID          string
-	Permissions ServiceAuthorizationPermission
+	// ID uniquely identifies the service authorization (service and user pair) to be updated.
+	ID string `jsonapi:"primary,service_authorization"`
+
+	// The permission to grant the user to the service referenced by this service authorization.
+	Permissions string `jsonapi:"attr,permission,omitempty"`
 }
 
+// UpdateServiceAuthorization updates an exisitng service authorization. The ID must be known.
 func (c *Client) UpdateServiceAuthorization(i *UpdateServiceAuthorizationInput) (*ServiceAuthorization, error) {
 	if i.ID == "" {
 		return nil, ErrMissingID
@@ -152,51 +107,34 @@ func (c *Client) UpdateServiceAuthorization(i *UpdateServiceAuthorizationInput) 
 		return nil, ErrMissingPermissions
 	}
 
-	out := &serviceAuthorizationAPIModel{
-		Data: serviceAuthorizationDataModel{
-			ID:   i.ID,
-			Type: "service_authorization",
-			Attributes: serviceAuthorizationAttributesModel{
-				Permission: i.Permissions,
-			},
-		},
-	}
-
 	path := fmt.Sprintf("/service-authorizations/%s", i.ID)
-	resp, err := c.PatchJSON(path, out, nil)
+	resp, err := c.PatchJSONAPI(path, i, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var a *serviceAuthorizationAPIModel
-	if err := decodeBodyMap(resp.Body, &a); err != nil {
+	var sa ServiceAuthorization
+	if err := jsonapi.UnmarshalPayload(resp.Body, &sa); err != nil {
 		return nil, err
 	}
 
-	return a.ToServiceAuthorization(), nil
+	return &sa, nil
 }
 
+// DeleteServiceAuthorizationInput is used as input to the DeleteServiceAuthorization function.
 type DeleteServiceAuthorizationInput struct {
+	// ID of the service authorization to delete.
 	ID string
 }
 
+// DeleteServiceAuthorization deletes an existing service authorization using the ID.
 func (c *Client) DeleteServiceAuthorization(i *DeleteServiceAuthorizationInput) error {
 	if i.ID == "" {
 		return ErrMissingID
 	}
 
 	path := fmt.Sprintf("/service-authorizations/%s", i.ID)
-	resp, err := c.Delete(path, nil)
-	if err != nil {
-		return err
-	}
+	_, err := c.Delete(path, nil)
 
-	var r *statusResp
-	if err := decodeBodyMap(resp.Body, &r); err != nil {
-		return err
-	}
-	if !r.Ok() {
-		return ErrNotOK
-	}
-	return nil
+	return err
 }

@@ -51,9 +51,9 @@ func resourceServiceAuthorizationCreate(_ context.Context, d *schema.ResourceDat
 	conn := meta.(*FastlyClient).conn
 
 	sa, err := conn.CreateServiceAuthorization(&gofastly.CreateServiceAuthorizationInput{
-		ServiceID:  d.Get("service_id").(string),
-		UserID:     d.Get("user_id").(string),
-		Permission: gofastly.ServiceAuthorizationPermission(d.Get("permission").(string)),
+		Service:    &gofastly.SAService{ID: d.Get("service_id").(string)},
+		User:       &gofastly.SAUser{ID: d.Get("user_id").(string)},
+		Permission: d.Get("permission").(string),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -75,8 +75,8 @@ func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	d.SetId(sa.ID)
-	d.Set("service_id", sa.ServiceID)
-	d.Set("user_id", sa.UserID)
+	d.Set("service_id", sa.Service.ID)
+	d.Set("user_id", sa.User.ID)
 	d.Set("permission", sa.Permission)
 
 	return nil
@@ -85,11 +85,10 @@ func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData,
 func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*FastlyClient).conn
 
-	// Update Name and/or Role.
 	if d.HasChanges("permission") {
 		_, err := conn.UpdateServiceAuthorization(&gofastly.UpdateServiceAuthorizationInput{
 			ID:          d.Id(),
-			Permissions: gofastly.ServiceAuthorizationPermission(d.Get("permission").(string)),
+			Permissions: d.Get("permission").(string),
 		})
 		if err != nil {
 			return diag.FromErr(err)

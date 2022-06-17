@@ -13,4 +13,4 @@ require (
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 )
 
-replace github.com/fastly/go-fastly/v6 => github.com/noseglid/go-fastly/v6 v6.0.0-20220615131558-6b72cc694806
+replace github.com/fastly/go-fastly/v6 => github.com/noseglid/go-fastly/v6 v6.0.0-20220616150832-4a299a27ec6b

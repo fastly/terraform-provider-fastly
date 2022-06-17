@@ -26,9 +26,8 @@ func resourceServiceAuthorization() *schema.Resource {
 			},
 			"permission": {
 				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "full",
-				Description:      "The permissions to grant the user. Can be `full` (the default), `read_only`, `purge_select` or `purge_all`.",
+				Required:         true,
+				Description:      "The permissions to grant the user. Can be `full`, `read_only`, `purge_select` or `purge_all`.",
 				ValidateDiagFunc: validateServiceAuthorizationPermission(),
 			},
 			"service_id": {

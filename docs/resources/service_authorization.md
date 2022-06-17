@@ -17,7 +17,7 @@ The Service Authorization resource requires a user id, service id and an optiona
 Basic usage:
 
 ```terraform
-resource "fastly_service_vcl" "myservice" {
+resource "fastly_service_vcl" "demo" {
   #...
 }
 
@@ -27,6 +27,9 @@ resource "fastly_user" "user" {
 }
 
 resource "fastly_service_authorization" "auth" {
+  service_id = fastly_service_vcl.demo.id
+  user_id    = fastly_user.user.id
+  permission = "purge_all"
 }
 ```
 
@@ -43,12 +46,9 @@ $ terraform import fastly_service_authorization.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
+- **permission** (String) The permissions to grant the user. Can be `full`, `read_only`, `purge_select` or `purge_all`.
 - **service_id** (String) The ID of the service to grant permissions for.
 - **user_id** (String) The ID of the user which will receive the granted permissions.
-
-### Optional
-
-- **permission** (String) The permissions to grant the user. Can be `full` (the default), `read_only`, `purge_select` or `purge_all`.
 
 ### Read-Only
 

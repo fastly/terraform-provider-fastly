@@ -51,16 +51,15 @@ func dataSourceFastlyDatacenters() *schema.Resource {
 }
 
 func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*FastlyClient).conn
 
 	log.Printf("[DEBUG] Reading datacenters")
 
 	datacenters, err := conn.AllDatacenters()
-
 	if err != nil {
 		return diag.Errorf("error fetching datacenters: %s", err)
 	}
+
 	hashBase, _ := json.Marshal(datacenters)
 	hashString := strconv.Itoa(hashcode.String(string(hashBase)))
 	d.SetId(hashString)
@@ -70,11 +69,9 @@ func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
-
 }
 
 func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]interface{} {
-
 	pops := make([]map[string]interface{}, len(datacenters))
 	if len(datacenters) == 0 {
 		return pops

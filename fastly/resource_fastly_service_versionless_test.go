@@ -25,7 +25,7 @@ func TestAccFastlyServiceVCL_creation_with_versionless_resources(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_create_service_with_one_acl_dictionart_and_dynamic_snippet(serviceName, dictionaryName, aclName, dynamicSnippetName, domainName),
+				Config: testAccServiceVCLConfigCreateServiceWithOneACLDictionaryAndDynamicSnippet(serviceName, dictionaryName, aclName, dynamicSnippetName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.service", &service),
 					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "1"),
@@ -37,7 +37,7 @@ func TestAccFastlyServiceVCL_creation_with_versionless_resources(t *testing.T) {
 	})
 }
 
-func testAccServiceVCLConfig_create_service_with_one_acl_dictionart_and_dynamic_snippet(serviceName, dictionaryName, aclName, dynamicSnippetName, domain string) string {
+func testAccServiceVCLConfigCreateServiceWithOneACLDictionaryAndDynamicSnippet(serviceName, dictionaryName, aclName, dynamicSnippetName, domain string) string {
 	return fmt.Sprintf(`
 locals {
   service_name         = "%s"
@@ -106,7 +106,7 @@ resource "fastly_service_dynamic_snippet_content" "dyn_content" {
 
   content = <<EOT
 if (!req.http.Accept-Language) {
-  set req.http.Accept-Language = table.lookup(${local.dictionary_name}, geoip.country_code, "en-US");
+  set req.http.Accept-Language = table.lookup(${local.dictionary_name}, client.geo.country_code, "en-US");
 }
 
 # block all requests to Admin pages from IP addresses not in office_ip_ranges

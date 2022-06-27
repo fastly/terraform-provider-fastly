@@ -23,7 +23,11 @@ func TestAccFastlyDataSourceDatacenters(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "pops.0.code"),
 					resource.TestCheckResourceAttrSet(resourceName, "pops.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "pops.0.group"),
-					resource.TestCheckResourceAttrSet(resourceName, "pops.0.shield"),
+					// NOTE: we don't validate pops.0.shield as not all pops within the
+					// dataset has a shield value. We also can't rely on the data
+					// staying consistent (e.g. if either the order of the data changes
+					// or a pop that once reported a shield suddently stops reporting one,
+					// then the test becomes flaky.
 				),
 			},
 		},
@@ -32,7 +36,6 @@ func TestAccFastlyDataSourceDatacenters(t *testing.T) {
 
 func testAccFastlyDataSourceDatacenters(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		r := s.RootModule().Resources[n]
 		a := r.Primary.Attributes
 

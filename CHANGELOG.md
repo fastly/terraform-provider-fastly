@@ -1,4 +1,14 @@
-## 2.1.0 (Unreleased)
+## 2.2.0 (Unreleased)
+
+## 2.1.0 (June 27, 2022)
+
+ENHANCEMENTS:
+
+* Support Service Authorizations [#572](https://github.com/fastly/terraform-provider-fastly/pull/572)
+
+BUG FIXES:
+
+* Fix integration tests [#573](https://github.com/fastly/terraform-provider-fastly/pull/573)
 
 ## 2.0.0 (May 10, 2022)
 

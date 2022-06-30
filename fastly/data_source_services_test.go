@@ -24,6 +24,7 @@ func TestAccFastlyDataSourceServices(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.*", map[string]string{
 						"name":    "example_service",
 						"comment": "example_comment",
+						"type":    "vcl",
 					}),
 				),
 			},
@@ -32,8 +33,6 @@ func TestAccFastlyDataSourceServices(t *testing.T) {
 }
 
 func testAccFastlyDataSourceServicesConfig() string {
-	b := make([]byte, 16)
-	rand.Read(b)
 	tf := `
 resource "fastly_service_vcl" "example_service" {
 	name    = "example_service"
@@ -49,7 +48,9 @@ resource "fastly_service_vcl" "example_service" {
 data "fastly_services" "some" {
 	depends_on = [ fastly_service_vcl.example_service ]
 }
-
 `
+
+	b := make([]byte, 16)
+	rand.Read(b)
 	return fmt.Sprintf(tf, hex.EncodeToString(b))
 }

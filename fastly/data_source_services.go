@@ -20,7 +20,7 @@ func dataSourceFastlyServices() *schema.Resource {
 			"ids": {
 				Type:        schema.TypeSet,
 				Computed:    true,
-				Description: "A list of ID of services in your account. This is limited to the services the API token can read.",
+				Description: "A list of service IDs in your account. This is limited to the services the API token can read.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

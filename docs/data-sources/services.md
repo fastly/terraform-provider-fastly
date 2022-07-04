@@ -37,7 +37,7 @@ output "fastly_services_filtered" {
 ### Read-Only
 
 - **details** (Set of Object) A detailed list of Fastly services in your account. This is limited to the services the API token can read. (see [below for nested schema](#nestedatt--details))
-- **ids** (Set of String) A list of ID of services in your account. This is limited to the services the API token can read.
+- **ids** (Set of String) A list of service IDs in your account. This is limited to the services the API token can read.
 
 <a id="nestedatt--details"></a>
 ### Nested Schema for `details`

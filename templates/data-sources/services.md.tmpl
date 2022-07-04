@@ -1,0 +1,19 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_services"
+sidebar_current: "docs-fastly-datasource-fastly_services"
+description: |-
+  Get information on Fastly services.
+---
+
+# fastly_services
+
+Use this data source to get the list of the [Fastly services][1].
+
+## Example Usage
+
+{{ tffile "examples/data-sources/services.tf"}}
+
+[1]: https://developer.fastly.com/reference/api/services/service/
+
+{{ .SchemaMarkdown | trimspace }}

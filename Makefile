@@ -8,6 +8,9 @@ VERSION=$(shell git describe --tags --always)
 VERSION_SHORT=$(shell git describe --tags --always --abbrev=0)
 DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION_SHORT))
 
+GOHOSTOS ?= $(shell go env GOHOSTOS || echo unknown)
+GOHOSTARCH ?= $(shell go env GOHOSTARCH || echo unknown)
+
 # Use a parallelism of 4 by default for tests, overriding whatever GOMAXPROCS is
 # set to. For the acceptance tests especially, the main bottleneck affecting the
 # tests is network bandwidth and Fastly API rate limits. Therefore using the
@@ -58,6 +61,22 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
+# DISABLED until Terraform provider supports go1.18 as goreleaser can't be
+# installed with a version less than 1.18.
+#
+# .PHONY: goreleaser-bin
+# goreleaser-bin:
+# 	go install github.com/goreleaser/goreleaser@latest
+
+# You can pass flags to goreleaser via GORELEASER_ARGS
+# --skip-validate will skip the checks
+# --rm-dist will save you deleting the dist dir
+# --single-target will be quicker and only build for your os & architecture
+# e.g.
+# make goreleaser GORELEASER_ARGS="--skip-validate --rm-dist"
+.PHONY: goreleaser
+goreleaser:
+	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

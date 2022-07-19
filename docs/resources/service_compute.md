@@ -105,6 +105,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - **logging_splunk** (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
 - **logging_sumologic** (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
 - **logging_syslog** (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
+- **reuse** (Boolean) Services that are active cannot be destroyed. This will cause the service to be deactivated allowing it to be reused by importing it into another Terraform project. Default `false`
 - **version_comment** (String) Description field for the version
 
 ### Read-Only

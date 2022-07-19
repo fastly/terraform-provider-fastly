@@ -130,6 +130,12 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Optional:    true,
 				Description: "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
 			},
+
+			"reuse": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Services that are active cannot be destroyed. This will cause the service to be deactivated allowing it to be reused by importing it into another Terraform project. Default `false`",
+			},
 		},
 	}
 
@@ -524,11 +530,10 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta inter
 	// Fastly will fail to delete any service with an Active Version.
 	// If `force_destroy` is given, we deactivate the active version and then send
 	// the DELETE call.
-	if d.Get("force_destroy").(bool) {
+	if d.Get("force_destroy").(bool) || d.Get("reuse").(bool) {
 		s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 			ID: d.Id(),
 		})
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -544,11 +549,16 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	err := conn.DeleteService(&gofastly.DeleteServiceInput{
-		ID: d.Id(),
-	})
-	if err != nil {
-		return diag.FromErr(err)
+	if !d.Get("reuse").(bool) {
+		err := conn.DeleteService(&gofastly.DeleteServiceInput{
+			ID: d.Id(),
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(d.Id())
+		return diag.FromErr(errors.New("don't delete the resource"))
 	}
 
 	return nil

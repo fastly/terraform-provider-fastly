@@ -80,11 +80,6 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
-	// set Token in environment variable so we can validate it's used as a default
-	data := stubSplunkEnv{token: "test-token-stubbed"}
-	resetEnv := setSplunkEnv(data, t)
-	defer resetEnv()
-
 	splunkLogOne := gofastly.Splunk{
 		Name:              "test-splunk-1",
 		URL:               "https://mysplunkendpoint.example.com/services/collector/event",
@@ -118,17 +113,6 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		UseTLS:            false,
 	}
 
-	splunkLogThree := gofastly.Splunk{
-		Name:              "test-splunk-3",
-		URL:               "https://mysplunkendpoint.example.com/services/collector/event",
-		Token:             data.token,
-		Format:            "%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V",
-		FormatVersion:     2,
-		Placement:         "waf_debug",
-		ResponseCondition: "ok_response_2XX",
-		UseTLS:            false,
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
@@ -139,10 +123,8 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_splunk.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "1"),
 				),
 			},
 
@@ -150,9 +132,9 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 				Config: testAccServiceVCLSplunkConfig_update(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo, &splunkLogThree}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "3"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "2"),
 				),
 			},
 		},
@@ -211,10 +193,8 @@ func TestAccFastlyServiceVCL_splunk_default(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_splunk.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "1"),
 				),
 			},
 		},
@@ -340,7 +320,7 @@ func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 		t.Errorf("Failed to generate key and cert: %s", err)
 	}
 	token := "test-token"
-	resetEnv := setSplunkEnv(stubSplunkEnv{cert, token}, t)
+	resetEnv := setSplunkEnv(cert, token, t)
 	defer resetEnv()
 
 	result1, err1 := loggingResourceSchema["token"].DefaultFunc()
@@ -584,18 +564,8 @@ resource "fastly_service_vcl" "foo" {
     response_condition = "ok_response_2XX"
   }
 
-  // NOTE: No 'Token' attribute set, should come from environment.
-  logging_splunk {
-    name               = "test-splunk-3"
-    url                = "https://mysplunkendpoint.example.com/services/collector/event"
-    format             = %q
-    format_version     = 2
-    placement          = "waf_debug"
-    response_condition = "ok_response_2XX"
-  }
-
   force_destroy = true
-}`, serviceName, domainName, format, format, format)
+}`, serviceName, domainName, format, format)
 }
 
 func testAccServiceVCLSplunkConfig_updateUseTLS(serviceName, cert, key string) string {
@@ -718,27 +688,18 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName)
 }
 
-// stubSplunkEnv represents the environment variables to be stubbed.
-type stubSplunkEnv struct {
-	cert, token string
-}
-
 // setSplunkEnv sets the specified values as environment variables and returns a
 // function that can be used to reset the environment variables in case the
 // same variables happen to be in the user's environment when running the tests.
-func setSplunkEnv(env stubSplunkEnv, t *testing.T) func() {
+func setSplunkEnv(cert, token string, t *testing.T) func() {
 	e := getSplunkEnv()
 
 	// stub specified environment variables
-	if env.cert != "" {
-		if err := os.Setenv("FASTLY_SPLUNK_CA_CERT", env.cert); err != nil {
-			t.Fatalf("Error setting env var FASTLY_SPLUNK_CA_CERT: %s", err)
-		}
+	if err := os.Setenv("FASTLY_SPLUNK_CA_CERT", cert); err != nil {
+		t.Fatalf("Error setting env var FASTLY_SPLUNK_CA_CERT: %s", err)
 	}
-	if env.token != "" {
-		if err := os.Setenv("FASTLY_SPLUNK_TOKEN", env.token); err != nil {
-			t.Fatalf("Error setting env var FASTLY_SPLUNK_TOKEN: %s", err)
-		}
+	if err := os.Setenv("FASTLY_SPLUNK_TOKEN", token); err != nil {
+		t.Fatalf("Error setting env var FASTLY_SPLUNK_TOKEN: %s", err)
 	}
 
 	// function will reset all the environment variables we modified above

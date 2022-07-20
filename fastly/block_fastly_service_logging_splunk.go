@@ -25,7 +25,7 @@ func NewServiceLoggingSplunk(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *SplunkServiceAttributeHandler) Key() string { return h.key }
 
 func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -40,7 +40,7 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", ""),
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", nil),
 			Description: "The Splunk token to be used for authentication",
 			Sensitive:   true,
 		},
@@ -113,9 +113,8 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
@@ -147,7 +146,6 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Splunks for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -164,8 +162,7 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSplunkInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -225,8 +222,7 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSplunkInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

@@ -1009,6 +1009,7 @@ Optional:
 Required:
 
 - **name** (String) A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- **token** (String, Sensitive) The Splunk token to be used for authentication
 - **url** (String) The Splunk URL to stream logs to
 
 Optional:
@@ -1021,7 +1022,6 @@ Optional:
 - **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format.
 - **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
 - **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
-- **token** (String, Sensitive) The Splunk token to be used for authentication
 - **use_tls** (Boolean) Whether to use TLS for secure logging. Default: `false`
 
 

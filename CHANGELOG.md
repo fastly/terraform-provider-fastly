@@ -1,5 +1,11 @@
 ## 2.3.0 (Unreleased)
 
+## 2.2.1 (July 21, 2022)
+
+BUG FIXES:
+
+* Fix Splunk `token` attribute to be required [#579](https://github.com/fastly/terraform-provider-fastly/pull/579)
+
 ## 2.2.0 (July 5, 2022)
 
 ENHANCEMENTS:

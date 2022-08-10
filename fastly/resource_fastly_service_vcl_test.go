@@ -534,7 +534,6 @@ func testAccCheckServiceVCLExists(n string, service *gofastly.ServiceDetail) res
 		latest, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 			ID: rs.Primary.ID,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -547,7 +546,6 @@ func testAccCheckServiceVCLExists(n string, service *gofastly.ServiceDetail) res
 
 func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, name string, domains []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -557,7 +555,6 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Domains for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -581,7 +578,6 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 
 func testAccCheckFastlyServiceVCLAttributes_backends(service *gofastly.ServiceDetail, name string, backends []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -591,7 +587,6 @@ func testAccCheckFastlyServiceVCLAttributes_backends(service *gofastly.ServiceDe
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -778,7 +773,7 @@ func testAccCheckServiceVCLDestroy(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		l, err := conn.ListServices(&gofastly.ListServicesInput{})
 		if err != nil {
-			return fmt.Errorf("[WARN] Error listing servcies when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("[WARN] Error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
 		}
 
 		for _, s := range l {

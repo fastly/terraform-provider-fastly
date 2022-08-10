@@ -110,8 +110,7 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLAttributes_bq(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -121,7 +120,6 @@ func testAccCheckFastlyServiceVCLAttributes_bq(service *gofastly.ServiceDetail, 
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up BigQuery records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -270,7 +268,6 @@ func getBQEnv() *currentBQEnv {
 
 // TestResourceFastlyFlattenBigQuery tests the flattenBigQuery function
 func TestResourceFastlyFlattenBigQuery(t *testing.T) {
-
 	secretKey, err := generateKey()
 	if err != nil {
 		t.Errorf("Failed to generate key: %s", err)

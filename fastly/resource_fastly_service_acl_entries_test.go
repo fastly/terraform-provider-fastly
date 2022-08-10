@@ -258,7 +258,6 @@ func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
 }
 
 func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
-
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -363,9 +362,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceAclEntriesRemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]interface{}) resource.TestCheckFunc {
-
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != serviceName {
 			return fmt.Errorf("[ERR] Bad name, expected (%s), got (%s)", serviceName, service.Name)
 		}
@@ -376,7 +373,6 @@ func testAccCheckFastlyServiceAclEntriesRemoteState(service *gofastly.ServiceDet
 			ServiceVersion: service.ActiveVersion.Number,
 			Name:           aclName,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -385,7 +381,6 @@ func testAccCheckFastlyServiceAclEntriesRemoteState(service *gofastly.ServiceDet
 			ServiceID: service.ID,
 			ACLID:     acl.ID,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up ACL entry records for (%s), ACL (%s): %s", service.Name, acl.ID, err)
 		}
@@ -413,7 +408,6 @@ func testAccCheckFastlyServiceAclEntriesRemoteState(service *gofastly.ServiceDet
 }
 
 func testAccServiceDictionaryItemsV1Config_one_acl_no_entries(serviceName, aclName string) string {
-
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 

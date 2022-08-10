@@ -545,7 +545,7 @@ func testAccCheckServiceVCLExists(n string, service *gofastly.ServiceDetail) res
 }
 
 func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, name string, domains []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -577,7 +577,7 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 }
 
 func testAccCheckFastlyServiceVCLAttributes_backends(service *gofastly.ServiceDetail, name string, backends []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}

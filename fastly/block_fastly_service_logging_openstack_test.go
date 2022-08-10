@@ -204,14 +204,12 @@ func TestAccFastlyServiceVCL_logging_openstack_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLOpenstackAttributes(service *gofastly.ServiceDetail, openstack []*gofastly.Openstack, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		openstackList, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up OpenStack Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

@@ -50,7 +50,6 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 			t.Fatalf("Error matching: %s", diff)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
@@ -98,7 +97,6 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccServiceVCLScalyrConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -159,14 +157,12 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Scalyr Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

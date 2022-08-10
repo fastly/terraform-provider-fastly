@@ -27,7 +27,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Key() string {
 }
 
 func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -104,7 +104,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBigQueryInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
@@ -138,7 +138,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *sche
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}

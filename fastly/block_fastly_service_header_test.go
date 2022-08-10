@@ -12,7 +12,6 @@ import (
 )
 
 func TestResourceFastlyFlattenHeaders(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.Header
 		local  []map[string]interface{}
@@ -53,7 +52,6 @@ func TestResourceFastlyFlattenHeaders(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
@@ -199,14 +197,12 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetail, headers []*gofastly.Header) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		headersList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Headers for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

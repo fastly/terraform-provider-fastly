@@ -12,7 +12,6 @@ import (
 )
 
 func TestResourceFastlyFlattenPapertrail(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.Papertrail
 		local  []map[string]interface{}
@@ -48,7 +47,6 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
@@ -80,7 +78,6 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccServiceVCLPapertrailConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
@@ -141,14 +138,12 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceDetail, papertrails []*gofastly.Papertrail, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Papertrail for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

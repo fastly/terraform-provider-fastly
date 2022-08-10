@@ -178,7 +178,7 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 // resourceImport satisfies the Terraform resource schema Importer "interface"
 func resourceImport() *schema.ResourceImporter {
 	return &schema.ResourceImporter{
-		StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+		StateContext: func(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 			parts := strings.Split(d.Id(), "@")
 			if len(parts) > 2 {
 				return nil, fmt.Errorf("expected import ID to either be the service ID, or be specified as <service id>@<service version>, e.g. nci48cow8ncw8ocn75@3")

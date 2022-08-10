@@ -12,7 +12,6 @@ import (
 )
 
 func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.RequestSetting
 		local  []map[string]interface{}
@@ -52,7 +51,6 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
@@ -111,14 +109,12 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.ServiceDetail, rqs []*gofastly.RequestSetting) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		rqList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Request Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

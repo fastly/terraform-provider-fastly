@@ -12,7 +12,6 @@ import (
 )
 
 func TestResourceFastlyFlattenVCLs(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.VCL
 		local  []map[string]interface{}
@@ -41,7 +40,6 @@ func TestResourceFastlyFlattenVCLs(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
@@ -83,8 +81,7 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, name string, vclCount int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -94,7 +91,6 @@ func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, 
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up VCL for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

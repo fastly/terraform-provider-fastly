@@ -131,8 +131,7 @@ func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLAttributesSumologic(service *gofastly.ServiceDetail, name string, sumologic gofastly.Sumologic, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -142,7 +141,6 @@ func testAccCheckFastlyServiceVCLAttributesSumologic(service *gofastly.ServiceDe
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Sumologics for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -164,7 +162,6 @@ func testAccCheckFastlyServiceVCLAttributesSumologic(service *gofastly.ServiceDe
 }
 
 func testAccServiceVCLConfigSumologicCompute(name, domainName, backendName string, sumologic gofastly.Sumologic) string {
-
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"
@@ -194,7 +191,6 @@ resource "fastly_service_compute" "foo" {
 }
 
 func testAccServiceVCLConfigSumologic(name, domainName, backendName string, sumologic gofastly.Sumologic) string {
-
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -14,11 +14,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const testAwsPrimaryAccessKey = "KEYABCDEFGHIJKLMNOPQ"
-const testAwsPrimarySecretKey = "SECRET0123456789012345678901234567890123"
+const (
+	testAwsPrimaryAccessKey = "KEYABCDEFGHIJKLMNOPQ"
+	testAwsPrimarySecretKey = "SECRET0123456789012345678901234567890123"
+)
 
-const testAwsOtherAccessKey = "KEYQPONMLKJIHGFEDCBA"
-const testAwsOtherSecretKey = "SECRETOTHER01234567890123456789012345678"
+const (
+	testAwsOtherAccessKey = "KEYQPONMLKJIHGFEDCBA"
+	testAwsOtherSecretKey = "SECRETOTHER01234567890123456789012345678"
+)
 
 const testS3IAMRole = "arn:aws:iam::123456789012:role/S3Access"
 
@@ -194,7 +198,6 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccServiceVCLS3LoggingConfig(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
@@ -384,14 +387,12 @@ func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDetail, s3s []*gofastly.S3, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up S3 Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

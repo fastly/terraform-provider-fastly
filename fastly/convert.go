@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
@@ -31,11 +32,12 @@ func diagToErr(diagnostics diag.Diagnostics) error {
 // This is to enable emulation of deprecated SchemaValidateFunc behaviour in the unit tests for SchemaValidateDiagFuncs.
 func diagToWarnsAndErrs(diagnostics diag.Diagnostics) (warnings []string, errors []string) {
 	for _, diagnostic := range diagnostics {
-		if diagnostic.Severity == diag.Warning {
+		switch diagnostic.Severity {
+		case diag.Warning:
 			warnings = append(warnings, diagnostic.Summary)
-		} else if diagnostic.Severity == diag.Error {
+		case diag.Error:
 			errors = append(errors, diagnostic.Summary)
-		} else {
+		default:
 			errors = append(errors, fmt.Sprintf("%s (unknown diagnostic severity: %d)", diagnostic.Summary, diagnostic.Severity))
 		}
 	}

@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
+var errFastlyNoServiceFound = errors.New("no matching Fastly service found")
 
 const (
 	// ServiceTypeVCL is the type for VCL services.
@@ -216,7 +216,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Comment: d.Get("comment").(string),
 		Type:    serviceDef.GetType(),
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -353,7 +352,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
 		})
-
 		if err != nil {
 			return diag.Errorf("[ERR] Error checking validation: %s", err)
 		}
@@ -408,7 +406,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		// Check if not found, if so, clear ID field and exit early.
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
-			log.Printf("[WARN] %s for ID (%s)", fastlyNoServiceFoundErr, d.Id())
+			log.Printf("[WARN] %s for ID (%s)", errFastlyNoServiceFound, d.Id())
 			d.SetId("")
 			return diag.FromErr(err)
 		}
@@ -493,7 +491,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// have an empty ActiveService version (no version is active, so we can't
 	// query for information on it).
 	if s.ActiveVersion.Number != 0 {
-
 		// This delegates read to all the attribute handlers which can then manage reading state for
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
@@ -528,7 +525,6 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta inter
 		s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 			ID: d.Id(),
 		})
-
 		if err != nil {
 			return diag.FromErr(err)
 		}

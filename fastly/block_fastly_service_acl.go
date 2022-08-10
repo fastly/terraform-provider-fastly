@@ -111,7 +111,7 @@ func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 		}
 
 		if !mayDelete {
-			return fmt.Errorf("Cannot delete ACL (%s), list is not empty. Either delete the entries first, or set force_destroy to true and apply it before making this change.", resource["acl_id"].(string))
+			return fmt.Errorf("cannot delete ACL (%s), list is not empty. Either delete the entries first, or set force_destroy to true and apply it before making this change", resource["acl_id"].(string))
 		}
 	}
 

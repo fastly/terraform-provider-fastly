@@ -48,7 +48,7 @@ func resourceServiceDictionaryItems() *schema.Resource {
 				ValidateDiagFunc: validateDictionaryItems(),
 				Elem:             schema.TypeString,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.HasChange("dictionary_id") == false && d.Get("manage_items") == false
+					return !d.HasChange("dictionary_id") && d.Get("manage_items") == false
 				},
 			},
 		},
@@ -65,7 +65,6 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 	var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
 	for key, val := range items {
-
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
 			Operation: gofastly.CreateBatchOperation,
 			ItemKey:   key,
@@ -84,7 +83,6 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -102,7 +100,6 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		// Handle Removal
 		for key := range os {
 			if _, ok := ns[key]; !ok {
-
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
 					Operation: gofastly.DeleteBatchOperation,
 					ItemKey:   key,
@@ -113,7 +110,6 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		for key, val := range ns {
 			// Handle replaces
 			if _, ok := os[key]; ok {
-
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
 					Operation: gofastly.UpdateBatchOperation,
 					ItemKey:   key,
@@ -123,13 +119,11 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 
 			// Handle additions
 			if _, ok := os[key]; !ok {
-
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
 					Operation: gofastly.CreateBatchOperation,
 					ItemKey:   key,
 					ItemValue: val.(string),
 				})
-
 			}
 		}
 
@@ -191,7 +185,7 @@ func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceD
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {
-		return nil, fmt.Errorf("Invalid id: %s. The ID should be in the format [service_id]/[dictionary_id]", d.Id())
+		return nil, fmt.Errorf("invalid id: %s. The ID should be in the format [service_id]/[dictionary_id]", d.Id())
 	}
 
 	serviceID := split[0]
@@ -199,12 +193,12 @@ func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceD
 
 	err := d.Set("service_id", serviceID)
 	if err != nil {
-		return nil, fmt.Errorf("Error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return nil, fmt.Errorf("error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	err = d.Set("dictionary_id", dictionaryID)
 	if err != nil {
-		return nil, fmt.Errorf("Error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return nil, fmt.Errorf("error importing dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	return []*schema.ResourceData{d}, nil
@@ -220,7 +214,6 @@ func flattenDictionaryItems(dictItemList []*gofastly.DictionaryItem) map[string]
 }
 
 func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictionaryID string, batchDictionaryItems []*gofastly.BatchDictionaryItem) error {
-
 	batchSize := gofastly.BatchModifyMaximumOperations
 
 	for i := 0; i < len(batchDictionaryItems); i += batchSize {
@@ -234,7 +227,6 @@ func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictiona
 			DictionaryID: dictionaryID,
 			Items:        batchDictionaryItems[i:j],
 		})
-
 		if err != nil {
 			return err
 		}

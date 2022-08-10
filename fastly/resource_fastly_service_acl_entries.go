@@ -48,7 +48,7 @@ func resourceServiceAclEntries() *schema.Resource {
 				Description: "ACL Entries",
 				MaxItems:    gofastly.MaximumACLSize,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.HasChange("acl_id") == false && d.Get("manage_entries") == false
+					return !d.HasChange("acl_id") && d.Get("manage_entries") == false
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -92,7 +92,7 @@ func resourceServiceAclEntriesCreate(ctx context.Context, d *schema.ResourceData
 	aclID := d.Get("acl_id").(string)
 	entries := d.Get("entry").(*schema.Set)
 
-	var batchACLEntries = []*gofastly.BatchACLEntry{}
+	batchACLEntries := []*gofastly.BatchACLEntry{}
 
 	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]interface{})
@@ -121,7 +121,6 @@ func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, me
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -135,13 +134,12 @@ func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, me
 }
 
 func resourceServiceAclEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	var batchACLEntries = []*gofastly.BatchACLEntry{}
+	batchACLEntries := []*gofastly.BatchACLEntry{}
 
 	if d.HasChange("entry") {
 
@@ -212,7 +210,7 @@ func resourceServiceAclEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	aclID := d.Get("acl_id").(string)
 	entries := d.Get("entry").(*schema.Set)
 
-	var batchACLEntries = []*gofastly.BatchACLEntry{}
+	batchACLEntries := []*gofastly.BatchACLEntry{}
 
 	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]interface{})
@@ -234,7 +232,6 @@ func resourceServiceAclEntriesDelete(_ context.Context, d *schema.ResourceData, 
 }
 
 func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface{} {
-
 	var resultList []map[string]interface{}
 
 	for _, currentAclEntry := range aclEntryList {
@@ -267,7 +264,7 @@ func resourceServiceACLEntriesImport(_ context.Context, d *schema.ResourceData, 
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {
-		return nil, fmt.Errorf("Invalid id: %s. The ID should be in the format [service_id]/[acl_id]", d.Id())
+		return nil, fmt.Errorf("invalid id: %s. The ID should be in the format [service_id]/[acl_id]", d.Id())
 	}
 
 	serviceID := split[0]
@@ -275,19 +272,18 @@ func resourceServiceACLEntriesImport(_ context.Context, d *schema.ResourceData, 
 
 	err := d.Set("service_id", serviceID)
 	if err != nil {
-		return nil, fmt.Errorf("Error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return nil, fmt.Errorf("error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	err = d.Set("acl_id", aclID)
 	if err != nil {
-		return nil, fmt.Errorf("Error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return nil, fmt.Errorf("error importing ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
 func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, batchACLEntries []*gofastly.BatchACLEntry) error {
-
 	batchSize := gofastly.BatchModifyMaximumOperations
 
 	for i := 0; i < len(batchACLEntries); i += batchSize {
@@ -301,7 +297,6 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 			ACLID:     aclID,
 			Entries:   batchACLEntries[i:j],
 		})
-
 		if err != nil {
 			return err
 		}

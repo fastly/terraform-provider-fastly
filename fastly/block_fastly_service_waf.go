@@ -121,14 +121,10 @@ func wafExists(conn *gofastly.Client, s string, v int, id string) bool {
 		ServiceVersion: v,
 		ID:             id,
 	})
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
-
 	var wl []map[string]interface{}
 	if len(wafList) == 0 {
 		return wl

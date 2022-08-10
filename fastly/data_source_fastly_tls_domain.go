@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
@@ -87,11 +88,11 @@ func findTLSDomain(conn *fastly.Client, d *schema.ResourceData) (*fastly.TLSDoma
 	}
 
 	if len(domains) == 0 {
-		return nil, fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return nil, fmt.Errorf("your query returned no results. Please change your search criteria and try again")
 	}
 
 	if len(domains) > 1 {
-		return nil, fmt.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
+		return nil, fmt.Errorf("your query returned more than one result. Please change to a more specific search criteria and try again")
 	}
 
 	return domains[0], nil

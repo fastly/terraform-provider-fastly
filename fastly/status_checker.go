@@ -65,7 +65,7 @@ func (c *WAFDeploymentChecker) waitForDeployment(ctx context.Context, wafID stri
 
 	_, err := createStateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("Error waiting for WAF Version (%s) to be updated: %v", wafID, err)
+		return fmt.Errorf("error waiting for WAF Version (%s) to be updated: %v", wafID, err)
 	}
 	return nil
 }

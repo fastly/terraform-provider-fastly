@@ -25,7 +25,7 @@ func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *SFTPServiceAttributeHandler) Key() string { return h.key }
 
 func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -159,8 +159,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	if opts.Password == "" && opts.SecretKey == "" {
@@ -182,7 +181,6 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -190,7 +188,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 	ell := flattenSFTP(sftpList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -200,8 +198,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 	return nil
 }
 
-func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSFTPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -273,8 +270,7 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
@@ -348,7 +344,7 @@ func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
 func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
 	df := sftpMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateSFTPInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

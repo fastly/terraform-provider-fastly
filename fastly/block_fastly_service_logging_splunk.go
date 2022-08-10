@@ -153,7 +153,7 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	spl := flattenSplunks(splunkList)
 
 	for _, element := range spl {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), spl); err != nil {

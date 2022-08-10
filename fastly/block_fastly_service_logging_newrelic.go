@@ -25,7 +25,7 @@ func NewServiceLoggingNewRelic(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *NewRelicServiceAttributeHandler) Key() string { return h.key }
 
 func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -82,8 +82,7 @@ func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly New Relic logging addition opts: %#v", opts)
@@ -101,7 +100,6 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up New Relic logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -109,7 +107,7 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	dll := flattenNewRelic(newrelicList)
 
 	for _, element := range dll {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), dll); err != nil {
@@ -119,8 +117,7 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateNewRelicInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -159,8 +156,7 @@ func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 	return nil
 }
 
-func (h *NewRelicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly New Relic logging endpoint removal opts: %#v", opts)
@@ -221,7 +217,7 @@ func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]interface{}
 func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
 	df := newrelicMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateNewRelicInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

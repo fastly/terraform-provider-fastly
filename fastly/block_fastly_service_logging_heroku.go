@@ -25,7 +25,7 @@ func NewServiceLoggingHeroku(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *HerokuServiceAttributeHandler) Key() string { return h.key }
 
 func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -82,8 +82,7 @@ func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Heroku logging addition opts: %#v", opts)
@@ -101,7 +100,6 @@ func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Heroku logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -109,7 +107,7 @@ func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	ell := flattenHeroku(herokuList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -119,8 +117,7 @@ func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHerokuInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -159,8 +156,7 @@ func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *HerokuServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Heroku logging endpoint removal opts: %#v", opts)
@@ -223,7 +219,7 @@ func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]interface{} {
 func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
 	df := herokuMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHerokuInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

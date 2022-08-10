@@ -145,7 +145,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *sche
 	bql := flattenBigQuery(BQList)
 
 	for _, element := range bql {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), bql); err != nil {

@@ -25,7 +25,7 @@ func NewServiceLoggingScalyr(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *ScalyrServiceAttributeHandler) Key() string { return h.key }
 
 func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -84,8 +84,7 @@ func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging addition opts: %#v", opts)
@@ -103,7 +102,6 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Scalyr logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -111,7 +109,7 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	scalyrLogList := flattenScalyr(scalyrList)
 
 	for _, element := range scalyrLogList {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), scalyrLogList); err != nil {
@@ -121,8 +119,7 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateScalyrInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -161,8 +158,7 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *ScalyrServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging endpoint removal opts: %#v", opts)
@@ -223,7 +219,7 @@ func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]interface{} {
 func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {
 	df := scalyrMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateScalyrInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

@@ -102,7 +102,6 @@ func testAccCheckUserExists(n string, user *gofastly.User) resource.TestCheckFun
 		latest, err := conn.GetUser(&gofastly.GetUserInput{
 			ID: rs.Primary.ID,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -121,6 +120,10 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		u, err := conn.GetCurrentUser()
+		if err != nil {
+			return fmt.Errorf("[WARN] Error getting current user when deleting Fastly User (%s): %s", rs.Primary.ID, err)
+		}
+
 		l, err := conn.ListCustomerUsers(&gofastly.ListCustomerUsersInput{
 			CustomerID: u.CustomerID,
 		})

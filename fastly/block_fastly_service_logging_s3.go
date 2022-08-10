@@ -26,7 +26,7 @@ func NewServiceLoggingS3(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *S3LoggingServiceAttributeHandler) Key() string { return h.key }
 
 func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -197,8 +197,7 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := h.buildCreate(resource, d.Id(), serviceVersion)
 	if err != nil {
 		return err
@@ -218,7 +217,6 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up S3 Logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -226,7 +224,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	sl := flattenS3s(s3List)
 
 	for _, element := range sl {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), sl); err != nil {
@@ -235,8 +233,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateS3Input{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -317,8 +314,7 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
-func (h *S3LoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 	err := deleteS3(conn, opts)
 	if err != nil {
@@ -395,7 +391,7 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
 	df := s3Map.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateS3Input{
 		ServiceID:                    serviceID,
 		ServiceVersion:               serviceVersion,

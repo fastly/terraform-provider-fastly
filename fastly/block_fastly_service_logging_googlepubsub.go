@@ -25,7 +25,7 @@ func NewServiceLoggingGooglePubSub(sa ServiceMetadata) ServiceAttributeDefinitio
 func (h *GooglePubSubServiceAttributeHandler) Key() string { return h.key }
 
 func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -96,8 +96,7 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging addition opts: %#v", opts)
@@ -115,7 +114,6 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Google Cloud Pub/Sub logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -123,7 +121,7 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 	googlepubsubLogList := flattenGooglePubSub(googlepubsubList)
 
 	for _, element := range googlepubsubLogList {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), googlepubsubLogList); err != nil {
@@ -133,8 +131,7 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdatePubsubInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -179,8 +176,7 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 	return nil
 }
 
-func (h *GooglePubSubServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging endpoint removal opts: %#v", opts)
@@ -245,7 +241,7 @@ func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]inter
 func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
 	df := googlepubsubMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreatePubsubInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

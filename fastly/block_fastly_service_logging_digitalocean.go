@@ -25,7 +25,7 @@ func NewServiceLoggingDigitalOcean(sa ServiceMetadata) ServiceAttributeDefinitio
 func (h *DigitalOceanServiceAttributeHandler) Key() string { return h.key }
 
 func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -142,8 +142,7 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
@@ -161,7 +160,6 @@ func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up DigitalOcean Spaces logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -169,7 +167,7 @@ func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.
 	ell := flattenDigitalOcean(digitaloceanList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -179,8 +177,7 @@ func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDigitalOceanInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -243,8 +240,7 @@ func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schem
 	return nil
 }
 
-func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging endpoint removal opts: %#v", opts)
@@ -316,7 +312,7 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string
 func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDigitalOceanInput {
 	df := digitaloceanMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateDigitalOceanInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

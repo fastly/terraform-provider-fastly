@@ -25,7 +25,7 @@ func NewServiceLoggingKinesis(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *KinesisServiceAttributeHandler) Key() string { return h.key }
 
 func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -103,8 +103,7 @@ func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging addition opts: %#v", opts)
@@ -122,7 +121,6 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -130,7 +128,7 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	ell := flattenKinesis(kinesisList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -140,8 +138,7 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	return nil
 }
 
-func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateKinesisInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -189,8 +186,7 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *KinesisServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging endpoint removal opts: %#v", opts)
@@ -256,7 +252,7 @@ func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]interface{} {
 func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateKinesisInput {
 	df := kinesisMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateKinesisInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

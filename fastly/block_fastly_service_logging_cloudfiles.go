@@ -25,7 +25,7 @@ func NewServiceLoggingCloudfiles(sa ServiceMetadata) ServiceAttributeDefinition 
 func (h *CloudfilesServiceAttributeHandler) Key() string { return h.key }
 
 func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -143,8 +143,7 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
@@ -162,7 +161,6 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Cloud Files logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -170,7 +168,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	ell := flattenCloudfiles(cloudfilesList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -180,8 +178,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
-func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCloudfilesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -244,8 +241,7 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging endpoint removal opts: %#v", opts)
@@ -317,7 +313,7 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]inter
 func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
 	df := cloudfilesMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateCloudfilesInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

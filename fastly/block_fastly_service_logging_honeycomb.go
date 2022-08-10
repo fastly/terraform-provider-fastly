@@ -25,7 +25,7 @@ func NewServiceLoggingHoneycomb(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *HoneycombServiceAttributeHandler) Key() string { return h.key }
 
 func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -82,8 +82,7 @@ func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Honeycomb logging addition opts: %#v", opts)
@@ -101,7 +100,6 @@ func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Honeycomb logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -109,7 +107,7 @@ func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	ell := flattenHoneycomb(honeycombList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -119,8 +117,7 @@ func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHoneycombInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -159,8 +156,7 @@ func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
-func (h *HoneycombServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Honeycomb logging endpoint removal opts: %#v", opts)
@@ -223,7 +219,7 @@ func flattenHoneycomb(honeycombList []*gofastly.Honeycomb) []map[string]interfac
 func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHoneycombInput {
 	df := honeycombMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHoneycombInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

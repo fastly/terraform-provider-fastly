@@ -25,7 +25,7 @@ func NewServiceLoggingLogshuttle(sa ServiceMetadata) ServiceAttributeDefinition 
 func (h *LogshuttleServiceAttributeHandler) Key() string { return h.key }
 
 func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -82,8 +82,7 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging addition opts: %#v", opts)
@@ -101,7 +100,6 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Log Shuttle logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -109,7 +107,7 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	ell := flattenLogshuttle(logshuttleList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -119,8 +117,7 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
-func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogshuttleInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -159,8 +156,7 @@ func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *LogshuttleServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging endpoint removal opts: %#v", opts)
@@ -223,7 +219,7 @@ func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]inter
 func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {
 	df := logshuttleMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateLogshuttleInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

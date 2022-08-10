@@ -25,7 +25,7 @@ func NewServiceLoggingLogentries(sa ServiceMetadata) ServiceAttributeDefinition 
 func (h *LogentriesServiceAttributeHandler) Key() string { return h.key }
 
 func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -89,9 +89,8 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateLogentriesInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
@@ -119,7 +118,6 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 	}
@@ -127,7 +125,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	lel := flattenLogentries(logentriesList)
 
 	for _, element := range lel {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), lel); err != nil {
@@ -137,8 +135,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
-func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogentriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -183,8 +180,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteLogentriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

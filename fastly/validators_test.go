@@ -2,8 +2,9 @@ package fastly
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
 	"testing"
+
+	"github.com/hashicorp/go-cty/cty"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 )
@@ -308,7 +309,6 @@ func TestValidateSnippetType(t *testing.T) {
 }
 
 func TestValidateDictionaryItemMaxSize(t *testing.T) {
-
 	for name, testcase := range map[string]struct {
 		value          map[string]interface{}
 		expectedWarns  int
@@ -331,7 +331,6 @@ func TestValidateDictionaryItemMaxSize(t *testing.T) {
 }
 
 func createTestDictionaryItems(size int) map[string]interface{} {
-
 	dictionaryItems := make(map[string]interface{})
 
 	for i := 0; i < size; i++ {
@@ -418,7 +417,7 @@ func TestValidateMultiplePEMBlocks(t *testing.T) {
 		"three blocks different types": {fmt.Sprintf("%s\n%s\n%s", cert, ca, key), "CERTIFICATE", 0, 1},
 		"gibberish":                    {"jkljansdfj\nasldfjhadskjfh\nlshakdjf", "", 0, 1},
 	} {
-		t.Run(fmt.Sprintf(name), func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			actualWarnings, actualErrors := diagToWarnsAndErrs(validatePEMBlocks(testCase.expectedPemType)(testCase.value, cty.GetAttrPath("intermediates_blob")))
 
 			if len(actualWarnings) != testCase.expectedWarnings {

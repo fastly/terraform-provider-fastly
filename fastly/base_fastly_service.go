@@ -134,7 +134,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			"reuse": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Services that are active cannot be destroyed. This will cause the service to be deactivated allowing it to be reused by importing it into another Terraform project. Default `false`",
+				Description: "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
 			},
 		},
 	}
@@ -222,7 +222,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Comment: d.Get("comment").(string),
 		Type:    serviceDef.GetType(),
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -359,7 +358,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
 		})
-
 		if err != nil {
 			return diag.Errorf("[ERR] Error checking validation: %s", err)
 		}
@@ -499,7 +497,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// have an empty ActiveService version (no version is active, so we can't
 	// query for information on it).
 	if s.ActiveVersion.Number != 0 {
-
 		// This delegates read to all the attribute handlers which can then manage reading state for
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {

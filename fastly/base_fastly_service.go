@@ -126,15 +126,17 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 
 			"force_destroy": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Description:   "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
+				ConflictsWith: []string{"reuse"},
 			},
 
 			"reuse": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Description:   "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
+				ConflictsWith: []string{"force_destroy"},
 			},
 		},
 	}

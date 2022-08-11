@@ -555,9 +555,6 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
-		d.SetId(d.Id())
-		return diag.FromErr(errors.New("don't delete the resource"))
 	}
 
 	return nil

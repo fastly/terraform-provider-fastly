@@ -283,6 +283,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - **logging_syslog** (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
 - **request_setting** (Block Set) (see [below for nested schema](#nestedblock--request_setting))
 - **response_object** (Block Set) (see [below for nested schema](#nestedblock--response_object))
+- **reuse** (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
 - **snippet** (Block Set) (see [below for nested schema](#nestedblock--snippet))
 - **stale_if_error** (Boolean) Enables serving a stale object if there is an error
 - **stale_if_error_ttl** (Number) The default time-to-live (TTL) for serving the stale object for the version

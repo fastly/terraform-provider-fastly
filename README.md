@@ -42,7 +42,10 @@ $ make build
 
 Alongside the newly built binary a file called `developer_overrides.tfrc` will be created.  The `make build` target will communicate
 back details for setting the `TF_CLI_CONFIG_FILE` environment variable that will enable Terraform to use your locally built provider binary.
+
 * HashiCorp - [Development Overrides for Provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers).
+
+> **NOTE**: If you have issues seeing any behaviours from code changes you've made to the provider, then it might be the terraform CLI is getting confused by which provider binary it should be using. Check inside the `./bin/` directory to see if there are multiple providers with different commit hashes (e.g. `terraform-provider-fastly_v2.2.0-5-gfdc37cee`) and delete them first before running `make build`. This should help the Terraform CLI resolve to the correct binary.
 
 ### Debugging the provider
 

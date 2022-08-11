@@ -126,9 +126,17 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 
 			"force_destroy": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Description:   "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
+				ConflictsWith: []string{"reuse"},
+			},
+
+			"reuse": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Description:   "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
+				ConflictsWith: []string{"force_destroy"},
 			},
 		},
 	}
@@ -216,7 +224,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Comment: d.Get("comment").(string),
 		Type:    serviceDef.GetType(),
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -353,7 +360,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
 		})
-
 		if err != nil {
 			return diag.Errorf("[ERR] Error checking validation: %s", err)
 		}
@@ -493,7 +499,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// have an empty ActiveService version (no version is active, so we can't
 	// query for information on it).
 	if s.ActiveVersion.Number != 0 {
-
 		// This delegates read to all the attribute handlers which can then manage reading state for
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
@@ -524,11 +529,10 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta inter
 	// Fastly will fail to delete any service with an Active Version.
 	// If `force_destroy` is given, we deactivate the active version and then send
 	// the DELETE call.
-	if d.Get("force_destroy").(bool) {
+	if d.Get("force_destroy").(bool) || d.Get("reuse").(bool) {
 		s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 			ID: d.Id(),
 		})
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -544,11 +548,13 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	err := conn.DeleteService(&gofastly.DeleteServiceInput{
-		ID: d.Id(),
-	})
-	if err != nil {
-		return diag.FromErr(err)
+	if !d.Get("reuse").(bool) {
+		err := conn.DeleteService(&gofastly.DeleteServiceInput{
+			ID: d.Id(),
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

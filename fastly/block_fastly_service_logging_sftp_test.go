@@ -155,7 +155,6 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccServiceVCLSFTPConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -247,14 +246,12 @@ func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail, sftps []*gofastly.SFTP, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up SFTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

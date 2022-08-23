@@ -25,7 +25,7 @@ func NewServiceLoggingSyslog(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *SyslogServiceAttributeHandler) Key() string { return h.key }
 
 func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -127,9 +127,8 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSyslogInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
@@ -163,7 +162,6 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Syslog for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 	}
@@ -171,7 +169,7 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	sll := flattenSyslogs(syslogList)
 
 	for _, element := range sll {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), sll); err != nil {
@@ -180,8 +178,7 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSyslogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -247,8 +244,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSyslogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

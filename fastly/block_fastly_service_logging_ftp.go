@@ -25,7 +25,7 @@ func NewServiceLoggingFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *FTPServiceAttributeHandler) Key() string { return h.key }
 
 func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -144,8 +144,7 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly FTP logging addition opts: %#v", opts)
@@ -163,7 +162,6 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up FTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -171,7 +169,7 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 	ell := flattenFTP(ftpList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -180,8 +178,7 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 	return nil
 }
 
-func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateFTPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -247,8 +244,7 @@ func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly FTP logging endpoint removal opts: %#v", opts)
@@ -319,7 +315,7 @@ func flattenFTP(ftpList []*gofastly.FTP) []map[string]interface{} {
 func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {
 	df := ftpMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateFTPInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

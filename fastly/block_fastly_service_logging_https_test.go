@@ -50,7 +50,6 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
@@ -169,14 +168,12 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up HTTPS Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -248,6 +245,7 @@ resource "fastly_service_vcl" "foo" {
 }
 `, name, domain)
 }
+
 func testAccServiceVCLHTTPSComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {

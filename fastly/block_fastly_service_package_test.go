@@ -86,14 +86,12 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDetail, computePackage *gofastly.Package) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		wp, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

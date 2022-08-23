@@ -12,7 +12,6 @@ import (
 )
 
 func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.HealthCheck
 		local  []map[string]interface{}
@@ -58,7 +57,6 @@ func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
@@ -129,14 +127,12 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.ServiceDetail, healthchecks []*gofastly.HealthCheck) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Healthcheck for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

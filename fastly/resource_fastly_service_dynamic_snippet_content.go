@@ -43,7 +43,7 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 				Required:    true,
 				Description: "The VCL code that specifies exactly what the snippet does",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.HasChange("snippet_id") == false && d.Get("manage_snippets") == false
+					return !d.HasChange("snippet_id") && d.Get("manage_snippets") == false
 				},
 			},
 		},
@@ -51,7 +51,6 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 }
 
 func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -77,7 +76,6 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*FastlyClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -92,7 +90,6 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 			ID:        snippetID,
 			Content:   gofastly.String(content),
 		})
-
 		if err != nil {
 			return diag.Errorf("Error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)
 		}
@@ -133,7 +130,7 @@ func resourceServiceDynamicSnippetContentImport(_ context.Context, d *schema.Res
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {
-		return nil, fmt.Errorf("Invalid id: %s. The ID should be in the format [service_id]/[snippet_id]", d.Id())
+		return nil, fmt.Errorf("invalid id: %s. The ID should be in the format [service_id]/[snippet_id]", d.Id())
 	}
 
 	serviceID := split[0]
@@ -141,12 +138,12 @@ func resourceServiceDynamicSnippetContentImport(_ context.Context, d *schema.Res
 
 	err := d.Set("service_id", serviceID)
 	if err != nil {
-		return nil, fmt.Errorf("Error importing dynamic snippet content: service %s, dynamic snippet %s, %s", serviceID, snippetID, err)
+		return nil, fmt.Errorf("error importing dynamic snippet content: service %s, dynamic snippet %s, %s", serviceID, snippetID, err)
 	}
 
 	err = d.Set("snippet_id", snippetID)
 	if err != nil {
-		return nil, fmt.Errorf("Error importing dynamic snippet content: service %s, dynamic snippet %s, %s", serviceID, snippetID, err)
+		return nil, fmt.Errorf("error importing dynamic snippet content: service %s, dynamic snippet %s, %s", serviceID, snippetID, err)
 	}
 
 	return []*schema.ResourceData{d}, nil

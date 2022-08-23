@@ -129,8 +129,7 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLAttributes_dictionary(service *gofastly.ServiceDetail, dictionary *gofastly.Dictionary, name, dictName string, writeOnly bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -141,7 +140,6 @@ func testAccCheckFastlyServiceVCLAttributes_dictionary(service *gofastly.Service
 			ServiceVersion: service.ActiveVersion.Number,
 			Name:           dictName,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -163,7 +161,7 @@ func testAccCheckFastlyServiceVCLAttributes_dictionary(service *gofastly.Service
 // testAccAddDictionaryItems doesn't technically check for anything despite returning a TestCheckFunc. Instead it is
 // used for its side effect of adding a Dictionary Item
 func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		_, err := conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
 			ServiceID:    dictionary.ServiceID,

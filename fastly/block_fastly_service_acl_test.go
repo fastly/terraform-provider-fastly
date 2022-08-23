@@ -111,8 +111,7 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLAttributes_acl(service *gofastly.ServiceDetail, name, aclName string, acl *gofastly.ACL) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -123,7 +122,6 @@ func testAccCheckFastlyServiceVCLAttributes_acl(service *gofastly.ServiceDetail,
 			ServiceVersion: service.ActiveVersion.Number,
 			Name:           aclName,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -141,7 +139,7 @@ func testAccCheckFastlyServiceVCLAttributes_acl(service *gofastly.ServiceDetail,
 // testAccAddACLEntries doesn't technically check for anything despite returning a TestCheckFunc. Instead it is used for
 // its side effect of adding an ACL Entry
 func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		_, err := conn.CreateACLEntry(&gofastly.CreateACLEntryInput{
 			ServiceID: acl.ServiceID,

@@ -25,7 +25,7 @@ func NewServiceLoggingPaperTrail(sa ServiceMetadata) ServiceAttributeDefinition 
 func (h *PaperTrailServiceAttributeHandler) Key() string { return h.key }
 
 func (h *PaperTrailServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -81,9 +81,8 @@ func (h *PaperTrailServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	vla := h.getVCLLoggingAttributes(resource)
 
 	opts := gofastly.CreatePapertrailInput{
 		ServiceID:         d.Id(),
@@ -111,7 +110,6 @@ func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Papertrail for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -119,7 +117,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	pl := flattenPapertrails(papertrailList)
 
 	for _, element := range pl {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), pl); err != nil {
@@ -129,8 +127,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
-func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdatePapertrailInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -169,8 +166,7 @@ func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeletePapertrailInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

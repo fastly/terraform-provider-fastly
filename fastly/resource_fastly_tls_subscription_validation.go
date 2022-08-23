@@ -47,7 +47,7 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 		}
 
 		if subscription.State != subscriptionStateIssued {
-			return resource.RetryableError(fmt.Errorf("Expected subscription state to be %s but it was %s", subscriptionStateIssued, subscription.State))
+			return resource.RetryableError(fmt.Errorf("expected subscription state to be %s but it was %s", subscriptionStateIssued, subscription.State))
 		}
 
 		err = diagToErr(resourceFastlyTLSSubscriptionValidationRead(ctx, d, meta))
@@ -57,7 +57,6 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 
 		return nil
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

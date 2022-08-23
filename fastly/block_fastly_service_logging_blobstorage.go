@@ -25,7 +25,7 @@ func NewServiceLoggingBlobStorage(sa ServiceMetadata) ServiceAttributeDefinition
 func (h *BlobStorageLoggingServiceAttributeHandler) Key() string { return h.key }
 
 func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -135,9 +135,8 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBlobStorageInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
@@ -173,7 +172,6 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Blob Storages for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -181,7 +179,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 	bsl := flattenBlobStorages(blobStorageList)
 
 	for _, element := range bsl {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), bsl); err != nil {
@@ -190,8 +188,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 	return nil
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -257,8 +254,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 	return nil
 }
 
-func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

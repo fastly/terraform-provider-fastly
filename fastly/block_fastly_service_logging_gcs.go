@@ -25,7 +25,7 @@ func NewServiceLoggingGCS(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *GCSLoggingServiceAttributeHandler) Key() string { return h.key }
 
 func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -126,9 +126,8 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateGCSInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
@@ -161,7 +160,6 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -169,7 +167,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	gcsl := flattenGCS(GCSList)
 
 	for _, element := range gcsl {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), gcsl); err != nil {
@@ -179,8 +177,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateGCSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -240,8 +237,7 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteGCSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

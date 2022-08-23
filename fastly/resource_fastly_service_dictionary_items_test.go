@@ -188,7 +188,6 @@ func TestAccFastlyServiceDictionaryItem_update(t *testing.T) {
 }
 
 func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
-
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -228,7 +227,6 @@ func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 }
 
 func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
-
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -268,13 +266,12 @@ func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 }
 
 func TestAccFastlyServiceDictionaryItem_batch_1001_items(t *testing.T) {
-
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
 
-	var expectedRemoteItems = make(map[string]string)
+	expectedRemoteItems := make(map[string]string)
 	expectedBatchSize := gofastly.BatchModifyMaximumOperations + 1
 
 	for i := 0; i < expectedBatchSize; i++ {
@@ -351,7 +348,7 @@ func testAccCheckFastlyServiceDictionaryItemsDoesNotExists(n string) resource.Te
 }
 
 func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.ServiceDetail, name, dictName string, expectedItems map[string]string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -362,7 +359,6 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 			ServiceVersion: service.Version.Number,
 			Name:           dictName,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -371,7 +367,6 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 			ServiceID:    service.ID,
 			DictionaryID: dict.ID,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Dictionary Items records for (%s), dictionary (%s): %s", service.Name, dict.ID, err)
 		}
@@ -387,11 +382,9 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 }
 
 func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetail, dictName, expectedKey, expectedValue string) {
-
 	conn := testAccProvider.Meta().(*FastlyClient).conn
 
 	dict, err := getDictionaryByName(service, dictName)
-
 	if err != nil {
 		t.Fatalf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 	}
@@ -407,7 +400,6 @@ func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	if err != nil {
 		t.Fatalf("[ERR] Error Createing Dictionary item for (%s), dictionary (%s): %s", service.Name, dict.Name, err)
 	}
-
 }
 
 func getDictionaryByName(service *gofastly.ServiceDetail, dictName string) (*gofastly.Dictionary, error) {
@@ -425,7 +417,7 @@ func testAccServiceDictionaryItemsConfig_one_dictionary_with_items(serviceName, 
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	var dictItems = "{\n"
+	dictItems := "{\n"
 
 	for key, value := range dictItemsList {
 		dictItems += fmt.Sprintf("%s: \"%s\"\n", key, value)
@@ -473,7 +465,6 @@ resource "fastly_service_dictionary_items" "items" {
 }
 
 func testAccServiceDictionaryItemsConfig_one_dictionary_no_items(serviceName, dictName string) string {
-
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -500,7 +491,6 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceDictionaryItemsConfig_create_dynamic(serviceName, dictName string) string {
-
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 

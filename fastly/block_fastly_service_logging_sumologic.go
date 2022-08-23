@@ -25,7 +25,7 @@ func NewServiceLoggingSumologic(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *SumologicServiceAttributeHandler) Key() string { return h.key }
 
 func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -84,9 +84,8 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
-	var vla = h.getVCLLoggingAttributes(resource)
+func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSumologicInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
@@ -113,7 +112,6 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Sumologic for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -121,7 +119,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	sul := flattenSumologics(sumologicList)
 
 	for _, element := range sul {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), sul); err != nil {
@@ -130,8 +128,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSumologicInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -173,8 +170,7 @@ func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
-func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSumologicInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

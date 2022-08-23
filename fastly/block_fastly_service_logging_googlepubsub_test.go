@@ -57,7 +57,6 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestUserEmailSchemaDefaultFunc(t *testing.T) {
@@ -250,14 +249,12 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.ServiceDetail, googlepubsub []*gofastly.Pubsub, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Google Cloud Pub/Sub Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

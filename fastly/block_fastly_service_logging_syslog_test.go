@@ -69,7 +69,6 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
@@ -117,7 +116,6 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccServiceVCLSyslogConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
@@ -267,14 +265,12 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetail, syslogs []*gofastly.Syslog, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Syslog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

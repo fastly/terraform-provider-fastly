@@ -162,8 +162,7 @@ func TestAccFastlyServiceDynamicSnippetContent_normal_snippet_is_not_removed(t *
 }
 
 func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly.ServiceDetail, name, dynamicSnippetName, expectedContent string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -174,7 +173,6 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 			ServiceVersion: service.ActiveVersion.Number,
 			Name:           dynamicSnippetName,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -183,7 +181,6 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 			ServiceID: service.ID,
 			ID:        snippet.ID,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Dynamic snippet content for (%s), snippet (%s): %s", service.Name, snippet.ID, err)
 		}
@@ -197,8 +194,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 }
 
 func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(service *gofastly.ServiceDetail, name, dynamicSnippetName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -208,7 +204,6 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -224,14 +219,12 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 }
 
 func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetail, dynamicSnippetName string, snippetType gofastly.SnippetType, content string) {
-
 	conn := testAccProvider.Meta().(*FastlyClient).conn
 
 	newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
 		ServiceID:      service.ID,
 		ServiceVersion: service.ActiveVersion.Number,
 	})
-
 	if err != nil {
 		t.Fatalf("[ERR] Error cloning service version (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 	}
@@ -243,7 +236,6 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 		Type:           snippetType,
 		Dynamic:        1,
 	})
-
 	if err != nil {
 		t.Fatalf("[ERR] Error creating Dynamic snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 	}
@@ -270,13 +262,11 @@ func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetai
 	latest, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 		ID: service.ID,
 	})
-
 	if err != nil {
 		t.Fatalf("[ERR] Error retrieving service details for (%s): %s", service.ID, err)
 	}
 
 	*service = *latest
-
 }
 
 func testAccServiceDynamicSnippetContentConfigWithSnippet(serviceName, snippetName, content string) string {

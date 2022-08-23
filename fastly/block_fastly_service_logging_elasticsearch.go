@@ -25,7 +25,7 @@ func NewServiceLoggingElasticSearch(sa ServiceMetadata) ServiceAttributeDefiniti
 func (h *ElasticSearchServiceAttributeHandler) Key() string { return h.key }
 
 func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -144,8 +144,7 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging addition opts: %#v", opts)
@@ -163,7 +162,6 @@ func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Elasticsearch logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -171,7 +169,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema
 	ell := flattenElasticsearch(elasticsearchList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -180,8 +178,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema
 	return nil
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateElasticsearchInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -247,8 +244,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 	return nil
 }
 
-func (h *ElasticSearchServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging endpoint removal opts: %#v", opts)
@@ -316,7 +312,7 @@ func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[str
 func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateElasticsearchInput {
 	df := elasticsearchMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateElasticsearchInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

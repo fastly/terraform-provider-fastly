@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var fastlyNoServiceFoundErr = errors.New("No matching Fastly Service found")
+var errFastlyNoServiceFound = errors.New("no matching Fastly service found")
 
 const (
 	// ServiceTypeVCL is the type for VCL services.
@@ -186,7 +186,7 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 // resourceImport satisfies the Terraform resource schema Importer "interface"
 func resourceImport() *schema.ResourceImporter {
 	return &schema.ResourceImporter{
-		StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+		StateContext: func(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
 			parts := strings.Split(d.Id(), "@")
 			if len(parts) > 2 {
 				return nil, fmt.Errorf("expected import ID to either be the service ID, or be specified as <service id>@<service version>, e.g. nci48cow8ncw8ocn75@3")
@@ -414,7 +414,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		// Check if not found, if so, clear ID field and exit early.
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
-			log.Printf("[WARN] %s for ID (%s)", fastlyNoServiceFoundErr, d.Id())
+			log.Printf("[WARN] %s for ID (%s)", errFastlyNoServiceFound, d.Id())
 			d.SetId("")
 			return diag.FromErr(err)
 		}

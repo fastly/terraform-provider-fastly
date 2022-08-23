@@ -12,7 +12,6 @@ import (
 )
 
 func TestAccFastlyServiceWAFVersionV1DetermineVersion(t *testing.T) {
-
 	cases := []struct {
 		remote  []*gofastly.WAFVersion
 		local   int
@@ -192,7 +191,6 @@ func TestAccFastlyServiceWAFVersionDelete(t *testing.T) {
 }
 
 func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
-
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -278,8 +276,7 @@ func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.ServiceDetail, local map[string]interface{}, latestVersion int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		// The "activate" attribute is not stored on the Fastly API and must be ignored.
 		delete(local, "activate")
 		conn := testAccProvider.Meta().(*FastlyClient).conn
@@ -321,8 +318,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 }
 
 func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDetail, latestVersion int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
@@ -380,13 +376,11 @@ func testAccFastlyServiceWAFVersionV1GetVersionNumber(versions []*gofastly.WAFVe
 }
 
 func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface{}, rules string, exclusions string) string {
-
 	hcl := `
         resource "fastly_service_waf_configuration" "waf" {
           waf_id = fastly_service_vcl.foo.waf[0].waf_id
          `
 	for k, v := range m {
-
 		switch t := reflect.TypeOf(v).String(); t {
 		case "string":
 			hcl = hcl + fmt.Sprintf(` %s = "%s"
@@ -407,7 +401,6 @@ func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface
 }
 
 func testAccFastlyServiceWAFVersionV1(name, extraHCL string) string {
-
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -425,26 +418,26 @@ resource "fastly_service_vcl" "foo" {
     name    = "tf -test backend"
   }
 
-	# The WAF was updated to insert an ALWAYS_FALSE default condition, which 
-	# broke our tests because the terraform state was unaware of the default 
-	# condition resource that was being dynamically created by the API. This 
+	# The WAF was updated to insert an ALWAYS_FALSE default condition, which
+	# broke our tests because the terraform state was unaware of the default
+	# condition resource that was being dynamically created by the API. This
 	# meant terraform would flag the difference in state as unexpected, and
 	# subsequently produce an error.
 	#
-	# To resolve this error we define the default condition in our terraform which 
-	# prevented the API from creating it, but there was a bug in the API 
+	# To resolve this error we define the default condition in our terraform which
+	# prevented the API from creating it, but there was a bug in the API
 	# implementation which meant the name of the condition had to match exactly
 	# otherwise it would consider the condition missing.
 	#
 	# TODO(integralist):
-	# Once the bug in the API has been fixed, come back and update the tests so 
+	# Once the bug in the API has been fixed, come back and update the tests so
 	# that we can validate the test terraform code no longer requires the
 	# condition name to be ALWAYS_FALSE (e.g. set the name to "foobar").
 	#
 	# NOTE:
-	# If the WAF isn't in place and without that ALWAYS_FALSE condition, the WAF 
-	# response object (403) will be served for all inbound traffic. This 
-	# condition was added by the WAF team to prevent Fastly from returning a 403 
+	# If the WAF isn't in place and without that ALWAYS_FALSE condition, the WAF
+	# response object (403) will be served for all inbound traffic. This
+	# condition was added by the WAF team to prevent Fastly from returning a 403
 	# on all of the customer traffic before WAF is provisioned to the service.
 
 	condition {

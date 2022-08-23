@@ -13,7 +13,6 @@ import (
 )
 
 func TestResourceFastlyFlattenLogentries(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.Logentries
 		local  []map[string]interface{}
@@ -50,7 +49,6 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
@@ -148,14 +146,12 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceDetail, logentriess []*gofastly.Logentries, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Logentries Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

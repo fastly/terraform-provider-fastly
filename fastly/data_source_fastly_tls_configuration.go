@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -168,9 +169,9 @@ func getTLSConfigurationFilters(d *schema.ResourceData) []func(*fastly.CustomTLS
 		service := v.(string)
 		filters = append(filters, func(c *fastly.CustomTLSConfiguration) bool {
 			if service == tlsPlatformService {
-				return c.Bulk == true
+				return c.Bulk
 			}
-			return c.Bulk == false
+			return !c.Bulk
 		})
 	}
 	if v, ok := d.GetOk("default"); ok {

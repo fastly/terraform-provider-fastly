@@ -3,13 +3,10 @@ package fastly
 import (
 	"io/ioutil"
 	"reflect"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
-import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // pgpPublicKey returns a PEM encoded PGP public key suitable for testing.
@@ -107,11 +104,11 @@ func assertEqualsSliceOfMaps(t *testing.T, actualSlice []map[string]interface{},
 	for i, actualMap := range actualSlice {
 		var keysToBeRemoved []string
 		for key, value := range actualMap {
-			switch value.(type) {
+			switch value := value.(type) {
 			case *schema.Set:
 				expected := expectedSlice[i][key]
 				keysToBeRemoved = append(keysToBeRemoved, key)
-				if !value.(*schema.Set).Equal(expected) {
+				if !value.Equal(expected) {
 					t.Errorf("Expected sets %s to be equal: %#v\n     got: %#v", key, expected, actualSlice)
 				}
 			}

@@ -78,7 +78,6 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccServiceVCLLogglyConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
@@ -138,14 +137,12 @@ func TestAccFastlyServiceVCL_logging_loggly_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetail, loggly []*gofastly.Loggly, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Loggly Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

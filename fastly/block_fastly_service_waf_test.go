@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var serviceRef = "fastly_service_vcl.foo"
-var condition = "prefetch"
-var response = "response"
-var extraResponse = `
+var (
+	serviceRef    = "fastly_service_vcl.foo"
+	condition     = "prefetch"
+	response      = "response"
+	extraResponse = `
   response_object {
 	name = "UpdatedResponse"
 	status = "403"
@@ -22,6 +23,7 @@ var extraResponse = `
 	content = "content"
 	request_condition = "ALWAYS_FALSE"
   }`
+)
 
 var extraCondition = `
   condition {
@@ -176,8 +178,7 @@ func TestAccFastlyServiceVCLWAFUpdateCondition(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
@@ -195,14 +196,12 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 }
 
 func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, response, condition string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
 			FilterVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
@@ -225,14 +224,13 @@ func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, 
 
 func composeWAF(condition, response string) string {
 	return fmt.Sprintf(`
-		waf { 
-			prefetch_condition = "%s" 
+		waf {
+			prefetch_condition = "%s"
 			response_object    = "%s"
 		}`, condition, response)
 }
 
 func testAccServiceVCLWAF(name, extraHCL, waf, config string) string {
-
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -252,26 +250,26 @@ resource "fastly_service_vcl" "foo" {
 
   %s
 
-	# The WAF was updated to insert an ALWAYS_FALSE default condition, which 
-	# broke our tests because the terraform state was unaware of the default 
-	# condition resource that was being dynamically created by the API. This 
+	# The WAF was updated to insert an ALWAYS_FALSE default condition, which
+	# broke our tests because the terraform state was unaware of the default
+	# condition resource that was being dynamically created by the API. This
 	# meant terraform would flag the difference in state as unexpected, and
 	# subsequently produce an error.
 	#
-	# To resolve this error we define the default condition in our terraform which 
-	# prevented the API from creating it, but there was a bug in the API 
+	# To resolve this error we define the default condition in our terraform which
+	# prevented the API from creating it, but there was a bug in the API
 	# implementation which meant the name of the condition had to match exactly
 	# otherwise it would consider the condition missing.
 	#
 	# TODO(integralist):
-	# Once the bug in the API has been fixed, come back and update the tests so 
+	# Once the bug in the API has been fixed, come back and update the tests so
 	# that we can validate the test terraform code no longer requires the
 	# condition name to be ALWAYS_FALSE (e.g. set the name to "foobar").
 	#
 	# NOTE:
-	# If the WAF isn't in place and without that ALWAYS_FALSE condition, the WAF 
-	# response object (403) will be served for all inbound traffic. This 
-	# condition was added by the WAF team to prevent Fastly from returning a 403 
+	# If the WAF isn't in place and without that ALWAYS_FALSE condition, the WAF
+	# response object (403) will be served for all inbound traffic. This
+	# condition was added by the WAF team to prevent Fastly from returning a 403
 	# on all of the customer traffic before WAF is provisioned to the service.
 
 	condition {
@@ -301,5 +299,4 @@ resource "fastly_service_vcl" "foo" {
 }
 %s
 `, name, domainName, backendName, extraHCL, waf, config)
-
 }

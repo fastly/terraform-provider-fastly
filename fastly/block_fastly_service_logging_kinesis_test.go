@@ -188,14 +188,12 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDetail, Kinesis []*gofastly.Kinesis, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		KinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Kinesis Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

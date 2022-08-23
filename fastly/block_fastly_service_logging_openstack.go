@@ -25,7 +25,7 @@ func NewServiceLoggingOpenstack(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *OpenstackServiceAttributeHandler) Key() string { return h.key }
 
 func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -143,8 +143,7 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
@@ -162,7 +161,6 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up OpenStack logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -170,7 +168,7 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	ell := flattenOpenstack(openstackList)
 
 	for _, element := range ell {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), ell); err != nil {
@@ -180,8 +178,7 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateOpenstackInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -247,8 +244,7 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
-func (h *OpenstackServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
@@ -320,7 +316,7 @@ func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]interfac
 func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
 	df := openstackMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateOpenstackInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

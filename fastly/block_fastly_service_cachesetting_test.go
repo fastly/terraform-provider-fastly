@@ -12,7 +12,6 @@ import (
 )
 
 func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.CacheSetting
 		local  []map[string]interface{}
@@ -45,7 +44,6 @@ func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
@@ -103,14 +101,12 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.ServiceDetail, cs []*gofastly.CacheSetting) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		cList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Cache Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

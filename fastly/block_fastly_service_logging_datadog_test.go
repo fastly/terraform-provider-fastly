@@ -225,14 +225,12 @@ func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDetail, datadog []*gofastly.Datadog, serviceType string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up Datadog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}

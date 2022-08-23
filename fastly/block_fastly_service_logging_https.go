@@ -26,7 +26,7 @@ func NewServiceLoggingHTTPS(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *HTTPSLoggingServiceAttributeHandler) Key() string { return h.key }
 
 func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// Required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -160,8 +160,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
@@ -179,7 +178,6 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -187,7 +185,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 	hll := flattenHTTPS(httpsList)
 
 	for _, element := range hll {
-		element = h.pruneVCLLoggingAttributes(element)
+		h.pruneVCLLoggingAttributes(element)
 	}
 
 	if err := d.Set(h.GetKey(), hll); err != nil {
@@ -197,8 +195,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHTTPSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -270,8 +267,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 	return nil
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
@@ -345,7 +341,7 @@ func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]interface{} {
 func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
 	df := httpsMap.(map[string]interface{})
 
-	var vla = h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateHTTPSInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,

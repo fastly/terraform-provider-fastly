@@ -12,7 +12,6 @@ import (
 )
 
 func TestResourceFastlyFlattenSnippets(t *testing.T) {
-
 	cases := []struct {
 		remote []*gofastly.Snippet
 		local  []map[string]interface{}
@@ -55,7 +54,6 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}
-
 }
 
 func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
@@ -126,14 +124,12 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDetail, snippets []*gofastly.Snippet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

@@ -150,8 +150,7 @@ func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLAttributes_gcs(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
@@ -161,7 +160,6 @@ func testAccCheckFastlyServiceVCLAttributes_gcs(service *gofastly.ServiceDetail,
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
-
 		if err != nil {
 			return fmt.Errorf("[ERR] Error looking up GCSs for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}

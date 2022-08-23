@@ -270,8 +270,7 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.ServiceDetail, expected []gofastly.WAFRuleExclusion, wafVerNo int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
+	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
@@ -347,7 +346,6 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 }
 
 func testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(exclusions []gofastly.WAFRuleExclusion) string {
-
 	var result string
 	for _, excl := range exclusions {
 		var modsecIds []string

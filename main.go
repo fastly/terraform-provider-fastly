@@ -1,3 +1,4 @@
+// Package main is the entry point for the Fastly Terraform provider.
 package main
 
 import (

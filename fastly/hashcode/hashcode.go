@@ -1,3 +1,4 @@
+// Package hashcode contains functions for converting strings into hash codes.
 package hashcode
 
 import (

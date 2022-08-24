@@ -1,3 +1,5 @@
+// Package version contains a variable used to construct the User-Agent for API
+// requests.
 package version
 
 var (

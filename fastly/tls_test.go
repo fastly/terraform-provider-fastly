@@ -13,15 +13,20 @@ import (
 	"time"
 )
 
+const (
+	emptyString = ""
+	formatDigit = "%d"
+	bitSize     = 2048
+)
+
 func generateKey() (string, error) {
 	reader := rand.Reader
-	bitSize := 2048
 
 	key, err := rsa.GenerateKey(reader, bitSize)
 	if err != nil {
-		return "", err
+		return emptyString, err
 	}
-	var privateKey = &pem.Block{
+	privateKey := &pem.Block{
 		Type:  "PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}
@@ -34,12 +39,12 @@ func generateKey() (string, error) {
 func generateKeyAndCert(SANs ...string) (string, string, error) {
 	privKey, key, err := buildPrivateKey()
 	if err != nil {
-		return "", "", err
+		return emptyString, emptyString, err
 	}
 
 	cert, err := buildCertificate(privKey, SANs...)
 	if err != nil {
-		return "", "", err
+		return emptyString, emptyString, err
 	}
 
 	return key, cert, nil
@@ -48,17 +53,17 @@ func generateKeyAndCert(SANs ...string) (string, string, error) {
 func generateKeyAndMultipleCerts(SANs ...string) (string, string, string, error) {
 	privKey, key, err := buildPrivateKey()
 	if err != nil {
-		return "", "", "", err
+		return emptyString, emptyString, emptyString, err
 	}
 
 	cert, err := buildCertificate(privKey, SANs...)
 	if err != nil {
-		return "", "", "", err
+		return emptyString, emptyString, emptyString, err
 	}
 
 	cert2, err := buildCertificate(privKey, SANs...)
 	if err != nil {
-		return "", "", "", err
+		return emptyString, emptyString, emptyString, err
 	}
 
 	return key, cert, cert2, nil
@@ -67,30 +72,30 @@ func generateKeyAndMultipleCerts(SANs ...string) (string, string, string, error)
 func generateKeyAndCertWithCA(domains ...string) (string, string, string, error) {
 	caCert, caPEM, caKey, err := buildCACertificate(domains...)
 	if err != nil {
-		return "", "", "", err
+		return emptyString, emptyString, emptyString, err
 	}
 
 	privateKey, key, err := buildPrivateKey()
 	if err != nil {
-		return "", "", "", err
+		return emptyString, emptyString, emptyString, err
 	}
 
 	cert, err := buildCertificateFromCA(caCert, privateKey, caKey, domains...)
 	if err != nil {
-		return "", "", "", err
+		return emptyString, emptyString, emptyString, err
 	}
 
 	return key, cert, caPEM, nil
 }
 
 func buildPrivateKey() (*rsa.PrivateKey, string, error) {
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	key, err := rsa.GenerateKey(rand.Reader, bitSize)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to generate private key: %s", err)
+		return nil, emptyString, fmt.Errorf("failed to generate private key: %s", err)
 	}
 	privKeyBytes, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
-		return nil, "", fmt.Errorf("unable to marshal private key: %v", err)
+		return nil, emptyString, fmt.Errorf("unable to marshal private key: %v", err)
 	}
 	keyBlock := &pem.Block{
 		Type:  "PRIVATE KEY",
@@ -105,7 +110,7 @@ func buildCertificate(privateKey *rsa.PrivateKey, domains ...string) (string, er
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			SerialNumber: fmt.Sprintf("%d", serialNumber),
+			SerialNumber: fmt.Sprintf(formatDigit, serialNumber),
 		},
 		NotBefore:             now,
 		NotAfter:              now.Add(24 * 90 * time.Hour),
@@ -123,7 +128,7 @@ func buildCertificate(privateKey *rsa.PrivateKey, domains ...string) (string, er
 
 	c, err := formatCertificate(template, template, &privateKey.PublicKey, privateKey)
 	if err != nil {
-		return "", err
+		return emptyString, err
 	}
 	return c, nil
 }
@@ -134,7 +139,7 @@ func buildCertificateFromCA(ca *x509.Certificate, privateKey *rsa.PrivateKey, ca
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			SerialNumber: fmt.Sprintf("%d", serialNumber),
+			SerialNumber: fmt.Sprintf(formatDigit, serialNumber),
 		},
 		NotBefore:             now,
 		NotAfter:              now.Add(24 * 90 * time.Hour),
@@ -151,7 +156,7 @@ func buildCertificateFromCA(ca *x509.Certificate, privateKey *rsa.PrivateKey, ca
 
 	c, err := formatCertificate(template, ca, &privateKey.PublicKey, caKey)
 	if err != nil {
-		return "", err
+		return emptyString, err
 	}
 	return c, nil
 }
@@ -162,7 +167,7 @@ func buildCACertificate(domains ...string) (*x509.Certificate, string, *rsa.Priv
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			SerialNumber: fmt.Sprintf("%d", serialNumber),
+			SerialNumber: fmt.Sprintf(formatDigit, serialNumber),
 		},
 		NotBefore:             now,
 		NotAfter:              now.Add(24 * 90 * time.Hour),
@@ -176,12 +181,12 @@ func buildCACertificate(domains ...string) (*x509.Certificate, string, *rsa.Priv
 
 	privateKey, _, err := buildPrivateKey()
 	if err != nil {
-		return nil, "", nil, err
+		return nil, emptyString, nil, err
 	}
 
 	c, err := formatCertificate(template, template, &privateKey.PublicKey, privateKey)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, emptyString, nil, err
 	}
 	return template, c, privateKey, nil
 }
@@ -195,7 +200,7 @@ func formatCertificate(certificate *x509.Certificate, parent *x509.Certificate, 
 		privateKey,
 	)
 	if err != nil {
-		return "", err
+		return emptyString, err
 	}
 	certBlock := &pem.Block{
 		Type:  "CERTIFICATE",

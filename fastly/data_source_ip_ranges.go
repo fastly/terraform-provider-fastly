@@ -32,18 +32,21 @@ func dataSourceFastlyIPRanges() *schema.Resource {
 }
 
 func dataSourceFastlyIPRangesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*FastlyClient).conn
 
 	log.Printf("[DEBUG] Reading IP ranges")
 
 	ipv4addresses, ipv6addresses, err := conn.AllIPs()
-
 	if err != nil {
 		return diag.Errorf("Error listing IP ranges: %s", err)
 	}
 
-	d.SetId(hashcode.Strings(append(ipv4addresses, ipv6addresses...)))
+	s, err := hashcode.Strings(append(ipv4addresses, ipv6addresses...))
+	if err != nil {
+		return diag.Errorf("Error hashing IP ranges for internal state management: %s", err)
+	}
+
+	d.SetId(s)
 
 	sort.Strings(ipv4addresses)
 	sort.Strings(ipv6addresses)
@@ -57,5 +60,4 @@ func dataSourceFastlyIPRangesRead(_ context.Context, d *schema.ResourceData, met
 	}
 
 	return nil
-
 }

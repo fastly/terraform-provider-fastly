@@ -49,7 +49,7 @@ func resourceServiceDictionaryItems() *schema.Resource {
 				ValidateDiagFunc: validateDictionaryItems(),
 				Elem:             schema.TypeString,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.HasChange("dictionary_id") && d.Get("manage_items") == false
+					return !d.HasChange("dictionary_id") && !d.Get("manage_items").(bool)
 				},
 			},
 		},

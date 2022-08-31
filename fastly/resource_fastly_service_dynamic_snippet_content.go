@@ -43,7 +43,7 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 				Required:    true,
 				Description: "The VCL code that specifies exactly what the snippet does",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.HasChange("snippet_id") && d.Get("manage_snippets") == false
+					return !d.HasChange("snippet_id") && !d.Get("manage_snippets").(bool)
 				},
 			},
 		},

@@ -356,7 +356,6 @@ func resourceServiceWAFConfigurationUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	latestVersion, err := getLatestVersion(d, meta)
 	if err != nil {
 		if errRes, ok := err.(*gofastly.HTTPError); ok {
@@ -381,7 +380,7 @@ func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.Get("activate") == false {
+	if !d.Get("activate").(bool) {
 		conn := meta.(*FastlyClient).conn
 		wafID := d.Get("waf_id").(string)
 		versionToRead := d.Get("cloned_version").(int)
@@ -454,7 +453,6 @@ func resourceServiceWAFConfigurationDelete(ctx context.Context, d *schema.Resour
 }
 
 func resourceServiceWAFConfigurationImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
-
 	wafID := d.Id()
 	err := d.Set("waf_id", wafID)
 	if err != nil {
@@ -610,7 +608,6 @@ func refreshWAFConfig(d *schema.ResourceData, version *gofastly.WAFVersion) {
 }
 
 func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersion, error) {
-
 	if len(versions) == 0 {
 		return nil, errors.New("the list of WAFVersions cannot be empty")
 	}

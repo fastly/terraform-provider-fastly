@@ -48,7 +48,7 @@ func resourceServiceACLEntries() *schema.Resource {
 				Description: "ACL Entries",
 				MaxItems:    gofastly.MaximumACLSize,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.HasChange("acl_id") && d.Get("manage_entries") == false
+					return !d.HasChange("acl_id") && !d.Get("manage_entries").(bool)
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

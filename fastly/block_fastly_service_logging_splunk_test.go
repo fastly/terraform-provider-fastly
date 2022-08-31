@@ -119,7 +119,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLSplunkConfig_basic(serviceName),
+				Config: testAccServiceVCLSplunkConfigBasic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
@@ -129,7 +129,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLSplunkConfig_update(serviceName),
+				Config: testAccServiceVCLSplunkConfigUpdate(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
@@ -157,7 +157,7 @@ func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLSplunkConfigCompute_basic(serviceName),
+				Config: testAccServiceVCLSplunkConfigComputeBasic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeCompute),
@@ -189,7 +189,7 @@ func TestAccFastlyServiceVCL_splunk_default(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLSplunkConfig_default(serviceName),
+				Config: testAccServiceVCLSplunkConfigDefault(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}, ServiceTypeVCL),
@@ -273,7 +273,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLSplunkConfig_useTLS(serviceName, cert, key),
+				Config: testAccServiceVCLSplunkConfigUseTLS(serviceName, cert, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
@@ -285,7 +285,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLSplunkConfig_updateUseTLS(serviceName, cert, key),
+				Config: testAccServiceVCLSplunkConfigUpdateUseTLS(serviceName, cert, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
@@ -391,7 +391,7 @@ func testAccCheckFastlyServiceVCLSplunkAttributes(service *gofastly.ServiceDetai
 	}
 }
 
-func testAccServiceVCLSplunkConfigCompute_basic(serviceName string) string {
+func testAccServiceVCLSplunkConfigComputeBasic(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
@@ -424,7 +424,7 @@ resource "fastly_service_compute" "foo" {
 }`, serviceName, domainName)
 }
 
-func testAccServiceVCLSplunkConfig_basic(serviceName string) string {
+func testAccServiceVCLSplunkConfigBasic(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	format := "%h %l %u %t \"%r\" %>s %b"
@@ -465,7 +465,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, format)
 }
 
-func testAccServiceVCLSplunkConfig_useTLS(serviceName, cert, key string) string {
+func testAccServiceVCLSplunkConfigUseTLS(serviceName, cert, key string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	format := "%h %l %u %t \"%r\" %>s %b"
@@ -512,7 +512,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, format, cert, cert, key)
 }
 
-func testAccServiceVCLSplunkConfig_update(serviceName string) string {
+func testAccServiceVCLSplunkConfigUpdate(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
 
@@ -568,7 +568,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, format, format)
 }
 
-func testAccServiceVCLSplunkConfig_updateUseTLS(serviceName, cert, key string) string {
+func testAccServiceVCLSplunkConfigUpdateUseTLS(serviceName, cert, key string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
 
@@ -635,7 +635,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, format, cert, cert, key, format, cert, cert, key)
 }
 
-func testAccServiceVCLSplunkConfig_default(serviceName string) string {
+func testAccServiceVCLSplunkConfigDefault(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
@@ -662,7 +662,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName)
 }
 
-func testAccServiceVCLSplunkConfig_env(serviceName string) string {
+func testAccServiceVCLSplunkConfigEnv(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`

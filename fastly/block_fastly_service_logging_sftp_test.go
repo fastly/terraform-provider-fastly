@@ -105,7 +105,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		Format:          "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.SFTP{
+	log1AfterUpdate := gofastly.SFTP{
 		ServiceVersion:    1,
 		Name:              "sftp-endpoint",
 		Address:           "sftp.example.com",
@@ -168,10 +168,10 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLSFTPConfig_update(name, domain),
+				Config: testAccServiceVCLSFTPConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -238,7 +238,7 @@ func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceVCLSFTPConfig_no_password_secret_key(name, domain),
+				Config:      testAccServiceVCLSFTPConfigNoPasswordSecretKey(name, domain),
 				ExpectError: regexp.MustCompile("Either password or secret_key must be set"),
 			},
 		},
@@ -374,7 +374,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSFTPConfig_update(name, domain string) string {
+func testAccServiceVCLSFTPConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -430,7 +430,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSFTPConfig_no_password_secret_key(name, domain string) string {
+func testAccServiceVCLSFTPConfigNoPasswordSecretKey(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

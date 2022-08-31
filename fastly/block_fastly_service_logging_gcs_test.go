@@ -76,10 +76,10 @@ func TestAccFastlyServiceVCL_gcslogging(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_gcs(name, gcsName, secretKey),
+				Config: testAccServiceVCLConfigGCS(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_gcs(&service, name, gcsName),
+					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
 				),
 			},
 		},
@@ -101,10 +101,10 @@ func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_compute_gcs(name, gcsName, secretKey),
+				Config: testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_gcs(&service, name, gcsName),
+					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
 				),
 			},
 		},
@@ -149,7 +149,7 @@ func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 	}
 }
 
-func testAccCheckFastlyServiceVCLAttributes_gcs(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesGCS(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
@@ -176,7 +176,7 @@ func testAccCheckFastlyServiceVCLAttributes_gcs(service *gofastly.ServiceDetail,
 	}
 }
 
-func testAccServiceVCLConfig_gcs(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigGCS(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -208,7 +208,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_compute_gcs(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test-compute.tf-%s.com", acctest.RandString(10))
 
@@ -243,7 +243,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_gcs_env(name, gcsName string) string {
+func testAccServiceVCLConfigGCSEnv(name, gcsName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 

@@ -104,7 +104,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		Password:          "password",
 	}
 
-	log1_after_update := gofastly.Kafka{
+	log1AfterUpdate := gofastly.Kafka{
 		ServiceVersion:    1,
 		Name:              "kafkalogger",
 		Topic:             "newtopic",
@@ -168,10 +168,10 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLKafkaConfig_update(name, domain),
+				Config: testAccServiceVCLKafkaConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLKafkaAttributes(&service, []*gofastly.Kafka{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLKafkaAttributes(&service, []*gofastly.Kafka{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -361,7 +361,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLKafkaConfig_update(name, domain string) string {
+func testAccServiceVCLKafkaConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"

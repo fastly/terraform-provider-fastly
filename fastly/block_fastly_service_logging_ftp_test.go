@@ -91,7 +91,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 		CompressionCodec: "zstd",
 	}
 
-	log1_after_update := gofastly.FTP{
+	log1AfterUpdate := gofastly.FTP{
 		ServiceVersion:  1,
 		Name:            "ftp-endpoint",
 		Address:         "ftp2.example.com",
@@ -145,10 +145,10 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLFTPConfig_update(name, domain),
+				Config: testAccServiceVCLFTPConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLFTPAttributes(&service, []*gofastly.FTP{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLFTPAttributes(&service, []*gofastly.FTP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -322,7 +322,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLFTPConfig_update(name, domain string) string {
+func testAccServiceVCLFTPConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

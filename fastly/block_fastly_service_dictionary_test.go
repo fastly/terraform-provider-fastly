@@ -65,39 +65,39 @@ func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_dictionary(name, dictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, dictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, false),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionary(name, updatedDictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionary(name, updatedDictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, updatedDictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, false),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionary(name, updatedDictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionary(name, updatedDictName, backendName, domainName),
 				Check:  testAccAddDictionaryItems(&dictionary), // triggers side-effect of adding a Dictionary Item
 			},
 			{
-				Config:      testAccServiceVCLConfig_dictionary(name, dictName, backendName, domainName),
+				Config:      testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName),
 				ExpectError: regexp.MustCompile("Cannot delete.*not empty.*"),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionaryForceDestroy(name, updatedDictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionaryForceDestroy(name, updatedDictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, updatedDictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, false),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionaryForceDestroy(name, dictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionaryForceDestroy(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, dictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, false),
 				),
 			},
 		},
@@ -118,17 +118,17 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_dictionary_write_only(name, dictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionaryWriteOnly(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, dictName, true),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, true),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFastlyServiceVCLAttributes_dictionary(service *gofastly.ServiceDetail, dictionary *gofastly.Dictionary, name, dictName string, writeOnly bool) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceDetail, dictionary *gofastly.Dictionary, name, dictName string, writeOnly bool) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
@@ -177,7 +177,7 @@ func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestChe
 	}
 }
 
-func testAccServiceVCLConfig_dictionary(name, dictName, backendName, domainName string) string {
+func testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -200,7 +200,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, dictName)
 }
 
-func testAccServiceVCLConfig_dictionaryForceDestroy(name, dictName, backendName, domainName string) string {
+func testAccServiceVCLConfigDictionaryForceDestroy(name, dictName, backendName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -224,7 +224,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, dictName)
 }
 
-func testAccServiceVCLConfig_dictionary_write_only(name, dictName, backendName, domainName string) string {
+func testAccServiceVCLConfigDictionaryWriteOnly(name, dictName, backendName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

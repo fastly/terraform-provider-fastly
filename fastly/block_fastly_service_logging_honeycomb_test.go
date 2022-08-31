@@ -97,7 +97,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 		Format:         appendNewLine(honeycombDefaultFormat),
 	}
 
-	log1_after_update := gofastly.Honeycomb{
+	log1AfterUpdate := gofastly.Honeycomb{
 		ServiceVersion:    1,
 		Name:              "honeycomb-endpoint",
 		Dataset:           "new-dataset",
@@ -137,10 +137,10 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHoneycombConfig_update(name, domain),
+				Config: testAccServiceVCLHoneycombConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLHoneycombAttributes(&service, []*gofastly.Honeycomb{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLHoneycombAttributes(&service, []*gofastly.Honeycomb{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -259,7 +259,7 @@ EOF
 `, name, domain)
 }
 
-func testAccServiceVCLHoneycombConfig_update(name, domain string) string {
+func testAccServiceVCLHoneycombConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

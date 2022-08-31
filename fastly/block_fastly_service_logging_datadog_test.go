@@ -142,7 +142,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Datadog{
+	log1AfterUpdate := gofastly.Datadog{
 		ServiceVersion: 1,
 		Name:           "datadog-endpoint",
 		Token:          "t0k3n",
@@ -178,10 +178,10 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDatadogConfig_update(name, domain),
+				Config: testAccServiceVCLDatadogConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -304,7 +304,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLDatadogConfig_update(name, domain string) string {
+func testAccServiceVCLDatadogConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

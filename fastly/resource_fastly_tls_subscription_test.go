@@ -23,7 +23,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain1 := fmt.Sprintf("%s.test", name)
 	domain2 := fmt.Sprintf("%salt.test", name)
-	domain2_bad := fmt.Sprintf("%sALT.test", name)
+	domain2Bad := fmt.Sprintf("%sALT.test", name)
 	commonName1 := domain1
 	commonName2 := domain2
 	var subscriptionId string
@@ -62,11 +62,11 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy", "force_update"},
 			},
 			{
-				Config:      testAccResourceFastlyTLSSubscriptionConfig_invalidCommonName(),
+				Config:      testAccResourceFastlyTLSSubscriptionConfigInvalidCommonName(),
 				ExpectError: regexp.MustCompile(`Please add \S+ to an active service to begin TLS enablement`),
 			},
 			{
-				Config:      testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2_bad, commonName2),
+				Config:      testAccResourceFastlyTLSSubscriptionConfig(name, domain1, domain2Bad, commonName2),
 				ExpectError: regexp.MustCompile("must not contain uppercase letters"),
 			},
 		},
@@ -118,7 +118,7 @@ func testAccResourceFastlyTLSSubscriptionExists(resourceName string, id *string)
 	}
 }
 
-func testAccResourceFastlyTLSSubscriptionConfig_invalidCommonName() string {
+func testAccResourceFastlyTLSSubscriptionConfigInvalidCommonName() string {
 	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	commonName := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	return fmt.Sprintf(`

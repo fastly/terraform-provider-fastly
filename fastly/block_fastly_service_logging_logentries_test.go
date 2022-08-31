@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceVCLLogentriesConfig_update(name, domainName1),
+				Config: testAccServiceVCLLogentriesConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1, &log2}, ServiceTypeVCL),
@@ -220,7 +220,7 @@ func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLLogentriesConfig_formatVersion(name, domainName1),
+				Config: testAccServiceVCLLogentriesConfigFormatVersion(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1}, ServiceTypeVCL),
@@ -288,7 +288,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLLogentriesConfig_update(name, domain string) string {
+func testAccServiceVCLLogentriesConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -323,7 +323,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLLogentriesConfig_formatVersion(name, domain string) string {
+func testAccServiceVCLLogentriesConfigFormatVersion(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

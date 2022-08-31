@@ -88,7 +88,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		MessageType:       "classic",
 	}
 
-	log1_after_update := gofastly.Syslog{
+	log1AfterUpdate := gofastly.Syslog{
 		ServiceVersion:    1,
 		Name:              "somesyslogname",
 		Address:           "127.0.0.1",
@@ -129,10 +129,10 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLSyslogConfig_update(name, domainName1),
+				Config: testAccServiceVCLSyslogConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -199,7 +199,7 @@ func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLSyslogConfig_formatVersion(name, domainName1),
+				Config: testAccServiceVCLSyslogConfigFormatVersion(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
@@ -250,7 +250,7 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLSyslogConfig_useTls(name, domainName1),
+				Config: testAccServiceVCLSyslogConfigUseTLS(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
@@ -368,7 +368,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSyslogConfig_update(name, domain string) string {
+func testAccServiceVCLSyslogConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -402,7 +402,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSyslogConfig_formatVersion(name, domain string) string {
+func testAccServiceVCLSyslogConfigFormatVersion(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -425,7 +425,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSyslogConfig_useTls(name, domain string) string {
+func testAccServiceVCLSyslogConfigUseTLS(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

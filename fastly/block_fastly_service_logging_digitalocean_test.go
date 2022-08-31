@@ -94,7 +94,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	log1_after_update := gofastly.DigitalOcean{
+	log1AfterUpdate := gofastly.DigitalOcean{
 		ServiceVersion:    1,
 		Name:              "digitalocean-endpoint",
 		BucketName:        "bucketupdate",
@@ -151,10 +151,10 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDigitalOceanConfig_update(name, domain),
+				Config: testAccServiceVCLDigitalOceanConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -296,7 +296,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLDigitalOceanConfig_update(name, domain string) string {
+func testAccServiceVCLDigitalOceanConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

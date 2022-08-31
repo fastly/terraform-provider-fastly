@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 		Placement:         "none",
 	}
 
-	log1_after_update := fst.Elasticsearch{
+	log1AfterUpdate := fst.Elasticsearch{
 		ServiceVersion:    1,
 		Name:              "elasticsearch-endpoint",
 		Index:             "#{%F}",
@@ -153,10 +153,10 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLElasticsearchConfig_update(name, domain),
+				Config: testAccServiceVCLElasticsearchConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -342,7 +342,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLElasticsearchConfig_update(name, domain string) string {
+func testAccServiceVCLElasticsearchConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

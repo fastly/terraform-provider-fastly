@@ -63,23 +63,23 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_acl(name, aclName, domain),
+				Config: testAccServiceVCLConfigACL(name, aclName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "a_"+aclName, &aclA),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "b_"+aclName, &aclB),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclName, &aclA),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclName, &aclB),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_acl(name, aclNameUpdated, domain),
+				Config: testAccServiceVCLConfigACL(name, aclNameUpdated, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "a_"+aclNameUpdated, &aclA),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "b_"+aclNameUpdated, &aclB),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclNameUpdated, &aclA),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclNameUpdated, &aclB),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_acl(name, aclNameUpdated, domain),
+				Config: testAccServiceVCLConfigACL(name, aclNameUpdated, domain),
 				// trigger side-effect of adding an ACL Entry
 				Check: resource.ComposeTestCheckFunc(
 					testAccAddACLEntries(&aclA),
@@ -87,30 +87,30 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccServiceVCLConfig_acl(name, aclName, domain),
+				Config:      testAccServiceVCLConfigACL(name, aclName, domain),
 				ExpectError: regexp.MustCompile("Cannot delete.*list is not empty.*"),
 			},
 			{
-				Config: testAccServiceVCLConfig_aclForceDestroy(name, aclNameUpdated, domain),
+				Config: testAccServiceVCLConfigACLForceDestroy(name, aclNameUpdated, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "a_"+aclNameUpdated, &aclA),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "b_"+aclNameUpdated, &aclB),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclNameUpdated, &aclA),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclNameUpdated, &aclB),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_aclForceDestroy(name, aclName, domain),
+				Config: testAccServiceVCLConfigACLForceDestroy(name, aclName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "a_"+aclName, &aclA),
-					testAccCheckFastlyServiceVCLAttributes_acl(&service, name, "b_"+aclName, &aclB),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclName, &aclA),
+					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclName, &aclB),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFastlyServiceVCLAttributes_acl(service *gofastly.ServiceDetail, name, aclName string, acl *gofastly.ACL) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, name, aclName string, acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
@@ -154,7 +154,7 @@ func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 	}
 }
 
-func testAccServiceVCLConfig_acl(name, aclName, domain string) string {
+func testAccServiceVCLConfigACL(name, aclName, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -181,7 +181,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, aclName, aclName)
 }
 
-func testAccServiceVCLConfig_aclForceDestroy(name, aclName, domain string) string {
+func testAccServiceVCLConfigACLForceDestroy(name, aclName, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

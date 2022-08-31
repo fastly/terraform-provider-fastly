@@ -156,7 +156,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		Placement:         "none",
 	}
 
-	log1_after_update := gofastly.Pubsub{
+	log1AfterUpdate := gofastly.Pubsub{
 		ServiceVersion:    1,
 		Name:              "googlepubsublogger",
 		User:              "newuser",
@@ -200,10 +200,10 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLGooglePubSubConfig_update(name, domain),
+				Config: testAccServiceVCLGooglePubSubConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLGooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLGooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -373,7 +373,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLGooglePubSubConfig_update(name, domain string) string {
+func testAccServiceVCLGooglePubSubConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"

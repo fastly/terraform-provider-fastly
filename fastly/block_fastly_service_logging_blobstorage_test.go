@@ -134,7 +134,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLBlobStorageLoggingConfig_complete(serviceName),
+				Config: testAccServiceVCLBlobStorageLoggingConfigComplete(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeVCL),
@@ -146,7 +146,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLBlobStorageLoggingConfig_update(serviceName),
+				Config: testAccServiceVCLBlobStorageLoggingConfigUpdate(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneUpdated, &blobStorageLogTwo}, ServiceTypeVCL),
@@ -184,7 +184,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLBlobStorageLoggingConfig_complete_compute(serviceName),
+				Config: testAccServiceVCLBlobStorageLoggingConfigCompleteCompute(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeCompute),
@@ -220,7 +220,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLBlobStorageLoggingConfig_default(serviceName),
+				Config: testAccServiceVCLBlobStorageLoggingConfigDefault(serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLog}, ServiceTypeVCL),
@@ -314,7 +314,7 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 	}
 }
 
-func testAccServiceVCLBlobStorageLoggingConfig_complete(serviceName string) string {
+func testAccServiceVCLBlobStorageLoggingConfigComplete(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	format := "%h %l %u %t \"%r\" %>s %b"
 
@@ -361,7 +361,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, format)
 }
 
-func testAccServiceVCLBlobStorageLoggingConfig_complete_compute(serviceName string) string {
+func testAccServiceVCLBlobStorageLoggingConfigCompleteCompute(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
@@ -401,7 +401,7 @@ resource "fastly_service_compute" "foo" {
 }`, serviceName, domainName)
 }
 
-func testAccServiceVCLBlobStorageLoggingConfig_update(serviceName string) string {
+func testAccServiceVCLBlobStorageLoggingConfigUpdate(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
 
@@ -473,7 +473,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, format, format)
 }
 
-func testAccServiceVCLBlobStorageLoggingConfig_default(serviceName string) string {
+func testAccServiceVCLBlobStorageLoggingConfigDefault(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
@@ -501,7 +501,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName)
 }
 
-func testAccServiceVCLBlobStorageLoggingConfig_env(serviceName string) string {
+func testAccServiceVCLBlobStorageLoggingConfigEnv(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`

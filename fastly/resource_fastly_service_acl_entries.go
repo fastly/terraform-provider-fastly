@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceServiceAclEntries() *schema.Resource {
+func resourceServiceACLEntries() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceServiceAclEntriesCreate,
 		ReadContext:   resourceServiceAclEntriesRead,

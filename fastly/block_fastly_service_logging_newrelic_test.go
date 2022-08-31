@@ -76,7 +76,7 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.NewRelic{
+	log1AfterUpdate := gofastly.NewRelic{
 		ServiceVersion: 1,
 		Name:           "newrelic-endpoint",
 		Token:          "t0k3n",
@@ -112,10 +112,10 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLNewRelicConfig_update(name, domain),
+				Config: testAccServiceVCLNewRelicConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLNewRelicAttributes(&service, []*gofastly.NewRelic{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLNewRelicAttributes(&service, []*gofastly.NewRelic{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -270,7 +270,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLNewRelicConfig_update(name, domain string) string {
+func testAccServiceVCLNewRelicConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -2,12 +2,13 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
-	"testing"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func TestAccFastlyResourceTLSPrivateKey_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckPrivateKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyTLSPrivateKeyConfig_simple_private_key(key, name),
+				Config: testAccFastlyTLSPrivateKeyConfigSimplePrivateKey(key, name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateKeyExists("fastly_tls_private_key.foo"),
 					resource.TestCheckResourceAttr("fastly_tls_private_key.foo", "name", name),
@@ -77,7 +78,7 @@ func testAccCheckPrivateKeyDestroy(state *terraform.State) error {
 	return nil
 }
 
-func testAccFastlyTLSPrivateKeyConfig_simple_private_key(key, name string) string {
+func testAccFastlyTLSPrivateKeyConfigSimplePrivateKey(key, name string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "foo" {
   key_pem = "%s"

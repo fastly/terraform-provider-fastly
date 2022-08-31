@@ -69,7 +69,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		FormatVersion: 2,
 	}
 
-	log1_after_update := gofastly.Scalyr{
+	log1AfterUpdate := gofastly.Scalyr{
 		ServiceVersion:    1,
 		Name:              "scalyrlogger",
 		Region:            "EU",
@@ -110,10 +110,10 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLScalyrConfig_update(name, domain),
+				Config: testAccServiceVCLScalyrConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -277,7 +277,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLScalyrConfig_update(name, domain string) string {
+func testAccServiceVCLScalyrConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"

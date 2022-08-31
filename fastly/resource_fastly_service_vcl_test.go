@@ -169,7 +169,7 @@ func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLConfig_domainAdd(nameUpdate, domainName1, domainName2),
+				Config: testAccServiceVCLConfigDomainAdd(nameUpdate, domainName1, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributes(&service, nameUpdate, []string{domainName1, domainName2}),
@@ -183,7 +183,7 @@ func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLConfig_domainUpdateComment(nameUpdate, domainName1, domainName2),
+				Config: testAccServiceVCLConfigDomainUpdateComment(nameUpdate, domainName1, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributes(&service, nameUpdate, []string{domainName1, domainName2}),
@@ -195,7 +195,7 @@ func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLConfig_domainUpdate(nameUpdate, domainName1, domainName3),
+				Config: testAccServiceVCLConfigDomainUpdate(nameUpdate, domainName1, domainName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributes(&service, nameUpdate, []string{domainName1, domainName3}),
@@ -222,18 +222,18 @@ func TestAccFastlyServiceVCL_updateBackend(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_backend(name, domain, backendName),
+				Config: testAccServiceVCLConfigBackend(name, domain, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName}),
 				),
 			},
 
 			{
-				Config: testAccServiceVCLConfig_backend_update(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName, backendName2}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName, backendName2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "active_version", "2"),
 					resource.TestCheckResourceAttr(
@@ -288,20 +288,20 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_backend_update(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName, backendName2}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName, backendName2}),
 					activateNewVersion,
 				),
 				ExpectNonEmptyPlan: true,
 			},
 
 			{
-				Config: testAccServiceVCLConfig_backend_update(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName, backendName2}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName, backendName2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "active_version", "3"),
 					resource.TestCheckResourceAttr(
@@ -326,19 +326,19 @@ func TestAccFastlyServiceVCL_updateInvalidBackend(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceVCLConfig_backend(name, domain, badBackendName),
+				Config:      testAccServiceVCLConfigBackend(name, domain, badBackendName),
 				ExpectError: regexp.MustCompile("Bad Request"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{}),
 				),
 			},
 
 			{
-				Config: testAccServiceVCLConfig_backend_update(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName, backendName2}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName, backendName2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "active_version", "1"),
 					resource.TestCheckResourceAttr(
@@ -386,10 +386,10 @@ func TestAccFastlyServiceVCL_createServiceWithStaticBackend(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_staticBackend(name, domain, snippet1),
+				Config: testAccServiceVCLConfigStaticBackend(name, domain, snippet1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "active_version", "1"),
 					resource.TestCheckResourceAttr(
@@ -415,7 +415,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_initWithVerstionComment(name, versionComment1, domainName1),
+				Config: testAccServiceVCLConfigInitWithVersionComment(name, versionComment1, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr(
@@ -434,7 +434,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 			},
 			{
 				// updating service comment with "activate = false" will be ignored
-				Config: testAccServiceVCLConfig_updateServiceComment(name, "new service comment", domainName1, false),
+				Config: testAccServiceVCLConfigUpdateServiceComment(name, "new service comment", domainName1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr(
@@ -445,7 +445,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccServiceVCLConfig_basicUpdate(name, comment, versionComment2, domainName2),
+				Config: testAccServiceVCLConfigBasicUpdate(name, comment, versionComment2, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr(
@@ -576,7 +576,7 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 	}
 }
 
-func testAccCheckFastlyServiceVCLAttributes_backends(service *gofastly.ServiceDetail, name string, backends []string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesBackends(service *gofastly.ServiceDetail, name string, backends []string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
@@ -621,20 +621,20 @@ func TestAccFastlyServiceVCL_defaultTTL(t *testing.T) {
 		Steps: []resource.TestStep{
 			// service default is 3600
 			{
-				Config: testAccServiceVCLConfig_backend(name, domain, backendName),
+				Config: testAccServiceVCLConfigBackend(name, domain, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "default_ttl", "3600"),
 				),
 			},
 			// update default TTL
 			{
-				Config: testAccServiceVCLConfig_backendTTL(name, domain, backendName, 3400),
+				Config: testAccServiceVCLConfigBackendTTL(name, domain, backendName, 3400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "default_ttl", "3400"),
 					resource.TestCheckResourceAttr(
@@ -643,10 +643,10 @@ func TestAccFastlyServiceVCL_defaultTTL(t *testing.T) {
 			},
 			// can set 0
 			{
-				Config: testAccServiceVCLConfig_backendTTL(name, domain, backendName, 0),
+				Config: testAccServiceVCLConfigBackendTTL(name, domain, backendName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "default_ttl", "0"),
 					resource.TestCheckResourceAttr(
@@ -669,7 +669,7 @@ func TestAccFastlyServiceVCL_defaultHost(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_default_host(name, domain, defaultHost),
+				Config: testAccServiceVCLConfigDefaultHost(name, domain, defaultHost),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr(
@@ -682,7 +682,7 @@ func TestAccFastlyServiceVCL_defaultHost(t *testing.T) {
 			},
 			// remove default_host
 			{
-				Config: testAccServiceVCLConfig_default_host(name, domain, ""),
+				Config: testAccServiceVCLConfigDefaultHost(name, domain, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr(
@@ -711,7 +711,7 @@ func TestAccFastlyServiceVCL_brokenSnippet(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_brokenSnippet(name, domain, "backend1", `if (req.url !~ "^/anything") {
+				Config: testAccServiceVCLConfigBrokenSnippet(name, domain, "backend1", `if (req.url !~ "^/anything") {
                        set req.url = "/anything" req.url;
                      }`),
 				Check: resource.ComposeTestCheckFunc(
@@ -719,13 +719,13 @@ func TestAccFastlyServiceVCL_brokenSnippet(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_brokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {
+				Config: testAccServiceVCLConfigBrokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {
                        set req.url = "/anything" req.url
                      }`),
 				ExpectError: regexp.MustCompile(`Invalid configuration for Fastly Service`),
 			},
 			{
-				Config: testAccServiceVCLConfig_brokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {
+				Config: testAccServiceVCLConfigBrokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {
                        set req.url = "/anything" req.url;
                      }`),
 				Check: resource.ComposeTestCheckFunc(
@@ -748,10 +748,10 @@ func TestAccFastlyServiceVCL_createZeroDefaultTTL(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_backendZeroTTL(name, domain, backendName, 0),
+				Config: testAccServiceVCLConfigBackendZeroTTL(name, domain, backendName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_backends(&service, name, []string{backendName}),
+					testAccCheckFastlyServiceVCLAttributesBackends(&service, name, []string{backendName}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "default_ttl", "0"),
 					resource.TestCheckResourceAttr(
@@ -805,7 +805,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLConfig_updateServiceComment(name, comment string, domain string, activate bool) string {
+func testAccServiceVCLConfigUpdateServiceComment(name, comment string, domain string, activate bool) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -826,7 +826,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, comment, domain, activate)
 }
 
-func testAccServiceVCLConfig_initWithVerstionComment(name, versionComment, domain string) string {
+func testAccServiceVCLConfigInitWithVersionComment(name, versionComment, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -846,7 +846,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, versionComment, domain)
 }
 
-func testAccServiceVCLConfig_default_host(name, domain, defaultHost string) string {
+func testAccServiceVCLConfigDefaultHost(name, domain, defaultHost string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -867,7 +867,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, defaultHost)
 }
 
-func testAccServiceVCLConfig_basicUpdate(name, comment, versionComment, domain string) string {
+func testAccServiceVCLConfigBasicUpdate(name, comment, versionComment, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name    = "%s"
@@ -888,7 +888,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, comment, versionComment, domain)
 }
 
-func testAccServiceVCLConfig_domainAdd(name, domain1, domain2 string) string {
+func testAccServiceVCLConfigDomainAdd(name, domain1, domain2 string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -912,7 +912,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain1, domain2)
 }
 
-func testAccServiceVCLConfig_domainUpdateComment(name, domain1, domain2 string) string {
+func testAccServiceVCLConfigDomainUpdateComment(name, domain1, domain2 string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -936,7 +936,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain1, domain2)
 }
 
-func testAccServiceVCLConfig_domainUpdate(name, domain1, domain3 string) string {
+func testAccServiceVCLConfigDomainUpdate(name, domain1, domain3 string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -960,7 +960,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain1, domain3)
 }
 
-func testAccServiceVCLConfig_backend(name, domain, backend string) string {
+func testAccServiceVCLConfigBackend(name, domain, backend string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -979,7 +979,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, backend)
 }
 
-func testAccServiceVCLConfig_staticBackend(name, domain, snippet string) string {
+func testAccServiceVCLConfigStaticBackend(name, domain, snippet string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
     name           = "%s"
@@ -1000,7 +1000,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, snippet)
 }
 
-func testAccServiceVCLConfig_backendTTL(name, domain, backend string, ttl uint) string {
+func testAccServiceVCLConfigBackendTTL(name, domain, backend string, ttl uint) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -1022,7 +1022,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, ttl, domain, backend)
 }
 
-func testAccServiceVCLConfig_backendZeroTTL(name, domain, backend string, ttl uint) string {
+func testAccServiceVCLConfigBackendZeroTTL(name, domain, backend string, ttl uint) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -1042,7 +1042,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, ttl, domain, backend)
 }
 
-func testAccServiceVCLConfig_backend_update(name, domain, backend, backend2 string, ttl uint) string {
+func testAccServiceVCLConfigBackendUpdate(name, domain, backend, backend2 string, ttl uint) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -1069,7 +1069,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, ttl, domain, backend, backend2)
 }
 
-func testAccServiceVCLConfig_brokenSnippet(name, domain, backendName, snippet string) string {
+func testAccServiceVCLConfigBrokenSnippet(name, domain, backendName, snippet string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
     name           = "%s"

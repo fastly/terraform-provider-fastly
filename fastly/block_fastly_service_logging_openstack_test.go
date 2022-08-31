@@ -93,7 +93,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	log1_after_update := gofastly.Openstack{
+	log1AfterUpdate := gofastly.Openstack{
 		ServiceVersion:    1,
 		Name:              "openstack-endpoint",
 		Format:            "%h %l %u %t \"%r\" %>s %b %T",
@@ -149,10 +149,10 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLOpenstackConfig_update(name, domain),
+				Config: testAccServiceVCLOpenstackConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLOpenstackAttributes(&service, []*gofastly.Openstack{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLOpenstackAttributes(&service, []*gofastly.Openstack{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -291,7 +291,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLOpenstackConfig_update(name, domain string) string {
+func testAccServiceVCLOpenstackConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

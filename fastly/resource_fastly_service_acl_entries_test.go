@@ -83,7 +83,7 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries, true),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, expectedRemoteEntries, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -131,7 +131,7 @@ func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries, true),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, expectedRemoteEntries, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -139,7 +139,7 @@ func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, expectedRemoteEntriesAfterUpdate, true),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, expectedRemoteEntriesAfterUpdate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntriesAfterUpdate),
@@ -187,7 +187,7 @@ func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries, true),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, expectedRemoteEntries, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -201,7 +201,7 @@ func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, expectedRemoteEntriesAfterUpdate, true),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, expectedRemoteEntriesAfterUpdate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntriesAfterUpdate),
@@ -239,7 +239,7 @@ func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, expectedRemoteEntries, true),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, expectedRemoteEntries, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntries),
@@ -247,7 +247,7 @@ func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceDictionaryItemsV1Config_one_acl_no_entries(serviceName, aclName),
+				Config: testAccServiceDictionaryItemsV1ConfigOneACLNoEntries(serviceName, aclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckNoResourceAttr("fastly_service_vcl.foo", "entry"),
@@ -293,7 +293,7 @@ func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(name, aclName, expectedRemoteEntries, true),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(name, aclName, expectedRemoteEntries, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, name, aclName, expectedRemoteEntries),
@@ -342,7 +342,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, initialEntries, false),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, initialEntries, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, initialEntries),
@@ -350,7 +350,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName, updatedEntries, false),
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, updatedEntries, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAclEntriesRemoteState(&service, serviceName, aclName, initialEntries),
@@ -407,7 +407,7 @@ func testAccCheckFastlyServiceAclEntriesRemoteState(service *gofastly.ServiceDet
 	}
 }
 
-func testAccServiceDictionaryItemsV1Config_one_acl_no_entries(serviceName, aclName string) string {
+func testAccServiceDictionaryItemsV1ConfigOneACLNoEntries(serviceName, aclName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -429,7 +429,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, backendName, aclName)
 }
 
-func testAccServiceACLEntriesConfig_one_acl_with_entries(serviceName, aclName string, aclEntriesList []map[string]interface{}, manageEntries bool) string {
+func testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName string, aclEntriesList []map[string]interface{}, manageEntries bool) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 

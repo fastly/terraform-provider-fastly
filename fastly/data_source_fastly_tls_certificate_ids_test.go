@@ -2,11 +2,12 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 func TestAccFastlyDataSourceTlSCertificateIDs(t *testing.T) {
@@ -23,7 +24,7 @@ func TestAccFastlyDataSourceTlSCertificateIDs(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceTLSCertificateIDSConfig_resources(name, key, cert),
+				Config: testAccFastlyDataSourceTLSCertificateIDSConfigResources(name, key, cert),
 				Check: resource.TestCheckTypeSetElemAttrPair(
 					"data.fastly_tls_certificate_ids.subject", "ids.*",
 					"fastly_tls_certificate.cert", "id"),
@@ -32,7 +33,7 @@ func TestAccFastlyDataSourceTlSCertificateIDs(t *testing.T) {
 	})
 }
 
-func testAccFastlyDataSourceTLSCertificateIDSConfig_resources(name, key, cert string) string {
+func testAccFastlyDataSourceTLSCertificateIDSConfigResources(name, key, cert string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "key" {
   key_pem = "%s"

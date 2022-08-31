@@ -182,7 +182,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHeadersConfig_update(name, domainName1),
+				Config: testAccServiceVCLHeadersConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHeaderAttributes(&service, []*gofastly.Header{&log1, &log3, &log4}),
@@ -272,7 +272,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLHeadersConfig_update(name, domain string) string {
+func testAccServiceVCLHeadersConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	log1_after_update := gofastly.Cloudfiles{
+	log1AfterUpdate := gofastly.Cloudfiles{
 		ServiceVersion:    1,
 		Name:              "cloudfiles-endpoint",
 		BucketName:        "bucketupdate",
@@ -153,10 +153,10 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLCloudfilesConfig_update(name, domain),
+				Config: testAccServiceVCLCloudfilesConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.none", &service),
-					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.none", "name", name),
 					resource.TestCheckResourceAttr(
@@ -339,7 +339,7 @@ resource "fastly_service_vcl" "none" {
 `, name, domain)
 }
 
-func testAccServiceVCLCloudfilesConfig_update(name, domain string) string {
+func testAccServiceVCLCloudfilesConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "none" {
   name = "%s"

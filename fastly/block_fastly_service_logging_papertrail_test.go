@@ -91,7 +91,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLPapertrailConfig_update(name, domainName1),
+				Config: testAccServiceVCLPapertrailConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1, &log2}, ServiceTypeVCL),
@@ -251,7 +251,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLPapertrailConfig_update(name, domain string) string {
+func testAccServiceVCLPapertrailConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -116,7 +116,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLGzipsConfig_delete_create(name, domainName1),
+				Config: testAccServiceVCLGzipsConfigDeleteCreate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log3}),
@@ -128,7 +128,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLGzipsConfig_update(name, domainName1),
+				Config: testAccServiceVCLGzipsConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log4}),
@@ -229,7 +229,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLGzipsConfig_delete_create(name, domain string) string {
+func testAccServiceVCLGzipsConfigDeleteCreate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -261,7 +261,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLGzipsConfig_update(name, domain string) string {
+func testAccServiceVCLGzipsConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

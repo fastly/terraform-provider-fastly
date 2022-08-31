@@ -69,7 +69,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceVCLPackageConfig_New(name02, domain02),
+				Config: testAccServiceVCLPackageConfigNew(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &wp2),
@@ -137,7 +137,7 @@ resource "fastly_service_compute" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLPackageConfig_New(name string, domain string) string {
+func testAccServiceVCLPackageConfigNew(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

@@ -30,10 +30,10 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_bigquery(name, bqName, secretKey),
+				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_bq(&service, name, bqName),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName),
 				),
 			},
 		},
@@ -57,10 +57,10 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_bigquery_compute(name, bqName, secretKey),
+				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_bq(&service, name, bqName),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName),
 				),
 			},
 		},
@@ -109,7 +109,7 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 	}
 }
 
-func testAccCheckFastlyServiceVCLAttributes_bq(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
@@ -136,7 +136,7 @@ func testAccCheckFastlyServiceVCLAttributes_bq(service *gofastly.ServiceDetail, 
 	}
 }
 
-func testAccServiceVCLConfig_bigquery(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigBigQuery(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -168,7 +168,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_bigquery_compute(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigBigQueryCompute(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -203,7 +203,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_bigquery_env(name, gcsName string) string {
+func testAccServiceVCLConfigBigQueryEnv(name, gcsName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`

@@ -112,7 +112,7 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHealthCheckConfig_update(name, domainName),
+				Config: testAccServiceVCLHealthCheckConfigUpdate(name, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHealthCheckAttributes(&service, []*gofastly.HealthCheck{&log1, &log2}),
@@ -201,7 +201,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLHealthCheckConfig_update(name, domain string) string {
+func testAccServiceVCLHealthCheckConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -66,7 +66,7 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLVCLConfig_update(name, domainName1, backendName),
+				Config: testAccServiceVCLVCLConfigUpdate(name, domainName1, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLVCLAttributes(&service, name, 2),
@@ -143,7 +143,7 @@ EOF
 }`, name, domain, backendName)
 }
 
-func testAccServiceVCLVCLConfig_update(name, domain, backendName string) string {
+func testAccServiceVCLVCLConfigUpdate(name, domain, backendName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

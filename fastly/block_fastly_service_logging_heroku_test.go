@@ -66,7 +66,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Heroku{
+	log1AfterUpdate := gofastly.Heroku{
 		ServiceVersion:    1,
 		Name:              "heroku-endpoint",
 		URL:               "https://example.com",
@@ -104,10 +104,10 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHerokuConfig_update(name, domain),
+				Config: testAccServiceVCLHerokuConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -224,7 +224,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLHerokuConfig_update(name, domain string) string {
+func testAccServiceVCLHerokuConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -66,7 +66,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Logshuttle{
+	log1AfterUpdate := gofastly.Logshuttle{
 		ServiceVersion: 1,
 		Name:           "logshuttle-endpoint",
 		Token:          "secret",
@@ -104,10 +104,10 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLLogshuttleConfig_update(name, domain),
+				Config: testAccServiceVCLLogshuttleConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLLogshuttleAttributes(&service, []*gofastly.Logshuttle{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLLogshuttleAttributes(&service, []*gofastly.Logshuttle{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -224,7 +224,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLLogshuttleConfig_update(name, domain string) string {
+func testAccServiceVCLLogshuttleConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

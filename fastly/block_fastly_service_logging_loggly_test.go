@@ -57,7 +57,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Loggly{
+	log1AfterUpdate := gofastly.Loggly{
 		ServiceVersion: 1,
 		Name:           "loggly-endpoint",
 		Token:          "secret",
@@ -91,10 +91,10 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLLogglyConfig_update(name, domain),
+				Config: testAccServiceVCLLogglyConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLLogglyAttributes(&service, []*gofastly.Loggly{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLLogglyAttributes(&service, []*gofastly.Loggly{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -245,7 +245,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLLogglyConfig_update(name, domain string) string {
+func testAccServiceVCLLogglyConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

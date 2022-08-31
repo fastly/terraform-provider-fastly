@@ -101,7 +101,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Kinesis{
+	log1AfterUpdate := gofastly.Kinesis{
 		ServiceVersion: 1,
 		Name:           "kinesis-endpoint",
 		StreamName:     "new-stream-name",
@@ -139,10 +139,10 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLKinesisConfig_update(name, domain),
+				Config: testAccServiceVCLKinesisConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLKinesisAttributes(&service, []*gofastly.Kinesis{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLKinesisAttributes(&service, []*gofastly.Kinesis{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -263,7 +263,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLKinesisConfig_update(name, domain string) string {
+func testAccServiceVCLKinesisConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -71,7 +71,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		JSONFormat:        "0",
 	}
 
-	log1_after_update := gofastly.HTTPS{
+	log1AfterUpdate := gofastly.HTTPS{
 		ServiceVersion: 1,
 		Name:           "httpslogger",
 		URL:            "https://example.com/logs/1",
@@ -117,10 +117,10 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHTTPSConfig_update(name, domain),
+				Config: testAccServiceVCLHTTPSConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -276,7 +276,7 @@ package {
 `, name, domain)
 }
 
-func testAccServiceVCLHTTPSConfig_update(name, domain string) string {
+func testAccServiceVCLHTTPSConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"

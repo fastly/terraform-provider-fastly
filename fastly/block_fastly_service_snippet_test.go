@@ -102,7 +102,7 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLSnippet_update(name, domainName1),
+				Config: testAccServiceVCLSnippetUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSnippetAttributes(&service, []*gofastly.Snippet{&updatedS1, &updatedS2}),
@@ -195,7 +195,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSnippet_update(name, domain string) string {
+func testAccServiceVCLSnippetUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

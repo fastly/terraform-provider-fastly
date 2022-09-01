@@ -86,10 +86,7 @@ func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Fastly Loggly logging addition opts: %#v", opts)
 
-	if err := createLoggly(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createLoggly(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -160,10 +157,7 @@ func (h *LogglyServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Fastly Loggly logging endpoint removal opts: %#v", opts)
 
-	if err := deleteLoggly(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteLoggly(conn, opts)
 }
 
 func createLoggly(conn *gofastly.Client, i *gofastly.CreateLogglyInput) error {

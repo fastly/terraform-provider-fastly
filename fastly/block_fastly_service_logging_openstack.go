@@ -153,10 +153,7 @@ func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 	log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
 
-	if err := createOpenstack(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createOpenstack(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -257,10 +254,7 @@ func (h *OpenstackServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 
 	log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
 
-	if err := deleteOpenstack(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteOpenstack(conn, opts)
 }
 
 func createOpenstack(conn *gofastly.Client, i *gofastly.CreateOpenstackInput) error {

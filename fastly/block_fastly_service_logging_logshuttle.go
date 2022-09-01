@@ -92,10 +92,7 @@ func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging addition opts: %#v", opts)
 
-	if err := createLogshuttle(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createLogshuttle(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -169,10 +166,7 @@ func (h *LogshuttleServiceAttributeHandler) Delete(_ context.Context, d *schema.
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging endpoint removal opts: %#v", opts)
 
-	if err := deleteLogshuttle(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteLogshuttle(conn, opts)
 }
 
 func createLogshuttle(conn *gofastly.Client, i *gofastly.CreateLogshuttleInput) error {

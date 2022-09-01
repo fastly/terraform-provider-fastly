@@ -190,11 +190,7 @@ func dataSourceFastlyTLSPrivateKeySetAttributes(privateKey *fastly.PrivateKey, d
 	if err := d.Set("replace", privateKey.Replace); err != nil {
 		return err
 	}
-	if err := d.Set("public_key_sha1", privateKey.PublicKeySHA1); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("public_key_sha1", privateKey.PublicKeySHA1)
 }
 
 func filterPrivateKey(privateKey *fastly.PrivateKey, filters []TLSPrivateKeyPredicate) bool {

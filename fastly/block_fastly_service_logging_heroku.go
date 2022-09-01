@@ -92,10 +92,7 @@ func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Fastly Heroku logging addition opts: %#v", opts)
 
-	if err := createHeroku(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createHeroku(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -169,10 +166,7 @@ func (h *HerokuServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Fastly Heroku logging endpoint removal opts: %#v", opts)
 
-	if err := deleteHeroku(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteHeroku(conn, opts)
 }
 
 func createHeroku(conn *gofastly.Client, i *gofastly.CreateHerokuInput) error {

@@ -153,11 +153,7 @@ func dataSourceFastlyTLSActivationSetAttributes(activation *fastly.TLSActivation
 	if err := d.Set("domain", activation.Domain.ID); err != nil {
 		return err
 	}
-	if err := d.Set("created_at", activation.CreatedAt.Format(time.RFC3339)); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("created_at", activation.CreatedAt.Format(time.RFC3339))
 }
 
 func filterTLSActivations(config *fastly.TLSActivation, filters []TLSActivationPredicate) bool {

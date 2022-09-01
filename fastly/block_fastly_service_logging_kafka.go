@@ -171,10 +171,7 @@ func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.Resou
 
 	log.Printf("[DEBUG] Fastly Kafka logging addition opts: %#v", opts)
 
-	if err := createKafka(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createKafka(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -284,10 +281,7 @@ func (h *KafkaServiceAttributeHandler) Delete(_ context.Context, d *schema.Resou
 
 	log.Printf("[DEBUG] Fastly Kafka logging endpoint removal opts: %#v", opts)
 
-	if err := deleteKafka(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteKafka(conn, opts)
 }
 
 func createKafka(conn *gofastly.Client, i *gofastly.CreateKafkaInput) error {

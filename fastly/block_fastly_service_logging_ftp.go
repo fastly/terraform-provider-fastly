@@ -154,10 +154,7 @@ func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 
 	log.Printf("[DEBUG] Fastly FTP logging addition opts: %#v", opts)
 
-	if err := createFTP(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createFTP(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -257,10 +254,7 @@ func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 
 	log.Printf("[DEBUG] Fastly FTP logging endpoint removal opts: %#v", opts)
 
-	if err := deleteFTP(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteFTP(conn, opts)
 }
 
 func createFTP(conn *gofastly.Client, i *gofastly.CreateFTPInput) error {

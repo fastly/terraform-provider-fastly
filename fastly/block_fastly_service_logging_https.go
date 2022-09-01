@@ -170,10 +170,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
 
-	if err := createHTTPS(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createHTTPS(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -280,10 +277,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
 
-	if err := deleteHTTPS(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteHTTPS(conn, opts)
 }
 
 func createHTTPS(conn *gofastly.Client, i *gofastly.CreateHTTPSInput) error {

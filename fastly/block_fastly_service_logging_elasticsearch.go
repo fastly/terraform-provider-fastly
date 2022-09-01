@@ -154,10 +154,7 @@ func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *sche
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging addition opts: %#v", opts)
 
-	if err := createElasticsearch(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createElasticsearch(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -257,10 +254,7 @@ func (h *ElasticSearchServiceAttributeHandler) Delete(_ context.Context, d *sche
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging endpoint removal opts: %#v", opts)
 
-	if err := deleteElasticsearch(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteElasticsearch(conn, opts)
 }
 
 func createElasticsearch(conn *gofastly.Client, i *gofastly.CreateElasticsearchInput) error {

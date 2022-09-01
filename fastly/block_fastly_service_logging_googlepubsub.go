@@ -106,10 +106,7 @@ func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging addition opts: %#v", opts)
 
-	if err := createGooglePubSub(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createGooglePubSub(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -189,10 +186,7 @@ func (h *GooglePubSubServiceAttributeHandler) Delete(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging endpoint removal opts: %#v", opts)
 
-	if err := deleteGooglePubSub(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteGooglePubSub(conn, opts)
 }
 
 func createGooglePubSub(conn *gofastly.Client, i *gofastly.CreatePubsubInput) error {

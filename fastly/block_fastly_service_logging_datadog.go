@@ -94,10 +94,7 @@ func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Fastly Datadog logging addition opts: %#v", opts)
 
-	if err := createDatadog(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createDatadog(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -171,10 +168,7 @@ func (h *DatadogServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Fastly Datadog logging endpoint removal opts: %#v", opts)
 
-	if err := deleteDatadog(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteDatadog(conn, opts)
 }
 
 func createDatadog(conn *gofastly.Client, i *gofastly.CreateDatadogInput) error {

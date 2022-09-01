@@ -245,10 +245,7 @@ func dataSourceFastlyTLSConfigurationSetAttributes(configuration *fastly.CustomT
 	if err := d.Set("updated_at", configuration.UpdatedAt.Format(time.RFC3339)); err != nil {
 		return err
 	}
-	if err := d.Set("dns_records", DNSRecords); err != nil {
-		return err
-	}
-	return nil
+	return d.Set("dns_records", DNSRecords)
 }
 
 func filterTLSConfiguration(config *fastly.CustomTLSConfiguration, filters []func(*fastly.CustomTLSConfiguration) bool) bool {

@@ -187,11 +187,7 @@ func dataSourceFastlyTLSPlatformCertificateSetAttributes(certificate *fastly.Bul
 	if err := d.Set("domains", domains); err != nil {
 		return err
 	}
-	if err := d.Set("configuration_id", certificate.Configurations[0].ID); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("configuration_id", certificate.Configurations[0].ID)
 }
 
 func filterPlatformTLSCertificate(config *fastly.BulkCertificate, filters []PlatformTLSCertificatePredicate) bool {

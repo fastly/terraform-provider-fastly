@@ -153,10 +153,7 @@ func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
 
-	if err := createCloudfiles(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createCloudfiles(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -254,10 +251,7 @@ func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging endpoint removal opts: %#v", opts)
 
-	if err := deleteCloudfiles(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteCloudfiles(conn, opts)
 }
 
 func createCloudfiles(conn *gofastly.Client, i *gofastly.CreateCloudfilesInput) error {

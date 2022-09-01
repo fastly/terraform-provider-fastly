@@ -113,10 +113,7 @@ func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Fastly Kinesis logging addition opts: %#v", opts)
 
-	if err := createKinesis(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createKinesis(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -199,10 +196,7 @@ func (h *KinesisServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 
 	log.Printf("[DEBUG] Fastly Kinesis logging endpoint removal opts: %#v", opts)
 
-	if err := deleteKinesis(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteKinesis(conn, opts)
 }
 
 func createKinesis(conn *gofastly.Client, i *gofastly.CreateKinesisInput) error {

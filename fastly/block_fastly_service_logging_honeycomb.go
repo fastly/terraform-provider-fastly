@@ -92,10 +92,7 @@ func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 	log.Printf("[DEBUG] Fastly Honeycomb logging addition opts: %#v", opts)
 
-	if err := createHoneycomb(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createHoneycomb(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -169,10 +166,7 @@ func (h *HoneycombServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 
 	log.Printf("[DEBUG] Fastly Honeycomb logging endpoint removal opts: %#v", opts)
 
-	if err := deleteHoneycomb(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteHoneycomb(conn, opts)
 }
 
 func createHoneycomb(conn *gofastly.Client, i *gofastly.CreateHoneycombInput) error {

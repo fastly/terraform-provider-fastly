@@ -173,10 +173,7 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 	log.Printf("[DEBUG] Fastly SFTP logging addition opts: %#v", opts)
 
-	if err := createSFTP(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createSFTP(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -283,10 +280,7 @@ func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.Resour
 
 	log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
 
-	if err := deleteSFTP(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteSFTP(conn, opts)
 }
 
 func createSFTP(conn *gofastly.Client, i *gofastly.CreateSFTPInput) error {

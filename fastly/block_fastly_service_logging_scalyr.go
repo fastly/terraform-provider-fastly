@@ -94,10 +94,7 @@ func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Fastly Scalyr logging addition opts: %#v", opts)
 
-	if err := createScalyr(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createScalyr(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -171,10 +168,7 @@ func (h *ScalyrServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Fastly Scalyr logging endpoint removal opts: %#v", opts)
 
-	if err := deleteScalyr(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteScalyr(conn, opts)
 }
 
 func createScalyr(conn *gofastly.Client, i *gofastly.CreateScalyrInput) error {

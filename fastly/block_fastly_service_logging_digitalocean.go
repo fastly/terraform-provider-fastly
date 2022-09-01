@@ -152,10 +152,7 @@ func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
 
-	if err := createDigitalOcean(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createDigitalOcean(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -253,10 +250,7 @@ func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging endpoint removal opts: %#v", opts)
 
-	if err := deleteDigitalOcean(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteDigitalOcean(conn, opts)
 }
 
 func createDigitalOcean(conn *gofastly.Client, i *gofastly.CreateDigitalOceanInput) error {

@@ -224,11 +224,7 @@ func dataSourceFastlyTLSCertificateSetAttributes(certificate *fastly.CustomTLSCe
 	if err := d.Set("signature_algorithm", certificate.SignatureAlgorithm); err != nil {
 		return err
 	}
-	if err := d.Set("domains", domains); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("domains", domains)
 }
 
 func filterTLSCertificate(config *fastly.CustomTLSCertificate, filters []TLSCertificatePredicate) bool {

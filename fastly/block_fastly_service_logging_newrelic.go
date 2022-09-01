@@ -92,10 +92,7 @@ func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 
 	log.Printf("[DEBUG] Fastly New Relic logging addition opts: %#v", opts)
 
-	if err := createNewRelic(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createNewRelic(conn, opts)
 }
 
 // Read refreshes the resource.
@@ -169,10 +166,7 @@ func (h *NewRelicServiceAttributeHandler) Delete(_ context.Context, d *schema.Re
 
 	log.Printf("[DEBUG] Fastly New Relic logging endpoint removal opts: %#v", opts)
 
-	if err := deleteNewRelic(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteNewRelic(conn, opts)
 }
 
 func createNewRelic(conn *gofastly.Client, i *gofastly.CreateNewRelicInput) error {

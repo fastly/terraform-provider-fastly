@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// CloudfilesServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type CloudfilesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingCloudfiles returns a new resource.
 func NewServiceLoggingCloudfiles(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&CloudfilesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingCloudfiles(sa ServiceMetadata) ServiceAttributeDefinition 
 	})
 }
 
+// Key returns the resource key.
 func (h *CloudfilesServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -143,6 +147,7 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -154,6 +159,7 @@ func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Cloud Files.
 	log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
@@ -178,6 +184,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Update updates the resource.
 func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCloudfilesInput{
 		ServiceID:      d.Id(),
@@ -241,6 +248,7 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

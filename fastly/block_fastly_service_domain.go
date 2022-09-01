@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// DomainServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DomainServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceDomain returns a new resource.
 func NewServiceDomain(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&DomainServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceDomain(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *DomainServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
@@ -47,8 +51,8 @@ func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -67,6 +71,7 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// TODO: update go-fastly to support an ActiveVersion struct, which contains
 	// domain and backend info in the response. Here we do 2 additional queries
@@ -76,7 +81,6 @@ func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Domains for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -90,8 +94,8 @@ func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *DomainServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *DomainServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -110,8 +114,8 @@ func (h *DomainServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GooglePubSubServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type GooglePubSubServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingGooglePubSub returns a new resource.
 func NewServiceLoggingGooglePubSub(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&GooglePubSubServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingGooglePubSub(sa ServiceMetadata) ServiceAttributeDefinitio
 	})
 }
 
+// Key returns the resource key.
 func (h *GooglePubSubServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -96,6 +100,7 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -107,6 +112,7 @@ func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schem
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Google Cloud Pub/Sub logging endpoints.
 	log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
@@ -131,6 +137,7 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 	return nil
 }
 
+// Update updates the resource.
 func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdatePubsubInput{
 		ServiceID:      d.Id(),
@@ -176,6 +183,7 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *GooglePubSubServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

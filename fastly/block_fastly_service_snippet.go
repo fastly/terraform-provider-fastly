@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// SnippetServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type SnippetServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceSnippet returns a new resource.
 func NewServiceSnippet(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&SnippetServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,10 @@ func NewServiceSnippet(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *SnippetServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *SnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -58,8 +62,8 @@ func (h *SnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildSnippet(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building VCL Snippet: %s", err)
@@ -76,6 +80,7 @@ func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
@@ -94,8 +99,8 @@ func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	return nil
 }
 
-func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Safety check in case keys aren't actually set in the HCL.
 	name, _ := resource["name"].(string)
 	priority, _ := resource["priority"].(int)
@@ -136,8 +141,8 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSnippetInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

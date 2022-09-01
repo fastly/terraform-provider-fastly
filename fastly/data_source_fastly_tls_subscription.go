@@ -2,8 +2,9 @@ package fastly
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,6 +106,7 @@ func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceDa
 	return nil
 }
 
+// TLSSubscriptionPredicate determines if a subscription should be filtered.
 type TLSSubscriptionPredicate func(*fastly.TLSSubscription) bool
 
 func getTLSSubscriptionFilters(d *schema.ResourceData) []TLSSubscriptionPredicate {

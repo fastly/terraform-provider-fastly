@@ -41,10 +41,12 @@ type BaseServiceDefinition struct {
 	Type       string
 }
 
+// GetType returns the resource type.
 func (d *BaseServiceDefinition) GetType() string {
 	return d.Type
 }
 
+// GetAttributeHandler returns the resource attributes.
 func (d *BaseServiceDefinition) GetAttributeHandler() []ServiceAttributeDefinition {
 	return d.Attributes
 }

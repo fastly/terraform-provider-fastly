@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// PackageServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type PackageServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServicePackage returns a new resource.
 func NewServicePackage(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &PackageServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,6 +24,7 @@ func NewServicePackage(sa ServiceMetadata) ServiceAttributeDefinition {
 	}
 }
 
+// Register add the attribute to the resource schema.
 func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:        schema.TypeList,
@@ -49,8 +52,8 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
+// Process creates or updates the attribute against the Fastly API.
 func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		// Schema guarantees one package block.
 		Package := v.([]interface{})[0].(map[string]interface{})
@@ -69,13 +72,13 @@ func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.
 	return nil
 }
 
+// Read refreshes the attribute state against the Fastly API.
 func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
 	Package, err := conn.GetPackage(&gofastly.GetPackageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: s.ActiveVersion.Number,
 	})
-
 	if err != nil {
 		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
 			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)

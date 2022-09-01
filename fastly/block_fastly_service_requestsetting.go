@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// RequestSettingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type RequestSettingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceRequestSetting returns a new resource.
 func NewServiceRequestSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&RequestSettingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,10 @@ func NewServiceRequestSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *RequestSettingServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -103,8 +107,8 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildRequestSetting(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Request Setting: %s", err)
@@ -121,13 +125,13 @@ func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *sch
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
 	rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Request Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -140,8 +144,8 @@ func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schem
 	return nil
 }
 
-func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -206,8 +210,8 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 	return nil
 }
 
-func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

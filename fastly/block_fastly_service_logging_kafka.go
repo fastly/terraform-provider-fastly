@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// KafkaServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type KafkaServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingKafka returns a new resource.
 func NewServiceLoggingKafka(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&KafkaServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingKafka(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *KafkaServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -161,6 +165,7 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -172,6 +177,7 @@ func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.Resou
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// refresh Kafka
 	log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
@@ -196,6 +202,7 @@ func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.Resourc
 	return nil
 }
 
+// Update updates the resource.
 func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateKafkaInput{
 		ServiceID:      d.Id(),
@@ -271,6 +278,7 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *KafkaServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

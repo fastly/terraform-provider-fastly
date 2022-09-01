@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -114,6 +115,7 @@ func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Res
 	return diags
 }
 
+// PlatformTLSCertificatePredicate determines if a certificate should be filtered.
 type PlatformTLSCertificatePredicate func(certificate *fastly.BulkCertificate) bool
 
 func getPlatformTLSCertificateFilters(d *schema.ResourceData) []PlatformTLSCertificatePredicate {

@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// FTPServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type FTPServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingFTP returns a new resource.
 func NewServiceLoggingFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&FTPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *FTPServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -144,6 +148,7 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -155,6 +160,7 @@ func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh FTP.
 	log.Printf("[DEBUG] Refreshing FTP logging endpoints for (%s)", d.Id())
@@ -178,6 +184,7 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 	return nil
 }
 
+// Update updates the resource.
 func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateFTPInput{
 		ServiceID:      d.Id(),
@@ -244,6 +251,7 @@ func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

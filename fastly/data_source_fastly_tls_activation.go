@@ -2,10 +2,11 @@ package fastly
 
 import (
 	"context"
+	"time"
+
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"time"
 )
 
 func dataSourceFastlyTLSActivation() *schema.Resource {
@@ -89,6 +90,7 @@ func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData
 	return nil
 }
 
+// TLSActivationPredicate determines if an activation should be filtered.
 type TLSActivationPredicate func(activation *fastly.TLSActivation) bool
 
 func getTLSActivationFilters(d *schema.ResourceData) []TLSActivationPredicate {
@@ -140,7 +142,6 @@ func listTLSActivations(conn *fastly.Client, filters ...TLSActivationPredicate) 
 }
 
 func dataSourceFastlyTLSActivationSetAttributes(activation *fastly.TLSActivation, d *schema.ResourceData) error {
-
 	d.SetId(activation.ID)
 
 	if err := d.Set("certificate_id", activation.Certificate.ID); err != nil {

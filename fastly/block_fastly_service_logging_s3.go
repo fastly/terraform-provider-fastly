@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// S3LoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type S3LoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingS3 returns a new resource.
 func NewServiceLoggingS3(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&S3LoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,10 @@ func NewServiceLoggingS3(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *S3LoggingServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -197,6 +201,7 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := h.buildCreate(resource, d.Id(), serviceVersion)
 	if err != nil {
@@ -210,6 +215,7 @@ func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh S3.
 	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
@@ -233,6 +239,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Update updates the resource.
 func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateS3Input{
 		ServiceID:      d.Id(),
@@ -314,6 +321,7 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *S3LoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 	err := deleteS3(conn, opts)

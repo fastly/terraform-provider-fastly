@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// SFTPServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type SFTPServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingSFTP returns a new resource.
 func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&SFTPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *SFTPServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -159,6 +163,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -174,6 +179,7 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh SFTP.
 	log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
@@ -198,6 +204,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 	return nil
 }
 
+// Update updates the resource.
 func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSFTPInput{
 		ServiceID:      d.Id(),
@@ -270,6 +277,7 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

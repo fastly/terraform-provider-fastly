@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -111,6 +112,7 @@ func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData
 	return diags
 }
 
+// TLSPrivateKeyPredicate determines if a key should be filtered.
 type TLSPrivateKeyPredicate func(key *fastly.PrivateKey) bool
 
 func getTLSPrivateKeyFilters(d *schema.ResourceData) []TLSPrivateKeyPredicate {

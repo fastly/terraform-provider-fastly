@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// WAFServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type WAFServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceWAF returns a new resource.
 func NewServiceWAF(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &WAFServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,6 +24,7 @@ func NewServiceWAF(sa ServiceMetadata) ServiceAttributeDefinition {
 	}
 }
 
+// Register add the attribute to the resource schema.
 func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeList,
@@ -57,6 +60,7 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
+// Process creates or updates the attribute against the Fastly API.
 func (h *WAFServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldWAFVal, newWAFVal := d.GetChange(h.GetKey())

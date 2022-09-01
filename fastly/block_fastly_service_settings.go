@@ -9,13 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-type SettingsServiceAttributeHandler struct {
-}
+// SettingsServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
+type SettingsServiceAttributeHandler struct{}
 
+// NewServiceSettings returns a new resource.
 func NewServiceSettings() ServiceAttributeDefinition {
 	return &SettingsServiceAttributeHandler{}
 }
 
+// Process creates or updates the attribute against the Fastly API.
 func (h *SettingsServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// NOTE: DefaultTTL uses the same default value as provided by the Fastly API.
 	opts := gofastly.UpdateSettingsInput{
@@ -56,6 +58,7 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// HasChange returns whether the state of the attribute has changed against Terraform stored state.
 func (h *SettingsServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
 	return d.HasChanges("default_ttl", "default_host", "stale_if_error", "stale_if_error_ttl")
 }
@@ -68,6 +71,7 @@ func (h *SettingsServiceAttributeHandler) MustProcess(d *schema.ResourceData, in
 	return h.HasChange(d) || (d.Get("default_ttl") == 0 && initialVersion)
 }
 
+// Register add the attribute to the resource schema.
 func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema["default_ttl"] = &schema.Schema{
 		Type:        schema.TypeInt,

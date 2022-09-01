@@ -60,6 +60,7 @@ func ToServiceAttributeDefinition(definition ServiceCRUDAttributeDefinition) Ser
 	return &blockSetAttributeHandler{definition}
 }
 
+// blockSetAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type blockSetAttributeHandler struct {
 	handler ServiceCRUDAttributeDefinition
 }

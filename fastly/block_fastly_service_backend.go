@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// BackendServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type BackendServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceBackend returns a new resource.
 func NewServiceBackend(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&BackendServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,12 +24,14 @@ func NewServiceBackend(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *BackendServiceAttributeHandler) Key() string {
 	return h.key
 }
 
+// GetSchema returns the resource schema.
 func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
-	var blockAttributes = map[string]*schema.Schema{
+	blockAttributes := map[string]*schema.Schema{
 		// required fields
 		"name": {
 			Type:        schema.TypeString,
@@ -181,7 +185,6 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 	required := false
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-
 		blockAttributes["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -200,6 +203,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreateBackendInput(d.Id(), serviceVersion, resource)
 
@@ -212,13 +216,13 @@ func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
 	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
@@ -230,6 +234,7 @@ func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	return nil
 }
 
+// Update updates the resource.
 func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildUpdateBackendInput(d.Id(), serviceVersion, resource, modified)
 
@@ -241,6 +246,7 @@ func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *BackendServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.createDeleteBackendInput(d.Id(), serviceVersion, resource)
 

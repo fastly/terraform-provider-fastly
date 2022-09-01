@@ -12,6 +12,9 @@ import (
 	"golang.org/x/net/http2"
 )
 
+// Config is the base configuration for the HTTP client.
+//
+// NOTE: The fields correlate to the root TCL schema.
 type Config struct {
 	ApiKey     string
 	BaseURL    string
@@ -20,10 +23,12 @@ type Config struct {
 	ForceHttp2 bool
 }
 
+// FastlyClient is a HTTP API Client.
 type FastlyClient struct {
 	conn *gofastly.Client
 }
 
+// Client returns a FastlyClient.
 func (c *Config) Client() (*FastlyClient, diag.Diagnostics) {
 	var client FastlyClient
 

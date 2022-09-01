@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// VCLServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type VCLServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceVCL returns a new resource.
 func NewServiceVCL(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&VCLServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,10 @@ func NewServiceVCL(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *VCLServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *VCLServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -52,8 +56,8 @@ func (h *VCLServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -70,6 +74,7 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
 	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
@@ -88,8 +93,8 @@ func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 	return nil
 }
 
-func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -108,8 +113,8 @@ func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

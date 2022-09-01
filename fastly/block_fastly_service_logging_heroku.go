@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// HerokuServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type HerokuServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingHeroku returns a new resource.
 func NewServiceLoggingHeroku(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&HerokuServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingHeroku(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *HerokuServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -82,6 +86,7 @@ func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -93,6 +98,7 @@ func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Heroku.
 	log.Printf("[DEBUG] Refreshing Heroku logging endpoints for (%s)", d.Id())
@@ -117,6 +123,7 @@ func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// Update updates the resource.
 func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHerokuInput{
 		ServiceID:      d.Id(),
@@ -156,6 +163,7 @@ func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *HerokuServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

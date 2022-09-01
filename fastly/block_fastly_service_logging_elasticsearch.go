@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ElasticSearchServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type ElasticSearchServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingElasticSearch returns a new resource.
 func NewServiceLoggingElasticSearch(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&ElasticSearchServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingElasticSearch(sa ServiceMetadata) ServiceAttributeDefiniti
 	})
 }
 
+// Key returns the resource key.
 func (h *ElasticSearchServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -144,6 +148,7 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -155,6 +160,7 @@ func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *sche
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Elasticsearch.
 	log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
@@ -178,6 +184,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema
 	return nil
 }
 
+// Update updates the resource.
 func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateElasticsearchInput{
 		ServiceID:      d.Id(),
@@ -244,6 +251,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *ElasticSearchServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

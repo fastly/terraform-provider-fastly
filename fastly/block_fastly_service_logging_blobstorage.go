@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// BlobStorageLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type BlobStorageLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingBlobStorage returns a new resource.
 func NewServiceLoggingBlobStorage(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&BlobStorageLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingBlobStorage(sa ServiceMetadata) ServiceAttributeDefinition
 	})
 }
 
+// Key returns the resource key.
 func (h *BlobStorageLoggingServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -135,6 +139,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBlobStorageInput{
@@ -166,6 +171,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
 	blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
@@ -188,6 +194,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 	return nil
 }
 
+// Update updates the resource.
 func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateBlobStorageInput{
 		ServiceID:      d.Id(),
@@ -254,6 +261,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteBlobStorageInput{
 		ServiceID:      d.Id(),

@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// DigitalOceanServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DigitalOceanServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingDigitalOcean returns a new resource.
 func NewServiceLoggingDigitalOcean(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&DigitalOceanServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingDigitalOcean(sa ServiceMetadata) ServiceAttributeDefinitio
 	})
 }
 
+// Key returns the resource key.
 func (h *DigitalOceanServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -142,6 +146,7 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -153,6 +158,7 @@ func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schem
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh DigitalOcean Spaces.
 	log.Printf("[DEBUG] Refreshing DigitalOcean Spaces logging endpoints for (%s)", d.Id())
@@ -177,6 +183,7 @@ func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.
 	return nil
 }
 
+// Update updates the resource.
 func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDigitalOceanInput{
 		ServiceID:      d.Id(),
@@ -240,6 +247,7 @@ func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schem
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

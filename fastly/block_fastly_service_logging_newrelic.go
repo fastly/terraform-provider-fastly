@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// NewRelicServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type NewRelicServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingNewRelic returns a new resource.
 func NewServiceLoggingNewRelic(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&NewRelicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,10 @@ func NewServiceLoggingNewRelic(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *NewRelicServiceAttributeHandler) Key() string { return h.key }
 
+// GetSchema returns the resource schema.
 func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -82,6 +86,7 @@ func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
@@ -93,6 +98,7 @@ func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh NewRelic.
 	log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
@@ -117,6 +123,7 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Update updates the resource.
 func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateNewRelicInput{
 		ServiceID:      d.Id(),
@@ -156,6 +163,7 @@ func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *NewRelicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 

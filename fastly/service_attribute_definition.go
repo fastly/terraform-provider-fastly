@@ -50,14 +50,12 @@ func (h *DefaultServiceAttributeHandler) GetServiceMetadata() ServiceMetadata {
 	return h.serviceMetadata
 }
 
+// HasChange returns whether or not the given key has been changed.
 func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
 	return d.HasChange(h.key)
 }
 
-func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, _ bool) bool {
-	return h.HasChange(d)
-}
-
+// VCLLoggingAttributes represents VCL log configuration.
 type VCLLoggingAttributes struct {
 	format            string
 	formatVersion     *uint
@@ -67,7 +65,7 @@ type VCLLoggingAttributes struct {
 
 // getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
 func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]interface{}) VCLLoggingAttributes {
-	var vla = VCLLoggingAttributes{
+	vla := VCLLoggingAttributes{
 		placement: "none",
 	}
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {

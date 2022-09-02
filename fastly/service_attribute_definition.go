@@ -55,6 +55,11 @@ func (h *DefaultServiceAttributeHandler) HasChange(d *schema.ResourceData) bool 
 	return d.HasChange(h.key)
 }
 
+// MustProcess returns whether we must process the resource.
+func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, _ bool) bool {
+	return h.HasChange(d)
+}
+
 // VCLLoggingAttributes represents VCL log configuration.
 type VCLLoggingAttributes struct {
 	format            string

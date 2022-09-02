@@ -274,7 +274,7 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetail, syslogs []*gofastly.Syslog, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

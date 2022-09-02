@@ -111,7 +111,7 @@ func testAccResourceFastlyTLSSubscriptionExists(resourceName string, id *string)
 		}
 
 		*id = r.Primary.ID
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		_, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
 			ID: r.Primary.ID,

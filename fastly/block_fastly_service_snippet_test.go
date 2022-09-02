@@ -127,7 +127,7 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDetail, snippets []*gofastly.Snippet) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

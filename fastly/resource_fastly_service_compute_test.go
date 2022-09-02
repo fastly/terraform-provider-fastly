@@ -137,7 +137,7 @@ func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		l, err := conn.ListServices(&gofastly.ListServicesInput{})
 		if err != nil {
 			return fmt.Errorf("[WARN] Error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)

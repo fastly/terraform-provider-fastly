@@ -118,7 +118,7 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteACL, err := conn.GetACL(&gofastly.GetACLInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -142,7 +142,7 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 // its side effect of adding an ACL Entry
 func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateACLEntry(&gofastly.CreateACLEntryInput{
 			ServiceID: acl.ServiceID,
 			ACLID:     acl.ID,

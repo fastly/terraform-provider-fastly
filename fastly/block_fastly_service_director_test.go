@@ -230,7 +230,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -272,7 +272,7 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 
 func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetail, directorBackends []*gofastly.DirectorBackend) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      service.ID,

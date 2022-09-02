@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,14 +44,13 @@ func resourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	u, err := conn.CreateUser(&gofastly.CreateUserInput{
 		Login: d.Get("login").(string),
 		Name:  d.Get("name").(string),
 		Role:  d.Get("role").(string),
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -61,12 +61,11 @@ func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceUserRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	u, err := conn.GetUser(&gofastly.GetUserInput{
 		ID: d.Id(),
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -79,7 +78,7 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta interface{
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	// Update Name and/or Role.
 	if d.HasChanges("name", "role") {
@@ -88,7 +87,6 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Name: gofastly.String(d.Get("name").(string)),
 			Role: gofastly.String(d.Get("role").(string)),
 		})
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -98,12 +96,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteUser(&gofastly.DeleteUserInput{
 		ID: d.Id(),
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

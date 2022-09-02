@@ -2,11 +2,12 @@ package fastly
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/fastly/terraform-provider-fastly/version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
-	"os"
-	"testing"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -31,7 +32,7 @@ func sharedClientForRegion(region string) (*fastly.Client, diag.Diagnostics) {
 		url = v
 	}
 	c := Config{
-		ApiKey:  os.Getenv("FASTLY_API_KEY"),
+		APIKey:  os.Getenv("FASTLY_API_KEY"),
 		BaseURL: url,
 		UserAgent: fmt.Sprintf(
 			"HashiCorp Terraform/%s (+https://www.terraform.io) Terraform Plugin SDK/%s %s/%s",

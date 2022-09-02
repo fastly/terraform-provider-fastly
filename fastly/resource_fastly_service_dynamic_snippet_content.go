@@ -51,7 +51,7 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 }
 
 func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	snippetID := d.Get("snippet_id").(string)
@@ -76,7 +76,7 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	snippetID := d.Get("snippet_id").(string)
@@ -98,7 +98,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	snippetID := d.Get("snippet_id").(string)

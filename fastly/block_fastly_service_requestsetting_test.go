@@ -112,7 +112,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.ServiceDetail, rqs []*gofastly.RequestSetting) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		rqList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

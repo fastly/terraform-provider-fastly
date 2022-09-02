@@ -227,7 +227,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLKafkaAttributes(service *gofastly.ServiceDetail, kafka []*gofastly.Kafka, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

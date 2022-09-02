@@ -119,7 +119,7 @@ func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, n
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		bqList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

@@ -162,7 +162,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

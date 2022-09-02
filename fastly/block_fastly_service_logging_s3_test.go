@@ -396,7 +396,7 @@ func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDetail, s3s []*gofastly.S3, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

@@ -258,7 +258,7 @@ func resourceServiceWAFConfigurationCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceServiceWAFConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	// If any attributes other than Computed (unconfigurable) or "activate" have changed, clone a new firewall version.
 	// Otherwise, don't clone but activate a draft version that was previously created with "activate = false".
@@ -381,7 +381,7 @@ func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceDa
 	}
 
 	if !d.Get("activate").(bool) {
-		conn := meta.(*FastlyClient).conn
+		conn := meta.(*APIClient).conn
 		wafID := d.Get("waf_id").(string)
 		versionToRead := d.Get("cloned_version").(int)
 		latestVersion, err = conn.GetWAFVersion(&gofastly.GetWAFVersionInput{
@@ -419,7 +419,7 @@ func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceDa
 }
 
 func resourceServiceWAFConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	wafID := d.Get("waf_id").(string)
 	log.Printf("[INFO] destroying configuration by creating empty version of WAF: %s", wafID)
@@ -462,7 +462,7 @@ func resourceServiceWAFConfigurationImport(_ context.Context, d *schema.Resource
 }
 
 func getLatestVersion(d *schema.ResourceData, meta interface{}) (*gofastly.WAFVersion, error) {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	wafID := d.Get("waf_id").(string)
 	resp, err := conn.ListAllWAFVersions(&gofastly.ListAllWAFVersionsInput{

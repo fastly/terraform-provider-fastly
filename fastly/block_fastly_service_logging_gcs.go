@@ -164,7 +164,7 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 // Read refreshes the resource.
 func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
-	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
+	gs, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
@@ -172,7 +172,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		return fmt.Errorf("[ERR] Error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
-	gcsl := flattenGCS(GCSList)
+	gcsl := flattenGCS(gs)
 
 	for _, element := range gcsl {
 		h.pruneVCLLoggingAttributes(element)
@@ -267,10 +267,10 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.
 }
 
 func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
-	var GCSList []map[string]interface{}
+	var sm []map[string]interface{}
 	for _, currentGCS := range gcsList {
 		// Convert gcs to a map for saving to state.
-		GCSMapString := map[string]interface{}{
+		m := map[string]interface{}{
 			"name":               currentGCS.Name,
 			"user":               currentGCS.User,
 			"bucket_name":        currentGCS.Bucket,
@@ -288,14 +288,14 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range GCSMapString {
+		for k, v := range m {
 			if v == "" {
-				delete(GCSMapString, k)
+				delete(m, k)
 			}
 		}
 
-		GCSList = append(GCSList, GCSMapString)
+		sm = append(sm, m)
 	}
 
-	return GCSList
+	return sm
 }

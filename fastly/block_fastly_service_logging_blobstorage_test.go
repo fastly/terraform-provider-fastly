@@ -271,7 +271,7 @@ func TestBlobstorageloggingEnvDefaultFuncAttributes(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.ServiceDetail, localBlobStorageList []*gofastly.BlobStorage, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteBlobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

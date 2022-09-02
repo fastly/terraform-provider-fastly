@@ -220,7 +220,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 	service, err := conn.CreateService(&gofastly.CreateServiceInput{
 		Name:    d.Get("name").(string),
 		Comment: d.Get("comment").(string),
@@ -248,7 +248,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	shouldActivate := d.Get("activate").(bool)
 	// Update Name and/or Comment. No new version is required for this.
@@ -406,7 +406,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 // resourceServiceRead provides service resource Read functionality.
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
@@ -526,7 +526,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 // resourceServiceDelete provides service resource Delete functionality.
 func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta interface{}, _ ServiceDefinition) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.
 	// If `force_destroy` is given, we deactivate the active version and then send

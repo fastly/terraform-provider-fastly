@@ -47,7 +47,7 @@ var wafRuleExclusion = &schema.Schema{
 }
 
 func readWAFRuleExclusions(meta interface{}, d *schema.ResourceData, wafVersionNumber int) error {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 	wafID := d.Get("waf_id").(string)
 
 	resp, e := conn.ListAllWAFRuleExclusions(&gofastly.ListAllWAFRuleExclusionsInput{
@@ -131,7 +131,7 @@ func updateWAFRuleExclusions(d *schema.ResourceData, meta interface{}, wafID str
 }
 
 func deleteWAFRuleExclusion(remove []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	for _, aRaw := range remove {
 		a := aRaw.(map[string]interface{})
@@ -150,16 +150,16 @@ func deleteWAFRuleExclusion(remove []interface{}, meta interface{}, wafID string
 }
 
 func createWAFRuleExclusion(add []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	for _, aRaw := range add {
 		a := aRaw.(map[string]interface{})
 
 		var rules []*gofastly.WAFRule
 		if a["exclusion_type"] == gofastly.WAFRuleExclusionTypeRule {
-			for _, ruleId := range a["modsec_rule_ids"].(*schema.Set).List() {
+			for _, ruleID := range a["modsec_rule_ids"].(*schema.Set).List() {
 				rules = append(rules, &gofastly.WAFRule{
-					ID: strconv.Itoa(ruleId.(int)),
+					ID: strconv.Itoa(ruleID.(int)),
 				})
 			}
 		} else {

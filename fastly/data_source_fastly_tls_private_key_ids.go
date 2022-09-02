@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
@@ -25,7 +26,7 @@ func dataSourceFastlyTLSPrivateKeyIDs() *schema.Resource {
 }
 
 func dataSourceFastlyTLSPrivateKeyIDsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	keys, err := listTLSPrivateKeys(conn)
 	if err != nil {

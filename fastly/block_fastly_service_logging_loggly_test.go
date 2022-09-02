@@ -142,7 +142,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetail, loggly []*gofastly.Loggly, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

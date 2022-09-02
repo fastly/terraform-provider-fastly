@@ -167,7 +167,7 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDetail, newrelic []*gofastly.NewRelic, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

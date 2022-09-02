@@ -41,5 +41,5 @@ func diagToWarnsAndErrs(diagnostics diag.Diagnostics) (warnings []string, errors
 			errors = append(errors, fmt.Sprintf("%s (unknown diagnostic severity: %d)", diagnostic.Summary, diagnostic.Severity))
 		}
 	}
-	return
+	return warnings, errors
 }

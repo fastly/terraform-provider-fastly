@@ -151,7 +151,7 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceDetail, logentriess []*gofastly.Logentries, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

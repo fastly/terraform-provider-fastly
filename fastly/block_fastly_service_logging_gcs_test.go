@@ -159,7 +159,7 @@ func testAccCheckFastlyServiceVCLAttributesGCS(service *gofastly.ServiceDetail, 
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		gcsList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

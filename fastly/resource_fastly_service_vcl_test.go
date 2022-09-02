@@ -261,7 +261,7 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	activateNewVersion := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		version, err := conn.CloneVersion(&gofastly.CloneVersionInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -498,7 +498,7 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the service
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		// deactivate active version to destoy
 		_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
 			ServiceID:      service.ID,
@@ -544,7 +544,7 @@ func testAccCheckServiceVCLExists(n string, service *gofastly.ServiceDetail) res
 			return fmt.Errorf("No Service ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		latest, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
 			ID: rs.Primary.ID,
 		})
@@ -564,7 +564,7 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -596,7 +596,7 @@ func testAccCheckFastlyServiceVCLAttributesBackends(service *gofastly.ServiceDet
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -792,7 +792,7 @@ func testAccCheckServiceVCLDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		l, err := conn.ListServices(&gofastly.ListServicesInput{})
 		if err != nil {
 			return fmt.Errorf("[WARN] Error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)

@@ -173,7 +173,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

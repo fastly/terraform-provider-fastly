@@ -53,11 +53,11 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 }
 
 // Process creates or updates the attribute against the Fastly API.
-func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		// Schema guarantees one package block.
-		Package := v.([]interface{})[0].(map[string]interface{})
-		packageFilename := Package["filename"].(string)
+		pkg := v.([]interface{})[0].(map[string]interface{})
+		packageFilename := pkg["filename"].(string)
 
 		err := updatePackage(conn, &gofastly.UpdatePackageInput{
 			ServiceID:      d.Id(),
@@ -73,9 +73,9 @@ func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.
 }
 
 // Read refreshes the attribute state against the Fastly API.
-func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
-	Package, err := conn.GetPackage(&gofastly.GetPackageInput{
+	pkg, err := conn.GetPackage(&gofastly.GetPackageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: s.ActiveVersion.Number,
 	})
@@ -89,7 +89,7 @@ func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.Res
 	}
 
 	filename := d.Get("package.0.filename").(string)
-	wp := flattenPackage(Package, filename)
+	wp := flattenPackage(pkg, filename)
 	if err := d.Set(h.GetKey(), wp); err != nil {
 		log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
 	}
@@ -102,10 +102,10 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 	return err
 }
 
-func flattenPackage(Package *gofastly.Package, filename string) []map[string]interface{} {
+func flattenPackage(pkg *gofastly.Package, filename string) []map[string]interface{} {
 	var pa []map[string]interface{}
 	p := map[string]interface{}{
-		"source_code_hash": Package.Metadata.HashSum,
+		"source_code_hash": pkg.Metadata.HashSum,
 		"filename":         filename,
 	}
 

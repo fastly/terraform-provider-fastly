@@ -7,7 +7,7 @@ import (
 
 func TestUserAgentContainsProviderVersion(t *testing.T) {
 	c := Config{
-		ApiKey:  "someapikey",
+		APIKey:  "someapikey",
 		BaseURL: "http://localhost",
 	}
 	_, diagnostics := c.Client()
@@ -19,15 +19,15 @@ func TestUserAgentContainsProviderVersion(t *testing.T) {
 
 func TestForceHttp2(t *testing.T) {
 	c1 := Config{
-		ApiKey:  "someapikey",
+		APIKey:  "someapikey",
 		BaseURL: "http://localhost",
 	}
 	client1, _ := c1.Client()
 
 	c2 := Config{
-		ApiKey:     "someapikey",
+		APIKey:     "someapikey",
 		BaseURL:    "http://localhost",
-		ForceHttp2: true,
+		ForceHTTP2: true,
 	}
 	client2, _ := c2.Client()
 

@@ -36,7 +36,7 @@ const (
 )
 
 func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
@@ -65,7 +65,7 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 }
 
 func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	subscriptionID := d.Get("subscription_id").(string)
 	subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{

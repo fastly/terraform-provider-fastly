@@ -373,7 +373,7 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.Version.Number,
@@ -402,7 +402,7 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 }
 
 func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetail, dictName, expectedKey, expectedValue string) {
-	conn := testAccProvider.Meta().(*FastlyClient).conn
+	conn := testAccProvider.Meta().(*APIClient).conn
 
 	dict, err := getDictionaryByName(service, dictName)
 	if err != nil {
@@ -423,7 +423,7 @@ func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetai
 }
 
 func getDictionaryByName(service *gofastly.ServiceDetail, dictName string) (*gofastly.Dictionary, error) {
-	conn := testAccProvider.Meta().(*FastlyClient).conn
+	conn := testAccProvider.Meta().(*APIClient).conn
 
 	dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
 		ServiceID:      service.ID,

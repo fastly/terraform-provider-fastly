@@ -50,7 +50,7 @@ func testAccFastlyDataSourceDatacenters(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		datacenters, err := conn.AllDatacenters()
 		if err != nil {
 			return fmt.Errorf("[ERROR] error fetching datacenters: %s", err)

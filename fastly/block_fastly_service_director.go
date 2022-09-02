@@ -321,5 +321,5 @@ func getDirectorBackendChange(d *schema.ResourceData, resource map[string]interf
 	odb = get(name.(string), od.(*schema.Set))
 	ndb = get(name.(string), nd.(*schema.Set))
 
-	return
+	return odb, ndb
 }

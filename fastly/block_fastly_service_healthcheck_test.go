@@ -130,7 +130,7 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.ServiceDetail, healthchecks []*gofastly.HealthCheck) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

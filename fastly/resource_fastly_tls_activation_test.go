@@ -99,7 +99,7 @@ resource "fastly_tls_activation" "test" {
 
 func testAccFastlyTLSActivationCheckExists(resourceName string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		r, ok := state.RootModule().Resources[resourceName]
 		if !ok {
@@ -118,7 +118,7 @@ func testAccFastlyTLSActivationCheckDestroy(state *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		activations, err := conn.ListTLSActivations(&fastly.ListTLSActivationsInput{})
 		if err != nil {
 			return fmt.Errorf(

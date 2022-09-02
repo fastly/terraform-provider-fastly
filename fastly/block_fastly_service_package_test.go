@@ -89,7 +89,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDetail, computePackage *gofastly.Package) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		wp, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

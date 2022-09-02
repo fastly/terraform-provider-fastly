@@ -138,7 +138,7 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -166,7 +166,7 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 // used for its side effect of adding a Dictionary Item
 func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
 			ServiceID:    dictionary.ServiceID,
 			DictionaryID: dictionary.ID,

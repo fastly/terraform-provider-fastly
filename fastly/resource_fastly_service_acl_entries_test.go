@@ -55,7 +55,7 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenAclEntries(c.remote)
+		out := flattenACLEntries(c.remote)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}
@@ -378,7 +378,7 @@ func testAccCheckFastlyServiceAclEntriesRemoteState(service *gofastly.ServiceDet
 			return fmt.Errorf("[ERR] Bad name, expected (%s), got (%s)", serviceName, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		acl, err := conn.GetACL(&gofastly.GetACLInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -396,7 +396,7 @@ func testAccCheckFastlyServiceAclEntriesRemoteState(service *gofastly.ServiceDet
 			return fmt.Errorf("[ERR] Error looking up ACL entry records for (%s), ACL (%s): %s", service.Name, acl.ID, err)
 		}
 
-		flatAclEntries := flattenAclEntries(aclEntries)
+		flatAclEntries := flattenACLEntries(aclEntries)
 		// Clear out the id values to allow a deep equal of the other attributes set in terraform.
 		for _, val := range flatAclEntries {
 			val["id"] = ""

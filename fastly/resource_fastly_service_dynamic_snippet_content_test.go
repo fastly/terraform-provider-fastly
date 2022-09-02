@@ -175,7 +175,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		snippet, err := conn.GetSnippet(&gofastly.GetSnippetInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -207,7 +207,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		snippets, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -227,7 +227,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 }
 
 func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetail, dynamicSnippetName string, snippetType gofastly.SnippetType, content string) {
-	conn := testAccProvider.Meta().(*FastlyClient).conn
+	conn := testAccProvider.Meta().(*APIClient).conn
 
 	newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
 		ServiceID:      service.ID,

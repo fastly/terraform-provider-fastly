@@ -211,7 +211,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.ServiceDetail, digitalocean []*gofastly.DigitalOcean, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

@@ -350,7 +350,7 @@ func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLSplunkAttributes(service *gofastly.ServiceDetail, localSplunkList []*gofastly.Splunk, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteSplunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

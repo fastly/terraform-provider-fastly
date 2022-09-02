@@ -200,7 +200,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetail, headers []*gofastly.Header) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		headersList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

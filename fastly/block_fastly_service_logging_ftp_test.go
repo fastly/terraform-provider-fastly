@@ -204,7 +204,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, ftps []*gofastly.FTP, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

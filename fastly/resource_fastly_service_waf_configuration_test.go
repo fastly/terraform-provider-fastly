@@ -289,7 +289,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 	return func(_ *terraform.State) error {
 		// The "activate" attribute is not stored on the Fastly API and must be ignored.
 		delete(local, "activate")
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
 			FilterVersion: service.ActiveVersion.Number,
@@ -329,7 +329,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 
 func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDetail, latestVersion int) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
 			FilterVersion: service.ActiveVersion.Number,

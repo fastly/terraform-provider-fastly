@@ -210,10 +210,10 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 }
 
 func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]interface{} {
-	var LEList []map[string]interface{}
+	var sm []map[string]interface{}
 	for _, currentLE := range logentriesList {
 		// Convert Logentries to a map for saving to state.
-		LEMapString := map[string]interface{}{
+		m := map[string]interface{}{
 			"name":               currentLE.Name,
 			"port":               currentLE.Port,
 			"use_tls":            currentLE.UseTLS,
@@ -225,14 +225,14 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range LEMapString {
+		for k, v := range m {
 			if v == "" {
-				delete(LEMapString, k)
+				delete(m, k)
 			}
 		}
 
-		LEList = append(LEList, LEMapString)
+		sm = append(sm, m)
 	}
 
-	return LEList
+	return sm
 }

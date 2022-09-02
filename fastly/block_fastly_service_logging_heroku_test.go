@@ -156,7 +156,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHerokuAttributes(service *gofastly.ServiceDetail, heroku []*gofastly.Heroku, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		herokuList, err := conn.ListHerokus(&gofastly.ListHerokusInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

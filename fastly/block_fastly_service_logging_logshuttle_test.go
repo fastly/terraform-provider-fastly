@@ -156,7 +156,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLLogshuttleAttributes(service *gofastly.ServiceDetail, logshuttle []*gofastly.Logshuttle, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

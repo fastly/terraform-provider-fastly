@@ -67,7 +67,7 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 }
 
 func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 

@@ -18,7 +18,7 @@ func NewServiceSettings() ServiceAttributeDefinition {
 }
 
 // Process creates or updates the attribute against the Fastly API.
-func (h *SettingsServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// NOTE: DefaultTTL uses the same default value as provided by the Fastly API.
 	opts := gofastly.UpdateSettingsInput{
 		ServiceID:       d.Id(),
@@ -47,14 +47,17 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 		ServiceID:      d.Id(),
 		ServiceVersion: s.ActiveVersion.Number,
 	}
-	if settings, err := conn.GetSettings(&settingsOpts); err == nil {
-		d.Set("default_host", settings.DefaultHost)
-		d.Set("default_ttl", int(settings.DefaultTTL))
-		d.Set("stale_if_error", bool(settings.StaleIfError))
-		d.Set("stale_if_error_ttl", int(settings.StaleIfErrorTTL))
-	} else {
+
+	settings, err := conn.GetSettings(&settingsOpts)
+	if err != nil {
 		return fmt.Errorf("[ERR] Error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
+
+	d.Set("default_host", settings.DefaultHost)
+	d.Set("default_ttl", int(settings.DefaultTTL))
+	d.Set("stale_if_error", bool(settings.StaleIfError))
+	d.Set("stale_if_error_ttl", int(settings.StaleIfErrorTTL))
+
 	return nil
 }
 
@@ -63,6 +66,8 @@ func (h *SettingsServiceAttributeHandler) HasChange(d *schema.ResourceData) bool
 	return d.HasChanges("default_ttl", "default_host", "stale_if_error", "stale_if_error_ttl")
 }
 
+// MustProcess returns whether we must process the resource
+//
 // If the requested default_ttl is 0, and this is the first
 // version being created, HasChange will return false, but we need
 // to set it anyway, so ensure we update the settings in that

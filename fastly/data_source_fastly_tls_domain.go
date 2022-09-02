@@ -42,7 +42,7 @@ func dataSourceFastlyTLSDomain() *schema.Resource {
 }
 
 func dataSourceFastlyTLSDomainsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	domain, err := findTLSDomain(conn, d)
 	if err != nil {

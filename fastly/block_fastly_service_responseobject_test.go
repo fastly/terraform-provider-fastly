@@ -114,7 +114,7 @@ func TestAccFastlyServiceVCL_response_object_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.ServiceDetail, responseObjects []*gofastly.ResponseObject) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

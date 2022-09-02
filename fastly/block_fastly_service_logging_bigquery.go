@@ -140,7 +140,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 // Read refreshes the resource.
 func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
-	BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
+	bqs, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
@@ -148,7 +148,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *sche
 		return fmt.Errorf("[ERR] Error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
-	bql := flattenBigQuery(BQList)
+	bql := flattenBigQuery(bqs)
 
 	for _, element := range bql {
 		h.pruneVCLLoggingAttributes(element)
@@ -236,10 +236,10 @@ func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *sc
 }
 
 func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
-	var BQList []map[string]interface{}
+	var sm []map[string]interface{}
 	for _, currentBQ := range bqList {
 		// Convert gcs to a map for saving to state.
-		BQMapString := map[string]interface{}{
+		m := map[string]interface{}{
 			"name":               currentBQ.Name,
 			"format":             currentBQ.Format,
 			"email":              currentBQ.User,
@@ -253,14 +253,14 @@ func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range BQMapString {
+		for k, v := range m {
 			if v == "" {
-				delete(BQMapString, k)
+				delete(m, k)
 			}
 		}
 
-		BQList = append(BQList, BQMapString)
+		sm = append(sm, m)
 	}
 
-	return BQList
+	return sm
 }

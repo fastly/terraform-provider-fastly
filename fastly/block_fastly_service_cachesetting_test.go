@@ -104,7 +104,7 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.ServiceDetail, cs []*gofastly.CacheSetting) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		cList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

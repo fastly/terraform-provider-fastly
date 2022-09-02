@@ -146,7 +146,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail, gzips []*gofastly.Gzip) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

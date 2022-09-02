@@ -254,7 +254,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.ServiceDetail, googlepubsub []*gofastly.Pubsub, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

@@ -106,7 +106,7 @@ func testAccTLSCertificateExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		_, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
 			ID: r.Primary.ID,
@@ -156,7 +156,7 @@ EOF
 }
 
 func testAccCheckTLSCertificateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*FastlyClient).conn
+	conn := testAccProvider.Meta().(*APIClient).conn
 
 	for _, r := range s.RootModule().Resources {
 		if r.Type != "fastly_tls_certificate" {

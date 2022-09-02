@@ -143,7 +143,7 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceDetail, papertrails []*gofastly.Papertrail, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

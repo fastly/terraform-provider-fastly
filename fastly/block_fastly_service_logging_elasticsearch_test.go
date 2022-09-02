@@ -214,7 +214,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDetail, elasticsearch []*fst.Elasticsearch, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		elasticsearchList, err := conn.ListElasticsearch(&fst.ListElasticsearchInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

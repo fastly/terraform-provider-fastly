@@ -61,7 +61,7 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 }
 
 // Process creates or updates the attribute against the Fastly API.
-func (h *WAFServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {
+func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldWAFVal, newWAFVal := d.GetChange(h.GetKey())
 
@@ -99,7 +99,7 @@ func (h *WAFServiceAttributeHandler) Process(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *WAFServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// refresh WAFs
 	log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
 	wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{
@@ -134,23 +134,23 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
 	}
 
 	w := wafList[0]
-	WAFMapString := map[string]interface{}{
+	m := map[string]interface{}{
 		"waf_id":             w.ID,
 		"response_object":    w.Response,
 		"prefetch_condition": w.PrefetchCondition,
 	}
 
 	// prune any empty values that come from the default string value in structs
-	for k, v := range WAFMapString {
+	for k, v := range m {
 		if v == "" {
-			delete(WAFMapString, k)
+			delete(m, k)
 		}
 	}
-	return append(wl, WAFMapString)
+	return append(wl, m)
 }
 
-func buildCreateWAF(WAFMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
-	df := WAFMap.(map[string]interface{})
+func buildCreateWAF(waf interface{}, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
+	df := waf.(map[string]interface{})
 
 	opts := gofastly.CreateWAFInput{
 		ServiceID:         serviceID,
@@ -162,8 +162,8 @@ func buildCreateWAF(WAFMap interface{}, serviceID string, serviceVersion int) *g
 	return &opts
 }
 
-func buildDeleteWAF(WAFMap interface{}, serviceVersion int) *gofastly.DeleteWAFInput {
-	df := WAFMap.(map[string]interface{})
+func buildDeleteWAF(waf interface{}, serviceVersion int) *gofastly.DeleteWAFInput {
+	df := waf.(map[string]interface{})
 
 	opts := gofastly.DeleteWAFInput{
 		ID:             df["waf_id"].(string),

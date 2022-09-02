@@ -198,7 +198,7 @@ func TestAccFastlyWAFRulesTagFilter(t *testing.T) {
 
 func testAccFastlyWAFRulesCheckByPublisherFilter(publishers []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		rulesResp, err := conn.ListAllWAFRules(&gofastly.ListAllWAFRulesInput{
 			FilterPublishers: publishers,
 		})
@@ -212,7 +212,7 @@ func testAccFastlyWAFRulesCheckByPublisherFilter(publishers []string) resource.T
 
 func testAccFastlyWAFRulesCheckByExcludeFilter(publishers []string, exclusions []int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		rulesResp, err := conn.ListAllWAFRules(&gofastly.ListAllWAFRulesInput{
 			FilterPublishers: publishers,
 			ExcludeMocSecIDs: exclusions,
@@ -227,7 +227,7 @@ func testAccFastlyWAFRulesCheckByExcludeFilter(publishers []string, exclusions [
 
 func testAccFastlyWAFRulesCheckByTagFilter(tags []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		rulesResp, err := conn.ListAllWAFRules(&gofastly.ListAllWAFRulesInput{
 			FilterTagNames: tags,
 		})

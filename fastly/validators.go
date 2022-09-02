@@ -114,15 +114,15 @@ func validateDictionaryItems() schema.SchemaValidateDiagFunc {
 		v, ok := i.(map[string]interface{})
 		if !ok {
 			es = append(es, fmt.Errorf("expected type of %s to be a map[string]interface", k))
-			return
+			return s, es
 		}
 
 		if len(v) > max {
 			es = append(es, fmt.Errorf("expected %s to be at most (%d), got %d", k, max, len(v)))
-			return
+			return s, es
 		}
 
-		return
+		return s, es
 	})
 }
 

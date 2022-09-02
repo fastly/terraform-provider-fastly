@@ -54,7 +54,7 @@ func testAccCheckServiceAuthorizationExists(n string, sa *gofastly.ServiceAuthor
 			return fmt.Errorf("No User ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		latest, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
 			ID: rs.Primary.ID,
 		})
@@ -74,7 +74,7 @@ func testAccCheckServiceAuthorizationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
 			ID: rs.Primary.ID,
 		})

@@ -14,10 +14,10 @@ import (
 
 func resourceServiceACLEntries() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceServiceAclEntriesCreate,
-		ReadContext:   resourceServiceAclEntriesRead,
-		UpdateContext: resourceServiceAclEntriesUpdate,
-		DeleteContext: resourceServiceAclEntriesDelete,
+		CreateContext: resourceServiceACLEntriesCreate,
+		ReadContext:   resourceServiceACLEntriesRead,
+		UpdateContext: resourceServiceACLEntriesUpdate,
+		DeleteContext: resourceServiceACLEntriesDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceACLEntriesImport,
 		},
@@ -85,8 +85,8 @@ func resourceServiceACLEntries() *schema.Resource {
 	}
 }
 
-func resourceServiceAclEntriesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -108,11 +108,11 @@ func resourceServiceAclEntriesCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclID))
-	return resourceServiceAclEntriesRead(ctx, d, meta)
+	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -125,7 +125,7 @@ func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("entry", flattenAclEntries(aclEntries))
+	err = d.Set("entry", flattenACLEntries(aclEntries))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -133,8 +133,8 @@ func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func resourceServiceAclEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -200,11 +200,11 @@ func resourceServiceAclEntriesUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("Error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
-	return resourceServiceAclEntriesRead(ctx, d, meta)
+	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceAclEntriesDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -231,21 +231,21 @@ func resourceServiceAclEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface{} {
+func flattenACLEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface{} {
 	var resultList []map[string]interface{}
 
-	for _, currentAclEntry := range aclEntryList {
+	for _, currentACLEntry := range aclEntryList {
 		aes := map[string]interface{}{
-			"id":      currentAclEntry.ID,
-			"ip":      currentAclEntry.IP,
-			"negated": currentAclEntry.Negated,
-			"comment": currentAclEntry.Comment,
+			"id":      currentACLEntry.ID,
+			"ip":      currentACLEntry.IP,
+			"negated": currentACLEntry.Negated,
+			"comment": currentACLEntry.Comment,
 		}
 
 		// NOTE: Fastly API may return "null" or int value
 		// we only want to set the value if subnet is not null
-		if currentAclEntry.Subnet != nil {
-			aes["subnet"] = strconv.Itoa(*currentAclEntry.Subnet)
+		if currentACLEntry.Subnet != nil {
+			aes["subnet"] = strconv.Itoa(*currentACLEntry.Subnet)
 		}
 
 		for k, v := range aes {

@@ -214,7 +214,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceDetail, cloudfiles []*gofastly.Cloudfiles, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

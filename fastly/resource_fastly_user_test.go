@@ -102,7 +102,7 @@ func testAccCheckUserExists(n string, user *gofastly.User) resource.TestCheckFun
 			return fmt.Errorf("No User ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		latest, err := conn.GetUser(&gofastly.GetUserInput{
 			ID: rs.Primary.ID,
 		})
@@ -122,7 +122,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		u, err := conn.GetCurrentUser()
 		if err != nil {
 			return fmt.Errorf("[WARN] Error getting current user when deleting Fastly User (%s): %s", rs.Primary.ID, err)

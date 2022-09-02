@@ -187,7 +187,7 @@ func TestAccFastlyServiceVCLWAFUpdateCondition(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
 			FilterVersion: service.ActiveVersion.Number,
@@ -205,7 +205,7 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 
 func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, response, condition string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
 			FilterVersion: service.ActiveVersion.Number,

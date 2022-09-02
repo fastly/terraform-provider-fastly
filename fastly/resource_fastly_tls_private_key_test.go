@@ -58,7 +58,7 @@ func testAccCheckPrivateKeyDestroy(state *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		keys, err := conn.ListPrivateKeys(&fastly.ListPrivateKeysInput{})
 		if err != nil {
 			return fmt.Errorf(
@@ -99,7 +99,7 @@ func testAccCheckPrivateKeyExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("no id set on resource %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		_, err := conn.GetPrivateKey(&fastly.GetPrivateKeyInput{
 			ID: res.Primary.ID,

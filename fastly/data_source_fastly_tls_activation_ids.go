@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -29,7 +30,7 @@ func dataSourceFastlyTLSActivationIds() *schema.Resource {
 }
 
 func dataSourceFastlyTLSActivationIDsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var certificateID string
 

@@ -57,7 +57,7 @@ func resourceServiceDictionaryItems() *schema.Resource {
 }
 
 func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
@@ -84,7 +84,7 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
@@ -138,7 +138,7 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
@@ -156,7 +156,7 @@ func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceDat
 }
 
 func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)

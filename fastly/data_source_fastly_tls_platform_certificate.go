@@ -66,7 +66,7 @@ func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 }
 
 func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 

@@ -152,7 +152,7 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 }
 
 func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var configuration *gofastly.TLSConfiguration
 	if v, ok := d.GetOk("configuration_id"); ok {
@@ -191,7 +191,7 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	include := "tls_authorizations"
 	subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
@@ -219,9 +219,9 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 
 	// NOTE: there must be only one certificate id included per subscription
 	// "pending" and "processing" state may not include the id (for new subscriptions)
-	var certificateId = ""
+	certificateID := ""
 	if len(subscription.Certificates) > 0 {
-		certificateId = subscription.Certificates[0].ID
+		certificateID = subscription.Certificates[0].ID
 	}
 
 	var managedHTTPChallenges []map[string]interface{}
@@ -283,7 +283,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("certificate_id", certificateId)
+	err = d.Set("certificate_id", certificateID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -320,7 +320,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 }
 
 func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	updates := &gofastly.UpdateTLSSubscriptionInput{
 		ID:    d.Id(),
@@ -350,7 +350,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteTLSSubscription(&gofastly.DeleteTLSSubscriptionInput{
 		ID:    d.Id(),

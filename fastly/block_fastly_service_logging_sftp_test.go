@@ -253,7 +253,7 @@ func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail, sftps []*gofastly.SFTP, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

@@ -189,7 +189,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDetail, honeycomb []*gofastly.Honeycomb, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,

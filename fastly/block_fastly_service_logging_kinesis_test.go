@@ -191,25 +191,25 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDetail, Kinesis []*gofastly.Kinesis, serviceType string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDetail, ks []*gofastly.Kinesis, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		KinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
+		ksl, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Kinesis Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Kinesis Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		if len(KinesisList) != len(Kinesis) {
-			return fmt.Errorf("Kinesis List count mismatch, expected (%d), got (%d)", len(Kinesis), len(KinesisList))
+		if len(ksl) != len(ks) {
+			return fmt.Errorf("kinesis List count mismatch, expected (%d), got (%d)", len(ks), len(ksl))
 		}
 
-		log.Printf("[DEBUG] KinesisList = %#v\n", KinesisList)
+		log.Printf("[DEBUG] KinesisList = %#v\n", ksl)
 
-		for _, e := range Kinesis {
-			for _, el := range KinesisList {
+		for _, e := range ks {
+			for _, el := range ksl {
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
@@ -228,7 +228,7 @@ func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDeta
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Kinesis logging match: %s", diff)
+						return fmt.Errorf("bad match Kinesis logging match: %s", diff)
 					}
 				}
 			}

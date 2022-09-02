@@ -26,7 +26,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	domain2Bad := fmt.Sprintf("%sALT.test", name)
 	commonName1 := domain1
 	commonName2 := domain2
-	var subscriptionId string
+	var subscriptionID string
 
 	resourceName := "fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "managed_dns_challenge.%", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "managed_http_challenges.#"),
 					resource.TestCheckResourceAttr(resourceName, "common_name", domain1),
-					testAccResourceFastlyTLSSubscriptionExists(resourceName, &subscriptionId),
+					testAccResourceFastlyTLSSubscriptionExists(resourceName, &subscriptionID),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "common_name", domain2),
 					// subscription is "updated" so the subscription ID should remain the same
-					resource.TestCheckResourceAttrPtr(resourceName, "id", &subscriptionId),
+					resource.TestCheckResourceAttrPtr(resourceName, "id", &subscriptionID),
 				),
 			},
 			{

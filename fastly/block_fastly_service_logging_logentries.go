@@ -127,7 +127,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 	}
 
 	lel := flattenLogentries(logentriesList)

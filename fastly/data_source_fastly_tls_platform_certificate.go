@@ -90,11 +90,11 @@ func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Res
 		}
 
 		if len(certificates) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(certificates) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+			return diag.Errorf("your query returned more than one result. Please change try a more specific search criteria and try again.")
 		}
 
 		certificate = certificates[0]

@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.ServiceDetail, name string, conditions []*gofastly.Condition) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -104,11 +104,11 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Conditions for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Conditions for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(conditionList) != len(conditions) {
-			return fmt.Errorf("Error: mis match count of conditions, expected (%d), got (%d)", len(conditions), len(conditionList))
+			return fmt.Errorf("error: mis match count of conditions, expected (%d), got (%d)", len(conditions), len(conditionList))
 		}
 
 		var found int
@@ -123,7 +123,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 					lc.CreatedAt = nil
 					lc.UpdatedAt = nil
 					if !reflect.DeepEqual(c, lc) {
-						return fmt.Errorf("Bad match Conditions match, expected (%#v), got (%#v)", c, lc)
+						return fmt.Errorf("bad match Conditions match, expected (%#v), got (%#v)", c, lc)
 					}
 					found++
 				}
@@ -131,7 +131,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 		}
 
 		if found != len(conditions) {
-			return fmt.Errorf("Error matching Conditions rules")
+			return fmt.Errorf("error matching Conditions rules")
 		}
 		return nil
 	}

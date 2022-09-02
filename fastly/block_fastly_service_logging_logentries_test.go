@@ -157,11 +157,11 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Logentries Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Logentries Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(logentriesList) != len(logentriess) {
-			return fmt.Errorf("Logentries List count mismatch, expected (%d), got (%d)", len(logentriess), len(logentriesList))
+			return fmt.Errorf("logentries List count mismatch, expected (%d), got (%d)", len(logentriess), len(logentriesList))
 		}
 
 		log.Printf("[DEBUG] logentriesList = %+v\n", logentriesList)
@@ -187,7 +187,7 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 					}
 
 					if !reflect.DeepEqual(s, ls) {
-						return fmt.Errorf("Bad match Logentries logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
+						return fmt.Errorf("bad match Logentries logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
 					}
 					found++
 				}
@@ -195,7 +195,7 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 		}
 
 		if found != len(logentriess) {
-			return fmt.Errorf("Error matching Logentries Logging rules")
+			return fmt.Errorf("error matching Logentries Logging rules")
 		}
 
 		return nil

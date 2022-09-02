@@ -149,11 +149,11 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Papertrail for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(papertrailList) != len(papertrails) {
-			return fmt.Errorf("Papertrail List count mismatch, expected (%d), got (%d)", len(papertrails), len(papertrailList))
+			return fmt.Errorf("papertrail List count mismatch, expected (%d), got (%d)", len(papertrails), len(papertrailList))
 		}
 
 		var found int
@@ -177,7 +177,7 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 					}
 
 					if !reflect.DeepEqual(p, lp) {
-						return fmt.Errorf("Bad match Papertrail match, expected (%#v), got (%#v)", p, lp)
+						return fmt.Errorf("bad match Papertrail match, expected (%#v), got (%#v)", p, lp)
 					}
 					found++
 				}
@@ -185,7 +185,7 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 		}
 
 		if found != len(papertrails) {
-			return fmt.Errorf("Error matching Papertrail rules")
+			return fmt.Errorf("error matching Papertrail rules")
 		}
 
 		return nil

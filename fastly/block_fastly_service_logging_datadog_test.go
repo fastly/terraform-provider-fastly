@@ -236,11 +236,11 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Datadog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Datadog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(datadogList) != len(datadog) {
-			return fmt.Errorf("Datadog List count mismatch, expected (%d), got (%d)", len(datadog), len(datadogList))
+			return fmt.Errorf("datadog List count mismatch, expected (%d), got (%d)", len(datadog), len(datadogList))
 		}
 
 		log.Printf("[DEBUG] datadogList = %#v\n", datadogList)
@@ -266,7 +266,7 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 					}
 
 					if diff := cmp.Diff(d, dl); diff != "" {
-						return fmt.Errorf("Bad match Datadog logging match: %s", diff)
+						return fmt.Errorf("bad match Datadog logging match: %s", diff)
 					}
 					found++
 				}
@@ -274,7 +274,7 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 		}
 
 		if found != len(datadog) {
-			return fmt.Errorf("Error matching Datadog Logging rules")
+			return fmt.Errorf("error matching Datadog Logging rules")
 		}
 
 		return nil

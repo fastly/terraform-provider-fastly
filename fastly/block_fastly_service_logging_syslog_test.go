@@ -16,7 +16,7 @@ import (
 func TestResourceFastlyFlattenSyslog(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
-		t.Errorf("Failed to generate key and cert: %s", err)
+		t.Errorf("failed to generate key and cert: %s", err)
 	}
 
 	cases := []struct {
@@ -224,7 +224,7 @@ func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
 func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
-		t.Errorf("Failed to generate key and cert: %s", err)
+		t.Errorf("failed to generate key and cert: %s", err)
 	}
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -280,11 +280,11 @@ func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetai
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Syslog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Syslog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(syslogList) != len(syslogs) {
-			return fmt.Errorf("Syslog List count mismatch, expected (%d), got (%d)", len(syslogs), len(syslogList))
+			return fmt.Errorf("syslog List count mismatch, expected (%d), got (%d)", len(syslogs), len(syslogList))
 		}
 
 		log.Printf("[DEBUG] syslogList = %+v\n", syslogList)
@@ -310,7 +310,7 @@ func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetai
 					}
 
 					if !reflect.DeepEqual(s, ls) {
-						return fmt.Errorf("Bad match Syslog logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
+						return fmt.Errorf("bad match Syslog logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
 					}
 					found++
 				}
@@ -318,7 +318,7 @@ func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(syslogs) {
-			return fmt.Errorf("Error matching Syslog Logging rules")
+			return fmt.Errorf("error matching Syslog Logging rules")
 		}
 
 		return nil

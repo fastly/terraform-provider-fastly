@@ -162,11 +162,11 @@ func testAccCheckFastlyServiceVCLHerokuAttributes(service *gofastly.ServiceDetai
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Heroku Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Heroku Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(herokuList) != len(heroku) {
-			return fmt.Errorf("Heroku List count mismatch, expected (%d), got (%d)", len(heroku), len(herokuList))
+			return fmt.Errorf("heroku List count mismatch, expected (%d), got (%d)", len(heroku), len(herokuList))
 		}
 
 		log.Printf("[DEBUG] herokuList = %#v\n", herokuList)
@@ -191,7 +191,7 @@ func testAccCheckFastlyServiceVCLHerokuAttributes(service *gofastly.ServiceDetai
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Heroku logging match: %s", diff)
+						return fmt.Errorf("bad match Heroku logging match: %s", diff)
 					}
 				}
 			}

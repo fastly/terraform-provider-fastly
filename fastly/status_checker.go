@@ -58,7 +58,7 @@ func (c *WAFDeploymentChecker) waitForDeployment(ctx context.Context, wafID stri
 				return nil, "", err
 			}
 			if res.LastDeploymentStatus == gofastly.WAFVersionDeploymentStatusFailed {
-				return res, res.LastDeploymentStatus, fmt.Errorf("WAF deployment failed. Error message: %v", res.Error)
+				return res, res.LastDeploymentStatus, fmt.Errorf("waf deployment failed. Error message: %v", res.Error)
 			}
 			return res, res.LastDeploymentStatus, nil
 		},

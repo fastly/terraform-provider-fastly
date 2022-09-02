@@ -95,23 +95,23 @@ func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDeta
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if computePackage.Metadata.Size != wp.Metadata.Size {
-			return fmt.Errorf("Package size mismatch, expected: %v, got: %v", computePackage.Metadata.Size, wp.Metadata.Size)
+			return fmt.Errorf("package size mismatch, expected: %v, got: %v", computePackage.Metadata.Size, wp.Metadata.Size)
 		}
 
 		if computePackage.Metadata.HashSum != wp.Metadata.HashSum {
-			return fmt.Errorf("Package hashsum mismatch, expected: %v, got: %v", computePackage.Metadata.HashSum, wp.Metadata.HashSum)
+			return fmt.Errorf("package hashsum mismatch, expected: %v, got: %v", computePackage.Metadata.HashSum, wp.Metadata.HashSum)
 		}
 
 		if computePackage.Metadata.Language != wp.Metadata.Language {
-			return fmt.Errorf("Package language mismatch, expected: %v, got: %v", computePackage.Metadata.Language, wp.Metadata.Language)
+			return fmt.Errorf("package language mismatch, expected: %v, got: %v", computePackage.Metadata.Language, wp.Metadata.Language)
 		}
 
 		if computePackage.Metadata.Name != wp.Metadata.Name {
-			return fmt.Errorf("Package name mismatch, expected: %v, got: %v", computePackage.Metadata.Name, wp.Metadata.Name)
+			return fmt.Errorf("package name mismatch, expected: %v, got: %v", computePackage.Metadata.Name, wp.Metadata.Name)
 		}
 
 		return nil

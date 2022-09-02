@@ -168,11 +168,11 @@ func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetai
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Scalyr Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Scalyr Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(scalyrList) != len(scalyr) {
-			return fmt.Errorf("Scalyr List count mismatch, expected (%d), got (%d)", len(scalyr), len(scalyrList))
+			return fmt.Errorf("scalyr List count mismatch, expected (%d), got (%d)", len(scalyr), len(scalyrList))
 		}
 
 		log.Printf("[DEBUG] scalyrList = %#v\n", scalyrList)
@@ -198,7 +198,7 @@ func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetai
 					}
 
 					if diff := cmp.Diff(s, sl); diff != "" {
-						return fmt.Errorf("Bad match Scalyr logging match: %s", diff)
+						return fmt.Errorf("bad match Scalyr logging match: %s", diff)
 					}
 					found++
 				}
@@ -206,7 +206,7 @@ func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(scalyr) {
-			return fmt.Errorf("Error matching Scalyr Logging rules")
+			return fmt.Errorf("error matching Scalyr Logging rules")
 		}
 
 		return nil

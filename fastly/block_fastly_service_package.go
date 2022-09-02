@@ -65,7 +65,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			PackagePath:    packageFilename,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error modifying package %s: %s", d.Id(), err)
+			return fmt.Errorf("error modifying package %s: %s", d.Id(), err)
 		}
 	}
 
@@ -85,7 +85,7 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			d.Set(h.GetKey(), nil)
 			return nil
 		}
-		return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
 
 	filename := d.Get("package.0.filename").(string)

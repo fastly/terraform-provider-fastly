@@ -169,7 +169,7 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 	var commonName *gofastly.TLSDomain
 	if v, ok := d.GetOk("common_name"); ok {
 		if !contains(domainStrings, v.(string)) {
-			return diag.Errorf("Domain specified as common_name (%s) must also be in domains (%v)", v, domainStrings)
+			return diag.Errorf("domain specified as common_name (%s) must also be in domains (%v)", v, domainStrings)
 		}
 
 		commonName = &gofastly.TLSDomain{ID: v.(string)}
@@ -230,7 +230,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		for _, challenge := range domain.Challenges {
 			if challenge.Type == "managed-dns" {
 				if len(challenge.Values) < 1 {
-					return diag.Errorf("Fastly API returned no record values for Managed DNS Challenges")
+					return diag.Errorf("fastly API returned no record values for Managed DNS Challenges")
 				}
 
 				managedDNSChallenges = append(managedDNSChallenges, map[string]interface{}{
@@ -258,7 +258,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		for _, challenge := range subscription.Authorizations[0].Challenges {
 			if challenge.Type == "managed-dns" {
 				if len(challenge.Values) < 1 {
-					return diag.Errorf("Fastly API returned no record values for Managed DNS Challenge")
+					return diag.Errorf("fastly API returned no record values for Managed DNS Challenge")
 				}
 
 				managedDNSChallengeOld = map[string]string{
@@ -385,7 +385,7 @@ func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.Re
 func resourceFastlyTLSSubscriptionValidateDomains(_ context.Context, v, _ interface{}) error {
 	for _, domain := range v.(*schema.Set).List() {
 		if domain.(string) != strings.ToLower(domain.(string)) {
-			return fmt.Errorf("TLS subscription 'domains' must not contain uppercase letters: %s", v.(*schema.Set).List())
+			return fmt.Errorf("tls subscription 'domains' must not contain uppercase letters: %s", v.(*schema.Set).List())
 		}
 	}
 	return nil
@@ -393,7 +393,7 @@ func resourceFastlyTLSSubscriptionValidateDomains(_ context.Context, v, _ interf
 
 func resourceFastlyTLSSubscriptionValidateCommonName(_ context.Context, v, _ interface{}) error {
 	if v.(string) != strings.ToLower(v.(string)) {
-		return fmt.Errorf("TLS subscription 'common_name' must not contain uppercase letters: %s", v.(string))
+		return fmt.Errorf("tls subscription 'common_name' must not contain uppercase letters: %s", v.(string))
 	}
 	return nil
 }

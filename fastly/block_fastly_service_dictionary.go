@@ -91,7 +91,7 @@ func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Dictionaries for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	dictionaries := flattenDictionaries(dictList)

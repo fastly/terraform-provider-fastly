@@ -136,11 +136,11 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Healthcheck for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Healthcheck for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(healthcheckList) != len(healthchecks) {
-			return fmt.Errorf("Healthcheck List count mismatch, expected (%d), got (%d)", len(healthchecks), len(healthcheckList))
+			return fmt.Errorf("healthcheck List count mismatch, expected (%d), got (%d)", len(healthchecks), len(healthcheckList))
 		}
 
 		var found int
@@ -155,7 +155,7 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 					lh.CreatedAt = nil
 					lh.UpdatedAt = nil
 					if !reflect.DeepEqual(h, lh) {
-						return fmt.Errorf("Bad match Healthcheck match, expected (%#v), got (%#v)", h, lh)
+						return fmt.Errorf("bad match Healthcheck match, expected (%#v), got (%#v)", h, lh)
 					}
 					found++
 				}
@@ -163,7 +163,7 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 		}
 
 		if found != len(healthchecks) {
-			return fmt.Errorf("Error matching Healthcheck rules")
+			return fmt.Errorf("error matching Healthcheck rules")
 		}
 
 		return nil

@@ -279,11 +279,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 			FilterVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(wafResp.Items) != 1 {
-			return fmt.Errorf("[ERR] Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+			return fmt.Errorf("expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
 		}
 
 		waf := wafResp.Items[0]
@@ -293,12 +293,12 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 			Include:          []string{"waf_rules"},
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		actual := exclResp.Items
 		if len(expected) != len(actual) {
-			return fmt.Errorf("Error matching rule exclusions slice sizes :\nexpected: %#v\ngot: %#v", len(expected), len(actual))
+			return fmt.Errorf("error matching rule exclusions slice sizes :\nexpected: %#v\ngot: %#v", len(expected), len(actual))
 		}
 
 		sort.Slice(expected, func(i, j int) bool {
@@ -313,19 +313,19 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 			actualExcl := actual[i]
 
 			if *expectedExcl.Name != *actualExcl.Name {
-				return fmt.Errorf("Error matching Name:\nexpected: %#v\ngot: %#v", *expectedExcl.Name, *actualExcl.Name)
+				return fmt.Errorf("error matching Name:\nexpected: %#v\ngot: %#v", *expectedExcl.Name, *actualExcl.Name)
 			}
 
 			if *expectedExcl.Condition != *actualExcl.Condition {
-				return fmt.Errorf("Error matching Condition:\nexpected: %#v\ngot: %#v", *expectedExcl.Condition, *actualExcl.Condition)
+				return fmt.Errorf("error matching Condition:\nexpected: %#v\ngot: %#v", *expectedExcl.Condition, *actualExcl.Condition)
 			}
 
 			if *expectedExcl.ExclusionType != *actualExcl.ExclusionType {
-				return fmt.Errorf("Error matching ExclusionType:\nexpected: %#v\ngot: %#v", *expectedExcl.ExclusionType, *actualExcl.ExclusionType)
+				return fmt.Errorf("error matching ExclusionType:\nexpected: %#v\ngot: %#v", *expectedExcl.ExclusionType, *actualExcl.ExclusionType)
 			}
 
 			if len(expectedExcl.Rules) != len(actualExcl.Rules) {
-				return fmt.Errorf("Error matching rules slice sizes :\nexpected: %#v\ngot: %#v", len(expectedExcl.Rules), len(actualExcl.Rules))
+				return fmt.Errorf("error matching rules slice sizes :\nexpected: %#v\ngot: %#v", len(expectedExcl.Rules), len(actualExcl.Rules))
 			}
 
 			sort.Slice(expectedExcl.Rules, func(i, j int) bool {
@@ -338,7 +338,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 			for k, expectedRule := range expectedExcl.Rules {
 				actualRule := actualExcl.Rules[k]
 				if expectedRule.ModSecID != actualRule.ModSecID {
-					return fmt.Errorf("Error matching Rule ModsecId:\nexpected: %#v\ngot: %#v", expectedRule.ModSecID, actualRule.ModSecID)
+					return fmt.Errorf("error matching Rule ModsecId:\nexpected: %#v\ngot: %#v", expectedRule.ModSecID, actualRule.ModSecID)
 				}
 			}
 		}

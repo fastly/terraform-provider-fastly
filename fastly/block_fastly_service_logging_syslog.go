@@ -171,7 +171,7 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Syslog for (%s), version (%d): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Syslog for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 	}
 
 	sll := flattenSyslogs(syslogList)

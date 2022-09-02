@@ -110,11 +110,11 @@ func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.Servi
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Cache Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Cache Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(cList) != len(cs) {
-			return fmt.Errorf("Cache Setting List count mismatch, expected (%d), got (%d)", len(cs), len(cList))
+			return fmt.Errorf("cache Setting List count mismatch, expected (%d), got (%d)", len(cs), len(cList))
 		}
 
 		var found int
@@ -129,7 +129,7 @@ func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.Servi
 					lc.CreatedAt = nil
 					lc.UpdatedAt = nil
 					if !reflect.DeepEqual(c, lc) {
-						return fmt.Errorf("Bad match Cache Setting match, expected (%#v), got (%#v)", c, lc)
+						return fmt.Errorf("bad match Cache Setting match, expected (%#v), got (%#v)", c, lc)
 					}
 					found++
 				}
@@ -137,7 +137,7 @@ func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.Servi
 		}
 
 		if found != len(cs) {
-			return fmt.Errorf("Error matching Cache Setting rules (%d/%d)", found, len(cs))
+			return fmt.Errorf("error matching Cache Setting rules (%d/%d)", found, len(cs))
 		}
 
 		return nil

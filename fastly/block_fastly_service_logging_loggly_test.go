@@ -148,11 +148,11 @@ func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetai
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Loggly Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Loggly Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(logglyList) != len(loggly) {
-			return fmt.Errorf("Loggly List count mismatch, expected (%d), got (%d)", len(loggly), len(logglyList))
+			return fmt.Errorf("loggly List count mismatch, expected (%d), got (%d)", len(loggly), len(logglyList))
 		}
 
 		log.Printf("[DEBUG] logglyList = %#v\n", logglyList)
@@ -178,7 +178,7 @@ func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetai
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Loggly logging match: %s", diff)
+						return fmt.Errorf("bad match Loggly logging match: %s", diff)
 					}
 					found++
 				}
@@ -186,7 +186,7 @@ func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(loggly) {
-			return fmt.Errorf("Error matching Loggly Logging rules")
+			return fmt.Errorf("error matching Loggly Logging rules")
 		}
 
 		return nil

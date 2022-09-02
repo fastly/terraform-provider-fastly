@@ -115,7 +115,7 @@ func TestAccFastlyServiceDynamicSnippetContent_external_snippet_is_removed(t *te
 			},
 			{
 				PreConfig: func() {
-					createDynamicSnippetThroughApi(t, &service, externalDynamicSnippetName, gofastly.SnippetTypeHit, externalContent)
+					createDynamicSnippetThroughAPI(t, &service, externalDynamicSnippetName, gofastly.SnippetTypeHit, externalContent)
 				},
 				Config: testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(name, managedDynamicSnippetName, managedContent, true),
 				Check: resource.ComposeTestCheckFunc(
@@ -172,7 +172,7 @@ func TestAccFastlyServiceDynamicSnippetContent_normal_snippet_is_not_removed(t *
 func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly.ServiceDetail, name, dynamicSnippetName, expectedContent string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -182,7 +182,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 			Name:           dynamicSnippetName,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		dynamicSnippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
@@ -190,11 +190,11 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 			ID:        snippet.ID,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Dynamic snippet content for (%s), snippet (%s): %s", service.Name, snippet.ID, err)
+			return fmt.Errorf("error looking up Dynamic snippet content for (%s), snippet (%s): %s", service.Name, snippet.ID, err)
 		}
 
 		if dynamicSnippet.Content != expectedContent {
-			return fmt.Errorf("[ERR] Error matching:\nexpected: %s\ngot: %s", expectedContent, dynamicSnippet.Content)
+			return fmt.Errorf("error matching:\nexpected: %s\ngot: %s", expectedContent, dynamicSnippet.Content)
 		}
 
 		return nil
@@ -204,7 +204,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(service *gofastly.ServiceDetail, name, dynamicSnippetName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -213,12 +213,12 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		for _, snippet := range snippets {
 			if snippet.Name == dynamicSnippetName {
-				return fmt.Errorf("[ERR] Dynamic snippet (%s) exists in service (%s)", dynamicSnippetName, service.Name)
+				return fmt.Dynamic snippet (%s) exists in service (%s)", dynamicSnippetName, service.Name)
 			}
 		}
 
@@ -226,7 +226,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 	}
 }
 
-func createDynamicSnippetThroughApi(t *testing.T, service *gofastly.ServiceDetail, dynamicSnippetName string, snippetType gofastly.SnippetType, content string) {
+func createDynamicSnippetThroughAPI(t *testing.T, service *gofastly.ServiceDetail, dynamicSnippetName string, snippetType gofastly.SnippetType, content string) {
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{

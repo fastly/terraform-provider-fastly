@@ -224,7 +224,7 @@ func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	bl := flattenBackend(backendList, h.GetServiceMetadata())

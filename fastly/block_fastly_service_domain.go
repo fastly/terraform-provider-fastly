@@ -84,7 +84,7 @@ func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Domains for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Domains for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	// Refresh Domains

@@ -118,11 +118,11 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Request Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Request Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(rqList) != len(rqs) {
-			return fmt.Errorf("Request Setting List count mismatch, expected (%d), got (%d)", len(rqs), len(rqList))
+			return fmt.Errorf("request Setting List count mismatch, expected (%d), got (%d)", len(rqs), len(rqList))
 		}
 
 		var found int
@@ -137,7 +137,7 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 					lr.CreatedAt = nil
 					lr.UpdatedAt = nil
 					if !reflect.DeepEqual(r, lr) {
-						return fmt.Errorf("Bad match Request Setting match, expected (%#v), got (%#v)", r, lr)
+						return fmt.Errorf("bad match Request Setting match, expected (%#v), got (%#v)", r, lr)
 					}
 					found++
 				}
@@ -145,7 +145,7 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 		}
 
 		if found != len(rqs) {
-			return fmt.Errorf("Error matching Request Setting rules (%d/%d)", found, len(rqs))
+			return fmt.Errorf("error matching Request Setting rules (%d/%d)", found, len(rqs))
 		}
 
 		return nil

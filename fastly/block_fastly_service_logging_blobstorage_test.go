@@ -243,11 +243,11 @@ func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 func TestBlobstorageloggingEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingBlobStorage(serviceAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_blobstorage"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_blobstorage"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect attributes to be sensitive
@@ -277,11 +277,11 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Blob Storage Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Blob Storage Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(remoteBlobStorageList) != len(localBlobStorageList) {
-			return fmt.Errorf("Blob Storage List count mismatch, expected (%d), got (%d)", len(localBlobStorageList), len(remoteBlobStorageList))
+			return fmt.Errorf("blob Storage List count mismatch, expected (%d), got (%d)", len(localBlobStorageList), len(remoteBlobStorageList))
 		}
 
 		var found int
@@ -305,7 +305,7 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 					rbs.CreatedAt = nil
 					rbs.UpdatedAt = nil
 					if !reflect.DeepEqual(lbs, rbs) {
-						return fmt.Errorf("Bad match Blob Storage logging match, expected (%#v), got (%#v)", lbs, rbs)
+						return fmt.Errorf("bad match Blob Storage logging match, expected (%#v), got (%#v)", lbs, rbs)
 					}
 					found++
 				}
@@ -313,7 +313,7 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 		}
 
 		if found != len(localBlobStorageList) {
-			return fmt.Errorf("Error matching Blob Storage Logging rules")
+			return fmt.Errorf("error matching Blob Storage Logging rules")
 		}
 
 		return nil

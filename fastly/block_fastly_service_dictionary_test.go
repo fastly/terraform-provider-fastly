@@ -135,7 +135,7 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceDetail, dictionary *gofastly.Dictionary, name, dictName string, writeOnly bool) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -145,15 +145,15 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 			Name:           dictName,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if dict.Name != dictName {
-			return fmt.Errorf("Dictionary name mismatch, expected: %s, got: %#v", dictName, dict.Name)
+			return fmt.Errorf("dictionary name mismatch, expected: %s, got: %#v", dictName, dict.Name)
 		}
 
 		if dict.WriteOnly != writeOnly {
-			return fmt.Errorf("Dictionary write_only attribute mismatch, expected: %#v, got: %#v", writeOnly, dict.WriteOnly)
+			return fmt.Errorf("dictionary write_only attribute mismatch, expected: %#v, got: %#v", writeOnly, dict.WriteOnly)
 		}
 
 		*dictionary = *dict
@@ -174,7 +174,7 @@ func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestChe
 			ItemValue:    "testItem",
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error adding item to dictionary (%s) on service (%s): %w", dictionary.ID, dictionary.ServiceID, err)
+			return fmt.Errorf("error adding item to dictionary (%s) on service (%s): %w", dictionary.ID, dictionary.ServiceID, err)
 		}
 
 		return nil

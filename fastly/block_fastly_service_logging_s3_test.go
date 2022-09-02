@@ -357,11 +357,11 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingS3(serviceAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_s3"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_s3"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect attributes to be sensitive
@@ -402,11 +402,11 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up S3 Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(s3List) != len(s3s) {
-			return fmt.Errorf("S3 List count mismatch, expected (%d), got (%d)", len(s3s), len(s3List))
+			return fmt.Errorf("s3 List count mismatch, expected (%d), got (%d)", len(s3s), len(s3List))
 		}
 
 		var found int
@@ -430,7 +430,7 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 					}
 
 					if diff := cmp.Diff(s, ls); diff != "" {
-						return fmt.Errorf("Bad match S3 logging match: %s", diff)
+						return fmt.Errorf("bad match S3 logging match: %s", diff)
 					}
 					found++
 				}
@@ -438,7 +438,7 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 		}
 
 		if found != len(s3s) {
-			return fmt.Errorf("Error matching S3 Logging rules")
+			return fmt.Errorf("error matching S3 Logging rules")
 		}
 
 		return nil

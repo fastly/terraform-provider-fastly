@@ -137,7 +137,7 @@ func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLAttributesSumologic(service *gofastly.ServiceDetail, name string, sumologic gofastly.Sumologic, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -146,19 +146,19 @@ func testAccCheckFastlyServiceVCLAttributesSumologic(service *gofastly.ServiceDe
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Sumologics for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Sumologics for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(sumologicList) != 1 {
-			return fmt.Errorf("Sumologic missing, expected: 1, got: %d", len(sumologicList))
+			return fmt.Errorf("sumologic missing, expected: 1, got: %d", len(sumologicList))
 		}
 
 		if sumologicList[0].Name != sumologic.Name {
-			return fmt.Errorf("Sumologic name mismatch, expected: %s, got: %#v", sumologic.Name, sumologicList[0].Name)
+			return fmt.Errorf("sumologic name mismatch, expected: %s, got: %#v", sumologic.Name, sumologicList[0].Name)
 		}
 
 		if serviceType == ServiceTypeVCL && sumologicList[0].Format != sumologic.Format {
-			return fmt.Errorf("Sumologic format mismatch, expected: %s, got: %#v", sumologic.Format, sumologicList[0].Format)
+			return fmt.Errorf("sumologic format mismatch, expected: %s, got: %#v", sumologic.Format, sumologicList[0].Format)
 		}
 
 		return nil

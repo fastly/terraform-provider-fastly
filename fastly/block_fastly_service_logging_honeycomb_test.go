@@ -195,11 +195,11 @@ func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDe
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Honeycomb Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Honeycomb Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(honeycombList) != len(honeycomb) {
-			return fmt.Errorf("Honeycomb List count mismatch, expected (%d), got (%d)", len(honeycomb), len(honeycombList))
+			return fmt.Errorf("honeycomb List count mismatch, expected (%d), got (%d)", len(honeycomb), len(honeycombList))
 		}
 
 		log.Printf("[DEBUG] honeycombList = %#v\n", honeycombList)
@@ -224,7 +224,7 @@ func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDe
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Honeycomb logging match: %s", diff)
+						return fmt.Errorf("bad match Honeycomb logging match: %s", diff)
 					}
 				}
 			}

@@ -220,11 +220,11 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDet
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Elasticsearch Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Elasticsearch Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(elasticsearchList) != len(elasticsearch) {
-			return fmt.Errorf("Elasticsearch List count mismatch, expected (%d), got (%d)", len(elasticsearch), len(elasticsearchList))
+			return fmt.Errorf("elasticsearch List count mismatch, expected (%d), got (%d)", len(elasticsearch), len(elasticsearchList))
 		}
 
 		log.Printf("[DEBUG] elasticsearchList = %#v\n", elasticsearchList)
@@ -250,7 +250,7 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDet
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Elasticsearch logging match: %s", diff)
+						return fmt.Errorf("bad match Elasticsearch logging match: %s", diff)
 					}
 					found++
 				}
@@ -258,7 +258,7 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDet
 		}
 
 		if found != len(elasticsearch) {
-			return fmt.Errorf("Error matching Elasticsearch Logging rules")
+			return fmt.Errorf("error matching Elasticsearch Logging rules")
 		}
 
 		return nil

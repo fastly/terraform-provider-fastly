@@ -210,11 +210,11 @@ func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, 
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up FTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up FTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(ftpList) != len(ftps) {
-			return fmt.Errorf("FTP List count mismatch, expected (%d), got (%d)", len(ftps), len(ftpList))
+			return fmt.Errorf("ftp List count mismatch, expected (%d), got (%d)", len(ftps), len(ftpList))
 		}
 
 		log.Printf("[DEBUG] ftpList = %#v\n", ftpList)
@@ -241,7 +241,7 @@ func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, 
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match FTP logging match: %s", diff)
+						return fmt.Errorf("bad match FTP logging match: %s", diff)
 					}
 					found++
 				}
@@ -249,7 +249,7 @@ func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, 
 		}
 
 		if found != len(ftps) {
-			return fmt.Errorf("Error matching FTP Logging rules")
+			return fmt.Errorf("error matching FTP Logging rules")
 		}
 
 		return nil

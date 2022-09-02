@@ -50,7 +50,7 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 
 	settings, err := conn.GetSettings(&settingsOpts)
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
 
 	d.Set("default_host", settings.DefaultHost)

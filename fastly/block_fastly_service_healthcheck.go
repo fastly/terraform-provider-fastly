@@ -140,7 +140,7 @@ func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.R
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Healthcheck for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Healthcheck for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	hcl := flattenHealthchecks(healthcheckList)

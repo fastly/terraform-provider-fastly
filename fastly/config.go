@@ -33,7 +33,7 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	var client APIClient
 
 	if !c.NoAuth && c.APIKey == "" {
-		return nil, diag.FromErr(fmt.Errorf("[Err] No API key for Fastly"))
+		return nil, diag.FromErr(fmt.Errorf("no API key for Fastly"))
 	}
 
 	gofastly.UserAgent = c.UserAgent

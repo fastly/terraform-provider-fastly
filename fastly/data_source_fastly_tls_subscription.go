@@ -88,11 +88,11 @@ func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceDa
 		}
 
 		if len(subscriptions) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again")
 		}
 
 		if len(subscriptions) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
+			return diag.Errorf("your query returned more than one result. Please change to a more specific search criteria")
 		}
 
 		subscription = subscriptions[0]

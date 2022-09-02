@@ -120,11 +120,11 @@ func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.Serv
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Response Object for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Response Object for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(responseObjectList) != len(responseObjects) {
-			return fmt.Errorf("Response Object List count mismatch, expected (%d), got (%d)", len(responseObjects), len(responseObjectList))
+			return fmt.Errorf("response Object List count mismatch, expected (%d), got (%d)", len(responseObjects), len(responseObjectList))
 		}
 
 		var found int
@@ -139,7 +139,7 @@ func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.Serv
 					lp.CreatedAt = nil
 					lp.UpdatedAt = nil
 					if !reflect.DeepEqual(p, lp) {
-						return fmt.Errorf("Bad match Response Object match, expected (%#v), got (%#v)", p, lp)
+						return fmt.Errorf("bad match Response Object match, expected (%#v), got (%#v)", p, lp)
 					}
 					found++
 				}
@@ -147,7 +147,7 @@ func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.Serv
 		}
 
 		if found != len(responseObjects) {
-			return fmt.Errorf("Error matching Response Object rules")
+			return fmt.Errorf("error matching Response Object rules")
 		}
 
 		return nil

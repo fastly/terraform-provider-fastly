@@ -295,11 +295,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 			FilterVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(wafResp.Items) != 1 {
-			return fmt.Errorf("[ERR] Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+			return fmt.Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
 		}
 
 		waf := wafResp.Items[0]
@@ -307,11 +307,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 			WAFID: waf.ID,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF version records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF version records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(verResp.Items) < 1 {
-			return fmt.Errorf("[ERR] Expected result size (%d), got (%d)", 1, len(verResp.Items))
+			return fmt.Expected result size (%d), got (%d)", 1, len(verResp.Items))
 		}
 
 		latestVersion, err := testAccFastlyServiceWAFVersionV1GetVersionNumber(verResp.Items, latestVersion)
@@ -321,7 +321,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 
 		remote := testAccFastlyServiceWAFVersionV1ToMap(latestVersion)
 		if !reflect.DeepEqual(remote, local) {
-			return fmt.Errorf("Error matching:\nexpected: %#v\nand  got: %#v", local, remote)
+			return fmt.Errorf("error matching:\nexpected: %#v\nand  got: %#v", local, remote)
 		}
 		return nil
 	}
@@ -335,11 +335,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 			FilterVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(wafResp.Items) != 1 {
-			return fmt.Errorf("[ERR] Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+			return fmt.Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
 		}
 
 		waf := wafResp.Items[0]
@@ -347,11 +347,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 			WAFID: waf.ID,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF version records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF version records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(verResp.Items) < 1 {
-			return fmt.Errorf("[ERR] Expected result size (%d), got (%d)", 1, len(verResp.Items))
+			return fmt.Expected result size (%d), got (%d)", 1, len(verResp.Items))
 		}
 
 		emptyVersion, err := testAccFastlyServiceWAFVersionV1GetVersionNumber(verResp.Items, latestVersion)
@@ -360,10 +360,10 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 		}
 
 		if !emptyVersion.Locked {
-			return fmt.Errorf("[ERR] Expected Locked = (%v),  got (%v)", true, emptyVersion.Locked)
+			return fmt.Expected Locked = (%v),  got (%v)", true, emptyVersion.Locked)
 		}
 		if emptyVersion.DeployedAt == nil {
-			return fmt.Errorf("[ERR] Expected DeployedAt not nil,  got (%v)", emptyVersion.DeployedAt)
+			return fmt.Expected DeployedAt not nil,  got (%v)", emptyVersion.DeployedAt)
 		}
 
 		totalRules := emptyVersion.ActiveRulesFastlyBlockCount + emptyVersion.ActiveRulesFastlyLogCount + emptyVersion.ActiveRulesOWASPBlockCount +

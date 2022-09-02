@@ -22,14 +22,14 @@ func TestAccFastlyIPRanges(t *testing.T) {
 			{
 				Config: testAccFastlyIPRangesConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccFastlyIPRanges("data.fastly_ip_ranges.some"),
+					testAccFastlyIPRangesState("data.fastly_ip_ranges.some"),
 				),
 			},
 		},
 	})
 }
 
-func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
+func testAccFastlyIPRangesState(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r := s.RootModule().Resources[n]
 		a := r.Primary.Attributes

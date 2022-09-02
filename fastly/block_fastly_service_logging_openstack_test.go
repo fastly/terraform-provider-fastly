@@ -215,11 +215,11 @@ func testAccCheckFastlyServiceVCLOpenstackAttributes(service *gofastly.ServiceDe
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up OpenStack Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up OpenStack Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(openstackList) != len(openstack) {
-			return fmt.Errorf("OpenStack List count mismatch, expected (%d), got (%d)", len(openstack), len(openstackList))
+			return fmt.Errorf("openStack List count mismatch, expected (%d), got (%d)", len(openstack), len(openstackList))
 		}
 
 		log.Printf("[DEBUG] openstackList = %#v\n", openstackList)
@@ -244,7 +244,7 @@ func testAccCheckFastlyServiceVCLOpenstackAttributes(service *gofastly.ServiceDe
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match OpenStack logging match: %s", diff)
+						return fmt.Errorf("bad match OpenStack logging match: %s", diff)
 					}
 				}
 			}

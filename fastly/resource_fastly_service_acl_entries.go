@@ -104,7 +104,7 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return diag.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclID))
@@ -197,7 +197,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return diag.Errorf("Error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	return resourceServiceACLEntriesRead(ctx, d, meta)
@@ -224,7 +224,7 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return diag.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	d.SetId("")

@@ -16,7 +16,7 @@ import (
 func TestResourceFastlyFlattenSplunk(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
-		t.Errorf("Failed to generate key and cert: %s", err)
+		t.Errorf("failed to generate key and cert: %s", err)
 	}
 
 	cases := []struct {
@@ -213,7 +213,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
-		t.Errorf("Failed to generate key and cert: %s", err)
+		t.Errorf("failed to generate key and cert: %s", err)
 	}
 
 	splunkLogOne := gofastly.Splunk{
@@ -310,11 +310,11 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingSplunk(serviceAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_splunk"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_splunk"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect attributes to be sensitive
@@ -325,7 +325,7 @@ func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 	// Actually set env var and expect it to be used to determine the values
 	_, cert, err := generateKeyAndCert()
 	if err != nil {
-		t.Errorf("Failed to generate key and cert: %s", err)
+		t.Errorf("failed to generate key and cert: %s", err)
 	}
 	token := "test-token"
 	resetEnv := setSplunkEnv(cert, token, t)
@@ -356,11 +356,11 @@ func testAccCheckFastlyServiceVCLSplunkAttributes(service *gofastly.ServiceDetai
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Splunk for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Splunk for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(remoteSplunkList) != len(localSplunkList) {
-			return fmt.Errorf("Splunk List count mismatch, expected (%d), got (%d)", len(localSplunkList), len(remoteSplunkList))
+			return fmt.Errorf("splunk List count mismatch, expected (%d), got (%d)", len(localSplunkList), len(remoteSplunkList))
 		}
 
 		var found int
@@ -384,7 +384,7 @@ func testAccCheckFastlyServiceVCLSplunkAttributes(service *gofastly.ServiceDetai
 					}
 
 					if !reflect.DeepEqual(ls, rs) {
-						return fmt.Errorf("Bad match Splunk logging match, expected (%#v), got (%#v)", ls, rs)
+						return fmt.Errorf("bad match Splunk logging match, expected (%#v), got (%#v)", ls, rs)
 					}
 					found++
 				}
@@ -392,7 +392,7 @@ func testAccCheckFastlyServiceVCLSplunkAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(localSplunkList) {
-			return fmt.Errorf("Error matching Splunk rules")
+			return fmt.Errorf("error matching Splunk rules")
 		}
 
 		return nil

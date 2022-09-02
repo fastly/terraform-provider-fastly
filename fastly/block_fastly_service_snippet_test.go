@@ -133,11 +133,11 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(sList) != len(snippets) {
-			return fmt.Errorf("Snippet List count mismatch, expected (%d), got (%d)", len(snippets), len(sList))
+			return fmt.Errorf("snippet List count mismatch, expected (%d), got (%d)", len(snippets), len(sList))
 		}
 
 		var found int
@@ -153,7 +153,7 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 					lr.UpdatedAt = nil
 
 					if !reflect.DeepEqual(expected, lr) {
-						return fmt.Errorf("Unexpected VCL Snippet.\nExpected: %#v\nGot: %#v\n", expected, lr)
+						return fmt.Errorf("unexpected VCL Snippet (expected: %#v, got: %#v)", expected, lr)
 					}
 					found++
 				}
@@ -161,7 +161,7 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 		}
 
 		if found != len(snippets) {
-			return fmt.Errorf("Error matching VCL Snippets. Found: %d / Expected: %d", found, len(snippets))
+			return fmt.Errorf("error matching VCL Snippets (expected: %d, got: %d)", len(snippets), found)
 		}
 
 		return nil

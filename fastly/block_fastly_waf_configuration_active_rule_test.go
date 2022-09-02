@@ -134,11 +134,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckRules(service *gofastly.ServiceDe
 			FilterVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(wafResp.Items) != 1 {
-			return fmt.Errorf("[ERR] Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+			return fmt.Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
 		}
 
 		waf := wafResp.Items[0]
@@ -147,12 +147,12 @@ func testAccCheckFastlyServiceWAFVersionV1CheckRules(service *gofastly.ServiceDe
 			WAFVersionNumber: wafVerNo,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		actual := ruleResp.Items
 		if len(expected) != len(actual) {
-			return fmt.Errorf("Error matching rules slice sizes :\nexpected: %#v\ngot: %#v", len(expected), len(actual))
+			return fmt.Errorf("error matching rules slice sizes :\nexpected: %#v\ngot: %#v", len(expected), len(actual))
 		}
 
 		sort.Slice(expected[:], func(i, j int) bool {
@@ -163,13 +163,13 @@ func testAccCheckFastlyServiceWAFVersionV1CheckRules(service *gofastly.ServiceDe
 		})
 		for i := range expected {
 			if expected[i].ModSecID != actual[i].ModSecID {
-				return fmt.Errorf("Error matching:\nexpected: %#v\ngot: %#v", expected[i].ModSecID, actual[i].ModSecID)
+				return fmt.Errorf("error matching:\nexpected: %#v\ngot: %#v", expected[i].ModSecID, actual[i].ModSecID)
 			}
 			if expected[i].Status != actual[i].Status {
-				return fmt.Errorf("Error matching:\nexpected: %#v\ngot: %#v", expected[i].Status, actual[i].Status)
+				return fmt.Errorf("error matching:\nexpected: %#v\ngot: %#v", expected[i].Status, actual[i].Status)
 			}
 			if expected[i].Revision != actual[i].Revision {
-				return fmt.Errorf("Error matching:\nexpected: %#v\ngot: %#v", expected[i].Revision, actual[i].Revision)
+				return fmt.Errorf("error matching:\nexpected: %#v\ngot: %#v", expected[i].Revision, actual[i].Revision)
 			}
 		}
 		return nil

@@ -537,11 +537,11 @@ func testAccCheckServiceVCLExists(n string, service *gofastly.ServiceDetail) res
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Service ID is set")
+			return fmt.Errorf("no Service ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -561,7 +561,7 @@ func testAccCheckServiceVCLExists(n string, service *gofastly.ServiceDetail) res
 func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, name string, domains []string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -570,7 +570,7 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Domains for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Domains for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		expected := len(domains)
@@ -583,7 +583,7 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 		}
 
 		if expected > 0 {
-			return fmt.Errorf("Domain count mismatch, expected: %#v, got: %#v", domains, domainList)
+			return fmt.Errorf("domain count mismatch, expected: %#v, got: %#v", domains, domainList)
 		}
 
 		return nil
@@ -593,7 +593,7 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 func testAccCheckFastlyServiceVCLAttributesBackends(service *gofastly.ServiceDetail, name string, backends []string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -602,7 +602,7 @@ func testAccCheckFastlyServiceVCLAttributesBackends(service *gofastly.ServiceDet
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		expected := len(backendList)
@@ -615,7 +615,7 @@ func testAccCheckFastlyServiceVCLAttributesBackends(service *gofastly.ServiceDet
 		}
 
 		if expected > 0 {
-			return fmt.Errorf("Backend count mismatch, expected: %#v, got: %#v", backends, backendList)
+			return fmt.Errorf("backend count mismatch, expected: %#v, got: %#v", backends, backendList)
 		}
 
 		return nil
@@ -795,13 +795,13 @@ func testAccCheckServiceVCLDestroy(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		l, err := conn.ListServices(&gofastly.ListServicesInput{})
 		if err != nil {
-			return fmt.Errorf("[WARN] Error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
 		}
 
 		for _, s := range l {
 			if s.ID == rs.Primary.ID {
 				// service still found
-				return fmt.Errorf("[WARN] Tried deleting Service (%s), but was still found", rs.Primary.ID)
+				return fmt.Tried deleting Service (%s), but was still found", rs.Primary.ID)
 			}
 		}
 	}

@@ -206,11 +206,11 @@ func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetai
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Headers for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(headersList) != len(headers) {
-			return fmt.Errorf("Healthcheck List count mismatch, expected (%d), got (%d)", len(headers), len(headersList))
+			return fmt.Errorf("healthcheck List count mismatch, expected (%d), got (%d)", len(headers), len(headersList))
 		}
 
 		var found int
@@ -225,7 +225,7 @@ func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetai
 					lh.CreatedAt = nil
 					lh.UpdatedAt = nil
 					if !reflect.DeepEqual(h, lh) {
-						return fmt.Errorf("Bad match Header match, expected (%#v), got (%#v)", h, lh)
+						return fmt.Errorf("bad match Header match, expected (%#v), got (%#v)", h, lh)
 					}
 					found++
 				}
@@ -233,7 +233,7 @@ func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(headers) {
-			return fmt.Errorf("Error matching Header rules")
+			return fmt.Errorf("error matching Header rules")
 		}
 
 		return nil

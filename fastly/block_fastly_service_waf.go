@@ -107,7 +107,7 @@ func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 		FilterVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
 
 	waf := flattenWAFs(wafList.Items)

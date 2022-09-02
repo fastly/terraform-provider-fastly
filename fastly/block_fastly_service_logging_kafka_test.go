@@ -233,11 +233,11 @@ func testAccCheckFastlyServiceVCLKafkaAttributes(service *gofastly.ServiceDetail
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Kafka Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Kafka Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(kafkaList) != len(kafka) {
-			return fmt.Errorf("Kafka List count mismatch, expected (%d), got (%d)", len(kafka), len(kafkaList))
+			return fmt.Errorf("kafka List count mismatch, expected (%d), got (%d)", len(kafka), len(kafkaList))
 		}
 
 		log.Printf("[DEBUG] kafkaList = %#v\n", kafkaList)
@@ -263,7 +263,7 @@ func testAccCheckFastlyServiceVCLKafkaAttributes(service *gofastly.ServiceDetail
 					}
 
 					if diff := cmp.Diff(s, sl); diff != "" {
-						return fmt.Errorf("Bad match Kafka logging match: %s", diff)
+						return fmt.Errorf("bad match Kafka logging match: %s", diff)
 					}
 					found++
 				}
@@ -271,7 +271,7 @@ func testAccCheckFastlyServiceVCLKafkaAttributes(service *gofastly.ServiceDetail
 		}
 
 		if found != len(kafka) {
-			return fmt.Errorf("Error matching Kafka Logging rules")
+			return fmt.Errorf("error matching Kafka Logging rules")
 		}
 
 		return nil

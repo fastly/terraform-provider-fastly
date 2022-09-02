@@ -85,7 +85,7 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, name string, vclCount int) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -94,11 +94,11 @@ func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, 
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up VCL for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up VCL for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(vclList) != vclCount {
-			return fmt.Errorf("VCL count mismatch, expected (%d), got (%d)", vclCount, len(vclList))
+			return fmt.Errorf("vcl count mismatch, expected (%d), got (%d)", vclCount, len(vclList))
 		}
 
 		return nil

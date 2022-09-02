@@ -173,11 +173,11 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up NewRelic Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up NewRelic Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(newrelicList) != len(newrelic) {
-			return fmt.Errorf("NewRelic List count mismatch, expected (%d), got (%d)", len(newrelic), len(newrelicList))
+			return fmt.Errorf("newRelic List count mismatch, expected (%d), got (%d)", len(newrelic), len(newrelicList))
 		}
 
 		log.Printf("[DEBUG] newrelicList = %#v\n", newrelicList)
@@ -203,7 +203,7 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 					}
 
 					if diff := cmp.Diff(d, dl); diff != "" {
-						return fmt.Errorf("Bad match NewRelic logging match: %s", diff)
+						return fmt.Errorf("bad match NewRelic logging match: %s", diff)
 					}
 					found++
 				}
@@ -211,7 +211,7 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 		}
 
 		if found != len(newrelic) {
-			return fmt.Errorf("Error matching NewRelic Logging rules")
+			return fmt.Errorf("error matching NewRelic Logging rules")
 		}
 
 		return nil

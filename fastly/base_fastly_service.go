@@ -363,11 +363,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceVersion: latestVersion,
 		})
 		if err != nil {
-			return diag.Errorf("[ERR] Error checking validation: %s", err)
+			return diag.Errorf("error checking validation: %s", err)
 		}
 
 		if !valid {
-			return diag.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
+			return diag.Errorf("invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
 		err = d.Set("cloned_version", latestVersion)
@@ -385,7 +385,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceVersion: latestVersion,
 		})
 		if err != nil {
-			return diag.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
+			return diag.Errorf("error activating version (%d): %s", latestVersion, err)
 		}
 
 		// Only if the version is valid and activated do we set the active_version.
@@ -431,7 +431,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Check for service type mismatch (i.e. when importing)
 	if s.Type != serviceDef.GetType() {
-		return diag.Errorf("[ERR] Service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
+		return diag.Errorf("service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
 	}
 
 	err = d.Set("name", s.Name)

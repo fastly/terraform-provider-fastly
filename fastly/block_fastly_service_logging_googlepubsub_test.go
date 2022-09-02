@@ -62,11 +62,11 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 func TestUserEmailSchemaDefaultFunc(t *testing.T) {
 	computeAttributes := ServiceMetadata{ServiceTypeCompute}
 	v := NewServiceLoggingGooglePubSub(computeAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_googlepubsub"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_googlepubsub"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Defaults to "" if no environment variable is set
@@ -99,11 +99,11 @@ func TestUserEmailSchemaDefaultFunc(t *testing.T) {
 func TestSecretKeySchemaDefaultFunc(t *testing.T) {
 	computeAttributes := ServiceMetadata{ServiceTypeCompute}
 	v := NewServiceLoggingGooglePubSub(computeAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_googlepubsub"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_googlepubsub"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect secret_key to be sensitive
@@ -260,11 +260,11 @@ func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.Servic
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Google Cloud Pub/Sub Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Google Cloud Pub/Sub Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(googlepubsubList) != len(googlepubsub) {
-			return fmt.Errorf("Google Cloud Pub/Sub List count mismatch, expected (%d), got (%d)", len(googlepubsub), len(googlepubsubList))
+			return fmt.Errorf("google Cloud Pub/Sub List count mismatch, expected (%d), got (%d)", len(googlepubsub), len(googlepubsubList))
 		}
 
 		log.Printf("[DEBUG] googlepubsubList = %#v\n", googlepubsubList)
@@ -290,7 +290,7 @@ func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.Servic
 					}
 
 					if diff := cmp.Diff(s, sl); diff != "" {
-						return fmt.Errorf("Bad match Google Cloud Pub/Sub logging match: %s", diff)
+						return fmt.Errorf("bad match Google Cloud Pub/Sub logging match: %s", diff)
 					}
 					found++
 				}
@@ -298,7 +298,7 @@ func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.Servic
 		}
 
 		if found != len(googlepubsub) {
-			return fmt.Errorf("Error matching Google Cloud Pub/Sub Logging rules")
+			return fmt.Errorf("error matching Google Cloud Pub/Sub Logging rules")
 		}
 
 		return nil

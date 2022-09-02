@@ -90,7 +90,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 			Content:   gofastly.String(content),
 		})
 		if err != nil {
-			return diag.Errorf("Error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)
+			return diag.Errorf("error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)
 		}
 	}
 

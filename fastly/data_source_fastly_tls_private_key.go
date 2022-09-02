@@ -87,11 +87,11 @@ func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData
 		}
 
 		if len(privateKeys) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(privateKeys) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
+			return diag.Errorf("your query returned more than one result. Please change to a more specific search criteria and try again.")
 		}
 
 		privateKey = privateKeys[0]

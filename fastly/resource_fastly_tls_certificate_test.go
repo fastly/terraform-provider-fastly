@@ -81,7 +81,7 @@ func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
 		CheckDestroy:      testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTlsCertificateWithoutName(name, key, cert),
+				Config: testAccTLSCertificateWithoutName(name, key, cert),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", domain),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -137,7 +137,7 @@ EOF
 `, keyName, key, certName, cert)
 }
 
-func testAccTlsCertificateWithoutName(keyName string, key string, cert string) string {
+func testAccTLSCertificateWithoutName(keyName string, key string, cert string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "key" {
   name = "%[1]s"

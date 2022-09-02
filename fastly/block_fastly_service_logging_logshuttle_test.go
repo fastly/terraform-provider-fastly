@@ -162,11 +162,11 @@ func testAccCheckFastlyServiceVCLLogshuttleAttributes(service *gofastly.ServiceD
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Log Shuttle Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Log Shuttle Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(logshuttleList) != len(logshuttle) {
-			return fmt.Errorf("Log Shuttle List count mismatch, expected (%d), got (%d)", len(logshuttle), len(logshuttleList))
+			return fmt.Errorf("log Shuttle List count mismatch, expected (%d), got (%d)", len(logshuttle), len(logshuttleList))
 		}
 
 		log.Printf("[DEBUG] logshuttleList = %#v\n", logshuttleList)
@@ -191,7 +191,7 @@ func testAccCheckFastlyServiceVCLLogshuttleAttributes(service *gofastly.ServiceD
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Log Shuttle logging match: %s", diff)
+						return fmt.Errorf("bad match Log Shuttle logging match: %s", diff)
 					}
 				}
 			}

@@ -47,11 +47,11 @@ func testAccCheckServiceAuthorizationExists(n string, sa *gofastly.ServiceAuthor
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No User ID is set")
+			return fmt.Errorf("no User ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -79,7 +79,7 @@ func testAccCheckServiceAuthorizationDestroy(s *terraform.State) error {
 			ID: rs.Primary.ID,
 		})
 		if err == nil {
-			return fmt.Errorf("[WARN] Tried deleting service authorization (%s), but it still exists.", rs.Primary.ID)
+			return fmt.Errorf("tried deleting service authorization (%s), but it still exists", rs.Primary.ID)
 		}
 	}
 	return nil

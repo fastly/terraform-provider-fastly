@@ -203,7 +203,7 @@ func testAccFastlyWAFRulesCheckByPublisherFilter(publishers []string) resource.T
 			FilterPublishers: publishers,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF rule records: error  %s", err)
+			return fmt.Errorf("error looking up WAF rule records: error  %s", err)
 		}
 
 		return testAccFastlyWAFRulesCheckAgainstState(s, rulesResp.Items)
@@ -218,7 +218,7 @@ func testAccFastlyWAFRulesCheckByExcludeFilter(publishers []string, exclusions [
 			ExcludeMocSecIDs: exclusions,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF rule records: error  %s", err)
+			return fmt.Errorf("error looking up WAF rule records: error  %s", err)
 		}
 
 		return testAccFastlyWAFRulesCheckAgainstState(s, rulesResp.Items)
@@ -232,7 +232,7 @@ func testAccFastlyWAFRulesCheckByTagFilter(tags []string) resource.TestCheckFunc
 			FilterTagNames: tags,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF rule records: error  %s", err)
+			return fmt.Errorf("error looking up WAF rule records: error  %s", err)
 		}
 
 		return testAccFastlyWAFRulesCheckAgainstState(s, rulesResp.Items)
@@ -249,7 +249,7 @@ func testAccFastlyWAFRulesCheckAgainstState(s *terraform.State, rules []*gofastl
 	}
 
 	if rulesListSize != len(rules) {
-		return fmt.Errorf("[ERR] Expected WAF rule size (%d), got (%d)", rulesListSize, len(rules))
+		return fmt.Expected WAF rule size (%d), got (%d)", rulesListSize, len(rules))
 	}
 
 	modSecIDs := make(map[string]bool, rulesListSize)
@@ -260,7 +260,7 @@ func testAccFastlyWAFRulesCheckAgainstState(s *terraform.State, rules []*gofastl
 
 	for _, r := range rules {
 		if _, ok := modSecIDs[strconv.Itoa(r.ModSecID)]; !ok {
-			return fmt.Errorf("[ERR] ModSecurity rule id (%d) not found", r.ModSecID)
+			return fmt.ModSecurity rule id (%d) not found", r.ModSecID)
 		}
 	}
 	return nil

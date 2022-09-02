@@ -72,11 +72,11 @@ func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData
 		}
 
 		if len(activations) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again")
 		}
 
 		if len(activations) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
+			return diag.Errorf("your query returned more than one result. Please change to a more specific search criteria")
 		}
 
 		activation = activations[0]

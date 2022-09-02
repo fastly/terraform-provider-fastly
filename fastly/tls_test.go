@@ -36,13 +36,13 @@ func generateKey() (string, error) {
 	return strings.TrimSpace(string(bytes)), nil
 }
 
-func generateKeyAndCert(SANs ...string) (string, string, error) {
+func generateKeyAndCert(sans ...string) (key string, cert string, err error) {
 	privKey, key, err := buildPrivateKey()
 	if err != nil {
 		return emptyString, emptyString, err
 	}
 
-	cert, err := buildCertificate(privKey, SANs...)
+	cert, err = buildCertificate(privKey, sans...)
 	if err != nil {
 		return emptyString, emptyString, err
 	}
@@ -50,18 +50,18 @@ func generateKeyAndCert(SANs ...string) (string, string, error) {
 	return key, cert, nil
 }
 
-func generateKeyAndMultipleCerts(SANs ...string) (string, string, string, error) {
+func generateKeyAndMultipleCerts(sans ...string) (key string, cert string, cert2 string, err error) {
 	privKey, key, err := buildPrivateKey()
 	if err != nil {
 		return emptyString, emptyString, emptyString, err
 	}
 
-	cert, err := buildCertificate(privKey, SANs...)
+	cert, err = buildCertificate(privKey, sans...)
 	if err != nil {
 		return emptyString, emptyString, emptyString, err
 	}
 
-	cert2, err := buildCertificate(privKey, SANs...)
+	cert2, err = buildCertificate(privKey, sans...)
 	if err != nil {
 		return emptyString, emptyString, emptyString, err
 	}
@@ -69,7 +69,7 @@ func generateKeyAndMultipleCerts(SANs ...string) (string, string, string, error)
 	return key, cert, cert2, nil
 }
 
-func generateKeyAndCertWithCA(domains ...string) (string, string, string, error) {
+func generateKeyAndCertWithCA(domains ...string) (key string, cert string, caPEM string, err error) {
 	caCert, caPEM, caKey, err := buildCACertificate(domains...)
 	if err != nil {
 		return emptyString, emptyString, emptyString, err
@@ -80,7 +80,7 @@ func generateKeyAndCertWithCA(domains ...string) (string, string, string, error)
 		return emptyString, emptyString, emptyString, err
 	}
 
-	cert, err := buildCertificateFromCA(caCert, privateKey, caKey, domains...)
+	cert, err = buildCertificateFromCA(caCert, privateKey, caKey, domains...)
 	if err != nil {
 		return emptyString, emptyString, emptyString, err
 	}

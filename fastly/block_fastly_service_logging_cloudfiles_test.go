@@ -220,11 +220,11 @@ func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceD
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Cloud Files Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Cloud Files Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(cloudfilesList) != len(cloudfiles) {
-			return fmt.Errorf("Cloud Files List count mismatch, expected (%d), got (%d)", len(cloudfiles), len(cloudfilesList))
+			return fmt.Errorf("cloud Files List count mismatch, expected (%d), got (%d)", len(cloudfiles), len(cloudfilesList))
 		}
 
 		log.Printf("[DEBUG] cloudfilesList = %#v\n", cloudfilesList)
@@ -249,7 +249,7 @@ func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceD
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Cloud Files logging match: %s", diff)
+						return fmt.Errorf("bad match Cloud Files logging match: %s", diff)
 					}
 				}
 			}

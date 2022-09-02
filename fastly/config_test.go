@@ -13,7 +13,7 @@ func TestUserAgentContainsProviderVersion(t *testing.T) {
 	_, diagnostics := c.Client()
 
 	if diagnostics.HasError() {
-		t.Errorf("Failed to create client: %s", diagToErr(diagnostics))
+		t.Errorf("failed to create client: %s", diagToErr(diagnostics))
 	}
 }
 
@@ -40,6 +40,6 @@ func TestForceHttp2(t *testing.T) {
 	ts2 := reflect.Indirect(tv2.FieldByName("transport").Elem()).Type().String()
 
 	if ts1 == ts2 {
-		t.Errorf("Failed to create client with force_http2: %#v, %#v", ts1, ts2)
+		t.Errorf("failed to create client with force_http2: %#v, %#v", ts1, ts2)
 	}
 }

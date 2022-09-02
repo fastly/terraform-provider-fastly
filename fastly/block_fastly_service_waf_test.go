@@ -197,7 +197,7 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 		}
 
 		if len(resp.Items) > 0 {
-			return fmt.Errorf("[ERR] Error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, service.ID, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, service.ID, service.ActiveVersion.Number, err)
 		}
 		return nil
 	}
@@ -211,19 +211,19 @@ func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, 
 			FilterVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(resp.Items) != 1 {
-			return fmt.Errorf("[ERR] Expected result size (%d), got (%d)", 1, len(resp.Items))
+			return fmt.Expected result size (%d), got (%d)", 1, len(resp.Items))
 		}
 
 		if resp.Items[0].Response != response {
-			return fmt.Errorf("[ERR] WAF response mismatch, expected: %s, got: %#v", response, resp.Items[0].Response)
+			return fmt.WAF response mismatch, expected: %s, got: %#v", response, resp.Items[0].Response)
 		}
 
 		if resp.Items[0].PrefetchCondition != condition {
-			return fmt.Errorf("[ERR] WAF condition mismatch, expected: %#v, got: %#v", condition, resp.Items[0].PrefetchCondition)
+			return fmt.WAF condition mismatch, expected: %#v, got: %#v", condition, resp.Items[0].PrefetchCondition)
 		}
 
 		return nil

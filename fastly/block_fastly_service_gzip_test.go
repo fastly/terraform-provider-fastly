@@ -152,11 +152,11 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Gzips for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(gzipsList) != len(gzips) {
-			return fmt.Errorf("Gzip count mismatch, expected (%d), got (%d)", len(gzips), len(gzipsList))
+			return fmt.Errorf("gzip count mismatch, expected (%d), got (%d)", len(gzips), len(gzipsList))
 		}
 
 		var found int
@@ -179,7 +179,7 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 						lg.ContentTypes = ""
 					}
 					if !reflect.DeepEqual(g, lg) {
-						return fmt.Errorf("Bad match Gzip match, expected (%#v), got (%#v)", g, lg)
+						return fmt.Errorf("bad match Gzip match, expected (%#v), got (%#v)", g, lg)
 					}
 					found++
 				}
@@ -187,7 +187,7 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 		}
 
 		if found != len(gzips) {
-			return fmt.Errorf("Error matching Gzip rules")
+			return fmt.Errorf("error matching Gzip rules")
 		}
 
 		return nil

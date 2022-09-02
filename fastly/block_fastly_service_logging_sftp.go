@@ -170,7 +170,7 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	if opts.Password == "" && opts.SecretKey == "" {
-		return fmt.Errorf("[ERR] Either password or secret_key must be set")
+		return fmt.Errorf("either password or secret_key must be set")
 	}
 
 	log.Printf("[DEBUG] Fastly SFTP logging addition opts: %#v", opts)
@@ -187,7 +187,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenSFTP(sftpList)

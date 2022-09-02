@@ -84,7 +84,7 @@ func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up VCLs for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up VCLs for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	vl := flattenVCLs(vclList)

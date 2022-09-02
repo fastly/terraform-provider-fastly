@@ -140,13 +140,13 @@ func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		l, err := conn.ListServices(&gofastly.ListServicesInput{})
 		if err != nil {
-			return fmt.Errorf("[WARN] Error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
 		}
 
 		for _, s := range l {
 			if s.ID == rs.Primary.ID {
 				// service still found
-				return fmt.Errorf("[WARN] Tried deleting Service (%s), but was still found", rs.Primary.ID)
+				return fmt.Tried deleting Service (%s), but was still found", rs.Primary.ID)
 			}
 		}
 	}

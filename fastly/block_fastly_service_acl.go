@@ -81,7 +81,7 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 		ServiceVersion: latestVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
+		return fmt.Errorf("error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
 	}
 
 	al := flattenACLs(aclList)

@@ -21,7 +21,7 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +50,7 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,11 +74,11 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingBigQuery(serviceAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_bigquery"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_bigquery"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect attributes to be sensitive
@@ -116,7 +116,7 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -125,15 +125,15 @@ func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, n
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up BigQuery records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up BigQuery records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(bqList) != 1 {
-			return fmt.Errorf("BigQuery logging endpoint missing, expected: 1, got: %d", len(bqList))
+			return fmt.Errorf("bigQuery logging endpoint missing, expected: 1, got: %d", len(bqList))
 		}
 
 		if bqList[0].Name != bqName {
-			return fmt.Errorf("BigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, bqList[0].Name)
+			return fmt.Errorf("bigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, bqList[0].Name)
 		}
 
 		return nil
@@ -274,7 +274,7 @@ func getBQEnv() *currentBQEnv {
 func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	cases := []struct {

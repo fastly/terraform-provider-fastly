@@ -217,11 +217,11 @@ func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.Servic
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up DigitalOcean Spaces Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up DigitalOcean Spaces Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(digitaloceanList) != len(digitalocean) {
-			return fmt.Errorf("DigitalOcean Spaces List count mismatch, expected (%d), got (%d)", len(digitalocean), len(digitaloceanList))
+			return fmt.Errorf("digitalOcean Spaces List count mismatch, expected (%d), got (%d)", len(digitalocean), len(digitaloceanList))
 		}
 
 		log.Printf("[DEBUG] digitaloceanList = %#v\n", digitaloceanList)
@@ -246,7 +246,7 @@ func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.Servic
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match DigitalOcean Spaces logging match: %s", diff)
+						return fmt.Errorf("bad match DigitalOcean Spaces logging match: %s", diff)
 					}
 				}
 			}

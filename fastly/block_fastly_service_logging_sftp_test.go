@@ -259,11 +259,11 @@ func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up SFTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up SFTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(sftpList) != len(sftps) {
-			return fmt.Errorf("SFTP List count mismatch, expected (%d), got (%d)", len(sftps), len(sftpList))
+			return fmt.Errorf("sftp List count mismatch, expected (%d), got (%d)", len(sftps), len(sftpList))
 		}
 
 		log.Printf("[DEBUG] sftpList = %#v\n", sftpList)
@@ -289,7 +289,7 @@ func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail,
 					}
 
 					if diff := cmp.Diff(s, sl); diff != "" {
-						return fmt.Errorf("Bad match SFTP logging match: %s", diff)
+						return fmt.Errorf("bad match SFTP logging match: %s", diff)
 					}
 					found++
 				}
@@ -297,7 +297,7 @@ func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail,
 		}
 
 		if found != len(sftps) {
-			return fmt.Errorf("Error matching SFTP Logging rules")
+			return fmt.Errorf("error matching SFTP Logging rules")
 		}
 
 		return nil

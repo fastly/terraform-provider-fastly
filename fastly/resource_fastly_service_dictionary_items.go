@@ -76,7 +76,7 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 	// Process the batch operations
 	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return diag.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return diag.Errorf("error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, dictionaryID))
@@ -130,7 +130,7 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		// Process the batch operations
 		err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 		if err != nil {
-			return diag.Errorf("Error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+			return diag.Errorf("error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 		}
 	}
 
@@ -174,7 +174,7 @@ func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceD
 	// Process the batch operations
 	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return diag.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return diag.Errorf("error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId("")

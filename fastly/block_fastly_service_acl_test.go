@@ -115,7 +115,7 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, name, aclName string, acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -125,11 +125,11 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 			Name:           aclName,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if remoteACL.Name != aclName {
-			return fmt.Errorf("ACL logging endpoint name mismatch, expected: %s, got: %#v", aclName, remoteACL.Name)
+			return fmt.Errorf("acl logging endpoint name mismatch, expected: %s, got: %#v", aclName, remoteACL.Name)
 		}
 
 		*acl = *remoteACL
@@ -149,7 +149,7 @@ func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 			IP:        "192.168.0.1",
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error adding entry to ACL (%s) on service (%s): %w", acl.ID, acl.ServiceID, err)
+			return fmt.Errorf("error adding entry to ACL (%s) on service (%s): %w", acl.ID, acl.ServiceID, err)
 		}
 
 		return nil

@@ -225,7 +225,7 @@ func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3")
+					createDictionaryItemThroughAPI(t, &service, dictName, "key3", "value3")
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
@@ -268,7 +268,7 @@ func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3")
+					createDictionaryItemThroughAPI(t, &service, dictName, "key3", "value3")
 				},
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryNoItems(name, dictName),
 				Check: resource.ComposeTestCheckFunc(
@@ -360,7 +360,7 @@ func testAccCheckFastlyServiceDictionaryItemsDoesNotExists(n string) resource.Te
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if ok {
-			return fmt.Errorf("Found: %s", n)
+			return fmt.Errorf("found: %s", n)
 		}
 
 		return nil
@@ -370,7 +370,7 @@ func testAccCheckFastlyServiceDictionaryItemsDoesNotExists(n string) resource.Te
 func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.ServiceDetail, name, dictName string, expectedItems map[string]string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -380,7 +380,7 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 			Name:           dictName,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		dictItems, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
@@ -388,20 +388,20 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 			DictionaryID: dict.ID,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Dictionary Items records for (%s), dictionary (%s): %s", service.Name, dict.ID, err)
+			return fmt.Errorf("error looking up Dictionary Items records for (%s), dictionary (%s): %s", service.Name, dict.ID, err)
 		}
 
 		dictItemsMap := flattenDictionaryItems(dictItems)
 
 		if !reflect.DeepEqual(dictItemsMap, expectedItems) {
-			return fmt.Errorf("[ERR] Error matching:\nexpected: %#v\ngot: %#v", expectedItems, dictItemsMap)
+			return fmt.Errorf("error matching:\nexpected: %#v\ngot: %#v", expectedItems, dictItemsMap)
 		}
 
 		return nil
 	}
 }
 
-func createDictionaryItemThroughApi(t *testing.T, service *gofastly.ServiceDetail, dictName, expectedKey, expectedValue string) {
+func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetail, dictName, expectedKey, expectedValue string) {
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	dict, err := getDictionaryByName(service, dictName)

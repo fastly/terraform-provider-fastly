@@ -245,7 +245,7 @@ func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceVCLSFTPConfigNoPasswordSecretKey(name, domain),
-				ExpectError: regexp.MustCompile("Either password or secret_key must be set"),
+				ExpectError: regexp.MustCompile("either password or secret_key must be set"),
 			},
 		},
 	})

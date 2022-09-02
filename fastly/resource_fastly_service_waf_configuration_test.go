@@ -299,7 +299,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 		}
 
 		if len(wafResp.Items) != 1 {
-			return fmt.Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+			return fmt.Errorf("expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
 		}
 
 		waf := wafResp.Items[0]
@@ -311,7 +311,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 		}
 
 		if len(verResp.Items) < 1 {
-			return fmt.Expected result size (%d), got (%d)", 1, len(verResp.Items))
+			return fmt.Errorf("expected result size (%d), got (%d)", 1, len(verResp.Items))
 		}
 
 		latestVersion, err := testAccFastlyServiceWAFVersionV1GetVersionNumber(verResp.Items, latestVersion)
@@ -339,7 +339,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 		}
 
 		if len(wafResp.Items) != 1 {
-			return fmt.Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+			return fmt.Errorf("expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
 		}
 
 		waf := wafResp.Items[0]
@@ -351,7 +351,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 		}
 
 		if len(verResp.Items) < 1 {
-			return fmt.Expected result size (%d), got (%d)", 1, len(verResp.Items))
+			return fmt.Errorf("expected result size (%d), got (%d)", 1, len(verResp.Items))
 		}
 
 		emptyVersion, err := testAccFastlyServiceWAFVersionV1GetVersionNumber(verResp.Items, latestVersion)
@@ -360,10 +360,10 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 		}
 
 		if !emptyVersion.Locked {
-			return fmt.Expected Locked = (%v),  got (%v)", true, emptyVersion.Locked)
+			return fmt.Errorf("expected Locked = (%v),  got (%v)", true, emptyVersion.Locked)
 		}
 		if emptyVersion.DeployedAt == nil {
-			return fmt.Expected DeployedAt not nil,  got (%v)", emptyVersion.DeployedAt)
+			return fmt.Errorf("expected DeployedAt not nil,  got (%v)", emptyVersion.DeployedAt)
 		}
 
 		totalRules := emptyVersion.ActiveRulesFastlyBlockCount + emptyVersion.ActiveRulesFastlyLogCount + emptyVersion.ActiveRulesOWASPBlockCount +

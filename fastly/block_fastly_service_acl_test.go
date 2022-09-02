@@ -90,7 +90,7 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 			},
 			{
 				Config:      testAccServiceVCLConfigACL(name, aclName, domain),
-				ExpectError: regexp.MustCompile("Cannot delete.*list is not empty.*"),
+				ExpectError: regexp.MustCompile("cannot delete.*list is not empty.*"),
 			},
 			{
 				Config: testAccServiceVCLConfigACLForceDestroy(name, aclNameUpdated, domain),

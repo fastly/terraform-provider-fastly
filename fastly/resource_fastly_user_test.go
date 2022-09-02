@@ -138,7 +138,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		for _, u := range l {
 			if u.ID == rs.Primary.ID {
 				// user still found
-				return fmt.Tried deleting User (%s), but was still found", rs.Primary.ID)
+				return fmt.Errorf("tried deleting User (%s), but was still found", rs.Primary.ID)
 			}
 		}
 	}

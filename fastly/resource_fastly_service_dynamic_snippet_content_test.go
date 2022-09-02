@@ -218,7 +218,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 
 		for _, snippet := range snippets {
 			if snippet.Name == dynamicSnippetName {
-				return fmt.Dynamic snippet (%s) exists in service (%s)", dynamicSnippetName, service.Name)
+				return fmt.Errorf("dynamic snippet (%s) exists in service (%s)", dynamicSnippetName, service.Name)
 			}
 		}
 

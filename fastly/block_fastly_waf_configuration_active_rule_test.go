@@ -138,7 +138,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckRules(service *gofastly.ServiceDe
 		}
 
 		if len(wafResp.Items) != 1 {
-			return fmt.Expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
+			return fmt.Errorf("expected waf result size (%d), got (%d)", 1, len(wafResp.Items))
 		}
 
 		waf := wafResp.Items[0]

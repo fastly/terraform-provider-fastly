@@ -375,7 +375,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]interface{}) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != serviceName {
-			return fmt.Bad name, expected (%s), got (%s)", serviceName, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn

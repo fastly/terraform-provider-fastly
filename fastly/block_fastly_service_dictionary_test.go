@@ -86,7 +86,7 @@ func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
 			},
 			{
 				Config:      testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName),
-				ExpectError: regexp.MustCompile("Cannot delete.*not empty.*"),
+				ExpectError: regexp.MustCompile("cannot delete.*not empty.*"),
 			},
 			{
 				Config: testAccServiceVCLConfigDictionaryForceDestroy(name, updatedDictName, backendName, domainName),

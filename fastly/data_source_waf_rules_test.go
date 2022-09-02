@@ -249,7 +249,7 @@ func testAccFastlyWAFRulesCheckAgainstState(s *terraform.State, rules []*gofastl
 	}
 
 	if rulesListSize != len(rules) {
-		return fmt.Expected WAF rule size (%d), got (%d)", rulesListSize, len(rules))
+		return fmt.Errorf("expected WAF rule size (%d), got (%d)", rulesListSize, len(rules))
 	}
 
 	modSecIDs := make(map[string]bool, rulesListSize)
@@ -260,7 +260,7 @@ func testAccFastlyWAFRulesCheckAgainstState(s *terraform.State, rules []*gofastl
 
 	for _, r := range rules {
 		if _, ok := modSecIDs[strconv.Itoa(r.ModSecID)]; !ok {
-			return fmt.ModSecurity rule id (%d) not found", r.ModSecID)
+			return fmt.Errorf("the ModSecurity rule id (%d) not found", r.ModSecID)
 		}
 	}
 	return nil

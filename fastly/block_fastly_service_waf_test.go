@@ -215,15 +215,15 @@ func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, 
 		}
 
 		if len(resp.Items) != 1 {
-			return fmt.Expected result size (%d), got (%d)", 1, len(resp.Items))
+			return fmt.Errorf("expected result size (%d), got (%d)", 1, len(resp.Items))
 		}
 
 		if resp.Items[0].Response != response {
-			return fmt.WAF response mismatch, expected: %s, got: %#v", response, resp.Items[0].Response)
+			return fmt.Errorf("response mismatch, expected: %s, got: %#v", response, resp.Items[0].Response)
 		}
 
 		if resp.Items[0].PrefetchCondition != condition {
-			return fmt.WAF condition mismatch, expected: %#v, got: %#v", condition, resp.Items[0].PrefetchCondition)
+			return fmt.Errorf("condition mismatch, expected: %#v, got: %#v", condition, resp.Items[0].PrefetchCondition)
 		}
 
 		return nil

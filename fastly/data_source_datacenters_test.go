@@ -13,7 +13,9 @@ func TestAccFastlyDataSourceDatacenters(t *testing.T) {
 	resourceName := "data.fastly_datacenters.some"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

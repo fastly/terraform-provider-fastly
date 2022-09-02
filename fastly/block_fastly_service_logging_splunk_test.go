@@ -114,7 +114,9 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +154,9 @@ func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -184,7 +188,9 @@ func TestAccFastlyServiceVCL_splunk_default(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -268,7 +274,9 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

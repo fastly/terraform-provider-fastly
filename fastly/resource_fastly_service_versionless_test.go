@@ -20,7 +20,9 @@ func TestAccFastlyServiceVCL_creation_with_versionless_resources(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

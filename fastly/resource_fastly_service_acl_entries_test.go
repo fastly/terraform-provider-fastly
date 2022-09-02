@@ -78,7 +78,9 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +128,9 @@ func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -182,7 +186,9 @@ func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -234,7 +240,9 @@ func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -270,7 +278,6 @@ func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
 	ipPart3 := 0
 	ipPart4 := 1
 	for i := 0; i < expectedBatchSize; i++ {
-
 		if ipPart4 > 254 {
 			ipPart3++
 			ipPart4 = 1
@@ -288,7 +295,9 @@ func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -337,7 +346,9 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

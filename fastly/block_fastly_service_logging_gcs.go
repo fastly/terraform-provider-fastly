@@ -25,7 +25,9 @@ func NewServiceLoggingGCS(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *GCSLoggingServiceAttributeHandler) Key() string { return h.key }
+func (h *GCSLoggingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {

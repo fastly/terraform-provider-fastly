@@ -25,7 +25,9 @@ func NewServiceHealthCheck(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *HealthCheckServiceAttributeHandler) Key() string { return h.key }
+func (h *HealthCheckServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {

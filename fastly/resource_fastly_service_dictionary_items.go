@@ -90,7 +90,6 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 	dictionaryID := d.Get("dictionary_id").(string)
 
 	if d.HasChange("items") {
-
 		var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
 		o, n := d.GetChange("items")
@@ -231,7 +230,6 @@ func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictiona
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil

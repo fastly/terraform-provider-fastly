@@ -26,7 +26,9 @@ func NewServiceRequestSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *RequestSettingServiceAttributeHandler) Key() string { return h.key }
+func (h *RequestSettingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {

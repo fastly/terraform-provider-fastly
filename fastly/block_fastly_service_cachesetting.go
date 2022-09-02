@@ -26,7 +26,9 @@ func NewServiceCacheSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *CacheSettingServiceAttributeHandler) Key() string { return h.key }
+func (h *CacheSettingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {

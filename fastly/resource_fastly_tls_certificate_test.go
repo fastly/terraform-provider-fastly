@@ -30,7 +30,9 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 
 	resourceName := "fastly_tls_certificate.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +74,9 @@ func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
 
 	resourceName := "fastly_tls_certificate.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{

@@ -19,7 +19,9 @@ func TestAccFastlyUser_basic(t *testing.T) {
 	role2 := "superuser"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +60,9 @@ func TestAccFastlyUser_updateLogin(t *testing.T) {
 	role := "engineer"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{

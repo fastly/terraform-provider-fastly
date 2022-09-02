@@ -131,14 +131,15 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 	}
 
 	for _, c := range cases {
-
 		wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 		exclusionsTF1 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRuleExclusions(c.exclusions)
 
 		wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", exclusionsTF1)
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:          func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+			},
 			ProviderFactories: testAccProviders,
 			CheckDestroy:      testAccCheckServiceVCLDestroy,
 			Steps: []resource.TestStep{
@@ -148,7 +149,6 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 				},
 			},
 		})
-
 	}
 }
 
@@ -247,7 +247,9 @@ func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
 	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF, exclusionsTF2)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

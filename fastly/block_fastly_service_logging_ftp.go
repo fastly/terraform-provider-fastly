@@ -25,7 +25,9 @@ func NewServiceLoggingFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *FTPServiceAttributeHandler) Key() string { return h.key }
+func (h *FTPServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {

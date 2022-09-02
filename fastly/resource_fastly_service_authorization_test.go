@@ -17,7 +17,9 @@ func TestAccFastlyServiceAuthorization_basic(t *testing.T) {
 	permission2 := "purge_all"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceAuthorizationDestroy,
 		Steps: []resource.TestStep{
@@ -56,7 +58,6 @@ func testAccCheckServiceAuthorizationExists(n string, sa *gofastly.ServiceAuthor
 		latest, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
 			ID: rs.Primary.ID,
 		})
-
 		if err != nil {
 			return err
 		}

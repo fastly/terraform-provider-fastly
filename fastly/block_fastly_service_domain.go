@@ -25,7 +25,9 @@ func NewServiceDomain(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *DomainServiceAttributeHandler) Key() string { return h.key }
+func (h *DomainServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {

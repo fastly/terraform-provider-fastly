@@ -25,7 +25,9 @@ func NewServiceLoggingElasticSearch(sa ServiceMetadata) ServiceAttributeDefiniti
 }
 
 // Key returns the resource key.
-func (h *ElasticSearchServiceAttributeHandler) Key() string { return h.key }
+func (h *ElasticSearchServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {

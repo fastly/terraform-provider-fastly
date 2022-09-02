@@ -404,7 +404,6 @@ func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[s
 	bl := make([]map[string]interface{}, 0, len(backendList))
 
 	for _, b := range backendList {
-
 		backend := map[string]interface{}{
 			"name":                  b.Name,
 			"address":               b.Address,

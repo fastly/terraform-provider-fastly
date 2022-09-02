@@ -61,7 +61,6 @@ func readWAFRuleExclusions(meta interface{}, d *schema.ResourceData, wafVersionN
 	}
 
 	err := d.Set("rule_exclusion", flattenWAFRuleExclusions(resp.Items))
-
 	if err != nil {
 		log.Printf("[WARN] Error setting WAF rule exclusions for (%s): %s", d.Id(), err)
 	}
@@ -73,7 +72,6 @@ func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[str
 	var result []map[string]interface{}
 
 	for _, exclusion := range exclusions {
-
 		m := make(map[string]interface{})
 		if exclusion.Name != nil {
 			m["name"] = *exclusion.Name
@@ -102,7 +100,6 @@ func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[str
 }
 
 func updateWAFRuleExclusions(d *schema.ResourceData, meta interface{}, wafID string, wafVersionNumber int) error {
-
 	os, ns := d.GetChange("rule_exclusion")
 
 	if os == nil {
@@ -144,7 +141,6 @@ func deleteWAFRuleExclusion(remove []interface{}, meta interface{}, wafID string
 			WAFID:            wafID,
 			WAFVersionNumber: wafVersionNumber,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -180,7 +176,6 @@ func createWAFRuleExclusion(add []interface{}, meta interface{}, wafID string, w
 				Rules:         rules,
 			},
 		})
-
 		if err != nil {
 			return err
 		}

@@ -21,7 +21,9 @@ func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
 	expectedSnippetContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +61,9 @@ func TestAccFastlyServiceDynamicSnippetContent_update(t *testing.T) {
 	expectedRemoteItemsAfterUpdate := "if ( req.url ) {\n set req.http.my-updated-test-header = \"true\";\n}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +100,9 @@ func TestAccFastlyServiceDynamicSnippetContent_external_snippet_is_removed(t *te
 	managedContent := "if ( req.url ) {\n set req.http.my-updated-test-header = \"true\";\n}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -135,7 +141,9 @@ func TestAccFastlyServiceDynamicSnippetContent_normal_snippet_is_not_removed(t *
 	dynamicContent := "if ( req.url ) {\n set req.http.my-new-content-test-header = \"true\";\n}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

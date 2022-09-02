@@ -82,7 +82,6 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 	snippetID := d.Get("snippet_id").(string)
 
 	if d.HasChange("content") {
-
 		content := d.Get("content").(string)
 
 		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{

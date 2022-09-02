@@ -25,7 +25,9 @@ func NewServiceDictionary(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *DictionaryServiceAttributeHandler) Key() string { return h.key }
+func (h *DictionaryServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
@@ -151,7 +153,6 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
 	var dl []map[string]interface{}
 	for _, currentDict := range dictList {
-
 		dictMapString := map[string]interface{}{
 			"dictionary_id": currentDict.ID,
 			"name":          currentDict.Name,

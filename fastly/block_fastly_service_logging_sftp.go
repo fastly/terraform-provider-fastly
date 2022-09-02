@@ -25,7 +25,9 @@ func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *SFTPServiceAttributeHandler) Key() string { return h.key }
+func (h *SFTPServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {

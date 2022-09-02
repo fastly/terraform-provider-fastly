@@ -26,7 +26,9 @@ func NewServiceVCL(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *VCLServiceAttributeHandler) Key() string { return h.key }
+func (h *VCLServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *VCLServiceAttributeHandler) GetSchema() *schema.Schema {

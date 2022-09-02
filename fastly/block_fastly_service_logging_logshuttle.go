@@ -25,7 +25,9 @@ func NewServiceLoggingLogshuttle(sa ServiceMetadata) ServiceAttributeDefinition 
 }
 
 // Key returns the resource key.
-func (h *LogshuttleServiceAttributeHandler) Key() string { return h.key }
+func (h *LogshuttleServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {

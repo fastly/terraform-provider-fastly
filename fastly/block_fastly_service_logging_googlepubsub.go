@@ -25,7 +25,9 @@ func NewServiceLoggingGooglePubSub(sa ServiceMetadata) ServiceAttributeDefinitio
 }
 
 // Key returns the resource key.
-func (h *GooglePubSubServiceAttributeHandler) Key() string { return h.key }
+func (h *GooglePubSubServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {

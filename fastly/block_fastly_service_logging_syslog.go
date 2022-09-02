@@ -25,7 +25,9 @@ func NewServiceLoggingSyslog(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *SyslogServiceAttributeHandler) Key() string { return h.key }
+func (h *SyslogServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {

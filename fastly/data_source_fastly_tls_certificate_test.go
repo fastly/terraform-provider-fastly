@@ -19,7 +19,9 @@ func TestAccFastlyDataSourceTLSCertificate_withName(t *testing.T) {
 	dataSourceName := "data.fastly_tls_certificate.test"
 	resourceName := "fastly_tls_certificate.cert"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

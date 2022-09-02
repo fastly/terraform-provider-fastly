@@ -26,7 +26,9 @@ func NewServiceLoggingHTTPS(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *HTTPSLoggingServiceAttributeHandler) Key() string { return h.key }
+func (h *HTTPSLoggingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {

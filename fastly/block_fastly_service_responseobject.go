@@ -25,7 +25,9 @@ func NewServiceResponseObject(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *ResponseObjectServiceAttributeHandler) Key() string { return h.key }
+func (h *ResponseObjectServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *ResponseObjectServiceAttributeHandler) GetSchema() *schema.Schema {

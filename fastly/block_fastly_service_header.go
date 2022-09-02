@@ -26,7 +26,9 @@ func NewServiceHeader(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *HeaderServiceAttributeHandler) Key() string { return h.key }
+func (h *HeaderServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *HeaderServiceAttributeHandler) GetSchema() *schema.Schema {

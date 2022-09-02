@@ -25,7 +25,9 @@ func NewServiceLoggingBlobStorage(sa ServiceMetadata) ServiceAttributeDefinition
 }
 
 // Key returns the resource key.
-func (h *BlobStorageLoggingServiceAttributeHandler) Key() string { return h.key }
+func (h *BlobStorageLoggingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {

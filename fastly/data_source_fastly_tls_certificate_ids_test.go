@@ -20,7 +20,9 @@ func TestAccFastlyDataSourceTlSCertificateIDs(t *testing.T) {
 	cert = strings.ReplaceAll(cert, "\n", `\n`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

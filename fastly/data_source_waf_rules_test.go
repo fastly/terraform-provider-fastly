@@ -12,7 +12,6 @@ import (
 )
 
 func TestFastlyWAFRulesDetermineRevision(t *testing.T) {
-
 	cases := []struct {
 		remote  []*gofastly.WAFRuleRevision
 		local   int
@@ -96,7 +95,6 @@ func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
 }
 
 func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
-
 	wafrulesHCL := `
     publishers = ["owasp"]
     `
@@ -104,7 +102,9 @@ func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
     publishers = ["owasp","fastly"]
     `
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -125,13 +125,14 @@ func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
 }
 
 func TestAccFastlyWAFRulesModSecIDsFilter(t *testing.T) {
-
 	wafrulesHCL := `
     modsec_rule_ids = [1010060, 1010070]
     `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -144,13 +145,14 @@ func TestAccFastlyWAFRulesModSecIDsFilter(t *testing.T) {
 }
 
 func TestAccFastlyWAFRulesExcludeFilter(t *testing.T) {
-
 	wafrulesHCL := `
     publishers = ["owasp"]
     exclude_modsec_rule_ids = [1010020]
     `
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +167,6 @@ func TestAccFastlyWAFRulesExcludeFilter(t *testing.T) {
 }
 
 func TestAccFastlyWAFRulesTagFilter(t *testing.T) {
-
 	wafrulesHCL := `
     tags = ["CVE-2018-17384"]
     `
@@ -173,7 +174,9 @@ func TestAccFastlyWAFRulesTagFilter(t *testing.T) {
     tags = ["CVE-2018-17384", "attack-rce"]
     `
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +198,6 @@ func TestAccFastlyWAFRulesTagFilter(t *testing.T) {
 
 func testAccFastlyWAFRulesCheckByPublisherFilter(publishers []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		rulesResp, err := conn.ListAllWAFRules(&gofastly.ListAllWAFRulesInput{
 			FilterPublishers: publishers,
@@ -210,7 +212,6 @@ func testAccFastlyWAFRulesCheckByPublisherFilter(publishers []string) resource.T
 
 func testAccFastlyWAFRulesCheckByExcludeFilter(publishers []string, exclusions []int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		rulesResp, err := conn.ListAllWAFRules(&gofastly.ListAllWAFRulesInput{
 			FilterPublishers: publishers,
@@ -226,7 +227,6 @@ func testAccFastlyWAFRulesCheckByExcludeFilter(publishers []string, exclusions [
 
 func testAccFastlyWAFRulesCheckByTagFilter(tags []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := testAccProvider.Meta().(*FastlyClient).conn
 		rulesResp, err := conn.ListAllWAFRules(&gofastly.ListAllWAFRulesInput{
 			FilterTagNames: tags,
@@ -267,7 +267,6 @@ func testAccFastlyWAFRulesCheckAgainstState(s *terraform.State, rules []*gofastl
 }
 
 func testAccFastlyWAFRules(filtersHCL string) string {
-
 	return fmt.Sprintf(`
     data "fastly_waf_rules" "r1" {
     %s

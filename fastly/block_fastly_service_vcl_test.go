@@ -49,7 +49,9 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

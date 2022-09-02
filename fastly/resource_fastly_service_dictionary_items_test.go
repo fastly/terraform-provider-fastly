@@ -58,7 +58,9 @@ func TestAccFastlyServiceDictionaryItem_create(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -101,7 +103,9 @@ func TestAccFastlyServiceDictionaryItem_create_inactive_service(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -130,7 +134,9 @@ func TestAccFastlyServiceDictionaryItem_create_dynamic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -163,7 +169,9 @@ func TestAccFastlyServiceDictionaryItem_update(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -201,7 +209,9 @@ func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 	config := testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItems, true, true)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -214,8 +224,10 @@ func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() { createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3") },
-				Config:    config,
+				PreConfig: func() {
+					createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3")
+				},
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
@@ -240,7 +252,9 @@ func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 	expectedRemoteItemsAfterUpdate := map[string]string{}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -253,8 +267,10 @@ func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() { createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3") },
-				Config:    testAccServiceDictionaryItemsConfigOneDictionaryNoItems(name, dictName),
+				PreConfig: func() {
+					createDictionaryItemThroughApi(t, &service, dictName, "key3", "value3")
+				},
+				Config: testAccServiceDictionaryItemsConfigOneDictionaryNoItems(name, dictName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItemsAfterUpdate),
@@ -279,7 +295,9 @@ func TestAccFastlyServiceDictionaryItem_batch_1001_items(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -312,7 +330,9 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

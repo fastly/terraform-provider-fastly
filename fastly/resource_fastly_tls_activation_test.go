@@ -2,13 +2,14 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 func init() {
@@ -31,7 +32,9 @@ func TestAccFastlyTLSActivation_basic(t *testing.T) {
 
 	resourceName := "fastly_tls_activation.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccFastlyTLSActivationCheckDestroy,
 		Steps: []resource.TestStep{

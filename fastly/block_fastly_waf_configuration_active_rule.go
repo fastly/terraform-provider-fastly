@@ -35,7 +35,6 @@ var activeRule = &schema.Schema{
 }
 
 func updateRules(d *schema.ResourceData, meta interface{}, wafID string, Number int) error {
-
 	conn := meta.(*FastlyClient).conn
 	os, ns := d.GetChange("rule")
 
@@ -100,7 +99,6 @@ func updateRules(d *schema.ResourceData, meta interface{}, wafID string, Number 
 }
 
 func readWAFRules(meta interface{}, d *schema.ResourceData, v int) error {
-
 	conn := meta.(*FastlyClient).conn
 	wafID := d.Get("waf_id").(string)
 
@@ -122,7 +120,6 @@ func readWAFRules(meta interface{}, d *schema.ResourceData, v int) error {
 }
 
 func buildBatchCreateWAFActiveRulesInput(items []interface{}, wafID string, wafVersionNumber int) gofastly.BatchModificationWAFActiveRulesInput {
-
 	rules := make([]*gofastly.WAFActiveRule, len(items))
 	for i, rRaw := range items {
 		rf := rRaw.(map[string]interface{})
@@ -143,7 +140,6 @@ func buildBatchCreateWAFActiveRulesInput(items []interface{}, wafID string, wafV
 }
 
 func buildBatchDeleteWAFActiveRulesInput(items []interface{}, wafID string, wafVersionNumber int) gofastly.BatchModificationWAFActiveRulesInput {
-
 	rules := make([]*gofastly.WAFActiveRule, len(items))
 	for i, rRaw := range items {
 		rf := rRaw.(map[string]interface{})
@@ -162,7 +158,6 @@ func buildBatchDeleteWAFActiveRulesInput(items []interface{}, wafID string, wafV
 }
 
 func executeBatchWAFActiveRulesOperations(conn *gofastly.Client, input *gofastly.BatchModificationWAFActiveRulesInput) error {
-
 	batchSize := gofastly.WAFBatchModifyMaximumOperations
 	items := input.Rules
 
@@ -189,7 +184,6 @@ func executeBatchWAFActiveRulesOperations(conn *gofastly.Client, input *gofastly
 func flattenWAFActiveRules(rules []*gofastly.WAFActiveRule) []map[string]interface{} {
 	rl := make([]map[string]interface{}, len(rules))
 	for i, r := range rules {
-
 		ruleMapString := map[string]interface{}{
 			"modsec_rule_id": r.ModSecID,
 			"revision":       r.Revision,

@@ -15,7 +15,9 @@ var (
 func init() {
 	testAccProvider = Provider()
 	testAccProviders = map[string]func() (*schema.Provider, error){
-		"fastly": func() (*schema.Provider, error) { return testAccProvider, nil },
+		"fastly": func() (*schema.Provider, error) {
+			return testAccProvider, nil
+		},
 	}
 }
 

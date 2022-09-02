@@ -94,7 +94,9 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test1.tf-%s.com", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceComputeDestroy,
 		Steps: []resource.TestStep{

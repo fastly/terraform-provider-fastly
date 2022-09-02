@@ -70,7 +70,9 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -92,7 +94,9 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -128,7 +132,9 @@ func TestAccFastlyServiceWAFVersionUpdate(t *testing.T) {
 
 	resourceName := "fastly_service_waf_configuration.waf"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -168,7 +174,9 @@ func TestAccFastlyServiceWAFVersionDelete(t *testing.T) {
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -248,7 +256,9 @@ func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
 	wafSvcCfg := testAccFastlyServiceWAFVersionV1(name, wafVer)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

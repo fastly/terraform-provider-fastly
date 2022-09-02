@@ -142,8 +142,8 @@ func resourceServiceAclEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	batchACLEntries := []*gofastly.BatchACLEntry{}
 
 	if d.HasChange("entry") {
-
 		oe, ne := d.GetChange("entry")
+
 		if oe == nil {
 			oe = new(schema.Set)
 		}
@@ -300,7 +300,6 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil

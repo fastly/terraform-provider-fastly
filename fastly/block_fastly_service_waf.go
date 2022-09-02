@@ -83,7 +83,6 @@ func (h *WAFServiceAttributeHandler) Process(ctx context.Context, d *schema.Reso
 			return err
 		}
 	} else if len(oldWAFVal.([]interface{})) > 0 {
-
 		wf := oldWAFVal.([]interface{})[0].(map[string]interface{})
 
 		opts := buildDeleteWAF(wf, serviceVersion)

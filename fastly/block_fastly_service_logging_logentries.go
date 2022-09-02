@@ -25,7 +25,9 @@ func NewServiceLoggingLogentries(sa ServiceMetadata) ServiceAttributeDefinition 
 }
 
 // Key returns the resource key.
-func (h *LogentriesServiceAttributeHandler) Key() string { return h.key }
+func (h *LogentriesServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {

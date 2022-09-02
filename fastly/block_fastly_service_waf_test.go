@@ -68,7 +68,9 @@ func TestAccFastlyServiceVCLWAFAdd(t *testing.T) {
 	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -89,7 +91,9 @@ func TestAccFastlyServiceVCLWAFAddAndRemove(t *testing.T) {
 	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -125,7 +129,9 @@ func TestAccFastlyServiceVCLWAFUpdateResponse(t *testing.T) {
 	updatedWaf := composeWAF(condition, updateResponse)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -155,7 +161,9 @@ func TestAccFastlyServiceVCLWAFUpdateCondition(t *testing.T) {
 	updatedWaf := composeWAF(updatedCondition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

@@ -150,7 +150,9 @@ func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {
 	domainName3 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -217,7 +219,9 @@ func TestAccFastlyServiceVCL_updateBackend(t *testing.T) {
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -283,7 +287,9 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -321,7 +327,9 @@ func TestAccFastlyServiceVCL_updateInvalidBackend(t *testing.T) {
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -381,7 +389,9 @@ func TestAccFastlyServiceVCL_createServiceWithStaticBackend(t *testing.T) {
 	`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -410,7 +420,9 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 	domainName2 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -503,7 +515,9 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -615,7 +629,9 @@ func TestAccFastlyServiceVCL_defaultTTL(t *testing.T) {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -664,7 +680,9 @@ func TestAccFastlyServiceVCL_defaultHost(t *testing.T) {
 	defaultHost := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -706,7 +724,9 @@ func TestAccFastlyServiceVCL_brokenSnippet(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.tf-%s.test", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -743,7 +763,9 @@ func TestAccFastlyServiceVCL_createZeroDefaultTTL(t *testing.T) {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{

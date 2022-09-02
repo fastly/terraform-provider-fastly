@@ -25,7 +25,9 @@ func NewServiceLoggingScalyr(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *ScalyrServiceAttributeHandler) Key() string { return h.key }
+func (h *ScalyrServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {

@@ -111,7 +111,6 @@ func validateDictionaryItems() schema.SchemaValidateDiagFunc {
 	max := gofastly.MaximumDictionarySize
 
 	return validation.ToDiagFunc(func(i interface{}, k string) (s []string, es []error) {
-
 		v, ok := i.(map[string]interface{})
 		if !ok {
 			es = append(es, fmt.Errorf("expected type of %s to be a map[string]interface", k))

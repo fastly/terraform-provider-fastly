@@ -25,7 +25,9 @@ func NewServiceLoggingDatadog(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *DatadogServiceAttributeHandler) Key() string { return h.key }
+func (h *DatadogServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {

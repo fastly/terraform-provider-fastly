@@ -25,7 +25,9 @@ func NewServiceLoggingOpenstack(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *OpenstackServiceAttributeHandler) Key() string { return h.key }
+func (h *OpenstackServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {

@@ -25,7 +25,9 @@ func NewServiceLoggingHoneycomb(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *HoneycombServiceAttributeHandler) Key() string { return h.key }
+func (h *HoneycombServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {

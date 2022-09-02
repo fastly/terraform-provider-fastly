@@ -26,7 +26,9 @@ func NewServiceSnippet(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *SnippetServiceAttributeHandler) Key() string { return h.key }
+func (h *SnippetServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *SnippetServiceAttributeHandler) GetSchema() *schema.Schema {

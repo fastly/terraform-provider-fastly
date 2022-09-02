@@ -31,7 +31,6 @@ func TestAccFastlyIPRanges(t *testing.T) {
 
 func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		r := s.RootModule().Resources[n]
 		a := r.Primary.Attributes
 
@@ -60,7 +59,6 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 		var cidrBlocks sort.StringSlice = make([]string, cidrBlockSize)
 
 		for i := range make([]string, cidrBlockSize) {
-
 			block := a[fmt.Sprintf("cidr_blocks.%d", i)]
 
 			if _, _, err := net.ParseCIDR(block); err != nil {
@@ -68,7 +66,6 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 			}
 
 			cidrBlocks[i] = block
-
 		}
 
 		if !sort.IsSorted(cidrBlocks) {
@@ -78,7 +75,6 @@ func testAccFastlyIPRanges(n string) resource.TestCheckFunc {
 		var ipv6cidrBlocks sort.StringSlice = make([]string, ipv6cidrBlockSize)
 
 		for j := range make([]string, ipv6cidrBlockSize) {
-
 			block := a[fmt.Sprintf("ipv6_cidr_blocks.%d", j)]
 
 			if _, _, err := net.ParseCIDR(block); err != nil {

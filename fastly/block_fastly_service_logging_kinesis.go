@@ -25,7 +25,9 @@ func NewServiceLoggingKinesis(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *KinesisServiceAttributeHandler) Key() string { return h.key }
+func (h *KinesisServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {

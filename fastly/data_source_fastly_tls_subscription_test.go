@@ -13,7 +13,9 @@ func TestAccDataSourceFastlyTLSSubscription_basic(t *testing.T) {
 
 	resourceName := "data.fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -35,7 +37,9 @@ func TestAccDataSourceFastlyTLSSubscription_byID(t *testing.T) {
 
 	resourceName := "data.fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

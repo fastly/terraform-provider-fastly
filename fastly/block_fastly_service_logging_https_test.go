@@ -71,7 +71,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		JSONFormat:        "0",
 	}
 
-	log1_after_update := gofastly.HTTPS{
+	log1AfterUpdate := gofastly.HTTPS{
 		ServiceVersion: 1,
 		Name:           "httpslogger",
 		URL:            "https://example.com/logs/1",
@@ -100,7 +100,9 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -117,10 +119,10 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHTTPSConfig_update(name, domain),
+				Config: testAccServiceVCLHTTPSConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -136,7 +138,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log := gofastly.HTTPS{
+	https := gofastly.HTTPS{
 		ServiceVersion:    1,
 		Name:              "httpslogger",
 		URL:               "https://example.com/logs/1",
@@ -148,7 +150,9 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -156,7 +160,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 				Config: testAccServiceVCLHTTPSComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log}, ServiceTypeCompute),
+					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&https}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -169,17 +173,17 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up HTTPS Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up HTTPS Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(httpsList) != len(https) {
-			return fmt.Errorf("HTTPS List count mismatch, expected (%d), got (%d)", len(https), len(httpsList))
+			return fmt.Errorf("https List count mismatch, expected (%d), got (%d)", len(https), len(httpsList))
 		}
 
 		log.Printf("[DEBUG] httpsList = %#v\n", httpsList)
@@ -205,7 +209,7 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 					hl.CreatedAt = nil
 					hl.UpdatedAt = nil
 					if !reflect.DeepEqual(h, hl) {
-						return fmt.Errorf("Bad match HTTPS logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", h, hl)
+						return fmt.Errorf("bad match HTTPS logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", h, hl)
 					}
 					found++
 				}
@@ -213,7 +217,7 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 		}
 
 		if found != len(https) {
-			return fmt.Errorf("Error matching HTTPS Logging rules")
+			return fmt.Errorf("error matching HTTPS Logging rules")
 		}
 
 		return nil
@@ -276,7 +280,7 @@ package {
 `, name, domain)
 }
 
-func testAccServiceVCLHTTPSConfig_update(name, domain string) string {
+func testAccServiceVCLHTTPSConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"

@@ -93,7 +93,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	log1_after_update := gofastly.Openstack{
+	log1AfterUpdate := gofastly.Openstack{
 		ServiceVersion:    1,
 		Name:              "openstack-endpoint",
 		Format:            "%h %l %u %t \"%r\" %>s %b %T",
@@ -132,7 +132,9 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -149,10 +151,10 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLOpenstackConfig_update(name, domain),
+				Config: testAccServiceVCLOpenstackConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLOpenstackAttributes(&service, []*gofastly.Openstack{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLOpenstackAttributes(&service, []*gofastly.Openstack{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -184,7 +186,9 @@ func TestAccFastlyServiceVCL_logging_openstack_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -205,17 +209,17 @@ func TestAccFastlyServiceVCL_logging_openstack_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLOpenstackAttributes(service *gofastly.ServiceDetail, openstack []*gofastly.Openstack, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		openstackList, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up OpenStack Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up OpenStack Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(openstackList) != len(openstack) {
-			return fmt.Errorf("OpenStack List count mismatch, expected (%d), got (%d)", len(openstack), len(openstackList))
+			return fmt.Errorf("openStack List count mismatch, expected (%d), got (%d)", len(openstack), len(openstackList))
 		}
 
 		log.Printf("[DEBUG] openstackList = %#v\n", openstackList)
@@ -240,7 +244,7 @@ func testAccCheckFastlyServiceVCLOpenstackAttributes(service *gofastly.ServiceDe
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match OpenStack logging match: %s", diff)
+						return fmt.Errorf("bad match OpenStack logging match: %s", diff)
 					}
 				}
 			}
@@ -291,7 +295,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLOpenstackConfig_update(name, domain string) string {
+func testAccServiceVCLOpenstackConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

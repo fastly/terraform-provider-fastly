@@ -60,44 +60,46 @@ func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
 	// 5. Without renaming, set force_destroy=true to skip the deletion check
 	// 6. Try to rename again, expect to succeed
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_dictionary(name, dictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, dictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, false),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionary(name, updatedDictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionary(name, updatedDictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, updatedDictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, false),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionary(name, updatedDictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionary(name, updatedDictName, backendName, domainName),
 				Check:  testAccAddDictionaryItems(&dictionary), // triggers side-effect of adding a Dictionary Item
 			},
 			{
-				Config:      testAccServiceVCLConfig_dictionary(name, dictName, backendName, domainName),
-				ExpectError: regexp.MustCompile("Cannot delete.*not empty.*"),
+				Config:      testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName),
+				ExpectError: regexp.MustCompile("cannot delete.*not empty.*"),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionaryForceDestroy(name, updatedDictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionaryForceDestroy(name, updatedDictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, updatedDictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, false),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfig_dictionaryForceDestroy(name, dictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionaryForceDestroy(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, dictName, false),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, false),
 				),
 			},
 		},
@@ -113,43 +115,45 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_dictionary_write_only(name, dictName, backendName, domainName),
+				Config: testAccServiceVCLConfigDictionaryWriteOnly(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_dictionary(&service, &dictionary, name, dictName, true),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, true),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFastlyServiceVCLAttributes_dictionary(service *gofastly.ServiceDetail, dictionary *gofastly.Dictionary, name, dictName string, writeOnly bool) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceDetail, dictionary *gofastly.Dictionary, name, dictName string, writeOnly bool) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 			Name:           dictName,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if dict.Name != dictName {
-			return fmt.Errorf("Dictionary name mismatch, expected: %s, got: %#v", dictName, dict.Name)
+			return fmt.Errorf("dictionary name mismatch, expected: %s, got: %#v", dictName, dict.Name)
 		}
 
 		if dict.WriteOnly != writeOnly {
-			return fmt.Errorf("Dictionary write_only attribute mismatch, expected: %#v, got: %#v", writeOnly, dict.WriteOnly)
+			return fmt.Errorf("dictionary write_only attribute mismatch, expected: %#v, got: %#v", writeOnly, dict.WriteOnly)
 		}
 
 		*dictionary = *dict
@@ -162,7 +166,7 @@ func testAccCheckFastlyServiceVCLAttributes_dictionary(service *gofastly.Service
 // used for its side effect of adding a Dictionary Item
 func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
 			ServiceID:    dictionary.ServiceID,
 			DictionaryID: dictionary.ID,
@@ -170,14 +174,14 @@ func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestChe
 			ItemValue:    "testItem",
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error adding item to dictionary (%s) on service (%s): %w", dictionary.ID, dictionary.ServiceID, err)
+			return fmt.Errorf("error adding item to dictionary (%s) on service (%s): %w", dictionary.ID, dictionary.ServiceID, err)
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceVCLConfig_dictionary(name, dictName, backendName, domainName string) string {
+func testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -200,7 +204,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, dictName)
 }
 
-func testAccServiceVCLConfig_dictionaryForceDestroy(name, dictName, backendName, domainName string) string {
+func testAccServiceVCLConfigDictionaryForceDestroy(name, dictName, backendName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -224,7 +228,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, dictName)
 }
 
-func testAccServiceVCLConfig_dictionary_write_only(name, dictName, backendName, domainName string) string {
+func testAccServiceVCLConfigDictionaryWriteOnly(name, dictName, backendName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

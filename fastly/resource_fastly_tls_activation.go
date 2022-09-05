@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,7 +49,7 @@ func resourceFastlyTLSActivation() *schema.Resource {
 }
 
 func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var configuration *fastly.TLSConfiguration
 	if v, ok := d.GetOk("configuration_id"); ok {
@@ -70,7 +71,7 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	activation, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{
 		ID: d.Id(),
@@ -100,7 +101,7 @@ func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, 
 }
 
 func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	_, err := conn.UpdateTLSActivation(&fastly.UpdateTLSActivationInput{
 		ID:          d.Id(),
@@ -114,7 +115,7 @@ func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceFastlyTLSActivationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{
 		ID: d.Id(),

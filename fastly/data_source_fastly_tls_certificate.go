@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -81,7 +82,7 @@ func dataSourceFastlyTLSCertificate() *schema.Resource {
 }
 
 func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
@@ -105,11 +106,11 @@ func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceDat
 		}
 
 		if len(certificates) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(certificates) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+			return diag.Errorf("your query returned more than one result. Please change try a more specific search criteria and try again.")
 		}
 
 		certificate = certificates[0]
@@ -130,6 +131,7 @@ func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceDat
 	return diags
 }
 
+// TLSCertificatePredicate determines if a certificate should be filtered.
 type TLSCertificatePredicate func(*fastly.CustomTLSCertificate) bool
 
 func getTLSCertificateFilters(d *schema.ResourceData) []TLSCertificatePredicate {
@@ -222,11 +224,7 @@ func dataSourceFastlyTLSCertificateSetAttributes(certificate *fastly.CustomTLSCe
 	if err := d.Set("signature_algorithm", certificate.SignatureAlgorithm); err != nil {
 		return err
 	}
-	if err := d.Set("domains", domains); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("domains", domains)
 }
 
 func filterTLSCertificate(config *fastly.CustomTLSCertificate, filters []TLSCertificatePredicate) bool {

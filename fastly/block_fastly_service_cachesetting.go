@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// CacheSettingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type CacheSettingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceCacheSetting returns a new resource.
 func NewServiceCacheSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&CacheSettingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,12 @@ func NewServiceCacheSetting(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *CacheSettingServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *CacheSettingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -64,8 +70,8 @@ func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildCacheSetting(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Cache Setting: %s", err)
@@ -82,6 +88,7 @@ func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schem
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
 	cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
@@ -89,7 +96,7 @@ func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Cache Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Cache Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	csl := flattenCacheSettings(cslList)
@@ -100,8 +107,8 @@ func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.
 	return nil
 }
 
-func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCacheSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -134,8 +141,8 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 	return nil
 }
 
-func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteCacheSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

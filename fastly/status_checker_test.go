@@ -10,7 +10,6 @@ import (
 )
 
 func TestAccFastlyServiceWAFVersionDeploymentStatus(t *testing.T) {
-
 	wafID := "waf-id"
 	latestVersion := &gofastly.WAFVersion{}
 	d := &schema.ResourceData{}

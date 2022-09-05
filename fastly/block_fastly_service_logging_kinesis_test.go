@@ -101,7 +101,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Kinesis{
+	log1AfterUpdate := gofastly.Kinesis{
 		ServiceVersion: 1,
 		Name:           "kinesis-endpoint",
 		StreamName:     "new-stream-name",
@@ -122,7 +122,9 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -139,10 +141,10 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLKinesisConfig_update(name, domain),
+				Config: testAccServiceVCLKinesisConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLKinesisAttributes(&service, []*gofastly.Kinesis{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLKinesisAttributes(&service, []*gofastly.Kinesis{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -168,7 +170,9 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -187,25 +191,25 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDetail, Kinesis []*gofastly.Kinesis, serviceType string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDetail, ks []*gofastly.Kinesis, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
-		KinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
+		conn := testAccProvider.Meta().(*APIClient).conn
+		ksl, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Kinesis Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Kinesis Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		if len(KinesisList) != len(Kinesis) {
-			return fmt.Errorf("Kinesis List count mismatch, expected (%d), got (%d)", len(Kinesis), len(KinesisList))
+		if len(ksl) != len(ks) {
+			return fmt.Errorf("kinesis List count mismatch, expected (%d), got (%d)", len(ks), len(ksl))
 		}
 
-		log.Printf("[DEBUG] KinesisList = %#v\n", KinesisList)
+		log.Printf("[DEBUG] KinesisList = %#v\n", ksl)
 
-		for _, e := range Kinesis {
-			for _, el := range KinesisList {
+		for _, e := range ks {
+			for _, el := range ksl {
 				if e.Name == el.Name {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
@@ -224,7 +228,7 @@ func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDeta
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Kinesis logging match: %s", diff)
+						return fmt.Errorf("bad match Kinesis logging match: %s", diff)
 					}
 				}
 			}
@@ -263,7 +267,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLKinesisConfig_update(name, domain string) string {
+func testAccServiceVCLKinesisConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

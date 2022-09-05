@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ScalyrServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type ScalyrServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingScalyr returns a new resource.
 func NewServiceLoggingScalyr(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&ScalyrServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingScalyr(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *ScalyrServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *ScalyrServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -84,17 +90,16 @@ func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging addition opts: %#v", opts)
 
-	if err := createScalyr(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createScalyr(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Scalyr.
 	log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
@@ -103,7 +108,7 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Scalyr logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Scalyr logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	scalyrLogList := flattenScalyr(scalyrList)
@@ -119,6 +124,7 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// Update updates the resource.
 func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateScalyrInput{
 		ServiceID:      d.Id(),
@@ -158,15 +164,13 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *ScalyrServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging endpoint removal opts: %#v", opts)
 
-	if err := deleteScalyr(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteScalyr(conn, opts)
 }
 
 func createScalyr(conn *gofastly.Client, i *gofastly.CreateScalyrInput) error {

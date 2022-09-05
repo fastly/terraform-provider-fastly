@@ -104,12 +104,11 @@ func assertEqualsSliceOfMaps(t *testing.T, actualSlice []map[string]interface{},
 	for i, actualMap := range actualSlice {
 		var keysToBeRemoved []string
 		for key, value := range actualMap {
-			switch value := value.(type) {
-			case *schema.Set:
+			if v, ok := value.(*schema.Set); ok {
 				expected := expectedSlice[i][key]
 				keysToBeRemoved = append(keysToBeRemoved, key)
-				if !value.Equal(expected) {
-					t.Errorf("Expected sets %s to be equal: %#v\n     got: %#v", key, expected, actualSlice)
+				if !v.Equal(expected) {
+					t.Errorf("expected sets %s to be equal: %#v\n     got: %#v", key, expected, actualSlice)
 				}
 			}
 		}

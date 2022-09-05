@@ -2,10 +2,11 @@ package fastly
 
 import (
 	"context"
+	"time"
+
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"time"
 )
 
 func dataSourceFastlyTLSActivation() *schema.Resource {
@@ -50,7 +51,7 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 }
 
 func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var activation *fastly.TLSActivation
 
@@ -71,11 +72,11 @@ func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData
 		}
 
 		if len(activations) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again")
 		}
 
 		if len(activations) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
+			return diag.Errorf("your query returned more than one result. Please change to a more specific search criteria")
 		}
 
 		activation = activations[0]
@@ -89,6 +90,7 @@ func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData
 	return nil
 }
 
+// TLSActivationPredicate determines if an activation should be filtered.
 type TLSActivationPredicate func(activation *fastly.TLSActivation) bool
 
 func getTLSActivationFilters(d *schema.ResourceData) []TLSActivationPredicate {
@@ -140,7 +142,6 @@ func listTLSActivations(conn *fastly.Client, filters ...TLSActivationPredicate) 
 }
 
 func dataSourceFastlyTLSActivationSetAttributes(activation *fastly.TLSActivation, d *schema.ResourceData) error {
-
 	d.SetId(activation.ID)
 
 	if err := d.Set("certificate_id", activation.Certificate.ID); err != nil {
@@ -152,11 +153,7 @@ func dataSourceFastlyTLSActivationSetAttributes(activation *fastly.TLSActivation
 	if err := d.Set("domain", activation.Domain.ID); err != nil {
 		return err
 	}
-	if err := d.Set("created_at", activation.CreatedAt.Format(time.RFC3339)); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("created_at", activation.CreatedAt.Format(time.RFC3339))
 }
 
 func filterTLSActivations(config *fastly.TLSActivation, filters []TLSActivationPredicate) bool {

@@ -2,12 +2,12 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
-
-	"strings"
-	"testing"
 )
 
 func TestAccFastlyDataSourceTLSPrivateKey_filters(t *testing.T) {
@@ -18,7 +18,9 @@ func TestAccFastlyDataSourceTLSPrivateKey_filters(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +41,9 @@ func TestAccFastlyDataSourceTLSPrivateKey_byID(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{

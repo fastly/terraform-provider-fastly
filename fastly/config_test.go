@@ -7,27 +7,27 @@ import (
 
 func TestUserAgentContainsProviderVersion(t *testing.T) {
 	c := Config{
-		ApiKey:  "someapikey",
+		APIKey:  "someapikey",
 		BaseURL: "http://localhost",
 	}
 	_, diagnostics := c.Client()
 
 	if diagnostics.HasError() {
-		t.Errorf("Failed to create client: %s", diagToErr(diagnostics))
+		t.Errorf("failed to create client: %s", diagToErr(diagnostics))
 	}
 }
 
 func TestForceHttp2(t *testing.T) {
 	c1 := Config{
-		ApiKey:  "someapikey",
+		APIKey:  "someapikey",
 		BaseURL: "http://localhost",
 	}
 	client1, _ := c1.Client()
 
 	c2 := Config{
-		ApiKey:     "someapikey",
+		APIKey:     "someapikey",
 		BaseURL:    "http://localhost",
-		ForceHttp2: true,
+		ForceHTTP2: true,
 	}
 	client2, _ := c2.Client()
 
@@ -40,6 +40,6 @@ func TestForceHttp2(t *testing.T) {
 	ts2 := reflect.Indirect(tv2.FieldByName("transport").Elem()).Type().String()
 
 	if ts1 == ts2 {
-		t.Errorf("Failed to create client with force_http2: %#v, %#v", ts1, ts2)
+		t.Errorf("failed to create client with force_http2: %#v, %#v", ts1, ts2)
 	}
 }

@@ -76,7 +76,7 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.NewRelic{
+	log1AfterUpdate := gofastly.NewRelic{
 		ServiceVersion: 1,
 		Name:           "newrelic-endpoint",
 		Token:          "t0k3n",
@@ -95,7 +95,9 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -112,10 +114,10 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLNewRelicConfig_update(name, domain),
+				Config: testAccServiceVCLNewRelicConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLNewRelicAttributes(&service, []*gofastly.NewRelic{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLNewRelicAttributes(&service, []*gofastly.NewRelic{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -142,7 +144,9 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -163,17 +167,17 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDetail, newrelic []*gofastly.NewRelic, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up NewRelic Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up NewRelic Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(newrelicList) != len(newrelic) {
-			return fmt.Errorf("NewRelic List count mismatch, expected (%d), got (%d)", len(newrelic), len(newrelicList))
+			return fmt.Errorf("newRelic List count mismatch, expected (%d), got (%d)", len(newrelic), len(newrelicList))
 		}
 
 		log.Printf("[DEBUG] newrelicList = %#v\n", newrelicList)
@@ -199,7 +203,7 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 					}
 
 					if diff := cmp.Diff(d, dl); diff != "" {
-						return fmt.Errorf("Bad match NewRelic logging match: %s", diff)
+						return fmt.Errorf("bad match NewRelic logging match: %s", diff)
 					}
 					found++
 				}
@@ -207,7 +211,7 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 		}
 
 		if found != len(newrelic) {
-			return fmt.Errorf("Error matching NewRelic Logging rules")
+			return fmt.Errorf("error matching NewRelic Logging rules")
 		}
 
 		return nil
@@ -270,7 +274,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLNewRelicConfig_update(name, domain string) string {
+func testAccServiceVCLNewRelicConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

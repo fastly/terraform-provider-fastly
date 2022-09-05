@@ -16,7 +16,7 @@ import (
 func TestResourceFastlyFlattenGCS(t *testing.T) {
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	cases := []struct {
@@ -67,19 +67,21 @@ func TestAccFastlyServiceVCL_gcslogging(t *testing.T) {
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_gcs(name, gcsName, secretKey),
+				Config: testAccServiceVCLConfigGCS(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_gcs(&service, name, gcsName),
+					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
 				),
 			},
 		},
@@ -92,19 +94,21 @@ func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_compute_gcs(name, gcsName, secretKey),
+				Config: testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_gcs(&service, name, gcsName),
+					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
 				),
 			},
 		},
@@ -114,11 +118,11 @@ func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
 func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingGCS(serviceAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_gcs"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_gcs"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect attributes to be sensitive
@@ -149,34 +153,34 @@ func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 	}
 }
 
-func testAccCheckFastlyServiceVCLAttributes_gcs(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesGCS(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		gcsList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up GCSs for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up GCSs for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(gcsList) != 1 {
-			return fmt.Errorf("GCS missing, expected: 1, got: %d", len(gcsList))
+			return fmt.Errorf("gcs missing, expected: 1, got: %d", len(gcsList))
 		}
 
 		if gcsList[0].Name != gcsName {
-			return fmt.Errorf("GCS name mismatch, expected: %s, got: %#v", gcsName, gcsList[0].Name)
+			return fmt.Errorf("gcs name mismatch, expected: %s, got: %#v", gcsName, gcsList[0].Name)
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceVCLConfig_gcs(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigGCS(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
@@ -208,7 +212,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_compute_gcs(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test-compute.tf-%s.com", acctest.RandString(10))
 
@@ -243,7 +247,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_gcs_env(name, gcsName string) string {
+func testAccServiceVCLConfigGCSEnv(name, gcsName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 

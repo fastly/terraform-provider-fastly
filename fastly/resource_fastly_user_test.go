@@ -19,7 +19,9 @@ func TestAccFastlyUser_basic(t *testing.T) {
 	role2 := "superuser"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +60,9 @@ func TestAccFastlyUser_updateLogin(t *testing.T) {
 	role := "engineer"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
@@ -91,14 +95,14 @@ func testAccCheckUserExists(n string, user *gofastly.User) resource.TestCheckFun
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No User ID is set")
+			return fmt.Errorf("no User ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		latest, err := conn.GetUser(&gofastly.GetUserInput{
 			ID: rs.Primary.ID,
 		})
@@ -118,23 +122,23 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		u, err := conn.GetCurrentUser()
 		if err != nil {
-			return fmt.Errorf("[WARN] Error getting current user when deleting Fastly User (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error getting current user when deleting Fastly User (%s): %s", rs.Primary.ID, err)
 		}
 
 		l, err := conn.ListCustomerUsers(&gofastly.ListCustomerUsersInput{
 			CustomerID: u.CustomerID,
 		})
 		if err != nil {
-			return fmt.Errorf("[WARN] Error listing users when deleting Fastly User (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error listing users when deleting Fastly User (%s): %s", rs.Primary.ID, err)
 		}
 
 		for _, u := range l {
 			if u.ID == rs.Primary.ID {
 				// user still found
-				return fmt.Errorf("[WARN] Tried deleting User (%s), but was still found", rs.Primary.ID)
+				return fmt.Errorf("tried deleting User (%s), but was still found", rs.Primary.ID)
 			}
 		}
 	}

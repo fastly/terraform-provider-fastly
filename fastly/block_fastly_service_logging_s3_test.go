@@ -160,7 +160,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	log1_after_update := gofastly.S3{
+	log1AfterUpdate := gofastly.S3{
 		ServiceVersion:    1,
 		Name:              "somebucketlog",
 		BucketName:        "fastlytestlogging",
@@ -194,7 +194,9 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -211,10 +213,10 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLS3LoggingConfig_update(name, domainName1),
+				Config: testAccServiceVCLS3LoggingConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -246,7 +248,9 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -287,12 +291,14 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLS3LoggingConfig_domain_default(name, domainName1),
+				Config: testAccServiceVCLS3LoggingConfigDomainDefault(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeVCL),
@@ -327,12 +333,14 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLS3LoggingConfig_formatVersion(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
+				Config: testAccServiceVCLS3LoggingConfigFormatVersion(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeVCL),
@@ -349,11 +357,11 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingS3(serviceAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_s3"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_s3"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect attributes to be sensitive
@@ -388,17 +396,17 @@ func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDetail, s3s []*gofastly.S3, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up S3 Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(s3List) != len(s3s) {
-			return fmt.Errorf("S3 List count mismatch, expected (%d), got (%d)", len(s3s), len(s3List))
+			return fmt.Errorf("s3 List count mismatch, expected (%d), got (%d)", len(s3s), len(s3List))
 		}
 
 		var found int
@@ -422,7 +430,7 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 					}
 
 					if diff := cmp.Diff(s, ls); diff != "" {
-						return fmt.Errorf("Bad match S3 logging match: %s", diff)
+						return fmt.Errorf("bad match S3 logging match: %s", diff)
 					}
 					found++
 				}
@@ -430,14 +438,14 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 		}
 
 		if found != len(s3s) {
-			return fmt.Errorf("Error matching S3 Logging rules")
+			return fmt.Errorf("error matching S3 Logging rules")
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceVCLS3LoggingConfig_domain_default(name, domain string) string {
+func testAccServiceVCLS3LoggingConfigDomainDefault(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -542,7 +550,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, key, secret)
 }
 
-func testAccServiceVCLS3LoggingConfig_update(name, domain string) string {
+func testAccServiceVCLS3LoggingConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -590,7 +598,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, testS3IAMRole, testS3IAMRole)
 }
 
-func testAccServiceVCLS3LoggingConfig_env(name, domain string) string {
+func testAccServiceVCLS3LoggingConfigEnv(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -615,7 +623,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLS3LoggingConfig_formatVersion(name, domain, key, secret string) string {
+func testAccServiceVCLS3LoggingConfigFormatVersion(name, domain, key, secret string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -9,20 +9,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ACLServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type ACLServiceAttributeHandler struct {
 	key string
 }
 
+// NewServiceACL returns a new resource.
 func NewServiceACL() ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&ACLServiceAttributeHandler{
 		key: "acl",
 	})
 }
 
+// Key returns the resource key.
 func (h *ACLServiceAttributeHandler) Key() string {
 	return h.key
 }
 
+// GetSchema returns the resource schema.
 func (h *ACLServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -52,6 +56,7 @@ func (h *ACLServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateACLInput{
 		ServiceID:      d.Id(),
@@ -68,6 +73,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
 	aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
@@ -75,7 +81,7 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 		ServiceVersion: latestVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
+		return fmt.Errorf("error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
 	}
 
 	al := flattenACLs(aclList)
@@ -99,10 +105,12 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 	return nil
 }
 
+// Update updates the resource.
 func (h *ACLServiceAttributeHandler) Update(context.Context, *schema.ResourceData, map[string]interface{}, map[string]interface{}, int, *gofastly.Client) error {
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
 	if !resource["force_destroy"].(bool) {
 		mayDelete, err := isACLEmpty(d.Id(), resource["acl_id"].(string), conn)

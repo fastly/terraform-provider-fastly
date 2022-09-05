@@ -79,7 +79,9 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -95,7 +97,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceVCLLogentriesConfig_update(name, domainName1),
+				Config: testAccServiceVCLLogentriesConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1, &log2}, ServiceTypeVCL),
@@ -126,7 +128,9 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -147,17 +151,17 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceDetail, logentriess []*gofastly.Logentries, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Logentries Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Logentries Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(logentriesList) != len(logentriess) {
-			return fmt.Errorf("Logentries List count mismatch, expected (%d), got (%d)", len(logentriess), len(logentriesList))
+			return fmt.Errorf("logentries List count mismatch, expected (%d), got (%d)", len(logentriess), len(logentriesList))
 		}
 
 		log.Printf("[DEBUG] logentriesList = %+v\n", logentriesList)
@@ -183,7 +187,7 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 					}
 
 					if !reflect.DeepEqual(s, ls) {
-						return fmt.Errorf("Bad match Logentries logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
+						return fmt.Errorf("bad match Logentries logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
 					}
 					found++
 				}
@@ -191,7 +195,7 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 		}
 
 		if found != len(logentriess) {
-			return fmt.Errorf("Error matching Logentries Logging rules")
+			return fmt.Errorf("error matching Logentries Logging rules")
 		}
 
 		return nil
@@ -215,12 +219,14 @@ func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLLogentriesConfig_formatVersion(name, domainName1),
+				Config: testAccServiceVCLLogentriesConfigFormatVersion(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1}, ServiceTypeVCL),
@@ -288,7 +294,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLLogentriesConfig_update(name, domain string) string {
+func testAccServiceVCLLogentriesConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -323,7 +329,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLLogentriesConfig_formatVersion(name, domain string) string {
+func testAccServiceVCLLogentriesConfigFormatVersion(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

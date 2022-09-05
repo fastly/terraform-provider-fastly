@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ConditionServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type ConditionServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceCondition returns a new resource.
 func NewServiceCondition(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&ConditionServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,12 @@ func NewServiceCondition(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *ConditionServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *ConditionServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *ConditionServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -58,8 +64,8 @@ func (h *ConditionServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -79,15 +85,15 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
 	conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Conditions for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Conditions for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	cl := flattenConditions(conditionList)
@@ -98,8 +104,8 @@ func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	optsCreate := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -161,8 +167,8 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
-func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

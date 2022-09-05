@@ -50,7 +50,6 @@ func NewSetDiff(keyFunc KeyFunc) *SetDiff {
 // 'comment' attribute, but in order to compare changes using SetDiff we only
 // really have the option to use 'name' as the lookup key.
 func (h *SetDiff) Diff(oldSet, newSet *schema.Set) (*DiffResult, error) {
-
 	// Convert the set into a map to facilitate lookup
 	oldSetMap := map[interface{}]interface{}{}
 	newSetMap := map[interface{}]interface{}{}

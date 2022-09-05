@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// ResponseObjectServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type ResponseObjectServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceResponseObject returns a new resource.
 func NewServiceResponseObject(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&ResponseObjectServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceResponseObject(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *ResponseObjectServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *ResponseObjectServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *ResponseObjectServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -78,8 +84,8 @@ func (h *ResponseObjectServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateResponseObjectInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
@@ -100,15 +106,15 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
 	responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Response Object for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Response Object for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	rol := flattenResponseObjects(responseObjectList)
@@ -119,8 +125,8 @@ func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schem
 	return nil
 }
 
-func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateResponseObjectInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -159,8 +165,8 @@ func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *sch
 	return nil
 }
 
-func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteResponseObjectInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

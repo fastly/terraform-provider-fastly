@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// DictionaryServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DictionaryServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceDictionary returns a new resource.
 func NewServiceDictionary(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&DictionaryServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceDictionary(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *DictionaryServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *DictionaryServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -59,6 +65,7 @@ func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildDictionary(resource)
 	if err != nil {
@@ -76,6 +83,7 @@ func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
 	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
@@ -83,7 +91,7 @@ func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Dictionaries for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Dictionaries for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	dictionaries := flattenDictionaries(dictList)
@@ -106,10 +114,12 @@ func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Update updates the resource.
 func (h *DictionaryServiceAttributeHandler) Update(_ context.Context, _ *schema.ResourceData, _, _ map[string]interface{}, _ int, _ *gofastly.Client) error {
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	if !resource["force_destroy"].(bool) {
 		mayDelete, err := isDictionaryEmpty(d.Id(), resource["dictionary_id"].(string), conn)
@@ -143,7 +153,6 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
 	var dl []map[string]interface{}
 	for _, currentDict := range dictList {
-
 		dictMapString := map[string]interface{}{
 			"dictionary_id": currentDict.ID,
 			"name":          currentDict.Name,

@@ -12,28 +12,33 @@ import (
 	"golang.org/x/net/http2"
 )
 
+// Config is the base configuration for the HTTP client.
+//
+// NOTE: The fields correlate to the root TCL schema.
 type Config struct {
-	ApiKey     string
+	APIKey     string
 	BaseURL    string
 	UserAgent  string
 	NoAuth     bool
-	ForceHttp2 bool
+	ForceHTTP2 bool
 }
 
-type FastlyClient struct {
+// APIClient is a HTTP API Client.
+type APIClient struct {
 	conn *gofastly.Client
 }
 
-func (c *Config) Client() (*FastlyClient, diag.Diagnostics) {
-	var client FastlyClient
+// Client returns a FastlyClient.
+func (c *Config) Client() (*APIClient, diag.Diagnostics) {
+	var client APIClient
 
-	if !c.NoAuth && c.ApiKey == "" {
-		return nil, diag.FromErr(fmt.Errorf("[Err] No API key for Fastly"))
+	if !c.NoAuth && c.APIKey == "" {
+		return nil, diag.FromErr(fmt.Errorf("no API key for Fastly"))
 	}
 
 	gofastly.UserAgent = c.UserAgent
 
-	fastlyClient, err := gofastly.NewClientForEndpoint(c.ApiKey, c.BaseURL)
+	fastlyClient, err := gofastly.NewClientForEndpoint(c.APIKey, c.BaseURL)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
@@ -68,7 +73,7 @@ func (c *Config) Client() (*FastlyClient, diag.Diagnostics) {
 	// so leave it to default values for now.
 	http2DefaultTransport := &http2.Transport{}
 
-	if c.ForceHttp2 {
+	if c.ForceHTTP2 {
 		fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", http2DefaultTransport)
 	} else {
 		fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", httpDefaultTransport)

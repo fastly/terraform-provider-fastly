@@ -1,3 +1,4 @@
+// Package hashcode contains functions for converting strings into hash codes.
 package hashcode
 
 import (
@@ -23,12 +24,15 @@ func String(s string) int {
 }
 
 // Strings hashes a list of strings to a unique hashcode.
-func Strings(strings []string) string {
+func Strings(strings []string) (string, error) {
 	var buf bytes.Buffer
 
 	for _, s := range strings {
-		buf.WriteString(fmt.Sprintf("%s-", s))
+		_, err := buf.WriteString(fmt.Sprintf("%s-", s))
+		if err != nil {
+			return "", err
+		}
 	}
 
-	return fmt.Sprintf("%d", String(buf.String()))
+	return fmt.Sprintf("%d", String(buf.String())), nil
 }

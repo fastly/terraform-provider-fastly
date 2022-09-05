@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// OpenstackServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type OpenstackServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingOpenstack returns a new resource.
 func NewServiceLoggingOpenstack(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&OpenstackServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingOpenstack(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *OpenstackServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *OpenstackServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -143,17 +149,16 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
 
-	if err := createOpenstack(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createOpenstack(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh OpenStack.
 	log.Printf("[DEBUG] Refreshing OpenStack logging endpoints for (%s)", d.Id())
@@ -162,7 +167,7 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up OpenStack logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up OpenStack logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenOpenstack(openstackList)
@@ -178,6 +183,7 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Update updates the resource.
 func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateOpenstackInput{
 		ServiceID:      d.Id(),
@@ -244,15 +250,13 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *OpenstackServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
 
-	if err := deleteOpenstack(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteOpenstack(conn, opts)
 }
 
 func createOpenstack(conn *gofastly.Client, i *gofastly.CreateOpenstackInput) error {

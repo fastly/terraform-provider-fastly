@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// LogshuttleServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type LogshuttleServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingLogshuttle returns a new resource.
 func NewServiceLoggingLogshuttle(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&LogshuttleServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingLogshuttle(sa ServiceMetadata) ServiceAttributeDefinition 
 	})
 }
 
-func (h *LogshuttleServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *LogshuttleServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -82,17 +88,16 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging addition opts: %#v", opts)
 
-	if err := createLogshuttle(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createLogshuttle(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Log Shuttle.
 	log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
@@ -101,7 +106,7 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Log Shuttle logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Log Shuttle logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenLogshuttle(logshuttleList)
@@ -117,6 +122,7 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Update updates the resource.
 func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogshuttleInput{
 		ServiceID:      d.Id(),
@@ -156,15 +162,13 @@ func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *LogshuttleServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging endpoint removal opts: %#v", opts)
 
-	if err := deleteLogshuttle(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteLogshuttle(conn, opts)
 }
 
 func createLogshuttle(conn *gofastly.Client, i *gofastly.CreateLogshuttleInput) error {

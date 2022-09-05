@@ -10,12 +10,17 @@ import (
 )
 
 const (
-	WAFStatusCheckDelay      = 5 * time.Second
+	// WAFStatusCheckDelay is the time to wait before starting a check.
+	WAFStatusCheckDelay = 5 * time.Second
+
+	// WAFStatusCheckMinTimeout is the smallest time to wait before refreshes.
 	WAFStatusCheckMinTimeout = 5 * time.Second
 )
 
+// WAFDeploymentStatusCheck returns the status of the WAF deployment.
 type WAFDeploymentStatusCheck func(wafID string, version int) (*gofastly.WAFVersion, error)
 
+// WAFDeploymentChecker represents a WAF deployment checker.
 type WAFDeploymentChecker struct {
 	Timeout    time.Duration
 	Delay      time.Duration
@@ -23,6 +28,7 @@ type WAFDeploymentChecker struct {
 	Check      WAFDeploymentStatusCheck
 }
 
+// DefaultWAFDeploymentChecker returns the default WAF.
 func DefaultWAFDeploymentChecker(conn *gofastly.Client) func(wafID string, version int) (*gofastly.WAFVersion, error) {
 	checkDeploymentStatus := func(wafID string, version int) (*gofastly.WAFVersion, error) {
 		resp, err := conn.GetWAFVersion(&gofastly.GetWAFVersionInput{
@@ -52,7 +58,7 @@ func (c *WAFDeploymentChecker) waitForDeployment(ctx context.Context, wafID stri
 				return nil, "", err
 			}
 			if res.LastDeploymentStatus == gofastly.WAFVersionDeploymentStatusFailed {
-				return res, res.LastDeploymentStatus, fmt.Errorf("WAF deployment failed. Error message: %v", res.Error)
+				return res, res.LastDeploymentStatus, fmt.Errorf("waf deployment failed. Error message: %v", res.Error)
 			}
 			return res, res.LastDeploymentStatus, nil
 		},

@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	log1_after_update := gofastly.Cloudfiles{
+	log1AfterUpdate := gofastly.Cloudfiles{
 		ServiceVersion:    1,
 		Name:              "cloudfiles-endpoint",
 		BucketName:        "bucketupdate",
@@ -136,7 +136,9 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -153,10 +155,10 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLCloudfilesConfig_update(name, domain),
+				Config: testAccServiceVCLCloudfilesConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.none", &service),
-					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.none", "name", name),
 					resource.TestCheckResourceAttr(
@@ -189,7 +191,9 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -210,17 +214,17 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceDetail, cloudfiles []*gofastly.Cloudfiles, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Cloud Files Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Cloud Files Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(cloudfilesList) != len(cloudfiles) {
-			return fmt.Errorf("Cloud Files List count mismatch, expected (%d), got (%d)", len(cloudfiles), len(cloudfilesList))
+			return fmt.Errorf("cloud Files List count mismatch, expected (%d), got (%d)", len(cloudfiles), len(cloudfilesList))
 		}
 
 		log.Printf("[DEBUG] cloudfilesList = %#v\n", cloudfilesList)
@@ -245,7 +249,7 @@ func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceD
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Cloud Files logging match: %s", diff)
+						return fmt.Errorf("bad match Cloud Files logging match: %s", diff)
 					}
 				}
 			}
@@ -339,7 +343,7 @@ resource "fastly_service_vcl" "none" {
 `, name, domain)
 }
 
-func testAccServiceVCLCloudfilesConfig_update(name, domain string) string {
+func testAccServiceVCLCloudfilesConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "none" {
   name = "%s"

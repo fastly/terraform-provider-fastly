@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// DatadogServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DatadogServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingDatadog returns a new resource.
 func NewServiceLoggingDatadog(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&DatadogServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingDatadog(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *DatadogServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *DatadogServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -84,17 +90,16 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Datadog logging addition opts: %#v", opts)
 
-	if err := createDatadog(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createDatadog(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Datadog.
 	log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
@@ -103,7 +108,7 @@ func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Datadog logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Datadog logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	dll := flattenDatadog(datadogList)
@@ -119,6 +124,7 @@ func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	return nil
 }
 
+// Update updates the resource.
 func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDatadogInput{
 		ServiceID:      d.Id(),
@@ -158,15 +164,13 @@ func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *DatadogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Datadog logging endpoint removal opts: %#v", opts)
 
-	if err := deleteDatadog(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteDatadog(conn, opts)
 }
 
 func createDatadog(conn *gofastly.Client, i *gofastly.CreateDatadogInput) error {

@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// HeaderServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type HeaderServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceHeader returns a new resource.
 func NewServiceHeader(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&HeaderServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,12 @@ func NewServiceHeader(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *HeaderServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *HeaderServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *HeaderServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -108,8 +114,8 @@ func (h *HeaderServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
-func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Create creates the resource.
+func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildHeader(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Header: %s", err)
@@ -126,15 +132,15 @@ func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
 	headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
-
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Headers for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	hl := flattenHeaders(headerList)
@@ -146,8 +152,8 @@ func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Update updates the resource.
+func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHeaderInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -201,8 +207,8 @@ func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface {
-}, serviceVersion int, conn *gofastly.Client) error {
+// Delete deletes the resource.
+func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteHeaderInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,

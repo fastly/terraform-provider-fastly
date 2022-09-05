@@ -94,7 +94,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	log1_after_update := gofastly.DigitalOcean{
+	log1AfterUpdate := gofastly.DigitalOcean{
 		ServiceVersion:    1,
 		Name:              "digitalocean-endpoint",
 		BucketName:        "bucketupdate",
@@ -134,7 +134,9 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -151,10 +153,10 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDigitalOceanConfig_update(name, domain),
+				Config: testAccServiceVCLDigitalOceanConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -186,7 +188,9 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -207,17 +211,17 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.ServiceDetail, digitalocean []*gofastly.DigitalOcean, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up DigitalOcean Spaces Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up DigitalOcean Spaces Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(digitaloceanList) != len(digitalocean) {
-			return fmt.Errorf("DigitalOcean Spaces List count mismatch, expected (%d), got (%d)", len(digitalocean), len(digitaloceanList))
+			return fmt.Errorf("digitalOcean Spaces List count mismatch, expected (%d), got (%d)", len(digitalocean), len(digitaloceanList))
 		}
 
 		log.Printf("[DEBUG] digitaloceanList = %#v\n", digitaloceanList)
@@ -242,7 +246,7 @@ func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.Servic
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match DigitalOcean Spaces logging match: %s", diff)
+						return fmt.Errorf("bad match DigitalOcean Spaces logging match: %s", diff)
 					}
 				}
 			}
@@ -296,7 +300,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLDigitalOceanConfig_update(name, domain string) string {
+func testAccServiceVCLDigitalOceanConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

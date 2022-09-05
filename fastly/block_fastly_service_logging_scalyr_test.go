@@ -69,7 +69,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		FormatVersion: 2,
 	}
 
-	log1_after_update := gofastly.Scalyr{
+	log1AfterUpdate := gofastly.Scalyr{
 		ServiceVersion:    1,
 		Name:              "scalyrlogger",
 		Region:            "EU",
@@ -93,7 +93,9 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -110,10 +112,10 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLScalyrConfig_update(name, domain),
+				Config: testAccServiceVCLScalyrConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -137,7 +139,9 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -158,17 +162,17 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Scalyr Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Scalyr Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(scalyrList) != len(scalyr) {
-			return fmt.Errorf("Scalyr List count mismatch, expected (%d), got (%d)", len(scalyr), len(scalyrList))
+			return fmt.Errorf("scalyr List count mismatch, expected (%d), got (%d)", len(scalyr), len(scalyrList))
 		}
 
 		log.Printf("[DEBUG] scalyrList = %#v\n", scalyrList)
@@ -194,7 +198,7 @@ func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetai
 					}
 
 					if diff := cmp.Diff(s, sl); diff != "" {
-						return fmt.Errorf("Bad match Scalyr logging match: %s", diff)
+						return fmt.Errorf("bad match Scalyr logging match: %s", diff)
 					}
 					found++
 				}
@@ -202,7 +206,7 @@ func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(scalyr) {
-			return fmt.Errorf("Error matching Scalyr Logging rules")
+			return fmt.Errorf("error matching Scalyr Logging rules")
 		}
 
 		return nil
@@ -277,7 +281,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLScalyrConfig_update(name, domain string) string {
+func testAccServiceVCLScalyrConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"

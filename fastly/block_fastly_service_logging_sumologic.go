@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// SumologicServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type SumologicServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingSumologic returns a new resource.
 func NewServiceLoggingSumologic(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&SumologicServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingSumologic(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *SumologicServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *SumologicServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -84,6 +90,7 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSumologicInput{
@@ -106,6 +113,7 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
@@ -113,7 +121,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Sumologic for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Sumologic for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	sul := flattenSumologics(sumologicList)
@@ -128,6 +136,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Update updates the resource.
 func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSumologicInput{
 		ServiceID:      d.Id(),
@@ -170,6 +179,7 @@ func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSumologicInput{
 		ServiceID:      d.Id(),

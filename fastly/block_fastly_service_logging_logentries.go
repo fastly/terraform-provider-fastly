@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// LogentriesServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type LogentriesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingLogentries returns a new resource.
 func NewServiceLoggingLogentries(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&LogentriesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingLogentries(sa ServiceMetadata) ServiceAttributeDefinition 
 	})
 }
 
-func (h *LogentriesServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *LogentriesServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -89,6 +95,7 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateLogentriesInput{
@@ -112,6 +119,7 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
 	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
@@ -119,7 +127,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 	}
 
 	lel := flattenLogentries(logentriesList)
@@ -135,6 +143,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Update updates the resource.
 func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogentriesInput{
 		ServiceID:      d.Id(),
@@ -180,6 +189,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteLogentriesInput{
 		ServiceID:      d.Id(),
@@ -200,10 +210,10 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 }
 
 func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]interface{} {
-	var LEList []map[string]interface{}
+	var sm []map[string]interface{}
 	for _, currentLE := range logentriesList {
 		// Convert Logentries to a map for saving to state.
-		LEMapString := map[string]interface{}{
+		m := map[string]interface{}{
 			"name":               currentLE.Name,
 			"port":               currentLE.Port,
 			"use_tls":            currentLE.UseTLS,
@@ -215,14 +225,14 @@ func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]inter
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range LEMapString {
+		for k, v := range m {
 			if v == "" {
-				delete(LEMapString, k)
+				delete(m, k)
 			}
 		}
 
-		LEList = append(LEList, LEMapString)
+		sm = append(sm, m)
 	}
 
-	return LEList
+	return sm
 }

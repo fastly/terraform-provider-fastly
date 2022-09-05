@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// BigQueryLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type BigQueryLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingBigQuery returns a new resource.
 func NewServiceLoggingBigQuery(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&BigQueryLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,10 +24,12 @@ func NewServiceLoggingBigQuery(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
+// Key returns the resource key.
 func (h *BigQueryLoggingServiceAttributeHandler) Key() string {
 	return h.key
 }
 
+// GetSchema returns the resource schema.
 func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -103,6 +107,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBigQueryInput{
@@ -132,17 +137,18 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
-	BQList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
+	bqs, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
-	bql := flattenBigQuery(BQList)
+	bql := flattenBigQuery(bqs)
 
 	for _, element := range bql {
 		h.pruneVCLLoggingAttributes(element)
@@ -155,6 +161,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *sche
 	return nil
 }
 
+// Update updates the resource.
 func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateBigQueryInput{
 		ServiceID:      d.Id(),
@@ -207,6 +214,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteBigQueryInput{
 		ServiceID:      d.Id(),
@@ -228,10 +236,10 @@ func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *sc
 }
 
 func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
-	var BQList []map[string]interface{}
+	var sm []map[string]interface{}
 	for _, currentBQ := range bqList {
 		// Convert gcs to a map for saving to state.
-		BQMapString := map[string]interface{}{
+		m := map[string]interface{}{
 			"name":               currentBQ.Name,
 			"format":             currentBQ.Format,
 			"email":              currentBQ.User,
@@ -245,14 +253,14 @@ func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]interface{} {
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range BQMapString {
+		for k, v := range m {
 			if v == "" {
-				delete(BQMapString, k)
+				delete(m, k)
 			}
 		}
 
-		BQList = append(BQList, BQMapString)
+		sm = append(sm, m)
 	}
 
-	return BQList
+	return sm
 }

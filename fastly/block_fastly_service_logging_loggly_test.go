@@ -57,7 +57,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Loggly{
+	log1AfterUpdate := gofastly.Loggly{
 		ServiceVersion: 1,
 		Name:           "loggly-endpoint",
 		Token:          "secret",
@@ -74,7 +74,9 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -91,10 +93,10 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLLogglyConfig_update(name, domain),
+				Config: testAccServiceVCLLogglyConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLLogglyAttributes(&service, []*gofastly.Loggly{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLLogglyAttributes(&service, []*gofastly.Loggly{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -117,7 +119,9 @@ func TestAccFastlyServiceVCL_logging_loggly_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -138,17 +142,17 @@ func TestAccFastlyServiceVCL_logging_loggly_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetail, loggly []*gofastly.Loggly, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Loggly Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Loggly Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(logglyList) != len(loggly) {
-			return fmt.Errorf("Loggly List count mismatch, expected (%d), got (%d)", len(loggly), len(logglyList))
+			return fmt.Errorf("loggly List count mismatch, expected (%d), got (%d)", len(loggly), len(logglyList))
 		}
 
 		log.Printf("[DEBUG] logglyList = %#v\n", logglyList)
@@ -174,7 +178,7 @@ func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetai
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Loggly logging match: %s", diff)
+						return fmt.Errorf("bad match Loggly logging match: %s", diff)
 					}
 					found++
 				}
@@ -182,7 +186,7 @@ func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(loggly) {
-			return fmt.Errorf("Error matching Loggly Logging rules")
+			return fmt.Errorf("error matching Loggly Logging rules")
 		}
 
 		return nil
@@ -245,7 +249,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLLogglyConfig_update(name, domain string) string {
+func testAccServiceVCLLogglyConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

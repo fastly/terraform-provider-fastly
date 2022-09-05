@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -79,7 +80,7 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 }
 
 func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	input := &fastly.CreateCustomTLSCertificateInput{
 		CertBlob: d.Get("certificate_body").(string),
@@ -100,7 +101,7 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
@@ -155,7 +156,7 @@ func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData,
 }
 
 func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	input := &fastly.UpdateCustomTLSCertificateInput{
 		ID:       d.Id(),
@@ -175,12 +176,11 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceFastlyTLSCertificateDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{
 		ID: d.Id(),
 	})
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

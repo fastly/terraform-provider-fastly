@@ -97,7 +97,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 		Format:         appendNewLine(honeycombDefaultFormat),
 	}
 
-	log1_after_update := gofastly.Honeycomb{
+	log1AfterUpdate := gofastly.Honeycomb{
 		ServiceVersion:    1,
 		Name:              "honeycomb-endpoint",
 		Dataset:           "new-dataset",
@@ -120,7 +120,9 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -137,10 +139,10 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHoneycombConfig_update(name, domain),
+				Config: testAccServiceVCLHoneycombConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLHoneycombAttributes(&service, []*gofastly.Honeycomb{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLHoneycombAttributes(&service, []*gofastly.Honeycomb{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -164,7 +166,9 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -185,17 +189,17 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDetail, honeycomb []*gofastly.Honeycomb, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Honeycomb Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Honeycomb Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(honeycombList) != len(honeycomb) {
-			return fmt.Errorf("Honeycomb List count mismatch, expected (%d), got (%d)", len(honeycomb), len(honeycombList))
+			return fmt.Errorf("honeycomb List count mismatch, expected (%d), got (%d)", len(honeycomb), len(honeycombList))
 		}
 
 		log.Printf("[DEBUG] honeycombList = %#v\n", honeycombList)
@@ -220,7 +224,7 @@ func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDe
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Honeycomb logging match: %s", diff)
+						return fmt.Errorf("bad match Honeycomb logging match: %s", diff)
 					}
 				}
 			}
@@ -259,7 +263,7 @@ EOF
 `, name, domain)
 }
 
-func testAccServiceVCLHoneycombConfig_update(name, domain string) string {
+func testAccServiceVCLHoneycombConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

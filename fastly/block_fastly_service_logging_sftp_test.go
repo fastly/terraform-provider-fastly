@@ -105,7 +105,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		Format:          "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.SFTP{
+	log1AfterUpdate := gofastly.SFTP{
 		ServiceVersion:    1,
 		Name:              "sftp-endpoint",
 		Address:           "sftp.example.com",
@@ -151,7 +151,9 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -168,10 +170,10 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLSFTPConfig_update(name, domain),
+				Config: testAccServiceVCLSFTPConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -209,7 +211,9 @@ func TestAccFastlyServiceVCL_logging_sftp_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -233,13 +237,15 @@ func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceVCLSFTPConfig_no_password_secret_key(name, domain),
-				ExpectError: regexp.MustCompile("Either password or secret_key must be set"),
+				Config:      testAccServiceVCLSFTPConfigNoPasswordSecretKey(name, domain),
+				ExpectError: regexp.MustCompile("either password or secret_key must be set"),
 			},
 		},
 	})
@@ -247,17 +253,17 @@ func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail, sftps []*gofastly.SFTP, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up SFTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up SFTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(sftpList) != len(sftps) {
-			return fmt.Errorf("SFTP List count mismatch, expected (%d), got (%d)", len(sftps), len(sftpList))
+			return fmt.Errorf("sftp List count mismatch, expected (%d), got (%d)", len(sftps), len(sftpList))
 		}
 
 		log.Printf("[DEBUG] sftpList = %#v\n", sftpList)
@@ -283,7 +289,7 @@ func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail,
 					}
 
 					if diff := cmp.Diff(s, sl); diff != "" {
-						return fmt.Errorf("Bad match SFTP logging match: %s", diff)
+						return fmt.Errorf("bad match SFTP logging match: %s", diff)
 					}
 					found++
 				}
@@ -291,7 +297,7 @@ func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail,
 		}
 
 		if found != len(sftps) {
-			return fmt.Errorf("Error matching SFTP Logging rules")
+			return fmt.Errorf("error matching SFTP Logging rules")
 		}
 
 		return nil
@@ -374,7 +380,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSFTPConfig_update(name, domain string) string {
+func testAccServiceVCLSFTPConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -430,7 +436,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSFTPConfig_no_password_secret_key(name, domain string) string {
+func testAccServiceVCLSFTPConfigNoPasswordSecretKey(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

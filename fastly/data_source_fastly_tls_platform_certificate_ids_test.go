@@ -2,10 +2,11 @@ package fastly
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestAccFastlyDataSourceTLSPlatformCertificateIDs(t *testing.T) {
@@ -16,14 +17,16 @@ func TestAccFastlyDataSourceTLSPlatformCertificateIDs(t *testing.T) {
 	require.NoError(t, err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resources(name, key, cert, ca),
+				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfigResources(name, key, cert, ca),
 			},
 			{
-				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resourcesAndData(name, key, cert, ca),
+				Config: testAccFastlyDataSourceTLSPlatformCertificateIDSConfigResourcesAndData(name, key, cert, ca),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemAttrPair(
 						"data.fastly_tls_platform_certificate_ids.subject", "ids.*",
@@ -35,7 +38,7 @@ func TestAccFastlyDataSourceTLSPlatformCertificateIDs(t *testing.T) {
 	})
 }
 
-func testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resources(name, key, cert, ca string) string {
+func testAccFastlyDataSourceTLSPlatformCertificateIDSConfigResources(name, key, cert, ca string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "key" {
   name = "%[1]s"
@@ -62,9 +65,9 @@ EOF
 `, name, key, cert, ca)
 }
 
-func testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resourcesAndData(name, key, cert, ca string) string {
+func testAccFastlyDataSourceTLSPlatformCertificateIDSConfigResourcesAndData(name, key, cert, ca string) string {
 	return fmt.Sprintf(`
 %s
 data "fastly_tls_platform_certificate_ids" "subject" {}
-`, testAccFastlyDataSourceTLSPlatformCertificateIDSConfig_resources(name, key, cert, ca))
+`, testAccFastlyDataSourceTLSPlatformCertificateIDSConfigResources(name, key, cert, ca))
 }

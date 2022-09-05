@@ -51,7 +51,7 @@ func dataSourceFastlyDatacenters() *schema.Resource {
 }
 
 func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading datacenters")
 

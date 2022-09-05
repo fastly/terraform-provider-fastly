@@ -21,19 +21,21 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_bigquery(name, bqName, secretKey),
+				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_bq(&service, name, bqName),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName),
 				),
 			},
 		},
@@ -48,19 +50,21 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfig_bigquery_compute(name, bqName, secretKey),
+				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributes_bq(&service, name, bqName),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName),
 				),
 			},
 		},
@@ -70,11 +74,11 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingBigQuery(serviceAttributes)
-	resource := &schema.Resource{
+	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(resource)
-	loggingResource := resource.Schema["logging_bigquery"]
+	v.Register(r)
+	loggingResource := r.Schema["logging_bigquery"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
 	// Expect attributes to be sensitive
@@ -109,34 +113,34 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 	}
 }
 
-func testAccCheckFastlyServiceVCLAttributes_bq(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		bqList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up BigQuery records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up BigQuery records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(bqList) != 1 {
-			return fmt.Errorf("BigQuery logging endpoint missing, expected: 1, got: %d", len(bqList))
+			return fmt.Errorf("bigQuery logging endpoint missing, expected: 1, got: %d", len(bqList))
 		}
 
 		if bqList[0].Name != bqName {
-			return fmt.Errorf("BigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, bqList[0].Name)
+			return fmt.Errorf("bigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, bqList[0].Name)
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceVCLConfig_bigquery(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigBigQuery(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -168,7 +172,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_bigquery_compute(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigBigQueryCompute(name, gcsName, secretKey string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -203,7 +207,7 @@ resource "fastly_service_compute" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfig_bigquery_env(name, gcsName string) string {
+func testAccServiceVCLConfigBigQueryEnv(name, gcsName string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -270,7 +274,7 @@ func getBQEnv() *currentBQEnv {
 func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 	secretKey, err := generateKey()
 	if err != nil {
-		t.Errorf("Failed to generate key: %s", err)
+		t.Errorf("failed to generate key: %s", err)
 	}
 
 	cases := []struct {

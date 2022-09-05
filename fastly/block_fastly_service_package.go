@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// PackageServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type PackageServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServicePackage returns a new resource.
 func NewServicePackage(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &PackageServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,6 +24,7 @@ func NewServicePackage(sa ServiceMetadata) ServiceAttributeDefinition {
 	}
 }
 
+// Register add the attribute to the resource schema.
 func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:        schema.TypeList,
@@ -49,12 +52,12 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
-
+// Process creates or updates the attribute against the Fastly API.
+func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		// Schema guarantees one package block.
-		Package := v.([]interface{})[0].(map[string]interface{})
-		packageFilename := Package["filename"].(string)
+		pkg := v.([]interface{})[0].(map[string]interface{})
+		packageFilename := pkg["filename"].(string)
 
 		err := updatePackage(conn, &gofastly.UpdatePackageInput{
 			ServiceID:      d.Id(),
@@ -62,31 +65,31 @@ func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.
 			PackagePath:    packageFilename,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error modifying package %s: %s", d.Id(), err)
+			return fmt.Errorf("error modifying package %s: %s", d.Id(), err)
 		}
 	}
 
 	return nil
 }
 
-func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+// Read refreshes the attribute state against the Fastly API.
+func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
-	Package, err := conn.GetPackage(&gofastly.GetPackageInput{
+	pkg, err := conn.GetPackage(&gofastly.GetPackageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: s.ActiveVersion.Number,
 	})
-
 	if err != nil {
 		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
 			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 			d.Set(h.GetKey(), nil)
 			return nil
 		}
-		return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
 
 	filename := d.Get("package.0.filename").(string)
-	wp := flattenPackage(Package, filename)
+	wp := flattenPackage(pkg, filename)
 	if err := d.Set(h.GetKey(), wp); err != nil {
 		log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
 	}
@@ -99,10 +102,10 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 	return err
 }
 
-func flattenPackage(Package *gofastly.Package, filename string) []map[string]interface{} {
+func flattenPackage(pkg *gofastly.Package, filename string) []map[string]interface{} {
 	var pa []map[string]interface{}
 	p := map[string]interface{}{
-		"source_code_hash": Package.Metadata.HashSum,
+		"source_code_hash": pkg.Metadata.HashSum,
 		"filename":         filename,
 	}
 

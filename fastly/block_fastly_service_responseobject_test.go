@@ -79,7 +79,9 @@ func TestAccFastlyServiceVCL_response_object_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +98,7 @@ func TestAccFastlyServiceVCL_response_object_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLResponseObjectConfig_update(name, domainName1),
+				Config: testAccServiceVCLResponseObjectConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLResponseObjectAttributes(&service, []*gofastly.ResponseObject{&log1, &log2}),
@@ -112,17 +114,17 @@ func TestAccFastlyServiceVCL_response_object_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.ServiceDetail, responseObjects []*gofastly.ResponseObject) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Response Object for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Response Object for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(responseObjectList) != len(responseObjects) {
-			return fmt.Errorf("Response Object List count mismatch, expected (%d), got (%d)", len(responseObjects), len(responseObjectList))
+			return fmt.Errorf("response Object List count mismatch, expected (%d), got (%d)", len(responseObjects), len(responseObjectList))
 		}
 
 		var found int
@@ -137,7 +139,7 @@ func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.Serv
 					lp.CreatedAt = nil
 					lp.UpdatedAt = nil
 					if !reflect.DeepEqual(p, lp) {
-						return fmt.Errorf("Bad match Response Object match, expected (%#v), got (%#v)", p, lp)
+						return fmt.Errorf("bad match Response Object match, expected (%#v), got (%#v)", p, lp)
 					}
 					found++
 				}
@@ -145,7 +147,7 @@ func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.Serv
 		}
 
 		if found != len(responseObjects) {
-			return fmt.Errorf("Error matching Response Object rules")
+			return fmt.Errorf("error matching Response Object rules")
 		}
 
 		return nil
@@ -195,7 +197,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLResponseObjectConfig_update(name, domain string) string {
+func testAccServiceVCLResponseObjectConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

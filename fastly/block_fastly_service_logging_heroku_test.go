@@ -66,7 +66,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Heroku{
+	log1AfterUpdate := gofastly.Heroku{
 		ServiceVersion:    1,
 		Name:              "heroku-endpoint",
 		URL:               "https://example.com",
@@ -87,7 +87,9 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -104,10 +106,10 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHerokuConfig_update(name, domain),
+				Config: testAccServiceVCLHerokuConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -131,7 +133,9 @@ func TestAccFastlyServiceVCL_logging_heroku_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -152,17 +156,17 @@ func TestAccFastlyServiceVCL_logging_heroku_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHerokuAttributes(service *gofastly.ServiceDetail, heroku []*gofastly.Heroku, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		herokuList, err := conn.ListHerokus(&gofastly.ListHerokusInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Heroku Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Heroku Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(herokuList) != len(heroku) {
-			return fmt.Errorf("Heroku List count mismatch, expected (%d), got (%d)", len(heroku), len(herokuList))
+			return fmt.Errorf("heroku List count mismatch, expected (%d), got (%d)", len(heroku), len(herokuList))
 		}
 
 		log.Printf("[DEBUG] herokuList = %#v\n", herokuList)
@@ -187,7 +191,7 @@ func testAccCheckFastlyServiceVCLHerokuAttributes(service *gofastly.ServiceDetai
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Heroku logging match: %s", diff)
+						return fmt.Errorf("bad match Heroku logging match: %s", diff)
 					}
 				}
 			}
@@ -224,7 +228,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLHerokuConfig_update(name, domain string) string {
+func testAccServiceVCLHerokuConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

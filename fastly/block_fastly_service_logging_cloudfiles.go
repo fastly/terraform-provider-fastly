@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// CloudfilesServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type CloudfilesServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingCloudfiles returns a new resource.
 func NewServiceLoggingCloudfiles(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&CloudfilesServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingCloudfiles(sa ServiceMetadata) ServiceAttributeDefinition 
 	})
 }
 
-func (h *CloudfilesServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *CloudfilesServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -143,17 +149,16 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
 
-	if err := createCloudfiles(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createCloudfiles(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Cloud Files.
 	log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
@@ -162,7 +167,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Cloud Files logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Cloud Files logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenCloudfiles(cloudfilesList)
@@ -178,6 +183,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Update updates the resource.
 func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCloudfilesInput{
 		ServiceID:      d.Id(),
@@ -241,15 +247,13 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging endpoint removal opts: %#v", opts)
 
-	if err := deleteCloudfiles(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteCloudfiles(conn, opts)
 }
 
 func createCloudfiles(conn *gofastly.Client, i *gofastly.CreateCloudfilesInput) error {

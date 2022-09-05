@@ -99,7 +99,9 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -116,7 +118,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLGzipsConfig_delete_create(name, domainName1),
+				Config: testAccServiceVCLGzipsConfigDeleteCreate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log3}),
@@ -128,7 +130,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLGzipsConfig_update(name, domainName1),
+				Config: testAccServiceVCLGzipsConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log4}),
@@ -144,17 +146,17 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail, gzips []*gofastly.Gzip) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Gzips for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(gzipsList) != len(gzips) {
-			return fmt.Errorf("Gzip count mismatch, expected (%d), got (%d)", len(gzips), len(gzipsList))
+			return fmt.Errorf("gzip count mismatch, expected (%d), got (%d)", len(gzips), len(gzipsList))
 		}
 
 		var found int
@@ -177,7 +179,7 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 						lg.ContentTypes = ""
 					}
 					if !reflect.DeepEqual(g, lg) {
-						return fmt.Errorf("Bad match Gzip match, expected (%#v), got (%#v)", g, lg)
+						return fmt.Errorf("bad match Gzip match, expected (%#v), got (%#v)", g, lg)
 					}
 					found++
 				}
@@ -185,7 +187,7 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 		}
 
 		if found != len(gzips) {
-			return fmt.Errorf("Error matching Gzip rules")
+			return fmt.Errorf("error matching Gzip rules")
 		}
 
 		return nil
@@ -229,7 +231,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLGzipsConfig_delete_create(name, domain string) string {
+func testAccServiceVCLGzipsConfigDeleteCreate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -261,7 +263,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLGzipsConfig_update(name, domain string) string {
+func testAccServiceVCLGzipsConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

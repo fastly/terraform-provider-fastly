@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,7 +67,7 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 }
 
 func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
@@ -86,11 +87,11 @@ func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData
 		}
 
 		if len(privateKeys) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(privateKeys) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria and try again.")
+			return diag.Errorf("your query returned more than one result. Please change to a more specific search criteria and try again.")
 		}
 
 		privateKey = privateKeys[0]
@@ -111,6 +112,7 @@ func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData
 	return diags
 }
 
+// TLSPrivateKeyPredicate determines if a key should be filtered.
 type TLSPrivateKeyPredicate func(key *fastly.PrivateKey) bool
 
 func getTLSPrivateKeyFilters(d *schema.ResourceData) []TLSPrivateKeyPredicate {
@@ -188,11 +190,7 @@ func dataSourceFastlyTLSPrivateKeySetAttributes(privateKey *fastly.PrivateKey, d
 	if err := d.Set("replace", privateKey.Replace); err != nil {
 		return err
 	}
-	if err := d.Set("public_key_sha1", privateKey.PublicKeySHA1); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("public_key_sha1", privateKey.PublicKeySHA1)
 }
 
 func filterPrivateKey(privateKey *fastly.PrivateKey, filters []TLSPrivateKeyPredicate) bool {

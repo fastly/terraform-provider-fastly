@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DirectorServiceAttributeHandler implements ServiceAttributeDefinition.
+// DirectorServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type DirectorServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
@@ -26,7 +26,9 @@ func NewServiceDirector(sa ServiceMetadata) ServiceAttributeDefinition {
 }
 
 // Key returns the resource key.
-func (h *DirectorServiceAttributeHandler) Key() string { return h.key }
+func (h *DirectorServiceAttributeHandler) Key() string {
+	return h.key
+}
 
 // GetSchema returns the resource schema.
 func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
@@ -142,7 +144,7 @@ func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	dirl := flattenDirectors(directorList)
@@ -319,5 +321,5 @@ func getDirectorBackendChange(d *schema.ResourceData, resource map[string]interf
 	odb = get(name.(string), od.(*schema.Set))
 	ndb = get(name.(string), nd.(*schema.Set))
 
-	return
+	return odb, ndb
 }

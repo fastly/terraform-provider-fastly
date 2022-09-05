@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"testing"
 )
 
 func TestAccDataSourceFastlyTLSSubscription_basic(t *testing.T) {
@@ -12,11 +13,13 @@ func TestAccDataSourceFastlyTLSSubscription_basic(t *testing.T) {
 
 	resourceName := "data.fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceFastlyTLSSubscriptionConfig_basic(domain),
+				Config: testAccDataSourceFastlyTLSSubscriptionConfigBasic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority", "lets-encrypt"),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
@@ -34,11 +37,13 @@ func TestAccDataSourceFastlyTLSSubscription_byID(t *testing.T) {
 
 	resourceName := "data.fastly_tls_subscription.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceFastlyTLSSubscriptionConfig_byID(domain),
+				Config: testAccDataSourceFastlyTLSSubscriptionConfigByID(domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "common_name", domain),
@@ -49,7 +54,7 @@ func TestAccDataSourceFastlyTLSSubscription_byID(t *testing.T) {
 	})
 }
 
-func testAccDataSourceFastlyTLSSubscriptionConfig_basic(domain string) string {
+func testAccDataSourceFastlyTLSSubscriptionConfigBasic(domain string) string {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	return fmt.Sprintf(`
@@ -80,7 +85,7 @@ data "fastly_tls_subscription" "subject" {
 	)
 }
 
-func testAccDataSourceFastlyTLSSubscriptionConfig_byID(domain string) string {
+func testAccDataSourceFastlyTLSSubscriptionConfigByID(domain string) string {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	return fmt.Sprintf(`

@@ -64,7 +64,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"fastly_service_vcl":                     resourceServiceVCL(),
 			"fastly_service_compute":                 resourceServiceCompute(),
-			"fastly_service_acl_entries":             resourceServiceAclEntries(),
+			"fastly_service_acl_entries":             resourceServiceACLEntries(),
 			"fastly_service_authorization":           resourceServiceAuthorization(),
 			"fastly_service_dictionary_items":        resourceServiceDictionaryItems(),
 			"fastly_service_dynamic_snippet_content": resourceServiceDynamicSnippetContent(),
@@ -81,10 +81,10 @@ func Provider() *schema.Provider {
 
 	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		config := Config{
-			ApiKey:     d.Get("api_key").(string),
+			APIKey:     d.Get("api_key").(string),
 			BaseURL:    d.Get("base_url").(string),
 			NoAuth:     d.Get("no_auth").(bool),
-			ForceHttp2: d.Get("force_http2").(bool),
+			ForceHTTP2: d.Get("force_http2").(bool),
 			UserAgent:  provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
 		}
 		return config.Client()

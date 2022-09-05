@@ -82,7 +82,9 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -102,7 +104,7 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLSnippet_update(name, domainName1),
+				Config: testAccServiceVCLSnippetUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSnippetAttributes(&service, []*gofastly.Snippet{&updatedS1, &updatedS2}),
@@ -125,17 +127,17 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDetail, snippets []*gofastly.Snippet) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up VCL Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(sList) != len(snippets) {
-			return fmt.Errorf("Snippet List count mismatch, expected (%d), got (%d)", len(snippets), len(sList))
+			return fmt.Errorf("snippet List count mismatch, expected (%d), got (%d)", len(snippets), len(sList))
 		}
 
 		var found int
@@ -151,7 +153,7 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 					lr.UpdatedAt = nil
 
 					if !reflect.DeepEqual(expected, lr) {
-						return fmt.Errorf("Unexpected VCL Snippet.\nExpected: %#v\nGot: %#v\n", expected, lr)
+						return fmt.Errorf("unexpected VCL Snippet (expected: %#v, got: %#v)", expected, lr)
 					}
 					found++
 				}
@@ -159,7 +161,7 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 		}
 
 		if found != len(snippets) {
-			return fmt.Errorf("Error matching VCL Snippets. Found: %d / Expected: %d", found, len(snippets))
+			return fmt.Errorf("error matching VCL Snippets (expected: %d, got: %d)", len(snippets), found)
 		}
 
 		return nil
@@ -195,7 +197,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLSnippet_update(name, domain string) string {
+func testAccServiceVCLSnippetUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

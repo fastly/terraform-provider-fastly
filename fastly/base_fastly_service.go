@@ -41,10 +41,12 @@ type BaseServiceDefinition struct {
 	Type       string
 }
 
+// GetType returns the resource type.
 func (d *BaseServiceDefinition) GetType() string {
 	return d.Type
 }
 
+// GetAttributeHandler returns the resource attributes.
 func (d *BaseServiceDefinition) GetAttributeHandler() []ServiceAttributeDefinition {
 	return d.Attributes
 }
@@ -73,7 +75,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			customdiff.ComputedIf("active_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
 				// If cloned_version is recomputed and we are automatically activating new versions (controlled with the
 				// activate flag) then the active_version will be recomputed too.
-				return d.HasChange("cloned_version") && d.Get("activate") == true
+				return d.HasChange("cloned_version") && d.Get("activate").(bool)
 			}),
 		),
 
@@ -218,7 +220,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 	service, err := conn.CreateService(&gofastly.CreateServiceInput{
 		Name:    d.Get("name").(string),
 		Comment: d.Get("comment").(string),
@@ -246,7 +248,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	shouldActivate := d.Get("activate").(bool)
 	// Update Name and/or Comment. No new version is required for this.
@@ -361,11 +363,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceVersion: latestVersion,
 		})
 		if err != nil {
-			return diag.Errorf("[ERR] Error checking validation: %s", err)
+			return diag.Errorf("error checking validation: %s", err)
 		}
 
 		if !valid {
-			return diag.Errorf("[ERR] Invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
+			return diag.Errorf("invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 		}
 
 		err = d.Set("cloned_version", latestVersion)
@@ -383,7 +385,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceVersion: latestVersion,
 		})
 		if err != nil {
-			return diag.Errorf("[ERR] Error activating version (%d): %s", latestVersion, err)
+			return diag.Errorf("error activating version (%d): %s", latestVersion, err)
 		}
 
 		// Only if the version is valid and activated do we set the active_version.
@@ -404,7 +406,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 // resourceServiceRead provides service resource Read functionality.
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
@@ -429,7 +431,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Check for service type mismatch (i.e. when importing)
 	if s.Type != serviceDef.GetType() {
-		return diag.Errorf("[ERR] Service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
+		return diag.Errorf("service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
 	}
 
 	err = d.Set("name", s.Name)
@@ -486,7 +488,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// If activate is false, then read the state from cloned_version instead of
 	// the active version.
 	// Otherwise, cloned_version should track the active version
-	if d.Get("activate") == false {
+	if !d.Get("activate").(bool) {
 		s.ActiveVersion.Number = d.Get("cloned_version").(int)
 	} else {
 		err := d.Set("cloned_version", s.ActiveVersion.Number)
@@ -524,7 +526,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 // resourceServiceDelete provides service resource Delete functionality.
 func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta interface{}, _ ServiceDefinition) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.
 	// If `force_destroy` is given, we deactivate the active version and then send

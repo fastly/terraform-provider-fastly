@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// SFTPServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type SFTPServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingSFTP returns a new resource.
 func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&SFTPServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingSFTP(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *SFTPServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *SFTPServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -159,21 +165,20 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	if opts.Password == "" && opts.SecretKey == "" {
-		return fmt.Errorf("[ERR] Either password or secret_key must be set")
+		return fmt.Errorf("either password or secret_key must be set")
 	}
 
 	log.Printf("[DEBUG] Fastly SFTP logging addition opts: %#v", opts)
 
-	if err := createSFTP(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createSFTP(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh SFTP.
 	log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
@@ -182,7 +187,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenSFTP(sftpList)
@@ -198,6 +203,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 	return nil
 }
 
+// Update updates the resource.
 func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSFTPInput{
 		ServiceID:      d.Id(),
@@ -270,15 +276,13 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
 
-	if err := deleteSFTP(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteSFTP(conn, opts)
 }
 
 func createSFTP(conn *gofastly.Client, i *gofastly.CreateSFTPInput) error {

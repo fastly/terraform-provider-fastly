@@ -104,7 +104,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		Password:          "password",
 	}
 
-	log1_after_update := gofastly.Kafka{
+	log1AfterUpdate := gofastly.Kafka{
 		ServiceVersion:    1,
 		Name:              "kafkalogger",
 		Topic:             "newtopic",
@@ -151,7 +151,9 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -168,10 +170,10 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLKafkaConfig_update(name, domain),
+				Config: testAccServiceVCLKafkaConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLKafkaAttributes(&service, []*gofastly.Kafka{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLKafkaAttributes(&service, []*gofastly.Kafka{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -202,7 +204,9 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -223,17 +227,17 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLKafkaAttributes(service *gofastly.ServiceDetail, kafka []*gofastly.Kafka, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Kafka Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Kafka Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(kafkaList) != len(kafka) {
-			return fmt.Errorf("Kafka List count mismatch, expected (%d), got (%d)", len(kafka), len(kafkaList))
+			return fmt.Errorf("kafka List count mismatch, expected (%d), got (%d)", len(kafka), len(kafkaList))
 		}
 
 		log.Printf("[DEBUG] kafkaList = %#v\n", kafkaList)
@@ -259,7 +263,7 @@ func testAccCheckFastlyServiceVCLKafkaAttributes(service *gofastly.ServiceDetail
 					}
 
 					if diff := cmp.Diff(s, sl); diff != "" {
-						return fmt.Errorf("Bad match Kafka logging match: %s", diff)
+						return fmt.Errorf("bad match Kafka logging match: %s", diff)
 					}
 					found++
 				}
@@ -267,7 +271,7 @@ func testAccCheckFastlyServiceVCLKafkaAttributes(service *gofastly.ServiceDetail
 		}
 
 		if found != len(kafka) {
-			return fmt.Errorf("Error matching Kafka Logging rules")
+			return fmt.Errorf("error matching Kafka Logging rules")
 		}
 
 		return nil
@@ -361,7 +365,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLKafkaConfig_update(name, domain string) string {
+func testAccServiceVCLKafkaConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"

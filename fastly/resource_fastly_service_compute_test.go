@@ -94,7 +94,9 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test1.tf-%s.com", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceComputeDestroy,
 		Steps: []resource.TestStep{
@@ -135,16 +137,16 @@ func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		l, err := conn.ListServices(&gofastly.ListServicesInput{})
 		if err != nil {
-			return fmt.Errorf("[WARN] Error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
 		}
 
 		for _, s := range l {
 			if s.ID == rs.Primary.ID {
 				// service still found
-				return fmt.Errorf("[WARN] Tried deleting Service (%s), but was still found", rs.Primary.ID)
+				return fmt.Errorf("tried deleting Service (%s), but was still found", rs.Primary.ID)
 			}
 		}
 	}

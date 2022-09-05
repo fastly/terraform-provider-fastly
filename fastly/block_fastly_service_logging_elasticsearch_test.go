@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 		Placement:         "none",
 	}
 
-	log1_after_update := fst.Elasticsearch{
+	log1AfterUpdate := fst.Elasticsearch{
 		ServiceVersion:    1,
 		Name:              "elasticsearch-endpoint",
 		Index:             "#{%F}",
@@ -136,7 +136,9 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -153,10 +155,10 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLElasticsearchConfig_update(name, domain),
+				Config: testAccServiceVCLElasticsearchConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -189,7 +191,9 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -210,17 +214,17 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDetail, elasticsearch []*fst.Elasticsearch, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		elasticsearchList, err := conn.ListElasticsearch(&fst.ListElasticsearchInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Elasticsearch Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Elasticsearch Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(elasticsearchList) != len(elasticsearch) {
-			return fmt.Errorf("Elasticsearch List count mismatch, expected (%d), got (%d)", len(elasticsearch), len(elasticsearchList))
+			return fmt.Errorf("elasticsearch List count mismatch, expected (%d), got (%d)", len(elasticsearch), len(elasticsearchList))
 		}
 
 		log.Printf("[DEBUG] elasticsearchList = %#v\n", elasticsearchList)
@@ -246,7 +250,7 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDet
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Elasticsearch logging match: %s", diff)
+						return fmt.Errorf("bad match Elasticsearch logging match: %s", diff)
 					}
 					found++
 				}
@@ -254,7 +258,7 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDet
 		}
 
 		if found != len(elasticsearch) {
-			return fmt.Errorf("Error matching Elasticsearch Logging rules")
+			return fmt.Errorf("error matching Elasticsearch Logging rules")
 		}
 
 		return nil
@@ -342,7 +346,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLElasticsearchConfig_update(name, domain string) string {
+func testAccServiceVCLElasticsearchConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -64,7 +64,9 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -80,7 +82,7 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceVCLConditionConfig_update(name, domainName1, "CACHE"),
+				Config: testAccServiceVCLConditionConfigUpdate(name, domainName1, "CACHE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLConditionalAttributes(&service, name, []*gofastly.Condition{&con2}),
@@ -93,20 +95,20 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.ServiceDetail, name string, conditions []*gofastly.Condition) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Conditions for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Conditions for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(conditionList) != len(conditions) {
-			return fmt.Errorf("Error: mis match count of conditions, expected (%d), got (%d)", len(conditions), len(conditionList))
+			return fmt.Errorf("error: mis match count of conditions, expected (%d), got (%d)", len(conditions), len(conditionList))
 		}
 
 		var found int
@@ -121,7 +123,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 					lc.CreatedAt = nil
 					lc.UpdatedAt = nil
 					if !reflect.DeepEqual(c, lc) {
-						return fmt.Errorf("Bad match Conditions match, expected (%#v), got (%#v)", c, lc)
+						return fmt.Errorf("bad match Conditions match, expected (%#v), got (%#v)", c, lc)
 					}
 					found++
 				}
@@ -129,7 +131,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 		}
 
 		if found != len(conditions) {
-			return fmt.Errorf("Error matching Conditions rules")
+			return fmt.Errorf("error matching Conditions rules")
 		}
 		return nil
 	}
@@ -172,7 +174,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLConditionConfig_update(name, domain, condType string) string {
+func testAccServiceVCLConditionConfigUpdate(name, domain, condType string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -43,7 +43,7 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 				Required:    true,
 				Description: "The VCL code that specifies exactly what the snippet does",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.HasChange("snippet_id") && d.Get("manage_snippets") == false
+					return !d.HasChange("snippet_id") && !d.Get("manage_snippets").(bool)
 				},
 			},
 		},
@@ -51,7 +51,7 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 }
 
 func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	snippetID := d.Get("snippet_id").(string)
@@ -76,13 +76,12 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	snippetID := d.Get("snippet_id").(string)
 
 	if d.HasChange("content") {
-
 		content := d.Get("content").(string)
 
 		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
@@ -91,7 +90,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 			Content:   gofastly.String(content),
 		})
 		if err != nil {
-			return diag.Errorf("Error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)
+			return diag.Errorf("error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)
 		}
 	}
 
@@ -99,7 +98,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	snippetID := d.Get("snippet_id").(string)

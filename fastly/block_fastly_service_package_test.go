@@ -40,7 +40,9 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -69,7 +71,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServiceVCLPackageConfig_New(name02, domain02),
+				Config: testAccServiceVCLPackageConfigNew(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &wp2),
@@ -87,29 +89,29 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDetail, computePackage *gofastly.Package) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		wp, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if computePackage.Metadata.Size != wp.Metadata.Size {
-			return fmt.Errorf("Package size mismatch, expected: %v, got: %v", computePackage.Metadata.Size, wp.Metadata.Size)
+			return fmt.Errorf("package size mismatch, expected: %v, got: %v", computePackage.Metadata.Size, wp.Metadata.Size)
 		}
 
 		if computePackage.Metadata.HashSum != wp.Metadata.HashSum {
-			return fmt.Errorf("Package hashsum mismatch, expected: %v, got: %v", computePackage.Metadata.HashSum, wp.Metadata.HashSum)
+			return fmt.Errorf("package hashsum mismatch, expected: %v, got: %v", computePackage.Metadata.HashSum, wp.Metadata.HashSum)
 		}
 
 		if computePackage.Metadata.Language != wp.Metadata.Language {
-			return fmt.Errorf("Package language mismatch, expected: %v, got: %v", computePackage.Metadata.Language, wp.Metadata.Language)
+			return fmt.Errorf("package language mismatch, expected: %v, got: %v", computePackage.Metadata.Language, wp.Metadata.Language)
 		}
 
 		if computePackage.Metadata.Name != wp.Metadata.Name {
-			return fmt.Errorf("Package name mismatch, expected: %v, got: %v", computePackage.Metadata.Name, wp.Metadata.Name)
+			return fmt.Errorf("package name mismatch, expected: %v, got: %v", computePackage.Metadata.Name, wp.Metadata.Name)
 		}
 
 		return nil
@@ -137,7 +139,7 @@ resource "fastly_service_compute" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLPackageConfig_New(name string, domain string) string {
+func testAccServiceVCLPackageConfigNew(name string, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "foo" {
   name = "%s"

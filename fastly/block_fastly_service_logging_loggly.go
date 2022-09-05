@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// LogglyServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type LogglyServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingLoggly returns a new resource.
 func NewServiceLoggingLoggly(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&LogglyServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingLoggly(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *LogglyServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *LogglyServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *LogglyServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -76,17 +82,16 @@ func (h *LogglyServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Loggly logging addition opts: %#v", opts)
 
-	if err := createLoggly(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createLoggly(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Loggly.
 	log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
@@ -95,7 +100,7 @@ func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Loggly logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Loggly logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenLoggly(logglyList)
@@ -111,6 +116,7 @@ func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// Update updates the resource.
 func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogglyInput{
 		ServiceID:      d.Id(),
@@ -147,15 +153,13 @@ func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *LogglyServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Loggly logging endpoint removal opts: %#v", opts)
 
-	if err := deleteLoggly(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteLoggly(conn, opts)
 }
 
 func createLoggly(conn *gofastly.Client, i *gofastly.CreateLogglyInput) error {

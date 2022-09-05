@@ -186,7 +186,9 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -228,17 +230,17 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(directorList) != len(directors) {
-			return fmt.Errorf("Director count mismatch, expected (%d), got (%d)", len(directors), len(directorList))
+			return fmt.Errorf("director count mismatch, expected (%d), got (%d)", len(directors), len(directorList))
 		}
 
 		var found int
@@ -253,7 +255,7 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 					sort.Strings(d.Backends)
 					sort.Strings(ld.Backends)
 					if !reflect.DeepEqual(d, ld) {
-						return fmt.Errorf("Bad match Director match, expected (%#v), got (%#v)", d, ld)
+						return fmt.Errorf("bad match Director match, expected (%#v), got (%#v)", d, ld)
 					}
 					found++
 				}
@@ -261,7 +263,7 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 		}
 
 		if found != len(directors) {
-			return fmt.Errorf("Error matching Director rules")
+			return fmt.Errorf("error matching Director rules")
 		}
 
 		return nil
@@ -270,14 +272,14 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 
 func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetail, directorBackends []*gofastly.DirectorBackend) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		expectedDirectorBackends := make(map[string][]string)
@@ -320,7 +322,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion, err)
+			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion, err)
 		}
 
 		var directorBackendList []*gofastly.DirectorBackend
@@ -340,7 +342,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		}
 
 		if len(directorBackends) != len(directorBackendList) {
-			return fmt.Errorf("Director count mismatch, expected (%d), got (%d)", len(directorBackends), len(directorBackendList))
+			return fmt.Errorf("director count mismatch, expected (%d), got (%d)", len(directorBackends), len(directorBackendList))
 		}
 
 		var found int
@@ -353,7 +355,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 					ldb.CreatedAt = nil
 					ldb.UpdatedAt = nil
 					if !reflect.DeepEqual(db, ldb) {
-						return fmt.Errorf("Bad Director Backend match, expected (%#v), got (%#v)", db, ldb)
+						return fmt.Errorf("bad Director Backend match, expected (%#v), got (%#v)", db, ldb)
 					}
 					found++
 				}
@@ -361,7 +363,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		}
 
 		if found != len(directorBackends) {
-			return fmt.Errorf("Error matching Director Backend rules, expected (%#v), got (%#v)", len(directorBackendList), found)
+			return fmt.Errorf("error matching Director Backend rules, expected (%#v), got (%#v)", len(directorBackendList), found)
 		}
 
 		return nil

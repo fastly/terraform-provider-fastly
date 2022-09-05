@@ -142,7 +142,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Datadog{
+	log1AfterUpdate := gofastly.Datadog{
 		ServiceVersion: 1,
 		Name:           "datadog-endpoint",
 		Token:          "t0k3n",
@@ -161,7 +161,9 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -178,10 +180,10 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLDatadogConfig_update(name, domain),
+				Config: testAccServiceVCLDatadogConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -205,7 +207,9 @@ func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -226,17 +230,17 @@ func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDetail, datadog []*gofastly.Datadog, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Datadog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Datadog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(datadogList) != len(datadog) {
-			return fmt.Errorf("Datadog List count mismatch, expected (%d), got (%d)", len(datadog), len(datadogList))
+			return fmt.Errorf("datadog List count mismatch, expected (%d), got (%d)", len(datadog), len(datadogList))
 		}
 
 		log.Printf("[DEBUG] datadogList = %#v\n", datadogList)
@@ -262,7 +266,7 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 					}
 
 					if diff := cmp.Diff(d, dl); diff != "" {
-						return fmt.Errorf("Bad match Datadog logging match: %s", diff)
+						return fmt.Errorf("bad match Datadog logging match: %s", diff)
 					}
 					found++
 				}
@@ -270,7 +274,7 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 		}
 
 		if found != len(datadog) {
-			return fmt.Errorf("Error matching Datadog Logging rules")
+			return fmt.Errorf("error matching Datadog Logging rules")
 		}
 
 		return nil
@@ -304,7 +308,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLDatadogConfig_update(name, domain string) string {
+func testAccServiceVCLDatadogConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

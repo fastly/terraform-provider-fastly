@@ -66,7 +66,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	log1_after_update := gofastly.Logshuttle{
+	log1AfterUpdate := gofastly.Logshuttle{
 		ServiceVersion: 1,
 		Name:           "logshuttle-endpoint",
 		Token:          "secret",
@@ -87,7 +87,9 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -104,10 +106,10 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLLogshuttleConfig_update(name, domain),
+				Config: testAccServiceVCLLogshuttleConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLLogshuttleAttributes(&service, []*gofastly.Logshuttle{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLLogshuttleAttributes(&service, []*gofastly.Logshuttle{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -131,7 +133,9 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -152,17 +156,17 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLLogshuttleAttributes(service *gofastly.ServiceDetail, logshuttle []*gofastly.Logshuttle, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Log Shuttle Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Log Shuttle Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(logshuttleList) != len(logshuttle) {
-			return fmt.Errorf("Log Shuttle List count mismatch, expected (%d), got (%d)", len(logshuttle), len(logshuttleList))
+			return fmt.Errorf("log Shuttle List count mismatch, expected (%d), got (%d)", len(logshuttle), len(logshuttleList))
 		}
 
 		log.Printf("[DEBUG] logshuttleList = %#v\n", logshuttleList)
@@ -187,7 +191,7 @@ func testAccCheckFastlyServiceVCLLogshuttleAttributes(service *gofastly.ServiceD
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match Log Shuttle logging match: %s", diff)
+						return fmt.Errorf("bad match Log Shuttle logging match: %s", diff)
 					}
 				}
 			}
@@ -224,7 +228,7 @@ resource "fastly_service_vcl" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLLogshuttleConfig_update(name, domain string) string {
+func testAccServiceVCLLogshuttleConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

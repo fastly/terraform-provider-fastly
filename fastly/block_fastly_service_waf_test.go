@@ -68,7 +68,9 @@ func TestAccFastlyServiceVCLWAFAdd(t *testing.T) {
 	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -89,7 +91,9 @@ func TestAccFastlyServiceVCLWAFAddAndRemove(t *testing.T) {
 	waf := composeWAF(condition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -125,7 +129,9 @@ func TestAccFastlyServiceVCLWAFUpdateResponse(t *testing.T) {
 	updatedWaf := composeWAF(condition, updateResponse)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -155,7 +161,9 @@ func TestAccFastlyServiceVCLWAFUpdateCondition(t *testing.T) {
 	updatedWaf := composeWAF(updatedCondition, response)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -179,7 +187,7 @@ func TestAccFastlyServiceVCLWAFUpdateCondition(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
 			FilterVersion: service.ActiveVersion.Number,
@@ -189,7 +197,7 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 		}
 
 		if len(resp.Items) > 0 {
-			return fmt.Errorf("[ERR] Error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, service.ID, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, service.ID, service.ActiveVersion.Number, err)
 		}
 		return nil
 	}
@@ -197,25 +205,25 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 
 func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, response, condition string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: service.ID,
 			FilterVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(resp.Items) != 1 {
-			return fmt.Errorf("[ERR] Expected result size (%d), got (%d)", 1, len(resp.Items))
+			return fmt.Errorf("expected result size (%d), got (%d)", 1, len(resp.Items))
 		}
 
 		if resp.Items[0].Response != response {
-			return fmt.Errorf("[ERR] WAF response mismatch, expected: %s, got: %#v", response, resp.Items[0].Response)
+			return fmt.Errorf("response mismatch, expected: %s, got: %#v", response, resp.Items[0].Response)
 		}
 
 		if resp.Items[0].PrefetchCondition != condition {
-			return fmt.Errorf("[ERR] WAF condition mismatch, expected: %#v, got: %#v", condition, resp.Items[0].PrefetchCondition)
+			return fmt.Errorf("condition mismatch, expected: %#v, got: %#v", condition, resp.Items[0].PrefetchCondition)
 		}
 
 		return nil

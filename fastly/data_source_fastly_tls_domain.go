@@ -42,7 +42,7 @@ func dataSourceFastlyTLSDomain() *schema.Resource {
 }
 
 func dataSourceFastlyTLSDomainsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	domain, err := findTLSDomain(conn, d)
 	if err != nil {
@@ -98,6 +98,7 @@ func findTLSDomain(conn *fastly.Client, d *schema.ResourceData) (*fastly.TLSDoma
 	return domains[0], nil
 }
 
+// TLSDomainPredicate determines if a domain should be filtered.
 type TLSDomainPredicate func(domain *fastly.TLSDomain) bool
 
 func listTLSDomains(conn *fastly.Client, filters ...TLSDomainPredicate) ([]*fastly.TLSDomain, error) {

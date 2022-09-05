@@ -165,7 +165,9 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -182,7 +184,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHeadersConfig_update(name, domainName1),
+				Config: testAccServiceVCLHeadersConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHeaderAttributes(&service, []*gofastly.Header{&log1, &log3, &log4}),
@@ -198,17 +200,17 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetail, headers []*gofastly.Header) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		headersList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Headers for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(headersList) != len(headers) {
-			return fmt.Errorf("Healthcheck List count mismatch, expected (%d), got (%d)", len(headers), len(headersList))
+			return fmt.Errorf("healthcheck List count mismatch, expected (%d), got (%d)", len(headers), len(headersList))
 		}
 
 		var found int
@@ -223,7 +225,7 @@ func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetai
 					lh.CreatedAt = nil
 					lh.UpdatedAt = nil
 					if !reflect.DeepEqual(h, lh) {
-						return fmt.Errorf("Bad match Header match, expected (%#v), got (%#v)", h, lh)
+						return fmt.Errorf("bad match Header match, expected (%#v), got (%#v)", h, lh)
 					}
 					found++
 				}
@@ -231,7 +233,7 @@ func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetai
 		}
 
 		if found != len(headers) {
-			return fmt.Errorf("Error matching Header rules")
+			return fmt.Errorf("error matching Header rules")
 		}
 
 		return nil
@@ -272,7 +274,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLHeadersConfig_update(name, domain string) string {
+func testAccServiceVCLHeadersConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

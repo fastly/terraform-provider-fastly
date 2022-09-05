@@ -49,7 +49,7 @@ func resourceServiceDictionaryItems() *schema.Resource {
 				ValidateDiagFunc: validateDictionaryItems(),
 				Elem:             schema.TypeString,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.HasChange("dictionary_id") && d.Get("manage_items") == false
+					return !d.HasChange("dictionary_id") && !d.Get("manage_items").(bool)
 				},
 			},
 		},
@@ -57,7 +57,7 @@ func resourceServiceDictionaryItems() *schema.Resource {
 }
 
 func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
@@ -76,7 +76,7 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 	// Process the batch operations
 	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return diag.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return diag.Errorf("error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, dictionaryID))
@@ -84,13 +84,12 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
 
 	if d.HasChange("items") {
-
 		var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
 		o, n := d.GetChange("items")
@@ -131,7 +130,7 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		// Process the batch operations
 		err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 		if err != nil {
-			return diag.Errorf("Error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+			return diag.Errorf("error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 		}
 	}
 
@@ -139,7 +138,7 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
@@ -157,7 +156,7 @@ func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceDat
 }
 
 func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
@@ -175,7 +174,7 @@ func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceD
 	// Process the batch operations
 	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return diag.Errorf("Error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return diag.Errorf("error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId("")
@@ -231,7 +230,6 @@ func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictiona
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil

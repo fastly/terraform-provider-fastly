@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// WAFServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type WAFServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceWAF returns a new resource.
 func NewServiceWAF(sa ServiceMetadata) ServiceAttributeDefinition {
 	return &WAFServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,6 +24,7 @@ func NewServiceWAF(sa ServiceMetadata) ServiceAttributeDefinition {
 	}
 }
 
+// Register add the attribute to the resource schema.
 func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:     schema.TypeList,
@@ -57,7 +60,8 @@ func (h *WAFServiceAttributeHandler) Register(s *schema.Resource) error {
 	return nil
 }
 
-func (h *WAFServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {
+// Process creates or updates the attribute against the Fastly API.
+func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	oldWAFVal, newWAFVal := d.GetChange(h.GetKey())
 
@@ -79,7 +83,6 @@ func (h *WAFServiceAttributeHandler) Process(ctx context.Context, d *schema.Reso
 			return err
 		}
 	} else if len(oldWAFVal.([]interface{})) > 0 {
-
 		wf := oldWAFVal.([]interface{})[0].(map[string]interface{})
 
 		opts := buildDeleteWAF(wf, serviceVersion)
@@ -96,7 +99,7 @@ func (h *WAFServiceAttributeHandler) Process(ctx context.Context, d *schema.Reso
 	return nil
 }
 
-func (h *WAFServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	// refresh WAFs
 	log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
 	wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{
@@ -104,7 +107,7 @@ func (h *WAFServiceAttributeHandler) Read(ctx context.Context, d *schema.Resourc
 		FilterVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 	}
 
 	waf := flattenWAFs(wafList.Items)
@@ -131,23 +134,23 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
 	}
 
 	w := wafList[0]
-	WAFMapString := map[string]interface{}{
+	m := map[string]interface{}{
 		"waf_id":             w.ID,
 		"response_object":    w.Response,
 		"prefetch_condition": w.PrefetchCondition,
 	}
 
 	// prune any empty values that come from the default string value in structs
-	for k, v := range WAFMapString {
+	for k, v := range m {
 		if v == "" {
-			delete(WAFMapString, k)
+			delete(m, k)
 		}
 	}
-	return append(wl, WAFMapString)
+	return append(wl, m)
 }
 
-func buildCreateWAF(WAFMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
-	df := WAFMap.(map[string]interface{})
+func buildCreateWAF(waf interface{}, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
+	df := waf.(map[string]interface{})
 
 	opts := gofastly.CreateWAFInput{
 		ServiceID:         serviceID,
@@ -159,8 +162,8 @@ func buildCreateWAF(WAFMap interface{}, serviceID string, serviceVersion int) *g
 	return &opts
 }
 
-func buildDeleteWAF(WAFMap interface{}, serviceVersion int) *gofastly.DeleteWAFInput {
-	df := WAFMap.(map[string]interface{})
+func buildDeleteWAF(waf interface{}, serviceVersion int) *gofastly.DeleteWAFInput {
+	df := waf.(map[string]interface{})
 
 	opts := gofastly.DeleteWAFInput{
 		ID:             df["waf_id"].(string),

@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceServiceAclEntries() *schema.Resource {
+func resourceServiceACLEntries() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceServiceAclEntriesCreate,
-		ReadContext:   resourceServiceAclEntriesRead,
-		UpdateContext: resourceServiceAclEntriesUpdate,
-		DeleteContext: resourceServiceAclEntriesDelete,
+		CreateContext: resourceServiceACLEntriesCreate,
+		ReadContext:   resourceServiceACLEntriesRead,
+		UpdateContext: resourceServiceACLEntriesUpdate,
+		DeleteContext: resourceServiceACLEntriesDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceACLEntriesImport,
 		},
@@ -48,7 +48,7 @@ func resourceServiceAclEntries() *schema.Resource {
 				Description: "ACL Entries",
 				MaxItems:    gofastly.MaximumACLSize,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.HasChange("acl_id") && d.Get("manage_entries") == false
+					return !d.HasChange("acl_id") && !d.Get("manage_entries").(bool)
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -85,8 +85,8 @@ func resourceServiceAclEntries() *schema.Resource {
 	}
 }
 
-func resourceServiceAclEntriesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -104,15 +104,15 @@ func resourceServiceAclEntriesCreate(ctx context.Context, d *schema.ResourceData
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return diag.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceID, aclID))
-	return resourceServiceAclEntriesRead(ctx, d, meta)
+	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -125,7 +125,7 @@ func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("entry", flattenAclEntries(aclEntries))
+	err = d.Set("entry", flattenACLEntries(aclEntries))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -133,8 +133,8 @@ func resourceServiceAclEntriesRead(_ context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func resourceServiceAclEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -142,8 +142,8 @@ func resourceServiceAclEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	batchACLEntries := []*gofastly.BatchACLEntry{}
 
 	if d.HasChange("entry") {
-
 		oe, ne := d.GetChange("entry")
+
 		if oe == nil {
 			oe = new(schema.Set)
 		}
@@ -197,14 +197,14 @@ func resourceServiceAclEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return diag.Errorf("Error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
-	return resourceServiceAclEntriesRead(ctx, d, meta)
+	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceAclEntriesDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
@@ -224,28 +224,28 @@ func resourceServiceAclEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	// Process the batch operations
 	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
-		return diag.Errorf("Error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
+		return diag.Errorf("error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func flattenAclEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface{} {
+func flattenACLEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface{} {
 	var resultList []map[string]interface{}
 
-	for _, currentAclEntry := range aclEntryList {
+	for _, currentACLEntry := range aclEntryList {
 		aes := map[string]interface{}{
-			"id":      currentAclEntry.ID,
-			"ip":      currentAclEntry.IP,
-			"negated": currentAclEntry.Negated,
-			"comment": currentAclEntry.Comment,
+			"id":      currentACLEntry.ID,
+			"ip":      currentACLEntry.IP,
+			"negated": currentACLEntry.Negated,
+			"comment": currentACLEntry.Comment,
 		}
 
 		// NOTE: Fastly API may return "null" or int value
 		// we only want to set the value if subnet is not null
-		if currentAclEntry.Subnet != nil {
-			aes["subnet"] = strconv.Itoa(*currentAclEntry.Subnet)
+		if currentACLEntry.Subnet != nil {
+			aes["subnet"] = strconv.Itoa(*currentACLEntry.Subnet)
 		}
 
 		for k, v := range aes {
@@ -300,7 +300,6 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil

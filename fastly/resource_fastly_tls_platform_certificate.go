@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -80,7 +81,7 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 }
 
 func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	input := &fastly.CreateBulkCertificateInput{
 		CertBlob:          d.Get("certificate_body").(string),
@@ -102,7 +103,7 @@ func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.R
 }
 
 func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
@@ -151,7 +152,7 @@ func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Resou
 }
 
 func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	_, err := conn.UpdateBulkCertificate(&fastly.UpdateBulkCertificateInput{
 		ID:                d.Id(),
@@ -167,7 +168,7 @@ func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceFastlyTLSPlatformCertificateDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	if err := conn.DeleteBulkCertificate(&fastly.DeleteBulkCertificateInput{
 		ID: d.Id(),

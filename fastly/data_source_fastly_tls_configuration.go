@@ -106,7 +106,7 @@ const (
 )
 
 func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var configuration *fastly.CustomTLSConfiguration
 
@@ -129,11 +129,11 @@ func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceD
 		}
 
 		if len(configurations) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(configurations) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please use a more specific search criteria and try again.")
+			return diag.Errorf("your query returned more than one result. Please use a more specific search criteria and try again.")
 		}
 
 		configuration = configurations[0]
@@ -197,7 +197,7 @@ func listTLSConfigurations(conn *fastly.Client, filters ...func(*fastly.CustomTL
 		if len(list) == 0 {
 			break
 		}
-		cursor += 1
+		cursor++
 
 		for _, configuration := range list {
 			if filterTLSConfiguration(configuration, filters) {
@@ -214,9 +214,9 @@ func dataSourceFastlyTLSConfigurationSetAttributes(configuration *fastly.CustomT
 		tlsService = tlsPlatformService
 	}
 
-	var DNSRecords []map[string]string
+	var dnsRecords []map[string]string
 	for _, record := range configuration.DNSRecords {
-		DNSRecords = append(DNSRecords, map[string]string{
+		dnsRecords = append(dnsRecords, map[string]string{
 			"record_type":  record.RecordType,
 			"record_value": record.ID,
 			"region":       record.Region,
@@ -245,10 +245,7 @@ func dataSourceFastlyTLSConfigurationSetAttributes(configuration *fastly.CustomT
 	if err := d.Set("updated_at", configuration.UpdatedAt.Format(time.RFC3339)); err != nil {
 		return err
 	}
-	if err := d.Set("dns_records", DNSRecords); err != nil {
-		return err
-	}
-	return nil
+	return d.Set("dns_records", dnsRecords)
 }
 
 func filterTLSConfiguration(config *fastly.CustomTLSConfiguration, filters []func(*fastly.CustomTLSConfiguration) bool) bool {

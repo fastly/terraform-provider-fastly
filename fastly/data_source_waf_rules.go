@@ -71,8 +71,7 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 }
 
 func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 	input := &gofastly.ListAllWAFRulesInput{
 		Include: "waf_rule_revisions",
 	}
@@ -136,14 +135,13 @@ func createFiltersHash(i *gofastly.ListAllWAFRulesInput) int {
 }
 
 func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]interface{} {
-
 	rl := make([]map[string]interface{}, len(ruleList))
+
 	if len(ruleList) == 0 {
 		return rl
 	}
 
 	for i, r := range ruleList {
-
 		latestRevisionNumber := 1
 		if latestRevision, err := determineLatestRuleRevision(r.Revisions); err == nil {
 			latestRevisionNumber = latestRevision.Revision
@@ -161,6 +159,7 @@ func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]interface{} {
 				delete(rulesMapString, k)
 			}
 		}
+
 		rl[i] = rulesMapString
 	}
 
@@ -168,7 +167,6 @@ func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]interface{} {
 }
 
 func determineLatestRuleRevision(revisions []*gofastly.WAFRuleRevision) (*gofastly.WAFRuleRevision, error) {
-
 	if len(revisions) == 0 {
 		return nil, errors.New("the list of WAFRuleRevisions cannot be empty")
 	}

@@ -17,7 +17,9 @@ func TestAccFastlyServiceAuthorization_basic(t *testing.T) {
 	permission2 := "purge_all"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceAuthorizationDestroy,
 		Steps: []resource.TestStep{
@@ -45,18 +47,17 @@ func testAccCheckServiceAuthorizationExists(n string, sa *gofastly.ServiceAuthor
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No User ID is set")
+			return fmt.Errorf("no User ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		latest, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
 			ID: rs.Primary.ID,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -73,12 +74,12 @@ func testAccCheckServiceAuthorizationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
 			ID: rs.Primary.ID,
 		})
 		if err == nil {
-			return fmt.Errorf("[WARN] Tried deleting service authorization (%s), but it still exists.", rs.Primary.ID)
+			return fmt.Errorf("tried deleting service authorization (%s), but it still exists", rs.Primary.ID)
 		}
 	}
 	return nil

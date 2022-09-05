@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// HTTPSLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type HTTPSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingHTTPS returns a new resource.
 func NewServiceLoggingHTTPS(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&HTTPSLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -23,8 +25,12 @@ func NewServiceLoggingHTTPS(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *HTTPSLoggingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -160,17 +166,16 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
 
-	if err := createHTTPS(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createHTTPS(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// refresh HTTPS
 	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
@@ -179,7 +184,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	hll := flattenHTTPS(httpsList)
@@ -195,6 +200,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 	return nil
 }
 
+// Update updates the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHTTPSInput{
 		ServiceID:      d.Id(),
@@ -267,15 +273,13 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
 
-	if err := deleteHTTPS(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteHTTPS(conn, opts)
 }
 
 func createHTTPS(conn *gofastly.Client, i *gofastly.CreateHTTPSInput) error {

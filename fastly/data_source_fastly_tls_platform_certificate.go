@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,7 +66,7 @@ func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 }
 
 func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
@@ -89,11 +90,11 @@ func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Res
 		}
 
 		if len(certificates) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again.")
 		}
 
 		if len(certificates) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change try a more specific search criteria and try again.")
+			return diag.Errorf("your query returned more than one result. Please change try a more specific search criteria and try again.")
 		}
 
 		certificate = certificates[0]
@@ -114,6 +115,7 @@ func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Res
 	return diags
 }
 
+// PlatformTLSCertificatePredicate determines if a certificate should be filtered.
 type PlatformTLSCertificatePredicate func(certificate *fastly.BulkCertificate) bool
 
 func getPlatformTLSCertificateFilters(d *schema.ResourceData) []PlatformTLSCertificatePredicate {
@@ -185,11 +187,7 @@ func dataSourceFastlyTLSPlatformCertificateSetAttributes(certificate *fastly.Bul
 	if err := d.Set("domains", domains); err != nil {
 		return err
 	}
-	if err := d.Set("configuration_id", certificate.Configurations[0].ID); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("configuration_id", certificate.Configurations[0].ID)
 }
 
 func filterPlatformTLSCertificate(config *fastly.BulkCertificate, filters []PlatformTLSCertificatePredicate) bool {

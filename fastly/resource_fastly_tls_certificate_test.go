@@ -30,7 +30,9 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 
 	resourceName := "fastly_tls_certificate.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -72,12 +74,14 @@ func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
 
 	resourceName := "fastly_tls_certificate.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckTLSCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTlsCertificateWithoutName(name, key, cert),
+				Config: testAccTLSCertificateWithoutName(name, key, cert),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", domain),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -102,7 +106,7 @@ func testAccTLSCertificateExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		_, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
 			ID: r.Primary.ID,
@@ -133,7 +137,7 @@ EOF
 `, keyName, key, certName, cert)
 }
 
-func testAccTlsCertificateWithoutName(keyName string, key string, cert string) string {
+func testAccTLSCertificateWithoutName(keyName string, key string, cert string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "key" {
   name = "%[1]s"
@@ -152,7 +156,7 @@ EOF
 }
 
 func testAccCheckTLSCertificateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*FastlyClient).conn
+	conn := testAccProvider.Meta().(*APIClient).conn
 
 	for _, r := range s.RootModule().Resources {
 		if r.Type != "fastly_tls_certificate" {

@@ -17,7 +17,9 @@ func TestAccFastlyDataSourceTLSDomain_basic(t *testing.T) {
 	require.NoError(t, err)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories:         testAccProviders,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{

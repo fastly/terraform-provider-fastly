@@ -2,13 +2,14 @@ package fastly
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 func init() {
@@ -31,7 +32,9 @@ func TestAccFastlyTLSActivation_basic(t *testing.T) {
 
 	resourceName := "fastly_tls_activation.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccFastlyTLSActivationCheckDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +99,7 @@ resource "fastly_tls_activation" "test" {
 
 func testAccFastlyTLSActivationCheckExists(resourceName string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 
 		r, ok := state.RootModule().Resources[resourceName]
 		if !ok {
@@ -115,7 +118,7 @@ func testAccFastlyTLSActivationCheckDestroy(state *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		activations, err := conn.ListTLSActivations(&fastly.ListTLSActivationsInput{})
 		if err != nil {
 			return fmt.Errorf(

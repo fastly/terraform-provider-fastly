@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// KinesisServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type KinesisServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingKinesis returns a new resource.
 func NewServiceLoggingKinesis(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&KinesisServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingKinesis(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *KinesisServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *KinesisServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -103,17 +109,16 @@ func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging addition opts: %#v", opts)
 
-	if err := createKinesis(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return createKinesis(conn, opts)
 }
 
+// Read refreshes the resource.
 func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	// Refresh Kinesis.
 	log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
@@ -122,7 +127,7 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	ell := flattenKinesis(kinesisList)
@@ -138,6 +143,7 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	return nil
 }
 
+// Update updates the resource.
 func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateKinesisInput{
 		ServiceID:      d.Id(),
@@ -186,15 +192,13 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *KinesisServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging endpoint removal opts: %#v", opts)
 
-	if err := deleteKinesis(conn, opts); err != nil {
-		return err
-	}
-	return nil
+	return deleteKinesis(conn, opts)
 }
 
 func createKinesis(conn *gofastly.Client, i *gofastly.CreateKinesisInput) error {

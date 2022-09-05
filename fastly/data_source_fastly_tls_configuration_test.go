@@ -9,11 +9,13 @@ import (
 func TestAccFastlyDataSourceTLSConfiguration_basic(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceTLSConfiguration_basic,
+				Config: testAccFastlyDataSourceTLSConfigurationBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
@@ -30,7 +32,7 @@ func TestAccFastlyDataSourceTLSConfiguration_basic(t *testing.T) {
 	})
 }
 
-const testAccFastlyDataSourceTLSConfiguration_basic = `
+const testAccFastlyDataSourceTLSConfigurationBasic = `
 data "fastly_tls_configuration" "subject" {
   default = true
   tls_service = "CUSTOM"
@@ -40,11 +42,13 @@ data "fastly_tls_configuration" "subject" {
 func TestAccFastlyDataSourceTLSConfiguration_withIDLookup(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceTLSConfiguration_withIDLookup,
+				Config: testAccFastlyDataSourceTLSConfigurationWithIDLookup,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "name", "data.fastly_tls_configuration.default", "name"),
 				),
@@ -53,7 +57,7 @@ func TestAccFastlyDataSourceTLSConfiguration_withIDLookup(t *testing.T) {
 	})
 }
 
-const testAccFastlyDataSourceTLSConfiguration_withIDLookup = `
+const testAccFastlyDataSourceTLSConfigurationWithIDLookup = `
 data "fastly_tls_configuration" "default" {
   default = true
 }

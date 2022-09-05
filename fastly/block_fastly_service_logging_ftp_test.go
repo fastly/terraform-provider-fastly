@@ -91,7 +91,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 		CompressionCodec: "zstd",
 	}
 
-	log1_after_update := gofastly.FTP{
+	log1AfterUpdate := gofastly.FTP{
 		ServiceVersion:  1,
 		Name:            "ftp-endpoint",
 		Address:         "ftp2.example.com",
@@ -128,7 +128,9 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -145,10 +147,10 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLFTPConfig_update(name, domain),
+				Config: testAccServiceVCLFTPConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLFTPAttributes(&service, []*gofastly.FTP{&log1_after_update, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLFTPAttributes(&service, []*gofastly.FTP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -179,7 +181,9 @@ func TestAccFastlyServiceVCL_logging_ftp_basic_compute(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -200,17 +204,17 @@ func TestAccFastlyServiceVCL_logging_ftp_basic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, ftps []*gofastly.FTP, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up FTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up FTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(ftpList) != len(ftps) {
-			return fmt.Errorf("FTP List count mismatch, expected (%d), got (%d)", len(ftps), len(ftpList))
+			return fmt.Errorf("ftp List count mismatch, expected (%d), got (%d)", len(ftps), len(ftpList))
 		}
 
 		log.Printf("[DEBUG] ftpList = %#v\n", ftpList)
@@ -237,7 +241,7 @@ func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, 
 					}
 
 					if diff := cmp.Diff(e, el); diff != "" {
-						return fmt.Errorf("Bad match FTP logging match: %s", diff)
+						return fmt.Errorf("bad match FTP logging match: %s", diff)
 					}
 					found++
 				}
@@ -245,7 +249,7 @@ func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, 
 		}
 
 		if found != len(ftps) {
-			return fmt.Errorf("Error matching FTP Logging rules")
+			return fmt.Errorf("error matching FTP Logging rules")
 		}
 
 		return nil
@@ -322,7 +326,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLFTPConfig_update(name, domain string) string {
+func testAccServiceVCLFTPConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -95,7 +95,9 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +114,7 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLHealthCheckConfig_update(name, domainName),
+				Config: testAccServiceVCLHealthCheckConfigUpdate(name, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHealthCheckAttributes(&service, []*gofastly.HealthCheck{&log1, &log2}),
@@ -128,17 +130,17 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.ServiceDetail, healthchecks []*gofastly.HealthCheck) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up Healthcheck for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Healthcheck for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(healthcheckList) != len(healthchecks) {
-			return fmt.Errorf("Healthcheck List count mismatch, expected (%d), got (%d)", len(healthchecks), len(healthcheckList))
+			return fmt.Errorf("healthcheck List count mismatch, expected (%d), got (%d)", len(healthchecks), len(healthcheckList))
 		}
 
 		var found int
@@ -153,7 +155,7 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 					lh.CreatedAt = nil
 					lh.UpdatedAt = nil
 					if !reflect.DeepEqual(h, lh) {
-						return fmt.Errorf("Bad match Healthcheck match, expected (%#v), got (%#v)", h, lh)
+						return fmt.Errorf("bad match Healthcheck match, expected (%#v), got (%#v)", h, lh)
 					}
 					found++
 				}
@@ -161,7 +163,7 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 		}
 
 		if found != len(healthchecks) {
-			return fmt.Errorf("Error matching Healthcheck rules")
+			return fmt.Errorf("error matching Healthcheck rules")
 		}
 
 		return nil
@@ -201,7 +203,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
-func testAccServiceVCLHealthCheckConfig_update(name, domain string) string {
+func testAccServiceVCLHealthCheckConfigUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

@@ -2,8 +2,9 @@ package fastly
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,7 +68,7 @@ func dataSourceFastlyTLSSubscription() *schema.Resource {
 }
 
 func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*FastlyClient).conn
+	conn := meta.(*APIClient).conn
 
 	var subscription *fastly.TLSSubscription
 
@@ -87,11 +88,11 @@ func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceDa
 		}
 
 		if len(subscriptions) == 0 {
-			return diag.Errorf("Your query returned no results. Please change your search criteria and try again")
+			return diag.Errorf("your query returned no results. Please change your search criteria and try again")
 		}
 
 		if len(subscriptions) > 1 {
-			return diag.Errorf("Your query returned more than one result. Please change to a more specific search criteria")
+			return diag.Errorf("your query returned more than one result. Please change to a more specific search criteria")
 		}
 
 		subscription = subscriptions[0]
@@ -105,6 +106,7 @@ func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceDa
 	return nil
 }
 
+// TLSSubscriptionPredicate determines if a subscription should be filtered.
 type TLSSubscriptionPredicate func(*fastly.TLSSubscription) bool
 
 func getTLSSubscriptionFilters(d *schema.ResourceData) []TLSSubscriptionPredicate {

@@ -49,7 +49,9 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
 		ProviderFactories: testAccProviders,
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
@@ -66,7 +68,7 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLVCLConfig_update(name, domainName1, backendName),
+				Config: testAccServiceVCLVCLConfigUpdate(name, domainName1, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLVCLAttributes(&service, name, 2),
@@ -83,20 +85,20 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, name string, vclCount int) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
-			return fmt.Errorf("Bad name, expected (%s), got (%s)", name, service.Name)
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
 		}
 
-		conn := testAccProvider.Meta().(*FastlyClient).conn
+		conn := testAccProvider.Meta().(*APIClient).conn
 		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
 		if err != nil {
-			return fmt.Errorf("[ERR] Error looking up VCL for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up VCL for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
 		if len(vclList) != vclCount {
-			return fmt.Errorf("VCL count mismatch, expected (%d), got (%d)", vclCount, len(vclList))
+			return fmt.Errorf("vcl count mismatch, expected (%d), got (%d)", vclCount, len(vclList))
 		}
 
 		return nil
@@ -143,7 +145,7 @@ EOF
 }`, name, domain, backendName)
 }
 
-func testAccServiceVCLVCLConfig_update(name, domain, backendName string) string {
+func testAccServiceVCLVCLConfigUpdate(name, domain, backendName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"

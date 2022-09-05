@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// GCSLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type GCSLoggingServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingGCS returns a new resource.
 func NewServiceLoggingGCS(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&GCSLoggingServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingGCS(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *GCSLoggingServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *GCSLoggingServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -126,6 +132,7 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateGCSInput{
@@ -154,17 +161,18 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
-	GCSList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
+	gs, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
-	gcsl := flattenGCS(GCSList)
+	gcsl := flattenGCS(gs)
 
 	for _, element := range gcsl {
 		h.pruneVCLLoggingAttributes(element)
@@ -177,6 +185,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 	return nil
 }
 
+// Update updates the resource.
 func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateGCSInput{
 		ServiceID:      d.Id(),
@@ -237,6 +246,7 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteGCSInput{
 		ServiceID:      d.Id(),
@@ -257,10 +267,10 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.
 }
 
 func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
-	var GCSList []map[string]interface{}
+	var sm []map[string]interface{}
 	for _, currentGCS := range gcsList {
 		// Convert gcs to a map for saving to state.
-		GCSMapString := map[string]interface{}{
+		m := map[string]interface{}{
 			"name":               currentGCS.Name,
 			"user":               currentGCS.User,
 			"bucket_name":        currentGCS.Bucket,
@@ -278,14 +288,14 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range GCSMapString {
+		for k, v := range m {
 			if v == "" {
-				delete(GCSMapString, k)
+				delete(m, k)
 			}
 		}
 
-		GCSList = append(GCSList, GCSMapString)
+		sm = append(sm, m)
 	}
 
-	return GCSList
+	return sm
 }

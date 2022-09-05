@@ -9,10 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// SplunkServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
 type SplunkServiceAttributeHandler struct {
 	*DefaultServiceAttributeHandler
 }
 
+// NewServiceLoggingSplunk returns a new resource.
 func NewServiceLoggingSplunk(sa ServiceMetadata) ServiceAttributeDefinition {
 	return ToServiceAttributeDefinition(&SplunkServiceAttributeHandler{
 		&DefaultServiceAttributeHandler{
@@ -22,8 +24,12 @@ func NewServiceLoggingSplunk(sa ServiceMetadata) ServiceAttributeDefinition {
 	})
 }
 
-func (h *SplunkServiceAttributeHandler) Key() string { return h.key }
+// Key returns the resource key.
+func (h *SplunkServiceAttributeHandler) Key() string {
+	return h.key
+}
 
+// GetSchema returns the resource schema.
 func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		// Required fields
@@ -113,6 +119,7 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 }
 
+// Create creates the resource.
 func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
@@ -140,6 +147,7 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Read refreshes the resource.
 func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
 	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
@@ -147,7 +155,7 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		ServiceVersion: serviceVersion,
 	})
 	if err != nil {
-		return fmt.Errorf("[ERR] Error looking up Splunks for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		return fmt.Errorf("error looking up Splunks for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 	}
 
 	spl := flattenSplunks(splunkList)
@@ -162,6 +170,7 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// Update updates the resource.
 func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSplunkInput{
 		ServiceID:      d.Id(),
@@ -222,6 +231,7 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// Delete deletes the resource.
 func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSplunkInput{
 		ServiceID:      d.Id(),

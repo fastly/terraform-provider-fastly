@@ -1,4 +1,16 @@
-## 2.3.0 (Unreleased)
+## 2.4.0 (Unreleased)
+
+## 2.3.0 (September 5, 2022)
+
+ENHANCEMENTS:
+
+* Allow services to be reused [#578](https://github.com/fastly/terraform-provider-fastly/pull/578)
+* Static analysis refactoring [#581](https://github.com/fastly/terraform-provider-fastly/pull/581)
+* Revive linter refactoring [#584](https://github.com/fastly/terraform-provider-fastly/pull/584)
+
+DOCUMENTATION:
+
+* Document updating `fastly_tls_certificate` [#582](https://github.com/fastly/terraform-provider-fastly/pull/582)
 
 ## 2.2.1 (July 21, 2022)
 
@@ -211,7 +223,7 @@ ENHANCEMENTS:
 * Upgrade to Go 1.16 to allow `darwin/arm64` builds [#447](https://github.com/fastly/terraform-provider-fastly/pull/447)
 * Replace `ActivateVCL` call with `Main` field on `CreateVCL` [#446](https://github.com/fastly/terraform-provider-fastly/pull/446)
 * Add limitations for `write_only` dictionaries [#445](https://github.com/fastly/terraform-provider-fastly/pull/445)
-* Replace `StateFunc` with `ValidateDiagFunc` [#439](https://github.com/fastly/terraform-provider-fastly/pull/439) 
+* Replace `StateFunc` with `ValidateDiagFunc` [#439](https://github.com/fastly/terraform-provider-fastly/pull/439)
 
 BUG FIXES:
 

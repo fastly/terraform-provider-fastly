@@ -742,7 +742,7 @@ func TestAccFastlyServiceVCL_brokenSnippet(t *testing.T) {
 				Config: testAccServiceVCLConfigBrokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {
                        set req.url = "/anything" req.url
                      }`),
-				ExpectError: regexp.MustCompile(`Invalid configuration for Fastly Service`),
+				ExpectError: regexp.MustCompile(`invalid configuration for Fastly Service`),
 			},
 			{
 				Config: testAccServiceVCLConfigBrokenSnippet(name, domain, "backend2", `if (req.url !~ "^/anything") {

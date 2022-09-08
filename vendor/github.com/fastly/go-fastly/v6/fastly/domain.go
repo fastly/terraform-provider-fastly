@@ -3,7 +3,7 @@ package fastly
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"sort"
 	"time"
@@ -55,6 +55,7 @@ func (c *Client) ListDomains(i *ListDomainsInput) ([]*Domain, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var ds []*Domain
 	if err := decodeBodyMap(resp.Body, &ds); err != nil {
@@ -94,6 +95,7 @@ func (c *Client) CreateDomain(i *CreateDomainInput) (*Domain, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var d *Domain
 	if err := decodeBodyMap(resp.Body, &d); err != nil {
@@ -133,6 +135,7 @@ func (c *Client) GetDomain(i *GetDomainInput) (*Domain, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var d *Domain
 	if err := decodeBodyMap(resp.Body, &d); err != nil {
@@ -183,6 +186,7 @@ func (c *Client) UpdateDomain(i *UpdateDomainInput) (*Domain, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var d *Domain
 	if err := decodeBodyMap(resp.Body, &d); err != nil {
@@ -258,7 +262,7 @@ func (c *Client) ValidateDomain(i *ValidateDomainInput) (*DomainValidationResult
 	}
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +349,7 @@ func (c *Client) ValidateAllDomains(i *ValidateAllDomainsInput) (results []*Doma
 	}
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

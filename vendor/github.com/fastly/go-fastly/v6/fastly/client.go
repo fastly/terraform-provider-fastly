@@ -48,7 +48,7 @@ const DefaultRealtimeStatsEndpoint = "https://rt.fastly.com"
 var ProjectURL = "github.com/fastly/go-fastly"
 
 // ProjectVersion is the version of this library.
-var ProjectVersion = "6.4.3"
+var ProjectVersion = "6.5.2"
 
 // UserAgent is the user agent for this particular client.
 var UserAgent = fmt.Sprintf("FastlyGo/%s (+%s; %s)",
@@ -466,10 +466,7 @@ func checkResp(resp *http.Response, err error) (*http.Response, error) {
 }
 
 // decodeBodyMap is used to decode an HTTP response body into a mapstructure struct.
-// It closes `body`.
-func decodeBodyMap(body io.ReadCloser, out interface{}) error {
-	defer body.Close()
-
+func decodeBodyMap(body io.Reader, out interface{}) error {
 	var parsed interface{}
 	dec := json.NewDecoder(body)
 	if err := dec.Decode(&parsed); err != nil {

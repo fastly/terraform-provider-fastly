@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -77,15 +76,15 @@ func (c *Client) GetAPIEvents(i *GetAPIEventsFilterInput) (GetAPIEventsResponse,
 		Links:  EventsPaginationInfo{},
 	}
 
-	var path = "/events"
+	path := "/events"
 
 	filters := &RequestOptions{Params: i.formatEventFilters()}
 
 	resp, err := c.Get(path, filters)
-
 	if err != nil {
 		return eventsResponse, err
 	}
+	defer resp.Body.Close()
 
 	err = c.interpretAPIEventsPage(&eventsResponse, i.PageNumber, resp)
 	// NOTE: It's possible for eventsResponse to be partially completed before an error
@@ -112,6 +111,7 @@ func (c *Client) GetAPIEvent(i *GetAPIEventInput) (*Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var event Event
 	if err := jsonapi.UnmarshalPayload(resp.Body, &event); err != nil {
@@ -151,6 +151,7 @@ func (c *Client) interpretAPIEventsPage(answer *GetAPIEventsResponse, pageNum in
 			if err != nil {
 				return err
 			}
+			defer resp.Body.Close()
 			c.interpretAPIEventsPage(answer, pageNum, resp)
 		}
 		return nil
@@ -165,7 +166,7 @@ func getEventsPages(body io.Reader) (EventsPaginationInfo, io.Reader, error) {
 	var buf bytes.Buffer
 	tee := io.TeeReader(body, &buf)
 
-	bodyBytes, err := ioutil.ReadAll(tee)
+	bodyBytes, err := io.ReadAll(tee)
 	if err != nil {
 		return EventsPaginationInfo{}, nil, err
 	}
@@ -201,7 +202,6 @@ func (i *GetAPIEventsFilterInput) formatEventFilters() map[string]string {
 				result[key] = strconv.Itoa(value.(int))
 			}
 		}
-
 	}
 	return result
 }

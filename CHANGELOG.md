@@ -1,5 +1,11 @@
 ## 2.4.0 (Unreleased)
 
+## 2.3.1 (September 12, 2022)
+
+BUG FIXES:
+
+* Bump dependencies to fix Dependabot vulnerability [#586](https://github.com/fastly/terraform-provider-fastly/pull/586)
+
 ## 2.3.0 (September 5, 2022)
 
 ENHANCEMENTS:

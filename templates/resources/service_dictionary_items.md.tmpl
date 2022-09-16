@@ -3,15 +3,12 @@ layout: "fastly"
 page_title: "Fastly: service_dictionary_items"
 sidebar_current: "docs-fastly-resource-service-dictionary-items"
 description: |-
-  Provides a grouping of Fastly dictionary items that can be applied to a service. 
+  Provides a grouping of Fastly dictionary items that can be applied to a service.
 ---
 
 # fastly_service_dictionary_items
 
 Defines a map of Fastly dictionary items that can be used to populate a service dictionary.  This resource will populate a dictionary with the items and will track their state.
-
-
-~> **Warning:** Terraform will take precedence over any changes you make in the UI or API. Such changes are likely to be reversed if you run Terraform again.  
 
 ~> **Note:** By default the Terraform provider allows you to externally manage the items via API or UI.
 If you wish to apply your changes in the HCL, then you should explicitly set the `manage_items` attribute. An example of this configuration is provided below.
@@ -78,7 +75,7 @@ The resource ID is a combined value of the `service_id` and `dictionary_id` sepa
 
 {{ codefile "sh" "examples/resources/service_dictionary_items_import_with_id.txt" }}
 
-If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.  
+If Terraform is already managing remote dictionary items against a resource being imported then the user will be asked to remove it from the existing Terraform state.
 The following is an example of the Terraform state command to remove the resource named `fastly_service_dictionary_items.items` from the Terraform state file.
 
 {{ codefile "sh" "examples/resources/service_dictionary_items_import_from_state.txt" }}

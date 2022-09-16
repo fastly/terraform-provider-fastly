@@ -8,9 +8,7 @@ description: |-
 
 # fastly_service_dynamic_snippet_content
 
-Defines content that represents blocks of VCL logic that is inserted into your service.  This resource will populate the content of a dynamic snippet and allow it to be manged without the creation of a new service verison. 
- 
-~> **Warning:** Terraform will take precedence over any changes you make through the API. Such changes are likely to be reversed if you run Terraform again.  
+Defines content that represents blocks of VCL logic that is inserted into your service.  This resource will populate the content of a dynamic snippet and allow it to be manged without the creation of a new service verison.
 
 ~> **Note:** By default the Terraform provider allows you to externally manage the snippets via API or UI.
 If you wish to apply your changes in the HCL, then you should explicitly set the `manage_snippets` attribute. An example of this configuration is provided below.

@@ -1,5 +1,15 @@
 ## 2.4.0 (Unreleased)
 
+## 2.3.2 (September 20, 2022)
+
+ENHANCEMENTS:
+
+* Support for additional S3 storage classes [#589](https://github.com/fastly/terraform-provider-fastly/pull/589)
+
+DOCUMENTATION:
+
+* Remove inconsistent 'warning' message [#591](https://github.com/fastly/terraform-provider-fastly/pull/591)
+
 ## 2.3.1 (September 12, 2022)
 
 BUG FIXES:

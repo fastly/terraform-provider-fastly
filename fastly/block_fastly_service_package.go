@@ -34,10 +34,16 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		MinItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"filename": {
+				"url": {
 					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The path to the Wasm deployment package within your local filesystem",
+					Optional:    true,
+					Description: "The URL to download the Wasm deployment package.",
+				},
+				"filename": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The path to the Wasm deployment package within your local filesystem",
+					ConflictsWith: []string{"url"},
 				},
 				// sha512 hash of the file
 				"source_code_hash": {
@@ -45,7 +51,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 					Optional:    true,
 					Computed:    true,
 					Description: `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
-				},
+				}, // TODO: How to handle `source_code_hash` for a url attribute?
 			},
 		},
 	}
@@ -58,6 +64,10 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 		// Schema guarantees one package block.
 		pkg := v.([]interface{})[0].(map[string]interface{})
 		packageFilename := pkg["filename"].(string)
+
+		// TODO: figure out how to switch between filename and url attributes.
+
+		// TODO: https://stackoverflow.com/questions/11692860/how-can-i-efficiently-download-a-large-file-using-go
 
 		err := updatePackage(conn, &gofastly.UpdatePackageInput{
 			ServiceID:      d.Id(),
@@ -87,6 +97,8 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		}
 		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
+
+	// TODO: figure out what the structure for package.0.url is.
 
 	filename := d.Get("package.0.filename").(string)
 	wp := flattenPackage(pkg, filename)

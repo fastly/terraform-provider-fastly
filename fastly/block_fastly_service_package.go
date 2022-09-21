@@ -2,8 +2,13 @@ package fastly
 
 import (
 	"context"
+	"crypto/sha512"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"os"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,23 +40,23 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"url": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The URL to download the Wasm deployment package.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The URL to download the Wasm deployment package from.",
+					ExactlyOneOf: []string{"url", "filename"},
 				},
 				"filename": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The path to the Wasm deployment package within your local filesystem",
-					ConflictsWith: []string{"url"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The path to the Wasm deployment package within your local filesystem",
+					ExactlyOneOf: []string{"filename", "url"},
 				},
-				// sha512 hash of the file
 				"source_code_hash": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Computed:    true,
 					Description: `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
-				}, // TODO: How to handle `source_code_hash` for a url attribute?
+				},
 			},
 		},
 	}
@@ -63,11 +68,40 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		// Schema guarantees one package block.
 		pkg := v.([]interface{})[0].(map[string]interface{})
+
+		packageURL := pkg["url"].(string)
 		packageFilename := pkg["filename"].(string)
 
-		// TODO: figure out how to switch between filename and url attributes.
+		if packageURL != "" {
+			f, err := os.CreateTemp("", "package-*")
+			if err != nil {
+				return fmt.Errorf("unable to create a temporary file to copy package data into: %w", err)
+			}
+			defer os.Remove(f.Name())
 
-		// TODO: https://stackoverflow.com/questions/11692860/how-can-i-efficiently-download-a-large-file-using-go
+			resp, err := http.Get(packageURL)
+			if err != nil {
+				return fmt.Errorf("unable to download package '%s': %w", packageURL, err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				return fmt.Errorf("bad package response '%s': %s", packageURL, resp.Status)
+			}
+
+			_, err = io.Copy(f, resp.Body)
+			if err != nil {
+				return fmt.Errorf("unable copy package into temporary file: %w", err)
+			}
+
+			digest, err := fileSHA512(f.Name())
+			if err != nil {
+				return fmt.Errorf("unable to hash package content: %w", err)
+			}
+			d.Set("source_code_hash", digest)
+
+			packageFilename = f.Name()
+		}
 
 		err := updatePackage(conn, &gofastly.UpdatePackageInput{
 			ServiceID:      d.Id(),
@@ -98,7 +132,7 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 	}
 
-	// TODO: figure out what the structure for package.0.url is.
+	// TODO: figure out what to do here? switch between url/filename like Process() method does?
 
 	filename := d.Get("package.0.filename").(string)
 	wp := flattenPackage(pkg, filename)
@@ -124,4 +158,27 @@ func flattenPackage(pkg *gofastly.Package, filename string) []map[string]interfa
 	// Convert Package to a map for saving to state.
 	pa = append(pa, p)
 	return pa
+}
+
+// fileSHA512 reads the path content, hashes it with sha512 and hex encodes.
+//
+// The implementation is copied from HashiCorps internal implementation for the
+// filesha512() function https://www.terraform.io/language/functions/filesha512:
+//
+// https://github.com/hashicorp/terraform/blob/31fc22a0d243a53f306eb41adb57b867aa170041/internal/lang/funcs/crypto.go#L236
+// https://github.com/hashicorp/terraform/blob/31fc22a0d243a53f306eb41adb57b867aa170041/internal/lang/funcs/crypto.go#L214
+func fileSHA512(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha512.New()
+	_, err = io.Copy(h, f)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

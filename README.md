@@ -91,6 +91,20 @@ You will then be able to set breakpoints and trace the provider's execution usin
 
 The implementation for setting up debug mode presumes Terraform 0.13.x is being used. If you're using Terraform 0.12.x you'll need to manually modify the value assigned to `TF_REATTACH_PROVIDERS` so that the key `"fastly/fastly"` becomes `"registry.terraform.io/-/fastly"`. See HashiCorp's ["Support for Debuggable Provider Binaries"](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html#support-for-debuggable-provider-binaries) for more details.
 
+### Summary
+
+```
+(first shell)  dlv debug . --headless -- --debug
+(second shell) dlv connect <output from first shell>
+               continue
+               <Ctrl-c>
+               break fastly/block_fastly_service_package.go:123
+(third shell)  export TF_REATTACH_PROVIDERS="..."
+               terraform apply
+(second shell) continue (do your step debugging)
+               <Ctrl-c> (then run another terraform command from third shell)
+```
+
 ## Testing
 
 In order to test the provider, you can simply run `make test`.

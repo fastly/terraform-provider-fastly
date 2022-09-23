@@ -20,6 +20,11 @@ TEST_PARALLELISM?=4
 
 default: build
 
+debug:
+	dlv debug . --headless -- --debug
+	@echo "In a separate shell execute: dlv connect 127.0.0.1:<port_number> (see output above)"
+	@echo "A summary of debug steps can be found here: https://github.com/fastly/terraform-provider-fastly#summary"
+
 build:
 	go build -o bin/terraform-provider-$(PKG_NAME)_$(VERSION) -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(VERSION)"
 	@sh -c "'$(CURDIR)/scripts/generate-dev-overrides.sh'"

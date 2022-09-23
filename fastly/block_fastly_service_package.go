@@ -32,6 +32,8 @@ func NewServicePackage(sa ServiceMetadata) ServiceAttributeDefinition {
 // Register add the attribute to the resource schema.
 func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
+		// schema.TypeList has an issue with ConflictsWith:
+		// https://github.com/hashicorp/terraform-plugin-sdk/issues/71
 		Type:        schema.TypeList,
 		Required:    true,
 		Description: "The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/)",
@@ -40,16 +42,16 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"url": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "The URL to download the Wasm deployment package from.",
-					ExactlyOneOf: []string{"url", "filename"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The URL to download the Wasm deployment package from.",
+					ConflictsWith: []string{"package.0.filename"},
 				},
 				"filename": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "The path to the Wasm deployment package within your local filesystem",
-					ExactlyOneOf: []string{"filename", "url"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The path to the Wasm deployment package within your local filesystem",
+					ConflictsWith: []string{"package.0.url"},
 				},
 				"source_code_hash": {
 					Type:        schema.TypeString,
@@ -69,14 +71,19 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 		// Schema guarantees one package block.
 		pkg := v.([]interface{})[0].(map[string]interface{})
 
+		// NOTE: The schema.ResourceData now reflects the proposed diff plan.
+		// This means the package data will show as if the diff has been applied.
+		// e.g. if you removed the "filename" attribute, it may still show in the
+		// statefile as having a value but here it will show as an empty string.
 		packageURL := pkg["url"].(string)
 		packageFilename := pkg["filename"].(string)
 
 		if packageURL != "" {
-			f, err := os.CreateTemp("", "package-*")
+			f, err := os.CreateTemp("", "package-*.tar.gz")
 			if err != nil {
 				return fmt.Errorf("unable to create a temporary file to copy package data into: %w", err)
 			}
+			log.Printf("[DEBUG] Temp Package file %s", f.Name())
 			defer os.Remove(f.Name())
 
 			resp, err := http.Get(packageURL)
@@ -88,6 +95,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			if resp.StatusCode != http.StatusOK {
 				return fmt.Errorf("bad package response '%s': %s", packageURL, resp.Status)
 			}
+			log.Printf("[DEBUG] Downloaded Package file from %s", packageURL)
 
 			_, err = io.Copy(f, resp.Body)
 			if err != nil {
@@ -98,7 +106,17 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			if err != nil {
 				return fmt.Errorf("unable to hash package content: %w", err)
 			}
-			d.Set("source_code_hash", digest)
+			log.Printf("[DEBUG] Package hash digest %s", digest)
+			sch := d.Get("source_code_hash")
+			if sch != nil {
+				v := sch.(string)
+				fmt.Printf("current source_code_hash: %+v\n", v)
+			}
+			wp := flattenPackage(digest, packageFilename, packageURL)
+			key := h.GetKey()
+			if err := d.Set(key, wp); err != nil {
+				log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
+			}
 
 			packageFilename = f.Name()
 		}
@@ -118,26 +136,31 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 
 // Read refreshes the attribute state against the Fastly API.
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
+	id := d.Id()
+	log.Printf("[DEBUG] Refreshing package for Service ID %s", id)
 	pkg, err := conn.GetPackage(&gofastly.GetPackageInput{
-		ServiceID:      d.Id(),
+		ServiceID:      id,
 		ServiceVersion: s.ActiveVersion.Number,
 	})
 	if err != nil {
 		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
-			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", id, s.ActiveVersion.Number, err)
 			d.Set(h.GetKey(), nil)
 			return nil
 		}
-		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", id, s.ActiveVersion.Number, err)
 	}
 
-	// TODO: figure out what to do here? switch between url/filename like Process() method does?
-
+	// d.Get() is pulling the data from the state file.
+	// TODO: figure out why we don't use GetKey and am using hardcoded 'package'
+	// name because if that key ever changes the code will break. we should
+	// interpolate the value instead.
+	packageURL := d.Get("package.0.url").(string)
 	filename := d.Get("package.0.filename").(string)
-	wp := flattenPackage(pkg, filename)
-	if err := d.Set(h.GetKey(), wp); err != nil {
-		log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
+	wp := flattenPackage(pkg.Metadata.HashSum, filename, packageURL)
+	key := h.GetKey()
+	if err := d.Set(key, wp); err != nil {
+		log.Printf("[WARN] Error setting Package for (%s): %s", id, err)
 	}
 
 	return nil
@@ -148,11 +171,12 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 	return err
 }
 
-func flattenPackage(pkg *gofastly.Package, filename string) []map[string]interface{} {
+func flattenPackage(hashSum, filename, packageURL string) []map[string]interface{} {
 	var pa []map[string]interface{}
 	p := map[string]interface{}{
-		"source_code_hash": pkg.Metadata.HashSum,
+		"source_code_hash": hashSum,
 		"filename":         filename,
+		"url":              packageURL,
 	}
 
 	// Convert Package to a map for saving to state.

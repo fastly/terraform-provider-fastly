@@ -210,6 +210,7 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	if err := d.Set(key, wp); err != nil {
 		log.Printf("[WARN] Error setting Package for (%s): %s", id, err)
 	}
+	log.Printf("[DEBUG] source_code_hash set to '%s'", d.Get("package.0.source_code_hash").(string))
 
 	return nil
 }

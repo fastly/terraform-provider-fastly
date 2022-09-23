@@ -112,6 +112,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 				v := sch.(string)
 				fmt.Printf("current source_code_hash: %+v\n", v)
 			}
+
 			wp := flattenPackage(digest, packageFilename, packageURL)
 			key := h.GetKey()
 			if err := d.Set(key, wp); err != nil {
@@ -151,10 +152,8 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", id, s.ActiveVersion.Number, err)
 	}
 
-	// d.Get() is pulling the data from the state file.
-	// TODO: figure out why we don't use GetKey and am using hardcoded 'package'
-	// name because if that key ever changes the code will break. we should
-	// interpolate the value instead.
+	// NOTE: d.Get() is pulling the data from the state file.
+	// TODO: Interpolate h.GetKey() to avoid error if package resource changes.
 	packageURL := d.Get("package.0.url").(string)
 	filename := d.Get("package.0.filename").(string)
 	wp := flattenPackage(pkg.Metadata.HashSum, filename, packageURL)

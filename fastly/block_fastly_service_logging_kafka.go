@@ -178,24 +178,27 @@ func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.Resou
 
 // Read refreshes the resource.
 func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// refresh Kafka
-	log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
-	kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Kafka logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	kafkaLogList := flattenKafka(kafkaList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
+		kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Kafka logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range kafkaLogList {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		kafkaLogList := flattenKafka(kafkaList)
 
-	if err := d.Set(h.GetKey(), kafkaLogList); err != nil {
-		log.Printf("[WARN] Error setting Kafka logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range kafkaLogList {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), kafkaLogList); err != nil {
+			log.Printf("[WARN] Error setting Kafka logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

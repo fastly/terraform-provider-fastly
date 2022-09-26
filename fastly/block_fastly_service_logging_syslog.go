@@ -165,24 +165,29 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
-	syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Syslog for (%s), version (%d): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
+		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Syslog for (%s), version (%d): %s", d.Id(), serviceVersion, err)
+		}
+
+		sll := flattenSyslogs(syslogList)
+
+		for _, element := range sll {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), sll); err != nil {
+			log.Printf("[WARN] Error setting Syslog for (%s): %s", d.Id(), err)
+		}
 	}
 
-	sll := flattenSyslogs(syslogList)
-
-	for _, element := range sll {
-		h.pruneVCLLoggingAttributes(element)
-	}
-
-	if err := d.Set(h.GetKey(), sll); err != nil {
-		log.Printf("[WARN] Error setting Syslog for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

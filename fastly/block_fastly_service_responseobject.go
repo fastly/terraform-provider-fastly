@@ -108,20 +108,25 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 
 // Read refreshes the resource.
 func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
-	responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Response Object for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
+		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Response Object for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		rol := flattenResponseObjects(responseObjectList)
+
+		if err := d.Set(h.GetKey(), rol); err != nil {
+			log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
+		}
 	}
 
-	rol := flattenResponseObjects(responseObjectList)
-
-	if err := d.Set(h.GetKey(), rol); err != nil {
-		log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

@@ -134,19 +134,23 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 
 // Read refreshes the resource.
 func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
-	healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Healthcheck for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	hcl := flattenHealthchecks(healthcheckList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
+		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Healthcheck for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	if err := d.Set(h.GetKey(), hcl); err != nil {
-		log.Printf("[WARN] Error setting Healthcheck for (%s): %s", d.Id(), err)
+		hcl := flattenHealthchecks(healthcheckList)
+
+		if err := d.Set(h.GetKey(), hcl); err != nil {
+			log.Printf("[WARN] Error setting Healthcheck for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

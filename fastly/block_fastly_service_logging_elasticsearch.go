@@ -161,25 +161,29 @@ func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *sche
 
 // Read refreshes the resource.
 func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Elasticsearch.
-	log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
-	elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Elasticsearch logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
+		elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Elasticsearch logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		ell := flattenElasticsearch(elasticsearchList)
+
+		for _, element := range ell {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), ell); err != nil {
+			log.Printf("[WARN] Error setting Elasticsearch logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
-	ell := flattenElasticsearch(elasticsearchList)
-
-	for _, element := range ell {
-		h.pruneVCLLoggingAttributes(element)
-	}
-
-	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting Elasticsearch logging endpoints for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

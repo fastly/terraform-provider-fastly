@@ -74,24 +74,32 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 
 // Read refreshes the attribute state against the Fastly API.
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
-	pkg, err := conn.GetPackage(&gofastly.GetPackageInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
-	})
-	if err != nil {
-		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
-			log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
-			d.Set(h.GetKey(), nil)
-			return nil
-		}
-		return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
-	}
+	log.Printf("[DEBUG] Refreshing %s", h.key)
+	log.Printf("[DEBUG] Refreshing %s", h.GetKey())
+	log.Printf("[DEBUG] Refreshing %T", d.Get(h.key))
+	resources := d.Get(h.key).([]interface{})
 
-	filename := d.Get("package.0.filename").(string)
-	wp := flattenPackage(pkg, filename)
-	if err := d.Set(h.GetKey(), wp); err != nil {
-		log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
+		pkg, err := conn.GetPackage(&gofastly.GetPackageInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: s.ActiveVersion.Number,
+		})
+		if err != nil {
+			if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+				log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+				d.Set(h.GetKey(), nil)
+				return nil
+			}
+			return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		filename := d.Get("package.0.filename").(string)
+		wp := flattenPackage(pkg, filename)
+		log.Printf("[WARN] Package state: %+v", wp)
+		if err := d.Set(h.GetKey(), wp); err != nil {
+			log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

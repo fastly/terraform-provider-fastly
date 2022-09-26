@@ -231,25 +231,29 @@ func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh S3.
-	log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
-	s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
+		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		sl := flattenS3s(s3List)
+
+		for _, element := range sl {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), sl); err != nil {
+			log.Printf("[WARN] Error setting S3 Logging for (%s): %s", d.Id(), err)
+		}
 	}
 
-	sl := flattenS3s(s3List)
-
-	for _, element := range sl {
-		h.pruneVCLLoggingAttributes(element)
-	}
-
-	if err := d.Set(h.GetKey(), sl); err != nil {
-		log.Printf("[WARN] Error setting S3 Logging for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

@@ -120,24 +120,27 @@ func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Kinesis.
-	log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
-	kinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	ell := flattenKinesis(kinesisList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
+		kinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range ell {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		ell := flattenKinesis(kinesisList)
 
-	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting Kinesis logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range ell {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), ell); err != nil {
+			log.Printf("[WARN] Error setting Kinesis logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

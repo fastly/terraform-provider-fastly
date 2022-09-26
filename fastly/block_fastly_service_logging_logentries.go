@@ -121,23 +121,27 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
-	logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	lel := flattenLogentries(logentriesList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
+		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range lel {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		lel := flattenLogentries(logentriesList)
 
-	if err := d.Set(h.GetKey(), lel); err != nil {
-		log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
+		for _, element := range lel {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), lel); err != nil {
+			log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

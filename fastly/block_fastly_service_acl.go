@@ -75,31 +75,35 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 
 // Read refreshes the resource.
 func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
-	aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: latestVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
-	}
+	resources := d.Get(h.Key()).(*schema.Set).List()
 
-	al := flattenACLs(aclList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
+		aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
+		}
 
-	// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
-	stateACLs := d.Get(h.Key()).(*schema.Set).List()
-	for _, acl := range al {
-		for _, sa := range stateACLs {
-			stateACL := sa.(map[string]interface{})
-			if acl["name"] == stateACL["name"] {
-				acl["force_destroy"] = stateACL["force_destroy"]
-				break
+		al := flattenACLs(aclList)
+
+		// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
+		stateACLs := d.Get(h.Key()).(*schema.Set).List()
+		for _, acl := range al {
+			for _, sa := range stateACLs {
+				stateACL := sa.(map[string]interface{})
+				if acl["name"] == stateACL["name"] {
+					acl["force_destroy"] = stateACL["force_destroy"]
+					break
+				}
 			}
 		}
-	}
 
-	if err := d.Set(h.Key(), al); err != nil {
-		log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
+		if err := d.Set(h.Key(), al); err != nil {
+			log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

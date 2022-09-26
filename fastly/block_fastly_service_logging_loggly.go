@@ -93,24 +93,27 @@ func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Loggly.
-	log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
-	logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Loggly logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	ell := flattenLoggly(logglyList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
+		logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Loggly logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range ell {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		ell := flattenLoggly(logglyList)
 
-	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting Loggly logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range ell {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), ell); err != nil {
+			log.Printf("[WARN] Error setting Loggly logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

@@ -99,24 +99,27 @@ func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Honeycomb.
-	log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
-	honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Honeycomb logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	ell := flattenHoneycomb(honeycombList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
+		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Honeycomb logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range ell {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		ell := flattenHoneycomb(honeycombList)
 
-	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting Honeycomb logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range ell {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), ell); err != nil {
+			log.Printf("[WARN] Error setting Honeycomb logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

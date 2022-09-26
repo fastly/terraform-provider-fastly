@@ -99,24 +99,27 @@ func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Log Shuttle.
-	log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
-	logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Log Shuttle logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	ell := flattenLogshuttle(logshuttleList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
+		logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Log Shuttle logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range ell {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		ell := flattenLogshuttle(logshuttleList)
 
-	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting Log Shuttle logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range ell {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), ell); err != nil {
+			log.Printf("[WARN] Error setting Log Shuttle logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

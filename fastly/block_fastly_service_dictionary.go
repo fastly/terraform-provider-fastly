@@ -85,32 +85,37 @@ func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
-	dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Dictionaries for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	dictionaries := flattenDictionaries(dictList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
+		dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Dictionaries for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
-	stateDicts := d.Get(h.GetKey()).(*schema.Set).List()
-	for _, dictionary := range dictionaries {
-		for _, sd := range stateDicts {
-			stateDict := sd.(map[string]interface{})
-			if dictionary["name"] == stateDict["name"] {
-				dictionary["force_destroy"] = stateDict["force_destroy"]
-				break
+		dictionaries := flattenDictionaries(dictList)
+
+		// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
+		stateDicts := d.Get(h.GetKey()).(*schema.Set).List()
+		for _, dictionary := range dictionaries {
+			for _, sd := range stateDicts {
+				stateDict := sd.(map[string]interface{})
+				if dictionary["name"] == stateDict["name"] {
+					dictionary["force_destroy"] = stateDict["force_destroy"]
+					break
+				}
 			}
+		}
+
+		if err := d.Set(h.GetKey(), dictionaries); err != nil {
+			log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
 		}
 	}
 
-	if err := d.Set(h.GetKey(), dictionaries); err != nil {
-		log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

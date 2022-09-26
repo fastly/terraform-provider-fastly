@@ -99,24 +99,27 @@ func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 
 // Read refreshes the resource.
 func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh NewRelic.
-	log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
-	newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up New Relic logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	dll := flattenNewRelic(newrelicList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
+		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up New Relic logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range dll {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		dll := flattenNewRelic(newrelicList)
 
-	if err := d.Set(h.GetKey(), dll); err != nil {
-		log.Printf("[WARN] Error setting New Relic logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range dll {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), dll); err != nil {
+			log.Printf("[WARN] Error setting New Relic logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

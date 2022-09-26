@@ -129,20 +129,25 @@ func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *sch
 
 // Read refreshes the resource.
 func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
-	rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Request Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
+		rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Request Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		rl := flattenRequestSettings(rsList)
+
+		if err := d.Set(h.GetKey(), rl); err != nil {
+			log.Printf("[WARN] Error setting Request Settings for (%s): %s", d.Id(), err)
+		}
 	}
 
-	rl := flattenRequestSettings(rsList)
-
-	if err := d.Set(h.GetKey(), rl); err != nil {
-		log.Printf("[WARN] Error setting Request Settings for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

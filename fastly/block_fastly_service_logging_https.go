@@ -177,24 +177,27 @@ func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// refresh HTTPS
-	log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
-	httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	hll := flattenHTTPS(httpsList)
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
+		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range hll {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		hll := flattenHTTPS(httpsList)
 
-	if err := d.Set(h.GetKey(), hll); err != nil {
-		log.Printf("[WARN] Error setting HTTPS logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range hll {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), hll); err != nil {
+			log.Printf("[WARN] Error setting HTTPS logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

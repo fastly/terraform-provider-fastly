@@ -218,19 +218,24 @@ func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
-	backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
+		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		bl := flattenBackend(backendList, h.GetServiceMetadata())
+		if err := d.Set(h.GetKey(), bl); err != nil {
+			log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
+		}
 	}
 
-	bl := flattenBackend(backendList, h.GetServiceMetadata())
-	if err := d.Set(h.GetKey(), bl); err != nil {
-		log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

@@ -84,20 +84,25 @@ func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
-	snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.Key()).(*schema.Set).List()
+
+	if len(resources) > 0 {
+		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
+		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		vsl := flattenSnippets(snippetList)
+
+		if err := d.Set(h.GetKey(), vsl); err != nil {
+			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
+		}
 	}
 
-	vsl := flattenSnippets(snippetList)
-
-	if err := d.Set(h.GetKey(), vsl); err != nil {
-		log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

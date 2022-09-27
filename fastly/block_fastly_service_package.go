@@ -74,9 +74,6 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 
 // Read refreshes the attribute state against the Fastly API.
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing %s", h.key)
-	log.Printf("[DEBUG] Refreshing %s", h.GetKey())
-	log.Printf("[DEBUG] Refreshing %T", d.Get(h.key))
 	resources := d.Get(h.key).([]interface{})
 
 	if len(resources) > 0 {

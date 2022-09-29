@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -191,6 +192,8 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing TLS Subscription Configuration for (%s)", d.Id())
+
 	conn := meta.(*APIClient).conn
 
 	include := "tls_authorizations"

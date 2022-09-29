@@ -406,6 +406,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 // resourceServiceRead provides service resource Read functionality.
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing Service Configuration for (%s)", d.Id())
+
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics

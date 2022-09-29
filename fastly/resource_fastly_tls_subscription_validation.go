@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
@@ -65,6 +66,8 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 }
 
 func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing TLS Subscription Validation Configuration for (%s)", d.Id())
+
 	conn := meta.(*APIClient).conn
 
 	subscriptionID := d.Get("subscription_id").(string)

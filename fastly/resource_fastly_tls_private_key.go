@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
@@ -78,6 +79,8 @@ func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing TLS Private Key Configuration for (%s)", d.Id())
+
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics

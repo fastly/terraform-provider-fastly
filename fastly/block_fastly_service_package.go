@@ -93,7 +93,6 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 
 		filename := d.Get("package.0.filename").(string)
 		wp := flattenPackage(pkg, filename)
-		log.Printf("[WARN] Package state: %+v", wp)
 		if err := d.Set(h.GetKey(), wp); err != nil {
 			log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
 		}

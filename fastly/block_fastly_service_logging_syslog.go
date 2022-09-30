@@ -167,7 +167,7 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
 		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
 			ServiceID:      d.Id(),

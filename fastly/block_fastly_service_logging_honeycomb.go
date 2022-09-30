@@ -101,7 +101,7 @@ func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.R
 func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
 		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
 			ServiceID:      d.Id(),

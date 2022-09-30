@@ -80,7 +80,7 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
 		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
 			ServiceID:      d.Id(),

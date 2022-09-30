@@ -163,7 +163,7 @@ func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing FTP logging endpoints for (%s)", d.Id())
 		ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
 			ServiceID:      d.Id(),

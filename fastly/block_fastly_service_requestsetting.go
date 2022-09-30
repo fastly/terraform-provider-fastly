@@ -131,7 +131,7 @@ func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *sch
 func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
 		rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
 			ServiceID:      d.Id(),

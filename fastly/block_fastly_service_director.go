@@ -140,7 +140,7 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      d.Id(),

@@ -103,7 +103,7 @@ func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
 		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
 			ServiceID:      d.Id(),

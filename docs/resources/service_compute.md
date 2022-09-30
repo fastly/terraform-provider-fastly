@@ -112,6 +112,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 - **active_version** (Number) The currently active version of your Fastly Service
 - **cloned_version** (Number) The latest cloned version by the provider
+- **imported** (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
 
 <a id="nestedblock--domain"></a>
 ### Nested Schema for `domain`

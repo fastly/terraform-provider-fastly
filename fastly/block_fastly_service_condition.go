@@ -89,7 +89,7 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
 		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
 			ServiceID:      d.Id(),

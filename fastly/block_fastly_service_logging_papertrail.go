@@ -115,7 +115,7 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
 		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 			ServiceID:      d.Id(),

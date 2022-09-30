@@ -76,7 +76,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	resources := d.Get(h.key).([]interface{})
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
 		pkg, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      d.Id(),

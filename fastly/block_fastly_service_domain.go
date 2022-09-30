@@ -77,7 +77,7 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		// TODO: update go-fastly to support an ActiveVersion struct, which contains
 		// domain and backend info in the response. Here we do 2 additional queries
 		// to find out that info

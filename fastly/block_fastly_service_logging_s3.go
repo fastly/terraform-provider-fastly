@@ -233,7 +233,7 @@ func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.R
 func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
 			ServiceID:      d.Id(),

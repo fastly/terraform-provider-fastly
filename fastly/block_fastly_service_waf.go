@@ -102,7 +102,7 @@ func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.Resour
 func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).([]interface{})
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
 		wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: d.Id(),

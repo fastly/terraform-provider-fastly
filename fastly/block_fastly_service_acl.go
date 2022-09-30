@@ -77,7 +77,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
 		aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
 			ServiceID:      d.Id(),

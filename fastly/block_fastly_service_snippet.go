@@ -86,7 +86,7 @@ func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
 		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      d.Id(),

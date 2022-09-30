@@ -430,18 +430,12 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				Config: testAccServiceVCLConfigInitWithVersionComment(name, versionComment1, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "comment", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "version_comment", versionComment1),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "active_version", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "domain.#", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "comment", "Managed by Terraform"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "version_comment", versionComment1),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "domain.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
 				),
 			},
 			{
@@ -449,10 +443,8 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				Config: testAccServiceVCLConfigUpdateServiceComment(name, "new service comment", domainName1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "active_version", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "comment", "Managed by Terraform"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "active_version", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "comment", "Managed by Terraform"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -460,18 +452,12 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				Config: testAccServiceVCLConfigBasicUpdate(name, comment, versionComment2, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "comment", comment),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "version_comment", versionComment2),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "active_version", "2"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "domain.#", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "comment", comment),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "version_comment", versionComment2),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "active_version", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "domain.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
 				),
 			},
 			{
@@ -479,7 +465,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "imported"},
 				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
 					return fmt.Sprintf("%s@2", service.ID), nil
 				},

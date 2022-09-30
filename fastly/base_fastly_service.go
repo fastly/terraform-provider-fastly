@@ -140,6 +140,12 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Description:   "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
 				ConflictsWith: []string{"force_destroy"},
 			},
+
+			"imported": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished",
+			},
 		},
 	}
 
@@ -196,6 +202,7 @@ func resourceImport() *schema.ResourceImporter {
 
 			id := parts[0]
 			d.SetId(id)
+			d.Set("imported", true)
 
 			if len(parts) == 2 {
 				version, err := strconv.Atoi(parts[1])
@@ -522,6 +529,11 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		log.Printf("[DEBUG] Active Version for Service (%s) is empty, no state to refresh", d.Id())
 	}
+
+	// To ensure nested resources (e.g. backends, domains etc) don't continue to
+	// call the API to refresh the internal Terraform state, once an import is
+	// complete, we reset the 'imported' computed attribute to false.
+	d.Set("imported", false)
 
 	return diags
 }

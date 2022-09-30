@@ -115,7 +115,7 @@ func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schem
 func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
 		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
 			ServiceID:      d.Id(),

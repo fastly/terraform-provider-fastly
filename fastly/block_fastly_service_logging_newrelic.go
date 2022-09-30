@@ -101,7 +101,7 @@ func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
 		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
 			ServiceID:      d.Id(),

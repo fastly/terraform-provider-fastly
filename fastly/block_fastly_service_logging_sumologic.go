@@ -117,7 +117,7 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 {
+	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
 		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
 			ServiceID:      d.Id(),

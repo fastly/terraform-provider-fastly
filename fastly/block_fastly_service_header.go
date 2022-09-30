@@ -134,19 +134,23 @@ func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
-	headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	hl := flattenHeaders(headerList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
+		headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	if err := d.Set(h.GetKey(), hl); err != nil {
-		log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
+		hl := flattenHeaders(headerList)
+
+		if err := d.Set(h.GetKey(), hl); err != nil {
+			log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

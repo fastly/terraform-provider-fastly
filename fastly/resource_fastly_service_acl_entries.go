@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -112,6 +113,8 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Print("[DEBUG] Refreshing ACL Entries Configuration")
+
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)

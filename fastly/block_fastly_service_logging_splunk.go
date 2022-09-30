@@ -149,24 +149,29 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
-	splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Splunks for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
+		splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Splunks for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		spl := flattenSplunks(splunkList)
+
+		for _, element := range spl {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), spl); err != nil {
+			log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
+		}
 	}
 
-	spl := flattenSplunks(splunkList)
-
-	for _, element := range spl {
-		h.pruneVCLLoggingAttributes(element)
-	}
-
-	if err := d.Set(h.GetKey(), spl); err != nil {
-		log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

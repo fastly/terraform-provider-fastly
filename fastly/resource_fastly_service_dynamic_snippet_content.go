@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -98,6 +99,8 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Print("[DEBUG] Refreshing Dynamic Snippet Configuration")
+
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)

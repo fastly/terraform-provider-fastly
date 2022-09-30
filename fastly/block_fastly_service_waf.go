@@ -100,21 +100,25 @@ func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.Resour
 }
 
 func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	// refresh WAFs
-	log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
-	wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-		FilterService: d.Id(),
-		FilterVersion: s.ActiveVersion.Number,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+	resources := d.Get(h.GetKey()).([]interface{})
+
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
+		wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{
+			FilterService: d.Id(),
+			FilterVersion: s.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		}
+
+		waf := flattenWAFs(wafList.Items)
+
+		if err := d.Set("waf", waf); err != nil {
+			log.Printf("[WARN] Error setting waf for (%s): %s", d.Id(), err)
+		}
 	}
 
-	waf := flattenWAFs(wafList.Items)
-
-	if err := d.Set("waf", waf); err != nil {
-		log.Printf("[WARN] Error setting waf for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

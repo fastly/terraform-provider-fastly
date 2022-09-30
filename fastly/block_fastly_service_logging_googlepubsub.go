@@ -113,24 +113,27 @@ func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Google Cloud Pub/Sub logging endpoints.
-	log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
-	googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Google Cloud Pub/Sub logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	googlepubsubLogList := flattenGooglePubSub(googlepubsubList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
+		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Google Cloud Pub/Sub logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range googlepubsubLogList {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		googlepubsubLogList := flattenGooglePubSub(googlepubsubList)
 
-	if err := d.Set(h.GetKey(), googlepubsubLogList); err != nil {
-		log.Printf("[WARN] Error setting Google Cloud Pub/Sublogging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range googlepubsubLogList {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), googlepubsubLogList); err != nil {
+			log.Printf("[WARN] Error setting Google Cloud Pub/Sublogging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

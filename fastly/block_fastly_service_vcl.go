@@ -78,20 +78,25 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 
 // Read refreshes the resource.
 func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
-	vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up VCLs for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.Key()).(*schema.Set).List()
+
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
+		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up VCLs for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		vl := flattenVCLs(vclList)
+
+		if err := d.Set(h.GetKey(), vl); err != nil {
+			log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
+		}
 	}
 
-	vl := flattenVCLs(vclList)
-
-	if err := d.Set(h.GetKey(), vl); err != nil {
-		log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

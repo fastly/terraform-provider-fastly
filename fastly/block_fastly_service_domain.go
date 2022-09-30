@@ -75,24 +75,29 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// TODO: update go-fastly to support an ActiveVersion struct, which contains
-	// domain and backend info in the response. Here we do 2 additional queries
-	// to find out that info
-	log.Printf("[DEBUG] Refreshing Domains for (%s)", d.Id())
-	domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Domains for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		// TODO: update go-fastly to support an ActiveVersion struct, which contains
+		// domain and backend info in the response. Here we do 2 additional queries
+		// to find out that info
+		log.Printf("[DEBUG] Refreshing Domains for (%s)", d.Id())
+		domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Domains for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		// Refresh Domains
+		dl := flattenDomains(domainList)
+
+		if err := d.Set(h.GetKey(), dl); err != nil {
+			log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
+		}
 	}
 
-	// Refresh Domains
-	dl := flattenDomains(domainList)
-
-	if err := d.Set(h.GetKey(), dl); err != nil {
-		log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

@@ -180,24 +180,27 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 // Read refreshes the resource.
 func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh SFTP.
-	log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
-	sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	ell := flattenSFTP(sftpList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
+		sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range ell {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		ell := flattenSFTP(sftpList)
 
-	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting SFTP logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range ell {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), ell); err != nil {
+			log.Printf("[WARN] Error setting SFTP logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

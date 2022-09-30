@@ -20,7 +20,7 @@ TEST_PARALLELISM?=4
 
 default: build
 
-build:
+build: clean
 	go build -o bin/terraform-provider-$(PKG_NAME)_$(VERSION) -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(VERSION)"
 	@sh -c "'$(CURDIR)/scripts/generate-dev-overrides.sh'"
 

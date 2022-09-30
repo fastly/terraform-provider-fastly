@@ -113,23 +113,27 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
-	papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	pl := flattenPapertrails(papertrailList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
+		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range pl {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		pl := flattenPapertrails(papertrailList)
 
-	if err := d.Set(h.GetKey(), pl); err != nil {
-		log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
+		for _, element := range pl {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), pl); err != nil {
+			log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

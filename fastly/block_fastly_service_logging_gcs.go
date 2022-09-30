@@ -163,23 +163,27 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
-	gs, err := conn.ListGCSs(&gofastly.ListGCSsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	gcsl := flattenGCS(gs)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
+		gs, err := conn.ListGCSs(&gofastly.ListGCSsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range gcsl {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		gcsl := flattenGCS(gs)
 
-	if err := d.Set(h.GetKey(), gcsl); err != nil {
-		log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
+		for _, element := range gcsl {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), gcsl); err != nil {
+			log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

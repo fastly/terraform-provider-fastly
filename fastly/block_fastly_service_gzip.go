@@ -94,49 +94,53 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 // Read refreshes the resource.
 func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
-	gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	gl := flattenGzips(gzipsList)
-
-	// NOTE: Although "content_types" and "extensions" fields are optional in spec,
-	// Fastly API will actually set the default value silently when these fields are not sent
-	// or an empty field value is sent. This will cause unexpected diff.
-	// We need to ignore these fields in the API response unless field values are explicitly set.
-	{
-		type IgnoreFields struct {
-			Name string
-		}
-		ignoreList := map[string][]IgnoreFields{}
-
-		for _, elem := range d.Get("gzip").(*schema.Set).List() {
-			m := elem.(map[string]interface{})
-			name := m["name"].(string)
-			if len(m["content_types"].([]interface{})) == 0 {
-				ignoreList[name] = append(ignoreList[name], IgnoreFields{Name: "content_types"})
-			}
-			if len(m["extensions"].([]interface{})) == 0 {
-				ignoreList[name] = append(ignoreList[name], IgnoreFields{Name: "extensions"})
-			}
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
+		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		for i, g := range gl {
-			if v, ok := ignoreList[g["name"].(string)]; ok && len(v) > 0 {
-				for _, sl := range v {
-					gl[i][sl.Name] = nil
+		gl := flattenGzips(gzipsList)
+
+		// NOTE: Although "content_types" and "extensions" fields are optional in spec,
+		// Fastly API will actually set the default value silently when these fields are not sent
+		// or an empty field value is sent. This will cause unexpected diff.
+		// We need to ignore these fields in the API response unless field values are explicitly set.
+		{
+			type IgnoreFields struct {
+				Name string
+			}
+			ignoreList := map[string][]IgnoreFields{}
+
+			for _, elem := range d.Get("gzip").(*schema.Set).List() {
+				m := elem.(map[string]interface{})
+				name := m["name"].(string)
+				if len(m["content_types"].([]interface{})) == 0 {
+					ignoreList[name] = append(ignoreList[name], IgnoreFields{Name: "content_types"})
+				}
+				if len(m["extensions"].([]interface{})) == 0 {
+					ignoreList[name] = append(ignoreList[name], IgnoreFields{Name: "extensions"})
+				}
+			}
+
+			for i, g := range gl {
+				if v, ok := ignoreList[g["name"].(string)]; ok && len(v) > 0 {
+					for _, sl := range v {
+						gl[i][sl.Name] = nil
+					}
 				}
 			}
 		}
-	}
 
-	if err := d.Set(h.GetKey(), gl); err != nil {
-		log.Printf("[WARN] Error setting Gzips for (%s): %s", d.Id(), err)
+		if err := d.Set(h.GetKey(), gl); err != nil {
+			log.Printf("[WARN] Error setting Gzips for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

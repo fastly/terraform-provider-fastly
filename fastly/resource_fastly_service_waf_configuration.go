@@ -356,6 +356,8 @@ func resourceServiceWAFConfigurationUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing WAF Configuration for (%s)", d.Id())
+
 	latestVersion, err := getLatestVersion(d, meta)
 	if err != nil {
 		if errRes, ok := err.(*gofastly.HTTPError); ok {

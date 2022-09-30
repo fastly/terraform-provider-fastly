@@ -139,23 +139,27 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 
 // Read refreshes the resource.
 func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
-	bqs, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	bql := flattenBigQuery(bqs)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
+		bqs, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range bql {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		bql := flattenBigQuery(bqs)
 
-	if err := d.Set(h.GetKey(), bql); err != nil {
-		log.Printf("[WARN] Error setting BigQuery for (%s): %s", d.Id(), err)
+		for _, element := range bql {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), bql); err != nil {
+			log.Printf("[WARN] Error setting BigQuery for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

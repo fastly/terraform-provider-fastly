@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -103,6 +104,8 @@ func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.R
 }
 
 func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing TLS Platform Certificate Configuration for (%s)", d.Id())
+
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics

@@ -115,24 +115,29 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
-	sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Sumologic for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
+		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Sumologic for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		sul := flattenSumologics(sumologicList)
+
+		for _, element := range sul {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), sul); err != nil {
+			log.Printf("[WARN] Error setting Sumologic for (%s): %s", d.Id(), err)
+		}
 	}
 
-	sul := flattenSumologics(sumologicList)
-
-	for _, element := range sul {
-		h.pruneVCLLoggingAttributes(element)
-	}
-
-	if err := d.Set(h.GetKey(), sul); err != nil {
-		log.Printf("[WARN] Error setting Sumologic for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

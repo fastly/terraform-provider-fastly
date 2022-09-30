@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"log"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -65,6 +66,8 @@ func resourceServiceAuthorizationCreate(_ context.Context, d *schema.ResourceDat
 }
 
 func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing Service Authorization Configuration for (%s)", d.Id())
+
 	conn := meta.(*APIClient).conn
 
 	sa, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{

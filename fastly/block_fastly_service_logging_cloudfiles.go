@@ -160,24 +160,28 @@ func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Cloud Files.
-	log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
-	cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Cloud Files logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	ell := flattenCloudfiles(cloudfilesList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		// Refresh Cloud Files.
+		log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
+		cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Cloud Files logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range ell {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		ell := flattenCloudfiles(cloudfilesList)
 
-	if err := d.Set(h.GetKey(), ell); err != nil {
-		log.Printf("[WARN] Error setting Cloud Files logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range ell {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), ell); err != nil {
+			log.Printf("[WARN] Error setting Cloud Files logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

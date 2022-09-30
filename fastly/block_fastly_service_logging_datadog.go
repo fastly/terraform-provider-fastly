@@ -101,24 +101,27 @@ func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Datadog.
-	log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
-	datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Datadog logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	dll := flattenDatadog(datadogList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
+		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Datadog logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range dll {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		dll := flattenDatadog(datadogList)
 
-	if err := d.Set(h.GetKey(), dll); err != nil {
-		log.Printf("[WARN] Error setting Datadog logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range dll {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), dll); err != nil {
+			log.Printf("[WARN] Error setting Datadog logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

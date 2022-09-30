@@ -175,24 +175,29 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 
 // Read refreshes the resource.
 func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
-	blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Blob Storages for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
+
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
+		blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Blob Storages for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
+
+		bsl := flattenBlobStorages(blobStorageList)
+
+		for _, element := range bsl {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), bsl); err != nil {
+			log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
+		}
 	}
 
-	bsl := flattenBlobStorages(blobStorageList)
-
-	for _, element := range bsl {
-		h.pruneVCLLoggingAttributes(element)
-	}
-
-	if err := d.Set(h.GetKey(), bsl); err != nil {
-		log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
-	}
 	return nil
 }
 

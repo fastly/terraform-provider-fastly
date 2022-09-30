@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -138,6 +139,8 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Print("[DEBUG] Refreshing Dictionary Items Configuration")
+
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)

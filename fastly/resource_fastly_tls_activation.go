@@ -71,6 +71,8 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing TLS Activation Configuration for (%s)", d.Id())
+
 	conn := meta.(*APIClient).conn
 
 	activation, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{

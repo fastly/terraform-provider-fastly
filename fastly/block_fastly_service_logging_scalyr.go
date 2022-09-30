@@ -101,24 +101,27 @@ func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	// Refresh Scalyr.
-	log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
-	scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Scalyr logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	scalyrLogList := flattenScalyr(scalyrList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
+		scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Scalyr logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	for _, element := range scalyrLogList {
-		h.pruneVCLLoggingAttributes(element)
-	}
+		scalyrLogList := flattenScalyr(scalyrList)
 
-	if err := d.Set(h.GetKey(), scalyrLogList); err != nil {
-		log.Printf("[WARN] Error setting Scalyr logging endpoints for (%s): %s", d.Id(), err)
+		for _, element := range scalyrLogList {
+			h.pruneVCLLoggingAttributes(element)
+		}
+
+		if err := d.Set(h.GetKey(), scalyrLogList); err != nil {
+			log.Printf("[WARN] Error setting Scalyr logging endpoints for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

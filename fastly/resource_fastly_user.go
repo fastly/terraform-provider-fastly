@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"log"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -61,6 +62,7 @@ func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceUserRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing User Configuration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
 	u, err := conn.GetUser(&gofastly.GetUserInput{

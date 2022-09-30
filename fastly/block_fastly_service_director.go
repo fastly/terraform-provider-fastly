@@ -138,19 +138,23 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 
 // Read refreshes the resource state.
 func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
-	log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
-	directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-	})
-	if err != nil {
-		return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", d.Id(), serviceVersion, err)
-	}
+	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
-	dirl := flattenDirectors(directorList)
+	if len(resources) > 0 || d.Get("imported").(bool) {
+		log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
+		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+			ServiceID:      d.Id(),
+			ServiceVersion: serviceVersion,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", d.Id(), serviceVersion, err)
+		}
 
-	if err := d.Set(h.GetKey(), dirl); err != nil {
-		log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
+		dirl := flattenDirectors(directorList)
+
+		if err := d.Set(h.GetKey(), dirl); err != nil {
+			log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

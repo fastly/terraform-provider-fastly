@@ -26,7 +26,7 @@ website/node_modules
 *.iml
 
 # ignore the compiled binary when running `go install`
-terraform-provider-fastly
+terraform-provider-fastly*
 
 website/vendor
 

@@ -1,5 +1,11 @@
 ## 2.4.0 (Unreleased)
 
+## 2.3.3 (October 3, 2022)
+
+ENHANCEMENTS:
+
+* Reduce unnecessary API calls [#593](https://github.com/fastly/terraform-provider-fastly/pull/593)
+
 ## 2.3.2 (September 20, 2022)
 
 ENHANCEMENTS:

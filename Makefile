@@ -71,12 +71,8 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-# DISABLED until Terraform provider supports go1.18 as goreleaser can't be
-# installed with a version less than 1.18.
-#
-# .PHONY: goreleaser-bin
-# goreleaser-bin:
-# 	go install github.com/goreleaser/goreleaser@latest
+goreleaser-bin:
+	go install github.com/goreleaser/goreleaser@latest
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip-validate will skip the checks
@@ -84,8 +80,7 @@ errcheck:
 # --single-target will be quicker and only build for your os & architecture
 # e.g.
 # make goreleaser GORELEASER_ARGS="--skip-validate --rm-dist"
-.PHONY: goreleaser
-goreleaser:
+goreleaser: goreleaser-bin
 	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
@@ -124,4 +119,4 @@ sweep:
 clean:
 	rm -rf ./bin
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs clean
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs clean clean_test goreleaser goreleaser-bin

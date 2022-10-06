@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceAuthorizationBasic(t *testing.T) {
+func TestAccFastlyServiceAuthorization_basic(t *testing.T) {
 	var sa gofastly.ServiceAuthorization
 	permission := "purge_select"
 	permission2 := "purge_all"

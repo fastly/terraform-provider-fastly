@@ -141,7 +141,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLUpdateDomain(t *testing.T) {
+func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	nameUpdate := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -211,7 +211,7 @@ func TestAccFastlyServiceVCLUpdateDomain(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLUpdateBackend(t *testing.T) {
+func TestAccFastlyServiceVCL_updateBackend(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -253,7 +253,7 @@ func TestAccFastlyServiceVCLUpdateBackend(t *testing.T) {
 // that gets cloned in order to make updates, are different when a new version is activated externally. In this case, a
 // 409 conflict error is produced by this test because it reads the new version when making a plan, plans to re-add in
 // the deleted backend, but clones the original version which still had the backend and fails with a conflict.
-func TestAccFastlyServiceVCLActivateNewVersionExternally(t *testing.T) {
+func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -318,7 +318,7 @@ func TestAccFastlyServiceVCLActivateNewVersionExternally(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLUpdateInvalidBackend(t *testing.T) {
+func TestAccFastlyServiceVCL_updateInvalidBackend(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -357,7 +357,7 @@ func TestAccFastlyServiceVCLUpdateInvalidBackend(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLCreateServiceWithStaticBackend(t *testing.T) {
+func TestAccFastlyServiceVCL_createServiceWithStaticBackend(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -410,7 +410,7 @@ func TestAccFastlyServiceVCLCreateServiceWithStaticBackend(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	comment := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -477,7 +477,7 @@ func TestAccFastlyServiceVCLBasic(t *testing.T) {
 // ServiceVCL_disappears – test that a non-empty plan is returned when a Fastly
 // Service is destroyed outside of Terraform, and can no longer be found,
 // correctly clearing the ID field and generating a new plan
-func TestAccFastlyServiceVCLDisappears(t *testing.T) {
+func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -608,7 +608,7 @@ func testAccCheckFastlyServiceVCLAttributesBackends(service *gofastly.ServiceDet
 	}
 }
 
-func TestAccFastlyServiceVCLDefaultTTL(t *testing.T) {
+func TestAccFastlyServiceVCL_defaultTTL(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -659,7 +659,7 @@ func TestAccFastlyServiceVCLDefaultTTL(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLDefaultHost(t *testing.T) {
+func TestAccFastlyServiceVCL_defaultHost(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -704,7 +704,7 @@ func TestAccFastlyServiceVCLDefaultHost(t *testing.T) {
 // return early before activating the version. This broke the assumption that cloned_version always tracks the active
 // version when activate=true, and means that the version we read from, and the one we clone from in order to make changes,
 // are different, meaning the plan is applied to a different version and 409 conflict errors can occur.
-func TestAccFastlyServiceVCLBrokenSnippet(t *testing.T) {
+func TestAccFastlyServiceVCL_brokenSnippet(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.test", acctest.RandString(10))
@@ -742,7 +742,7 @@ func TestAccFastlyServiceVCLBrokenSnippet(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLCreateZeroDefaultTTL(t *testing.T) {
+func TestAccFastlyServiceVCL_createZeroDefaultTTL(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

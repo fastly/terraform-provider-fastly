@@ -88,7 +88,7 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceComputeBasic(t *testing.T) {
+func TestAccFastlyServiceCompute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test1.tf-%s.com", acctest.RandString(10))

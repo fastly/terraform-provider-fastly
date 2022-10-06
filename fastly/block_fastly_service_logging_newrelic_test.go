@@ -62,7 +62,7 @@ var newrelicDefaultFormat = `{
   "cache_status":"%{regsub(fastly_info.state, "^(HIT-(SYNTH)|(HITPASS|HIT|MISS|PASS|ERROR|PIPE)).*", "\2\3") }V"
 }`
 
-func TestAccFastlyServiceVCLLoggingNewrelicBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -129,7 +129,7 @@ func TestAccFastlyServiceVCLLoggingNewrelicBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLLoggingNewrelicBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_newrelic_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

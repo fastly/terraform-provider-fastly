@@ -61,7 +61,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLGcslogging(t *testing.T) {
+func TestAccFastlyServiceVCL_gcslogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
@@ -88,7 +88,7 @@ func TestAccFastlyServiceVCLGcslogging(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLGcsloggingCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))

@@ -52,7 +52,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLHttpsloggingBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -133,7 +133,7 @@ func TestAccFastlyServiceVCLHttpsloggingBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLHttpsloggingBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

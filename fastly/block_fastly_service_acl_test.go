@@ -41,7 +41,7 @@ func TestResourceFastlyFlattenAcl(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLAcl(t *testing.T) {
+func TestAccFastlyServiceVCL_acl(t *testing.T) {
 	var service gofastly.ServiceDetail
 	var aclA gofastly.ACL
 	var aclB gofastly.ACL

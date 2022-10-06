@@ -19,7 +19,7 @@ func init() {
 	})
 }
 
-func TestAccFastlyTLSActivationBasic(t *testing.T) {
+func TestAccFastlyTLSActivation_basic(t *testing.T) {
 	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	key, cert, cert2, err := generateKeyAndMultipleCerts(domain)
 	require.NoError(t, err)

@@ -48,7 +48,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLSumologic(t *testing.T) {
+func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
@@ -101,7 +101,7 @@ func TestAccFastlyServiceVCLSumologic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLSumologicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))

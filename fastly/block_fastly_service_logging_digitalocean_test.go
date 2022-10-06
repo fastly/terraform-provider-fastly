@@ -70,7 +70,7 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLLoggingDigitaloceanBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -167,7 +167,7 @@ func TestAccFastlyServiceVCLLoggingDigitaloceanBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLLoggingDigitaloceanBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

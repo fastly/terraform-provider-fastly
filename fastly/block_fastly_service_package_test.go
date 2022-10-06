@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceVCLPackageBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name01 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain01 := fmt.Sprintf("fastly-test.%s.com", name01)

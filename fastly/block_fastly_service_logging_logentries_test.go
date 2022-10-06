@@ -51,7 +51,7 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLLogentriesBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -111,7 +111,7 @@ func TestAccFastlyServiceVCLLogentriesBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLLogentriesBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -202,7 +202,7 @@ func testAccCheckFastlyServiceVCLLogentriesAttributes(service *gofastly.ServiceD
 	}
 }
 
-func TestAccFastlyServiceVCLLogentriesFormatVersion(t *testing.T) {
+func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

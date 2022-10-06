@@ -19,7 +19,7 @@ func init() {
 	})
 }
 
-func TestAccFastlyTLSPlatformCertificateBasic(t *testing.T) {
+func TestAccFastlyTLSPlatformCertificate_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.test", name)
 

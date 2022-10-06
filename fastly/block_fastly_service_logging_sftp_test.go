@@ -75,7 +75,7 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLLoggingSftpBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -184,7 +184,7 @@ func TestAccFastlyServiceVCLLoggingSftpBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLLoggingSftpBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_sftp_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -232,7 +232,7 @@ func TestAccFastlyServiceVCLLoggingSftpBasicCompute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLLoggingSftpPasswordSecretKey(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 

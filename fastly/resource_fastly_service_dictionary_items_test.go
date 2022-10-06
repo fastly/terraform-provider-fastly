@@ -47,7 +47,7 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceDictionaryItemCreate(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_create(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
@@ -92,7 +92,7 @@ func TestAccFastlyServiceDictionaryItemCreate(t *testing.T) {
 // previous active version, then the state wasn't being read. This manifested
 // itself as a runtime error in certain situations, such as another resource
 // referencing the state in its configuration.
-func TestAccFastlyServiceDictionaryItemCreateInactiveService(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_create_inactive_service(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
@@ -121,7 +121,7 @@ func TestAccFastlyServiceDictionaryItemCreateInactiveService(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemCreateDynamic(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_create_dynamic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
@@ -152,7 +152,7 @@ func TestAccFastlyServiceDictionaryItemCreateDynamic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemUpdate(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
@@ -195,7 +195,7 @@ func TestAccFastlyServiceDictionaryItemUpdate(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemExternalItemIsRemoved(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -238,7 +238,7 @@ func TestAccFastlyServiceDictionaryItemExternalItemIsRemoved(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemExternalItemDeleted(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -281,7 +281,7 @@ func TestAccFastlyServiceDictionaryItemExternalItemDeleted(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemBatch1001Items(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_batch_1001_items(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -313,7 +313,7 @@ func TestAccFastlyServiceDictionaryItemBatch1001Items(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDictionaryItemManageItemsFalse(t *testing.T) {
+func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))

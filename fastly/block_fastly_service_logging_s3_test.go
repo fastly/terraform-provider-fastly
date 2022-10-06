@@ -133,7 +133,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLS3loggingBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -222,7 +222,7 @@ func TestAccFastlyServiceVCLS3loggingBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLS3loggingBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -264,7 +264,7 @@ func TestAccFastlyServiceVCLS3loggingBasicCompute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLS3loggingDomainDefault(t *testing.T) {
+func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -307,7 +307,7 @@ func TestAccFastlyServiceVCLS3loggingDomainDefault(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLS3loggingFormatVersion(t *testing.T) {
+func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

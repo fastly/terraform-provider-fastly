@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccFastlyDataSourceTLSCertificateWithName(t *testing.T) {
+func TestAccFastlyDataSourceTLSCertificate_withName(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.example.com", name)
 

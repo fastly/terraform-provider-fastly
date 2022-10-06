@@ -54,7 +54,7 @@ func TestResourceFastlyFlattenHeaders(t *testing.T) {
 	}
 }
 
-func TestFastlyServiceVCLBuildHeaders(t *testing.T) {
+func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 	cases := []struct {
 		remote *gofastly.CreateHeaderInput
 		local  map[string]any
@@ -118,7 +118,7 @@ func TestFastlyServiceVCLBuildHeaders(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLHeadersBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

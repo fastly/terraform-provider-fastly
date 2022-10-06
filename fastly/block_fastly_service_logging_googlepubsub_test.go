@@ -156,7 +156,7 @@ func TestSecretKeySchemaDefaultFunc(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLGooglepubsubloggingBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -234,7 +234,7 @@ func TestAccFastlyServiceVCLGooglepubsubloggingBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLGooglepubsubloggingBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

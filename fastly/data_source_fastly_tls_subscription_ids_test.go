@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceFastlyTLSSubscriptionIdsBasic(t *testing.T) {
+func TestAccDataSourceFastlyTLSSubscriptionIds_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("tf-test-%s.com", name)
 

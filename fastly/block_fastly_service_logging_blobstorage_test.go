@@ -70,7 +70,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLBlobstorageloggingBasic(t *testing.T) {
+func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -162,7 +162,7 @@ func TestAccFastlyServiceVCLBlobstorageloggingBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLBlobstorageloggingBasicCompute(t *testing.T) {
+func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -202,7 +202,7 @@ func TestAccFastlyServiceVCLBlobstorageloggingBasicCompute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLBlobstorageloggingDefault(t *testing.T) {
+func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

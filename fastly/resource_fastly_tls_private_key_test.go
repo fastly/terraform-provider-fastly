@@ -19,7 +19,7 @@ func init() {
 	})
 }
 
-func TestAccFastlyResourceTLSPrivateKeyBasic(t *testing.T) {
+func TestAccFastlyResourceTLSPrivateKey_basic(t *testing.T) {
 	key, _, err := generateKeyAndCert()
 	if err != nil {
 		t.Fatalf("Failed to generate private key: %v", err)

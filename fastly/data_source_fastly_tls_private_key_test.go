@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccFastlyDataSourceTLSPrivateKeyFilters(t *testing.T) {
+func TestAccFastlyDataSourceTLSPrivateKey_filters(t *testing.T) {
 	key, _, err := generateKeyAndCert()
 	require.NoError(t, err)
 	key = strings.ReplaceAll(key, "\n", `\n`)
@@ -34,7 +34,7 @@ func TestAccFastlyDataSourceTLSPrivateKeyFilters(t *testing.T) {
 	})
 }
 
-func TestAccFastlyDataSourceTLSPrivateKeyByID(t *testing.T) {
+func TestAccFastlyDataSourceTLSPrivateKey_byID(t *testing.T) {
 	key, _, err := generateKeyAndCert()
 	require.NoError(t, err)
 

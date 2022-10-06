@@ -101,6 +101,7 @@ func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 
 		cl := flattenConditions(conditionList)
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), cl); err != nil {
 			log.Printf("[WARN] Error setting Conditions for (%s): %s", d.Id(), err)
 		}

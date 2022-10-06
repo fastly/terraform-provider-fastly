@@ -85,6 +85,7 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		if err != nil {
 			if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
 				log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+				// lintignore:R001
 				d.Set(h.GetKey(), nil)
 				return nil
 			}
@@ -93,6 +94,7 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 
 		filename := d.Get("package.0.filename").(string)
 		wp := flattenPackage(pkg, filename)
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), wp); err != nil {
 			log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
 		}

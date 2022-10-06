@@ -181,6 +181,7 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), sll); err != nil {
 			log.Printf("[WARN] Error setting Syslog for (%s): %s", d.Id(), err)
 		}

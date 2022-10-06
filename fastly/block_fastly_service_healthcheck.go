@@ -146,6 +146,7 @@ func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.R
 
 		hcl := flattenHealthchecks(healthcheckList)
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), hcl); err != nil {
 			log.Printf("[WARN] Error setting Healthcheck for (%s): %s", d.Id(), err)
 		}

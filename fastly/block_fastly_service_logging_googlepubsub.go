@@ -126,6 +126,7 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), googlepubsubLogList); err != nil {
 			log.Printf("[WARN] Error setting Google Cloud Pub/Sublogging endpoints for (%s): %s", d.Id(), err)
 		}

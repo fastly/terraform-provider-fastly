@@ -115,6 +115,7 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), scalyrLogList); err != nil {
 			log.Printf("[WARN] Error setting Scalyr logging endpoints for (%s): %s", d.Id(), err)
 		}

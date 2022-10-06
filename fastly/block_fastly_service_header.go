@@ -146,6 +146,7 @@ func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 
 		hl := flattenHeaders(headerList)
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), hl); err != nil {
 			log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
 		}

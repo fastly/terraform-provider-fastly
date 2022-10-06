@@ -191,6 +191,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), bsl); err != nil {
 			log.Printf("[WARN] Error setting Blob Storages for (%s): %s", d.Id(), err)
 		}

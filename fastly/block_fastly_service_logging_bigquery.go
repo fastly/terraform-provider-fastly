@@ -155,6 +155,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *sche
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), bql); err != nil {
 			log.Printf("[WARN] Error setting BigQuery for (%s): %s", d.Id(), err)
 		}

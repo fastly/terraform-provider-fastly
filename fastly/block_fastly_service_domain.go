@@ -92,6 +92,7 @@ func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		// Refresh Domains
 		dl := flattenDomains(domainList)
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), dl); err != nil {
 			log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
 		}

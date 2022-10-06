@@ -180,6 +180,7 @@ func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.Resourc
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), kafkaLogList); err != nil {
 			log.Printf("[WARN] Error setting Kafka logging endpoints for (%s): %s", d.Id(), err)
 		}

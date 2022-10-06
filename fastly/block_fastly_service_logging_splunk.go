@@ -165,6 +165,7 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), spl); err != nil {
 			log.Printf("[WARN] Error setting Splunks for (%s): %s", d.Id(), err)
 		}

@@ -167,6 +167,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), ell); err != nil {
 			log.Printf("[WARN] Error setting Cloud Files logging endpoints for (%s): %s", d.Id(), err)
 		}

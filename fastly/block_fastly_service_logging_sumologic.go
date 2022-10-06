@@ -131,6 +131,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), sul); err != nil {
 			log.Printf("[WARN] Error setting Sumologic for (%s): %s", d.Id(), err)
 		}

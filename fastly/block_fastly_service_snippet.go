@@ -98,6 +98,7 @@ func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 
 		vsl := flattenSnippets(snippetList)
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), vsl); err != nil {
 			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
 		}

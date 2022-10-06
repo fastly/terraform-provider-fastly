@@ -120,6 +120,7 @@ func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schem
 
 		rol := flattenResponseObjects(responseObjectList)
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), rol); err != nil {
 			log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
 		}

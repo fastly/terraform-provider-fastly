@@ -166,6 +166,7 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), ell); err != nil {
 			log.Printf("[WARN] Error setting OpenStack logging endpoints for (%s): %s", d.Id(), err)
 		}

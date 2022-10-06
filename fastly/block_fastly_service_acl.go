@@ -99,6 +99,7 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			}
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.Key(), al); err != nil {
 			log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
 		}

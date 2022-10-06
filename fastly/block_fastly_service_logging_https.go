@@ -181,6 +181,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 			h.pruneVCLLoggingAttributes(element)
 		}
 
+		// lintignore:R001
 		if err := d.Set(h.GetKey(), hll); err != nil {
 			log.Printf("[WARN] Error setting HTTPS logging endpoints for (%s): %s", d.Id(), err)
 		}

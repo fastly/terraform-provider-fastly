@@ -95,10 +95,6 @@ func testAccFastlyIPRangesState(n string) resource.TestCheckFunc {
 }
 
 const testAccFastlyIPRangesConfig = `
-provider "fastly" {
-  api_key = ""
-  no_auth = true
-}
 data "fastly_ip_ranges" "some" {
 }
 `

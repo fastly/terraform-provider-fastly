@@ -102,7 +102,7 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
+func TestAccFastlyServiceAclEntries_create_update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))

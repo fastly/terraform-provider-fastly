@@ -310,7 +310,7 @@ func TestValidateSnippetType(t *testing.T) {
 
 func TestValidateDictionaryItemMaxSize(t *testing.T) {
 	for name, testcase := range map[string]struct {
-		value          map[string]interface{}
+		value          map[string]any
 		expectedWarns  int
 		expectedErrors int
 	}{
@@ -330,8 +330,8 @@ func TestValidateDictionaryItemMaxSize(t *testing.T) {
 	}
 }
 
-func createTestDictionaryItems(size int) map[string]interface{} {
-	dictionaryItems := make(map[string]interface{})
+func createTestDictionaryItems(size int) map[string]any {
+	dictionaryItems := make(map[string]any)
 
 	for i := 0; i < size; i++ {
 		dictionaryItems[fmt.Sprintf("key%d", i)] = fmt.Sprintf("value%d", i)

@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.RequestSetting
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.RequestSetting{
@@ -27,7 +27,7 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 					Action:           gofastly.RequestSettingActionPass,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":              "alt_backend",
 					"request_condition": "serve_alt_backend",

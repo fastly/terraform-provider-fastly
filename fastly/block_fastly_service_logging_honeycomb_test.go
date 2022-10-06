@@ -46,7 +46,7 @@ var honeycombDefaultFormat = `{
 func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Honeycomb
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Honeycomb{
@@ -61,7 +61,7 @@ func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 					FormatVersion:     2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "honeycomb-endpoint",
 					"token":              "token",

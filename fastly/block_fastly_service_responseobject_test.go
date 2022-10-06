@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.ResponseObject
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.ResponseObject{
@@ -29,7 +29,7 @@ func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
 					CacheCondition:   "test-cache-condition",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":              "responseObjecttesting",
 					"status":            uint(200),

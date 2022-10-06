@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.DigitalOcean
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.DigitalOcean{
@@ -39,7 +39,7 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					CompressionCodec:  "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "digitalocean-endpoint",
 					"bucket_name":        "bucket",

@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenSnippets(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Snippet
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Snippet{
@@ -25,7 +25,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":     "recv_test",
 					"type":     gofastly.SnippetTypeRecv,
@@ -44,7 +44,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 					Dynamic:  1,
 				},
 			},
-			local: []map[string]interface{}(nil),
+			local: []map[string]any(nil),
 		},
 	}
 

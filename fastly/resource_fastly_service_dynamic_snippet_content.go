@@ -51,7 +51,7 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 	}
 }
 
-func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -76,7 +76,7 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 	return resourceServiceDynamicSnippetRead(ctx, d, meta)
 }
 
-func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -98,7 +98,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 	return resourceServiceDynamicSnippetRead(ctx, d, meta)
 }
 
-func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing Dynamic Snippet Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -122,13 +122,13 @@ func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	// Dynamic snippet content cannot be deleted. Removing from state only
 	d.SetId("")
 	return nil
 }
 
-func resourceServiceDynamicSnippetContentImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceDynamicSnippetContentImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

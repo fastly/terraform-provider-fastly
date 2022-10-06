@@ -70,35 +70,35 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	input := &gofastly.ListAllWAFRulesInput{
 		Include: "waf_rule_revisions",
 	}
 
 	if v, ok := d.GetOk("publishers"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.FilterPublishers = append(input.FilterPublishers, l[i].(string))
 		}
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.FilterTagNames = append(input.FilterTagNames, l[i].(string))
 		}
 	}
 
 	if v, ok := d.GetOk("modsec_rule_ids"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.FilterModSecIDs = append(input.FilterModSecIDs, l[i].(int))
 		}
 	}
 
 	if v, ok := d.GetOk("exclude_modsec_rule_ids"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.ExcludeMocSecIDs = append(input.ExcludeMocSecIDs, l[i].(int))
 		}
@@ -134,8 +134,8 @@ func createFiltersHash(i *gofastly.ListAllWAFRulesInput) int {
 	return hashcode.String(result)
 }
 
-func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]interface{} {
-	rl := make([]map[string]interface{}, len(ruleList))
+func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]any {
+	rl := make([]map[string]any, len(ruleList))
 
 	if len(ruleList) == 0 {
 		return rl
@@ -147,7 +147,7 @@ func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]interface{} {
 			latestRevisionNumber = latestRevision.Revision
 		}
 
-		rulesMapString := map[string]interface{}{
+		rulesMapString := map[string]any{
 			"modsec_rule_id":         r.ModSecID,
 			"latest_revision_number": latestRevisionNumber,
 			"type":                   r.Type,

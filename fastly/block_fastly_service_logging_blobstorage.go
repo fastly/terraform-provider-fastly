@@ -142,7 +142,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBlobStorageInput{
 		ServiceID:         d.Id(),
@@ -174,7 +174,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 }
 
 // Read refreshes the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -202,14 +202,14 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 }
 
 // Update updates the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -269,7 +269,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 }
 
 // Delete deletes the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -288,11 +288,11 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d 
 	return nil
 }
 
-func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]interface{} {
-	var bsl []map[string]interface{}
+func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]any {
+	var bsl []map[string]any
 	for _, bs := range blobStorageList {
 		// Convert Blob Storages to a map for saving to state.
-		nbs := map[string]interface{}{
+		nbs := map[string]any{
 			"name":               bs.Name,
 			"path":               bs.Path,
 			"account_name":       bs.AccountName,

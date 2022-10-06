@@ -50,7 +50,7 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var activation *fastly.TLSActivation

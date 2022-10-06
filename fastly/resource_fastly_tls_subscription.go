@@ -152,7 +152,7 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var configuration *gofastly.TLSConfiguration
@@ -191,7 +191,7 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 	return resourceFastlyTLSSubscriptionRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Subscription Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -227,8 +227,8 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		certificateID = subscription.Certificates[0].ID
 	}
 
-	var managedHTTPChallenges []map[string]interface{}
-	var managedDNSChallenges []map[string]interface{}
+	var managedHTTPChallenges []map[string]any
+	var managedDNSChallenges []map[string]any
 	for _, domain := range subscription.Authorizations {
 		for _, challenge := range domain.Challenges {
 			if challenge.Type == "managed-dns" {
@@ -236,13 +236,13 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 					return diag.Errorf("fastly API returned no record values for Managed DNS Challenges")
 				}
 
-				managedDNSChallenges = append(managedDNSChallenges, map[string]interface{}{
+				managedDNSChallenges = append(managedDNSChallenges, map[string]any{
 					"record_type":  challenge.RecordType,
 					"record_name":  challenge.RecordName,
 					"record_value": challenge.Values[0],
 				})
 			} else {
-				managedHTTPChallenges = append(managedHTTPChallenges, map[string]interface{}{
+				managedHTTPChallenges = append(managedHTTPChallenges, map[string]any{
 					"record_type":   challenge.RecordType,
 					"record_name":   challenge.RecordName,
 					"record_values": challenge.Values,
@@ -322,7 +322,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	updates := &gofastly.UpdateTLSSubscriptionInput{
@@ -352,7 +352,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 	return resourceFastlyTLSSubscriptionRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteTLSSubscription(&gofastly.DeleteTLSSubscriptionInput{
@@ -362,12 +362,12 @@ func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceDa
 	return diag.FromErr(err)
 }
 
-func resourceFastlyTLSSubscriptionIsStateImmutable(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+func resourceFastlyTLSSubscriptionIsStateImmutable(_ context.Context, d *schema.ResourceDiff, _ any) bool {
 	state := d.Get("state").(string)
 	return state != "issued" && state != "pending"
 }
 
-func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	// NOTE: This is a workaround for a bug in Terraform core (hashicorp/terraform-plugin-sdk#195)
 	// where TypeSet computed attributes are not being updated with the new values upon applying (in an update action).
 	// This means that they will not be updated until the second "refresh" or "apply" after the first apply.
@@ -385,7 +385,7 @@ func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.Re
 // For example, Let's Encrypt doesn't allow uppercase letters. For this reason, Fastly TLS also doesn't support
 // uppercase letters in domains. But, Fastly API accepts such inputs and silently converts them to lowercase.
 // This would cause state mismatch and diff loop, so we explicitly raise an error to eliminate any confusion.
-func resourceFastlyTLSSubscriptionValidateDomains(_ context.Context, v, _ interface{}) error {
+func resourceFastlyTLSSubscriptionValidateDomains(_ context.Context, v, _ any) error {
 	for _, domain := range v.(*schema.Set).List() {
 		if domain.(string) != strings.ToLower(domain.(string)) {
 			return fmt.Errorf("tls subscription 'domains' must not contain uppercase letters: %s", v.(*schema.Set).List())
@@ -394,7 +394,7 @@ func resourceFastlyTLSSubscriptionValidateDomains(_ context.Context, v, _ interf
 	return nil
 }
 
-func resourceFastlyTLSSubscriptionValidateCommonName(_ context.Context, v, _ interface{}) error {
+func resourceFastlyTLSSubscriptionValidateCommonName(_ context.Context, v, _ any) error {
 	if v.(string) != strings.ToLower(v.(string)) {
 		return fmt.Errorf("tls subscription 'common_name' must not contain uppercase letters: %s", v.(string))
 	}

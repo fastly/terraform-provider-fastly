@@ -65,7 +65,7 @@ func TestFastlyWAFRulesDetermineRevision(t *testing.T) {
 func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFRule
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAFRule{
@@ -77,7 +77,7 @@ func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
 					},
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"modsec_rule_id":         11110000,
 					"type":                   "type",

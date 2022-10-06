@@ -110,7 +110,7 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildRequestSetting(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Request Setting: %s", err)
@@ -128,7 +128,7 @@ func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *sch
 }
 
 // Read refreshes the resource.
-func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -152,7 +152,7 @@ func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schem
 }
 
 // Update updates the resource.
-func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -218,7 +218,7 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 }
 
 // Delete deletes the resource.
-func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -237,11 +237,11 @@ func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *sch
 	return nil
 }
 
-func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]interface{} {
-	var rl []map[string]interface{}
+func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]any {
+	var rl []map[string]any
 	for _, r := range rsList {
 		// Convert Request Settings to a map for saving to state.
-		nrs := map[string]interface{}{
+		nrs := map[string]any{
 			"name":              r.Name,
 			"max_stale_age":     r.MaxStaleAge,
 			"force_miss":        r.ForceMiss,
@@ -269,8 +269,8 @@ func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]inte
 	return rl
 }
 
-func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequestSettingInput, error) {
-	resource := requestSettingMap.(map[string]interface{})
+func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingInput, error) {
+	resource := requestSettingMap.(map[string]any)
 	opts := gofastly.CreateRequestSettingInput{
 		Name:             resource["name"].(string),
 		MaxStaleAge:      gofastly.Uint(uint(resource["max_stale_age"].(int))),

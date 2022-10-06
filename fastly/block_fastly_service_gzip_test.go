@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenGzips(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Gzip
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Gzip{
@@ -23,10 +23,10 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 					Extensions: "css",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":       "somegzip",
-					"extensions": []interface{}{"css"},
+					"extensions": []any{"css"},
 				},
 			},
 		},
@@ -43,16 +43,16 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 					ContentTypes: "text/html text/xml",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":          "somegzip",
-					"extensions":    []interface{}{"css", "json", "js"},
-					"content_types": []interface{}{"text/html"},
+					"extensions":    []any{"css", "json", "js"},
+					"content_types": []any{"text/html"},
 				},
 				{
 					"name":          "someothergzip",
-					"extensions":    []interface{}{"css", "js"},
-					"content_types": []interface{}{"text/html", "text/xml"},
+					"extensions":    []any{"css", "js"},
+					"content_types": []any{"text/html", "text/xml"},
 				},
 			},
 		},

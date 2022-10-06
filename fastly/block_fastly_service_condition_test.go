@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenConditions(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Condition
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Condition{
@@ -25,7 +25,7 @@ func TestResourceFastlyFlattenConditions(t *testing.T) {
 					Statement: `req.url ~ "^/yolo/"`,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":      "some amz condition",
 					"priority":  10,

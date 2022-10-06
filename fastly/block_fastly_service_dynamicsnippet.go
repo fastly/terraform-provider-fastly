@@ -65,7 +65,7 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildDynamicSnippet(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building VCL Dynamic Snippet: %s", err)
@@ -83,7 +83,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Create(_ context.Context, d *sch
 }
 
 // Read refreshes the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -106,14 +106,14 @@ func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schem
 }
 
 // Update updates the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSnippetInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -137,7 +137,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 }
 
 // Delete deletes the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSnippetInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -156,8 +156,8 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *sch
 	return nil
 }
 
-func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
-	df := dynamicSnippetMap.(map[string]interface{})
+func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, error) {
+	df := dynamicSnippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
 		Name:     df["name"].(string),
 		Priority: gofastly.Int(df["priority"].(int)),
@@ -170,8 +170,8 @@ func buildDynamicSnippet(dynamicSnippetMap interface{}) (*gofastly.CreateSnippet
 	return &opts, nil
 }
 
-func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string]interface{} {
-	var sl []map[string]interface{}
+func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string]any {
+	var sl []map[string]any
 	for _, dynamicSnippet := range dynamicSnippetList {
 		// Skip non-dynamic snippets
 		if dynamicSnippet.Dynamic == 0 {
@@ -179,7 +179,7 @@ func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string
 		}
 
 		// Convert VCLs to a map for saving to state.
-		dynamicSnippetMap := map[string]interface{}{
+		dynamicSnippetMap := map[string]any{
 			"snippet_id": dynamicSnippet.ID,
 			"name":       dynamicSnippet.Name,
 			"type":       dynamicSnippet.Type,

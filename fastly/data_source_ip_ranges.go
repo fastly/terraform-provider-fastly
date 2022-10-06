@@ -31,7 +31,7 @@ func dataSourceFastlyIPRanges() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyIPRangesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyIPRangesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading IP ranges")

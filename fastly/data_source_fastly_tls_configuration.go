@@ -105,7 +105,7 @@ const (
 	tlsCustomService   = "CUSTOM"
 )
 
-func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var configuration *fastly.CustomTLSConfiguration
@@ -257,7 +257,7 @@ func filterTLSConfiguration(config *fastly.CustomTLSConfiguration, filters []fun
 	return true
 }
 
-func containsSubSet(set []string, subSet []interface{}) bool {
+func containsSubSet(set []string, subSet []any) bool {
 	for _, s := range subSet {
 		if !contains(set, s) {
 			return false
@@ -266,7 +266,7 @@ func containsSubSet(set []string, subSet []interface{}) bool {
 	return true
 }
 
-func contains(haystack []string, needle interface{}) bool {
+func contains(haystack []string, needle any) bool {
 	for _, s := range haystack {
 		if s == needle {
 			return true

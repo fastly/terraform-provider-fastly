@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenDictionary(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Dictionary
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Dictionary{
@@ -25,7 +25,7 @@ func TestResourceFastlyFlattenDictionary(t *testing.T) {
 					WriteOnly: false,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"dictionary_id": "1234567890",
 					"name":          "dictionary-example",

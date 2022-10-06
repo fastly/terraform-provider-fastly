@@ -69,7 +69,7 @@ type VCLLoggingAttributes struct {
 }
 
 // getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
-func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]interface{}) VCLLoggingAttributes {
+func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]any) VCLLoggingAttributes {
 	vla := VCLLoggingAttributes{
 		placement: "none",
 	}
@@ -92,7 +92,7 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 
 // pruneVCLLoggingAttributes deletes the keys corresponding to VCL-only logging attributes which aren't present for
 // Compute services.
-func (h *DefaultServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]interface{}) map[string]interface{} {
+func (h *DefaultServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) map[string]any {
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		delete(data, "format")
 		delete(data, "format_version")

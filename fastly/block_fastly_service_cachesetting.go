@@ -71,7 +71,7 @@ func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildCacheSetting(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Cache Setting: %s", err)
@@ -89,7 +89,7 @@ func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schem
 }
 
 // Read refreshes the resource.
-func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -113,14 +113,14 @@ func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCacheSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -147,7 +147,7 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteCacheSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -166,8 +166,8 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 	return nil
 }
 
-func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput, error) {
-	df := cacheMap.(map[string]interface{})
+func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) {
+	df := cacheMap.(map[string]any)
 	opts := gofastly.CreateCacheSettingInput{
 		Name:           df["name"].(string),
 		StaleTTL:       uint(df["stale_ttl"].(int)),
@@ -191,11 +191,11 @@ func buildCacheSetting(cacheMap interface{}) (*gofastly.CreateCacheSettingInput,
 	return &opts, nil
 }
 
-func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]interface{} {
-	var csl []map[string]interface{}
+func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]any {
+	var csl []map[string]any
 	for _, cl := range csList {
 		// Convert Cache Settings to a map for saving to state.
-		clMap := map[string]interface{}{
+		clMap := map[string]any{
 			"name":            cl.Name,
 			"action":          cl.Action,
 			"cache_condition": cl.CacheCondition,

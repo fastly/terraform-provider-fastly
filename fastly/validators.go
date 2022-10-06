@@ -110,8 +110,8 @@ func validateRuleStatusType() schema.SchemaValidateDiagFunc {
 func validateDictionaryItems() schema.SchemaValidateDiagFunc {
 	max := gofastly.MaximumDictionarySize
 
-	return validation.ToDiagFunc(func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(map[string]interface{})
+	return validation.ToDiagFunc(func(i any, k string) (s []string, es []error) {
+		v, ok := i.(map[string]any)
 		if !ok {
 			es = append(es, fmt.Errorf("expected type of %s to be a map[string]interface", k))
 			return s, es
@@ -153,7 +153,7 @@ func validateUserRole() schema.SchemaValidateDiagFunc {
 // validatePEMBlock returns a schema validation function that checks whether a string contains a single PEM block of
 // type `pemType`.
 func validatePEMBlock(pemType string) schema.SchemaValidateDiagFunc {
-	return validation.ToDiagFunc(func(val interface{}, key string) ([]string, []error) {
+	return validation.ToDiagFunc(func(val any, key string) ([]string, []error) {
 		b, rest := pem.Decode([]byte(val.(string)))
 		if b == nil {
 			return nil, []error{fmt.Errorf("expected %s to be a valid PEM-format block", key)}
@@ -171,7 +171,7 @@ func validatePEMBlock(pemType string) schema.SchemaValidateDiagFunc {
 // validatePEMBlocks returns a schema validation function that checks whether a string contains multiple PEM blocks of
 // type `pemType`.
 func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
-	return validation.ToDiagFunc(func(val interface{}, key string) ([]string, []error) {
+	return validation.ToDiagFunc(func(val any, key string) ([]string, []error) {
 		pemRest := []byte(val.(string))
 		numBlocks := 0
 		for {
@@ -194,7 +194,7 @@ func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
 	})
 }
 
-func validateStringTrimmed(i interface{}, path cty.Path) diag.Diagnostics {
+func validateStringTrimmed(i any, path cty.Path) diag.Diagnostics {
 	v := i.(string)
 	attr := path[len(path)-1].(cty.GetAttrStep)
 	if v != strings.TrimSpace(v) {

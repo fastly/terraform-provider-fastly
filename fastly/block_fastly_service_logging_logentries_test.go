@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenLogentries(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Logentries
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Logentries{
@@ -29,7 +29,7 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 					ResponseCondition: "response_condition_test",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "somelogentriesname",
 					"port":               uint(8080),

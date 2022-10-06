@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.NewRelic
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.NewRelic{
@@ -27,7 +27,7 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 					FormatVersion:  2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":           "newrelic-endpoint",
 					"token":          "token",

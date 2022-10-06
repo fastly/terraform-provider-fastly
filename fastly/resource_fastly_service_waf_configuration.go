@@ -26,7 +26,7 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			validateWAFConfigurationResource,
-			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ any) bool {
 				// If anything other than "activate" has changed, the current version will be
 				// cloned in resourceServiceWAFConfigurationV1Update so set it as recomputed.
 				for _, changedKey := range d.GetChangedKeysPrefix("") {
@@ -251,13 +251,13 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 
 // this method calls update because the creation of the waf (within the service resource) automatically creates
 // the first waf version, and this makes both a create and an updating exactly the same operation.
-func resourceServiceWAFConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[INFO] creating configuration for WAF: %s", d.Get("waf_id").(string))
 	d.SetId(d.Get("waf_id").(string))
 	return resourceServiceWAFConfigurationUpdate(ctx, d, meta)
 }
 
-func resourceServiceWAFConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	// If any attributes other than Computed (unconfigurable) or "activate" have changed, clone a new firewall version.
@@ -355,7 +355,7 @@ func resourceServiceWAFConfigurationUpdate(ctx context.Context, d *schema.Resour
 	return resourceServiceWAFConfigurationRead(ctx, d, meta)
 }
 
-func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing WAF Configuration for (%s)", d.Id())
 
 	latestVersion, err := getLatestVersion(d, meta)
@@ -420,7 +420,7 @@ func resourceServiceWAFConfigurationRead(_ context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func resourceServiceWAFConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceWAFConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	wafID := d.Get("waf_id").(string)
@@ -454,7 +454,7 @@ func resourceServiceWAFConfigurationDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceServiceWAFConfigurationImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceWAFConfigurationImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	wafID := d.Id()
 	err := d.Set("waf_id", wafID)
 	if err != nil {
@@ -463,7 +463,7 @@ func resourceServiceWAFConfigurationImport(_ context.Context, d *schema.Resource
 	return []*schema.ResourceData{d}, nil
 }
 
-func getLatestVersion(d *schema.ResourceData, meta interface{}) (*gofastly.WAFVersion, error) {
+func getLatestVersion(d *schema.ResourceData, meta any) (*gofastly.WAFVersion, error) {
 	conn := meta.(*APIClient).conn
 
 	wafID := d.Get("waf_id").(string)
@@ -631,6 +631,6 @@ func determineLatestVersion(versions []*gofastly.WAFVersion) (*gofastly.WAFVersi
 	return latest, nil
 }
 
-func validateWAFConfigurationResource(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+func validateWAFConfigurationResource(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	return validateWAFRuleExclusion(d)
 }

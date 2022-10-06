@@ -216,7 +216,7 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := h.buildCreate(resource, d.Id(), serviceVersion)
 	if err != nil {
 		return err
@@ -230,7 +230,7 @@ func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.R
 }
 
 // Read refreshes the resource.
-func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -258,14 +258,14 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateS3Input{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -340,7 +340,7 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *S3LoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 	err := deleteS3(conn, opts)
 	if err != nil {
@@ -373,11 +373,11 @@ func deleteS3(conn *gofastly.Client, i *gofastly.DeleteS3Input) error {
 	return nil
 }
 
-func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
-	var sl []map[string]interface{}
+func flattenS3s(s3List []*gofastly.S3) []map[string]any {
+	var sl []map[string]any
 	for _, s := range s3List {
 		// Convert S3s to a map for saving to state.
-		ns := map[string]interface{}{
+		ns := map[string]any{
 			"name":                              s.Name,
 			"bucket_name":                       s.BucketName,
 			"s3_access_key":                     s.AccessKey,
@@ -414,8 +414,8 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]interface{} {
 	return sl
 }
 
-func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
-	df := s3Map.(map[string]interface{})
+func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
+	df := s3Map.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateS3Input{
@@ -454,8 +454,8 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map interface{}, servic
 	return &opts, nil
 }
 
-func (h *S3LoggingServiceAttributeHandler) buildDelete(s3Map interface{}, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {
-	df := s3Map.(map[string]interface{})
+func (h *S3LoggingServiceAttributeHandler) buildDelete(s3Map any, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {
+	df := s3Map.(map[string]any)
 
 	return &gofastly.DeleteS3Input{
 		ServiceID:      serviceID,

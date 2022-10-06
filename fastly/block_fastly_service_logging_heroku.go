@@ -89,7 +89,7 @@ func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Heroku logging addition opts: %#v", opts)
@@ -98,7 +98,7 @@ func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -126,14 +126,14 @@ func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHerokuInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -166,7 +166,7 @@ func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *HerokuServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Heroku logging endpoint removal opts: %#v", opts)
@@ -196,11 +196,11 @@ func deleteHeroku(conn *gofastly.Client, i *gofastly.DeleteHerokuInput) error {
 	return nil
 }
 
-func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]interface{} {
-	var res []map[string]interface{}
+func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]any {
+	var res []map[string]any
 	for _, ll := range herokuList {
 		// Convert Heroku logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"token":              ll.Token,
 			"url":                ll.URL,
@@ -223,8 +223,8 @@ func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]interface{} {
 	return res
 }
 
-func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
-	df := herokuMap.(map[string]interface{})
+func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap any, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
+	df := herokuMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateHerokuInput{
@@ -240,8 +240,8 @@ func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap interface{}, servi
 	}
 }
 
-func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
-	df := herokuMap.(map[string]interface{})
+func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap any, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
+	df := herokuMap.(map[string]any)
 
 	return &gofastly.DeleteHerokuInput{
 		ServiceID:      serviceID,

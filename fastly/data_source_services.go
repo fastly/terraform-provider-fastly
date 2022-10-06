@@ -78,7 +78,7 @@ func dataSourceFastlyServices() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading services")
@@ -111,14 +111,14 @@ func flattenServiceIDs(services []*gofastly.Service) []string {
 	return result
 }
 
-func flattenServiceDetails(services []*gofastly.Service) []map[string]interface{} {
-	result := make([]map[string]interface{}, len(services))
+func flattenServiceDetails(services []*gofastly.Service) []map[string]any {
+	result := make([]map[string]any, len(services))
 	if len(services) == 0 {
 		return result
 	}
 
 	for i, s := range services {
-		result[i] = map[string]interface{}{
+		result[i] = map[string]any{
 			"id":          s.ID,
 			"name":        s.Name,
 			"type":        s.Type,

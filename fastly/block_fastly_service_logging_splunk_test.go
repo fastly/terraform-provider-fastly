@@ -21,7 +21,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 
 	cases := []struct {
 		remote []*gofastly.Splunk
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Splunk{
@@ -44,7 +44,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					TLSClientKey:  key,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "test-splunk",
 					"url":                "https://mysplunkendpoint.example.com/services/collector/event",

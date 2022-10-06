@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenAcl(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.ACL
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.ACL{
@@ -24,7 +24,7 @@ func TestResourceFastlyFlattenAcl(t *testing.T) {
 					Name: "acl-example",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"acl_id": "1234567890",
 					"name":   "acl-example",

@@ -21,7 +21,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 
 	cases := []struct {
 		remote []*gofastly.Syslog
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Syslog{
@@ -43,7 +43,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 					TLSClientKey:      key,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "somesyslogname",
 					"address":            "127.0.0.1",

@@ -89,7 +89,7 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging addition opts: %#v", opts)
@@ -98,7 +98,7 @@ func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -126,14 +126,14 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogshuttleInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -166,7 +166,7 @@ func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *LogshuttleServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogshuttleServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Log Shuttle logging endpoint removal opts: %#v", opts)
@@ -196,11 +196,11 @@ func deleteLogshuttle(conn *gofastly.Client, i *gofastly.DeleteLogshuttleInput) 
 	return nil
 }
 
-func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]interface{} {
-	var lsl []map[string]interface{}
+func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]any {
+	var lsl []map[string]any
 	for _, ll := range logshuttleList {
 		// Convert Log Shuttle logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"token":              ll.Token,
 			"url":                ll.URL,
@@ -223,8 +223,8 @@ func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]inter
 	return lsl
 }
 
-func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {
-	df := logshuttleMap.(map[string]interface{})
+func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap any, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {
+	df := logshuttleMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateLogshuttleInput{
@@ -240,8 +240,8 @@ func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap interface{
 	}
 }
 
-func (h *LogshuttleServiceAttributeHandler) buildDelete(logshuttleMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteLogshuttleInput {
-	df := logshuttleMap.(map[string]interface{})
+func (h *LogshuttleServiceAttributeHandler) buildDelete(logshuttleMap any, serviceID string, serviceVersion int) *gofastly.DeleteLogshuttleInput {
+	df := logshuttleMap.(map[string]any)
 
 	return &gofastly.DeleteLogshuttleInput{
 		ServiceID:      serviceID,

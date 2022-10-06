@@ -50,7 +50,7 @@ func dataSourceFastlyDatacenters() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading datacenters")
@@ -71,14 +71,14 @@ func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]interface{} {
-	pops := make([]map[string]interface{}, len(datacenters))
+func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]any {
+	pops := make([]map[string]any, len(datacenters))
 	if len(datacenters) == 0 {
 		return pops
 	}
 
 	for i, pop := range datacenters {
-		datacentersMapString := map[string]interface{}{
+		datacentersMapString := map[string]any{
 			"code":   pop.Code,
 			"name":   pop.Name,
 			"group":  pop.Group,

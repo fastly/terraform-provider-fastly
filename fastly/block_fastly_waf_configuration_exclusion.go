@@ -46,7 +46,7 @@ var wafRuleExclusion = &schema.Schema{
 	},
 }
 
-func readWAFRuleExclusions(meta interface{}, d *schema.ResourceData, wafVersionNumber int) error {
+func readWAFRuleExclusions(meta any, d *schema.ResourceData, wafVersionNumber int) error {
 	conn := meta.(*APIClient).conn
 	wafID := d.Get("waf_id").(string)
 
@@ -68,11 +68,11 @@ func readWAFRuleExclusions(meta interface{}, d *schema.ResourceData, wafVersionN
 	return nil
 }
 
-func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[string]interface{} {
-	var result []map[string]interface{}
+func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[string]any {
+	var result []map[string]any
 
 	for _, exclusion := range exclusions {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		if exclusion.Name != nil {
 			m["name"] = *exclusion.Name
 		}
@@ -86,7 +86,7 @@ func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[str
 			m["exclusion_type"] = *exclusion.ExclusionType
 		}
 
-		var rules []interface{}
+		var rules []any
 		for _, rule := range exclusion.Rules {
 			rules = append(rules, rule.ModSecID)
 		}
@@ -99,7 +99,7 @@ func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[str
 	return result
 }
 
-func updateWAFRuleExclusions(d *schema.ResourceData, meta interface{}, wafID string, wafVersionNumber int) error {
+func updateWAFRuleExclusions(d *schema.ResourceData, meta any, wafID string, wafVersionNumber int) error {
 	os, ns := d.GetChange("rule_exclusion")
 
 	if os == nil {
@@ -130,11 +130,11 @@ func updateWAFRuleExclusions(d *schema.ResourceData, meta interface{}, wafID str
 	return nil
 }
 
-func deleteWAFRuleExclusion(remove []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
+func deleteWAFRuleExclusion(remove []any, meta any, wafID string, wafVersionNumber int) error {
 	conn := meta.(*APIClient).conn
 
 	for _, aRaw := range remove {
-		a := aRaw.(map[string]interface{})
+		a := aRaw.(map[string]any)
 
 		err := conn.DeleteWAFRuleExclusion(&gofastly.DeleteWAFRuleExclusionInput{
 			Number:           a["number"].(int),
@@ -149,11 +149,11 @@ func deleteWAFRuleExclusion(remove []interface{}, meta interface{}, wafID string
 	return nil
 }
 
-func createWAFRuleExclusion(add []interface{}, meta interface{}, wafID string, wafVersionNumber int) error {
+func createWAFRuleExclusion(add []any, meta any, wafID string, wafVersionNumber int) error {
 	conn := meta.(*APIClient).conn
 
 	for _, aRaw := range add {
-		a := aRaw.(map[string]interface{})
+		a := aRaw.(map[string]any)
 
 		var rules []*gofastly.WAFRule
 		if a["exclusion_type"] == gofastly.WAFRuleExclusionTypeRule {
@@ -195,7 +195,7 @@ func validateExecutionType() schema.SchemaValidateDiagFunc {
 
 func validateWAFRuleExclusion(d *schema.ResourceDiff) error {
 	for _, i := range d.Get("rule_exclusion").(*schema.Set).List() {
-		wafRuleExclusion := i.(map[string]interface{})
+		wafRuleExclusion := i.(map[string]any)
 
 		if wafRuleExclusion["exclusion_type"] == gofastly.WAFRuleExclusionTypeWAF && len(wafRuleExclusion["modsec_rule_ids"].(*schema.Set).List()) > 0 {
 			return fmt.Errorf("must not set \"modsec_rule_ids\" with \"waf\" exclusion type in exclusion \"%s\"", wafRuleExclusion["name"])

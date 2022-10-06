@@ -65,8 +65,8 @@ func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.Resour
 	serviceID := d.Id()
 	oldWAFVal, newWAFVal := d.GetChange(h.GetKey())
 
-	if len(newWAFVal.([]interface{})) == 1 {
-		wf := newWAFVal.([]interface{})[0].(map[string]interface{})
+	if len(newWAFVal.([]any)) == 1 {
+		wf := newWAFVal.([]any)[0].(map[string]any)
 
 		var err error
 		if wafExists(conn, serviceID, serviceVersion, wf["waf_id"].(string)) {
@@ -82,8 +82,8 @@ func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.Resour
 		if err != nil {
 			return err
 		}
-	} else if len(oldWAFVal.([]interface{})) > 0 {
-		wf := oldWAFVal.([]interface{})[0].(map[string]interface{})
+	} else if len(oldWAFVal.([]any)) > 0 {
+		wf := oldWAFVal.([]any)[0].(map[string]any)
 
 		opts := buildDeleteWAF(wf, serviceVersion)
 		log.Printf("[DEBUG] Fastly WAF Removal opts: %#v", opts)
@@ -100,7 +100,7 @@ func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.Resour
 }
 
 func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).([]interface{})
+	resources := d.Get(h.GetKey()).([]any)
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
@@ -131,14 +131,14 @@ func wafExists(conn *gofastly.Client, s string, v int, id string) bool {
 	return err == nil
 }
 
-func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
-	var wl []map[string]interface{}
+func flattenWAFs(wafList []*gofastly.WAF) []map[string]any {
+	var wl []map[string]any
 	if len(wafList) == 0 {
 		return wl
 	}
 
 	w := wafList[0]
-	m := map[string]interface{}{
+	m := map[string]any{
 		"waf_id":             w.ID,
 		"response_object":    w.Response,
 		"prefetch_condition": w.PrefetchCondition,
@@ -153,8 +153,8 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]interface{} {
 	return append(wl, m)
 }
 
-func buildCreateWAF(waf interface{}, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
-	df := waf.(map[string]interface{})
+func buildCreateWAF(waf any, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
+	df := waf.(map[string]any)
 
 	opts := gofastly.CreateWAFInput{
 		ServiceID:         serviceID,
@@ -166,8 +166,8 @@ func buildCreateWAF(waf interface{}, serviceID string, serviceVersion int) *gofa
 	return &opts
 }
 
-func buildDeleteWAF(waf interface{}, serviceVersion int) *gofastly.DeleteWAFInput {
-	df := waf.(map[string]interface{})
+func buildDeleteWAF(waf any, serviceVersion int) *gofastly.DeleteWAFInput {
+	df := waf.(map[string]any)
 
 	opts := gofastly.DeleteWAFInput{
 		ID:             df["waf_id"].(string),
@@ -176,8 +176,8 @@ func buildDeleteWAF(waf interface{}, serviceVersion int) *gofastly.DeleteWAFInpu
 	return &opts
 }
 
-func buildUpdateWAF(d *schema.ResourceData, wafMap interface{}, serviceID string, serviceVersion int) *gofastly.UpdateWAFInput {
-	df := wafMap.(map[string]interface{})
+func buildUpdateWAF(d *schema.ResourceData, wafMap any, serviceID string, serviceVersion int) *gofastly.UpdateWAFInput {
+	df := wafMap.(map[string]any)
 
 	input := gofastly.UpdateWAFInput{
 		ServiceID:      gofastly.String(serviceID),

@@ -279,7 +279,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 
 	cases := []struct {
 		remote []*gofastly.BigQuery
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.BigQuery{
@@ -292,7 +292,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					SecretKey: secretKey,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":       "bigquery-example",
 					"email":      "email@example.com",
@@ -317,7 +317,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					SecretKey:         secretKey,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "bigquery-example",
 					"email":              "email@example.com",

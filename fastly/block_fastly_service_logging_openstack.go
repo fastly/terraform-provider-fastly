@@ -150,7 +150,7 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
@@ -159,7 +159,7 @@ func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.R
 }
 
 // Read refreshes the resource.
-func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -187,14 +187,14 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateOpenstackInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -254,7 +254,7 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *OpenstackServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
@@ -284,11 +284,11 @@ func deleteOpenstack(conn *gofastly.Client, i *gofastly.DeleteOpenstackInput) er
 	return nil
 }
 
-func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]interface{} {
-	var lsl []map[string]interface{}
+func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]any {
+	var lsl []map[string]any
 	for _, ll := range openstackList {
 		// Convert OpenStack logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"url":                ll.URL,
 			"user":               ll.User,
@@ -320,8 +320,8 @@ func flattenOpenstack(openstackList []*gofastly.Openstack) []map[string]interfac
 	return lsl
 }
 
-func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
-	df := openstackMap.(map[string]interface{})
+func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
+	df := openstackMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateOpenstackInput{
@@ -346,8 +346,8 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap interface{},
 	}
 }
 
-func (h *OpenstackServiceAttributeHandler) buildDelete(openstackMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteOpenstackInput {
-	df := openstackMap.(map[string]interface{})
+func (h *OpenstackServiceAttributeHandler) buildDelete(openstackMap any, serviceID string, serviceVersion int) *gofastly.DeleteOpenstackInput {
+	df := openstackMap.(map[string]any)
 
 	return &gofastly.DeleteOpenstackInput{
 		ServiceID:      serviceID,

@@ -120,7 +120,7 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
 		ServiceID:         d.Id(),
@@ -148,7 +148,7 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -176,14 +176,14 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSplunkInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -237,7 +237,7 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSplunkInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -256,11 +256,11 @@ func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]interface{} {
-	var sl []map[string]interface{}
+func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]any {
+	var sl []map[string]any
 	for _, s := range splunkList {
 		// Convert Splunk to a map for saving to state.
-		nbs := map[string]interface{}{
+		nbs := map[string]any{
 			"name":               s.Name,
 			"url":                s.URL,
 			"format":             s.Format,

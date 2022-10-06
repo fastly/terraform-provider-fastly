@@ -15,7 +15,7 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 	cases := []struct {
 		serviceMetadata ServiceMetadata
 		remote          []*gofastly.Backend
-		local           []map[string]interface{}
+		local           []map[string]any
 	}{
 		{
 			serviceMetadata: ServiceMetadata{
@@ -49,7 +49,7 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					Weight:              uint(100),
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                  "test.notexample.com",
 					"address":               "www.notexample.com",

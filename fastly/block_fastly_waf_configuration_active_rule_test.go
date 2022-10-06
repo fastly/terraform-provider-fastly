@@ -17,7 +17,7 @@ import (
 func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFActiveRule
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAFActiveRule{
@@ -27,7 +27,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 					Status:   "log",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"modsec_rule_id": 1110111,
 					"revision":       1,
@@ -190,9 +190,9 @@ func testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules []gofastly.WAFAc
 	return result
 }
 
-func testHashFunc(v interface{}) int {
+func testHashFunc(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m := v.(map[string]any)
 	buf.WriteString(fmt.Sprintf("%d-", m["modsec_rule_id"].(int)))
 	return hashcode.String(buf.String())
 }

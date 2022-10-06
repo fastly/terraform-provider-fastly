@@ -80,7 +80,7 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.CreateCustomTLSCertificateInput{
@@ -101,7 +101,7 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Certificate Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -158,7 +158,7 @@ func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.UpdateCustomTLSCertificateInput{
@@ -178,7 +178,7 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{

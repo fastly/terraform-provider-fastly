@@ -17,7 +17,7 @@ const testKinesisIAMRole = "arn:aws:iam::123456789012:role/KinesisAccess"
 func TestResourceFastlyFlattenKinesis(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Kinesis
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Kinesis{
@@ -34,7 +34,7 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 					FormatVersion:     2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "kinesis-endpoint",
 					"topic":              "stream-name",
@@ -62,7 +62,7 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 					FormatVersion:     2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "kinesis-endpoint",
 					"topic":              "stream-name",

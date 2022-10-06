@@ -167,7 +167,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
@@ -176,7 +176,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schem
 }
 
 // Read refreshes the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -204,14 +204,14 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHTTPSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -277,7 +277,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
@@ -307,11 +307,11 @@ func deleteHTTPS(conn *gofastly.Client, i *gofastly.DeleteHTTPSInput) error {
 	return nil
 }
 
-func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]interface{} {
-	var hsl []map[string]interface{}
+func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]any {
+	var hsl []map[string]any
 	for _, hl := range httpsList {
 		// Convert HTTP logging to a map for saving to state.
-		nhl := map[string]interface{}{
+		nhl := map[string]any{
 			"name":                hl.Name,
 			"response_condition":  hl.ResponseCondition,
 			"format":              hl.Format,
@@ -345,8 +345,8 @@ func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]interface{} {
 	return hsl
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
-	df := httpsMap.(map[string]interface{})
+func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
+	df := httpsMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateHTTPSInput{
@@ -375,8 +375,8 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, 
 	return &opts
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
-	df := httpsMap.(map[string]interface{})
+func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap any, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
+	df := httpsMap.(map[string]any)
 
 	opts := gofastly.DeleteHTTPSInput{
 		ServiceID:      serviceID,

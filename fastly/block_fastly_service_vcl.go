@@ -59,7 +59,7 @@ func (h *VCLServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -77,7 +77,7 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 }
 
 // Read refreshes the resource.
-func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.Key()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -101,7 +101,7 @@ func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 }
 
 // Update updates the resource.
-func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -121,7 +121,7 @@ func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 }
 
 // Delete deletes the resource.
-func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -140,11 +140,11 @@ func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func flattenVCLs(vclList []*gofastly.VCL) []map[string]interface{} {
-	var vl []map[string]interface{}
+func flattenVCLs(vclList []*gofastly.VCL) []map[string]any {
+	var vl []map[string]any
 	for _, vcl := range vclList {
 		// Convert VCLs to a map for saving to state.
-		vclMap := map[string]interface{}{
+		vclMap := map[string]any{
 			"name":    vcl.Name,
 			"content": vcl.Content,
 			"main":    vcl.Main,
@@ -173,7 +173,7 @@ func validateVCLs(d *schema.ResourceData) error {
 
 	numberOfMainVCLs, numberOfIncludeVCLs := 0, 0
 	for _, vclElem := range vcls.(*schema.Set).List() {
-		vcl := vclElem.(map[string]interface{})
+		vcl := vclElem.(map[string]any)
 		if mainVal, hasMain := vcl["main"]; hasMain && mainVal.(bool) {
 			numberOfMainVCLs++
 		} else {

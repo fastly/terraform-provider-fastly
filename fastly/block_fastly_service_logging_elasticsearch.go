@@ -151,7 +151,7 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging addition opts: %#v", opts)
@@ -160,7 +160,7 @@ func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *sche
 }
 
 // Read refreshes the resource.
-func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -188,14 +188,14 @@ func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema
 }
 
 // Update updates the resource.
-func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateElasticsearchInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -255,7 +255,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 }
 
 // Delete deletes the resource.
-func (h *ElasticSearchServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging endpoint removal opts: %#v", opts)
@@ -281,11 +281,11 @@ func deleteElasticsearch(conn *gofastly.Client, i *gofastly.DeleteElasticsearchI
 	return nil
 }
 
-func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[string]interface{} {
-	var esl []map[string]interface{}
+func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[string]any {
+	var esl []map[string]any
 	for _, el := range elasticsearchList {
 		// Convert Elasticsearch logging to a map for saving to state.
-		nel := map[string]interface{}{
+		nel := map[string]any{
 			"name":                el.Name,
 			"response_condition":  el.ResponseCondition,
 			"format":              el.Format,
@@ -317,8 +317,8 @@ func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[str
 	return esl
 }
 
-func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateElasticsearchInput {
-	df := elasticsearchMap.(map[string]interface{})
+func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.CreateElasticsearchInput {
+	df := elasticsearchMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateElasticsearchInput{
@@ -343,8 +343,8 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap inte
 	}
 }
 
-func (h *ElasticSearchServiceAttributeHandler) buildDelete(elasticsearchMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteElasticsearchInput {
-	df := elasticsearchMap.(map[string]interface{})
+func (h *ElasticSearchServiceAttributeHandler) buildDelete(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.DeleteElasticsearchInput {
+	df := elasticsearchMap.(map[string]any)
 
 	return &gofastly.DeleteElasticsearchInput{
 		ServiceID:      serviceID,

@@ -16,7 +16,7 @@ import (
 func TestResourceFastlyFlattenSFTP(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.SFTP
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.SFTP{
@@ -42,7 +42,7 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					CompressionCodec:  "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "sftp-endpoint",
 					"address":            "sftp.example.com",

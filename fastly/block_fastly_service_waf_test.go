@@ -35,7 +35,7 @@ var extraCondition = `
 func TestResourceFastlyFlattenWAF(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAF
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAF{
@@ -45,7 +45,7 @@ func TestResourceFastlyFlattenWAF(t *testing.T) {
 					Response:          "response",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"waf_id":             "test1",
 					"prefetch_condition": "prefetch",

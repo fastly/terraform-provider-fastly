@@ -29,7 +29,7 @@ const testS3IAMRole = "arn:aws:iam::123456789012:role/S3Access"
 func TestResourceFastlyFlattenS3(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.S3
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.S3{
@@ -55,7 +55,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					CompressionCodec:             "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                              "s3-endpoint",
 					"bucket_name":                       "bucket",
@@ -103,7 +103,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					ACL:                          gofastly.S3AccessControlListPrivate,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                              "s3-endpoint",
 					"bucket_name":                       "bucket",

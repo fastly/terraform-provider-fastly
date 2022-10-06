@@ -18,7 +18,7 @@ import (
 func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFRuleExclusion
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAFRuleExclusion{
@@ -60,20 +60,20 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 					Condition:     gofastly.String("req.url.basename == \"index.asp\""),
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"number":          1,
 					"name":            "index page",
 					"exclusion_type":  "rule",
 					"condition":       "req.url.basename == \"index.html\"",
-					"modsec_rule_ids": schema.NewSet(schema.HashInt, []interface{}{2029718, 1010070}),
+					"modsec_rule_ids": schema.NewSet(schema.HashInt, []any{2029718, 1010070}),
 				},
 				{
 					"number":          2,
 					"name":            "index php",
 					"exclusion_type":  "rule",
 					"condition":       "req.url.basename == \"index.php\"",
-					"modsec_rule_ids": schema.NewSet(schema.HashInt, []interface{}{1010070}),
+					"modsec_rule_ids": schema.NewSet(schema.HashInt, []any{1010070}),
 				},
 				{
 					"number":         3,

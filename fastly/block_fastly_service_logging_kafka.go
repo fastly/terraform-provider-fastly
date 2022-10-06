@@ -168,7 +168,7 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kafka logging addition opts: %#v", opts)
@@ -177,7 +177,7 @@ func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.Resou
 }
 
 // Read refreshes the resource.
-func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -205,14 +205,14 @@ func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.Resourc
 }
 
 // Update updates the resource.
-func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateKafkaInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -281,7 +281,7 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 }
 
 // Delete deletes the resource.
-func (h *KafkaServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kafka logging endpoint removal opts: %#v", opts)
@@ -308,11 +308,11 @@ func deleteKafka(conn *gofastly.Client, i *gofastly.DeleteKafkaInput) error {
 	return nil
 }
 
-func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
-	var flattened []map[string]interface{}
+func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]any {
+	var flattened []map[string]any
 	for _, s := range kafkaList {
 		// Convert logging to a map for saving to state.
-		flatKafka := map[string]interface{}{
+		flatKafka := map[string]any{
 			"name":               s.Name,
 			"topic":              s.Topic,
 			"brokers":            s.Brokers,
@@ -347,8 +347,8 @@ func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]interface{} {
 	return flattened
 }
 
-func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateKafkaInput {
-	df := kafkaMap.(map[string]interface{})
+func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap any, serviceID string, serviceVersion int) *gofastly.CreateKafkaInput {
+	df := kafkaMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateKafkaInput{
@@ -376,8 +376,8 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap interface{}, service
 	}
 }
 
-func (h *KafkaServiceAttributeHandler) buildDelete(kafkaMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteKafkaInput {
-	df := kafkaMap.(map[string]interface{})
+func (h *KafkaServiceAttributeHandler) buildDelete(kafkaMap any, serviceID string, serviceVersion int) *gofastly.DeleteKafkaInput {
+	df := kafkaMap.(map[string]any)
 
 	return &gofastly.DeleteKafkaInput{
 		ServiceID:      serviceID,

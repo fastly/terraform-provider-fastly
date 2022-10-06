@@ -67,7 +67,7 @@ func dataSourceFastlyTLSSubscription() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var subscription *fastly.TLSSubscription

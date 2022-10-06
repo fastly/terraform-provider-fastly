@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenDatadog(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Datadog
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Datadog{
@@ -27,7 +27,7 @@ func TestResourceFastlyFlattenDatadog(t *testing.T) {
 					FormatVersion:  2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":           "datadog-endpoint",
 					"token":          "token",

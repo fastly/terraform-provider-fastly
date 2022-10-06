@@ -150,7 +150,7 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
@@ -159,7 +159,7 @@ func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -188,14 +188,14 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCloudfilesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -252,7 +252,7 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging endpoint removal opts: %#v", opts)
@@ -282,11 +282,11 @@ func deleteCloudfiles(conn *gofastly.Client, i *gofastly.DeleteCloudfilesInput) 
 	return nil
 }
 
-func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]interface{} {
-	var lsl []map[string]interface{}
+func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]any {
+	var lsl []map[string]any
 	for _, ll := range cloudfilesList {
 		// Convert Cloud Files logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"bucket_name":        ll.BucketName,
 			"user":               ll.User,
@@ -318,8 +318,8 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]inter
 	return lsl
 }
 
-func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
-	df := cloudfilesMap.(map[string]interface{})
+func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
+	df := cloudfilesMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateCloudfilesInput{
@@ -344,8 +344,8 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{
 	}
 }
 
-func (h *CloudfilesServiceAttributeHandler) buildDelete(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteCloudfilesInput {
-	df := cloudfilesMap.(map[string]interface{})
+func (h *CloudfilesServiceAttributeHandler) buildDelete(cloudfilesMap any, serviceID string, serviceVersion int) *gofastly.DeleteCloudfilesInput {
+	df := cloudfilesMap.(map[string]any)
 
 	return &gofastly.DeleteCloudfilesInput{
 		ServiceID:      serviceID,

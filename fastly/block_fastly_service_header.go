@@ -115,7 +115,7 @@ func (h *HeaderServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildHeader(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Header: %s", err)
@@ -133,7 +133,7 @@ func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -157,14 +157,14 @@ func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHeaderInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -212,7 +212,7 @@ func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteHeaderInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -231,11 +231,11 @@ func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenHeaders(headerList []*gofastly.Header) []map[string]interface{} {
-	var hl []map[string]interface{}
+func flattenHeaders(headerList []*gofastly.Header) []map[string]any {
+	var hl []map[string]any
 	for _, h := range headerList {
 		// Convert Header to a map for saving to state.
-		nh := map[string]interface{}{
+		nh := map[string]any{
 			"name":               h.Name,
 			"action":             h.Action,
 			"ignore_if_set":      h.IgnoreIfSet,
@@ -261,8 +261,8 @@ func flattenHeaders(headerList []*gofastly.Header) []map[string]interface{} {
 	return hl
 }
 
-func buildHeader(headerMap interface{}) (*gofastly.CreateHeaderInput, error) {
-	df := headerMap.(map[string]interface{})
+func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {
+	df := headerMap.(map[string]any)
 	opts := gofastly.CreateHeaderInput{
 		Name:              df["name"].(string),
 		IgnoreIfSet:       gofastly.Compatibool(df["ignore_if_set"].(bool)),

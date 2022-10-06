@@ -151,7 +151,7 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly FTP logging addition opts: %#v", opts)
@@ -160,7 +160,7 @@ func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 }
 
 // Read refreshes the resource.
-func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -188,14 +188,14 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 }
 
 // Update updates the resource.
-func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateFTPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -255,7 +255,7 @@ func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 }
 
 // Delete deletes the resource.
-func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly FTP logging endpoint removal opts: %#v", opts)
@@ -284,11 +284,11 @@ func deleteFTP(conn *gofastly.Client, i *gofastly.DeleteFTPInput) error {
 	return nil
 }
 
-func flattenFTP(ftpList []*gofastly.FTP) []map[string]interface{} {
-	var fsl []map[string]interface{}
+func flattenFTP(ftpList []*gofastly.FTP) []map[string]any {
+	var fsl []map[string]any
 	for _, fl := range ftpList {
 		// Convert FTP logging to a map for saving to state.
-		nfl := map[string]interface{}{
+		nfl := map[string]any{
 			"name":               fl.Name,
 			"address":            fl.Address,
 			"user":               fl.Username,
@@ -320,8 +320,8 @@ func flattenFTP(ftpList []*gofastly.FTP) []map[string]interface{} {
 	return fsl
 }
 
-func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {
-	df := ftpMap.(map[string]interface{})
+func (h *FTPServiceAttributeHandler) buildCreate(ftpMap any, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {
+	df := ftpMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateFTPInput{
@@ -346,8 +346,8 @@ func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID s
 	}
 }
 
-func (h *FTPServiceAttributeHandler) buildDelete(ftpMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteFTPInput {
-	df := ftpMap.(map[string]interface{})
+func (h *FTPServiceAttributeHandler) buildDelete(ftpMap any, serviceID string, serviceVersion int) *gofastly.DeleteFTPInput {
+	df := ftpMap.(map[string]any)
 
 	return &gofastly.DeleteFTPInput{
 		ServiceID:      serviceID,

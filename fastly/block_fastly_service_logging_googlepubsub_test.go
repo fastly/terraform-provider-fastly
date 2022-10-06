@@ -18,7 +18,7 @@ import (
 func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Pubsub
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Pubsub{
@@ -35,7 +35,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 					Placement:         "none",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "googlepubsub-endpoint",
 					"user":               "user",

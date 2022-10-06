@@ -65,7 +65,7 @@ func (h *ConditionServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -86,7 +86,7 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 }
 
 // Read refreshes the resource.
-func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -110,7 +110,7 @@ func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	optsCreate := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -126,7 +126,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -173,7 +173,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -192,11 +192,11 @@ func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 	return nil
 }
 
-func flattenConditions(conditionList []*gofastly.Condition) []map[string]interface{} {
-	var cl []map[string]interface{}
+func flattenConditions(conditionList []*gofastly.Condition) []map[string]any {
+	var cl []map[string]any
 	for _, c := range conditionList {
 		// Convert Conditions to a map for saving to state.
-		nc := map[string]interface{}{
+		nc := map[string]any{
 			"name":      c.Name,
 			"statement": c.Statement,
 			"type":      c.Type,

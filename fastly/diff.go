@@ -8,7 +8,7 @@ import (
 )
 
 // KeyFunc calculates a key from an element
-type KeyFunc func(interface{}) (interface{}, error)
+type KeyFunc func(any) (any, error)
 
 // SetDiff diffs two sets using a key to identify which elements have been added, changed, removed or not modified.
 //
@@ -23,10 +23,10 @@ type SetDiff struct {
 
 // DiffResult contains the differences between two sets
 type DiffResult struct {
-	Added      []interface{}
-	Modified   []interface{}
-	Deleted    []interface{}
-	Unmodified []interface{}
+	Added      []any
+	Modified   []any
+	Deleted    []any
+	Unmodified []any
 }
 
 // NewSetDiff creates a new SetDiff with a provided KeyFunc.
@@ -51,8 +51,8 @@ func NewSetDiff(keyFunc KeyFunc) *SetDiff {
 // really have the option to use 'name' as the lookup key.
 func (h *SetDiff) Diff(oldSet, newSet *schema.Set) (*DiffResult, error) {
 	// Convert the set into a map to facilitate lookup
-	oldSetMap := map[interface{}]interface{}{}
-	newSetMap := map[interface{}]interface{}{}
+	oldSetMap := map[any]any{}
+	newSetMap := map[any]any{}
 
 	for _, elem := range oldSet.List() {
 		key, err := h.computeKey(elem)
@@ -71,7 +71,7 @@ func (h *SetDiff) Diff(oldSet, newSet *schema.Set) (*DiffResult, error) {
 	}
 
 	// Compute all added and modified elements using Terraform set comparison method.
-	var added, modified []interface{}
+	var added, modified []any
 	for _, newElem := range newSet.Difference(oldSet).List() {
 		key, err := h.computeKey(newElem)
 		if err != nil {
@@ -84,7 +84,7 @@ func (h *SetDiff) Diff(oldSet, newSet *schema.Set) (*DiffResult, error) {
 		}
 	}
 
-	var deleted []interface{}
+	var deleted []any
 	for _, oldElem := range oldSet.Difference(newSet).List() {
 		key, err := h.computeKey(oldElem)
 		if err != nil {
@@ -105,7 +105,7 @@ func (h *SetDiff) Diff(oldSet, newSet *schema.Set) (*DiffResult, error) {
 	}, nil
 }
 
-func (h *SetDiff) computeKey(elem interface{}) (interface{}, error) {
+func (h *SetDiff) computeKey(elem any) (any, error) {
 	key, err := h.keyFunc(elem)
 	if err != nil {
 		return nil, err
@@ -123,12 +123,12 @@ func (h *SetDiff) computeKey(elem interface{}) (interface{}, error) {
 // resource to a value that hasn't actually changed because (depending on the
 // attribute) it might have unexpected consequences (e.g. a nested resource
 // gets replaced/recreated). Safer to only update attributes that need to be.
-func (h *SetDiff) Filter(modified map[string]interface{}, oldSet *schema.Set) map[string]interface{} {
+func (h *SetDiff) Filter(modified map[string]any, oldSet *schema.Set) map[string]any {
 	elements := oldSet.List()
-	filtered := make(map[string]interface{})
+	filtered := make(map[string]any)
 
 	for _, e := range elements {
-		m := e.(map[string]interface{})
+		m := e.(map[string]any)
 
 		if m["name"].(string) == modified["name"].(string) {
 			for k, v := range m {
@@ -142,6 +142,6 @@ func (h *SetDiff) Filter(modified map[string]interface{}, oldSet *schema.Set) ma
 	return filtered
 }
 
-func newElementKeyError(elem interface{}, err error) error {
+func newElementKeyError(elem any, err error) error {
 	return fmt.Errorf("error computing the key for element %v, %v", elem, err)
 }

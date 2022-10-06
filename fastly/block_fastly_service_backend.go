@@ -204,7 +204,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreateBackendInput(d.Id(), serviceVersion, resource)
 
 	log.Printf("[DEBUG] Create Backend Opts: %#v", opts)
@@ -217,7 +217,7 @@ func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 }
 
 // Read refreshes the resource.
-func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -240,7 +240,7 @@ func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 }
 
 // Update updates the resource.
-func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildUpdateBackendInput(d.Id(), serviceVersion, resource, modified)
 
 	log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
@@ -252,7 +252,7 @@ func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 }
 
 // Delete deletes the resource.
-func (h *BackendServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.createDeleteBackendInput(d.Id(), serviceVersion, resource)
 
 	log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
@@ -268,7 +268,7 @@ func (h *BackendServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 	return nil
 }
 
-func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string, latestVersion int, bf map[string]interface{}) gofastly.DeleteBackendInput {
+func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string, latestVersion int, bf map[string]any) gofastly.DeleteBackendInput {
 	return gofastly.DeleteBackendInput{
 		ServiceID:      service,
 		ServiceVersion: latestVersion,
@@ -276,7 +276,7 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 	}
 }
 
-func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, df map[string]interface{}) gofastly.CreateBackendInput {
+func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, df map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
@@ -312,14 +312,14 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	return opts
 }
 
-func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID string, latestVersion int, resource, modified map[string]interface{}) gofastly.UpdateBackendInput {
+func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID string, latestVersion int, resource, modified map[string]any) gofastly.UpdateBackendInput {
 	opts := gofastly.UpdateBackendInput{
 		ServiceID:      serviceID,
 		ServiceVersion: latestVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -405,11 +405,11 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	return opts
 }
 
-func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[string]interface{} {
-	bl := make([]map[string]interface{}, 0, len(backendList))
+func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[string]any {
+	bl := make([]map[string]any, 0, len(backendList))
 
 	for _, b := range backendList {
-		backend := map[string]interface{}{
+		backend := map[string]any{
 			"name":                  b.Name,
 			"address":               b.Address,
 			"auto_loadbalance":      b.AutoLoadbalance,

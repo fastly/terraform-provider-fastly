@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenKafka(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Kafka
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Kafka{
@@ -42,7 +42,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					Password:          "password",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "kafka-endpoint",
 					"topic":              "topic",

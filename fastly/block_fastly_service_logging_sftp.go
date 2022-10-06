@@ -166,7 +166,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	if opts.Password == "" && opts.SecretKey == "" {
@@ -179,7 +179,7 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 }
 
 // Read refreshes the resource.
-func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -207,14 +207,14 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 }
 
 // Update updates the resource.
-func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSFTPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -280,7 +280,7 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 }
 
 // Delete deletes the resource.
-func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
@@ -310,11 +310,11 @@ func deleteSFTP(conn *gofastly.Client, i *gofastly.DeleteSFTPInput) error {
 	return nil
 }
 
-func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
-	var ssl []map[string]interface{}
+func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]any {
+	var ssl []map[string]any
 	for _, sl := range sftpList {
 		// Convert SFTP logging to a map for saving to state.
-		nsl := map[string]interface{}{
+		nsl := map[string]any{
 			"name":               sl.Name,
 			"address":            sl.Address,
 			"user":               sl.User,
@@ -348,8 +348,8 @@ func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
 	return ssl
 }
 
-func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
-	df := sftpMap.(map[string]interface{})
+func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
+	df := sftpMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateSFTPInput{
@@ -375,8 +375,8 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID
 	}
 }
 
-func (h *SFTPServiceAttributeHandler) buildDelete(sftpMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteSFTPInput {
-	df := sftpMap.(map[string]interface{})
+func (h *SFTPServiceAttributeHandler) buildDelete(sftpMap any, serviceID string, serviceVersion int) *gofastly.DeleteSFTPInput {
+	df := sftpMap.(map[string]any)
 
 	return &gofastly.DeleteSFTPInput{
 		ServiceID:      serviceID,

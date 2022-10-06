@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenLoggly(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Loggly
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Loggly{
@@ -26,7 +26,7 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 					FormatVersion:  2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":           "loggly-endpoint",
 					"token":          "token",

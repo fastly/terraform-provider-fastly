@@ -202,7 +202,7 @@ func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
-	extraHCLMap := map[string]interface{}{
+	extraHCLMap := map[string]any{
 		"http_violation_score_threshold": 10,
 	}
 
@@ -285,7 +285,7 @@ func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.ServiceDetail, local map[string]interface{}, latestVersion int) resource.TestCheckFunc {
+func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.ServiceDetail, local map[string]any, latestVersion int) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		// The "activate" attribute is not stored on the Fastly API and must be ignored.
 		delete(local, "activate")
@@ -385,7 +385,7 @@ func testAccFastlyServiceWAFVersionV1GetVersionNumber(versions []*gofastly.WAFVe
 	return gofastly.WAFVersion{}, fmt.Errorf("version number %d not found", number)
 }
 
-func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]interface{}, rules string, exclusions string) string {
+func testAccFastlyServiceWAFVersionV1ComposeConfiguration(m map[string]any, rules string, exclusions string) string {
 	hcl := `
         resource "fastly_service_waf_configuration" "waf" {
           waf_id = fastly_service_vcl.foo.waf[0].waf_id
@@ -482,8 +482,8 @@ resource "fastly_service_vcl" "foo" {
 `, name, domainName, backendName, extraHCL)
 }
 
-func testAccFastlyServiceWAFVersionV1BuildConfig(threshold int, activate bool) map[string]interface{} {
-	return map[string]interface{}{
+func testAccFastlyServiceWAFVersionV1BuildConfig(threshold int, activate bool) map[string]any {
+	return map[string]any{
 		"activate":                             activate,
 		"allowed_http_versions":                "HTTP/1.0 HTTP/1.1",
 		"allowed_methods":                      "GET HEAD POST",
@@ -516,8 +516,8 @@ func testAccFastlyServiceWAFVersionV1BuildConfig(threshold int, activate bool) m
 	}
 }
 
-func testAccFastlyServiceWAFVersionV1ToMap(v gofastly.WAFVersion) map[string]interface{} {
-	return map[string]interface{}{
+func testAccFastlyServiceWAFVersionV1ToMap(v gofastly.WAFVersion) map[string]any {
+	return map[string]any{
 		"allowed_http_versions":                v.AllowedHTTPVersions,
 		"allowed_methods":                      v.AllowedMethods,
 		"allowed_request_content_type":         v.AllowedRequestContentType,

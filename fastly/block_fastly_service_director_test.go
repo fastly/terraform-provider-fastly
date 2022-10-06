@@ -16,7 +16,7 @@ import (
 func TestResourceFastlyFlattenDirectors(t *testing.T) {
 	cases := []struct {
 		remoteDirector []*gofastly.Director
-		local          []map[string]interface{}
+		local          []map[string]any
 	}{
 		{
 			remoteDirector: []*gofastly.Director{
@@ -30,13 +30,13 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 					},
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":     "somedirector",
 					"type":     3,
 					"quorum":   75,
 					"retries":  10,
-					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend"}),
+					"backends": schema.NewSet(schema.HashString, []any{"somebackend"}),
 				},
 			},
 		},
@@ -57,14 +57,14 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 					},
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":     "somedirector",
-					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
+					"backends": schema.NewSet(schema.HashString, []any{"somebackend", "someotherbackend"}),
 				},
 				{
 					"name":     "someotherdirector",
-					"backends": schema.NewSet(schema.HashString, []interface{}{"somebackend", "someotherbackend"}),
+					"backends": schema.NewSet(schema.HashString, []any{"somebackend", "someotherbackend"}),
 				},
 			},
 		},

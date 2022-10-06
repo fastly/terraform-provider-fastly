@@ -29,7 +29,7 @@ func dataSourceFastlyTLSActivationIds() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSActivationIDsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyTLSActivationIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var certificateID string

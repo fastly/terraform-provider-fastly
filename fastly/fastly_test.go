@@ -100,7 +100,7 @@ func appendNewLine(s string) string {
 }
 
 // assertEqualsSliceOfMaps compares a slice of maps even if they include schema.Set values
-func assertEqualsSliceOfMaps(t *testing.T, actualSlice []map[string]interface{}, expectedSlice []map[string]interface{}) {
+func assertEqualsSliceOfMaps(t *testing.T, actualSlice []map[string]any, expectedSlice []map[string]any) {
 	for i, actualMap := range actualSlice {
 		var keysToBeRemoved []string
 		for key, value := range actualMap {

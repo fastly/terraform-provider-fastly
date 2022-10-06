@@ -65,7 +65,7 @@ func (h *SnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildSnippet(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building VCL Snippet: %s", err)
@@ -83,7 +83,7 @@ func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 }
 
 // Read refreshes the resource.
-func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.Key()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -107,7 +107,7 @@ func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 }
 
 // Update updates the resource.
-func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	// Safety check in case keys aren't actually set in the HCL.
 	name, _ := resource["name"].(string)
 	priority, _ := resource["priority"].(int)
@@ -124,7 +124,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		Type:           gofastly.SnippetTypeToString(stype),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -149,7 +149,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 }
 
 // Delete deletes the resource.
-func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSnippetInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -168,8 +168,8 @@ func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 	return nil
 }
 
-func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) {
-	df := snippetMap.(map[string]interface{})
+func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
+	df := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
 		Name:     df["name"].(string),
 		Content:  df["content"].(string),
@@ -182,8 +182,8 @@ func buildSnippet(snippetMap interface{}) (*gofastly.CreateSnippetInput, error) 
 	return &opts, nil
 }
 
-func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
-	var sl []map[string]interface{}
+func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]any {
+	var sl []map[string]any
 	for _, snippet := range snippetList {
 		// Skip dynamic snippets
 		if snippet.Dynamic == 1 {
@@ -191,7 +191,7 @@ func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]interface{} {
 		}
 
 		// Convert VCLs to a map for saving to state.
-		snippetMap := map[string]interface{}{
+		snippetMap := map[string]any{
 			"name":     snippet.Name,
 			"type":     snippet.Type,
 			"priority": int(snippet.Priority),

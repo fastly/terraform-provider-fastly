@@ -149,7 +149,7 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
@@ -158,7 +158,7 @@ func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schem
 }
 
 // Read refreshes the resource.
-func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -186,14 +186,14 @@ func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDigitalOceanInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -250,7 +250,7 @@ func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging endpoint removal opts: %#v", opts)
@@ -280,11 +280,11 @@ func deleteDigitalOcean(conn *gofastly.Client, i *gofastly.DeleteDigitalOceanInp
 	return nil
 }
 
-func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string]interface{} {
-	var lsl []map[string]interface{}
+func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string]any {
+	var lsl []map[string]any
 	for _, ll := range digitaloceanList {
 		// Convert DigitalOcean Spaces logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"bucket_name":        ll.BucketName,
 			"domain":             ll.Domain,
@@ -316,8 +316,8 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean) []map[string
 	return lsl
 }
 
-func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDigitalOceanInput {
-	df := digitaloceanMap.(map[string]interface{})
+func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap any, serviceID string, serviceVersion int) *gofastly.CreateDigitalOceanInput {
+	df := digitaloceanMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateDigitalOceanInput{
@@ -342,8 +342,8 @@ func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap interf
 	}
 }
 
-func (h *DigitalOceanServiceAttributeHandler) buildDelete(digitaloceanMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDigitalOceanInput {
-	df := digitaloceanMap.(map[string]interface{})
+func (h *DigitalOceanServiceAttributeHandler) buildDelete(digitaloceanMap any, serviceID string, serviceVersion int) *gofastly.DeleteDigitalOceanInput {
+	df := digitaloceanMap.(map[string]any)
 
 	return &gofastly.DeleteDigitalOceanInput{
 		ServiceID:      serviceID,

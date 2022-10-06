@@ -79,7 +79,7 @@ func Provider() *schema.Provider {
 		},
 	}
 
-	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		config := Config{
 			APIKey:     d.Get("api_key").(string),
 			BaseURL:    d.Get("base_url").(string),

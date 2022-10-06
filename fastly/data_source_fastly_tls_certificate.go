@@ -81,7 +81,7 @@ func dataSourceFastlyTLSCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics

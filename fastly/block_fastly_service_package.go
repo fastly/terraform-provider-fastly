@@ -56,7 +56,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		// Schema guarantees one package block.
-		pkg := v.([]interface{})[0].(map[string]interface{})
+		pkg := v.([]any)[0].(map[string]any)
 		packageFilename := pkg["filename"].(string)
 
 		err := updatePackage(conn, &gofastly.UpdatePackageInput{
@@ -74,7 +74,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 
 // Read refreshes the attribute state against the Fastly API.
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	resources := d.Get(h.key).([]interface{})
+	resources := d.Get(h.key).([]any)
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
@@ -106,9 +106,9 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 	return err
 }
 
-func flattenPackage(pkg *gofastly.Package, filename string) []map[string]interface{} {
-	var pa []map[string]interface{}
-	p := map[string]interface{}{
+func flattenPackage(pkg *gofastly.Package, filename string) []map[string]any {
+	var pa []map[string]any
+	p := map[string]any{
 		"source_code_hash": pkg.Metadata.HashSum,
 		"filename":         filename,
 	}

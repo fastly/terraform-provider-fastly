@@ -91,7 +91,7 @@ func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging addition opts: %#v", opts)
@@ -100,7 +100,7 @@ func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -128,14 +128,14 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateScalyrInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -168,7 +168,7 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *ScalyrServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging endpoint removal opts: %#v", opts)
@@ -196,11 +196,11 @@ func deleteScalyr(conn *gofastly.Client, i *gofastly.DeleteScalyrInput) error {
 	return nil
 }
 
-func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]interface{} {
-	var flattened []map[string]interface{}
+func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]any {
+	var flattened []map[string]any
 	for _, s := range scalyrList {
 		// Convert logging to a map for saving to state.
-		flatScalyr := map[string]interface{}{
+		flatScalyr := map[string]any{
 			"name":               s.Name,
 			"region":             s.Region,
 			"token":              s.Token,
@@ -223,8 +223,8 @@ func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]interface{} {
 	return flattened
 }
 
-func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {
-	df := scalyrMap.(map[string]interface{})
+func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {
+	df := scalyrMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateScalyrInput{
@@ -240,8 +240,8 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap interface{}, servi
 	}
 }
 
-func (h *ScalyrServiceAttributeHandler) buildDelete(scalyrMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteScalyrInput {
-	df := scalyrMap.(map[string]interface{})
+func (h *ScalyrServiceAttributeHandler) buildDelete(scalyrMap any, serviceID string, serviceVersion int) *gofastly.DeleteScalyrInput {
+	df := scalyrMap.(map[string]any)
 
 	return &gofastly.DeleteScalyrInput{
 		ServiceID:      serviceID,

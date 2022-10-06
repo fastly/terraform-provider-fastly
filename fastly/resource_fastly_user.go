@@ -44,7 +44,7 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	u, err := conn.CreateUser(&gofastly.CreateUserInput{
@@ -61,7 +61,7 @@ func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceUserRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing User Configuration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
@@ -79,7 +79,7 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	// Update Name and/or Role.
@@ -97,7 +97,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return resourceUserRead(ctx, d, meta)
 }
 
-func resourceUserDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteUser(&gofastly.DeleteUserInput{

@@ -62,7 +62,7 @@ func resourceFastlyTLSPrivateKey() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	privateKey, err := conn.CreatePrivateKey(&gofastly.CreatePrivateKeyInput{
@@ -78,7 +78,7 @@ func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceDa
 	return resourceFastlyTLSPrivateKeyRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Private Key Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -127,7 +127,7 @@ func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceFastlyTLSPrivateKeyDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPrivateKeyDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeletePrivateKey(&gofastly.DeletePrivateKeyInput{

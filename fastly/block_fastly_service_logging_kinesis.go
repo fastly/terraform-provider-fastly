@@ -110,7 +110,7 @@ func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging addition opts: %#v", opts)
@@ -119,7 +119,7 @@ func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 }
 
 // Read refreshes the resource.
-func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -147,14 +147,14 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 }
 
 // Update updates the resource.
-func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateKinesisInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -196,7 +196,7 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 }
 
 // Delete deletes the resource.
-func (h *KinesisServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging endpoint removal opts: %#v", opts)
@@ -226,11 +226,11 @@ func deleteKinesis(conn *gofastly.Client, i *gofastly.DeleteKinesisInput) error 
 	return nil
 }
 
-func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]interface{} {
-	var lsl []map[string]interface{}
+func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]any {
+	var lsl []map[string]any
 	for _, ll := range kinesisList {
 		// Convert Kinesis logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"topic":              ll.StreamName,
 			"region":             ll.Region,
@@ -256,8 +256,8 @@ func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]interface{} {
 	return lsl
 }
 
-func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateKinesisInput {
-	df := kinesisMap.(map[string]interface{})
+func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID string, serviceVersion int) *gofastly.CreateKinesisInput {
+	df := kinesisMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateKinesisInput{
@@ -276,8 +276,8 @@ func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap interface{}, ser
 	}
 }
 
-func (h *KinesisServiceAttributeHandler) buildDelete(kinesisMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteKinesisInput {
-	df := kinesisMap.(map[string]interface{})
+func (h *KinesisServiceAttributeHandler) buildDelete(kinesisMap any, serviceID string, serviceVersion int) *gofastly.DeleteKinesisInput {
+	df := kinesisMap.(map[string]any)
 
 	return &gofastly.DeleteKinesisInput{
 		ServiceID:      serviceID,

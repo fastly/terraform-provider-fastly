@@ -60,7 +60,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		DeleteContext: resourceDelete(serviceDef),
 		Importer:      resourceImport(),
 		CustomizeDiff: customdiff.All(
-			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ any) bool {
 				// If anything other than name, comment and version_comment has changed, the current version will be
 				// cloned in resourceServiceUpdate so set it as recomputed. These three fields can be updated without
 				// creating a new version
@@ -72,7 +72,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				}
 				return false
 			}),
-			customdiff.ComputedIf("active_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+			customdiff.ComputedIf("active_version", func(_ context.Context, d *schema.ResourceDiff, _ any) bool {
 				// If cloned_version is recomputed and we are automatically activating new versions (controlled with the
 				// activate flag) then the active_version will be recomputed too.
 				return d.HasChange("cloned_version") && d.Get("activate").(bool)
@@ -162,7 +162,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 // resourceCreate satisfies the Terraform resource schema Create "interface"
 // while injecting the ServiceDefinition into the true Create functionality.
 func resourceCreate(serviceDef ServiceDefinition) schema.CreateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceCreate(ctx, d, meta, serviceDef)
 	}
 }
@@ -170,7 +170,7 @@ func resourceCreate(serviceDef ServiceDefinition) schema.CreateContextFunc {
 // resourceRead satisfies the Terraform resource schema Read "interface"
 // while injecting the ServiceDefinition into the true Read functionality.
 func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceRead(ctx, d, meta, serviceDef)
 	}
 }
@@ -178,7 +178,7 @@ func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
 // resourceUpdate satisfies the Terraform resource schema Update "interface"
 // while injecting the ServiceDefinition into the true Update functionality.
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceUpdate(ctx, d, meta, serviceDef)
 	}
 }
@@ -186,7 +186,7 @@ func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
 // resourceDelete satisfies the Terraform resource schema Delete "interface"
 // while injecting the ServiceDefinition into the true Delete functionality.
 func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceDelete(ctx, d, meta, serviceDef)
 	}
 }
@@ -194,7 +194,7 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 // resourceImport satisfies the Terraform resource schema Importer "interface"
 func resourceImport() *schema.ResourceImporter {
 	return &schema.ResourceImporter{
-		StateContext: func(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+		StateContext: func(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 			parts := strings.Split(d.Id(), "@")
 			if len(parts) > 2 {
 				return nil, fmt.Errorf("expected import ID to either be the service ID, or be specified as <service id>@<service version>, e.g. nci48cow8ncw8ocn75@3")
@@ -222,7 +222,7 @@ func resourceImport() *schema.ResourceImporter {
 }
 
 // resourceServiceCreate provides service resource Create functionality.
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any, serviceDef ServiceDefinition) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -250,7 +250,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 // resourceServiceUpdate provides service resource Update functionality.
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any, serviceDef ServiceDefinition) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -412,7 +412,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 // resourceServiceRead provides service resource Read functionality.
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, serviceDef ServiceDefinition) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Service Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -539,7 +539,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 // resourceServiceDelete provides service resource Delete functionality.
-func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta interface{}, _ ServiceDefinition) diag.Diagnostics {
+func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, _ ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.

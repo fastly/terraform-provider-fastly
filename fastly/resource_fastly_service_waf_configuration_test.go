@@ -202,7 +202,7 @@ func TestAccFastlyServiceWAFVersion_Delete(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersion_Import(t *testing.T) {
+func TestAccFastlyServiceWAFVersion_Config(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

@@ -320,6 +320,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			// immediately mutable, so we need to sleep a few and let Fastly ready
 			// itself. Typically, 7 seconds is enough.
 			log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
+
+			// TODO: Replace sleep with either resource.Retry() or WaitForState().
+			// https://github.com/bflad/tfproviderlint/tree/main/passes/R018
+
+			// lintignore:R018
 			time.Sleep(7 * time.Second)
 
 			// Update the cloned version's comment.

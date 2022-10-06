@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyIPRanges(t *testing.T) {
+func TestAccFastlyIPRanges_Config(t *testing.T) {
 	// NOTE: due to how providers are instantiated during ParallelTest
 	// there may be a case where some tests get polluted with an instance of the provider
 	// with no API key created in this particular test (ie., the "no_auth" option).

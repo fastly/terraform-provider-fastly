@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceWAFVersionV1DetermineVersion(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_DetermineVersion(t *testing.T) {
 	cases := []struct {
 		remote  []*gofastly.WAFVersion
 		local   int
@@ -63,7 +63,7 @@ func TestAccFastlyServiceWAFVersionV1DetermineVersion(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_Add(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
@@ -88,7 +88,7 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_AddExistingService(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
@@ -119,7 +119,7 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersionUpdate(t *testing.T) {
+func TestAccFastlyServiceWAFVersion_Update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -170,7 +170,7 @@ func TestAccFastlyServiceWAFVersionUpdate(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersionDelete(t *testing.T) {
+func TestAccFastlyServiceWAFVersion_Delete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
@@ -202,7 +202,7 @@ func TestAccFastlyServiceWAFVersionDelete(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
+func TestAccFastlyServiceWAFVersion_Import(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

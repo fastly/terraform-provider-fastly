@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_FlattenWAFActiveRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFActiveRule
 		local  []map[string]any
@@ -42,7 +42,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteRules(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteRules(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

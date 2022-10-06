@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyDataSourceDatacenters(t *testing.T) {
+func TestAccFastlyDataSource_Datacenters(t *testing.T) {
 	resourceName := "data.fastly_datacenters.some"
 
 	// lintignore:XAT001

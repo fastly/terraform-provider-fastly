@@ -1,14 +1,12 @@
 package fastly
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"sort"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
-	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -188,11 +186,4 @@ func testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules []gofastly.WAFAc
 		result = result + rule
 	}
 	return result
-}
-
-func testHashFunc(v any) int {
-	var buf bytes.Buffer
-	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%d-", m["modsec_rule_id"].(int)))
-	return hashcode.String(buf.String())
 }

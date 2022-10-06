@@ -510,33 +510,6 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName)
 }
 
-func testAccServiceVCLBlobStorageLoggingConfigEnv(serviceName string) string {
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
-  name = "%s"
-
-  domain {
-    name = "%s"
-    comment = "tf-testing-domain"
-  }
-
-  backend {
-    address = "aws.amazon.com"
-    name = "tf-test-backend"
-  }
-
-  logging_blobstorage {
-    name = "test-blobstorage"
-    account_name = "test"
-    container = "fastly"
-  }
-
-  force_destroy = true
-}`, serviceName, domainName)
-}
-
 func setBlobStorageEnv(sas string, t *testing.T) func() {
 	e := getBlobStorageEnv()
 	// Set all the envs to a dummy value

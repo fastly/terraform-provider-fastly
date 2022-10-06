@@ -43,6 +43,16 @@ test:
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -parallel=$(TEST_PARALLELISM) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
 
+# WARNING: This target will delete infrastructure.
+clean_test:
+	@printf 'WARNING: This will delete infrastructure. Continue? (y/n) '; \
+	read answer; \
+	if echo "$$answer" | grep -iq '^y'; then \
+	  SILENCE=true make sweep || true; \
+		fastly service list --token $$FASTLY_API_KEY | grep -E '^tf\-' | awk '{print $$2}' | xargs -I % fastly service delete --token $$FASTLY_API_KEY -f -s %; \
+		TEST_PARALLELISM=8 make testacc; \
+	fi
+
 vet:
 	@echo "go vet ."
 	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
@@ -61,12 +71,8 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-# DISABLED until Terraform provider supports go1.18 as goreleaser can't be
-# installed with a version less than 1.18.
-#
-# .PHONY: goreleaser-bin
-# goreleaser-bin:
-# 	go install github.com/goreleaser/goreleaser@latest
+goreleaser-bin:
+	go install github.com/goreleaser/goreleaser@latest
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip-validate will skip the checks
@@ -74,8 +80,7 @@ errcheck:
 # --single-target will be quicker and only build for your os & architecture
 # e.g.
 # make goreleaser GORELEASER_ARGS="--skip-validate --rm-dist"
-.PHONY: goreleaser
-goreleaser:
+goreleaser: goreleaser-bin
 	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
@@ -106,10 +111,12 @@ tfproviderlint: $(BIN)/tfproviderlint
 	$(BIN)/tfproviderlint $(TFPROVIDERLINT_ARGS) ./...
 
 sweep:
-	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m
+	@if [ "$(SILENCE)" != "true" ]; then \
+		echo "WARNING: This will destroy infrastructure. Use only in development accounts."; \
+	fi
+	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m || true
 
 clean:
 	rm -rf ./bin
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs clean
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs clean clean_test goreleaser goreleaser-bin

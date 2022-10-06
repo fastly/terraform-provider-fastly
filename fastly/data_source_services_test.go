@@ -53,6 +53,6 @@ data "fastly_services" "some" {
 `
 
 	b := make([]byte, 16)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return fmt.Sprintf(tf, hex.EncodeToString(b))
 }

@@ -313,7 +313,10 @@ func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_splunk"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 

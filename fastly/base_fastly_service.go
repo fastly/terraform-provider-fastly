@@ -153,7 +153,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	// Register adds schema attributes to the overall schema for the resource. This allows each AttributeHandler to
 	// define its own attributes while allowing the overall set to be composed.
 	for _, a := range serviceDef.GetAttributeHandler() {
-		a.Register(s) // Mutates s, adding handler-specific schema items to the list.
+		_ = a.Register(s)
 	}
 
 	return s
@@ -202,7 +202,10 @@ func resourceImport() *schema.ResourceImporter {
 
 			id := parts[0]
 			d.SetId(id)
-			d.Set("imported", true)
+			err := d.Set("imported", true)
+			if err != nil {
+				return nil, fmt.Errorf("error setting imported attribute into the state: %w", err)
+			}
 
 			if len(parts) == 2 {
 				version, err := strconv.Atoi(parts[1])
@@ -533,7 +536,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// To ensure nested resources (e.g. backends, domains etc) don't continue to
 	// call the API to refresh the internal Terraform state, once an import is
 	// complete, we reset the 'imported' computed attribute to false.
-	d.Set("imported", false)
+	err = d.Set("imported", false)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

@@ -27,7 +27,7 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-func TestProvider_impl(_ *testing.T) {
+func TestProviderImpl(_ *testing.T) {
 	_ = Provider()
 }
 

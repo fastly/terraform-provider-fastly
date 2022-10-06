@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccFastlyDataSourceTLSConfiguration_basic(t *testing.T) {
+func TestAccFastlyDataSourceTLSConfigurationBasic(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -39,7 +39,7 @@ data "fastly_tls_configuration" "subject" {
 }
 `
 
-func TestAccFastlyDataSourceTLSConfiguration_withIDLookup(t *testing.T) {
+func TestAccFastlyDataSourceTLSConfigurationWithIDLookup(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {

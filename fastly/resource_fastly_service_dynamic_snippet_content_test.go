@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
+func TestAccFastlyServiceDynamicSnippetContentCreate(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -51,7 +51,7 @@ func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDynamicSnippetContent_update(t *testing.T) {
+func TestAccFastlyServiceDynamicSnippetContentUpdate(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dynamicSnippetName := fmt.Sprintf("dynamic snippet %s", acctest.RandString(10))
@@ -89,7 +89,7 @@ func TestAccFastlyServiceDynamicSnippetContent_update(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceDynamicSnippetContent_external_snippet_is_removed(t *testing.T) {
+func TestAccFastlyServiceDynamicSnippetContentExternalSnippetIsRemoved(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -130,7 +130,7 @@ func TestAccFastlyServiceDynamicSnippetContent_external_snippet_is_removed(t *te
 	})
 }
 
-func TestAccFastlyServiceDynamicSnippetContent_normal_snippet_is_not_removed(t *testing.T) {
+func TestAccFastlyServiceDynamicSnippetContentNormalSnippetIsNotRemoved(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

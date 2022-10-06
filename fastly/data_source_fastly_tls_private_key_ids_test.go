@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccFastlyDataSourceTLSPrivateKeyIds_basic(t *testing.T) {
+func TestAccFastlyDataSourceTLSPrivateKeyIdsBasic(t *testing.T) {
 	key, _, err := generateKeyAndCert()
 	require.NoError(t, err)
 

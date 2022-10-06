@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyUser_basic(t *testing.T) {
+func TestAccFastlyUserBasic(t *testing.T) {
 	var user gofastly.User
 	login := fmt.Sprintf("tf-test-%s@example.com", acctest.RandString(10))
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -52,7 +52,7 @@ func TestAccFastlyUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyUser_updateLogin(t *testing.T) {
+func TestAccFastlyUserUpdateLogin(t *testing.T) {
 	var user gofastly.User
 	login := fmt.Sprintf("tf-test-%s@example.com", acctest.RandString(10))
 	login2 := fmt.Sprintf("tf-test-%s@example.com", acctest.RandString(10))

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccFastlyServiceVCL_creation_with_versionless_resources(t *testing.T) {
+func TestAccFastlyServiceVCLCreationWithVersionlessResources(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	serviceName := "tf-test-service-versionless"

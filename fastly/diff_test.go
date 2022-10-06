@@ -2,12 +2,13 @@ package fastly
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
-func TestSetDiff_Diff(t *testing.T) {
+func TestSetDiffDiff(t *testing.T) {
 	cases := []struct {
 		name               string
 		keyFunc            KeyFunc

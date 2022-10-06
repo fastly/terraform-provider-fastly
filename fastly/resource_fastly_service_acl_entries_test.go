@@ -62,7 +62,7 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceAclEntries_create(t *testing.T) {
+func TestAccFastlyServiceAclEntriesCreate(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
@@ -102,7 +102,7 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
+func TestAccFastlyServiceAclEntriesCreateUpdateImport(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
@@ -160,7 +160,7 @@ func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
+func TestAccFastlyServiceAclEntriesUpdateAdditionalFields(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := "ACL Test Update Negated Field"
@@ -224,7 +224,7 @@ func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
+func TestAccFastlyServiceAclEntriesDelete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
@@ -265,7 +265,7 @@ func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
+func TestAccFastlyServiceAclEntriesProcess1001Entries(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -313,7 +313,7 @@ func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
+func TestAccFastlyServiceAclEntriesManageEntriesFalse(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))

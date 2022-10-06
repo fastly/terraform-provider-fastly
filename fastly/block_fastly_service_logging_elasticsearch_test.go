@@ -70,7 +70,7 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
+func TestAccFastlyServiceVCLLoggingElasticsearchBasic(t *testing.T) {
 	var service fst.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -169,7 +169,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
+func TestAccFastlyServiceVCLLoggingElasticsearchBasicCompute(t *testing.T) {
 	var service fst.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

@@ -66,7 +66,7 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
+func TestAccFastlyServiceVCLGzipsBasic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
+func TestAccFastlyServiceVCLBigquerylogging(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -42,7 +42,7 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
+func TestAccFastlyServiceVCLBigqueryloggingCompute(t *testing.T) {
 	var service gofastly.ServiceDetail
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

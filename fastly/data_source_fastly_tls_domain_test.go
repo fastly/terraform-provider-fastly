@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccFastlyDataSourceTLSDomain_basic(t *testing.T) {
+func TestAccFastlyDataSourceTLSDomainBasic(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.example", name)
 

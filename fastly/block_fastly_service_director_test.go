@@ -105,7 +105,7 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 // the second director is unchanged and a third director is added.
 // In the final test, the first director is removed while the second
 // director is unchanged and one backend for the third director is removed.
-func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
+func TestAccFastlyServiceVCLDirectorsBasic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

@@ -128,7 +128,7 @@ var datadogDefaultFormat = `{
   "socket_ploss": %{client.socket.ploss}V
 }`
 
-func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
+func TestAccFastlyServiceVCLLoggingDatadogBasic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
@@ -194,7 +194,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
+func TestAccFastlyServiceVCLLoggingDatadogBasicCompute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)

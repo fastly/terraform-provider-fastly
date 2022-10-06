@@ -71,7 +71,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
+func TestAccFastlyServiceVCLSyslogBasic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -145,7 +145,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
+func TestAccFastlyServiceVCLSyslogBasicCompute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -181,7 +181,7 @@ func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
+func TestAccFastlyServiceVCLSyslogFormatVersion(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -221,7 +221,7 @@ func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
 
 // This test should not be run in parallel due to its use of schema.EnvDefaultFunc to set/reset environment variables,
 // which conflicts with other running tests.
-func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
+func TestAccFastlyServiceVCLSyslogUseTLS(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
 		t.Errorf("failed to generate key and cert: %s", err)

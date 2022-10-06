@@ -59,7 +59,7 @@ func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
+func TestAccFastlyServiceVCLHealthcheckBasic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

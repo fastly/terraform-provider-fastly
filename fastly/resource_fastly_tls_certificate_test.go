@@ -20,7 +20,7 @@ func init() {
 	})
 }
 
-func TestAccFastlyTLSCertificate_withName(t *testing.T) {
+func TestAccFastlyTLSCertificateWithName(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	updatedName := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.example.com", name)
@@ -65,7 +65,7 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 	})
 }
 
-func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
+func TestAccFastlyTLSCertificateWithoutName(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain := fmt.Sprintf("%s.example.com", name)
 

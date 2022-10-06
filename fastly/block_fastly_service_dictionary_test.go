@@ -43,7 +43,7 @@ func TestResourceFastlyFlattenDictionary(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
+func TestAccFastlyServiceVCLDictionary(t *testing.T) {
 	var service gofastly.ServiceDetail
 	var dictionary gofastly.Dictionary
 	name := acctest.RandomWithPrefix(testResourcePrefix)
@@ -106,7 +106,7 @@ func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
+func TestAccFastlyServiceVCLDictionaryWriteOnly(t *testing.T) {
 	var service gofastly.ServiceDetail
 	var dictionary gofastly.Dictionary
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))

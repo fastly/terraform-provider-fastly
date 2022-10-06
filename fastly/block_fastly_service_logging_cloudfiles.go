@@ -32,47 +32,29 @@ func (h *CloudfilesServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
-		"bucket_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of your Cloud Files container",
-		},
-
-		"user": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The username for your Cloud Files account",
-		},
-
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "Your Cloud File account access key",
 		},
-
-		// Optional fields
-		"public_key": {
+		"bucket_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of your Cloud Files container",
+		},
+		"compression_codec": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
-
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
 			Description: GzipLevelDescription,
 		},
-
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -80,37 +62,43 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
-
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The path to upload logs to",
 		},
-
-		"region": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)",
-		},
-
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
 			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
 		},
-
+		"public_key": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)",
+		},
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
 			Description: TimestampFormatDescription,
 		},
-		"compression_codec": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for your Cloud Files account",
 		},
 	}
 

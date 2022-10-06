@@ -32,29 +32,10 @@ func (h *SplunkServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-		"url": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The Splunk URL to stream logs to",
-		},
-		"token": {
-			Type:        schema.TypeString,
-			Required:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", nil),
-			Description: "The Splunk token to be used for authentication",
-			Sensitive:   true,
-		},
-		// Optional fields
-		"tls_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)",
 		},
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
@@ -74,6 +55,23 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_CLIENT_KEY", ""),
 			Description: "The client private key used to make authenticated requests. Must be in PEM format.",
 			Sensitive:   true,
+		},
+		"tls_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SPLUNK_TOKEN", nil),
+			Description: "The Splunk token to be used for authentication",
+			Sensitive:   true,
+		},
+		"url": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Splunk URL to stream logs to",
 		},
 		"use_tls": {
 			Type:        schema.TypeBool,

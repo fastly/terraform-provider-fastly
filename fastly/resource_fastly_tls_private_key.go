@@ -20,19 +20,6 @@ func resourceFastlyTLSPrivateKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"key_pem": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Private key in PEM format.",
-				Sensitive:   true,
-			},
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Customisable name of the private key.",
-			},
 			"created_at": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -43,20 +30,33 @@ func resourceFastlyTLSPrivateKey() *schema.Resource {
 				Computed:    true,
 				Description: "The key length used to generate the private key.",
 			},
+			"key_pem": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Private key in PEM format.",
+				Sensitive:   true,
+			},
 			"key_type": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The algorithm used to generate the private key. Must be RSA.",
 			},
-			"replace": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Whether Fastly recommends replacing this private key.",
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Customisable name of the private key.",
 			},
 			"public_key_sha1": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Useful for safely identifying the key.",
+			},
+			"replace": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether Fastly recommends replacing this private key.",
 			},
 		},
 	}

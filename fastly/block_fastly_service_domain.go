@@ -37,16 +37,15 @@ func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 		Description: "A set of Domain names to serve as entry points for your Service",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.",
-				},
-
 				"comment": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "An optional comment about the Domain.",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.",
 				},
 			},
 		},

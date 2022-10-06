@@ -32,24 +32,21 @@ func (h *HoneycombServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
+		"dataset": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Honeycomb Dataset you want to log to",
+		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "The Write Key from the Account page of your Honeycomb account",
-		},
-
-		"dataset": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The Honeycomb Dataset you want to log to",
 		},
 	}
 

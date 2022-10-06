@@ -22,26 +22,12 @@ func resourceServiceACLEntries() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceACLEntriesImport,
 		},
-
 		Schema: map[string]*schema.Schema{
-			"service_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ID of the Service that the ACL belongs to",
-			},
-
 			"acl_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "The ID of the ACL that the items belong to",
-			},
-			"manage_entries": {
-				Type:        schema.TypeBool,
-				Default:     false,
-				Optional:    true,
-				Description: "Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally",
 			},
 			"entry": {
 				Type:        schema.TypeSet,
@@ -53,6 +39,11 @@ func resourceServiceACLEntries() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"comment": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A personal freeform descriptive note",
+						},
 						"id": {
 							Type:        schema.TypeString,
 							Description: "The unique ID of the entry",
@@ -63,24 +54,31 @@ func resourceServiceACLEntries() *schema.Resource {
 							Description: "An IP address that is the focus for the ACL",
 							Required:    true,
 						},
-						"subnet": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "An optional subnet mask applied to the IP address",
-						},
 						"negated": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
 							Description: "A boolean that will negate the match if true",
 						},
-						"comment": {
+						"subnet": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A personal freeform descriptive note",
+							Description: "An optional subnet mask applied to the IP address",
 						},
 					},
 				},
+			},
+			"manage_entries": {
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				Description: "Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally",
+			},
+			"service_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The ID of the Service that the ACL belongs to",
 			},
 		},
 	}

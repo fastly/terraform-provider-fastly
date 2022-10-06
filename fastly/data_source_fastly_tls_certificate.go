@@ -14,28 +14,11 @@ import (
 func dataSourceFastlyTLSCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyTLSCertificateRead,
-
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:          schema.TypeString,
-				Description:   "Unique ID assigned to certificate by Fastly",
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"name", "issued_to", "domains", "issuer"},
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Description:   "Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.",
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"id"},
-			},
-			"issued_to": {
-				Type:          schema.TypeString,
-				Description:   "The hostname for which a certificate was issued.",
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"id"},
+			"created_at": {
+				Type:        schema.TypeString,
+				Description: "Timestamp (GMT) when the certificate was created",
+				Computed:    true,
 			},
 			"domains": {
 				Type:          schema.TypeSet,
@@ -45,6 +28,20 @@ func dataSourceFastlyTLSCertificate() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"id"},
 			},
+			"id": {
+				Type:          schema.TypeString,
+				Description:   "Unique ID assigned to certificate by Fastly",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"name", "issued_to", "domains", "issuer"},
+			},
+			"issued_to": {
+				Type:          schema.TypeString,
+				Description:   "The hostname for which a certificate was issued.",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"id"},
+			},
 			"issuer": {
 				Type:          schema.TypeString,
 				Description:   "The certificate authority that issued the certificate.",
@@ -52,15 +49,12 @@ func dataSourceFastlyTLSCertificate() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"id"},
 			},
-			"created_at": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the certificate was created",
-				Computed:    true,
-			},
-			"updated_at": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the certificate was last updated",
-				Computed:    true,
+			"name": {
+				Type:          schema.TypeString,
+				Description:   "Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"id"},
 			},
 			"replace": {
 				Type:        schema.TypeBool,
@@ -75,6 +69,11 @@ func dataSourceFastlyTLSCertificate() *schema.Resource {
 			"signature_algorithm": {
 				Type:        schema.TypeString,
 				Description: "The algorithm used to sign the certificate",
+				Computed:    true,
+			},
+			"updated_at": {
+				Type:        schema.TypeString,
+				Description: "Timestamp (GMT) when the certificate was last updated",
 				Computed:    true,
 			},
 		},

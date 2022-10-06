@@ -37,11 +37,6 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource",
-				},
 				"backends": {
 					Type:        schema.TypeSet,
 					Required:    true,
@@ -54,11 +49,10 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     "",
 					Description: "An optional comment about the Director",
 				},
-				"shield": {
+				"name": {
 					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Selected POP to serve as a \"shield\" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response",
+					Required:    true,
+					Description: "Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"quorum": {
 					Type:             schema.TypeInt,
@@ -67,18 +61,24 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 					Description:      "Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`",
 					ValidateDiagFunc: validateDirectorQuorum(),
 				},
+				"retries": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     5,
+					Description: "How many backends to search if it fails. Default `5`",
+				},
+				"shield": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Selected POP to serve as a \"shield\" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response",
+				},
 				"type": {
 					Type:             schema.TypeInt,
 					Optional:         true,
 					Default:          1,
 					Description:      "Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`",
 					ValidateDiagFunc: validateDirectorType(),
-				},
-				"retries": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     5,
-					Description: "How many backends to search if it fails. Default `5`",
 				},
 			},
 		},

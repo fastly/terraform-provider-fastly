@@ -32,18 +32,11 @@ func (h *BackendServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource",
-		},
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "An IPv4, hostname, or IPv6 address for the Backend",
 		},
-		// Optional fields, defaults where they exist
 		"auto_loadbalance": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -86,30 +79,6 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     200,
 			Description: "Maximum number of connections for this Backend. Default `200`",
 		},
-		"port": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     80,
-			Description: "The port number on which the Backend responds. Default `80`",
-		},
-		"override_host": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "The hostname to override the Host header",
-		},
-		"shield": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response",
-		},
-		"use_ssl": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether or not to use SSL to reach the Backend. Default `false`",
-		},
 		"max_tls_version": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -122,24 +91,28 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "",
 			Description: "Minimum allowed TLS version on SSL connections to this backend.",
 		},
-		"ssl_ciphers": {
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"override_host": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.",
+			Description: "The hostname to override the Host header",
 		},
-		"ssl_check_cert": {
-			Type:        schema.TypeBool,
+		"port": {
+			Type:        schema.TypeInt,
 			Optional:    true,
-			Default:     true,
-			Description: "Be strict about checking SSL certs. Default `true`",
+			Default:     80,
+			Description: "The port number on which the Backend responds. Default `80`",
 		},
-		"ssl_hostname": {
+		"shield": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Used for both SNI during the TLS handshake and to validate the cert",
-			Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
+			Description: "The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response",
 		},
 		"ssl_ca_cert": {
 			Type:        schema.TypeString,
@@ -153,11 +126,17 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "",
 			Description: "Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all",
 		},
-		"ssl_sni_hostname": {
+		"ssl_check_cert": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Be strict about checking SSL certs. Default `true`",
+		},
+		"ssl_ciphers": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all",
+			Description: "Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.",
 		},
 		"ssl_client_cert": {
 			Type:        schema.TypeString,
@@ -172,6 +151,25 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "",
 			Description: "Client key attached to origin. Used when connecting to the backend",
 			Sensitive:   true,
+		},
+		"ssl_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Used for both SNI during the TLS handshake and to validate the cert",
+			Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
+		},
+		"ssl_sni_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all",
+		},
+		"use_ssl": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Whether or not to use SSL to reach the Backend. Default `false`",
 		},
 		"weight": {
 			Type:        schema.TypeInt,

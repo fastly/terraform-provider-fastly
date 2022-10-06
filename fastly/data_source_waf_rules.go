@@ -16,19 +16,12 @@ import (
 func dataSourceFastlyWAFRules() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyWAFRulesRead,
-
 		Schema: map[string]*schema.Schema{
-			"publishers": {
+			"exclude_modsec_rule_ids": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A list of publishers to be used as filters for the data set.",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"tags": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A list of tags to be used as filters for the data set.",
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of modsecurity rules IDs to be excluded from the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"modsec_rule_ids": {
 				Type:        schema.TypeList,
@@ -36,11 +29,11 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 				Description: "A list of modsecurity rules IDs to be used as filters for the data set.",
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"exclude_modsec_rule_ids": {
+			"publishers": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A list of modsecurity rules IDs to be excluded from the data set.",
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "A list of publishers to be used as filters for the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"rules": {
 				Type:        schema.TypeList,
@@ -48,15 +41,15 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 				Description: "The list of rules that results from any given combination of filters.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"modsec_rule_id": {
-							Type:        schema.TypeInt,
-							Required:    true,
-							Description: "The modsecurity rule ID.",
-						},
 						"latest_revision_number": {
 							Type:        schema.TypeInt,
 							Required:    true,
 							Description: "The modsecurity rule's latest revision.",
+						},
+						"modsec_rule_id": {
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "The modsecurity rule ID.",
 						},
 						"type": {
 							Type:        schema.TypeString,
@@ -65,6 +58,12 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 						},
 					},
 				},
+			},
+			"tags": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of tags to be used as filters for the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

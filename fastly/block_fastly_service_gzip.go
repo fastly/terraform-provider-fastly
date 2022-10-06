@@ -37,13 +37,12 @@ func (h *GzipServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// required fields
-				"name": {
+				"cache_condition": {
 					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A name to refer to this gzip condition. It is important to note that changing this attribute will delete and recreate the resource",
+					Optional:    true,
+					Default:     "",
+					Description: "Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
 				},
-				// optional fields
 				"content_types": {
 					Type:        schema.TypeList,
 					Optional:    true,
@@ -56,11 +55,10 @@ func (h *GzipServiceAttributeHandler) GetSchema() *schema.Schema {
 					Description: "File extensions for each file type to dynamically gzip. Example: `[\"css\", \"js\"]`",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
-				"cache_condition": {
+				"name": {
 					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Name of already defined `condition` controlling when this gzip configuration applies. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
+					Required:    true,
+					Description: "A name to refer to this gzip condition. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 			},
 		},

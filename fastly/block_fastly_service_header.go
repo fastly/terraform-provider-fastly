@@ -37,65 +37,11 @@ func (h *HeaderServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name for this header attribute. It is important to note that changing this attribute will delete and recreate the resource",
-				},
 				"action": {
 					Type:             schema.TypeString,
 					Required:         true,
 					Description:      "The Header manipulation action to take; must be one of `set`, `append`, `delete`, `regex`, or `regex_repeat`",
 					ValidateDiagFunc: validateHeaderAction(),
-				},
-				"type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					Description:      "The Request type on which to apply the selected Action; must be one of `request`, `fetch`, `cache` or `response`",
-					ValidateDiagFunc: validateHeaderType(),
-				},
-				"destination": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The name of the header that is going to be affected by the Action",
-				},
-				// Optional fields, defaults where they exist
-				"ignore_if_set": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Default:     false,
-					Description: "Don't add the header if it is already. (Only applies to `set` action.). Default `false`",
-				},
-				"source": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Computed:    true,
-					Description: "Variable to be used as a source for the header content (Does not apply to `delete` action.)",
-				},
-				"regex": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Computed:    true,
-					Description: "Regular expression to use (Only applies to `regex` and `regex_repeat` actions.)",
-				},
-				"substitution": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Computed:    true,
-					Description: "Value to substitute in place of regular expression. (Only applies to `regex` and `regex_repeat`.)",
-				},
-				"priority": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     100,
-					Description: "Lower priorities execute first. Default: `100`",
-				},
-				"request_condition": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Name of already defined `condition` to apply. This `condition` must be of type `REQUEST`",
 				},
 				"cache_condition": {
 					Type:        schema.TypeString,
@@ -103,11 +49,63 @@ func (h *HeaderServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     "",
 					Description: "Name of already defined `condition` to apply. This `condition` must be of type `CACHE`",
 				},
+				"destination": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The name of the header that is going to be affected by the Action",
+				},
+				"ignore_if_set": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "Don't add the header if it is already. (Only applies to `set` action.). Default `false`",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name for this header attribute. It is important to note that changing this attribute will delete and recreate the resource",
+				},
+				"priority": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     100,
+					Description: "Lower priorities execute first. Default: `100`",
+				},
+				"regex": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Computed:    true,
+					Description: "Regular expression to use (Only applies to `regex` and `regex_repeat` actions.)",
+				},
+				"request_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of already defined `condition` to apply. This `condition` must be of type `REQUEST`",
+				},
 				"response_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
 					Description: "Name of already defined `condition` to apply. This `condition` must be of type `RESPONSE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
+				},
+				"source": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Computed:    true,
+					Description: "Variable to be used as a source for the header content (Does not apply to `delete` action.)",
+				},
+				"substitution": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Computed:    true,
+					Description: "Value to substitute in place of regular expression. (Only applies to `regex` and `regex_repeat`.)",
+				},
+				"type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "The Request type on which to apply the selected Action; must be one of `request`, `fetch`, `cache` or `response`",
+					ValidateDiagFunc: validateHeaderType(),
 				},
 			},
 		},

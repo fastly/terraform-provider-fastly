@@ -42,16 +42,16 @@ func (h *ConditionServiceAttributeHandler) GetSchema() *schema.Schema {
 					Required:    true,
 					Description: "The unique name for the condition. It is important to note that changing this attribute will delete and recreate the resource",
 				},
-				"statement": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The statement used to determine if the condition is met",
-				},
 				"priority": {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     10,
 					Description: "A number used to determine the order in which multiple conditions execute. Lower numbers execute first. Default `10`",
+				},
+				"statement": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The statement used to determine if the condition is met",
 				},
 				"type": {
 					Type:             schema.TypeString,

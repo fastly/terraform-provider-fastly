@@ -15,26 +15,19 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyTLSPrivateKeyRead,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				Description:   "Fastly private key ID. Conflicts with all the other filters",
-				ConflictsWith: []string{"name", "created_at", "key_length", "key_type", "public_key_sha1"},
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Description:   "The human-readable name assigned to the private key when uploaded.",
-				Computed:      true,
-				ConflictsWith: []string{"id"},
-			},
 			"created_at": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				Description:   "Timestamp (GMT) when the private key was created.",
 				ConflictsWith: []string{"id"},
+			},
+			"id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				Description:   "Fastly private key ID. Conflicts with all the other filters",
+				ConflictsWith: []string{"name", "created_at", "key_length", "key_type", "public_key_sha1"},
 			},
 			"key_length": {
 				Type:          schema.TypeInt,
@@ -50,10 +43,12 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 				Description:   "The algorithm used to generate the private key. Must be RSA.",
 				ConflictsWith: []string{"id"},
 			},
-			"replace": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Whether Fastly recommends replacing this private key.",
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Description:   "The human-readable name assigned to the private key when uploaded.",
+				Computed:      true,
+				ConflictsWith: []string{"id"},
 			},
 			"public_key_sha1": {
 				Type:          schema.TypeString,
@@ -61,6 +56,11 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 				Computed:      true,
 				Description:   "A hash of the associated public key, useful for safely identifying it.",
 				ConflictsWith: []string{"id"},
+			},
+			"replace": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether Fastly recommends replacing this private key.",
 			},
 		},
 	}

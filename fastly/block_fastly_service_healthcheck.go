@@ -36,23 +36,6 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource",
-				},
-				"host": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The Host header to send for this Healthcheck",
-				},
-				"path": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The path to check",
-				},
-				// optional fields
 				"check_interval": {
 					Type:        schema.TypeInt,
 					Optional:    true,
@@ -64,6 +47,11 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Default:     200,
 					Description: "The status code expected from the host. Default `200`",
+				},
+				"host": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The Host header to send for this Healthcheck",
 				},
 				"http_version": {
 					Type:        schema.TypeString,
@@ -82,6 +70,16 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "HEAD",
 					Description: "Which HTTP method to use. Default `HEAD`",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource",
+				},
+				"path": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The path to check",
 				},
 				"threshold": {
 					Type:        schema.TypeInt,

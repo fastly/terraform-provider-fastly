@@ -37,11 +37,6 @@ func (h *VCLServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name for this configuration block. It is important to note that changing this attribute will delete and recreate the resource",
-				},
 				"content": {
 					Type:        schema.TypeString,
 					Required:    true,
@@ -52,6 +47,11 @@ func (h *VCLServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Default:     false,
 					Description: "If `true`, use this block as the main configuration. If `false`, use this block as an includable library. Only a single VCL block can be marked as the main block. Default is `false`",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name for this configuration block. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 			},
 		},

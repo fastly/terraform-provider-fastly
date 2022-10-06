@@ -15,45 +15,11 @@ import (
 func dataSourceFastlyTLSConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyTLSConfigurationRead,
-
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:          schema.TypeString,
-				Description:   "ID of the TLS configuration obtained from the Fastly API or another data source. Conflicts with all the other filters.",
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"name", "tls_protocols", "http_protocols", "tls_service", "default"},
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Description:   "Custom name of the TLS configuration.",
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"id"},
-			},
-			"tls_protocols": {
-				Type:          schema.TypeSet,
-				Description:   "TLS protocols available on the TLS configuration.",
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"id"},
-			},
-			"http_protocols": {
-				Type:          schema.TypeSet,
-				Description:   "HTTP protocols available on the TLS configuration.",
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"id"},
-			},
-			"tls_service": {
-				Type:          schema.TypeString,
-				Description:   fmt.Sprintf("Whether the configuration should support the `%s` or `%s` TLS service.", tlsPlatformService, tlsCustomService),
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validation.StringInSlice([]string{tlsPlatformService, tlsCustomService}, false),
-				ConflictsWith: []string{"id"},
+			"created_at": {
+				Type:        schema.TypeString,
+				Description: "Timestamp (GMT) when the configuration was created.",
+				Computed:    true,
 			},
 			"default": {
 				Type:          schema.TypeBool,
@@ -61,16 +27,6 @@ func dataSourceFastlyTLSConfiguration() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"id"},
-			},
-			"created_at": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the configuration was created.",
-				Computed:    true,
-			},
-			"updated_at": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the configuration was last updated.",
-				Computed:    true,
 			},
 			"dns_records": {
 				Type:        schema.TypeSet,
@@ -95,6 +51,49 @@ func dataSourceFastlyTLSConfiguration() *schema.Resource {
 						},
 					},
 				},
+			},
+			"http_protocols": {
+				Type:          schema.TypeSet,
+				Description:   "HTTP protocols available on the TLS configuration.",
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"id"},
+			},
+			"id": {
+				Type:          schema.TypeString,
+				Description:   "ID of the TLS configuration obtained from the Fastly API or another data source. Conflicts with all the other filters.",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"name", "tls_protocols", "http_protocols", "tls_service", "default"},
+			},
+			"name": {
+				Type:          schema.TypeString,
+				Description:   "Custom name of the TLS configuration.",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"id"},
+			},
+			"tls_protocols": {
+				Type:          schema.TypeSet,
+				Description:   "TLS protocols available on the TLS configuration.",
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"id"},
+			},
+			"tls_service": {
+				Type:          schema.TypeString,
+				Description:   fmt.Sprintf("Whether the configuration should support the `%s` or `%s` TLS service.", tlsPlatformService, tlsCustomService),
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validation.StringInSlice([]string{tlsPlatformService, tlsCustomService}, false),
+				ConflictsWith: []string{"id"},
+			},
+			"updated_at": {
+				Type:        schema.TypeString,
+				Description: "Timestamp (GMT) when the configuration was last updated.",
+				Computed:    true,
 			},
 		},
 	}

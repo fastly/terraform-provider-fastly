@@ -32,74 +32,23 @@ func (h *FTPServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The FTP address to stream logs to",
 		},
-
-		"user": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The username for the server (can be `anonymous`)",
-		},
-
-		"password": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The password for the server (for anonymous use an email address)",
-			Sensitive:   true,
-		},
-
-		"path": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
-		},
-
-		// Optional fields
-		"port": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     21,
-			Description: "The port number. Default: `21`",
-		},
-
-		"period": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     3600,
-			Description: "How frequently the logs should be transferred, in seconds (Default `3600`)",
-		},
-
-		"public_key": {
+		"compression_codec": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
-
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
 			Description: GzipLevelDescription,
 		},
-
-		"timestamp_format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: TimestampFormatDescription,
-		},
-
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -107,11 +56,50 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
-		"compression_codec": {
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"password": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The password for the server (for anonymous use an email address)",
+			Sensitive:   true,
+		},
+		"path": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
+		},
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently the logs should be transferred, in seconds (Default `3600`)",
+		},
+		"port": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     21,
+			Description: "The port number. Default: `21`",
+		},
+		"public_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: TimestampFormatDescription,
+		},
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for the server (can be `anonymous`)",
 		},
 	}
 

@@ -37,27 +37,27 @@ func (h *SnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks. It is important to note that changing this attribute will delete and recreate the resource`,
-				},
-				"type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					Description:      SnippetTypeDescription,
-					ValidateDiagFunc: validateSnippetType(),
-				},
 				"content": {
 					Type:        schema.TypeString,
 					Required:    true,
 					Description: "The VCL code that specifies exactly what the snippet does",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks. It is important to note that changing this attribute will delete and recreate the resource`,
 				},
 				"priority": {
 					Type:        schema.TypeInt,
 					Optional:    true,
 					Default:     100,
 					Description: "Priority determines the ordering for multiple snippets. Lower numbers execute first. Defaults to `100`",
+				},
+				"type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      SnippetTypeDescription,
+					ValidateDiagFunc: validateSnippetType(),
 				},
 			},
 		},

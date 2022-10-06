@@ -36,29 +36,27 @@ func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary",
-				},
-				// Optional fields
 				"dictionary_id": {
 					Type:        schema.TypeString,
 					Computed:    true,
 					Description: "The ID of the dictionary",
-				},
-				"write_only": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Default:     false,
-					Description: "If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_vcl` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
 				},
 				"force_destroy": {
 					Type:        schema.TypeBool,
 					Default:     false,
 					Optional:    true,
 					Description: "Allow the dictionary to be deleted, even if it contains entries. Defaults to false.",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary",
+				},
+				"write_only": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_vcl` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
 				},
 			},
 		},

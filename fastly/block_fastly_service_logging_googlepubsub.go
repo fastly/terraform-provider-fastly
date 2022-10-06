@@ -32,20 +32,16 @@ func (h *GooglePubSubServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Google Cloud Pub/Sub logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
-		"user": {
+		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.",
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_EMAIL", ""),
+			Description: "The ID of your Google Cloud Platform project",
 		},
-
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -53,17 +49,16 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_SECRET_KEY", ""),
 			Sensitive:   true,
 		},
-
-		"project_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The ID of your Google Cloud Platform project",
-		},
-
 		"topic": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The Google Cloud Pub/Sub topic to which logs will be published",
+		},
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.",
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_EMAIL", ""),
 		},
 	}
 

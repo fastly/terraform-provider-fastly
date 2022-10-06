@@ -42,12 +42,6 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 					Required:    true,
 					Description: `A name that is unique across "regular" and "dynamic" VCL Snippet configuration blocks. It is important to note that changing this attribute will delete and recreate the resource`,
 				},
-				"type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					Description:      SnippetTypeDescription,
-					ValidateDiagFunc: validateSnippetType(),
-				},
 				"priority": {
 					Type:        schema.TypeInt,
 					Optional:    true,
@@ -58,6 +52,12 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 					Type:        schema.TypeString,
 					Computed:    true,
 					Description: "The ID of the dynamic snippet",
+				},
+				"type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      SnippetTypeDescription,
+					ValidateDiagFunc: validateSnippetType(),
 				},
 			},
 		},

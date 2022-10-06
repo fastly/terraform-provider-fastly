@@ -32,26 +32,22 @@ func (h *DatadogServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Datadog logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
-		"token": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Sensitive:   true,
-			Description: "The API key from your Datadog account",
-		},
-
-		// Optional fields
 		"region": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "US",
 			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The API key from your Datadog account",
 		},
 	}
 

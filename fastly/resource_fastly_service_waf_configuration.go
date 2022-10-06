@@ -39,12 +39,6 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 			}),
 		),
 		Schema: map[string]*schema.Schema{
-			"waf_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ID of the Web Application Firewall that the configuration belongs to",
-			},
 			"activate": {
 				Type:        schema.TypeBool,
 				Description: "Conditionally prevents a new firewall version from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
@@ -55,11 +49,6 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Whether a specific firewall version is currently deployed",
 				Computed:    true,
-			},
-			"cloned_version": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "The latest cloned firewall version by the provider",
 			},
 			"allowed_http_versions": {
 				Type:        schema.TypeString,
@@ -96,6 +85,11 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "The maximum allowed argument name length",
+			},
+			"cloned_version": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The latest cloned firewall version by the provider",
 			},
 			"combined_file_sizes": {
 				Type:        schema.TypeInt,
@@ -160,16 +154,16 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 				Computed:    true,
 				Description: "The maximum number of arguments allowed",
 			},
-			"number": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "The WAF firewall version",
-			},
 			"notice_anomaly_score": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Computed:    true,
 				Description: "Score value to add for notice anomalies",
+			},
+			"number": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The WAF firewall version",
 			},
 			"paranoia_level": {
 				Type:        schema.TypeInt,
@@ -210,6 +204,8 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 				Description:  "Remote file inclusion attack threshold",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"rule":           activeRule,
+			"rule_exclusion": wafRuleExclusion,
 			"session_fixation_score_threshold": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -230,6 +226,12 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 				Computed:    true,
 				Description: "The maximum size of argument names and values",
 			},
+			"waf_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The ID of the Web Application Firewall that the configuration belongs to",
+			},
 			"warning_anomaly_score": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -243,8 +245,6 @@ func resourceServiceWAFConfiguration() *schema.Resource {
 				Description:  "XSS attack threshold",
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"rule":           activeRule,
-			"rule_exclusion": wafRuleExclusion,
 		},
 	}
 }

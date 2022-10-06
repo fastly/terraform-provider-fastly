@@ -21,28 +21,13 @@ func resourceServiceDictionaryItems() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceDictionaryItemsImport,
 		},
-
 		Schema: map[string]*schema.Schema{
-			"service_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ID of the service that the dictionary belongs to",
-			},
-
 			"dictionary_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "The ID of the dictionary that the items belong to",
 			},
-			"manage_items": {
-				Type:        schema.TypeBool,
-				Default:     false,
-				Optional:    true,
-				Description: "Whether to reapply changes if the state of the items drifts, i.e. if items are managed externally",
-			},
-
 			"items": {
 				Type:             schema.TypeMap,
 				Optional:         true,
@@ -52,6 +37,18 @@ func resourceServiceDictionaryItems() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return !d.HasChange("dictionary_id") && !d.Get("manage_items").(bool)
 				},
+			},
+			"manage_items": {
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				Description: "Whether to reapply changes if the state of the items drifts, i.e. if items are managed externally",
+			},
+			"service_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The ID of the service that the dictionary belongs to",
 			},
 		},
 	}

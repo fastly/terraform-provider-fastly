@@ -32,23 +32,21 @@ func (h *LogentriesServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Logentries logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-		"token": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
-		},
-		// Optional
 		"port": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     20000,
 			Description: "The port number configured in Logentries",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
 		},
 		"use_tls": {
 			Type:        schema.TypeBool,

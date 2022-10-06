@@ -32,72 +32,34 @@ func (h *DigitalOceanServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
-		"bucket_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of the DigitalOcean Space",
-		},
-
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "Your DigitalOcean Spaces account access key",
 		},
-
-		"secret_key": {
+		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Sensitive:   true,
-			Description: "Your DigitalOcean Spaces account secret key",
+			Description: "The name of the DigitalOcean Space",
 		},
-
-		// Optional fields
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		},
 		"domain": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)",
 			Default:     "nyc3.digitaloceanspaces.com",
 		},
-
-		"public_key": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed,
-		},
-
-		"path": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The path to upload logs to",
-		},
-
-		"period": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
-		},
-
-		"timestamp_format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: TimestampFormatDescription,
-		},
-
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Description: GzipLevelDescription,
 		},
-
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -105,11 +67,37 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
-		"compression_codec": {
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The path to upload logs to",
+		},
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
+		},
+		"public_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+		"secret_key": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Your DigitalOcean Spaces account secret key",
+		},
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: TimestampFormatDescription,
 		},
 	}
 

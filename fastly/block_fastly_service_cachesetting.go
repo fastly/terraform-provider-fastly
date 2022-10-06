@@ -37,23 +37,21 @@ func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name for this Cache Setting. It is important to note that changing this attribute will delete and recreate the resource",
-				},
 				"action": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: `One of cache, pass, or restart, as defined on Fastly's documentation under "[Caching action descriptions](https://docs.fastly.com/en/guides/controlling-caching#caching-action-descriptions)"`,
 				},
-				// optional
 				"cache_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
 					Description: "Name of already defined `condition` used to test whether this settings object should be used. This `condition` must be of type `CACHE`",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name for this Cache Setting. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"stale_ttl": {
 					Type:        schema.TypeInt,

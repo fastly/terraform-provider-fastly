@@ -33,13 +33,6 @@ func (h *ACLServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL",
-				},
-				// Optional fields
 				"acl_id": {
 					Type:        schema.TypeString,
 					Computed:    true,
@@ -50,6 +43,11 @@ func (h *ACLServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     false,
 					Optional:    true,
 					Description: "Allow the ACL to be deleted, even if it contains entries. Defaults to false.",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL",
 				},
 			},
 		},

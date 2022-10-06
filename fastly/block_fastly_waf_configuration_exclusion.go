@@ -15,11 +15,6 @@ var wafRuleExclusion = &schema.Schema{
 	Optional: true,
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The name of rule exclusion",
-			},
 			"condition": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -36,6 +31,11 @@ var wafRuleExclusion = &schema.Schema{
 				Optional:    true,
 				Description: "Set of modsecurity IDs to be excluded. No rules should be provided when `exclusion_type` is `waf`. The rules need to be configured on the Web Application Firewall to be excluded",
 				Elem:        &schema.Schema{Type: schema.TypeInt},
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of rule exclusion",
 			},
 			"number": {
 				Type:        schema.TypeInt,

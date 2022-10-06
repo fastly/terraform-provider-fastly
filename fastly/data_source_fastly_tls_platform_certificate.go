@@ -14,14 +14,16 @@ import (
 func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyTLSPlatformCertificateRead,
-
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:          schema.TypeString,
-				Description:   "Unique ID assigned to certificate by Fastly. Conflicts with all the other filters.",
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"domains"},
+			"configuration_id": {
+				Type:        schema.TypeString,
+				Description: "ID of TLS configuration used to terminate TLS traffic.",
+				Computed:    true,
+			},
+			"created_at": {
+				Type:        schema.TypeString,
+				Description: "Timestamp (GMT) when the certificate was created.",
+				Computed:    true,
 			},
 			"domains": {
 				Type:          schema.TypeSet,
@@ -31,14 +33,16 @@ func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"id"},
 			},
-			"created_at": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the certificate was created.",
-				Computed:    true,
+			"id": {
+				Type:          schema.TypeString,
+				Description:   "Unique ID assigned to certificate by Fastly. Conflicts with all the other filters.",
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"domains"},
 			},
-			"updated_at": {
+			"not_after": {
 				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the certificate was last updated.",
+				Description: "Timestamp (GMT) when the certificate will expire.",
 				Computed:    true,
 			},
 			"not_before": {
@@ -46,19 +50,14 @@ func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 				Description: "Timestamp (GMT) when the certificate will become valid.",
 				Computed:    true,
 			},
-			"not_after": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the certificate will expire.",
-				Computed:    true,
-			},
 			"replace": {
 				Type:        schema.TypeBool,
 				Description: "A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.",
 				Computed:    true,
 			},
-			"configuration_id": {
+			"updated_at": {
 				Type:        schema.TypeString,
-				Description: "ID of TLS configuration used to terminate TLS traffic.",
+				Description: "Timestamp (GMT) when the certificate was last updated.",
 				Computed:    true,
 			},
 		},

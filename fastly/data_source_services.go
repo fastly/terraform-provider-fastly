@@ -15,22 +15,28 @@ import (
 func dataSourceFastlyServices() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyServicesRead,
-
 		Schema: map[string]*schema.Schema{
-			"ids": {
-				Type:        schema.TypeSet,
-				Computed:    true,
-				Description: "A list of service IDs in your account. This is limited to the services the API token can read.",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"details": {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "A detailed list of Fastly services in your account. This is limited to the services the API token can read.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"comment": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "A freeform descriptive note.",
+						},
+						"created_at": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Date and time in ISO 8601 format.",
+						},
+						"customer_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Alphanumeric string identifying the customer.",
+						},
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -46,32 +52,25 @@ func dataSourceFastlyServices() *schema.Resource {
 							Computed:    true,
 							Description: "The type of this service. One of `vcl`, `wasm`.",
 						},
-						"version": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "The currently activated version.",
-						},
-						"comment": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "A freeform descriptive note.",
-						},
-						"customer_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Alphanumeric string identifying the customer.",
-						},
-						"created_at": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Date and time in ISO 8601 format.",
-						},
 						"updated_at": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Date and time in ISO 8601 format.",
 						},
+						"version": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The currently activated version.",
+						},
 					},
+				},
+			},
+			"ids": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "A list of service IDs in your account. This is limited to the services the API token can read.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 		},

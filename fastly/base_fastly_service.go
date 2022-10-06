@@ -78,27 +78,13 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				return d.HasChange("cloned_version") && d.Get("activate").(bool)
 			}),
 		),
-
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name for the Service to create",
-			},
-
-			"comment": {
-				Type:        schema.TypeString,
+			"activate": {
+				Type:        schema.TypeBool,
+				Description: "Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
+				Default:     true,
 				Optional:    true,
-				Default:     "Managed by Terraform",
-				Description: "Description field for the service. Default `Managed by Terraform`",
 			},
-
-			"version_comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Description field for the version",
-			},
-
 			// Active Version represents the currently activated version in Fastly. In
 			// Terraform, we abstract this number away from the users and manage
 			// creating and activating. It's used internally, but also exported for
@@ -108,7 +94,6 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Computed:    true,
 				Description: "The currently active version of your Fastly Service",
 			},
-
 			// Cloned Version represents the latest cloned version by the provider. It
 			// gets set whenever Terraform detects changes and clones the currently
 			// activated version in order to modify it. Active Version and Cloned
@@ -119,32 +104,38 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Computed:    true,
 				Description: "The latest cloned version by the provider",
 			},
-
-			"activate": {
-				Type:        schema.TypeBool,
-				Description: "Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
-				Default:     true,
+			"comment": {
+				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "Managed by Terraform",
+				Description: "Description field for the service. Default `Managed by Terraform`",
 			},
-
 			"force_destroy": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				Description:   "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
 				ConflictsWith: []string{"reuse"},
 			},
-
+			"imported": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished",
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The unique name for the Service to create",
+			},
 			"reuse": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				Description:   "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
 				ConflictsWith: []string{"force_destroy"},
 			},
-
-			"imported": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished",
+			"version_comment": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description field for the version",
 			},
 		},
 	}

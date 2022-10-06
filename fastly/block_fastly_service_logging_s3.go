@@ -33,39 +33,6 @@ func (h *S3LoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the S3 logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-		"bucket_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of the bucket in which to store the logs",
-		},
-		"s3_access_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
-			Description: "AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`",
-			Sensitive:   true,
-		},
-		"s3_secret_key": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
-			Description: "AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`",
-			Sensitive:   true,
-		},
-		"s3_iam_role": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_IAM_ROLE", ""),
-			Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`",
-			Sensitive:   false,
-		},
-		// Optional fields
 		"acl": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -91,10 +58,16 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 				false,
 			)),
 		},
-		"path": {
+		"bucket_name": {
 			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path",
+			Required:    true,
+			Description: "The name of the bucket in which to store the logs",
+		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 		"domain": {
 			Type:        schema.TypeString,
@@ -108,17 +81,34 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     0,
 			Description: GzipLevelDescription,
 		},
+		"message_type": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      MessageTypeDescription,
+			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the S3 logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path",
+		},
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
 			Description: "How frequently the logs should be transferred, in seconds. Default `3600`",
 		},
-		"timestamp_format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: TimestampFormatDescription,
+		"public_key": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
 		},
 		"redundancy": {
 			Type:     schema.TypeString,
@@ -146,18 +136,26 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 				false,
 			)),
 		},
-		"public_key": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed,
+		"s3_access_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
+			Description: "AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`",
+			Sensitive:   true,
 		},
-		"message_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "classic",
-			Description:      MessageTypeDescription,
-			ValidateDiagFunc: validateLoggingMessageType(),
+		"s3_iam_role": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_IAM_ROLE", ""),
+			Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`",
+			Sensitive:   false,
+		},
+		"s3_secret_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
+			Description: "AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`",
+			Sensitive:   true,
 		},
 		"server_side_encryption": {
 			Type:             schema.TypeString,
@@ -170,11 +168,11 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Description: "Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`",
 		},
-		"compression_codec": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: TimestampFormatDescription,
 		},
 	}
 

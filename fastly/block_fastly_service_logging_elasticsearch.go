@@ -32,73 +32,51 @@ func (h *ElasticSearchServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the Elasticsearch logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
-		"url": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The Elasticsearch URL to stream logs to",
-		},
-
 		"index": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The name of the Elasticsearch index to send documents (logs) to",
 		},
-
-		// Optional fields
-		"pipeline": {
+		"name": {
 			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing",
+			Required:    true,
+			Description: "The unique name of the Elasticsearch logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
-		"user": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "BasicAuth username for Elasticsearch",
-		},
-
 		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "BasicAuth password for Elasticsearch",
 			Sensitive:   true,
 		},
-
-		"request_max_entries": {
-			Type:        schema.TypeInt,
+		"pipeline": {
+			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     0,
-			Description: "The maximum number of bytes sent in one request. Defaults to `0` for unbounded",
+			Description: "The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing",
 		},
-
 		"request_max_bytes": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
 			Description: "The maximum number of logs sent in one request. Defaults to `0` for unbounded",
 		},
-
+		"request_max_entries": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "The maximum number of bytes sent in one request. Defaults to `0` for unbounded",
+		},
 		"tls_ca_cert": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A secure certificate to authenticate the server with. Must be in PEM format",
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_client_cert": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "The client certificate used to make authenticated requests. Must be in PEM format",
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_client_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -106,11 +84,20 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN)",
+		},
+		"url": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Elasticsearch URL to stream logs to",
+		},
+		"user": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "BasicAuth username for Elasticsearch",
 		},
 	}
 

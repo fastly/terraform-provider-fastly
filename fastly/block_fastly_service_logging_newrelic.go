@@ -32,24 +32,22 @@ func (h *NewRelicServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "US",
+			Description: "The region that log data will be sent to. Default: `US`",
 		},
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "The Insert API key from the Account page of your New Relic account",
-		},
-		// Optional
-		"region": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "US",
-			Description: "The region that log data will be sent to. Default: `US`",
 		},
 	}
 

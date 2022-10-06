@@ -32,59 +32,60 @@ func (h *KafkaServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
+		"auth_method": {
 			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the Kafka logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+			Optional:    true,
+			Description: "SASL authentication method. One of: plain, scram-sha-256, scram-sha-512",
 		},
-
-		"topic": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The Kafka topic to send logs to",
-		},
-
 		"brokers": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A comma-separated list of IP addresses or hostnames of Kafka brokers",
 		},
-
-		// Optional
 		"compression_codec": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The codec used for compression of your logs. One of: `gzip`, `snappy`, `lz4`",
 		},
-
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Kafka logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"parse_log_keyvals": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers",
+		},
+		"password": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "SASL Pass",
+			Sensitive:   true,
+		},
+		"request_max_bytes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Maximum size of log batch, if non-zero. Defaults to 0 for unbounded",
+		},
 		"required_acks": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1` Wait for all in-sync replicas to respond",
 		},
-
-		"use_tls": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether to use TLS for secure logging. Can be either `true` or `false`",
-		},
-
 		"tls_ca_cert": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A secure certificate to authenticate the server with. Must be in PEM format",
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_client_cert": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "The client certificate used to make authenticated requests. Must be in PEM format",
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_client_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -92,43 +93,26 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)",
 		},
-
-		"parse_log_keyvals": {
+		"topic": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Kafka topic to send logs to",
+		},
+		"use_tls": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers",
+			Description: "Whether to use TLS for secure logging. Can be either `true` or `false`",
 		},
-
-		"request_max_bytes": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Description: "Maximum size of log batch, if non-zero. Defaults to 0 for unbounded",
-		},
-
-		"auth_method": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "SASL authentication method. One of: plain, scram-sha-256, scram-sha-512",
-		},
-
 		"user": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "SASL User",
-		},
-
-		"password": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "SASL Pass",
-			Sensitive:   true,
 		},
 	}
 

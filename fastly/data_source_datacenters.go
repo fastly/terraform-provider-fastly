@@ -28,15 +28,15 @@ func dataSourceFastlyDatacenters() *schema.Resource {
 							Computed:    true,
 							Description: "A code representing the POP location.",
 						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The name of the POP.",
-						},
 						"group": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "A code representing the general region of the world in which the POP location resides.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the POP.",
 						},
 						"shield": {
 							Type:        schema.TypeString,

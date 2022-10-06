@@ -36,24 +36,11 @@ func (h *ResponseObjectServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name to identify this Response Object. It is important to note that changing this attribute will delete and recreate the resource",
-				},
-				// Optional fields
-				"status": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     200,
-					Description: "The HTTP Status Code. Default `200`",
-				},
-				"response": {
+				"cache_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Default:     "OK",
-					Description: "The HTTP Response. Default `OK`",
+					Default:     "",
+					Description: "Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
 				},
 				"content": {
 					Type:        schema.TypeString,
@@ -67,17 +54,28 @@ func (h *ResponseObjectServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     "",
 					Description: "The MIME type of the content",
 				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to identify this Response Object. It is important to note that changing this attribute will delete and recreate the resource",
+				},
 				"request_condition": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
 					Description: "Name of already defined `condition` to be checked during the request phase. If the condition passes then this object will be delivered. This `condition` must be of type `REQUEST`",
 				},
-				"cache_condition": {
+				"response": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Default:     "",
-					Description: "Name of already defined `condition` to check after we have retrieved an object. If the condition passes then deliver this Request Object instead. This `condition` must be of type `CACHE`. For detailed information about Conditionals, see [Fastly's Documentation on Conditionals](https://docs.fastly.com/en/guides/using-conditions)",
+					Default:     "OK",
+					Description: "The HTTP Response. Default `OK`",
+				},
+				"status": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     200,
+					Description: "The HTTP Status Code. Default `200`",
 				},
 			},
 		},

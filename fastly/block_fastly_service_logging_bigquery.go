@@ -32,7 +32,18 @@ func (h *BigQueryLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
+		"dataset": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your BigQuery dataset",
+		},
+		"email": {
+			Type:        schema.TypeString,
+			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
+			Description: "The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable",
+			Sensitive:   true,
+		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -43,23 +54,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The ID of your GCP project",
 		},
-		"dataset": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The ID of your BigQuery dataset",
-		},
-		"table": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The ID of your BigQuery table",
-		},
-		"email": {
-			Type:        schema.TypeString,
-			Required:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
-			Description: "The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable",
-			Sensitive:   true,
-		},
 		"secret_key": {
 			Type:             schema.TypeString,
 			Required:         true,
@@ -68,7 +62,11 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-		// Optional fields
+		"table": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your BigQuery table",
+		},
 		"template": {
 			Type:        schema.TypeString,
 			Optional:    true,

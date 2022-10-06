@@ -32,45 +32,39 @@ func (h *KinesisServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
-		"topic": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The Kinesis stream name",
-		},
-
-		"region": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "us-east-1",
-			Description: "The AWS region the stream resides in. (Default: `us-east-1`)",
-		},
-
 		"access_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   true,
 			Description: "The AWS access key to be used to write to the stream",
 		},
-
+		"iam_role": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.",
+			Sensitive:   false,
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "us-east-1",
+			Description: "The AWS region the stream resides in. (Default: `us-east-1`)",
+		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   true,
 			Description: "The AWS secret access key to authenticate with",
 		},
-
-		"iam_role": {
+		"topic": {
 			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.",
-			Sensitive:   false,
+			Required:    true,
+			Description: "The Kinesis stream name",
 		},
 	}
 

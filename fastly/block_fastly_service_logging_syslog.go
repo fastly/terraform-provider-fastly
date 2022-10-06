@@ -32,41 +32,28 @@ func (h *SyslogServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A hostname or IPv4 address of the Syslog endpoint",
 		},
-		// Optional
+		"message_type": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      MessageTypeDescription,
+			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
 		"port": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     514,
 			Description: "The port associated with the address where the Syslog endpoint can be accessed. Default `514`",
-		},
-		"token": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Whether to prepend each message with a specific token",
-		},
-		"use_tls": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether to use TLS for secure logging. Default `false`",
-		},
-		"tls_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Used during the TLS handshake to validate the certificate",
 		},
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
@@ -87,12 +74,23 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`",
 			Sensitive:   true,
 		},
-		"message_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "classic",
-			Description:      MessageTypeDescription,
-			ValidateDiagFunc: validateLoggingMessageType(),
+		"tls_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Used during the TLS handshake to validate the certificate",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Whether to prepend each message with a specific token",
+		},
+		"use_tls": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Whether to use TLS for secure logging. Default `false`",
 		},
 	}
 

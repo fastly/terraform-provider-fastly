@@ -32,7 +32,13 @@ func (h *SumologicServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
+		"message_type": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      MessageTypeDescription,
+			ValidateDiagFunc: validateLoggingMessageType(),
+		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -42,14 +48,6 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The URL to Sumologic collector endpoint",
-		},
-		// Optional fields
-		"message_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "classic",
-			Description:      MessageTypeDescription,
-			ValidateDiagFunc: validateLoggingMessageType(),
 		},
 	}
 

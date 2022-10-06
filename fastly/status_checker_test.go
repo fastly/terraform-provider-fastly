@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestAccFastlyServiceWAFVersionDeploymentStatus(t *testing.T) {
+func TestAccFastlyServiceWAFVersion_DeploymentStatus(t *testing.T) {
 	wafID := "waf-id"
 	latestVersion := &gofastly.WAFVersion{}
 	d := &schema.ResourceData{}

@@ -160,6 +160,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 		Format:         datadogDefaultFormat + "\n",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -206,6 +207,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
 		Region:         "US",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

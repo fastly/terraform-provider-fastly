@@ -78,6 +78,7 @@ func TestAccFastlyServiceVCL_response_object_basic(t *testing.T) {
 		CacheCondition:   "another-test-cache-condition",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

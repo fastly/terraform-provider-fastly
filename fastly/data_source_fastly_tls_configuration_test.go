@@ -8,6 +8,7 @@ import (
 
 func TestAccFastlyDataSourceTLSConfiguration_basic(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -41,6 +42,7 @@ data "fastly_tls_configuration" "subject" {
 
 func TestAccFastlyDataSourceTLSConfiguration_withIDLookup(t *testing.T) {
 	resourceName := "data.fastly_tls_configuration.subject"
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -57,6 +57,8 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 	// 4. Try to rename the ACLs, expect to fail with "list not empty error"
 	// 5. Without renaming the ACLs, set force_destroy=true to skip the deletion check
 	// 6. Try to rename the ACLs again, expect to succeed
+
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

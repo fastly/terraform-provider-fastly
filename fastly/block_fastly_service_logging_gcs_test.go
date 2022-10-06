@@ -70,6 +70,7 @@ func TestAccFastlyServiceVCL_gcslogging(t *testing.T) {
 		t.Errorf("failed to generate key: %s", err)
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -97,6 +98,7 @@ func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
 		t.Errorf("failed to generate key: %s", err)
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

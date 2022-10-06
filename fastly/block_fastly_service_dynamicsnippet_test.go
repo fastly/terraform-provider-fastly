@@ -81,6 +81,7 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 		Dynamic:  1,
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -18,6 +18,7 @@ func TestAccFastlyDataSourceTLSCertificate_withName(t *testing.T) {
 
 	dataSourceName := "data.fastly_tls_certificate.test"
 	resourceName := "fastly_tls_certificate.cert"
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

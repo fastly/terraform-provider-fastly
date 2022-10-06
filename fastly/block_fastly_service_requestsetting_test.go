@@ -73,6 +73,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		MaxStaleAge:      uint(900),
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

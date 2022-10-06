@@ -29,6 +29,7 @@ func TestAccResourceFastlyTLSSubscription(t *testing.T) {
 	var subscriptionID string
 
 	resourceName := "fastly_tls_subscription.subject"
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

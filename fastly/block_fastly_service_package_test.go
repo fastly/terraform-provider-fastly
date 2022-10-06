@@ -39,6 +39,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 		},
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

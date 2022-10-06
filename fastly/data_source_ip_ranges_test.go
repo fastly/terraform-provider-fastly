@@ -16,6 +16,8 @@ func TestAccFastlyIPRanges(t *testing.T) {
 	// there may be a case where some tests get polluted with an instance of the provider
 	// with no API key created in this particular test (ie., the "no_auth" option).
 	// Using Test instead.
+
+	// lintignore:XAT001
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{

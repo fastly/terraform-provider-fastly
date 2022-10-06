@@ -77,6 +77,7 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 		},
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -127,6 +128,7 @@ func TestAccFastlyServiceAclEntries_create_update(t *testing.T) {
 		},
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -185,6 +187,7 @@ func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
 		},
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -239,6 +242,7 @@ func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
 		},
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -294,6 +298,7 @@ func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
 		ipPart4++
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -345,6 +350,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 		},
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

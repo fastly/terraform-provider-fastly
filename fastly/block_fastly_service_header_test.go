@@ -164,6 +164,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		ResponseCondition: "test_res_condition",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

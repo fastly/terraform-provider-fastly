@@ -121,6 +121,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 		Format:         "%h %l %u %t \"%r\" %>s %b",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -169,6 +170,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 		SecretKey:      "thisisthesecretthatneedstobe40characters",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

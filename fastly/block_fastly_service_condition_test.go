@@ -63,6 +63,7 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 		Statement: `req.url ~ "^/yolo/"`,
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -16,6 +16,7 @@ func TestAccFastlyServiceAuthorization_basic(t *testing.T) {
 	permission := "purge_select"
 	permission2 := "purge_all"
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

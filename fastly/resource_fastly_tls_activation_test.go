@@ -31,6 +31,7 @@ func TestAccFastlyTLSActivation_basic(t *testing.T) {
 	updatedName := acctest.RandomWithPrefix(testResourcePrefix)
 
 	resourceName := "fastly_tls_activation.test"
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

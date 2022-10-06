@@ -86,6 +86,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 		Format:            "%h %l %u %t \"%r\" %>s %b",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -132,6 +133,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 		URL:            "https://example.com",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

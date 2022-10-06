@@ -111,6 +111,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		MessageType:    "classic",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -159,6 +160,7 @@ func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
 		MessageType:    "classic",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -197,6 +199,7 @@ func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
 		MessageType:    "classic",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -250,6 +253,7 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 		TLSClientKey:   key,
 	}
 
+	// lintignore:XAT001
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

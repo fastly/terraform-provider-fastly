@@ -113,6 +113,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		UseTLS:            false,
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -153,6 +154,7 @@ func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
 		Token: "test-token",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -187,6 +189,7 @@ func TestAccFastlyServiceVCL_splunk_default(t *testing.T) {
 		FormatVersion: 2,
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -273,6 +276,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 		TLSClientKey:  key,
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

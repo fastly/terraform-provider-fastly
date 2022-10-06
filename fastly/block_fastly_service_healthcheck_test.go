@@ -94,6 +94,7 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 		Window:           10,
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

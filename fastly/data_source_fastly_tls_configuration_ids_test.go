@@ -7,6 +7,7 @@ import (
 )
 
 func TestAccFastlyDataSourceTLSConfigurationIDs(t *testing.T) {
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -99,6 +99,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		JSONFormat:        "0",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -149,6 +150,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 		JSONFormat:        "0",
 	}
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -69,6 +69,7 @@ func TestAccFastlyServiceWAFVersionV1Add(t *testing.T) {
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -93,6 +94,7 @@ func TestAccFastlyServiceWAFVersionV1AddExistingService(t *testing.T) {
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -131,6 +133,7 @@ func TestAccFastlyServiceWAFVersionUpdate(t *testing.T) {
 	wafVer3 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput3, "", "")
 
 	resourceName := "fastly_service_waf_configuration.waf"
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -173,6 +176,7 @@ func TestAccFastlyServiceWAFVersionDelete(t *testing.T) {
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", "")
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -255,6 +259,7 @@ func TestAccFastlyServiceWAFVersionImport(t *testing.T) {
 	wafVer := testAccFastlyServiceWAFVersionV1ComposeConfiguration(extraHCLMap, rulesTF, exclusionsTF)
 	wafSvcCfg := testAccFastlyServiceWAFVersionV1(name, wafVer)
 
+	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

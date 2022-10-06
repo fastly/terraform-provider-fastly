@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccDataSourceFastlyTLSActivation_basic(t *testing.T) {
+func TestAccFastlyDataSourceTLSActivation_basic(t *testing.T) {
 	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	key, cert, err := generateKeyAndCert(domain)
 	require.NoError(t, err)
@@ -38,7 +38,7 @@ func TestAccDataSourceFastlyTLSActivation_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyDataSourceFastlyTLSActivation_byID(t *testing.T) {
+func TestAccFastlyDataSourceTLSActivation_byID(t *testing.T) {
 	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 	key, cert, err := generateKeyAndCert(domain)
 	require.NoError(t, err)

@@ -119,7 +119,7 @@ func TestAccFastlyServiceWAFVersionV1_AddExistingService(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersion_Update(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_Update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -170,7 +170,7 @@ func TestAccFastlyServiceWAFVersion_Update(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersion_Delete(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_Delete(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	wafVerInput := testAccFastlyServiceWAFVersionV1BuildConfig(20, true)
@@ -202,7 +202,7 @@ func TestAccFastlyServiceWAFVersion_Delete(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceWAFVersion_Config(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_Config(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

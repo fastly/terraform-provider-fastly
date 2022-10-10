@@ -489,6 +489,7 @@ Optional:
 
 - **check_interval** (Number) How often to run the Healthcheck in milliseconds. Default `5000`
 - **expected_response** (Number) The status code expected from the host. Default `200`
+- **headers** (Set of String)
 - **http_version** (String) Whether to use version 1.0 or 1.1 HTTP. Default `1.1`
 - **initial** (Number) When loading a config, the initial number of probes to be seen as OK. Default `3`
 - **method** (String) Which HTTP method to use. Default `HEAD`

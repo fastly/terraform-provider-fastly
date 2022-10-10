@@ -210,7 +210,7 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 		opts.Period = gofastly.Uint(uint(v.(int)))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -318,7 +318,7 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, servi
 		User:              df["user"].(string),
 		AccessKey:         df["access_key"].(string),
 		PublicKey:         df["public_key"].(string),
-		GzipLevel:         uint(df["gzip_level"].(int)),
+		GzipLevel:         uint8(df["gzip_level"].(int)),
 		MessageType:       df["message_type"].(string),
 		Path:              df["path"].(string),
 		Region:            df["region"].(string),

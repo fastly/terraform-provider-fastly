@@ -212,7 +212,7 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -321,7 +321,7 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, service
 		BucketName:        df["bucket_name"].(string),
 		AccessKey:         df["access_key"].(string),
 		PublicKey:         df["public_key"].(string),
-		GzipLevel:         uint(df["gzip_level"].(int)),
+		GzipLevel:         uint8(df["gzip_level"].(int)),
 		MessageType:       df["message_type"].(string),
 		Path:              df["path"].(string),
 		Period:            uint(df["period"].(int)),

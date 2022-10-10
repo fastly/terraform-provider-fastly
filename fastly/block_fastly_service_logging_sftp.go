@@ -239,7 +239,7 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -350,7 +350,7 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string,
 		SSHKnownHosts:     df["ssh_known_hosts"].(string),
 		Port:              uint(df["port"].(int)),
 		Password:          df["password"].(string),
-		GzipLevel:         uint(df["gzip_level"].(int)),
+		GzipLevel:         uint8(df["gzip_level"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
 		MessageType:       df["message_type"].(string),
 		CompressionCodec:  df["compression_codec"].(string),

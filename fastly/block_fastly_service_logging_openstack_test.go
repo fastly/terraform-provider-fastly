@@ -54,7 +54,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"response_condition": "always",
 					"period":             uint(3600),
-					"gzip_level":         uint(0),
+					"gzip_level":         uint8(0),
 					"compression_codec":  "zstd",
 				},
 			},

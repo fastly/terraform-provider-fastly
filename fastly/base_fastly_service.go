@@ -323,8 +323,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 			// TODO: Replace sleep with either resource.Retry() or WaitForState().
 			// https://github.com/bflad/tfproviderlint/tree/main/passes/R018
-
-			// lintignore:R018
 			time.Sleep(7 * time.Second)
 
 			// Update the cloned version's comment.

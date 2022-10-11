@@ -48,6 +48,24 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     200,
 					Description: "The status code expected from the host. Default `200`",
 				},
+				// NOTE: We can't use TypeList as the Fastly API orders the headers.
+				//
+				// The Fastly API returns the contained elements in a sorted order,
+				// which might otherwise cause unexpected diffs if using TypeList as the
+				// data type expects the elements to be consistently ordered. So if a
+				// user was to define their headers as ["b: 2", "a: 1"], then there
+				// would be a constant diff as the API returns ["a: 1", "b: 2"].
+				//
+				// Reference:
+				// https://www.terraform.io/plugin/sdkv2/schemas/schema-types#typelist
+				"headers": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Optional:    true,
+					Description: "Custom health check HTTP headers (e.g. if your health check requires an API key to be provided)",
+				},
 				"host": {
 					Type:        schema.TypeString,
 					Required:    true,
@@ -98,23 +116,6 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Default:     5,
 					Description: "The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`",
-				},
-				// NOTE: We can't use TypeList as the Fastly API orders the headers.
-				//
-				// The Fastly API returns the contained elements in a sorted order,
-				// which might otherwise cause unexpected diffs if using TypeList as the
-				// data type expects the elements to be consistently ordered. So if a
-				// user was to define their headers as ["b: 2", "a: 1"], then there
-				// would be a constant diff as the API returns ["a: 1", "b: 2"].
-				//
-				// Reference:
-				// https://www.terraform.io/plugin/sdkv2/schemas/schema-types#typelist
-				"headers": {
-					Type: schema.TypeSet,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-					Optional: true,
 				},
 			},
 		},

@@ -73,7 +73,6 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		FormatVersion:  uint(2),
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -120,7 +119,6 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 		Port:           uint(3600),
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

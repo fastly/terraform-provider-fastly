@@ -99,7 +99,6 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteRules(t *testing.T) {
 	rulesTF2 := testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules2)
 	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF2, "")
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

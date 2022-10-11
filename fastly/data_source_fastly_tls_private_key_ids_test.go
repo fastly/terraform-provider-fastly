@@ -15,7 +15,6 @@ func TestAccFastlyDataSourceTLSPrivateKeyIds_basic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

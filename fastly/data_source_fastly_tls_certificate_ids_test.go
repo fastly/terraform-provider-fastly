@@ -19,7 +19,6 @@ func TestAccFastlyDataSourceTlSCertificate_IDs(t *testing.T) {
 	key = strings.ReplaceAll(key, "\n", `\n`)
 	cert = strings.ReplaceAll(cert, "\n", `\n`)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

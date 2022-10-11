@@ -200,7 +200,6 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		Placement:         "none",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -249,7 +248,6 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 		Topic:          "topic",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

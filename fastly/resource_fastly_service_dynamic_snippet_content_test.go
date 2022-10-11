@@ -20,7 +20,6 @@ func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
 	expectedSnippetPriority := "100"
 	expectedSnippetContent := "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -61,7 +60,6 @@ func TestAccFastlyServiceDynamicSnippetContent_update(t *testing.T) {
 
 	expectedRemoteItemsAfterUpdate := "if ( req.url ) {\n set req.http.my-updated-test-header = \"true\";\n}"
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -101,7 +99,6 @@ func TestAccFastlyServiceDynamicSnippetContent_external_snippet_is_removed(t *te
 	managedDynamicSnippetName := fmt.Sprintf("dynamic snippet %s", acctest.RandString(10))
 	managedContent := "if ( req.url ) {\n set req.http.my-updated-test-header = \"true\";\n}"
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -143,7 +140,6 @@ func TestAccFastlyServiceDynamicSnippetContent_normal_snippet_is_not_removed(t *
 	dynamicSnippetName := fmt.Sprintf("existing dynamic snippet %s", acctest.RandString(10))
 	dynamicContent := "if ( req.url ) {\n set req.http.my-new-content-test-header = \"true\";\n}"
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

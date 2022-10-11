@@ -67,7 +67,6 @@ func TestAccFastlyServiceVCLWAF_Add(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	waf := composeWAF(condition, response)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -91,7 +90,6 @@ func TestAccFastlyServiceVCLWAF_AddAndRemove(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	waf := composeWAF(condition, response)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -130,7 +128,6 @@ func TestAccFastlyServiceVCLWAF_UpdateResponse(t *testing.T) {
 	waf := composeWAF(condition, response)
 	updatedWaf := composeWAF(condition, updateResponse)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -163,7 +160,6 @@ func TestAccFastlyServiceVCLWAF_UpdateCondition(t *testing.T) {
 	waf := composeWAF(condition, response)
 	updatedWaf := composeWAF(updatedCondition, response)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

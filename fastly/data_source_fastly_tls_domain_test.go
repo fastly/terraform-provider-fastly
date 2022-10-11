@@ -16,7 +16,6 @@ func TestAccFastlyDataSourceTLSDomain_basic(t *testing.T) {
 	key, cert, err := generateKeyAndCert(domain)
 	require.NoError(t, err)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

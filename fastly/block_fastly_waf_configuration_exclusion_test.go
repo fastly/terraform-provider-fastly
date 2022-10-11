@@ -136,7 +136,6 @@ func TestAccFastlyServiceWAFVersionV1_Validation(t *testing.T) {
 
 		wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, "", exclusionsTF1)
 
-		// lintignore:XAT001
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -247,7 +246,6 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 	wafVer1 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF, exclusionsTF1)
 	wafVer2 := testAccFastlyServiceWAFVersionV1ComposeConfiguration(wafVerInput, rulesTF, exclusionsTF2)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

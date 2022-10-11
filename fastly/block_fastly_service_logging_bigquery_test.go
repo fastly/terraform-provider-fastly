@@ -24,7 +24,6 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 		t.Errorf("failed to generate key: %s", err)
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -54,7 +53,6 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 		t.Errorf("failed to generate key: %s", err)
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

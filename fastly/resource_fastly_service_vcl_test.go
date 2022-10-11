@@ -149,7 +149,6 @@ func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {
 	domainName2 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	domainName3 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -219,7 +218,6 @@ func TestAccFastlyServiceVCL_updateBackend(t *testing.T) {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -288,7 +286,6 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 		return err
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -329,7 +326,6 @@ func TestAccFastlyServiceVCL_updateInvalidBackend(t *testing.T) {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -392,7 +388,6 @@ func TestAccFastlyServiceVCL_createServiceWithStaticBackend(t *testing.T) {
 	}
 	`
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -424,7 +419,6 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	domainName2 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -506,7 +500,6 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 		})
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -621,7 +614,6 @@ func TestAccFastlyServiceVCL_defaultTTL(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -673,7 +665,6 @@ func TestAccFastlyServiceVCL_defaultHost(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	defaultHost := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -718,7 +709,6 @@ func TestAccFastlyServiceVCL_brokenSnippet(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.tf-%s.test", acctest.RandString(10))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -758,7 +748,6 @@ func TestAccFastlyServiceVCL_createZeroDefaultTTL(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

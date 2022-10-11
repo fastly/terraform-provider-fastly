@@ -81,7 +81,6 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 		Content:  "restart;\n",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -135,7 +135,6 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 		Placement:         "none",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -191,7 +190,6 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 		TLSHostname:       "example.com",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

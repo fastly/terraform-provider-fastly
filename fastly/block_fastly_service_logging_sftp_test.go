@@ -150,7 +150,6 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		Format:          "%h %l %u %t \"%r\" %>s %b",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -211,7 +210,6 @@ func TestAccFastlyServiceVCL_logging_sftp_basic_compute(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -238,7 +236,6 @@ func TestAccFastlyServiceVCL_logging_sftp_password_secret_key(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

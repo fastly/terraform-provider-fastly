@@ -16,7 +16,6 @@ func TestAccFastlyDataSourceTLSPlatformCertificate_IDs(t *testing.T) {
 	key, cert, ca, err := generateKeyAndCertWithCA(domain)
 	require.NoError(t, err)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

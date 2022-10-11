@@ -12,7 +12,6 @@ import (
 func TestAccFastlyDataSource_Datacenters(t *testing.T) {
 	resourceName := "data.fastly_datacenters.some"
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

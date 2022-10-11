@@ -27,7 +27,6 @@ func TestAccFastlyTLSPlatformCertificate_basic(t *testing.T) {
 	require.NoError(t, err)
 
 	resourceName := "fastly_tls_platform_certificate.subject"
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

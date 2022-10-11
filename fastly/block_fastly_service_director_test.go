@@ -185,7 +185,6 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 		Backends:       []string{"www"},
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

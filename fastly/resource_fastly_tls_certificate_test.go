@@ -29,7 +29,6 @@ func TestAccFastlyTLSCertificate_withName(t *testing.T) {
 	require.NoError(t, err)
 
 	resourceName := "fastly_tls_certificate.test"
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -74,7 +73,6 @@ func TestAccFastlyTLSCertificate_withoutName(t *testing.T) {
 	require.NoError(t, err)
 
 	resourceName := "fastly_tls_certificate.test"
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

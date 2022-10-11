@@ -57,7 +57,6 @@ func TestAccFastlyServiceDictionaryItem_create(t *testing.T) {
 		"key2": "value2",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -103,7 +102,6 @@ func TestAccFastlyServiceDictionaryItem_create_inactive_service(t *testing.T) {
 		"key2": "value2",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -135,7 +133,6 @@ func TestAccFastlyServiceDictionaryItem_create_dynamic(t *testing.T) {
 		"delta": "delta.demo.notexample.com",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -171,7 +168,6 @@ func TestAccFastlyServiceDictionaryItem_update(t *testing.T) {
 		"key3": "value3",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -212,7 +208,6 @@ func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 
 	config := testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItems, true, true)
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -256,7 +251,6 @@ func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 
 	expectedRemoteItemsAfterUpdate := map[string]string{}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -300,7 +294,6 @@ func TestAccFastlyServiceDictionaryItem_batch_1001_items(t *testing.T) {
 		expectedRemoteItems[fmt.Sprintf("key%d", i)] = fmt.Sprintf("value%d", i)
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -336,7 +329,6 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 		"key3": "value3",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -13,7 +13,6 @@ func TestAccFastlyDataSourceServices_Config(t *testing.T) {
 	resourceName := "data.fastly_services.some"
 	serviceName := "fastly_service_vcl.example_service"
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

@@ -59,8 +59,6 @@ func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
 	// 4. Try to rename it, expect to fail with "dictionary not empty error"
 	// 5. Without renaming, set force_destroy=true to skip the deletion check
 	// 6. Try to rename again, expect to succeed
-
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -116,7 +114,6 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

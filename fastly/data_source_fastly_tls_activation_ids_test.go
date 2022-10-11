@@ -18,7 +18,6 @@ func TestAccDataSourceFastlyTLSActivationIds_basic(t *testing.T) {
 	cert = strings.ReplaceAll(cert, "\n", `\n`)
 
 	datasourceName := "data.fastly_tls_activation_ids.subject"
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

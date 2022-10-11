@@ -101,7 +101,6 @@ func TestAccFastlyWAFRules_PublisherFilter(t *testing.T) {
 	wafrulesHCL2 := `
     publishers = ["owasp","fastly"]
     `
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -130,7 +129,6 @@ func TestAccFastlyWAFRules_ModSecIDsFilter(t *testing.T) {
     modsec_rule_ids = [1010060, 1010070]
     `
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -151,7 +149,6 @@ func TestAccFastlyWAFRules_ExcludeFilter(t *testing.T) {
     publishers = ["owasp"]
     exclude_modsec_rule_ids = [1010020]
     `
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -176,7 +173,6 @@ func TestAccFastlyWAFRules_TagFilter(t *testing.T) {
 	wafrulesHCL2 := `
     tags = ["CVE-2018-17384", "attack-rce"]
     `
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

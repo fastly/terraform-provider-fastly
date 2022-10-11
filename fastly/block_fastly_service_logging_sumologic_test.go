@@ -68,7 +68,6 @@ func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 		Format:        "my format new",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -113,7 +112,6 @@ func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 		URL:  "https://collectors.sumologic.com/receiver/1",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

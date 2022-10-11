@@ -12,7 +12,6 @@ func TestAccDataSourceFastlyTLSSubscription_basic(t *testing.T) {
 	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 
 	resourceName := "data.fastly_tls_subscription.subject"
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -37,7 +36,6 @@ func TestAccDataSourceFastlyTLSSubscription_byID(t *testing.T) {
 	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
 
 	resourceName := "data.fastly_tls_subscription.subject"
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

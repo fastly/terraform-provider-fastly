@@ -188,7 +188,6 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		CompressionCodec: "zstd",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -243,7 +242,6 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 		CompressionCodec: "zstd",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -287,7 +285,6 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -330,7 +327,6 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

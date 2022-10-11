@@ -150,7 +150,6 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		Password:          "password",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -204,7 +203,6 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 		TLSHostname:      "example.com",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

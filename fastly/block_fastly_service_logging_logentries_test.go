@@ -78,7 +78,6 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -128,7 +127,6 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -220,7 +218,6 @@ func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

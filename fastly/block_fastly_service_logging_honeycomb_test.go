@@ -119,7 +119,6 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 		ResponseCondition: "response_condition_test",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -166,7 +165,6 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic_compute(t *testing.T) {
 		Dataset:        "dataset",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

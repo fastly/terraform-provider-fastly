@@ -128,7 +128,6 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -181,7 +180,6 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 		CompressionCodec: "zstd",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -220,7 +218,6 @@ func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 		MessageType:     "classic",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

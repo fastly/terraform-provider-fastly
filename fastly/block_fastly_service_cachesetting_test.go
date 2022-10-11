@@ -66,7 +66,6 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 		TTL:            uint(300),
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

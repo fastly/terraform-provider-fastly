@@ -131,7 +131,6 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		CompressionCodec:  "zstd",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -186,7 +185,6 @@ func TestAccFastlyServiceVCL_logging_openstack_basic_compute(t *testing.T) {
 		CompressionCodec: "zstd",
 	}
 
-	// lintignore:XAT001
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

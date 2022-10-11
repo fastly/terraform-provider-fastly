@@ -117,7 +117,6 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), ell); err != nil {
 			log.Printf("[WARN] Error setting Log Shuttle logging endpoints for (%s): %s", d.Id(), err)
 		}

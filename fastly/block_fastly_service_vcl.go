@@ -92,7 +92,6 @@ func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 
 		vl := flattenVCLs(vclList)
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), vl); err != nil {
 			log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
 		}

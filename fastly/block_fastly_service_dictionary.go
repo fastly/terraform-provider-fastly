@@ -109,7 +109,6 @@ func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			}
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), dictionaries); err != nil {
 			log.Printf("[WARN] Error setting Dictionary for (%s): %s", d.Id(), err)
 		}

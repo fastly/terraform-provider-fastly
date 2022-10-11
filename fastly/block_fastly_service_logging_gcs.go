@@ -179,7 +179,6 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), gcsl); err != nil {
 			log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
 		}

@@ -137,7 +137,6 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), lel); err != nil {
 			log.Printf("[WARN] Error setting Logentries for (%s): %s", d.Id(), err)
 		}

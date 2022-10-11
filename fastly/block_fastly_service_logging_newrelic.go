@@ -115,7 +115,6 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), dll); err != nil {
 			log.Printf("[WARN] Error setting New Relic logging endpoints for (%s): %s", d.Id(), err)
 		}

@@ -136,7 +136,6 @@ func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 			}
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), gl); err != nil {
 			log.Printf("[WARN] Error setting Gzips for (%s): %s", d.Id(), err)
 		}

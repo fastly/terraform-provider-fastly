@@ -152,7 +152,6 @@ func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 
 		dirl := flattenDirectors(directorList)
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), dirl); err != nil {
 			log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
 		}

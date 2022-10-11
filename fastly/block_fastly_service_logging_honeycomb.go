@@ -114,7 +114,6 @@ func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), ell); err != nil {
 			log.Printf("[WARN] Error setting Honeycomb logging endpoints for (%s): %s", d.Id(), err)
 		}

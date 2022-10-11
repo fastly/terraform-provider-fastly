@@ -132,7 +132,6 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), ell); err != nil {
 			log.Printf("[WARN] Error setting Kinesis logging endpoints for (%s): %s", d.Id(), err)
 		}

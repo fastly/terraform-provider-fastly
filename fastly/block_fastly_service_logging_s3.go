@@ -247,7 +247,6 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), sl); err != nil {
 			log.Printf("[WARN] Error setting S3 Logging for (%s): %s", d.Id(), err)
 		}

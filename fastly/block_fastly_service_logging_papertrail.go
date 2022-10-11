@@ -130,7 +130,6 @@ func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), pl); err != nil {
 			log.Printf("[WARN] Error setting Papertrail for (%s): %s", d.Id(), err)
 		}

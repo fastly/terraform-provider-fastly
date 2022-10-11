@@ -111,7 +111,6 @@ func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), ell); err != nil {
 			log.Printf("[WARN] Error setting Loggly logging endpoints for (%s): %s", d.Id(), err)
 		}

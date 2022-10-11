@@ -115,7 +115,6 @@ func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), dll); err != nil {
 			log.Printf("[WARN] Error setting Datadog logging endpoints for (%s): %s", d.Id(), err)
 		}

@@ -102,7 +102,6 @@ func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.
 
 		csl := flattenCacheSettings(cslList)
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), csl); err != nil {
 			log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
 		}

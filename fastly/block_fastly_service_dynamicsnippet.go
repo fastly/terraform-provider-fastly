@@ -97,7 +97,6 @@ func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schem
 		}
 
 		dynamicSnippets := flattenDynamicSnippets(snippetList)
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), dynamicSnippets); err != nil {
 			log.Printf("[WARN] Error setting VCL Dynamic Snippets for (%s): %s", d.Id(), err)
 		}

@@ -141,7 +141,6 @@ func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schem
 
 		rl := flattenRequestSettings(rsList)
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), rl); err != nil {
 			log.Printf("[WARN] Error setting Request Settings for (%s): %s", d.Id(), err)
 		}

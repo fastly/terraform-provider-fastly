@@ -229,7 +229,6 @@ func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		}
 
 		bl := flattenBackend(backendList, h.GetServiceMetadata())
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), bl); err != nil {
 			log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
 		}

@@ -167,7 +167,6 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			h.pruneVCLLoggingAttributes(element)
 		}
 
-		// lintignore:R001
 		if err := d.Set(h.GetKey(), ell); err != nil {
 			log.Printf("[WARN] Error setting FTP logging endpoints for (%s): %s", d.Id(), err)
 		}

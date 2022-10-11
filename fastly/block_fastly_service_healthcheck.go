@@ -99,6 +99,23 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     5,
 					Description: "The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`",
 				},
+				// NOTE: We can't use TypeList as the Fastly API orders the headers.
+				//
+				// The Fastly API returns the contained elements in a sorted order,
+				// which might otherwise cause unexpected diffs if using TypeList as the
+				// data type expects the elements to be consistently ordered. So if a
+				// user was to define their headers as ["b: 2", "a: 1"], then there
+				// would be a constant diff as the API returns ["a: 1", "b: 2"].
+				//
+				// Reference:
+				// https://www.terraform.io/plugin/sdkv2/schemas/schema-types#typelist
+				"headers": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Optional: true,
+				},
 			},
 		},
 	}
@@ -106,10 +123,17 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+	hi := resource["headers"].(*schema.Set).List()
+	var hs []string
+	for _, v := range hi {
+		hs = append(hs, v.(string))
+	}
+
 	opts := gofastly.CreateHealthCheckInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
 		Name:             resource["name"].(string),
+		Headers:          hs,
 		Host:             resource["host"].(string),
 		Path:             resource["path"].(string),
 		CheckInterval:    gofastly.Uint(uint(resource["check_interval"].(int))),
@@ -200,6 +224,17 @@ func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema
 	if v, ok := modified["initial"]; ok {
 		opts.Initial = gofastly.Uint(uint(v.(int)))
 	}
+	if v, ok := modified["headers"]; ok {
+		h, ok := v.(*schema.Set)
+		if ok {
+			hi := h.List()
+			var hs []string
+			for _, hv := range hi {
+				hs = append(hs, hv.(string))
+			}
+			opts.Headers = &hs
+		}
+	}
 
 	log.Printf("[DEBUG] Update Healthcheck Opts: %#v", opts)
 	_, err := conn.UpdateHealthCheck(&opts)
@@ -235,6 +270,7 @@ func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]a
 		// Convert HealthChecks to a map for saving to state.
 		nh := map[string]any{
 			"name":              h.Name,
+			"headers":           h.Headers,
 			"host":              h.Host,
 			"path":              h.Path,
 			"check_interval":    h.CheckInterval,

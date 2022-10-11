@@ -8,6 +8,11 @@ VERSION=$(shell git describe --tags --always)
 VERSION_SHORT=$(shell git describe --tags --always --abbrev=0)
 DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION_SHORT))
 
+# XAT001: missing resource.TestCase ErrorCheck.
+# R018: replace sleep with either resource.Retry() or WaitForState().
+# R001: for complex d.Set() calls use a string literal instead.
+TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false -R018=false -R001=false
+
 GOHOSTOS ?= $(shell go env GOHOSTOS || echo unknown)
 GOHOSTARCH ?= $(shell go env GOHOSTARCH || echo unknown)
 
@@ -54,10 +59,8 @@ clean_test:
 	fi
 
 vet:
-	@echo "go vet ."
 	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
-		echo ""; \
-		echo "Vet found suspicious constructs. Please check the reported constructs"; \
+		echo "\nVet found suspicious constructs. Please check the reported constructs"; \
 		echo "and fix them if necessary before submitting the code for review."; \
 		exit 1; \
 	fi
@@ -105,7 +108,7 @@ validate-docs: $(BIN)/tfplugindocs
 	$(BIN)/tfplugindocs validate
 
 tfproviderlintx: $(BIN)/tfproviderlintx
-	$(BIN)/tfproviderlintx $(TFPROVIDERLINT_ARGS) ./...
+	$(BIN)/tfproviderlintx $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
 
 tfproviderlint: $(BIN)/tfproviderlint
 	$(BIN)/tfproviderlint $(TFPROVIDERLINT_ARGS) ./...
@@ -119,4 +122,4 @@ sweep:
 clean:
 	rm -rf ./bin
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile sweep validate-docs generate-docs clean clean_test goreleaser goreleaser-bin
+.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin sweep test test-compile testacc validate-docs vet

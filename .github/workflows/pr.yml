@@ -21,11 +21,8 @@ jobs:
       run: make fmt
     - name: Vet
       run: make vet
-    - name: tfproviderlint
-      run: make tfproviderlintx TFPROVIDERLINT_ARGS='-XAT001=false -R018=false -R001=false'
-      # XAT001: missing resource.TestCase ErrorCheck
-      # R018: replace sleep with either resource.Retry() or WaitForState()
-      # R001: for complex d.Set() calls
+    - name: tfproviderlintx
+      run: make tfproviderlintx
   test:
     strategy:
       matrix:

@@ -150,6 +150,8 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 				if h.Name == lh.Name {
 					// The API returns the headers sorted, so to avoid potential errors in
 					// the test setup we will order the headers too before comparing.
+					//
+					// NOTE: Sorting the headers isn't necessary outside of the tests.
 					sort.Strings(h.Headers)
 
 					// we don't know these things ahead of time, so populate them now

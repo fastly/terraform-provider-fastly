@@ -21,7 +21,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 
 	cases := []struct {
 		remote []*gofastly.Splunk
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Splunk{
@@ -44,7 +44,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					TLSClientKey:  key,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "test-splunk",
 					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
@@ -313,7 +313,10 @@ func TestSplunkEnvDefaultFuncAttributes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_splunk"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 

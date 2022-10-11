@@ -11,17 +11,17 @@ func TestSetDiff_Diff(t *testing.T) {
 	cases := []struct {
 		name               string
 		keyFunc            KeyFunc
-		oldElements        []map[string]interface{}
-		newElements        []map[string]interface{}
-		expectedAdded      []map[string]interface{}
-		expectedModified   []map[string]interface{}
-		expectedDeleted    []map[string]interface{}
-		expectedUnmodified []map[string]interface{}
+		oldElements        []map[string]any
+		newElements        []map[string]any
+		expectedAdded      []map[string]any
+		expectedModified   []map[string]any
+		expectedDeleted    []map[string]any
+		expectedUnmodified []map[string]any
 		expectedError      bool
 	}{
 		{
 			name: "should return the correct diff",
-			oldElements: []map[string]interface{}{
+			oldElements: []map[string]any{
 				{
 					"name":  "name-a",
 					"value": "value-a",
@@ -35,7 +35,7 @@ func TestSetDiff_Diff(t *testing.T) {
 					"value": "value-d",
 				},
 			},
-			newElements: []map[string]interface{}{
+			newElements: []map[string]any{
 				{
 					"name":  "name-a",
 					"value": "value-a-new",
@@ -49,25 +49,25 @@ func TestSetDiff_Diff(t *testing.T) {
 					"value": "value-d",
 				},
 			},
-			expectedAdded: []map[string]interface{}{
+			expectedAdded: []map[string]any{
 				{
 					"name":  "name-c",
 					"value": "value-c",
 				},
 			},
-			expectedModified: []map[string]interface{}{
+			expectedModified: []map[string]any{
 				{
 					"name":  "name-a",
 					"value": "value-a-new",
 				},
 			},
-			expectedDeleted: []map[string]interface{}{
+			expectedDeleted: []map[string]any{
 				{
 					"name":  "b",
 					"value": "value-b",
 				},
 			},
-			expectedUnmodified: []map[string]interface{}{
+			expectedUnmodified: []map[string]any{
 				{
 					"name":  "name-d",
 					"value": "value-d",
@@ -79,10 +79,10 @@ func TestSetDiff_Diff(t *testing.T) {
 		},
 		{
 			name: "should return error if key cannot be computed",
-			oldElements: []map[string]interface{}{
+			oldElements: []map[string]any{
 				{},
 			},
-			newElements: []map[string]interface{}{
+			newElements: []map[string]any{
 				{},
 			},
 			expectedError: true,
@@ -118,12 +118,12 @@ func TestSetDiff_Diff(t *testing.T) {
 	}
 }
 
-func testKeyFuncByName(element interface{}) (interface{}, error) {
-	elemMap := element.(map[string]interface{})
+func testKeyFuncByName(element any) (any, error) {
+	elemMap := element.(map[string]any)
 	return elemMap["name"], nil
 }
 
-func testCreateSet(items []map[string]interface{}) *schema.Set {
+func testCreateSet(items []map[string]any) *schema.Set {
 	return schema.NewSet(schema.HashResource(&schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -140,8 +140,8 @@ func testCreateSet(items []map[string]interface{}) *schema.Set {
 	}), toArrayInterface(items))
 }
 
-func toArrayInterface(arrayOfMaps []map[string]interface{}) []interface{} {
-	var result []interface{}
+func toArrayInterface(arrayOfMaps []map[string]any) []any {
+	var result []any
 	for _, c := range arrayOfMaps {
 		result = append(result, c)
 	}

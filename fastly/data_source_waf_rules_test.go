@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestFastlyWAFRulesDetermineRevision(t *testing.T) {
+func TestFastlyWAFRules_DetermineRevision(t *testing.T) {
 	cases := []struct {
 		remote  []*gofastly.WAFRuleRevision
 		local   int
@@ -62,10 +62,10 @@ func TestFastlyWAFRulesDetermineRevision(t *testing.T) {
 	}
 }
 
-func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
+func TestFastlyWAFRules_FlattenWAFRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFRule
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAFRule{
@@ -77,7 +77,7 @@ func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
 					},
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"modsec_rule_id":         11110000,
 					"type":                   "type",
@@ -94,7 +94,7 @@ func TestFastlyWAFRulesFlattenWAFRules(t *testing.T) {
 	}
 }
 
-func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
+func TestAccFastlyWAFRules_PublisherFilter(t *testing.T) {
 	wafrulesHCL := `
     publishers = ["owasp"]
     `
@@ -124,7 +124,7 @@ func TestAccFastlyWAFRulesPublisherFilter(t *testing.T) {
 	})
 }
 
-func TestAccFastlyWAFRulesModSecIDsFilter(t *testing.T) {
+func TestAccFastlyWAFRules_ModSecIDsFilter(t *testing.T) {
 	wafrulesHCL := `
     modsec_rule_ids = [1010060, 1010070]
     `
@@ -144,7 +144,7 @@ func TestAccFastlyWAFRulesModSecIDsFilter(t *testing.T) {
 	})
 }
 
-func TestAccFastlyWAFRulesExcludeFilter(t *testing.T) {
+func TestAccFastlyWAFRules_ExcludeFilter(t *testing.T) {
 	wafrulesHCL := `
     publishers = ["owasp"]
     exclude_modsec_rule_ids = [1010020]
@@ -166,7 +166,7 @@ func TestAccFastlyWAFRulesExcludeFilter(t *testing.T) {
 	})
 }
 
-func TestAccFastlyWAFRulesTagFilter(t *testing.T) {
+func TestAccFastlyWAFRules_TagFilter(t *testing.T) {
 	wafrulesHCL := `
     tags = ["CVE-2018-17384"]
     `

@@ -33,58 +33,21 @@ func (h *HTTPSLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-		"url": {
-			Type:         schema.TypeString,
-			Required:     true,
-			Description:  "URL that log data will be sent to. Must use the https protocol",
-			ValidateFunc: validation.IsURLWithHTTPS,
-		},
-
-		// Optional fields
-		"request_max_entries": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Description: "The maximum number of logs sent in one request",
-		},
-
-		"request_max_bytes": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Description: "The maximum number of bytes sent in one request",
-		},
-
 		"content_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Value of the `Content-Type` header sent with the request",
 		},
-
 		"header_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Custom header sent with the request",
 		},
-
 		"header_value": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Value of the custom header sent with the request",
 		},
-
-		"method": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "POST",
-			Description:  "HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`",
-			ValidateFunc: validation.StringInSlice([]string{"POST", "PUT"}, false),
-		},
-
 		// NOTE: The `json_format` field's documented type is string, but it should likely be an integer.
 		"json_format": {
 			Type:         schema.TypeString,
@@ -93,21 +56,47 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description:  "Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)",
 			ValidateFunc: validation.StringInSlice([]string{"0", "1", "2"}, false),
 		},
-
+		"message_type": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "blank",
+			Description:      MessageTypeDescription,
+			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"method": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "POST",
+			Description:  "HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`",
+			ValidateFunc: validation.StringInSlice([]string{"POST", "PUT"}, false),
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"request_max_bytes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "The maximum number of bytes sent in one request",
+		},
+		"request_max_entries": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "The maximum number of logs sent in one request",
+		},
 		"tls_ca_cert": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A secure certificate to authenticate the server with. Must be in PEM format",
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_client_cert": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "The client certificate used to make authenticated requests. Must be in PEM format",
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_client_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -115,19 +104,16 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Sensitive:        true,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-
 		"tls_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Used during the TLS handshake to validate the certificate",
 		},
-
-		"message_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "blank",
-			Description:      MessageTypeDescription,
-			ValidateDiagFunc: validateLoggingMessageType(),
+		"url": {
+			Type:         schema.TypeString,
+			Required:     true,
+			Description:  "URL that log data will be sent to. Must use the https protocol",
+			ValidateFunc: validation.IsURLWithHTTPS,
 		},
 	}
 
@@ -167,7 +153,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
@@ -176,7 +162,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schem
 }
 
 // Read refreshes the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -204,14 +190,14 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHTTPSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -277,7 +263,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
@@ -307,11 +293,11 @@ func deleteHTTPS(conn *gofastly.Client, i *gofastly.DeleteHTTPSInput) error {
 	return nil
 }
 
-func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]interface{} {
-	var hsl []map[string]interface{}
+func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]any {
+	var hsl []map[string]any
 	for _, hl := range httpsList {
 		// Convert HTTP logging to a map for saving to state.
-		nhl := map[string]interface{}{
+		nhl := map[string]any{
 			"name":                hl.Name,
 			"response_condition":  hl.ResponseCondition,
 			"format":              hl.Format,
@@ -345,8 +331,8 @@ func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]interface{} {
 	return hsl
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
-	df := httpsMap.(map[string]interface{})
+func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
+	df := httpsMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateHTTPSInput{
@@ -375,8 +361,8 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap interface{}, 
 	return &opts
 }
 
-func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
-	df := httpsMap.(map[string]interface{})
+func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap any, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
+	df := httpsMap.(map[string]any)
 
 	opts := gofastly.DeleteHTTPSInput{
 		ServiceID:      serviceID,

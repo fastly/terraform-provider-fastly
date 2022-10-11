@@ -15,10 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_FlattenWAFRuleExclusions(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFRuleExclusion
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAFRuleExclusion{
@@ -60,20 +60,20 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 					Condition:     gofastly.String("req.url.basename == \"index.asp\""),
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"number":          1,
 					"name":            "index page",
 					"exclusion_type":  "rule",
 					"condition":       "req.url.basename == \"index.html\"",
-					"modsec_rule_ids": schema.NewSet(schema.HashInt, []interface{}{2029718, 1010070}),
+					"modsec_rule_ids": schema.NewSet(schema.HashInt, []any{2029718, 1010070}),
 				},
 				{
 					"number":          2,
 					"name":            "index php",
 					"exclusion_type":  "rule",
 					"condition":       "req.url.basename == \"index.php\"",
-					"modsec_rule_ids": schema.NewSet(schema.HashInt, []interface{}{1010070}),
+					"modsec_rule_ids": schema.NewSet(schema.HashInt, []any{1010070}),
 				},
 				{
 					"number":         3,
@@ -91,7 +91,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFRuleExclusions(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_Validation(t *testing.T) {
 	// As we use a 'table test' which executes a `resource.Test` multiple times within a for-loop, we don't utilise the
 	// `resource.ParallelTest` function but instead call t.Parallel(). The use of t.Parallel() must happen outside of
 	// the for-loop otherwise it would be executed multiple times, leading to a runtime panic.
@@ -152,7 +152,7 @@ func TestAccFastlyServiceWAFVersionV1Validation(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteExclusions(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 

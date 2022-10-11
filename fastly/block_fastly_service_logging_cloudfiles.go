@@ -32,47 +32,29 @@ func (h *CloudfilesServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
-		"bucket_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of your Cloud Files container",
-		},
-
-		"user": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The username for your Cloud Files account",
-		},
-
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "Your Cloud File account access key",
 		},
-
-		// Optional fields
-		"public_key": {
+		"bucket_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of your Cloud Files container",
+		},
+		"compression_codec": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
-
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
 			Description: GzipLevelDescription,
 		},
-
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -80,37 +62,43 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
-
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The path to upload logs to",
 		},
-
-		"region": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)",
-		},
-
 		"period": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
 			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
 		},
-
+		"public_key": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)",
+		},
 		"timestamp_format": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "%Y-%m-%dT%H:%M:%S.000",
 			Description: TimestampFormatDescription,
 		},
-		"compression_codec": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for your Cloud Files account",
 		},
 	}
 
@@ -150,7 +138,7 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
@@ -159,7 +147,7 @@ func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -188,14 +176,14 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCloudfilesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -252,7 +240,7 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging endpoint removal opts: %#v", opts)
@@ -282,11 +270,11 @@ func deleteCloudfiles(conn *gofastly.Client, i *gofastly.DeleteCloudfilesInput) 
 	return nil
 }
 
-func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]interface{} {
-	var lsl []map[string]interface{}
+func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]any {
+	var lsl []map[string]any
 	for _, ll := range cloudfilesList {
 		// Convert Cloud Files logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"bucket_name":        ll.BucketName,
 			"user":               ll.User,
@@ -318,8 +306,8 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles) []map[string]inter
 	return lsl
 }
 
-func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
-	df := cloudfilesMap.(map[string]interface{})
+func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {
+	df := cloudfilesMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateCloudfilesInput{
@@ -344,8 +332,8 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap interface{
 	}
 }
 
-func (h *CloudfilesServiceAttributeHandler) buildDelete(cloudfilesMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteCloudfilesInput {
-	df := cloudfilesMap.(map[string]interface{})
+func (h *CloudfilesServiceAttributeHandler) buildDelete(cloudfilesMap any, serviceID string, serviceVersion int) *gofastly.DeleteCloudfilesInput {
+	df := cloudfilesMap.(map[string]any)
 
 	return &gofastly.DeleteCloudfilesInput{
 		ServiceID:      serviceID,

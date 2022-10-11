@@ -16,19 +16,12 @@ import (
 func dataSourceFastlyWAFRules() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyWAFRulesRead,
-
 		Schema: map[string]*schema.Schema{
-			"publishers": {
+			"exclude_modsec_rule_ids": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A list of publishers to be used as filters for the data set.",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"tags": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A list of tags to be used as filters for the data set.",
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A list of modsecurity rules IDs to be excluded from the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
 			"modsec_rule_ids": {
 				Type:        schema.TypeList,
@@ -36,11 +29,11 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 				Description: "A list of modsecurity rules IDs to be used as filters for the data set.",
 				Elem:        &schema.Schema{Type: schema.TypeInt},
 			},
-			"exclude_modsec_rule_ids": {
+			"publishers": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "A list of modsecurity rules IDs to be excluded from the data set.",
-				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "A list of publishers to be used as filters for the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"rules": {
 				Type:        schema.TypeList,
@@ -48,15 +41,15 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 				Description: "The list of rules that results from any given combination of filters.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"modsec_rule_id": {
-							Type:        schema.TypeInt,
-							Required:    true,
-							Description: "The modsecurity rule ID.",
-						},
 						"latest_revision_number": {
 							Type:        schema.TypeInt,
 							Required:    true,
 							Description: "The modsecurity rule's latest revision.",
+						},
+						"modsec_rule_id": {
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "The modsecurity rule ID.",
 						},
 						"type": {
 							Type:        schema.TypeString,
@@ -66,39 +59,45 @@ func dataSourceFastlyWAFRules() *schema.Resource {
 					},
 				},
 			},
+			"tags": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of tags to be used as filters for the data set.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
 
-func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	input := &gofastly.ListAllWAFRulesInput{
 		Include: "waf_rule_revisions",
 	}
 
 	if v, ok := d.GetOk("publishers"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.FilterPublishers = append(input.FilterPublishers, l[i].(string))
 		}
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.FilterTagNames = append(input.FilterTagNames, l[i].(string))
 		}
 	}
 
 	if v, ok := d.GetOk("modsec_rule_ids"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.FilterModSecIDs = append(input.FilterModSecIDs, l[i].(int))
 		}
 	}
 
 	if v, ok := d.GetOk("exclude_modsec_rule_ids"); ok {
-		l := v.([]interface{})
+		l := v.([]any)
 		for i := range l {
 			input.ExcludeMocSecIDs = append(input.ExcludeMocSecIDs, l[i].(int))
 		}
@@ -134,8 +133,8 @@ func createFiltersHash(i *gofastly.ListAllWAFRulesInput) int {
 	return hashcode.String(result)
 }
 
-func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]interface{} {
-	rl := make([]map[string]interface{}, len(ruleList))
+func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]any {
+	rl := make([]map[string]any, len(ruleList))
 
 	if len(ruleList) == 0 {
 		return rl
@@ -147,7 +146,7 @@ func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]interface{} {
 			latestRevisionNumber = latestRevision.Revision
 		}
 
-		rulesMapString := map[string]interface{}{
+		rulesMapString := map[string]any{
 			"modsec_rule_id":         r.ModSecID,
 			"latest_revision_number": latestRevisionNumber,
 			"type":                   r.Type,

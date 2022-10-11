@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Logshuttle
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Logshuttle{
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
 					FormatVersion:     2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "logshuttle-endpoint",
 					"token":              "token",

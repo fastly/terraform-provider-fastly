@@ -60,7 +60,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		DeleteContext: resourceDelete(serviceDef),
 		Importer:      resourceImport(),
 		CustomizeDiff: customdiff.All(
-			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+			customdiff.ComputedIf("cloned_version", func(_ context.Context, d *schema.ResourceDiff, _ any) bool {
 				// If anything other than name, comment and version_comment has changed, the current version will be
 				// cloned in resourceServiceUpdate so set it as recomputed. These three fields can be updated without
 				// creating a new version
@@ -72,33 +72,19 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				}
 				return false
 			}),
-			customdiff.ComputedIf("active_version", func(_ context.Context, d *schema.ResourceDiff, _ interface{}) bool {
+			customdiff.ComputedIf("active_version", func(_ context.Context, d *schema.ResourceDiff, _ any) bool {
 				// If cloned_version is recomputed and we are automatically activating new versions (controlled with the
 				// activate flag) then the active_version will be recomputed too.
 				return d.HasChange("cloned_version") && d.Get("activate").(bool)
 			}),
 		),
-
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The unique name for the Service to create",
-			},
-
-			"comment": {
-				Type:        schema.TypeString,
+			"activate": {
+				Type:        schema.TypeBool,
+				Description: "Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
+				Default:     true,
 				Optional:    true,
-				Default:     "Managed by Terraform",
-				Description: "Description field for the service. Default `Managed by Terraform`",
 			},
-
-			"version_comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Description field for the version",
-			},
-
 			// Active Version represents the currently activated version in Fastly. In
 			// Terraform, we abstract this number away from the users and manage
 			// creating and activating. It's used internally, but also exported for
@@ -108,7 +94,6 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Computed:    true,
 				Description: "The currently active version of your Fastly Service",
 			},
-
 			// Cloned Version represents the latest cloned version by the provider. It
 			// gets set whenever Terraform detects changes and clones the currently
 			// activated version in order to modify it. Active Version and Cloned
@@ -119,32 +104,38 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Computed:    true,
 				Description: "The latest cloned version by the provider",
 			},
-
-			"activate": {
-				Type:        schema.TypeBool,
-				Description: "Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
-				Default:     true,
+			"comment": {
+				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "Managed by Terraform",
+				Description: "Description field for the service. Default `Managed by Terraform`",
 			},
-
 			"force_destroy": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				Description:   "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
 				ConflictsWith: []string{"reuse"},
 			},
-
+			"imported": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished",
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The unique name for the Service to create",
+			},
 			"reuse": {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				Description:   "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
 				ConflictsWith: []string{"force_destroy"},
 			},
-
-			"imported": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished",
+			"version_comment": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Description field for the version",
 			},
 		},
 	}
@@ -153,7 +144,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	// Register adds schema attributes to the overall schema for the resource. This allows each AttributeHandler to
 	// define its own attributes while allowing the overall set to be composed.
 	for _, a := range serviceDef.GetAttributeHandler() {
-		a.Register(s) // Mutates s, adding handler-specific schema items to the list.
+		_ = a.Register(s)
 	}
 
 	return s
@@ -162,7 +153,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 // resourceCreate satisfies the Terraform resource schema Create "interface"
 // while injecting the ServiceDefinition into the true Create functionality.
 func resourceCreate(serviceDef ServiceDefinition) schema.CreateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceCreate(ctx, d, meta, serviceDef)
 	}
 }
@@ -170,7 +161,7 @@ func resourceCreate(serviceDef ServiceDefinition) schema.CreateContextFunc {
 // resourceRead satisfies the Terraform resource schema Read "interface"
 // while injecting the ServiceDefinition into the true Read functionality.
 func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceRead(ctx, d, meta, serviceDef)
 	}
 }
@@ -178,7 +169,7 @@ func resourceRead(serviceDef ServiceDefinition) schema.ReadContextFunc {
 // resourceUpdate satisfies the Terraform resource schema Update "interface"
 // while injecting the ServiceDefinition into the true Update functionality.
 func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceUpdate(ctx, d, meta, serviceDef)
 	}
 }
@@ -186,7 +177,7 @@ func resourceUpdate(serviceDef ServiceDefinition) schema.UpdateContextFunc {
 // resourceDelete satisfies the Terraform resource schema Delete "interface"
 // while injecting the ServiceDefinition into the true Delete functionality.
 func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		return resourceServiceDelete(ctx, d, meta, serviceDef)
 	}
 }
@@ -194,7 +185,7 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 // resourceImport satisfies the Terraform resource schema Importer "interface"
 func resourceImport() *schema.ResourceImporter {
 	return &schema.ResourceImporter{
-		StateContext: func(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+		StateContext: func(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 			parts := strings.Split(d.Id(), "@")
 			if len(parts) > 2 {
 				return nil, fmt.Errorf("expected import ID to either be the service ID, or be specified as <service id>@<service version>, e.g. nci48cow8ncw8ocn75@3")
@@ -202,7 +193,10 @@ func resourceImport() *schema.ResourceImporter {
 
 			id := parts[0]
 			d.SetId(id)
-			d.Set("imported", true)
+			err := d.Set("imported", true)
+			if err != nil {
+				return nil, fmt.Errorf("error setting imported attribute into the state: %w", err)
+			}
 
 			if len(parts) == 2 {
 				version, err := strconv.Atoi(parts[1])
@@ -222,7 +216,7 @@ func resourceImport() *schema.ResourceImporter {
 }
 
 // resourceServiceCreate provides service resource Create functionality.
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any, serviceDef ServiceDefinition) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -250,7 +244,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 // resourceServiceUpdate provides service resource Update functionality.
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any, serviceDef ServiceDefinition) diag.Diagnostics {
 	if err := validateVCLs(d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -326,6 +320,9 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// immediately mutable, so we need to sleep a few and let Fastly ready
 			// itself. Typically, 7 seconds is enough.
 			log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
+
+			// TODO: Replace sleep with either resource.Retry() or WaitForState().
+			// https://github.com/bflad/tfproviderlint/tree/main/passes/R018
 			time.Sleep(7 * time.Second)
 
 			// Update the cloned version's comment.
@@ -412,7 +409,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 // resourceServiceRead provides service resource Read functionality.
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}, serviceDef ServiceDefinition) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, serviceDef ServiceDefinition) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Service Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -533,13 +530,16 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// To ensure nested resources (e.g. backends, domains etc) don't continue to
 	// call the API to refresh the internal Terraform state, once an import is
 	// complete, we reset the 'imported' computed attribute to false.
-	d.Set("imported", false)
+	err = d.Set("imported", false)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }
 
 // resourceServiceDelete provides service resource Delete functionality.
-func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta interface{}, _ ServiceDefinition) diag.Diagnostics {
+func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, _ ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.

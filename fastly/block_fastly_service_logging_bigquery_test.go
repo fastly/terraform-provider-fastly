@@ -77,7 +77,10 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_bigquery"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
@@ -207,34 +210,6 @@ resource "fastly_service_compute" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfigBigQueryEnv(name, gcsName string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
-  name = "%s"
-
-  domain {
-    name    = "%s"
-    comment = "tf-testing-domain"
-  }
-
-  backend {
-    address = "%s"
-    name    = "tf -test backend"
-  }
-
-  logging_bigquery {
-    name       = "%s"
-    project_id = "example-gcp-project"
-    dataset    = "example_bq_dataset"
-    table      = "example_bq_table"
-  }
-
-  force_destroy = true
-}`, name, domainName, backendName, gcsName)
-}
-
 func setBQEnv(email, secretKey string, t *testing.T) func() {
 	e := getBQEnv()
 	// Set all the envs to a dummy value
@@ -279,7 +254,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 
 	cases := []struct {
 		remote []*gofastly.BigQuery
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.BigQuery{
@@ -292,7 +267,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					SecretKey: secretKey,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":       "bigquery-example",
 					"email":      "email@example.com",
@@ -317,7 +292,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					SecretKey:         secretKey,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "bigquery-example",
 					"email":              "email@example.com",

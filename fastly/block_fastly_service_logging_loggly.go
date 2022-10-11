@@ -83,7 +83,7 @@ func (h *LogglyServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Loggly logging addition opts: %#v", opts)
@@ -92,7 +92,7 @@ func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -120,14 +120,14 @@ func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogglyInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -157,7 +157,7 @@ func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *LogglyServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Loggly logging endpoint removal opts: %#v", opts)
@@ -187,11 +187,11 @@ func deleteLoggly(conn *gofastly.Client, i *gofastly.DeleteLogglyInput) error {
 	return nil
 }
 
-func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]interface{} {
-	var lsl []map[string]interface{}
+func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]any {
+	var lsl []map[string]any
 	for _, ll := range logglyList {
 		// Convert Loggly logging to a map for saving to state.
-		nll := map[string]interface{}{
+		nll := map[string]any{
 			"name":               ll.Name,
 			"token":              ll.Token,
 			"format":             ll.Format,
@@ -213,8 +213,8 @@ func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]interface{} {
 	return lsl
 }
 
-func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateLogglyInput {
-	df := logglyMap.(map[string]interface{})
+func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap any, serviceID string, serviceVersion int) *gofastly.CreateLogglyInput {
+	df := logglyMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateLogglyInput{
@@ -229,8 +229,8 @@ func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap interface{}, servi
 	}
 }
 
-func (h *LogglyServiceAttributeHandler) buildDelete(logglyMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteLogglyInput {
-	df := logglyMap.(map[string]interface{})
+func (h *LogglyServiceAttributeHandler) buildDelete(logglyMap any, serviceID string, serviceVersion int) *gofastly.DeleteLogglyInput {
+	df := logglyMap.(map[string]any)
 
 	return &gofastly.DeleteLogglyInput{
 		ServiceID:      serviceID,

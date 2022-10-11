@@ -32,74 +32,23 @@ func (h *FTPServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The FTP address to stream logs to",
 		},
-
-		"user": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The username for the server (can be `anonymous`)",
-		},
-
-		"password": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The password for the server (for anonymous use an email address)",
-			Sensitive:   true,
-		},
-
-		"path": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
-		},
-
-		// Optional fields
-		"port": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     21,
-			Description: "The port number. Default: `21`",
-		},
-
-		"period": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     3600,
-			Description: "How frequently the logs should be transferred, in seconds (Default `3600`)",
-		},
-
-		"public_key": {
+		"compression_codec": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
-
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
 			Description: GzipLevelDescription,
 		},
-
-		"timestamp_format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: TimestampFormatDescription,
-		},
-
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -107,11 +56,50 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
-		"compression_codec": {
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"password": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The password for the server (for anonymous use an email address)",
+			Sensitive:   true,
+		},
+		"path": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
+		},
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently the logs should be transferred, in seconds (Default `3600`)",
+		},
+		"port": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     21,
+			Description: "The port number. Default: `21`",
+		},
+		"public_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+			Description:      "The PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: TimestampFormatDescription,
+		},
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for the server (can be `anonymous`)",
 		},
 	}
 
@@ -151,7 +139,7 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly FTP logging addition opts: %#v", opts)
@@ -160,7 +148,7 @@ func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 }
 
 // Read refreshes the resource.
-func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -188,14 +176,14 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 }
 
 // Update updates the resource.
-func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateFTPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -255,7 +243,7 @@ func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 }
 
 // Delete deletes the resource.
-func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *FTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly FTP logging endpoint removal opts: %#v", opts)
@@ -284,11 +272,11 @@ func deleteFTP(conn *gofastly.Client, i *gofastly.DeleteFTPInput) error {
 	return nil
 }
 
-func flattenFTP(ftpList []*gofastly.FTP) []map[string]interface{} {
-	var fsl []map[string]interface{}
+func flattenFTP(ftpList []*gofastly.FTP) []map[string]any {
+	var fsl []map[string]any
 	for _, fl := range ftpList {
 		// Convert FTP logging to a map for saving to state.
-		nfl := map[string]interface{}{
+		nfl := map[string]any{
 			"name":               fl.Name,
 			"address":            fl.Address,
 			"user":               fl.Username,
@@ -320,8 +308,8 @@ func flattenFTP(ftpList []*gofastly.FTP) []map[string]interface{} {
 	return fsl
 }
 
-func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {
-	df := ftpMap.(map[string]interface{})
+func (h *FTPServiceAttributeHandler) buildCreate(ftpMap any, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {
+	df := ftpMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateFTPInput{
@@ -346,8 +334,8 @@ func (h *FTPServiceAttributeHandler) buildCreate(ftpMap interface{}, serviceID s
 	}
 }
 
-func (h *FTPServiceAttributeHandler) buildDelete(ftpMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteFTPInput {
-	df := ftpMap.(map[string]interface{})
+func (h *FTPServiceAttributeHandler) buildDelete(ftpMap any, serviceID string, serviceVersion int) *gofastly.DeleteFTPInput {
+	df := ftpMap.(map[string]any)
 
 	return &gofastly.DeleteFTPInput{
 		ServiceID:      serviceID,

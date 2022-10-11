@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Openstack
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Openstack{
@@ -38,7 +38,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					CompressionCodec:  "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "openstack-logging",
 					"url":                "https://auth.example.com",

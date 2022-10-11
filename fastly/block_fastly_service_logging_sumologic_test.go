@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenSumologic(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Sumologic
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Sumologic{
@@ -27,7 +27,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 					ResponseCondition: "condition 1",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "sumo collector",
 					"url":                "https://collectors.sumologic.com/receiver/1",

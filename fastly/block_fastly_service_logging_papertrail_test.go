@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Papertrail
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Papertrail{
@@ -28,7 +28,7 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 					ResponseCondition: "test_response_condition",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "papertrailtesting",
 					"address":            "test1.papertrailapp.com",

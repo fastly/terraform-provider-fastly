@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenHeroku(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Heroku
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Heroku{
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenHeroku(t *testing.T) {
 					FormatVersion:     2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "heroku-endpoint",
 					"token":              "token",

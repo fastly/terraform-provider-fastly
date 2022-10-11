@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.HTTPS
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.HTTPS{
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					FormatVersion:     2,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                "https-endpoint",
 					"url":                 "https://example.com/logs",

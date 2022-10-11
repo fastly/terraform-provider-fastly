@@ -21,7 +21,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 
 	cases := []struct {
 		remote []*gofastly.GCS
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.GCS{
@@ -37,7 +37,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					CompressionCodec: "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":              "GCS collector",
 					"user":              "email@example.com",
@@ -121,7 +121,10 @@ func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_gcs"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 

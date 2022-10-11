@@ -22,26 +22,12 @@ func resourceServiceACLEntries() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceACLEntriesImport,
 		},
-
 		Schema: map[string]*schema.Schema{
-			"service_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ID of the Service that the ACL belongs to",
-			},
-
 			"acl_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "The ID of the ACL that the items belong to",
-			},
-			"manage_entries": {
-				Type:        schema.TypeBool,
-				Default:     false,
-				Optional:    true,
-				Description: "Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally",
 			},
 			"entry": {
 				Type:        schema.TypeSet,
@@ -53,6 +39,11 @@ func resourceServiceACLEntries() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"comment": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A personal freeform descriptive note",
+						},
 						"id": {
 							Type:        schema.TypeString,
 							Description: "The unique ID of the entry",
@@ -63,30 +54,37 @@ func resourceServiceACLEntries() *schema.Resource {
 							Description: "An IP address that is the focus for the ACL",
 							Required:    true,
 						},
-						"subnet": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "An optional subnet mask applied to the IP address",
-						},
 						"negated": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
 							Description: "A boolean that will negate the match if true",
 						},
-						"comment": {
+						"subnet": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A personal freeform descriptive note",
+							Description: "An optional subnet mask applied to the IP address",
 						},
 					},
 				},
+			},
+			"manage_entries": {
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				Description: "Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally",
+			},
+			"service_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The ID of the Service that the ACL belongs to",
 			},
 		},
 	}
 }
 
-func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -96,7 +94,7 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 	batchACLEntries := []*gofastly.BatchACLEntry{}
 
 	for _, vRaw := range entries.List() {
-		val := vRaw.(map[string]interface{})
+		val := vRaw.(map[string]any)
 
 		entry := buildBatchACLEntry(val, gofastly.CreateBatchOperation)
 		batchACLEntries = append(batchACLEntries, entry)
@@ -112,7 +110,7 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing ACL Entries Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -136,7 +134,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -157,8 +155,8 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 		oldSet := oe.(*schema.Set)
 		newSet := ne.(*schema.Set)
 
-		setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-			t, ok := resource.(map[string]interface{})
+		setDiff := NewSetDiff(func(resource any) (any, error) {
+			t, ok := resource.(map[string]any)
 			if !ok {
 				return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
 			}
@@ -172,7 +170,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 
 		// DELETE removed resources
 		for _, resource := range diffResult.Deleted {
-			resource := resource.(map[string]interface{})
+			resource := resource.(map[string]any)
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 				Operation: gofastly.DeleteBatchOperation,
@@ -182,7 +180,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 
 		// CREATE new resources
 		for _, resource := range diffResult.Added {
-			resource := resource.(map[string]interface{})
+			resource := resource.(map[string]any)
 
 			entry := buildBatchACLEntry(resource, gofastly.CreateBatchOperation)
 			batchACLEntries = append(batchACLEntries, entry)
@@ -190,7 +188,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 
 		// UPDATE modified resources
 		for _, resource := range diffResult.Modified {
-			resource := resource.(map[string]interface{})
+			resource := resource.(map[string]any)
 
 			entry := buildBatchACLEntry(resource, gofastly.UpdateBatchOperation)
 			batchACLEntries = append(batchACLEntries, entry)
@@ -206,7 +204,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -216,7 +214,7 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	batchACLEntries := []*gofastly.BatchACLEntry{}
 
 	for _, vRaw := range entries.List() {
-		val := vRaw.(map[string]interface{})
+		val := vRaw.(map[string]any)
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 			Operation: gofastly.DeleteBatchOperation,
@@ -234,11 +232,11 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func flattenACLEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface{} {
-	var resultList []map[string]interface{}
+func flattenACLEntries(aclEntryList []*gofastly.ACLEntry) []map[string]any {
+	var resultList []map[string]any
 
 	for _, currentACLEntry := range aclEntryList {
-		aes := map[string]interface{}{
+		aes := map[string]any{
 			"id":      currentACLEntry.ID,
 			"ip":      currentACLEntry.IP,
 			"negated": currentACLEntry.Negated,
@@ -263,7 +261,7 @@ func flattenACLEntries(aclEntryList []*gofastly.ACLEntry) []map[string]interface
 	return resultList
 }
 
-func resourceServiceACLEntriesImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceACLEntriesImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {
@@ -308,7 +306,7 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 	return nil
 }
 
-func buildBatchACLEntry(v map[string]interface{}, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
+func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
 	entry := &gofastly.BatchACLEntry{
 		Operation: op,
 		ID:        gofastly.String(v["id"].(string)),

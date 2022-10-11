@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccFastlyDataSourceTLSConfigurationIDs(t *testing.T) {
+func TestAccFastlyDataSourceTLSConfiguration_IDs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)

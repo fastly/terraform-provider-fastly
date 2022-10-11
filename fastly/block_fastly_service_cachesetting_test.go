@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.CacheSetting
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.CacheSetting{
@@ -26,7 +26,7 @@ func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
 					TTL:            300,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":            "alt_backend",
 					"action":          gofastly.CacheSettingActionPass,

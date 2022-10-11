@@ -19,17 +19,12 @@ const (
 	testAwsPrimarySecretKey = "SECRET0123456789012345678901234567890123"
 )
 
-const (
-	testAwsOtherAccessKey = "KEYQPONMLKJIHGFEDCBA"
-	testAwsOtherSecretKey = "SECRETOTHER01234567890123456789012345678"
-)
-
 const testS3IAMRole = "arn:aws:iam::123456789012:role/S3Access"
 
 func TestResourceFastlyFlattenS3(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.S3
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.S3{
@@ -55,7 +50,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					CompressionCodec:             "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                              "s3-endpoint",
 					"bucket_name":                       "bucket",
@@ -103,7 +98,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					ACL:                          gofastly.S3AccessControlListPrivate,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                              "s3-endpoint",
 					"bucket_name":                       "bucket",
@@ -360,7 +355,10 @@ func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_s3"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
@@ -596,31 +594,6 @@ resource "fastly_service_vcl" "foo" {
 
   force_destroy = true
 }`, name, domain, testS3IAMRole, testS3IAMRole)
-}
-
-func testAccServiceVCLS3LoggingConfigEnv(name, domain string) string {
-	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
-  name = "%s"
-
-  domain {
-    name = "%s"
-    comment = "tf-testing-domain"
-  }
-
-  backend {
-    address = "aws.amazon.com"
-    name = "amazon docs"
-  }
-
-  logging_s3 {
-    name = "somebucketlog"
-    bucket_name = "fastlytestlogging"
-    domain = "s3-us-west-2.amazonaws.com"
-  }
-
-  force_destroy = true
-}`, name, domain)
 }
 
 func testAccServiceVCLS3LoggingConfigFormatVersion(name, domain, key, secret string) string {

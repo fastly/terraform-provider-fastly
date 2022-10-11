@@ -20,19 +20,6 @@ func resourceFastlyTLSPrivateKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"key_pem": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Private key in PEM format.",
-				Sensitive:   true,
-			},
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Customisable name of the private key.",
-			},
 			"created_at": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -43,26 +30,39 @@ func resourceFastlyTLSPrivateKey() *schema.Resource {
 				Computed:    true,
 				Description: "The key length used to generate the private key.",
 			},
+			"key_pem": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Private key in PEM format.",
+				Sensitive:   true,
+			},
 			"key_type": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The algorithm used to generate the private key. Must be RSA.",
 			},
-			"replace": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Whether Fastly recommends replacing this private key.",
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Customisable name of the private key.",
 			},
 			"public_key_sha1": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Useful for safely identifying the key.",
 			},
+			"replace": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether Fastly recommends replacing this private key.",
+			},
 		},
 	}
 }
 
-func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	privateKey, err := conn.CreatePrivateKey(&gofastly.CreatePrivateKeyInput{
@@ -78,7 +78,7 @@ func resourceFastlyTLSPrivateKeyCreate(ctx context.Context, d *schema.ResourceDa
 	return resourceFastlyTLSPrivateKeyRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Private Key Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -127,7 +127,7 @@ func resourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceFastlyTLSPrivateKeyDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPrivateKeyDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeletePrivateKey(&gofastly.DeletePrivateKeyInput{

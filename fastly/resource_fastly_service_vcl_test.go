@@ -23,7 +23,7 @@ func init() {
 func TestResourceFastlyFlattenDomains(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Domain
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Domain{
@@ -32,7 +32,7 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 					Comment: "not comment",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":    "test.notexample.com",
 					"comment": "not comment",
@@ -45,7 +45,7 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 					Name: "test.notexample.com",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":    "test.notexample.com",
 					"comment": "",
@@ -66,7 +66,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 	cases := []struct {
 		serviceMetadata ServiceMetadata
 		remote          []*gofastly.Backend
-		local           []map[string]interface{}
+		local           []map[string]any
 	}{
 		{
 			serviceMetadata: ServiceMetadata{
@@ -101,7 +101,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					Weight:              uint(100),
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                  "test.notexample.com",
 					"address":               "www.notexample.com",

@@ -32,30 +32,45 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
 		"account_name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique Azure Blob Storage namespace in which your data objects are stored",
+		},
+		"compression_codec": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 		"container": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The name of the Azure Blob Storage container in which to store logs",
 		},
-		"sas_token": {
+		"file_max_bytes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Maximum size of an uploaded log file, if non-zero.",
+		},
+		"gzip_level": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: GzipLevelDescription,
+		},
+		"message_type": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      MessageTypeDescription,
+			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE", ""),
-			Description: "The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work",
-			Sensitive:   true,
+			Description: "A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-		// Optional fields
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -67,41 +82,24 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     3600,
 			Description: "How frequently the logs should be transferred in seconds. Default `3600`",
 		},
-		"timestamp_format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: TimestampFormatDescription,
-		},
-		"gzip_level": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
-			Description: GzipLevelDescription,
-		},
 		"public_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
 			ValidateDiagFunc: validateStringTrimmed,
 		},
-		"message_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "classic",
-			Description:      MessageTypeDescription,
-			ValidateDiagFunc: validateLoggingMessageType(),
+		"sas_token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE", ""),
+			Description: "The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work",
+			Sensitive:   true,
 		},
-		"file_max_bytes": {
-			Type:        schema.TypeInt,
+		"timestamp_format": {
+			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Maximum size of an uploaded log file, if non-zero.",
-		},
-		"compression_codec": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: TimestampFormatDescription,
 		},
 	}
 
@@ -142,7 +140,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBlobStorageInput{
 		ServiceID:         d.Id(),
@@ -174,7 +172,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 }
 
 // Read refreshes the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -202,14 +200,14 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 }
 
 // Update updates the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -269,7 +267,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 }
 
 // Delete deletes the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -288,11 +286,11 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d 
 	return nil
 }
 
-func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]interface{} {
-	var bsl []map[string]interface{}
+func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]any {
+	var bsl []map[string]any
 	for _, bs := range blobStorageList {
 		// Convert Blob Storages to a map for saving to state.
-		nbs := map[string]interface{}{
+		nbs := map[string]any{
 			"name":               bs.Name,
 			"path":               bs.Path,
 			"account_name":       bs.AccountName,

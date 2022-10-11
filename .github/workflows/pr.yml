@@ -21,6 +21,8 @@ jobs:
       run: make fmt
     - name: Vet
       run: make vet
+    - name: tfproviderlintx
+      run: make tfproviderlintx
   test:
     strategy:
       matrix:

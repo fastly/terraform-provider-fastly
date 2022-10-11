@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenHeaders(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Header
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Header{
@@ -33,7 +33,7 @@ func TestResourceFastlyFlattenHeaders(t *testing.T) {
 					ResponseCondition: "",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":          "myheader",
 					"action":        gofastly.HeaderActionDelete,
@@ -57,7 +57,7 @@ func TestResourceFastlyFlattenHeaders(t *testing.T) {
 func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 	cases := []struct {
 		remote *gofastly.CreateHeaderInput
-		local  map[string]interface{}
+		local  map[string]any
 	}{
 		{
 			remote: &gofastly.CreateHeaderInput{
@@ -68,7 +68,7 @@ func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 				Destination: "http.aws-id",
 				Priority:    gofastly.Uint(uint(100)),
 			},
-			local: map[string]interface{}{
+			local: map[string]any{
 				"name":               "someheadder",
 				"action":             "delete",
 				"ignore_if_set":      true,
@@ -93,7 +93,7 @@ func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 				Priority:    gofastly.Uint(uint(100)),
 				Source:      "http.server-name",
 			},
-			local: map[string]interface{}{
+			local: map[string]any{
 				"name":               "someheadder",
 				"action":             "set",
 				"ignore_if_set":      false,

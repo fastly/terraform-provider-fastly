@@ -15,22 +15,28 @@ import (
 func dataSourceFastlyServices() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyServicesRead,
-
 		Schema: map[string]*schema.Schema{
-			"ids": {
-				Type:        schema.TypeSet,
-				Computed:    true,
-				Description: "A list of service IDs in your account. This is limited to the services the API token can read.",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"details": {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "A detailed list of Fastly services in your account. This is limited to the services the API token can read.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"comment": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "A freeform descriptive note.",
+						},
+						"created_at": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Date and time in ISO 8601 format.",
+						},
+						"customer_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Alphanumeric string identifying the customer.",
+						},
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -46,39 +52,32 @@ func dataSourceFastlyServices() *schema.Resource {
 							Computed:    true,
 							Description: "The type of this service. One of `vcl`, `wasm`.",
 						},
-						"version": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "The currently activated version.",
-						},
-						"comment": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "A freeform descriptive note.",
-						},
-						"customer_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Alphanumeric string identifying the customer.",
-						},
-						"created_at": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Date and time in ISO 8601 format.",
-						},
 						"updated_at": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Date and time in ISO 8601 format.",
 						},
+						"version": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The currently activated version.",
+						},
 					},
+				},
+			},
+			"ids": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "A list of service IDs in your account. This is limited to the services the API token can read.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 		},
 	}
 }
 
-func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading services")
@@ -111,14 +110,14 @@ func flattenServiceIDs(services []*gofastly.Service) []string {
 	return result
 }
 
-func flattenServiceDetails(services []*gofastly.Service) []map[string]interface{} {
-	result := make([]map[string]interface{}, len(services))
+func flattenServiceDetails(services []*gofastly.Service) []map[string]any {
+	result := make([]map[string]any, len(services))
 	if len(services) == 0 {
 		return result
 	}
 
 	for i, s := range services {
-		result[i] = map[string]interface{}{
+		result[i] = map[string]any{
 			"id":          s.ID,
 			"name":        s.Name,
 			"type":        s.Type,

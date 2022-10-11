@@ -35,7 +35,7 @@ var extraCondition = `
 func TestResourceFastlyFlattenWAF(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAF
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAF{
@@ -45,7 +45,7 @@ func TestResourceFastlyFlattenWAF(t *testing.T) {
 					Response:          "response",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"waf_id":             "test1",
 					"prefetch_condition": "prefetch",
@@ -62,7 +62,7 @@ func TestResourceFastlyFlattenWAF(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceVCLWAFAdd(t *testing.T) {
+func TestAccFastlyServiceVCLWAF_Add(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	waf := composeWAF(condition, response)
@@ -85,7 +85,7 @@ func TestAccFastlyServiceVCLWAFAdd(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLWAFAddAndRemove(t *testing.T) {
+func TestAccFastlyServiceVCLWAF_AddAndRemove(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	waf := composeWAF(condition, response)
@@ -121,7 +121,7 @@ func TestAccFastlyServiceVCLWAFAddAndRemove(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLWAFUpdateResponse(t *testing.T) {
+func TestAccFastlyServiceVCLWAF_UpdateResponse(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	updateResponse := "UpdatedResponse"
@@ -153,7 +153,7 @@ func TestAccFastlyServiceVCLWAFUpdateResponse(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCLWAFUpdateCondition(t *testing.T) {
+func TestAccFastlyServiceVCLWAF_UpdateCondition(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	updatedCondition := "UpdatedPrefetch"

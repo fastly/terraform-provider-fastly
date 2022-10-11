@@ -38,19 +38,19 @@ type ServiceCRUDAttributeDefinition interface {
 	// argument should just be used for things like getting the service ID. The serviceVersion argument should be used
 	// to decide which version of the service to make updates to. This will be an unlocked version that the base service
 	// update function created.
-	Create(ctx context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error
+	Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error
 
 	// Read should refresh the state of all of the instance of the nested blocks. See the description of Create for more
 	// details about the arguments.
-	Read(ctx context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error
+	Read(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error
 
 	// Update should make changes to an existing instance of the nested block. The arguments are as described in the
 	// Create comments, with the exception of modified which will contain only the attributes that have changed.
-	Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error
+	Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error
 
 	// Delete should remove the instance of the nested block. See the description of Create for more details about the
 	// arguments.
-	Delete(ctx context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error
+	Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error
 }
 
 // ToServiceAttributeDefinition returns an implementation of ServiceAttributeDefinition for a particular implementation
@@ -86,8 +86,8 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	oldSet := oldVal.(*schema.Set)
 	newSet := newVal.(*schema.Set)
 
-	setDiff := NewSetDiff(func(resource interface{}) (interface{}, error) {
-		t, ok := resource.(map[string]interface{})
+	setDiff := NewSetDiff(func(resource any) (any, error) {
+		t, ok := resource.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("resource failed to be type asserted: %+v", resource)
 		}
@@ -100,7 +100,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Deleted {
-		resource := resource.(map[string]interface{})
+		resource := resource.(map[string]any)
 		err := h.handler.Delete(ctx, d, resource, serviceVersion, conn)
 		if err != nil {
 			return err
@@ -108,7 +108,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Added {
-		resource := resource.(map[string]interface{})
+		resource := resource.(map[string]any)
 		err := h.handler.Create(ctx, d, resource, serviceVersion, conn)
 		if err != nil {
 			return err
@@ -116,7 +116,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Modified {
-		resource := resource.(map[string]interface{})
+		resource := resource.(map[string]any)
 
 		modified := setDiff.Filter(resource, oldSet)
 

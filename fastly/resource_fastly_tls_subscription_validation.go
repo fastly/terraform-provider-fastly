@@ -36,7 +36,7 @@ const (
 	subscriptionStateIssued = "issued"
 )
 
-func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -65,7 +65,7 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 	return nil
 }
 
-func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Subscription Validation Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -97,7 +97,7 @@ func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.Re
 	return nil
 }
 
-func resourceFastlyTLSSubscriptionValidationDelete(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionValidationDelete(_ context.Context, _ *schema.ResourceData, _ any) diag.Diagnostics {
 	// Virtual resource so doesn't need deleting
 	return nil
 }

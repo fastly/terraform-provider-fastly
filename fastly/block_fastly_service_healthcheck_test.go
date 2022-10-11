@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.HealthCheck
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.HealthCheck{
@@ -33,7 +33,7 @@ func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 					Window:           5,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":              "myhealthcheck",
 					"host":              "example1.com",

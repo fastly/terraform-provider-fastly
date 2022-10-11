@@ -32,41 +32,28 @@ func (h *SyslogServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A hostname or IPv4 address of the Syslog endpoint",
 		},
-		// Optional
+		"message_type": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          "classic",
+			Description:      MessageTypeDescription,
+			ValidateDiagFunc: validateLoggingMessageType(),
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
 		"port": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     514,
 			Description: "The port associated with the address where the Syslog endpoint can be accessed. Default `514`",
-		},
-		"token": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Whether to prepend each message with a specific token",
-		},
-		"use_tls": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Whether to use TLS for secure logging. Default `false`",
-		},
-		"tls_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Used during the TLS handshake to validate the certificate",
 		},
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
@@ -87,12 +74,23 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`",
 			Sensitive:   true,
 		},
-		"message_type": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          "classic",
-			Description:      MessageTypeDescription,
-			ValidateDiagFunc: validateLoggingMessageType(),
+		"tls_hostname": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Used during the TLS handshake to validate the certificate",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Whether to prepend each message with a specific token",
+		},
+		"use_tls": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Whether to use TLS for secure logging. Default `false`",
 		},
 	}
 
@@ -134,7 +132,7 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSyslogInput{
 		ServiceID:         d.Id(),
@@ -164,7 +162,7 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -192,14 +190,14 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSyslogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -259,7 +257,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSyslogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -278,11 +276,11 @@ func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]interface{} {
-	var pl []map[string]interface{}
+func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]any {
+	var pl []map[string]any
 	for _, p := range syslogList {
 		// Convert Syslog to a map for saving to state.
-		ns := map[string]interface{}{
+		ns := map[string]any{
 			"name":               p.Name,
 			"address":            p.Address,
 			"port":               p.Port,

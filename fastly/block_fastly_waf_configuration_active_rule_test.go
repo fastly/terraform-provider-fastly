@@ -1,23 +1,21 @@
 package fastly
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"sort"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
-	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_FlattenWAFActiveRules(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.WAFActiveRule
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.WAFActiveRule{
@@ -27,7 +25,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 					Status:   "log",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"modsec_rule_id": 1110111,
 					"revision":       1,
@@ -44,7 +42,7 @@ func TestAccFastlyServiceWAFVersionV1FlattenWAFActiveRules(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceWAFVersionV1AddUpdateDeleteRules(t *testing.T) {
+func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteRules(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
@@ -188,11 +186,4 @@ func testAccCheckFastlyServiceWAFVersionV1ComposeWAFRules(rules []gofastly.WAFAc
 		result = result + rule
 	}
 	return result
-}
-
-func testHashFunc(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%d-", m["modsec_rule_id"].(int)))
-	return hashcode.String(buf.String())
 }

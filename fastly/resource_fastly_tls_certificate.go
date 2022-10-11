@@ -21,14 +21,7 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Description: "Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.",
-				Optional:    true,
-				Computed:    true,
-			},
 			"certificate_body": {
 				Type:             schema.TypeString,
 				Description:      "PEM-formatted certificate, optionally including any intermediary certificates.",
@@ -40,10 +33,11 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 				Description: "Timestamp (GMT) when the certificate was created.",
 				Computed:    true,
 			},
-			"updated_at": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the certificate was last updated.",
+			"domains": {
+				Type:        schema.TypeSet,
+				Description: "All the domains (including wildcard domains) that are listed in the certificate's Subject Alternative Names (SAN) list.",
 				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"issued_to": {
 				Type:        schema.TypeString,
@@ -53,6 +47,12 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 			"issuer": {
 				Type:        schema.TypeString,
 				Description: "The certificate authority that issued the certificate.",
+				Computed:    true,
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Description: "Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.",
+				Optional:    true,
 				Computed:    true,
 			},
 			"replace": {
@@ -70,17 +70,16 @@ func resourceFastlyTLSCertificate() *schema.Resource {
 				Description: "The algorithm used to sign the certificate.",
 				Computed:    true,
 			},
-			"domains": {
-				Type:        schema.TypeSet,
-				Description: "All the domains (including wildcard domains) that are listed in the certificate's Subject Alternative Names (SAN) list.",
+			"updated_at": {
+				Type:        schema.TypeString,
+				Description: "Timestamp (GMT) when the certificate was last updated.",
 				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
 }
 
-func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.CreateCustomTLSCertificateInput{
@@ -101,7 +100,7 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Certificate Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -158,7 +157,7 @@ func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.UpdateCustomTLSCertificateInput{
@@ -178,7 +177,7 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSCertificateDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{

@@ -37,16 +37,15 @@ func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 		Description: "A set of Domain names to serve as entry points for your Service",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.",
-				},
-
 				"comment": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "An optional comment about the Domain.",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.",
 				},
 			},
 		},
@@ -54,7 +53,7 @@ func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -74,7 +73,7 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -102,7 +101,7 @@ func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *DomainServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DomainServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -122,7 +121,7 @@ func (h *DomainServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -141,11 +140,11 @@ func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenDomains(list []*gofastly.Domain) []map[string]interface{} {
-	dl := make([]map[string]interface{}, 0, len(list))
+func flattenDomains(list []*gofastly.Domain) []map[string]any {
+	dl := make([]map[string]any, 0, len(list))
 
 	for _, d := range list {
-		dl = append(dl, map[string]interface{}{
+		dl = append(dl, map[string]any{
 			"name":    d.Name,
 			"comment": d.Comment,
 		})

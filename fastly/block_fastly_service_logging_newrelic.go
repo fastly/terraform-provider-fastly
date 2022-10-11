@@ -32,24 +32,22 @@ func (h *NewRelicServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "US",
+			Description: "The region that log data will be sent to. Default: `US`",
 		},
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "The Insert API key from the Account page of your New Relic account",
-		},
-		// Optional
-		"region": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "US",
-			Description: "The region that log data will be sent to. Default: `US`",
 		},
 	}
 
@@ -89,7 +87,7 @@ func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly New Relic logging addition opts: %#v", opts)
@@ -98,7 +96,7 @@ func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 }
 
 // Read refreshes the resource.
-func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -126,14 +124,14 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 }
 
 // Update updates the resource.
-func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateNewRelicInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -166,7 +164,7 @@ func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 }
 
 // Delete deletes the resource.
-func (h *NewRelicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly New Relic logging endpoint removal opts: %#v", opts)
@@ -194,11 +192,11 @@ func deleteNewRelic(conn *gofastly.Client, i *gofastly.DeleteNewRelicInput) erro
 	return nil
 }
 
-func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]interface{} {
-	var dsl []map[string]interface{}
+func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]any {
+	var dsl []map[string]any
 	for _, dl := range newrelicList {
 		// Convert NewRelic logging to a map for saving to state.
-		ndl := map[string]interface{}{
+		ndl := map[string]any{
 			"name":               dl.Name,
 			"token":              dl.Token,
 			"format":             dl.Format,
@@ -221,8 +219,8 @@ func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]interface{}
 	return dsl
 }
 
-func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
-	df := newrelicMap.(map[string]interface{})
+func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap any, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
+	df := newrelicMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateNewRelicInput{
@@ -238,8 +236,8 @@ func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap interface{}, s
 	}
 }
 
-func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
-	df := newrelicMap.(map[string]interface{})
+func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap any, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
+	df := newrelicMap.(map[string]any)
 
 	return &gofastly.DeleteNewRelicInput{
 		ServiceID:      serviceID,

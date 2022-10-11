@@ -36,23 +36,10 @@ func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary",
-				},
-				// Optional fields
 				"dictionary_id": {
 					Type:        schema.TypeString,
 					Computed:    true,
 					Description: "The ID of the dictionary",
-				},
-				"write_only": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Default:     false,
-					Description: "If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_vcl` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
 				},
 				"force_destroy": {
 					Type:        schema.TypeBool,
@@ -60,13 +47,24 @@ func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Allow the dictionary to be deleted, even if it contains entries. Defaults to false.",
 				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary",
+				},
+				"write_only": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Default:     false,
+					Description: "If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_vcl` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform",
+				},
 			},
 		},
 	}
 }
 
 // Create creates the resource.
-func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildDictionary(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Dicitionary: %s", err)
@@ -84,7 +82,7 @@ func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -103,7 +101,7 @@ func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 		stateDicts := d.Get(h.GetKey()).(*schema.Set).List()
 		for _, dictionary := range dictionaries {
 			for _, sd := range stateDicts {
-				stateDict := sd.(map[string]interface{})
+				stateDict := sd.(map[string]any)
 				if dictionary["name"] == stateDict["name"] {
 					dictionary["force_destroy"] = stateDict["force_destroy"]
 					break
@@ -120,12 +118,12 @@ func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *DictionaryServiceAttributeHandler) Update(_ context.Context, _ *schema.ResourceData, _, _ map[string]interface{}, _ int, _ *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Update(_ context.Context, _ *schema.ResourceData, _, _ map[string]any, _ int, _ *gofastly.Client) error {
 	return nil
 }
 
 // Delete deletes the resource.
-func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	if !resource["force_destroy"].(bool) {
 		mayDelete, err := isDictionaryEmpty(d.Id(), resource["dictionary_id"].(string), conn)
 		if err != nil {
@@ -155,10 +153,10 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
-func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface{} {
-	var dl []map[string]interface{}
+func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]any {
+	var dl []map[string]any
 	for _, currentDict := range dictList {
-		dictMapString := map[string]interface{}{
+		dictMapString := map[string]any{
 			"dictionary_id": currentDict.ID,
 			"name":          currentDict.Name,
 			"write_only":    currentDict.WriteOnly,
@@ -177,8 +175,8 @@ func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]interface
 	return dl
 }
 
-func buildDictionary(dictMap interface{}) (*gofastly.CreateDictionaryInput, error) {
-	df := dictMap.(map[string]interface{})
+func buildDictionary(dictMap any) (*gofastly.CreateDictionaryInput, error) {
+	df := dictMap.(map[string]any)
 	opts := gofastly.CreateDictionaryInput{
 		Name:      df["name"].(string),
 		WriteOnly: gofastly.Compatibool(df["write_only"].(bool)),

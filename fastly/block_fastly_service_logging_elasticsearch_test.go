@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 	cases := []struct {
 		remote []*fst.Elasticsearch
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*fst.Elasticsearch{
@@ -39,7 +39,7 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 					Placement:         "none",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":                "elasticsearch-endpoint",
 					"index":               "index",

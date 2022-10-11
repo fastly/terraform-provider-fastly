@@ -36,23 +36,6 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource",
-				},
-				"host": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The Host header to send for this Healthcheck",
-				},
-				"path": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The path to check",
-				},
-				// optional fields
 				"check_interval": {
 					Type:        schema.TypeInt,
 					Optional:    true,
@@ -64,6 +47,11 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Default:     200,
 					Description: "The status code expected from the host. Default `200`",
+				},
+				"host": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The Host header to send for this Healthcheck",
 				},
 				"http_version": {
 					Type:        schema.TypeString,
@@ -82,6 +70,16 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Default:     "HEAD",
 					Description: "Which HTTP method to use. Default `HEAD`",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource",
+				},
+				"path": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The path to check",
 				},
 				"threshold": {
 					Type:        schema.TypeInt,
@@ -107,7 +105,7 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateHealthCheckInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
@@ -133,7 +131,7 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 }
 
 // Read refreshes the resource.
-func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -157,14 +155,14 @@ func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.R
 }
 
 // Update updates the resource.
-func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHealthCheckInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -212,7 +210,7 @@ func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema
 }
 
 // Delete deletes the resource.
-func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteHealthCheckInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -231,11 +229,11 @@ func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema
 	return nil
 }
 
-func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]interface{} {
-	var hl []map[string]interface{}
+func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]any {
+	var hl []map[string]any
 	for _, h := range healthcheckList {
 		// Convert HealthChecks to a map for saving to state.
-		nh := map[string]interface{}{
+		nh := map[string]any{
 			"name":              h.Name,
 			"host":              h.Host,
 			"path":              h.Path,

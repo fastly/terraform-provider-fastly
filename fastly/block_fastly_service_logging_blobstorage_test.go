@@ -16,7 +16,7 @@ import (
 func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.BlobStorage
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.BlobStorage{
@@ -39,7 +39,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					CompressionCodec:  "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "test-blobstorage",
 					"path":               "/logs/",
@@ -246,7 +246,10 @@ func TestBlobstorageloggingEnvDefaultFuncAttributes(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_blobstorage"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
@@ -501,33 +504,6 @@ resource "fastly_service_vcl" "foo" {
     account_name = "test"
     container = "fastly"
     sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
-  }
-
-  force_destroy = true
-}`, serviceName, domainName)
-}
-
-func testAccServiceVCLBlobStorageLoggingConfigEnv(serviceName string) string {
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
-  name = "%s"
-
-  domain {
-    name = "%s"
-    comment = "tf-testing-domain"
-  }
-
-  backend {
-    address = "aws.amazon.com"
-    name = "tf-test-backend"
-  }
-
-  logging_blobstorage {
-    name = "test-blobstorage"
-    account_name = "test"
-    container = "fastly"
   }
 
   force_destroy = true

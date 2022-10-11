@@ -19,7 +19,7 @@ func init() {
 	})
 }
 
-func TestAccResourceFastlyTLSSubscription(t *testing.T) {
+func TestAccResourceFastlyTLSSubscription_Config(t *testing.T) {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 	domain1 := fmt.Sprintf("%s.test", name)
 	domain2 := fmt.Sprintf("%salt.test", name)

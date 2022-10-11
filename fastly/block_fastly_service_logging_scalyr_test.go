@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenScalyr(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Scalyr
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Scalyr{
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 					Placement:         "none",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "scalyr-endpoint",
 					"region":             "US",

@@ -52,7 +52,7 @@ func (c *WAFDeploymentChecker) waitForDeployment(ctx context.Context, wafID stri
 		Target: []string{
 			gofastly.WAFVersionDeploymentStatusCompleted,
 		},
-		Refresh: func() (interface{}, string, error) {
+		Refresh: func() (any, string, error) {
 			res, err := c.Check(wafID, latestVersion.Number)
 			if err != nil {
 				return nil, "", err

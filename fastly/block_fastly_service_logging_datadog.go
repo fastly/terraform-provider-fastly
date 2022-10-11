@@ -32,26 +32,22 @@ func (h *DatadogServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Datadog logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
-		"token": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Sensitive:   true,
-			Description: "The API key from your Datadog account",
-		},
-
-		// Optional fields
 		"region": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "US",
 			Description: "The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "The API key from your Datadog account",
 		},
 	}
 
@@ -91,7 +87,7 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Datadog logging addition opts: %#v", opts)
@@ -100,7 +96,7 @@ func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 }
 
 // Read refreshes the resource.
-func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -128,14 +124,14 @@ func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 }
 
 // Update updates the resource.
-func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDatadogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -168,7 +164,7 @@ func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 }
 
 // Delete deletes the resource.
-func (h *DatadogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Datadog logging endpoint removal opts: %#v", opts)
@@ -198,11 +194,11 @@ func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error 
 	return nil
 }
 
-func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]interface{} {
-	var dsl []map[string]interface{}
+func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]any {
+	var dsl []map[string]any
 	for _, dl := range datadogList {
 		// Convert Datadog logging to a map for saving to state.
-		ndl := map[string]interface{}{
+		ndl := map[string]any{
 			"name":               dl.Name,
 			"token":              dl.Token,
 			"region":             dl.Region,
@@ -225,8 +221,8 @@ func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]interface{} {
 	return dsl
 }
 
-func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {
-	df := datadogMap.(map[string]interface{})
+func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap any, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {
+	df := datadogMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateDatadogInput{
@@ -242,8 +238,8 @@ func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap interface{}, ser
 	}
 }
 
-func (h *DatadogServiceAttributeHandler) buildDelete(datadogMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
-	df := datadogMap.(map[string]interface{})
+func (h *DatadogServiceAttributeHandler) buildDelete(datadogMap any, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
+	df := datadogMap.(map[string]any)
 
 	return &gofastly.DeleteDatadogInput{
 		ServiceID:      serviceID,

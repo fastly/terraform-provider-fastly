@@ -21,8 +21,21 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceDynamicSnippetContentImport,
 		},
-
 		Schema: map[string]*schema.Schema{
+			"content": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The VCL code that specifies exactly what the snippet does",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return !d.HasChange("snippet_id") && !d.Get("manage_snippets").(bool)
+				},
+			},
+			"manage_snippets": {
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				Description: "Whether to reapply changes if the state of the snippets drifts, i.e. if snippets are managed externally",
+			},
 			"service_id": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -33,25 +46,11 @@ func resourceServiceDynamicSnippetContent() *schema.Resource {
 				Required:    true,
 				Description: "The ID of the dynamic snippet that the content belong to",
 			},
-			"manage_snippets": {
-				Type:        schema.TypeBool,
-				Default:     false,
-				Optional:    true,
-				Description: "Whether to reapply changes if the state of the snippets drifts, i.e. if snippets are managed externally",
-			},
-			"content": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The VCL code that specifies exactly what the snippet does",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.HasChange("snippet_id") && !d.Get("manage_snippets").(bool)
-				},
-			},
 		},
 	}
 }
 
-func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -76,7 +75,7 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 	return resourceServiceDynamicSnippetRead(ctx, d, meta)
 }
 
-func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -98,7 +97,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 	return resourceServiceDynamicSnippetRead(ctx, d, meta)
 }
 
-func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing Dynamic Snippet Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -122,13 +121,13 @@ func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	// Dynamic snippet content cannot be deleted. Removing from state only
 	d.SetId("")
 	return nil
 }
 
-func resourceServiceDynamicSnippetContentImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceDynamicSnippetContentImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

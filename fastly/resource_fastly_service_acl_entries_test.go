@@ -16,7 +16,7 @@ import (
 func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.ACLEntry
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.ACLEntry{
@@ -37,7 +37,7 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 					Comment:   "ACL Entry 2",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"ip":      "127.0.0.1",
 					"subnet":  "24",
@@ -67,7 +67,7 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
 
-	expectedRemoteEntries := []map[string]interface{}{
+	expectedRemoteEntries := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.1",
@@ -102,12 +102,12 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
+func TestAccFastlyServiceAclEntries_create_update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
 
-	expectedRemoteEntries := []map[string]interface{}{
+	expectedRemoteEntries := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.1",
@@ -117,7 +117,7 @@ func TestAccFastlyServiceAclEntries_create_update_import(t *testing.T) {
 		},
 	}
 
-	expectedRemoteEntriesAfterUpdate := []map[string]interface{}{
+	expectedRemoteEntriesAfterUpdate := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.2",
@@ -165,7 +165,7 @@ func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := "ACL Test Update Negated Field"
 
-	expectedRemoteEntries := []map[string]interface{}{
+	expectedRemoteEntries := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.1",
@@ -175,7 +175,7 @@ func TestAccFastlyServiceAclEntries_update_additional_fields(t *testing.T) {
 		},
 	}
 
-	expectedRemoteEntriesAfterUpdate := []map[string]interface{}{
+	expectedRemoteEntriesAfterUpdate := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.1",
@@ -229,7 +229,7 @@ func TestAccFastlyServiceAclEntries_delete(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
 
-	expectedRemoteEntries := []map[string]interface{}{
+	expectedRemoteEntries := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.1",
@@ -273,7 +273,7 @@ func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
 
 	expectedBatchSize := gofastly.BatchModifyMaximumOperations + 1
 
-	expectedRemoteEntries := make([]map[string]interface{}, 0)
+	expectedRemoteEntries := make([]map[string]any, 0)
 
 	ipPart3 := 0
 	ipPart4 := 1
@@ -283,7 +283,7 @@ func TestAccFastlyServiceAclEntries_process_1001_entries(t *testing.T) {
 			ipPart4 = 1
 		}
 
-		expectedRemoteEntries = append(expectedRemoteEntries, map[string]interface{}{
+		expectedRemoteEntries = append(expectedRemoteEntries, map[string]any{
 			"id":      "",
 			"ip":      fmt.Sprintf("127.0.%d.%d", ipPart3, ipPart4),
 			"subnet":  "22",
@@ -318,7 +318,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
 
-	initialEntries := []map[string]interface{}{
+	initialEntries := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.1",
@@ -328,7 +328,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 		},
 	}
 
-	updatedEntries := []map[string]interface{}{
+	updatedEntries := []map[string]any{
 		{
 			"id":      "",
 			"ip":      "127.0.0.1",
@@ -372,7 +372,7 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]interface{}) resource.TestCheckFunc {
+func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]any) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != serviceName {
 			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
@@ -440,7 +440,7 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName, backendName, aclName)
 }
 
-func testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName string, aclEntriesList []map[string]interface{}, manageEntries bool) string {
+func testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName string, aclEntriesList []map[string]any, manageEntries bool) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 

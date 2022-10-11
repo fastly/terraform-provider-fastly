@@ -33,13 +33,6 @@ func (h *ACLServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL",
-				},
-				// Optional fields
 				"acl_id": {
 					Type:        schema.TypeString,
 					Computed:    true,
@@ -51,13 +44,18 @@ func (h *ACLServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Allow the ACL to be deleted, even if it contains entries. Defaults to false.",
 				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "A unique name to identify this ACL. It is important to note that changing this attribute will delete and recreate the ACL, and discard the current items in the ACL",
+				},
 			},
 		},
 	}
 }
 
 // Create creates the resource.
-func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, latestVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateACLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: latestVersion,
@@ -74,7 +72,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 }
 
 // Read refreshes the resource.
-func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, latestVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.Key()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -93,7 +91,7 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 		stateACLs := d.Get(h.Key()).(*schema.Set).List()
 		for _, acl := range al {
 			for _, sa := range stateACLs {
-				stateACL := sa.(map[string]interface{})
+				stateACL := sa.(map[string]any)
 				if acl["name"] == stateACL["name"] {
 					acl["force_destroy"] = stateACL["force_destroy"]
 					break
@@ -110,12 +108,12 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 }
 
 // Update updates the resource.
-func (h *ACLServiceAttributeHandler) Update(context.Context, *schema.ResourceData, map[string]interface{}, map[string]interface{}, int, *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Update(context.Context, *schema.ResourceData, map[string]any, map[string]any, int, *gofastly.Client) error {
 	return nil
 }
 
 // Delete deletes the resource.
-func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, latestVersion int, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, latestVersion int, conn *gofastly.Client) error {
 	if !resource["force_destroy"].(bool) {
 		mayDelete, err := isACLEmpty(d.Id(), resource["acl_id"].(string), conn)
 		if err != nil {
@@ -147,11 +145,11 @@ func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func flattenACLs(aclList []*gofastly.ACL) []map[string]interface{} {
-	var al []map[string]interface{}
+func flattenACLs(aclList []*gofastly.ACL) []map[string]any {
+	var al []map[string]any
 	for _, acl := range aclList {
 		// Convert ACLs to a map for saving to state.
-		aclMap := map[string]interface{}{
+		aclMap := map[string]any{
 			"acl_id": acl.ID,
 			"name":   acl.Name,
 		}

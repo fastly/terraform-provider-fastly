@@ -14,7 +14,7 @@ import (
 func TestResourceFastlyFlattenVCLs(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.VCL
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.VCL{
@@ -24,7 +24,7 @@ func TestResourceFastlyFlattenVCLs(t *testing.T) {
 					Main:    true,
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":    "myVCL",
 					"content": "<<EOF somecontent EOF",

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccFastlyDataSourceServices(t *testing.T) {
+func TestAccFastlyDataSourceServices_Config(t *testing.T) {
 	resourceName := "data.fastly_services.some"
 	serviceName := "fastly_service_vcl.example_service"
 
@@ -53,6 +53,6 @@ data "fastly_services" "some" {
 `
 
 	b := make([]byte, 16)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return fmt.Sprintf(tf, hex.EncodeToString(b))
 }

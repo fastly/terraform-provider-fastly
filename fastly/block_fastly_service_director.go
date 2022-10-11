@@ -37,11 +37,6 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource",
-				},
 				"backends": {
 					Type:        schema.TypeSet,
 					Required:    true,
@@ -54,11 +49,10 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     "",
 					Description: "An optional comment about the Director",
 				},
-				"shield": {
+				"name": {
 					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "",
-					Description: "Selected POP to serve as a \"shield\" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response",
+					Required:    true,
+					Description: "Unique name for this Director. It is important to note that changing this attribute will delete and recreate the resource",
 				},
 				"quorum": {
 					Type:             schema.TypeInt,
@@ -67,6 +61,18 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 					Description:      "Percentage of capacity that needs to be up for the director itself to be considered up. Default `75`",
 					ValidateDiagFunc: validateDirectorQuorum(),
 				},
+				"retries": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     5,
+					Description: "How many backends to search if it fails. Default `5`",
+				},
+				"shield": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Selected POP to serve as a \"shield\" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response",
+				},
 				"type": {
 					Type:             schema.TypeInt,
 					Optional:         true,
@@ -74,19 +80,13 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 					Description:      "Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`",
 					ValidateDiagFunc: validateDirectorType(),
 				},
-				"retries": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     5,
-					Description: "How many backends to search if it fails. Default `5`",
-				},
 			},
 		},
 	}
 }
 
 // Create creates a new resource instance.
-func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -137,7 +137,7 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 }
 
 // Read refreshes the resource state.
-func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -161,14 +161,14 @@ func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 }
 
 // Update updates the resource instance.
-func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -246,7 +246,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 }
 
 // Delete deletes the resource instance.
-func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -265,11 +265,11 @@ func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.Re
 	return nil
 }
 
-func flattenDirectors(directorList []*gofastly.Director) []map[string]interface{} {
-	var dl []map[string]interface{}
+func flattenDirectors(directorList []*gofastly.Director) []map[string]any {
+	var dl []map[string]any
 	for _, d := range directorList {
 		// Convert Director to a map for saving to state.
-		nd := map[string]interface{}{
+		nd := map[string]any{
 			"name":    d.Name,
 			"comment": d.Comment,
 			"shield":  d.Shield,
@@ -280,7 +280,7 @@ func flattenDirectors(directorList []*gofastly.Director) []map[string]interface{
 
 		// NOTE: schema.NewSet expects slice of empty interface so we have to build
 		// this from the Dictionary's Backend field.
-		var b []interface{}
+		var b []any
 		for _, v := range d.Backends {
 			b = append(b, v)
 		}
@@ -300,7 +300,7 @@ func flattenDirectors(directorList []*gofastly.Director) []map[string]interface{
 	return dl
 }
 
-func getDirectorBackendChange(d *schema.ResourceData, resource map[string]interface{}) (odb *schema.Set, ndb *schema.Set) {
+func getDirectorBackendChange(d *schema.ResourceData, resource map[string]any) (odb *schema.Set, ndb *schema.Set) {
 	od, nd := d.GetChange("director")
 
 	if od == nil {
@@ -312,7 +312,7 @@ func getDirectorBackendChange(d *schema.ResourceData, resource map[string]interf
 
 	get := func(targetDirectorName string, directorsSet *schema.Set) *schema.Set {
 		for _, director := range directorsSet.List() {
-			director := director.(map[string]interface{})
+			director := director.(map[string]any)
 
 			if director["name"] == targetDirectorName {
 				return director["backends"].(*schema.Set)

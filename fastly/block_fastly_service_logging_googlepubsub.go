@@ -32,20 +32,16 @@ func (h *GooglePubSubServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Google Cloud Pub/Sub logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
-		"user": {
+		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.",
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_EMAIL", ""),
+			Description: "The ID of your Google Cloud Platform project",
 		},
-
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -53,17 +49,16 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_SECRET_KEY", ""),
 			Sensitive:   true,
 		},
-
-		"project_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The ID of your Google Cloud Platform project",
-		},
-
 		"topic": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The Google Cloud Pub/Sub topic to which logs will be published",
+		},
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.",
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_EMAIL", ""),
 		},
 	}
 
@@ -103,7 +98,7 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging addition opts: %#v", opts)
@@ -112,7 +107,7 @@ func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schem
 }
 
 // Read refreshes the resource.
-func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -140,14 +135,14 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdatePubsubInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -186,7 +181,7 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *GooglePubSubServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging endpoint removal opts: %#v", opts)
@@ -216,11 +211,11 @@ func deleteGooglePubSub(conn *gofastly.Client, i *gofastly.DeletePubsubInput) er
 	return nil
 }
 
-func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]interface{} {
-	var flattened []map[string]interface{}
+func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]any {
+	var flattened []map[string]any
 	for _, s := range googlepubsubList {
 		// Convert logging to a map for saving to state.
-		flatGooglePubSub := map[string]interface{}{
+		flatGooglePubSub := map[string]any{
 			"name":               s.Name,
 			"user":               s.User,
 			"secret_key":         s.SecretKey,
@@ -245,8 +240,8 @@ func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]inter
 	return flattened
 }
 
-func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
-	df := googlepubsubMap.(map[string]interface{})
+func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
+	df := googlepubsubMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreatePubsubInput{
@@ -264,8 +259,8 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap interf
 	}
 }
 
-func (h *GooglePubSubServiceAttributeHandler) buildDelete(googlepubsubMap interface{}, serviceID string, serviceVersion int) *gofastly.DeletePubsubInput {
-	df := googlepubsubMap.(map[string]interface{})
+func (h *GooglePubSubServiceAttributeHandler) buildDelete(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.DeletePubsubInput {
+	df := googlepubsubMap.(map[string]any)
 
 	return &gofastly.DeletePubsubInput{
 		ServiceID:      serviceID,

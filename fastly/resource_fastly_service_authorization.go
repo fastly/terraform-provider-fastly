@@ -48,7 +48,7 @@ func resourceServiceAuthorization() *schema.Resource {
 	}
 }
 
-func resourceServiceAuthorizationCreate(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceAuthorizationCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	sa, err := conn.CreateServiceAuthorization(&gofastly.CreateServiceAuthorizationInput{
@@ -65,7 +65,7 @@ func resourceServiceAuthorizationCreate(_ context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Service Authorization Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -84,7 +84,7 @@ func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	if d.HasChanges("permission") {
@@ -100,7 +100,7 @@ func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceServiceAuthorizationRead(ctx, d, meta)
 }
 
-func resourceServiceAuthorizationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceAuthorizationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteServiceAuthorization(&gofastly.DeleteServiceAuthorizationInput{

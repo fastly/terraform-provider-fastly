@@ -29,17 +29,17 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("FASTLY_API_URL", gofastly.DefaultEndpoint),
 				Description: "Fastly API URL",
 			},
-			"no_auth": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Set to `true` if your configuration only consumes data sources that do not require authentication, such as `fastly_ip_ranges`",
-			},
 			"force_http2": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Set this to `true` to disable HTTP/1.x fallback mechanism that the underlying Go library will attempt upon connection to `api.fastly.com:443` by default. This may slightly improve the provider's performance and reduce unnecessary TLS handshakes. Default: `false`",
+			},
+			"no_auth": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set to `true` if your configuration only consumes data sources that do not require authentication, such as `fastly_ip_ranges`",
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -79,7 +79,7 @@ func Provider() *schema.Provider {
 		},
 	}
 
-	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		config := Config{
 			APIKey:     d.Get("api_key").(string),
 			BaseURL:    d.Get("base_url").(string),

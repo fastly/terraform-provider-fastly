@@ -18,7 +18,7 @@ import (
 func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Pubsub
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Pubsub{
@@ -35,7 +35,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 					Placement:         "none",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "googlepubsub-endpoint",
 					"user":               "user",
@@ -65,7 +65,10 @@ func TestUserEmailSchemaDefaultFunc(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_googlepubsub"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
@@ -83,9 +86,15 @@ func TestUserEmailSchemaDefaultFunc(t *testing.T) {
 	mockValue := "example@my-project.iam.gserviceaccount.com"
 	originalEnvValue := os.Getenv(envVarKey)
 	defer func() {
-		os.Setenv(envVarKey, originalEnvValue)
+		err := os.Setenv(envVarKey, originalEnvValue)
+		if err != nil {
+			t.Fatalf("failed to reset the environment: %s", err)
+		}
 	}()
-	os.Setenv(envVarKey, mockValue)
+	err = os.Setenv(envVarKey, mockValue)
+	if err != nil {
+		t.Fatalf("failed to mock the environment: %s", err)
+	}
 
 	result, err = loggingResourceSchema["user"].DefaultFunc()
 	if err != nil {
@@ -102,7 +111,10 @@ func TestSecretKeySchemaDefaultFunc(t *testing.T) {
 	r := &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
-	v.Register(r)
+	err := v.Register(r)
+	if err != nil {
+		t.Fatal("Failed to register resource into schema")
+	}
 	loggingResource := r.Schema["logging_googlepubsub"]
 	loggingResourceSchema := loggingResource.Elem.(*schema.Resource).Schema
 
@@ -125,9 +137,15 @@ func TestSecretKeySchemaDefaultFunc(t *testing.T) {
 	mockValue := "-----BEGIN PRIVATE KEY-----\nabc123\n-----END PRIVATE KEY-----\n"
 	originalEnvValue := os.Getenv(envVarKey)
 	defer func() {
-		os.Setenv(envVarKey, originalEnvValue)
+		err := os.Setenv(envVarKey, originalEnvValue)
+		if err != nil {
+			t.Fatalf("failed to reset the environment: %s", err)
+		}
 	}()
-	os.Setenv(envVarKey, mockValue)
+	err = os.Setenv(envVarKey, mockValue)
+	if err != nil {
+		t.Fatalf("failed to mock the environment: %s", err)
+	}
 
 	result, err = loggingResourceSchema["secret_key"].DefaultFunc()
 	if err != nil {

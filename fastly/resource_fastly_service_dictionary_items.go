@@ -21,28 +21,13 @@ func resourceServiceDictionaryItems() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceServiceDictionaryItemsImport,
 		},
-
 		Schema: map[string]*schema.Schema{
-			"service_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The ID of the service that the dictionary belongs to",
-			},
-
 			"dictionary_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "The ID of the dictionary that the items belong to",
 			},
-			"manage_items": {
-				Type:        schema.TypeBool,
-				Default:     false,
-				Optional:    true,
-				Description: "Whether to reapply changes if the state of the items drifts, i.e. if items are managed externally",
-			},
-
 			"items": {
 				Type:             schema.TypeMap,
 				Optional:         true,
@@ -53,16 +38,28 @@ func resourceServiceDictionaryItems() *schema.Resource {
 					return !d.HasChange("dictionary_id") && !d.Get("manage_items").(bool)
 				},
 			},
+			"manage_items": {
+				Type:        schema.TypeBool,
+				Default:     false,
+				Optional:    true,
+				Description: "Whether to reapply changes if the state of the items drifts, i.e. if items are managed externally",
+			},
+			"service_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The ID of the service that the dictionary belongs to",
+			},
 		},
 	}
 }
 
-func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
-	items := d.Get("items").(map[string]interface{})
+	items := d.Get("items").(map[string]any)
 
 	var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
@@ -84,7 +81,7 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 	return resourceServiceDictionaryItemsRead(ctx, d, meta)
 }
 
-func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -95,8 +92,8 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 
 		o, n := d.GetChange("items")
 
-		os := o.(map[string]interface{})
-		ns := n.(map[string]interface{})
+		os := o.(map[string]any)
+		ns := n.(map[string]any)
 
 		// Handle Removal
 		for key := range os {
@@ -138,7 +135,7 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 	return resourceServiceDictionaryItemsRead(ctx, d, meta)
 }
 
-func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing Dictionary Items Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -158,12 +155,12 @@ func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceDat
 	return diag.FromErr(err)
 }
 
-func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
-	items := d.Get("items").(map[string]interface{})
+	items := d.Get("items").(map[string]any)
 
 	var batchDictionaryItems []*gofastly.BatchDictionaryItem
 
@@ -184,7 +181,7 @@ func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	split := strings.Split(d.Id(), "/")
 
 	if len(split) != 2 {

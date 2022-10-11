@@ -15,7 +15,7 @@ import (
 func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.Cloudfiles
-		local  []map[string]interface{}
+		local  []map[string]any
 	}{
 		{
 			remote: []*gofastly.Cloudfiles{
@@ -39,7 +39,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					CompressionCodec:  "zstd",
 				},
 			},
-			local: []map[string]interface{}{
+			local: []map[string]any{
 				{
 					"name":               "cloudfiles-endpoint",
 					"bucket_name":        "bucket",

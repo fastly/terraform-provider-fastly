@@ -32,23 +32,21 @@ func (h *LogentriesServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Logentries logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-		"token": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
-		},
-		// Optional
 		"port": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     20000,
 			Description: "The port number configured in Logentries",
+		},
+		"token": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Use token based authentication (https://logentries.com/doc/input-token/)",
 		},
 		"use_tls": {
 			Type:        schema.TypeBool,
@@ -96,7 +94,7 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateLogentriesInput{
 		ServiceID:         d.Id(),
@@ -120,7 +118,7 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -148,14 +146,14 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogentriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -194,7 +192,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteLogentriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -213,11 +211,11 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
-func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]interface{} {
-	var sm []map[string]interface{}
+func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]any {
+	var sm []map[string]any
 	for _, currentLE := range logentriesList {
 		// Convert Logentries to a map for saving to state.
-		m := map[string]interface{}{
+		m := map[string]any{
 			"name":               currentLE.Name,
 			"port":               currentLE.Port,
 			"use_tls":            currentLE.UseTLS,

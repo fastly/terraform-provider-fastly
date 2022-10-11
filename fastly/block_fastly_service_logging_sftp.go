@@ -32,88 +32,23 @@ func (h *SFTPServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
-		// Required fields
-		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The unique name of the SFTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
-		},
-
 		"address": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The SFTP address to stream logs to",
 		},
-
-		"user": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The username for the server",
-		},
-
-		"path": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
-		},
-
-		"ssh_known_hosts": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "A list of host keys for all hosts we can connect to over SFTP",
-		},
-
-		// Optional fields
-		"port": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     22,
-			Description: "The port the SFTP service listens on. (Default: `22`)",
-		},
-
-		"password": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
-			Sensitive:   true,
-		},
-
-		"secret_key": {
+		"compression_codec": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
-			Sensitive:        true,
-			ValidateDiagFunc: validateStringTrimmed,
+			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
+			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
-
-		"public_key": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
-			ValidateDiagFunc: validateStringTrimmed,
-		},
-
-		"period": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     3600,
-			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
-		},
-
 		"gzip_level": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     0,
 			Description: GzipLevelDescription,
 		},
-
-		"timestamp_format": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "%Y-%m-%dT%H:%M:%S.000",
-			Description: TimestampFormatDescription,
-		},
-
 		"message_type": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -121,11 +56,62 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description:      MessageTypeDescription,
 			ValidateDiagFunc: validateLoggingMessageType(),
 		},
-		"compression_codec": {
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The unique name of the SFTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"password": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
+			Sensitive:   true,
+		},
+		"path": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The path to upload log files to. If the path ends in `/` then it is treated as a directory",
+		},
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)",
+		},
+		"port": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     22,
+			Description: "The port the SFTP service listens on. (Default: `22`)",
+		},
+		"public_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
+			Description:      "A PGP public key that Fastly will use to encrypt your log files before writing them to disk",
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+		"secret_key": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred",
+			Sensitive:        true,
+			ValidateDiagFunc: validateStringTrimmed,
+		},
+		"ssh_known_hosts": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A list of host keys for all hosts we can connect to over SFTP",
+		},
+		"timestamp_format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "%Y-%m-%dT%H:%M:%S.000",
+			Description: TimestampFormatDescription,
+		},
+		"user": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The username for the server",
 		},
 	}
 
@@ -166,7 +152,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	if opts.Password == "" && opts.SecretKey == "" {
@@ -179,7 +165,7 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 }
 
 // Read refreshes the resource.
-func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -207,14 +193,14 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 }
 
 // Update updates the resource.
-func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSFTPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between interface{} we lose the ability to
+	// NOTE: where we transition between any we lose the ability to
 	// infer the underlying type being either a uint vs an int. This
 	// materializes as a panic (yay) and so it's only at runtime we discover
 	// this and so we've updated the below code to convert the type asserted
@@ -280,7 +266,7 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 }
 
 // Delete deletes the resource.
-func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
@@ -310,11 +296,11 @@ func deleteSFTP(conn *gofastly.Client, i *gofastly.DeleteSFTPInput) error {
 	return nil
 }
 
-func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
-	var ssl []map[string]interface{}
+func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]any {
+	var ssl []map[string]any
 	for _, sl := range sftpList {
 		// Convert SFTP logging to a map for saving to state.
-		nsl := map[string]interface{}{
+		nsl := map[string]any{
 			"name":               sl.Name,
 			"address":            sl.Address,
 			"user":               sl.User,
@@ -348,8 +334,8 @@ func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]interface{} {
 	return ssl
 }
 
-func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
-	df := sftpMap.(map[string]interface{})
+func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
+	df := sftpMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
 	return &gofastly.CreateSFTPInput{
@@ -375,8 +361,8 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap interface{}, serviceID
 	}
 }
 
-func (h *SFTPServiceAttributeHandler) buildDelete(sftpMap interface{}, serviceID string, serviceVersion int) *gofastly.DeleteSFTPInput {
-	df := sftpMap.(map[string]interface{})
+func (h *SFTPServiceAttributeHandler) buildDelete(sftpMap any, serviceID string, serviceVersion int) *gofastly.DeleteSFTPInput {
+	df := sftpMap.(map[string]any)
 
 	return &gofastly.DeleteSFTPInput{
 		ServiceID:      serviceID,

@@ -22,17 +22,17 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"allow_untrusted_root": {
+				Type:        schema.TypeBool,
+				Description: "Disable checking whether the root of the certificate chain is trusted. Useful for development purposes to allow use of self-signed CAs. Defaults to false. Write-only on create.",
+				Optional:    true,
+				Default:     false,
+			},
 			"certificate_body": {
 				Type:             schema.TypeString,
 				Description:      "PEM-formatted certificate.",
 				Required:         true,
 				ValidateDiagFunc: validatePEMBlock("CERTIFICATE"),
-			},
-			"intermediates_blob": {
-				Type:             schema.TypeString,
-				Description:      "PEM-formatted certificate chain from the `certificate_body` to its root.",
-				Required:         true,
-				ValidateDiagFunc: validatePEMBlocks("CERTIFICATE"),
 			},
 			"configuration_id": {
 				Type:        schema.TypeString,
@@ -40,11 +40,22 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			"allow_untrusted_root": {
-				Type:        schema.TypeBool,
-				Description: "Disable checking whether the root of the certificate chain is trusted. Useful for development purposes to allow use of self-signed CAs. Defaults to false. Write-only on create.",
-				Optional:    true,
-				Default:     false,
+			"created_at": {
+				Type:        schema.TypeString,
+				Description: "Timestamp (GMT) when the certificate was created.",
+				Computed:    true,
+			},
+			"domains": {
+				Type:        schema.TypeSet,
+				Description: "All the domains (including wildcard domains) that are listed in any certificate's Subject Alternative Names (SAN) list.",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"intermediates_blob": {
+				Type:             schema.TypeString,
+				Description:      "PEM-formatted certificate chain from the `certificate_body` to its root.",
+				Required:         true,
+				ValidateDiagFunc: validatePEMBlocks("CERTIFICATE"),
 			},
 			"not_after": {
 				Type:        schema.TypeString,
@@ -56,9 +67,9 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 				Description: "Timestamp (GMT) when the certificate will become valid.",
 				Computed:    true,
 			},
-			"created_at": {
-				Type:        schema.TypeString,
-				Description: "Timestamp (GMT) when the certificate was created.",
+			"replace": {
+				Type:        schema.TypeBool,
+				Description: "A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.",
 				Computed:    true,
 			},
 			"updated_at": {
@@ -66,22 +77,11 @@ func resourceFastlyTLSPlatformCertificate() *schema.Resource {
 				Description: "Timestamp (GMT) when the certificate was last updated.",
 				Computed:    true,
 			},
-			"replace": {
-				Type:        schema.TypeBool,
-				Description: "A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.",
-				Computed:    true,
-			},
-			"domains": {
-				Type:        schema.TypeSet,
-				Description: "All the domains (including wildcard domains) that are listed in any certificate's Subject Alternative Names (SAN) list.",
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 		},
 	}
 }
 
-func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.CreateBulkCertificateInput{
@@ -103,7 +103,7 @@ func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.R
 	return resourceFastlyTLSPlatformCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Platform Certificate Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -154,7 +154,7 @@ func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	_, err := conn.UpdateBulkCertificate(&fastly.UpdateBulkCertificateInput{
@@ -170,7 +170,7 @@ func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.R
 	return resourceFastlyTLSPlatformCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPlatformCertificateDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSPlatformCertificateDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	if err := conn.DeleteBulkCertificate(&fastly.DeleteBulkCertificateInput{

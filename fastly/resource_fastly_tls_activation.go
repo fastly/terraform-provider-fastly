@@ -33,22 +33,22 @@ func resourceFastlyTLSActivation() *schema.Resource {
 				Computed:    true,
 				Description: "ID of TLS configuration to be used to terminate TLS traffic, or use the default one if missing.",
 			},
+			"created_at": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Time-stamp (GMT) when TLS was enabled.",
+			},
 			"domain": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "Domain to enable TLS on. Must be assigned to an existing Fastly Service.",
 			},
-			"created_at": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Time-stamp (GMT) when TLS was enabled.",
-			},
 		},
 	}
 }
 
-func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var configuration *fastly.TLSConfiguration
@@ -70,7 +70,7 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 	return resourceFastlyTLSActivationRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Activation Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
@@ -102,7 +102,7 @@ func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	_, err := conn.UpdateTLSActivation(&fastly.UpdateTLSActivationInput{
@@ -116,7 +116,7 @@ func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceDa
 	return resourceFastlyTLSActivationRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSActivationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyTLSActivationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{

@@ -37,23 +37,20 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required fields
-				"name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Unique name to refer to this Request Setting. It is important to note that changing this attribute will delete and recreate the resource",
-				},
-				// Optional fields
-				"request_condition": {
+				"action": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Default:     "",
-					Description: "Name of already defined `condition` to determine if this request setting should be applied",
+					Description: "Allows you to terminate request handling and immediately perform an action. When set it can be `lookup` or `pass` (Ignore the cache completely)",
 				},
-				"max_stale_age": {
-					Type:        schema.TypeInt,
+				"bypass_busy_wait": {
+					Type:        schema.TypeBool,
 					Optional:    true,
-					Description: "How old an object is allowed to be to serve `stale-if-error` or `stale-while-revalidate`, in seconds",
+					Description: "Disable collapsed forwarding, so you don't wait for other objects to origin",
+				},
+				"default_host": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Sets the host header",
 				},
 				"force_miss": {
 					Type:        schema.TypeBool,
@@ -65,20 +62,39 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Forces the request to use SSL (Redirects a non-SSL request to SSL)",
 				},
-				"action": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Allows you to terminate request handling and immediately perform an action. When set it can be `lookup` or `pass` (Ignore the cache completely)",
-				},
-				"bypass_busy_wait": {
+				// TODO: Although Fastly API has been exposing this parameter over years
+				// it turned out that setting this parameter does nothing. We should remove this attribute in v3.0.0
+				"geo_headers": {
 					Type:        schema.TypeBool,
 					Optional:    true,
-					Description: "Disable collapsed forwarding, so you don't wait for other objects to origin",
+					Deprecated:  "'geo_headers' attribute has been deprecated and will be removed in the next major version release",
+					Description: "Injects Fastly-Geo-Country, Fastly-Geo-City, and Fastly-Geo-Region into the request headers",
 				},
 				"hash_keys": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Comma separated list of varnish request object fields that should be in the hash key",
+				},
+				"max_stale_age": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Description: "How old an object is allowed to be to serve `stale-if-error` or `stale-while-revalidate`, in seconds",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Unique name to refer to this Request Setting. It is important to note that changing this attribute will delete and recreate the resource",
+				},
+				"request_condition": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "Name of already defined `condition` to determine if this request setting should be applied",
+				},
+				"timer_support": {
+					Type:        schema.TypeBool,
+					Optional:    true,
+					Description: "Injects the X-Timer info into the request for viewing origin fetch durations",
 				},
 				"xff": {
 					Type:        schema.TypeString,
@@ -86,31 +102,13 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 					Default:     "append",
 					Description: "X-Forwarded-For, should be `clear`, `leave`, `append`, `append_all`, or `overwrite`. Default `append`",
 				},
-				"timer_support": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Description: "Injects the X-Timer info into the request for viewing origin fetch durations",
-				},
-				// TODO: Although Fastly API has been exposing this parameter over years
-				// it turned out that setting this parameter does nothing. We should remove this attribute in v1.0.0
-				"geo_headers": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Deprecated:  "'geo_headers' attribute has been deprecated and will be removed in the next major version release",
-					Description: "Injects Fastly-Geo-Country, Fastly-Geo-City, and Fastly-Geo-Region into the request headers",
-				},
-				"default_host": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Sets the host header",
-				},
 			},
 		},
 	}
 }
 
 // Create creates the resource.
-func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts, err := buildRequestSetting(resource)
 	if err != nil {
 		log.Printf("[DEBUG] Error building Request Setting: %s", err)
@@ -128,7 +126,7 @@ func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *sch
 }
 
 // Read refreshes the resource.
-func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	resources := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(resources) > 0 || d.Get("imported").(bool) {
@@ -152,7 +150,7 @@ func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schem
 }
 
 // Update updates the resource.
-func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -218,7 +216,7 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 }
 
 // Delete deletes the resource.
-func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]interface{}, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -237,11 +235,11 @@ func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *sch
 	return nil
 }
 
-func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]interface{} {
-	var rl []map[string]interface{}
+func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]any {
+	var rl []map[string]any
 	for _, r := range rsList {
 		// Convert Request Settings to a map for saving to state.
-		nrs := map[string]interface{}{
+		nrs := map[string]any{
 			"name":              r.Name,
 			"max_stale_age":     r.MaxStaleAge,
 			"force_miss":        r.ForceMiss,
@@ -269,8 +267,8 @@ func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]inte
 	return rl
 }
 
-func buildRequestSetting(requestSettingMap interface{}) (*gofastly.CreateRequestSettingInput, error) {
-	resource := requestSettingMap.(map[string]interface{})
+func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingInput, error) {
+	resource := requestSettingMap.(map[string]any)
 	opts := gofastly.CreateRequestSettingInput{
 		Name:             resource["name"].(string),
 		MaxStaleAge:      gofastly.Uint(uint(resource["max_stale_age"].(int))),

@@ -13,13 +13,6 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyTLSActivationRead,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				Description:   "Fastly Activation ID. Conflicts with all other filters.",
-				ConflictsWith: []string{"certificate_id", "configuration_id", "domain"},
-			},
 			"certificate_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -34,6 +27,11 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 				ConflictsWith: []string{"id"},
 				Description:   "ID of the TLS Configuration used.",
 			},
+			"created_at": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Timestamp (GMT) when TLS was enabled.",
+			},
 			"domain": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -41,16 +39,18 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 				ConflictsWith: []string{"id"},
 				Description:   "Domain that TLS was enabled on.",
 			},
-			"created_at": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Timestamp (GMT) when TLS was enabled.",
+			"id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				Description:   "Fastly Activation ID. Conflicts with all other filters.",
+				ConflictsWith: []string{"certificate_id", "configuration_id", "domain"},
 			},
 		},
 	}
 }
 
-func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var activation *fastly.TLSActivation

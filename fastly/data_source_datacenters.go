@@ -28,15 +28,15 @@ func dataSourceFastlyDatacenters() *schema.Resource {
 							Computed:    true,
 							Description: "A code representing the POP location.",
 						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The name of the POP.",
-						},
 						"group": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "A code representing the general region of the world in which the POP location resides.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the POP.",
 						},
 						"shield": {
 							Type:        schema.TypeString,
@@ -50,7 +50,7 @@ func dataSourceFastlyDatacenters() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading datacenters")
@@ -71,14 +71,14 @@ func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]interface{} {
-	pops := make([]map[string]interface{}, len(datacenters))
+func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]any {
+	pops := make([]map[string]any, len(datacenters))
 	if len(datacenters) == 0 {
 		return pops
 	}
 
 	for i, pop := range datacenters {
-		datacentersMapString := map[string]interface{}{
+		datacentersMapString := map[string]any{
 			"code":   pop.Code,
 			"name":   pop.Name,
 			"group":  pop.Group,

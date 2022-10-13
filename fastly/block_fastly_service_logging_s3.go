@@ -293,7 +293,7 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -425,7 +425,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 		SecretKey:                    df["s3_secret_key"].(string),
 		IAMRole:                      df["s3_iam_role"].(string),
 		Period:                       uint(df["period"].(int)),
-		GzipLevel:                    uint(df["gzip_level"].(int)),
+		GzipLevel:                    uint8(df["gzip_level"].(int)),
 		Domain:                       df["domain"].(string),
 		Path:                         df["path"].(string),
 		TimestampFormat:              df["timestamp_format"].(string),

@@ -205,7 +205,7 @@ func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.Period = gofastly.Uint(uint(v.(int)))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -319,7 +319,7 @@ func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap any, s
 		PublicKey:         df["public_key"].(string),
 		Path:              df["path"].(string),
 		Period:            uint(df["period"].(int)),
-		GzipLevel:         uint(df["gzip_level"].(int)),
+		GzipLevel:         uint8(df["gzip_level"].(int)),
 		TimestampFormat:   df["timestamp_format"].(string),
 		MessageType:       df["message_type"].(string),
 		CompressionCodec:  df["compression_codec"].(string),

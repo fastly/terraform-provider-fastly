@@ -50,7 +50,7 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					"path":               "/",
 					"period":             uint(3600),
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"gzip_level":         uint(0),
+					"gzip_level":         uint8(0),
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"format_version":     uint(2),
 					"message_type":       "classic",

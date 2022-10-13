@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v6/fastly"
@@ -21,6 +22,7 @@ func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 				{
 					ServiceVersion:   1,
 					Name:             "myhealthcheck",
+					Headers:          []string{"Foo: Bar", "Baz: Qux"},
 					Host:             "example1.com",
 					Path:             "/test1.txt",
 					CheckInterval:    4000,
@@ -36,6 +38,7 @@ func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 			local: []map[string]any{
 				{
 					"name":              "myhealthcheck",
+					"headers":           []string{"Foo: Bar", "Baz: Qux"},
 					"host":              "example1.com",
 					"path":              "/test1.txt",
 					"check_interval":    uint(4000),
@@ -67,6 +70,7 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 	log1 := gofastly.HealthCheck{
 		ServiceVersion:   1,
 		Name:             "example-healthcheck1",
+		Headers:          []string{"Foo: Bar", "Baz: Qux"},
 		Host:             "example1.com",
 		Path:             "/test1.txt",
 		CheckInterval:    4000,
@@ -80,15 +84,16 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.HealthCheck{
-		ServiceVersion:   1,
-		Name:             "example-healthcheck2",
-		Host:             "example2.com",
-		Path:             "/test2.txt",
 		CheckInterval:    4500,
 		ExpectedResponse: 404,
 		HTTPVersion:      "1.0",
+		Headers:          []string{"Beep: Boop"},
+		Host:             "example2.com",
 		Initial:          1,
 		Method:           "POST",
+		Name:             "example-healthcheck2",
+		Path:             "/test2.txt",
+		ServiceVersion:   1,
 		Threshold:        4,
 		Timeout:          4000,
 		Window:           10,
@@ -106,10 +111,8 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHealthCheckAttributes(&service, []*gofastly.HealthCheck{&log1}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "healthcheck.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "healthcheck.#", "1"),
 				),
 			},
 
@@ -118,10 +121,8 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHealthCheckAttributes(&service, []*gofastly.HealthCheck{&log1, &log2}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "healthcheck.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "healthcheck.#", "2"),
 				),
 			},
 		},
@@ -147,6 +148,12 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 		for _, h := range healthchecks {
 			for _, lh := range healthcheckList {
 				if h.Name == lh.Name {
+					// The API returns the headers sorted, so to avoid potential errors in
+					// the test setup we will order the headers too before comparing.
+					//
+					// NOTE: Sorting the headers isn't necessary outside of the tests.
+					sort.Strings(h.Headers)
+
 					// we don't know these things ahead of time, so populate them now
 					h.ServiceID = service.ID
 					h.ServiceVersion = service.ActiveVersion.Number
@@ -186,14 +193,15 @@ resource "fastly_service_vcl" "foo" {
   }
 
   healthcheck {
-		name              = "example-healthcheck1"
-		host              = "example1.com"
-		path              = "/test1.txt"
 		check_interval    = 4000
 		expected_response = 200
+		headers           = ["Foo: Bar", "Baz: Qux"]
+		host              = "example1.com"
 		http_version      = "1.1"
 		initial           = 2
 		method            = "HEAD"
+		name              = "example-healthcheck1"
+		path              = "/test1.txt"
 		threshold         = 3
 		timeout           = 5000
 		window            = 5
@@ -219,28 +227,30 @@ resource "fastly_service_vcl" "foo" {
   }
 
 	healthcheck {
-		name              = "example-healthcheck1"
-		host              = "example1.com"
-		path              = "/test1.txt"
 		check_interval    = 4000
 		expected_response = 200
+		headers           = ["Foo: Bar", "Baz: Qux"]
+		host              = "example1.com"
 		http_version      = "1.1"
 		initial           = 2
 		method            = "HEAD"
+		name              = "example-healthcheck1"
+		path              = "/test1.txt"
 		threshold         = 3
 		timeout           = 5000
 		window            = 5
   }
 
 	healthcheck {
-		name              = "example-healthcheck2"
-		host              = "example2.com"
-		path              = "/test2.txt"
 		check_interval    = 4500
 		expected_response = 404
+		headers           = ["Beep: Boop"]
+		host              = "example2.com"
 		http_version      = "1.0"
 		initial           = 1
 		method            = "POST"
+		name              = "example-healthcheck2"
+		path              = "/test2.txt"
 		threshold         = 4
 		timeout           = 4000
 		window            = 10

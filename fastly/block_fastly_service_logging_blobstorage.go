@@ -152,7 +152,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 		SASToken:          resource["sas_token"].(string),
 		Period:            uint(resource["period"].(int)),
 		TimestampFormat:   resource["timestamp_format"].(string),
-		GzipLevel:         uint(resource["gzip_level"].(int)),
+		GzipLevel:         uint8(resource["gzip_level"].(int)),
 		PublicKey:         resource["public_key"].(string),
 		MessageType:       resource["message_type"].(string),
 		Format:            vla.format,
@@ -234,7 +234,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint(uint(v.(int)))
+		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.String(v.(string))

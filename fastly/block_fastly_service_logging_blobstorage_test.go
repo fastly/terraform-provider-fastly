@@ -51,7 +51,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					"public_key":         "test-public-key",
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"format_version":     uint(2),
-					"gzip_level":         uint(0),
+					"gzip_level":         uint8(0),
 					"message_type":       "classic",
 					"placement":          "waf_debug",
 					"response_condition": "error_response",

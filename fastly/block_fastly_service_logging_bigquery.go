@@ -183,7 +183,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	if v, ok := modified["template_suffix"]; ok {
 		opts.Template = gofastly.String(v.(string))
 	}
-	if v, ok := modified["user"]; ok {
+	if v, ok := modified["email"]; ok {
 		opts.User = gofastly.String(v.(string))
 	}
 	if v, ok := modified["secret_key"]; ok {

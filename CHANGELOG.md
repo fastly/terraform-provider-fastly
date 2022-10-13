@@ -1,4 +1,11 @@
-## 2.4.0 (Unreleased)
+## 2.5.0 (Unreleased)
+
+## 2.4.0 (October 13, 2022)
+
+ENHANCEMENTS:
+
+* Support health check headers [#598](https://github.com/fastly/terraform-provider-fastly/pull/598)
+* Code base refactor with tfproviderlintx [#596](https://github.com/fastly/terraform-provider-fastly/pull/596)
 
 ## 2.3.3 (October 3, 2022)
 

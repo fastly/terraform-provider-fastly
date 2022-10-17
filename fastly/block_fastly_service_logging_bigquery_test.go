@@ -18,6 +18,8 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
+	email := "email@example.com"
+	emailUpdate := "update@example.com"
 
 	secretKey, err := generateKey()
 	if err != nil {
@@ -32,10 +34,17 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey),
+				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email),
+				),
+			},
+			{
+				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, emailUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate),
 				),
 			},
 		},
@@ -47,6 +56,8 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	bqName := fmt.Sprintf("bq %s", acctest.RandString(10))
+	email := "email@example.com"
+	emailUpdate := "update@example.com"
 
 	secretKey, err := generateKey()
 	if err != nil {
@@ -61,10 +72,17 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey),
+				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email),
+				),
+			},
+			{
+				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey, emailUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate),
 				),
 			},
 		},
@@ -116,7 +134,7 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 	}
 }
 
-func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName, email string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != name {
 			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
@@ -139,11 +157,15 @@ func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, n
 			return fmt.Errorf("bigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, bqList[0].Name)
 		}
 
+		if bqList[0].User != email {
+			return fmt.Errorf("bigQuery logging endpoint user/email mismatch, expected: %s, got: %#v", email, bqList[0].User)
+		}
+
 		return nil
 	}
 }
 
-func testAccServiceVCLConfigBigQuery(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigBigQuery(name, gcsName, secretKey, email string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -162,8 +184,8 @@ resource "fastly_service_vcl" "foo" {
 
   logging_bigquery {
     name       = "%s"
-    email      = "email@example.com"
     secret_key = trimspace(%q)
+    email      = "%s"
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
@@ -172,10 +194,10 @@ resource "fastly_service_vcl" "foo" {
   }
 
   force_destroy = true
-}`, name, domainName, backendName, gcsName, secretKey)
+}`, name, domainName, backendName, gcsName, secretKey, email)
 }
 
-func testAccServiceVCLConfigBigQueryCompute(name, gcsName, secretKey string) string {
+func testAccServiceVCLConfigBigQueryCompute(name, gcsName, secretKey, email string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -194,8 +216,8 @@ resource "fastly_service_compute" "foo" {
 
   logging_bigquery {
     name       = "%s"
-    email      = "email@example.com"
     secret_key = trimspace(%q)
+    email      = "%s"
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
@@ -207,7 +229,7 @@ resource "fastly_service_compute" "foo" {
   }
 
   force_destroy = true
-}`, name, domainName, backendName, gcsName, secretKey)
+}`, name, domainName, backendName, gcsName, secretKey, email)
 }
 
 func setBQEnv(email, secretKey string, t *testing.T) func() {

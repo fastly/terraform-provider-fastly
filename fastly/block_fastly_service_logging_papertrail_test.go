@@ -58,9 +58,9 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		ServiceVersion:    1,
 		Name:              "papertrailtesting",
 		Address:           "test1.papertrailapp.com",
-		Port:              uint(3600),
+		Port:              3600,
 		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     uint(2),
+		FormatVersion:     2,
 		ResponseCondition: "test_response_condition",
 	}
 
@@ -68,9 +68,9 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "papertrailtesting2",
 		Address:        "test2.papertrailapp.com",
-		Port:           uint(8080),
+		Port:           8080,
 		Format:         `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:  uint(2),
+		FormatVersion:  2,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -116,7 +116,7 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "papertrailtesting",
 		Address:        "test1.papertrailapp.com",
-		Port:           uint(3600),
+		Port:           3600,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

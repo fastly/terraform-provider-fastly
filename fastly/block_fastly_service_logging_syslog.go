@@ -137,20 +137,20 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	opts := gofastly.CreateSyslogInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		Address:           resource["address"].(string),
-		Port:              uint(resource["port"].(int)),
-		Token:             resource["token"].(string),
-		UseTLS:            gofastly.Compatibool(resource["use_tls"].(bool)),
-		TLSHostname:       resource["tls_hostname"].(string),
-		TLSCACert:         resource["tls_ca_cert"].(string),
-		TLSClientCert:     resource["tls_client_cert"].(string),
-		TLSClientKey:      resource["tls_client_key"].(string),
-		MessageType:       resource["message_type"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Name:              gofastly.String(resource["name"].(string)),
+		Address:           gofastly.String(resource["address"].(string)),
+		Port:              gofastly.Int(resource["port"].(int)),
+		Token:             gofastly.String(resource["token"].(string)),
+		UseTLS:            gofastly.CBool(resource["use_tls"].(bool)),
+		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
+		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
+		MessageType:       gofastly.String(resource["message_type"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		Placement:         gofastly.String(vla.placement),
 	}
 
 	log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -209,7 +209,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Hostname = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["use_tls"]; ok {
 		opts.UseTLS = gofastly.CBool(v.(bool))
@@ -236,7 +236,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["message_type"]; ok {
 		opts.MessageType = gofastly.String(v.(string))

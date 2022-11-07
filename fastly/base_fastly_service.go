@@ -223,9 +223,9 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*APIClient).conn
 	service, err := conn.CreateService(&gofastly.CreateServiceInput{
-		Name:    d.Get("name").(string),
-		Comment: d.Get("comment").(string),
-		Type:    serviceDef.GetType(),
+		Name:    gofastly.String(d.Get("name").(string)),
+		Comment: gofastly.String(d.Get("comment").(string)),
+		Type:    gofastly.String(serviceDef.GetType()),
 	})
 	if err != nil {
 		return diag.FromErr(err)

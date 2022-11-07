@@ -69,11 +69,11 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	opts := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		Type:           resource["type"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
+		Type:           gofastly.String(resource["type"].(string)),
 		// need to trim leading/tailing spaces, incase the config has HEREDOC
 		// formatting and contains a trailing new line
-		Statement: strings.TrimSpace(resource["statement"].(string)),
+		Statement: gofastly.String(strings.TrimSpace(resource["statement"].(string))),
 		Priority:  gofastly.Int(resource["priority"].(int)),
 	}
 
@@ -114,9 +114,9 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	optsCreate := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		Type:           resource["type"].(string),
-		Statement:      strings.TrimSpace(resource["statement"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		Type:           gofastly.String(resource["type"].(string)),
+		Statement:      gofastly.String(strings.TrimSpace(resource["statement"].(string))),
 		Priority:       gofastly.Int(resource["priority"].(int)),
 	}
 
@@ -135,7 +135,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		optsUpdate.Comment = gofastly.String(v.(string))
 	}
 	if v, ok := modified["statement"]; ok {
-		optsCreate.Statement = v.(string)
+		optsCreate.Statement = gofastly.String(v.(string))
 		optsUpdate.Statement = gofastly.String(v.(string))
 	}
 	if v, ok := modified["priority"]; ok {
@@ -145,7 +145,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	// NOTE: Fastly API doesn't support updating the condition "type".
 	// Therefore, we need to DELETE and CREATE if "type" attribute is changed.
 	if v, ok := modified["type"]; ok {
-		optsCreate.Type = v.(string)
+		optsCreate.Type = gofastly.String(v.(string))
 		log.Printf("[DEBUG] Delete Condition: %s (type changed)", resource["name"].(string))
 		err := conn.DeleteCondition(&gofastly.DeleteConditionInput{
 			ServiceID:      d.Id(),

@@ -172,7 +172,7 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -257,16 +257,16 @@ func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID s
 	return &gofastly.CreateKinesisInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		StreamName:        df["topic"].(string),
-		Region:            df["region"].(string),
-		AccessKey:         df["access_key"].(string),
-		SecretKey:         df["secret_key"].(string),
-		IAMRole:           df["iam_role"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		Name:              gofastly.String(df["name"].(string)),
+		StreamName:        gofastly.String(df["topic"].(string)),
+		Region:            gofastly.String(df["region"].(string)),
+		AccessKey:         gofastly.String(df["access_key"].(string)),
+		SecretKey:         gofastly.String(df["secret_key"].(string)),
+		IAMRole:           gofastly.String(df["iam_role"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 }
 

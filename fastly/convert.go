@@ -6,7 +6,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-func uintOrDefault(int *uint) uint {
+// intOrDefault accepts a pointer and returns the deferenced value, otherwise it
+// returns the zero value.
+func intOrDefault(int *int) int {
 	if int == nil {
 		return 0
 	}

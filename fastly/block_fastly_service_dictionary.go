@@ -178,8 +178,8 @@ func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]any {
 func buildDictionary(dictMap any) (*gofastly.CreateDictionaryInput, error) {
 	df := dictMap.(map[string]any)
 	opts := gofastly.CreateDictionaryInput{
-		Name:      df["name"].(string),
-		WriteOnly: gofastly.Compatibool(df["write_only"].(bool)),
+		Name:      gofastly.String(df["name"].(string)),
+		WriteOnly: gofastly.CBool(df["write_only"].(bool)),
 	}
 
 	return &opts, nil

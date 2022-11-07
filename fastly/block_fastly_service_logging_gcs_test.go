@@ -31,7 +31,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					Bucket:           "bucketname",
 					SecretKey:        secretKey,
 					Format:           "log format",
-					FormatVersion:    uint(2),
+					FormatVersion:    2,
 					Period:           3600,
 					GzipLevel:        0,
 					CompressionCodec: "zstd",

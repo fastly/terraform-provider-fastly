@@ -240,9 +240,9 @@ func createDynamicSnippetThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 	dynamicSnippet, err := conn.CreateSnippet(&gofastly.CreateSnippetInput{
 		ServiceID:      service.ID,
 		ServiceVersion: newVersion.Number,
-		Name:           dynamicSnippetName,
-		Type:           snippetType,
-		Dynamic:        1,
+		Name:           gofastly.String(dynamicSnippetName),
+		Type:           gofastly.SnippetTypePtr(snippetType),
+		Dynamic:        gofastly.Int(1),
 	})
 	if err != nil {
 		t.Fatalf("[ERR] Error creating Dynamic snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)

@@ -121,7 +121,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		NewName:        gofastly.String(name),
 		Priority:       gofastly.Int(priority),
 		Content:        gofastly.String(content),
-		Type:           gofastly.SnippetTypeToString(stype),
+		Type:           gofastly.SnippetTypePtr(gofastly.SnippetType(stype)),
 	}
 
 	// NOTE: where we transition between any we lose the ability to
@@ -137,7 +137,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	}
 	if v, ok := modified["type"]; ok {
 		snippetType := strings.ToLower(v.(string))
-		opts.Type = gofastly.SnippetTypeToString(snippetType)
+		opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
 	}
 
 	log.Printf("[DEBUG] Update VCL Snippet Opts: %#v", opts)
@@ -171,13 +171,13 @@ func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 	df := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Name:     df["name"].(string),
-		Content:  df["content"].(string),
+		Name:     gofastly.String(df["name"].(string)),
+		Content:  gofastly.String(df["content"].(string)),
 		Priority: gofastly.Int(df["priority"].(int)),
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))
-	opts.Type = gofastly.SnippetType(snippetType)
+	opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
 
 	return &opts, nil
 }

@@ -70,16 +70,16 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 	opts := gofastly.CreateGzipInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		CacheCondition: resource["cache_condition"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
+		CacheCondition: gofastly.String(resource["cache_condition"].(string)),
 	}
 
 	if v, ok := resource["content_types"]; ok {
-		opts.ContentTypes = sliceToString(v.([]any))
+		opts.ContentTypes = gofastly.String(sliceToString(v.([]any)))
 	}
 
 	if v, ok := resource["extensions"]; ok {
-		opts.Extensions = sliceToString(v.([]any))
+		opts.Extensions = gofastly.String(sliceToString(v.([]any)))
 	}
 
 	log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)

@@ -63,9 +63,9 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	opts := gofastly.CreateVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		Content:        resource["content"].(string),
-		Main:           resource["main"].(bool),
+		Name:           gofastly.String(resource["name"].(string)),
+		Content:        gofastly.String(resource["content"].(string)),
+		Main:           gofastly.Bool(resource["main"].(bool)),
 	}
 
 	log.Printf("[DEBUG] Fastly VCL Addition opts: %#v", opts)

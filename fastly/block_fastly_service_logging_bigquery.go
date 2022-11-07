@@ -111,19 +111,19 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 	opts := gofastly.CreateBigQueryInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		ProjectID:         resource["project_id"].(string),
-		Dataset:           resource["dataset"].(string),
-		Table:             resource["table"].(string),
-		User:              resource["email"].(string),
-		SecretKey:         resource["secret_key"].(string),
-		Template:          resource["template"].(string),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Name:              gofastly.String(resource["name"].(string)),
+		ProjectID:         gofastly.String(resource["project_id"].(string)),
+		Dataset:           gofastly.String(resource["dataset"].(string)),
+		Table:             gofastly.String(resource["table"].(string)),
+		User:              gofastly.String(resource["email"].(string)),
+		SecretKey:         gofastly.String(resource["secret_key"].(string)),
+		Template:          gofastly.String(resource["template"].(string)),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		Placement:         gofastly.String(vla.placement),
 	}
 
 	if vla.format != "" {
-		opts.Format = vla.format
+		opts.Format = gofastly.String(vla.format)
 	}
 
 	log.Printf("[DEBUG] Create BigQuery opts: %#v", opts)
@@ -204,7 +204,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	// this and so we've updated the below code to convert the type asserted
 	// int into a uint before passing the value to gofastly.Uint().
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update BigQuery Opts: %#v", opts)

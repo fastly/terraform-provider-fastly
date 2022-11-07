@@ -57,11 +57,11 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	opts := gofastly.CreateDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
 	}
 
 	if v, ok := resource["comment"]; ok {
-		opts.Comment = v.(string)
+		opts.Comment = gofastly.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Fastly Domain Addition opts: %#v", opts)

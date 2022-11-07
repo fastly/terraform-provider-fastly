@@ -155,7 +155,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
-	if opts.Password == "" && opts.SecretKey == "" {
+	if *opts.Password == "" && *opts.SecretKey == "" {
 		return fmt.Errorf("either password or secret_key must be set")
 	}
 
@@ -209,7 +209,7 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.String(v.(string))
@@ -230,16 +230,16 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		opts.Path = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -341,23 +341,23 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string,
 	return &gofastly.CreateSFTPInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Address:           df["address"].(string),
-		Name:              df["name"].(string),
-		User:              df["user"].(string),
-		Path:              df["path"].(string),
-		PublicKey:         df["public_key"].(string),
-		SecretKey:         df["secret_key"].(string),
-		SSHKnownHosts:     df["ssh_known_hosts"].(string),
-		Port:              uint(df["port"].(int)),
-		Password:          df["password"].(string),
-		GzipLevel:         uint8(df["gzip_level"].(int)),
-		TimestampFormat:   df["timestamp_format"].(string),
-		MessageType:       df["message_type"].(string),
-		CompressionCodec:  df["compression_codec"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		Address:           gofastly.String(df["address"].(string)),
+		Name:              gofastly.String(df["name"].(string)),
+		User:              gofastly.String(df["user"].(string)),
+		Path:              gofastly.String(df["path"].(string)),
+		PublicKey:         gofastly.String(df["public_key"].(string)),
+		SecretKey:         gofastly.String(df["secret_key"].(string)),
+		SSHKnownHosts:     gofastly.String(df["ssh_known_hosts"].(string)),
+		Port:              gofastly.Int(df["port"].(int)),
+		Password:          gofastly.String(df["password"].(string)),
+		GzipLevel:         gofastly.Int(df["gzip_level"].(int)),
+		TimestampFormat:   gofastly.String(df["timestamp_format"].(string)),
+		MessageType:       gofastly.String(df["message_type"].(string)),
+		CompressionCodec:  gofastly.String(df["compression_codec"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 }
 

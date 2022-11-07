@@ -136,19 +136,19 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 	opts := gofastly.CreateGCSInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		User:              resource["user"].(string),
-		Bucket:            resource["bucket_name"].(string),
-		SecretKey:         resource["secret_key"].(string),
-		Path:              resource["path"].(string),
-		Period:            uint(resource["period"].(int)),
-		GzipLevel:         uint8(resource["gzip_level"].(int)),
-		TimestampFormat:   resource["timestamp_format"].(string),
-		MessageType:       resource["message_type"].(string),
-		CompressionCodec:  resource["compression_codec"].(string),
-		Format:            vla.format,
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Name:              gofastly.String(resource["name"].(string)),
+		User:              gofastly.String(resource["user"].(string)),
+		Bucket:            gofastly.String(resource["bucket_name"].(string)),
+		SecretKey:         gofastly.String(resource["secret_key"].(string)),
+		Path:              gofastly.String(resource["path"].(string)),
+		Period:            gofastly.Int(resource["period"].(int)),
+		GzipLevel:         gofastly.Int(resource["gzip_level"].(int)),
+		TimestampFormat:   gofastly.String(resource["timestamp_format"].(string)),
+		MessageType:       gofastly.String(resource["message_type"].(string)),
+		CompressionCodec:  gofastly.String(resource["compression_codec"].(string)),
+		Format:            gofastly.String(vla.format),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		Placement:         gofastly.String(vla.placement),
 	}
 
 	log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
@@ -213,16 +213,16 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 		opts.Path = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))

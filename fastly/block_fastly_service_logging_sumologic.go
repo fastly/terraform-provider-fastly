@@ -94,13 +94,13 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	opts := gofastly.CreateSumologicInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		URL:               resource["url"].(string),
-		MessageType:       resource["message_type"].(string),
-		Format:            vla.format,
-		FormatVersion:     int(uintOrDefault(vla.formatVersion)),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Name:              gofastly.String(resource["name"].(string)),
+		URL:               gofastly.String(resource["url"].(string)),
+		MessageType:       gofastly.String(resource["message_type"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(int(intOrDefault(vla.formatVersion))),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		Placement:         gofastly.String(vla.placement),
 	}
 
 	log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)

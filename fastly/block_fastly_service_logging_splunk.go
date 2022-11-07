@@ -123,18 +123,18 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	opts := gofastly.CreateSplunkInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		URL:               resource["url"].(string),
-		Token:             resource["token"].(string),
-		TLSHostname:       resource["tls_hostname"].(string),
-		TLSCACert:         resource["tls_ca_cert"].(string),
-		TLSClientCert:     resource["tls_client_cert"].(string),
-		TLSClientKey:      resource["tls_client_key"].(string),
-		UseTLS:            gofastly.Compatibool(resource["use_tls"].(bool)),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Name:              gofastly.String(resource["name"].(string)),
+		URL:               gofastly.String(resource["url"].(string)),
+		Token:             gofastly.String(resource["token"].(string)),
+		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
+		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
+		UseTLS:            gofastly.CBool(resource["use_tls"].(bool)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		Placement:         gofastly.String(vla.placement),
 	}
 
 	log.Printf("[DEBUG] Splunk create opts: %#v", opts)
@@ -190,16 +190,16 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.URL = gofastly.String(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxEntries = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))

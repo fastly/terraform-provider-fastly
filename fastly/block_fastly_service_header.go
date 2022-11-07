@@ -168,13 +168,13 @@ func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	// this and so we've updated the below code to convert the type asserted
 	// int into a uint before passing the value to gofastly.Uint().
 	if v, ok := modified["action"]; ok {
-		opts.Action = gofastly.PHeaderAction(gofastly.HeaderAction(v.(string)))
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderAction(v.(string)))
 	}
 	if v, ok := modified["ignore_if_set"]; ok {
 		opts.IgnoreIfSet = gofastly.CBool(v.(bool))
 	}
 	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.PHeaderType(gofastly.HeaderType(v.(string)))
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderType(v.(string)))
 	}
 	if v, ok := modified["destination"]; ok {
 		opts.Destination = gofastly.String(v.(string))
@@ -189,7 +189,7 @@ func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Substitution = gofastly.String(v.(string))
 	}
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.Uint(uint(v.(int)))
+		opts.Priority = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_condition"]; ok {
 		opts.RequestCondition = gofastly.String(v.(string))
@@ -262,42 +262,42 @@ func flattenHeaders(headerList []*gofastly.Header) []map[string]any {
 func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {
 	df := headerMap.(map[string]any)
 	opts := gofastly.CreateHeaderInput{
-		Name:              df["name"].(string),
-		IgnoreIfSet:       gofastly.Compatibool(df["ignore_if_set"].(bool)),
-		Destination:       df["destination"].(string),
-		Priority:          gofastly.Uint(uint(df["priority"].(int))),
-		Source:            df["source"].(string),
-		Regex:             df["regex"].(string),
-		Substitution:      df["substitution"].(string),
-		RequestCondition:  df["request_condition"].(string),
-		CacheCondition:    df["cache_condition"].(string),
-		ResponseCondition: df["response_condition"].(string),
+		Name:              gofastly.String(df["name"].(string)),
+		IgnoreIfSet:       gofastly.CBool(df["ignore_if_set"].(bool)),
+		Destination:       gofastly.String(df["destination"].(string)),
+		Priority:          gofastly.Int(df["priority"].(int)),
+		Source:            gofastly.String(df["source"].(string)),
+		Regex:             gofastly.String(df["regex"].(string)),
+		Substitution:      gofastly.String(df["substitution"].(string)),
+		RequestCondition:  gofastly.String(df["request_condition"].(string)),
+		CacheCondition:    gofastly.String(df["cache_condition"].(string)),
+		ResponseCondition: gofastly.String(df["response_condition"].(string)),
 	}
 
 	act := strings.ToLower(df["action"].(string))
 	switch act {
 	case "set":
-		opts.Action = gofastly.HeaderActionSet
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionSet)
 	case "append":
-		opts.Action = gofastly.HeaderActionAppend
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionAppend)
 	case "delete":
-		opts.Action = gofastly.HeaderActionDelete
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionDelete)
 	case "regex":
-		opts.Action = gofastly.HeaderActionRegex
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionRegex)
 	case "regex_repeat":
-		opts.Action = gofastly.HeaderActionRegexRepeat
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionRegexRepeat)
 	}
 
 	ty := strings.ToLower(df["type"].(string))
 	switch ty {
 	case "request":
-		opts.Type = gofastly.HeaderTypeRequest
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeRequest)
 	case "fetch":
-		opts.Type = gofastly.HeaderTypeFetch
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeFetch)
 	case "cache":
-		opts.Type = gofastly.HeaderTypeCache
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeCache)
 	case "response":
-		opts.Type = gofastly.HeaderTypeResponse
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeResponse)
 	}
 
 	return &opts, nil

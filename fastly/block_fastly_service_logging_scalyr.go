@@ -140,7 +140,7 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["token"]; ok {
 		opts.Token = gofastly.String(v.(string))
@@ -226,13 +226,13 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 	return &gofastly.CreateScalyrInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Region:            df["region"].(string),
-		Token:             df["token"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		Name:              gofastly.String(df["name"].(string)),
+		Region:            gofastly.String(df["region"].(string)),
+		Token:             gofastly.String(df["token"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 }
 

@@ -87,13 +87,13 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 	opts := gofastly.CreateResponseObjectInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             resource["name"].(string),
-		Status:           gofastly.Uint(uint(resource["status"].(int))),
-		Response:         resource["response"].(string),
-		Content:          resource["content"].(string),
-		ContentType:      resource["content_type"].(string),
-		RequestCondition: resource["request_condition"].(string),
-		CacheCondition:   resource["cache_condition"].(string),
+		Name:             gofastly.String(resource["name"].(string)),
+		Status:           gofastly.Int(resource["status"].(int)),
+		Response:         gofastly.String(resource["response"].(string)),
+		Content:          gofastly.String(resource["content"].(string)),
+		ContentType:      gofastly.String(resource["content_type"].(string)),
+		RequestCondition: gofastly.String(resource["request_condition"].(string)),
+		CacheCondition:   gofastly.String(resource["cache_condition"].(string)),
 	}
 
 	log.Printf("[DEBUG] Create Response Object Opts: %#v", opts)
@@ -142,7 +142,7 @@ func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *sch
 	// this and so we've updated the below code to convert the type asserted
 	// int into a uint before passing the value to gofastly.Uint().
 	if v, ok := modified["status"]; ok {
-		opts.Status = gofastly.Uint(uint(v.(int)))
+		opts.Status = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response"]; ok {
 		opts.Response = gofastly.String(v.(string))

@@ -207,16 +207,16 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 		opts.Placement = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -313,22 +313,22 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, servi
 	return &gofastly.CreateCloudfilesInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		BucketName:        df["bucket_name"].(string),
-		User:              df["user"].(string),
-		AccessKey:         df["access_key"].(string),
-		PublicKey:         df["public_key"].(string),
-		GzipLevel:         uint8(df["gzip_level"].(int)),
-		MessageType:       df["message_type"].(string),
-		Path:              df["path"].(string),
-		Region:            df["region"].(string),
-		Period:            uint(df["period"].(int)),
-		TimestampFormat:   df["timestamp_format"].(string),
-		CompressionCodec:  df["compression_codec"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		Name:              gofastly.String(df["name"].(string)),
+		BucketName:        gofastly.String(df["bucket_name"].(string)),
+		User:              gofastly.String(df["user"].(string)),
+		AccessKey:         gofastly.String(df["access_key"].(string)),
+		PublicKey:         gofastly.String(df["public_key"].(string)),
+		GzipLevel:         gofastly.Int(df["gzip_level"].(int)),
+		MessageType:       gofastly.String(df["message_type"].(string)),
+		Path:              gofastly.String(df["path"].(string)),
+		Region:            gofastly.String(df["region"].(string)),
+		Period:            gofastly.Int(df["period"].(int)),
+		TimestampFormat:   gofastly.String(df["timestamp_format"].(string)),
+		CompressionCodec:  gofastly.String(df["compression_codec"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 }
 

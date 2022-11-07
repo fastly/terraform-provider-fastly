@@ -93,13 +93,13 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 	opts := gofastly.CreatePapertrailInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		Address:           resource["address"].(string),
-		Port:              uint(resource["port"].(int)),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Name:              gofastly.String(resource["name"].(string)),
+		Address:           gofastly.String(resource["address"].(string)),
+		Port:              gofastly.Int(resource["port"].(int)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		Placement:         gofastly.String(vla.placement),
 	}
 
 	log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -155,10 +155,10 @@ func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.
 		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))

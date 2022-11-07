@@ -212,10 +212,10 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.URL = gofastly.String(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxEntries = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["content_type"]; ok {
 		opts.ContentType = gofastly.String(v.(string))
@@ -251,7 +251,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.MessageType = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
@@ -338,24 +338,24 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 	opts := gofastly.CreateHTTPSInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		URL:               df["url"].(string),
-		RequestMaxEntries: uint(df["request_max_entries"].(int)),
-		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
-		ContentType:       df["content_type"].(string),
-		HeaderName:        df["header_name"].(string),
-		HeaderValue:       df["header_value"].(string),
-		Method:            df["method"].(string),
-		JSONFormat:        df["json_format"].(string),
-		TLSCACert:         df["tls_ca_cert"].(string),
-		TLSClientCert:     df["tls_client_cert"].(string),
-		TLSClientKey:      df["tls_client_key"].(string),
-		TLSHostname:       df["tls_hostname"].(string),
-		MessageType:       df["message_type"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Name:              gofastly.String(df["name"].(string)),
+		URL:               gofastly.String(df["url"].(string)),
+		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
+		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
+		ContentType:       gofastly.String(df["content_type"].(string)),
+		HeaderName:        gofastly.String(df["header_name"].(string)),
+		HeaderValue:       gofastly.String(df["header_value"].(string)),
+		Method:            gofastly.String(df["method"].(string)),
+		JSONFormat:        gofastly.String(df["json_format"].(string)),
+		TLSCACert:         gofastly.String(df["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(df["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(df["tls_client_key"].(string)),
+		TLSHostname:       gofastly.String(df["tls_hostname"].(string)),
+		MessageType:       gofastly.String(df["message_type"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		Placement:         gofastly.String(vla.placement),
 	}
 
 	return &opts

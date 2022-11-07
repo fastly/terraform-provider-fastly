@@ -287,19 +287,19 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		opts.Path = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -419,34 +419,34 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 	opts := gofastly.CreateS3Input{
 		ServiceID:                    serviceID,
 		ServiceVersion:               serviceVersion,
-		Name:                         df["name"].(string),
-		BucketName:                   df["bucket_name"].(string),
-		AccessKey:                    df["s3_access_key"].(string),
-		SecretKey:                    df["s3_secret_key"].(string),
-		IAMRole:                      df["s3_iam_role"].(string),
-		Period:                       uint(df["period"].(int)),
-		GzipLevel:                    uint8(df["gzip_level"].(int)),
-		Domain:                       df["domain"].(string),
-		Path:                         df["path"].(string),
-		TimestampFormat:              df["timestamp_format"].(string),
-		MessageType:                  df["message_type"].(string),
-		PublicKey:                    df["public_key"].(string),
-		ServerSideEncryptionKMSKeyID: df["server_side_encryption_kms_key_id"].(string),
-		CompressionCodec:             df["compression_codec"].(string),
-		Format:                       vla.format,
-		FormatVersion:                uintOrDefault(vla.formatVersion),
-		ResponseCondition:            vla.responseCondition,
-		Placement:                    vla.placement,
-		Redundancy:                   gofastly.S3Redundancy(df["redundancy"].(string)),
-		ACL:                          gofastly.S3AccessControlList(df["acl"].(string)),
+		Name:                         gofastly.String(df["name"].(string)),
+		BucketName:                   gofastly.String(df["bucket_name"].(string)),
+		AccessKey:                    gofastly.String(df["s3_access_key"].(string)),
+		SecretKey:                    gofastly.String(df["s3_secret_key"].(string)),
+		IAMRole:                      gofastly.String(df["s3_iam_role"].(string)),
+		Period:                       gofastly.Int(df["period"].(int)),
+		GzipLevel:                    gofastly.Int(df["gzip_level"].(int)),
+		Domain:                       gofastly.String(df["domain"].(string)),
+		Path:                         gofastly.String(df["path"].(string)),
+		TimestampFormat:              gofastly.String(df["timestamp_format"].(string)),
+		MessageType:                  gofastly.String(df["message_type"].(string)),
+		PublicKey:                    gofastly.String(df["public_key"].(string)),
+		ServerSideEncryptionKMSKeyID: gofastly.String(df["server_side_encryption_kms_key_id"].(string)),
+		CompressionCodec:             gofastly.String(df["compression_codec"].(string)),
+		Format:                       gofastly.String(vla.format),
+		FormatVersion:                gofastly.Int(intOrDefault(vla.formatVersion)),
+		ResponseCondition:            gofastly.String(vla.responseCondition),
+		Placement:                    gofastly.String(vla.placement),
+		Redundancy:                   gofastly.S3RedundancyPtr(gofastly.S3Redundancy(df["redundancy"].(string))),
+		ACL:                          gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(df["acl"].(string))),
 	}
 
 	encryption := df["server_side_encryption"].(string)
 	switch encryption {
 	case string(gofastly.S3ServerSideEncryptionAES):
-		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionAES
+		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionPtr(gofastly.S3ServerSideEncryptionAES)
 	case string(gofastly.S3ServerSideEncryptionKMS):
-		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionKMS
+		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionPtr(gofastly.S3ServerSideEncryptionKMS)
 	}
 
 	return &opts, nil

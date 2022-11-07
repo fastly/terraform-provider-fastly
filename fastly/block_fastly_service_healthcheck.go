@@ -133,18 +133,18 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 	opts := gofastly.CreateHealthCheckInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             resource["name"].(string),
-		Headers:          hs,
-		Host:             resource["host"].(string),
-		Path:             resource["path"].(string),
-		CheckInterval:    gofastly.Uint(uint(resource["check_interval"].(int))),
-		ExpectedResponse: gofastly.Uint(uint(resource["expected_response"].(int))),
-		HTTPVersion:      resource["http_version"].(string),
-		Initial:          gofastly.Uint(uint(resource["initial"].(int))),
-		Method:           resource["method"].(string),
-		Threshold:        gofastly.Uint(uint(resource["threshold"].(int))),
-		Timeout:          gofastly.Uint(uint(resource["timeout"].(int))),
-		Window:           gofastly.Uint(uint(resource["window"].(int))),
+		Name:             gofastly.String(resource["name"].(string)),
+		Headers:          &hs,
+		Host:             gofastly.String(resource["host"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		CheckInterval:    gofastly.Int(resource["check_interval"].(int)),
+		ExpectedResponse: gofastly.Int(resource["expected_response"].(int)),
+		HTTPVersion:      gofastly.String(resource["http_version"].(string)),
+		Initial:          gofastly.Int(resource["initial"].(int)),
+		Method:           gofastly.String(resource["method"].(string)),
+		Threshold:        gofastly.Int(resource["threshold"].(int)),
+		Timeout:          gofastly.Int(resource["timeout"].(int)),
+		Window:           gofastly.Int(resource["window"].(int)),
 	}
 
 	log.Printf("[DEBUG] Create Healthcheck Opts: %#v", opts)
@@ -208,22 +208,22 @@ func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema
 		opts.HTTPVersion = gofastly.String(v.(string))
 	}
 	if v, ok := modified["timeout"]; ok {
-		opts.Timeout = gofastly.Uint(uint(v.(int)))
+		opts.Timeout = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["check_interval"]; ok {
-		opts.CheckInterval = gofastly.Uint(uint(v.(int)))
+		opts.CheckInterval = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["expected_response"]; ok {
-		opts.ExpectedResponse = gofastly.Uint(uint(v.(int)))
+		opts.ExpectedResponse = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["window"]; ok {
-		opts.Window = gofastly.Uint(uint(v.(int)))
+		opts.Window = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["threshold"]; ok {
-		opts.Threshold = gofastly.Uint(uint(v.(int)))
+		opts.Threshold = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["initial"]; ok {
-		opts.Initial = gofastly.Uint(uint(v.(int)))
+		opts.Initial = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["headers"]; ok {
 		h, ok := v.(*schema.Set)

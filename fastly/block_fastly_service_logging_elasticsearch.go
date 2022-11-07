@@ -209,10 +209,10 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 		opts.Password = gofastly.String(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxEntries = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.String(v.(string))
@@ -230,7 +230,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 		opts.TLSHostname = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update Elasticsearch Opts: %#v", opts)
@@ -311,22 +311,22 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any,
 	return &gofastly.CreateElasticsearchInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Index:             df["index"].(string),
-		URL:               df["url"].(string),
-		Pipeline:          df["pipeline"].(string),
-		User:              df["user"].(string),
-		Password:          df["password"].(string),
-		RequestMaxEntries: uint(df["request_max_entries"].(int)),
-		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
-		TLSCACert:         df["tls_ca_cert"].(string),
-		TLSClientCert:     df["tls_client_cert"].(string),
-		TLSClientKey:      df["tls_client_key"].(string),
-		TLSHostname:       df["tls_hostname"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		Name:              gofastly.String(df["name"].(string)),
+		Index:             gofastly.String(df["index"].(string)),
+		URL:               gofastly.String(df["url"].(string)),
+		Pipeline:          gofastly.String(df["pipeline"].(string)),
+		User:              gofastly.String(df["user"].(string)),
+		Password:          gofastly.String(df["password"].(string)),
+		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
+		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
+		TLSCACert:         gofastly.String(df["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(df["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(df["tls_client_key"].(string)),
+		TLSHostname:       gofastly.String(df["tls_hostname"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 }
 

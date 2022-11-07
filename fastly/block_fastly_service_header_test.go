@@ -61,12 +61,12 @@ func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 	}{
 		{
 			remote: &gofastly.CreateHeaderInput{
-				Name:        "someheadder",
-				Action:      gofastly.HeaderActionDelete,
-				IgnoreIfSet: true,
-				Type:        gofastly.HeaderTypeCache,
-				Destination: "http.aws-id",
-				Priority:    gofastly.Uint(uint(100)),
+				Name:        gofastly.String("someheadder"),
+				Action:      gofastly.HeaderActionPtr(gofastly.HeaderActionDelete),
+				IgnoreIfSet: gofastly.CBool(true),
+				Type:        gofastly.HeaderTypePtr(gofastly.HeaderTypeCache),
+				Destination: gofastly.String("http.aws-id"),
+				Priority:    gofastly.Int(100),
 			},
 			local: map[string]any{
 				"name":               "someheadder",
@@ -85,13 +85,13 @@ func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 		},
 		{
 			remote: &gofastly.CreateHeaderInput{
-				Name:        "someheadder",
-				Action:      gofastly.HeaderActionSet,
-				IgnoreIfSet: false,
-				Type:        gofastly.HeaderTypeCache,
-				Destination: "http.aws-id",
-				Priority:    gofastly.Uint(uint(100)),
-				Source:      "http.server-name",
+				Name:        gofastly.String("someheadder"),
+				Action:      gofastly.HeaderActionPtr(gofastly.HeaderActionSet),
+				IgnoreIfSet: gofastly.CBool(false),
+				Type:        gofastly.HeaderTypePtr(gofastly.HeaderTypeCache),
+				Destination: gofastly.String("http.aws-id"),
+				Priority:    gofastly.Int(100),
+				Source:      gofastly.String("http.server-name"),
 			},
 			local: map[string]any{
 				"name":               "someheadder",
@@ -129,7 +129,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Destination:    "http.x-amz-request-id",
 		Type:           "cache",
 		Action:         "delete",
-		Priority:       uint(100),
+		Priority:       100,
 	}
 
 	log2 := gofastly.Header{
@@ -139,7 +139,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Type:           "cache",
 		Action:         "delete",
 		IgnoreIfSet:    true,
-		Priority:       uint(100),
+		Priority:       100,
 	}
 
 	log3 := gofastly.Header{
@@ -148,7 +148,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Destination:    "http.Server",
 		Type:           "cache",
 		Action:         "delete",
-		Priority:       uint(100),
+		Priority:       100,
 	}
 
 	log4 := gofastly.Header{
@@ -158,7 +158,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Type:              "request",
 		Action:            "set",
 		Source:            "server.identity",
-		Priority:          uint(100),
+		Priority:          100,
 		RequestCondition:  "test_req_condition",
 		CacheCondition:    "test_cache_condition",
 		ResponseCondition: "test_res_condition",

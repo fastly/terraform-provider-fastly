@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDefaultUintToZero(t *testing.T) {
-	assert.Equal(t, uint(0), uintOrDefault(nil))
+func TestDefaultIntToZero(t *testing.T) {
+	assert.Equal(t, int(0), intOrDefault(nil))
 }
 
-func TestDefaultUint(t *testing.T) {
-	v := uint(10)
-	assert.Equal(t, v, uintOrDefault(&v))
+func TestDefaultInt(t *testing.T) {
+	v := int(10)
+	assert.Equal(t, v, intOrDefault(&v))
 }

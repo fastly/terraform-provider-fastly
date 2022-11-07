@@ -54,16 +54,16 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 	cq1 := gofastly.CacheSetting{
 		Name:           "alt_backend",
 		Action:         "pass",
-		StaleTTL:       uint(3600),
+		StaleTTL:       3600,
 		CacheCondition: "serve_alt_backend",
 	}
 
 	cq2 := gofastly.CacheSetting{
 		Name:           "cache_backend",
 		Action:         "restart",
-		StaleTTL:       uint(1600),
+		StaleTTL:       1600,
 		CacheCondition: "cache_alt_backend",
-		TTL:            uint(300),
+		TTL:            300,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

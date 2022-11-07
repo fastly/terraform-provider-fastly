@@ -90,22 +90,22 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 	opts := gofastly.CreateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		Comment:        resource["comment"].(string),
-		Shield:         resource["shield"].(string),
-		Quorum:         gofastly.Uint(uint(resource["quorum"].(int))),
-		Retries:        gofastly.Uint(uint(resource["retries"].(int))),
+		Name:           gofastly.String(resource["name"].(string)),
+		Comment:        gofastly.String(resource["comment"].(string)),
+		Shield:         gofastly.String(resource["shield"].(string)),
+		Quorum:         gofastly.Int(resource["quorum"].(int)),
+		Retries:        gofastly.Int(resource["retries"].(int)),
 	}
 
 	switch resource["type"].(int) {
 	case 1:
-		opts.Type = gofastly.DirectorTypeRandom
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRandom)
 	case 2:
-		opts.Type = gofastly.DirectorTypeRoundRobin
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRoundRobin)
 	case 3:
-		opts.Type = gofastly.DirectorTypeHash
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeHash)
 	case 4:
-		opts.Type = gofastly.DirectorTypeClient
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeClient)
 	}
 
 	log.Printf("[DEBUG] Director Create opts: %#v", opts)
@@ -180,7 +180,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		opts.Shield = gofastly.String(v.(string))
 	}
 	if v, ok := modified["quorum"]; ok {
-		opts.Quorum = gofastly.Uint(uint(v.(int)))
+		opts.Quorum = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["type"]; ok {
 		switch v.(int) {
@@ -195,7 +195,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		}
 	}
 	if v, ok := modified["retries"]; ok {
-		opts.Retries = gofastly.Uint(uint(v.(int)))
+		opts.Retries = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update Director Opts: %#v", opts)

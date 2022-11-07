@@ -220,7 +220,7 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -244,7 +244,7 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 		opts.ParseLogKeyvals = gofastly.CBool(v.(bool))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["auth_method"]; ok {
 		opts.AuthMethod = gofastly.String(v.(string))
@@ -338,25 +338,25 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap any, serviceID strin
 	return &gofastly.CreateKafkaInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Brokers:           df["brokers"].(string),
-		Topic:             df["topic"].(string),
-		RequiredACKs:      df["required_acks"].(string),
-		UseTLS:            gofastly.Compatibool(df["use_tls"].(bool)),
-		CompressionCodec:  df["compression_codec"].(string),
-		TLSCACert:         df["tls_ca_cert"].(string),
-		TLSClientCert:     df["tls_client_cert"].(string),
-		TLSClientKey:      df["tls_client_key"].(string),
-		TLSHostname:       df["tls_hostname"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
-		ParseLogKeyvals:   gofastly.Compatibool(df["parse_log_keyvals"].(bool)),
-		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
-		AuthMethod:        df["auth_method"].(string),
-		User:              df["user"].(string),
-		Password:          df["password"].(string),
+		Name:              gofastly.String(df["name"].(string)),
+		Brokers:           gofastly.String(df["brokers"].(string)),
+		Topic:             gofastly.String(df["topic"].(string)),
+		RequiredACKs:      gofastly.String(df["required_acks"].(string)),
+		UseTLS:            gofastly.CBool(df["use_tls"].(bool)),
+		CompressionCodec:  gofastly.String(df["compression_codec"].(string)),
+		TLSCACert:         gofastly.String(df["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(df["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(df["tls_client_key"].(string)),
+		TLSHostname:       gofastly.String(df["tls_hostname"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		ParseLogKeyvals:   gofastly.CBool(df["parse_log_keyvals"].(bool)),
+		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
+		AuthMethod:        gofastly.String(df["auth_method"].(string)),
+		User:              gofastly.String(df["user"].(string)),
+		Password:          gofastly.String(df["password"].(string)),
 	}
 }
 

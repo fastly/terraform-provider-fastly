@@ -125,7 +125,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 		opts.Content = gofastly.String(v.(string))
 	}
 	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.SnippetTypeToString(v.(string))
+		opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(v.(string)))
 	}
 
 	log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
@@ -159,13 +159,13 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *sch
 func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, error) {
 	df := dynamicSnippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Name:     df["name"].(string),
+		Name:     gofastly.String(df["name"].(string)),
 		Priority: gofastly.Int(df["priority"].(int)),
-		Dynamic:  1,
+		Dynamic:  gofastly.Int(1),
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))
-	opts.Type = gofastly.SnippetType(snippetType)
+	opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
 
 	return &opts, nil
 }

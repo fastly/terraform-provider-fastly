@@ -99,14 +99,14 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 	opts := gofastly.CreateLogentriesInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		Port:              uint(resource["port"].(int)),
-		UseTLS:            gofastly.Compatibool(resource["use_tls"].(bool)),
-		Token:             resource["token"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		Name:              gofastly.String(resource["name"].(string)),
+		Port:              gofastly.Int(resource["port"].(int)),
+		UseTLS:            gofastly.CBool(resource["use_tls"].(bool)),
+		Token:             gofastly.String(resource["token"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 
 	log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
@@ -159,7 +159,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	// this and so we've updated the below code to convert the type asserted
 	// int into a uint before passing the value to gofastly.Uint().
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["use_tls"]; ok {
 		opts.UseTLS = gofastly.CBool(v.(bool))
@@ -171,7 +171,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))

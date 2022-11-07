@@ -127,10 +127,10 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.Action = gofastly.CacheSettingAction(v.(string))
 	}
 	if v, ok := modified["ttl"]; ok {
-		opts.TTL = gofastly.Uint(uint(v.(int)))
+		opts.TTL = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["stale_ttl"]; ok {
-		opts.StaleTTL = gofastly.Uint(uint(v.(int)))
+		opts.StaleTTL = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["cache_condition"]; ok {
 		opts.CacheCondition = gofastly.String(v.(string))
@@ -167,23 +167,23 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) {
 	df := cacheMap.(map[string]any)
 	opts := gofastly.CreateCacheSettingInput{
-		Name:           df["name"].(string),
-		StaleTTL:       uint(df["stale_ttl"].(int)),
-		CacheCondition: df["cache_condition"].(string),
+		Name:           gofastly.String(df["name"].(string)),
+		StaleTTL:       gofastly.Int(df["stale_ttl"].(int)),
+		CacheCondition: gofastly.String(df["cache_condition"].(string)),
 	}
 
 	if v, ok := df["ttl"]; ok {
-		opts.TTL = uint(v.(int))
+		opts.TTL = gofastly.Int(v.(int))
 	}
 
 	act := strings.ToLower(df["action"].(string))
 	switch act {
 	case "cache":
-		opts.Action = gofastly.CacheSettingActionCache
+		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionCache)
 	case "pass":
-		opts.Action = gofastly.CacheSettingActionPass
+		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionPass)
 	case "restart":
-		opts.Action = gofastly.CacheSettingActionRestart
+		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionRestart)
 	}
 
 	return &opts, nil

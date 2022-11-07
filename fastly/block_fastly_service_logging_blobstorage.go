@@ -145,22 +145,22 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 	opts := gofastly.CreateBlobStorageInput{
 		ServiceID:         d.Id(),
 		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		Path:              resource["path"].(string),
-		AccountName:       resource["account_name"].(string),
-		Container:         resource["container"].(string),
-		SASToken:          resource["sas_token"].(string),
-		Period:            uint(resource["period"].(int)),
-		TimestampFormat:   resource["timestamp_format"].(string),
-		GzipLevel:         uint8(resource["gzip_level"].(int)),
-		PublicKey:         resource["public_key"].(string),
-		MessageType:       resource["message_type"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
-		FileMaxBytes:      uint(resource["file_max_bytes"].(int)),
-		CompressionCodec:  resource["compression_codec"].(string),
+		Name:              gofastly.String(resource["name"].(string)),
+		Path:              gofastly.String(resource["path"].(string)),
+		AccountName:       gofastly.String(resource["account_name"].(string)),
+		Container:         gofastly.String(resource["container"].(string)),
+		SASToken:          gofastly.String(resource["sas_token"].(string)),
+		Period:            gofastly.Int(resource["period"].(int)),
+		TimestampFormat:   gofastly.String(resource["timestamp_format"].(string)),
+		GzipLevel:         gofastly.Int(resource["gzip_level"].(int)),
+		PublicKey:         gofastly.String(resource["public_key"].(string)),
+		MessageType:       gofastly.String(resource["message_type"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
+		FileMaxBytes:      gofastly.Int(resource["file_max_bytes"].(int)),
+		CompressionCodec:  gofastly.String(resource["compression_codec"].(string)),
 	}
 
 	log.Printf("[DEBUG] Blob Storage logging create opts: %#v", opts)
@@ -225,7 +225,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 		opts.SASToken = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["timestamp_format"]; ok {
 		opts.TimestampFormat = gofastly.String(v.(string))
@@ -234,7 +234,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.String(v.(string))
@@ -243,7 +243,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["message_type"]; ok {
 		opts.MessageType = gofastly.String(v.(string))
@@ -255,7 +255,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 		opts.ResponseCondition = gofastly.String(v.(string))
 	}
 	if v, ok := modified["file_max_bytes"]; ok {
-		opts.FileMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.FileMaxBytes = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update Blob Storage Opts: %#v", opts)

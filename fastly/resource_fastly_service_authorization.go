@@ -89,8 +89,8 @@ func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceD
 
 	if d.HasChanges("permission") {
 		_, err := conn.UpdateServiceAuthorization(&gofastly.UpdateServiceAuthorizationInput{
-			ID:          d.Id(),
-			Permissions: d.Get("permission").(string),
+			ID:         d.Id(),
+			Permission: d.Get("permission").(string),
 		})
 		if err != nil {
 			return diag.FromErr(err)

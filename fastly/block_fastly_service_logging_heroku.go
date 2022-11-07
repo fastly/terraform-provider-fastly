@@ -142,7 +142,7 @@ func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["url"]; ok {
 		opts.URL = gofastly.String(v.(string))
@@ -230,13 +230,13 @@ func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap any, serviceID str
 	return &gofastly.CreateHerokuInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Token:             df["token"].(string),
-		URL:               df["url"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		Name:              gofastly.String(df["name"].(string)),
+		Token:             gofastly.String(df["token"].(string)),
+		URL:               gofastly.String(df["url"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 }
 

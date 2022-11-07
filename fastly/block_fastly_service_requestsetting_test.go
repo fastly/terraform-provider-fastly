@@ -63,14 +63,14 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		RequestCondition: "serve_alt_backend",
 		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
 		XForwardedFor:    "append",
-		MaxStaleAge:      uint(90),
+		MaxStaleAge:      90,
 	}
 	rq2 := gofastly.RequestSetting{
 		Name:             "alt_backend",
 		RequestCondition: "serve_alt_backend",
 		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
 		XForwardedFor:    "append",
-		MaxStaleAge:      uint(900),
+		MaxStaleAge:      900,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -143,7 +143,7 @@ func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -226,13 +226,13 @@ func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap any, serviceID
 	return &gofastly.CreateNewRelicInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Token:             df["token"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		Region:            df["region"].(string),
-		ResponseCondition: vla.responseCondition,
+		Name:              gofastly.String(df["name"].(string)),
+		Token:             gofastly.String(df["token"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
+		Placement:         gofastly.String(vla.placement),
+		Region:            gofastly.String(df["region"].(string)),
+		ResponseCondition: gofastly.String(vla.responseCondition),
 	}
 }
 

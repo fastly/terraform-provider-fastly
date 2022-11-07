@@ -59,7 +59,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	log1 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesname",
-		Port:              uint(20000),
+		Port:              20000,
 		UseTLS:            true,
 		Token:             "token",
 		Format:            `%h %l %u %t "%r" %>s %b`,
@@ -70,7 +70,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	log2 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesanothername",
-		Port:              uint(10000),
+		Port:              10000,
 		UseTLS:            false,
 		Token:             "newtoken",
 		Format:            "%h %u %t %r %>s",
@@ -119,7 +119,7 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 	log1 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesname",
-		Port:              uint(20000),
+		Port:              20000,
 		UseTLS:            true,
 		Token:             "token",
 		Format:            `%h %l %u %t "%r" %>s %b`,
@@ -210,7 +210,7 @@ func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 	log1 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesname",
-		Port:              uint(20000),
+		Port:              20000,
 		UseTLS:            true,
 		Token:             "token",
 		Format:            `%h %l %u %t "%r" %>s %b`,

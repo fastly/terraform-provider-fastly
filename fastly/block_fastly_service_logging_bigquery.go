@@ -198,11 +198,8 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.String(v.(string))
 	}
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.Int(v.(int))
 	}

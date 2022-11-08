@@ -197,14 +197,8 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
-	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
-	}
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}

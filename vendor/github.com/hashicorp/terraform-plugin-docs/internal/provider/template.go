@@ -7,7 +7,11 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/hashicorp/terraform-plugin-docs/internal/mdplain"
 	"github.com/hashicorp/terraform-plugin-docs/internal/tmplfuncs"
 	"github.com/hashicorp/terraform-plugin-docs/schemamd"
@@ -30,17 +34,19 @@ type (
 
 func newTemplate(name, text string) (*template.Template, error) {
 	tmpl := template.New(name)
+	titleCaser := cases.Title(language.Und)
 
-	tmpl.Funcs(template.FuncMap(map[string]interface{}{
+	tmpl.Funcs(map[string]interface{}{
 		"codefile":      tmplfuncs.CodeFile,
+		"lower":         strings.ToLower,
 		"plainmarkdown": mdplain.PlainMarkdown,
 		"prefixlines":   tmplfuncs.PrefixLines,
-		"tffile": func(file string) (string, error) {
-			// TODO: omit comment handling
-			return tmplfuncs.CodeFile("terraform", file)
-		},
-		"trimspace": strings.TrimSpace,
-	}))
+		"split":         strings.Split,
+		"tffile":        terraformCodeFile,
+		"title":         titleCaser.String,
+		"trimspace":     strings.TrimSpace,
+		"upper":         strings.ToUpper,
+	})
 
 	var err error
 	tmpl, err = tmpl.Parse(text)
@@ -49,6 +55,11 @@ func newTemplate(name, text string) (*template.Template, error) {
 	}
 
 	return tmpl, nil
+}
+
+func terraformCodeFile(file string) (string, error) {
+	// TODO: omit comment handling
+	return tmplfuncs.CodeFile("terraform", file)
 }
 
 func renderTemplate(name string, text string, out io.Writer, data interface{}) error {
@@ -116,7 +127,7 @@ func (t providerFileTemplate) Render(name string) (string, error) {
 	}{name, providerShortName(name)})
 }
 
-func (t providerTemplate) Render(providerName, exampleFile string, schema *tfjson.Schema) (string, error) {
+func (t providerTemplate) Render(providerName, renderedProviderName, exampleFile string, schema *tfjson.Schema) (string, error) {
 	schemaBuffer := bytes.NewBuffer(nil)
 	err := schemamd.Render(schema, schemaBuffer)
 	if err != nil {
@@ -128,34 +139,33 @@ func (t providerTemplate) Render(providerName, exampleFile string, schema *tfjso
 		return "", nil
 	}
 	return renderStringTemplate("providerTemplate", s, struct {
-		Type        string
-		Name        string
 		Description string
 
 		HasExample  bool
 		ExampleFile string
 
-		HasImport  bool
-		ImportFile string
-
 		ProviderName      string
 		ProviderShortName string
 
 		SchemaMarkdown string
+
+		RenderedProviderName string
 	}{
 		Description: schema.Block.Description,
 
-		HasExample:  exampleFile != "",
+		HasExample:  exampleFile != "" && fileExists(exampleFile),
 		ExampleFile: exampleFile,
 
 		ProviderName:      providerName,
 		ProviderShortName: providerShortName(providerName),
 
 		SchemaMarkdown: schemaComment + "\n" + schemaBuffer.String(),
+
+		RenderedProviderName: renderedProviderName,
 	})
 }
 
-func (t resourceTemplate) Render(name, providerName, typeName, exampleFile, importFile string, schema *tfjson.Schema) (string, error) {
+func (t resourceTemplate) Render(name, providerName, renderedProviderName, typeName, exampleFile, importFile string, schema *tfjson.Schema) (string, error) {
 	schemaBuffer := bytes.NewBuffer(nil)
 	err := schemamd.Render(schema, schemaBuffer)
 	if err != nil {
@@ -182,21 +192,25 @@ func (t resourceTemplate) Render(name, providerName, typeName, exampleFile, impo
 		ProviderShortName string
 
 		SchemaMarkdown string
+
+		RenderedProviderName string
 	}{
 		Type:        typeName,
 		Name:        name,
 		Description: schema.Block.Description,
 
-		HasExample:  exampleFile != "",
+		HasExample:  exampleFile != "" && fileExists(exampleFile),
 		ExampleFile: exampleFile,
 
-		HasImport:  importFile != "",
+		HasImport:  importFile != "" && fileExists(importFile),
 		ImportFile: importFile,
 
 		ProviderName:      providerName,
 		ProviderShortName: providerShortName(providerName),
 
 		SchemaMarkdown: schemaComment + "\n" + schemaBuffer.String(),
+
+		RenderedProviderName: renderedProviderName,
 	})
 }
 

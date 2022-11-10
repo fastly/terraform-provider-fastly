@@ -65,13 +65,9 @@ type nestedType struct {
 func writeAttribute(w io.Writer, path []string, att *tfjson.SchemaAttribute, group groupFilter) ([]nestedType, error) {
 	name := path[len(path)-1]
 
-	_, err := io.WriteString(w, "- **"+name+"** ")
+	_, err := io.WriteString(w, "- `"+name+"` ")
 	if err != nil {
 		return nil, err
-	}
-
-	if name == "id" && att.Description == "" {
-		att.Description = "The ID of this resource."
 	}
 
 	if att.AttributeNestedType == nil {
@@ -142,7 +138,7 @@ func writeAttribute(w io.Writer, path []string, att *tfjson.SchemaAttribute, gro
 func writeBlockType(w io.Writer, path []string, block *tfjson.SchemaBlockType) ([]nestedType, error) {
 	name := path[len(path)-1]
 
-	_, err := io.WriteString(w, "- **"+name+"** ")
+	_, err := io.WriteString(w, "- `"+name+"` ")
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +221,18 @@ nameLoop:
 			}
 		} else if childAtt, ok := block.Attributes[n]; ok {
 			for i, gf := range groupFilters {
-				if gf.filterAttribute(childAtt) {
+				// By default, the attribute `id` is place in the "Read-Only" group
+				// if the provider schema contained no `.Description` for it.
+				//
+				// If a `.Description` is provided instead, the behaviour will be the
+				// same as for every other attribute.
+				if strings.ToLower(n) == "id" && childAtt.Description == "" {
+					if strings.Contains(gf.topLevelTitle, "Read-Only") {
+						childAtt.Description = "The ID of this resource."
+						groups[i] = append(groups[i], n)
+						continue nameLoop
+					}
+				} else if gf.filterAttribute(childAtt) {
 					groups[i] = append(groups[i], n)
 					continue nameLoop
 				}
@@ -286,7 +293,9 @@ nameLoop:
 		}
 
 		for _, name := range sortedNames {
-			path := append(parents, name)
+			path := make([]string, len(parents), len(parents)+1)
+			copy(path, parents)
+			path = append(path, name)
 
 			if childBlock, ok := block.NestedBlocks[name]; ok {
 				nt, err := writeBlockType(w, path, childBlock)
@@ -367,7 +376,7 @@ func writeNestedTypes(w io.Writer, nestedTypes []nestedType) error {
 func writeObjectAttribute(w io.Writer, path []string, att cty.Type, group groupFilter) ([]nestedType, error) {
 	name := path[len(path)-1]
 
-	_, err := io.WriteString(w, "- **"+name+"** (")
+	_, err := io.WriteString(w, "- `"+name+"` (")
 	if err != nil {
 		return nil, err
 	}
@@ -466,36 +475,55 @@ func writeObjectChildren(w io.Writer, parents []string, ty cty.Type, group group
 }
 
 func writeNestedAttributeChildren(w io.Writer, parents []string, nestedAttributes *tfjson.SchemaNestedAttributeType, group groupFilter) error {
-	_, err := io.WriteString(w, group.nestedTitle+"\n\n")
-	if err != nil {
-		return err
-	}
-
 	sortedNames := []string{}
 	for n := range nestedAttributes.Attributes {
 		sortedNames = append(sortedNames, n)
 	}
 	sort.Strings(sortedNames)
-	nestedTypes := []nestedType{}
 
+	groups := map[int][]string{}
 	for _, name := range sortedNames {
 		att := nestedAttributes.Attributes[name]
-		path := append(parents, name)
 
-		nt, err := writeAttribute(w, path, att, group)
-		if err != nil {
-			return fmt.Errorf("unable to render attribute %q: %w", name, err)
+		for i, gf := range groupFilters {
+			if gf.filterAttribute(att) {
+				groups[i] = append(groups[i], name)
+			}
+		}
+	}
+
+	nestedTypes := []nestedType{}
+
+	for i, gf := range groupFilters {
+		names, ok := groups[i]
+		if !ok || len(names) == 0 {
+			continue
 		}
 
-		nestedTypes = append(nestedTypes, nt...)
+		_, err := io.WriteString(w, gf.nestedTitle+"\n\n")
+		if err != nil {
+			return err
+		}
+
+		for _, name := range names {
+			att := nestedAttributes.Attributes[name]
+			path := append(parents, name)
+
+			nt, err := writeAttribute(w, path, att, group)
+			if err != nil {
+				return fmt.Errorf("unable to render attribute %q: %w", name, err)
+			}
+
+			nestedTypes = append(nestedTypes, nt...)
+		}
+
+		_, err = io.WriteString(w, "\n")
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = io.WriteString(w, "\n")
-	if err != nil {
-		return err
-	}
-
-	err = writeNestedTypes(w, nestedTypes)
+	err := writeNestedTypes(w, nestedTypes)
 	if err != nil {
 		return err
 	}

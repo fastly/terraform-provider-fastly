@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/bflad/tfproviderlint v0.28.1
 	github.com/fastly/go-fastly/v6 v6.8.0
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/terraform-plugin-docs v0.5.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1

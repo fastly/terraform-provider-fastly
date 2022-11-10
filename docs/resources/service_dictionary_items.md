@@ -249,11 +249,14 @@ $ terraform state rm fastly_service_dictionary_items.items
 
 ### Required
 
-- **dictionary_id** (String) The ID of the dictionary that the items belong to
-- **service_id** (String) The ID of the service that the dictionary belongs to
+- `dictionary_id` (String) The ID of the dictionary that the items belong to
+- `service_id` (String) The ID of the service that the dictionary belongs to
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **items** (Map of String) A map representing an entry in the dictionary, (key/value)
-- **manage_items** (Boolean) Whether to reapply changes if the state of the items drifts, i.e. if items are managed externally
+- `items` (Map of String) A map representing an entry in the dictionary, (key/value)
+- `manage_items` (Boolean) Whether to reapply changes if the state of the items drifts, i.e. if items are managed externally
+
+### Read-Only
+
+- `id` (String) The ID of this resource.

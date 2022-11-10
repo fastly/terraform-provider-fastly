@@ -40,17 +40,14 @@ $ terraform import fastly_tls_private_key.demo xxxxxxxxxxx
 
 ### Required
 
-- **key_pem** (String, Sensitive) Private key in PEM format.
-- **name** (String) Customisable name of the private key.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `key_pem` (String, Sensitive) Private key in PEM format.
+- `name` (String) Customisable name of the private key.
 
 ### Read-Only
 
-- **created_at** (String) Time-stamp (GMT) when the private key was created.
-- **key_length** (Number) The key length used to generate the private key.
-- **key_type** (String) The algorithm used to generate the private key. Must be RSA.
-- **public_key_sha1** (String) Useful for safely identifying the key.
-- **replace** (Boolean) Whether Fastly recommends replacing this private key.
+- `created_at` (String) Time-stamp (GMT) when the private key was created.
+- `id` (String) The ID of this resource.
+- `key_length` (Number) The key length used to generate the private key.
+- `key_type` (String) The algorithm used to generate the private key. Must be RSA.
+- `public_key_sha1` (String) Useful for safely identifying the key.
+- `replace` (Boolean) Whether Fastly recommends replacing this private key.

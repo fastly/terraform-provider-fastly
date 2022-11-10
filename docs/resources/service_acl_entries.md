@@ -224,28 +224,31 @@ $ terraform state rm fastly_service_acl_entries.entries
 
 ### Required
 
-- **acl_id** (String) The ID of the ACL that the items belong to
-- **service_id** (String) The ID of the Service that the ACL belongs to
+- `acl_id` (String) The ID of the ACL that the items belong to
+- `service_id` (String) The ID of the Service that the ACL belongs to
 
 ### Optional
 
-- **entry** (Block Set, Max: 10000) ACL Entries (see [below for nested schema](#nestedblock--entry))
-- **id** (String) The ID of this resource.
-- **manage_entries** (Boolean) Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally
+- `entry` (Block Set, Max: 10000) ACL Entries (see [below for nested schema](#nestedblock--entry))
+- `manage_entries` (Boolean) Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--entry"></a>
 ### Nested Schema for `entry`
 
 Required:
 
-- **ip** (String) An IP address that is the focus for the ACL
+- `ip` (String) An IP address that is the focus for the ACL
 
 Optional:
 
-- **comment** (String) A personal freeform descriptive note
-- **negated** (Boolean) A boolean that will negate the match if true
-- **subnet** (String) An optional subnet mask applied to the IP address
+- `comment` (String) A personal freeform descriptive note
+- `negated` (Boolean) A boolean that will negate the match if true
+- `subnet` (String) An optional subnet mask applied to the IP address
 
 Read-Only:
 
-- **id** (String) The unique ID of the entry
+- `id` (String) The unique ID of the entry

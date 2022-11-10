@@ -36,10 +36,13 @@ $ terraform import fastly_user.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
-- **login** (String) The email address, which is the login name, of the User
-- **name** (String) The real life name of the user
+- `login` (String) The email address, which is the login name, of the User
+- `name` (String) The real life name of the user
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **role** (String) The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do)
+- `role` (String) The role of this user. Can be `user` (the default), `billing`, `engineer`, or `superuser`. For detailed information on the abilities granted to each role, see [Fastly's Documentation on User roles](https://docs.fastly.com/en/guides/configuring-user-roles-and-permissions#user-roles-and-what-they-can-do)
+
+### Read-Only
+
+- `id` (String) The ID of this resource.

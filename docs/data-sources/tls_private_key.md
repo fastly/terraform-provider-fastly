@@ -35,13 +35,13 @@ output "private_key_needs_replacing" {
 
 ### Optional
 
-- **created_at** (String) Timestamp (GMT) when the private key was created.
-- **id** (String) Fastly private key ID. Conflicts with all the other filters
-- **key_length** (Number) The key length used to generate the private key.
-- **key_type** (String) The algorithm used to generate the private key. Must be RSA.
-- **name** (String) The human-readable name assigned to the private key when uploaded.
-- **public_key_sha1** (String) A hash of the associated public key, useful for safely identifying it.
+- `created_at` (String) Timestamp (GMT) when the private key was created.
+- `id` (String) Fastly private key ID. Conflicts with all the other filters
+- `key_length` (Number) The key length used to generate the private key.
+- `key_type` (String) The algorithm used to generate the private key. Must be RSA.
+- `name` (String) The human-readable name assigned to the private key when uploaded.
+- `public_key_sha1` (String) A hash of the associated public key, useful for safely identifying it.
 
 ### Read-Only
 
-- **replace** (Boolean) Whether Fastly recommends replacing this private key.
+- `replace` (Boolean) Whether Fastly recommends replacing this private key.

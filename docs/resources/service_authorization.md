@@ -46,10 +46,10 @@ $ terraform import fastly_service_authorization.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
-- **permission** (String) The permissions to grant the user. Can be `full`, `read_only`, `purge_select` or `purge_all`.
-- **service_id** (String) The ID of the service to grant permissions for.
-- **user_id** (String) The ID of the user which will receive the granted permissions.
+- `permission` (String) The permissions to grant the user. Can be `full`, `read_only`, `purge_select` or `purge_all`.
+- `service_id` (String) The ID of the service to grant permissions for.
+- `user_id` (String) The ID of the user which will receive the granted permissions.
 
 ### Read-Only
 
-- **id** (String) The ID of this service authorization.
+- `id` (String) The ID of this service authorization.

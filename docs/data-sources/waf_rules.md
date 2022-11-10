@@ -154,21 +154,21 @@ The `rules` block supports:
 
 ### Optional
 
-- **exclude_modsec_rule_ids** (List of Number) A list of modsecurity rules IDs to be excluded from the data set.
-- **id** (String) The ID of this resource.
-- **modsec_rule_ids** (List of Number) A list of modsecurity rules IDs to be used as filters for the data set.
-- **publishers** (List of String) A list of publishers to be used as filters for the data set.
-- **tags** (List of String) A list of tags to be used as filters for the data set.
+- `exclude_modsec_rule_ids` (List of Number) A list of modsecurity rules IDs to be excluded from the data set.
+- `modsec_rule_ids` (List of Number) A list of modsecurity rules IDs to be used as filters for the data set.
+- `publishers` (List of String) A list of publishers to be used as filters for the data set.
+- `tags` (List of String) A list of tags to be used as filters for the data set.
 
 ### Read-Only
 
-- **rules** (List of Object) The list of rules that results from any given combination of filters. (see [below for nested schema](#nestedatt--rules))
+- `id` (String) The ID of this resource.
+- `rules` (List of Object) The list of rules that results from any given combination of filters. (see [below for nested schema](#nestedatt--rules))
 
 <a id="nestedatt--rules"></a>
 ### Nested Schema for `rules`
 
 Read-Only:
 
-- **latest_revision_number** (Number)
-- **modsec_rule_id** (Number)
-- **type** (String)
+- `latest_revision_number` (Number)
+- `modsec_rule_id` (Number)
+- `type` (String)

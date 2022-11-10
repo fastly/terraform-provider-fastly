@@ -67,63 +67,63 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Required
 
-- **domain** (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
-- **name** (String) The unique name for the Service to create
-- **package** (Block List, Min: 1, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
+- `domain` (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
+- `name` (String) The unique name for the Service to create
+- `package` (Block List, Min: 1, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
 
 ### Optional
 
-- **activate** (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
-- **backend** (Block Set) (see [below for nested schema](#nestedblock--backend))
-- **comment** (String) Description field for the service. Default `Managed by Terraform`
-- **dictionary** (Block Set) (see [below for nested schema](#nestedblock--dictionary))
-- **force_destroy** (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
-- **id** (String) The ID of this resource.
-- **logging_bigquery** (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
-- **logging_blobstorage** (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
-- **logging_cloudfiles** (Block Set) (see [below for nested schema](#nestedblock--logging_cloudfiles))
-- **logging_datadog** (Block Set) (see [below for nested schema](#nestedblock--logging_datadog))
-- **logging_digitalocean** (Block Set) (see [below for nested schema](#nestedblock--logging_digitalocean))
-- **logging_elasticsearch** (Block Set) (see [below for nested schema](#nestedblock--logging_elasticsearch))
-- **logging_ftp** (Block Set) (see [below for nested schema](#nestedblock--logging_ftp))
-- **logging_gcs** (Block Set) (see [below for nested schema](#nestedblock--logging_gcs))
-- **logging_googlepubsub** (Block Set) (see [below for nested schema](#nestedblock--logging_googlepubsub))
-- **logging_heroku** (Block Set) (see [below for nested schema](#nestedblock--logging_heroku))
-- **logging_honeycomb** (Block Set) (see [below for nested schema](#nestedblock--logging_honeycomb))
-- **logging_https** (Block Set) (see [below for nested schema](#nestedblock--logging_https))
-- **logging_kafka** (Block Set) (see [below for nested schema](#nestedblock--logging_kafka))
-- **logging_kinesis** (Block Set) (see [below for nested schema](#nestedblock--logging_kinesis))
-- **logging_logentries** (Block Set) (see [below for nested schema](#nestedblock--logging_logentries))
-- **logging_loggly** (Block Set) (see [below for nested schema](#nestedblock--logging_loggly))
-- **logging_logshuttle** (Block Set) (see [below for nested schema](#nestedblock--logging_logshuttle))
-- **logging_newrelic** (Block Set) (see [below for nested schema](#nestedblock--logging_newrelic))
-- **logging_openstack** (Block Set) (see [below for nested schema](#nestedblock--logging_openstack))
-- **logging_papertrail** (Block Set) (see [below for nested schema](#nestedblock--logging_papertrail))
-- **logging_s3** (Block Set) (see [below for nested schema](#nestedblock--logging_s3))
-- **logging_scalyr** (Block Set) (see [below for nested schema](#nestedblock--logging_scalyr))
-- **logging_sftp** (Block Set) (see [below for nested schema](#nestedblock--logging_sftp))
-- **logging_splunk** (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
-- **logging_sumologic** (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
-- **logging_syslog** (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
-- **reuse** (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
-- **version_comment** (String) Description field for the version
+- `activate` (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
+- `comment` (String) Description field for the service. Default `Managed by Terraform`
+- `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
+- `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
+- `logging_bigquery` (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
+- `logging_blobstorage` (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
+- `logging_cloudfiles` (Block Set) (see [below for nested schema](#nestedblock--logging_cloudfiles))
+- `logging_datadog` (Block Set) (see [below for nested schema](#nestedblock--logging_datadog))
+- `logging_digitalocean` (Block Set) (see [below for nested schema](#nestedblock--logging_digitalocean))
+- `logging_elasticsearch` (Block Set) (see [below for nested schema](#nestedblock--logging_elasticsearch))
+- `logging_ftp` (Block Set) (see [below for nested schema](#nestedblock--logging_ftp))
+- `logging_gcs` (Block Set) (see [below for nested schema](#nestedblock--logging_gcs))
+- `logging_googlepubsub` (Block Set) (see [below for nested schema](#nestedblock--logging_googlepubsub))
+- `logging_heroku` (Block Set) (see [below for nested schema](#nestedblock--logging_heroku))
+- `logging_honeycomb` (Block Set) (see [below for nested schema](#nestedblock--logging_honeycomb))
+- `logging_https` (Block Set) (see [below for nested schema](#nestedblock--logging_https))
+- `logging_kafka` (Block Set) (see [below for nested schema](#nestedblock--logging_kafka))
+- `logging_kinesis` (Block Set) (see [below for nested schema](#nestedblock--logging_kinesis))
+- `logging_logentries` (Block Set) (see [below for nested schema](#nestedblock--logging_logentries))
+- `logging_loggly` (Block Set) (see [below for nested schema](#nestedblock--logging_loggly))
+- `logging_logshuttle` (Block Set) (see [below for nested schema](#nestedblock--logging_logshuttle))
+- `logging_newrelic` (Block Set) (see [below for nested schema](#nestedblock--logging_newrelic))
+- `logging_openstack` (Block Set) (see [below for nested schema](#nestedblock--logging_openstack))
+- `logging_papertrail` (Block Set) (see [below for nested schema](#nestedblock--logging_papertrail))
+- `logging_s3` (Block Set) (see [below for nested schema](#nestedblock--logging_s3))
+- `logging_scalyr` (Block Set) (see [below for nested schema](#nestedblock--logging_scalyr))
+- `logging_sftp` (Block Set) (see [below for nested schema](#nestedblock--logging_sftp))
+- `logging_splunk` (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
+- `logging_sumologic` (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
+- `logging_syslog` (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
+- `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
+- `version_comment` (String) Description field for the version
 
 ### Read-Only
 
-- **active_version** (Number) The currently active version of your Fastly Service
-- **cloned_version** (Number) The latest cloned version by the provider
-- **imported** (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
+- `active_version` (Number) The currently active version of your Fastly Service
+- `cloned_version` (Number) The latest cloned version by the provider
+- `id` (String) The ID of this resource.
+- `imported` (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
 
 <a id="nestedblock--domain"></a>
 ### Nested Schema for `domain`
 
 Required:
 
-- **name** (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
+- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
 
 Optional:
 
-- **comment** (String) An optional comment about the Domain.
+- `comment` (String) An optional comment about the Domain.
 
 
 <a id="nestedblock--package"></a>
@@ -131,11 +131,11 @@ Optional:
 
 Required:
 
-- **filename** (String) The path to the Wasm deployment package within your local filesystem
+- `filename` (String) The path to the Wasm deployment package within your local filesystem
 
 Optional:
 
-- **source_code_hash** (String) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package
+- `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package
 
 
 <a id="nestedblock--backend"></a>
@@ -143,33 +143,33 @@ Optional:
 
 Required:
 
-- **address** (String) An IPv4, hostname, or IPv6 address for the Backend
-- **name** (String) Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource
+- `address` (String) An IPv4, hostname, or IPv6 address for the Backend
+- `name` (String) Name for this Backend. Must be unique to this Service. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
-- **auto_loadbalance** (Boolean) Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `false`
-- **between_bytes_timeout** (Number) How long to wait between bytes in milliseconds. Default `10000`
-- **connect_timeout** (Number) How long to wait for a timeout in milliseconds. Default `1000`
-- **error_threshold** (Number) Number of errors to allow before the Backend is marked as down. Default `0`
-- **first_byte_timeout** (Number) How long to wait for the first bytes in milliseconds. Default `15000`
-- **healthcheck** (String) Name of a defined `healthcheck` to assign to this backend
-- **max_conn** (Number) Maximum number of connections for this Backend. Default `200`
-- **max_tls_version** (String) Maximum allowed TLS version on SSL connections to this backend.
-- **min_tls_version** (String) Minimum allowed TLS version on SSL connections to this backend.
-- **override_host** (String) The hostname to override the Host header
-- **port** (Number) The port number on which the Backend responds. Default `80`
-- **shield** (String) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response
-- **ssl_ca_cert** (String) CA certificate attached to origin.
-- **ssl_cert_hostname** (String) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all
-- **ssl_check_cert** (Boolean) Be strict about checking SSL certs. Default `true`
-- **ssl_ciphers** (String) Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.
-- **ssl_client_cert** (String, Sensitive) Client certificate attached to origin. Used when connecting to the backend
-- **ssl_client_key** (String, Sensitive) Client key attached to origin. Used when connecting to the backend
-- **ssl_hostname** (String, Deprecated) Used for both SNI during the TLS handshake and to validate the cert
-- **ssl_sni_hostname** (String) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all
-- **use_ssl** (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
-- **weight** (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`
+- `auto_loadbalance` (Boolean) Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `false`
+- `between_bytes_timeout` (Number) How long to wait between bytes in milliseconds. Default `10000`
+- `connect_timeout` (Number) How long to wait for a timeout in milliseconds. Default `1000`
+- `error_threshold` (Number) Number of errors to allow before the Backend is marked as down. Default `0`
+- `first_byte_timeout` (Number) How long to wait for the first bytes in milliseconds. Default `15000`
+- `healthcheck` (String) Name of a defined `healthcheck` to assign to this backend
+- `max_conn` (Number) Maximum number of connections for this Backend. Default `200`
+- `max_tls_version` (String) Maximum allowed TLS version on SSL connections to this backend.
+- `min_tls_version` (String) Minimum allowed TLS version on SSL connections to this backend.
+- `override_host` (String) The hostname to override the Host header
+- `port` (Number) The port number on which the Backend responds. Default `80`
+- `shield` (String) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response
+- `ssl_ca_cert` (String) CA certificate attached to origin.
+- `ssl_cert_hostname` (String) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all
+- `ssl_check_cert` (Boolean) Be strict about checking SSL certs. Default `true`
+- `ssl_ciphers` (String) Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.
+- `ssl_client_cert` (String, Sensitive) Client certificate attached to origin. Used when connecting to the backend
+- `ssl_client_key` (String, Sensitive) Client key attached to origin. Used when connecting to the backend
+- `ssl_hostname` (String, Deprecated) Used for both SNI during the TLS handshake and to validate the cert
+- `ssl_sni_hostname` (String) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all
+- `use_ssl` (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
+- `weight` (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`
 
 
 <a id="nestedblock--dictionary"></a>
@@ -177,16 +177,16 @@ Optional:
 
 Required:
 
-- **name** (String) A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary
+- `name` (String) A unique name to identify this dictionary. It is important to note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary
 
 Optional:
 
-- **force_destroy** (Boolean) Allow the dictionary to be deleted, even if it contains entries. Defaults to false.
-- **write_only** (Boolean) If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_vcl` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform
+- `force_destroy` (Boolean) Allow the dictionary to be deleted, even if it contains entries. Defaults to false.
+- `write_only` (Boolean) If `true`, the dictionary is a [private dictionary](https://docs.fastly.com/en/guides/private-dictionaries). Default is `false`. Please note that changing this attribute will delete and recreate the dictionary, and discard the current items in the dictionary. `fastly_service_vcl` resource will only manage the dictionary object itself, and items under private dictionaries can not be managed using [`fastly_service_dictionary_items`](https://registry.terraform.io/providers/fastly/fastly/latest/docs/resources/service_dictionary_items#limitations) resource. Therefore, using a write-only/private dictionary should only be done if the items are managed outside of Terraform
 
 Read-Only:
 
-- **dictionary_id** (String) The ID of the dictionary
+- `dictionary_id` (String) The ID of the dictionary
 
 
 <a id="nestedblock--logging_bigquery"></a>
@@ -194,16 +194,16 @@ Read-Only:
 
 Required:
 
-- **dataset** (String) The ID of your BigQuery dataset
-- **name** (String) A unique name to identify this BigQuery logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **project_id** (String) The ID of your GCP project
-- **table** (String) The ID of your BigQuery table
+- `dataset` (String) The ID of your BigQuery dataset
+- `name` (String) A unique name to identify this BigQuery logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `project_id` (String) The ID of your GCP project
+- `table` (String) The ID of your BigQuery table
 
 Optional:
 
-- **email** (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
-- **secret_key** (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
-- **template** (String) BigQuery table name suffix template
+- `email` (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
+- `secret_key` (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
+- `template` (String) BigQuery table name suffix template
 
 
 <a id="nestedblock--logging_blobstorage"></a>
@@ -211,21 +211,21 @@ Optional:
 
 Required:
 
-- **account_name** (String) The unique Azure Blob Storage namespace in which your data objects are stored
-- **container** (String) The name of the Azure Blob Storage container in which to store logs
-- **name** (String) A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `account_name` (String) The unique Azure Blob Storage namespace in which your data objects are stored
+- `container` (String) The name of the Azure Blob Storage container in which to store logs
+- `name` (String) A unique name to identify the Azure Blob Storage endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **file_max_bytes** (Number) Maximum size of an uploaded log file, if non-zero.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
-- **period** (Number) How frequently the logs should be transferred in seconds. Default `3600`
-- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **sas_token** (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `file_max_bytes` (Number) Maximum size of an uploaded log file, if non-zero.
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `path` (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
+- `period` (Number) How frequently the logs should be transferred in seconds. Default `3600`
+- `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `sas_token` (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_cloudfiles"></a>
@@ -233,21 +233,21 @@ Optional:
 
 Required:
 
-- **access_key** (String, Sensitive) Your Cloud File account access key
-- **bucket_name** (String) The name of your Cloud Files container
-- **name** (String) The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **user** (String) The username for your Cloud Files account
+- `access_key` (String, Sensitive) Your Cloud File account access key
+- `bucket_name` (String) The name of your Cloud Files container
+- `name` (String) The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `user` (String) The username for your Cloud Files account
 
 Optional:
 
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) The path to upload logs to
-- **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
-- **public_key** (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **region** (String) The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `path` (String) The path to upload logs to
+- `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
+- `public_key` (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `region` (String) The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_datadog"></a>
@@ -255,12 +255,12 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Datadog logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The API key from your Datadog account
+- `name` (String) The unique name of the Datadog logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The API key from your Datadog account
 
 Optional:
 
-- **region** (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
+- `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 
 
 <a id="nestedblock--logging_digitalocean"></a>
@@ -268,21 +268,21 @@ Optional:
 
 Required:
 
-- **access_key** (String, Sensitive) Your DigitalOcean Spaces account access key
-- **bucket_name** (String) The name of the DigitalOcean Space
-- **name** (String) The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **secret_key** (String, Sensitive) Your DigitalOcean Spaces account secret key
+- `access_key` (String, Sensitive) Your DigitalOcean Spaces account access key
+- `bucket_name` (String) The name of the DigitalOcean Space
+- `name` (String) The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `secret_key` (String, Sensitive) Your DigitalOcean Spaces account secret key
 
 Optional:
 
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **domain** (String) The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) The path to upload logs to
-- **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
-- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `domain` (String) The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `path` (String) The path to upload logs to
+- `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
+- `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_elasticsearch"></a>
@@ -290,21 +290,21 @@ Optional:
 
 Required:
 
-- **index** (String) The name of the Elasticsearch index to send documents (logs) to
-- **name** (String) The unique name of the Elasticsearch logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **url** (String) The Elasticsearch URL to stream logs to
+- `index` (String) The name of the Elasticsearch index to send documents (logs) to
+- `name` (String) The unique name of the Elasticsearch logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `url` (String) The Elasticsearch URL to stream logs to
 
 Optional:
 
-- **password** (String, Sensitive) BasicAuth password for Elasticsearch
-- **pipeline** (String) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing
-- **request_max_bytes** (Number) The maximum number of logs sent in one request. Defaults to `0` for unbounded
-- **request_max_entries** (Number) The maximum number of bytes sent in one request. Defaults to `0` for unbounded
-- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
-- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
-- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
-- **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN)
-- **user** (String) BasicAuth username for Elasticsearch
+- `password` (String, Sensitive) BasicAuth password for Elasticsearch
+- `pipeline` (String) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing
+- `request_max_bytes` (Number) The maximum number of logs sent in one request. Defaults to `0` for unbounded
+- `request_max_entries` (Number) The maximum number of bytes sent in one request. Defaults to `0` for unbounded
+- `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
+- `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
+- `tls_hostname` (String) The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN)
+- `user` (String) BasicAuth username for Elasticsearch
 
 
 <a id="nestedblock--logging_ftp"></a>
@@ -312,21 +312,21 @@ Optional:
 
 Required:
 
-- **address** (String) The FTP address to stream logs to
-- **name** (String) The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **password** (String, Sensitive) The password for the server (for anonymous use an email address)
-- **path** (String) The path to upload log files to. If the path ends in `/` then it is treated as a directory
-- **user** (String) The username for the server (can be `anonymous`)
+- `address` (String) The FTP address to stream logs to
+- `name` (String) The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `password` (String, Sensitive) The password for the server (for anonymous use an email address)
+- `path` (String) The path to upload log files to. If the path ends in `/` then it is treated as a directory
+- `user` (String) The username for the server (can be `anonymous`)
 
 Optional:
 
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **period** (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
-- **port** (Number) The port number. Default: `21`
-- **public_key** (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `period` (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
+- `port` (Number) The port number. Default: `21`
+- `public_key` (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_gcs"></a>
@@ -334,19 +334,19 @@ Optional:
 
 Required:
 
-- **bucket_name** (String) The name of the bucket in which to store the logs
-- **name** (String) A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `bucket_name` (String) The name of the bucket in which to store the logs
+- `name` (String) A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
-- **period** (Number) How frequently the logs should be transferred, in seconds (Default 3600)
-- **secret_key** (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
-- **user** (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
+- `period` (Number) How frequently the logs should be transferred, in seconds (Default 3600)
+- `secret_key` (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.
 
 
 <a id="nestedblock--logging_googlepubsub"></a>
@@ -354,14 +354,14 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Google Cloud Pub/Sub logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **project_id** (String) The ID of your Google Cloud Platform project
-- **topic** (String) The Google Cloud Pub/Sub topic to which logs will be published
+- `name` (String) The unique name of the Google Cloud Pub/Sub logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `project_id` (String) The ID of your Google Cloud Platform project
+- `topic` (String) The Google Cloud Pub/Sub topic to which logs will be published
 
 Optional:
 
-- **secret_key** (String, Sensitive) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
-- **user** (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.
+- `secret_key` (String, Sensitive) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
+- `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.
 
 
 <a id="nestedblock--logging_heroku"></a>
@@ -369,9 +369,9 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Heroku logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)
-- **url** (String) The URL to stream logs to
+- `name` (String) The unique name of the Heroku logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)
+- `url` (String) The URL to stream logs to
 
 
 <a id="nestedblock--logging_honeycomb"></a>
@@ -379,9 +379,9 @@ Required:
 
 Required:
 
-- **dataset** (String) The Honeycomb Dataset you want to log to
-- **name** (String) The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The Write Key from the Account page of your Honeycomb account
+- `dataset` (String) The Honeycomb Dataset you want to log to
+- `name` (String) The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The Write Key from the Account page of your Honeycomb account
 
 
 <a id="nestedblock--logging_https"></a>
@@ -389,23 +389,23 @@ Required:
 
 Required:
 
-- **name** (String) The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **url** (String) URL that log data will be sent to. Must use the https protocol
+- `name` (String) The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `url` (String) URL that log data will be sent to. Must use the https protocol
 
 Optional:
 
-- **content_type** (String) Value of the `Content-Type` header sent with the request
-- **header_name** (String) Custom header sent with the request
-- **header_value** (String) Value of the custom header sent with the request
-- **json_format** (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **method** (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
-- **request_max_bytes** (Number) The maximum number of bytes sent in one request
-- **request_max_entries** (Number) The maximum number of logs sent in one request
-- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
-- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
-- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
-- **tls_hostname** (String) Used during the TLS handshake to validate the certificate
+- `content_type` (String) Value of the `Content-Type` header sent with the request
+- `header_name` (String) Custom header sent with the request
+- `header_value` (String) Value of the custom header sent with the request
+- `json_format` (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `method` (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
+- `request_max_bytes` (Number) The maximum number of bytes sent in one request
+- `request_max_entries` (Number) The maximum number of logs sent in one request
+- `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
+- `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
+- `tls_hostname` (String) Used during the TLS handshake to validate the certificate
 
 
 <a id="nestedblock--logging_kafka"></a>
@@ -413,24 +413,24 @@ Optional:
 
 Required:
 
-- **brokers** (String) A comma-separated list of IP addresses or hostnames of Kafka brokers
-- **name** (String) The unique name of the Kafka logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **topic** (String) The Kafka topic to send logs to
+- `brokers` (String) A comma-separated list of IP addresses or hostnames of Kafka brokers
+- `name` (String) The unique name of the Kafka logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `topic` (String) The Kafka topic to send logs to
 
 Optional:
 
-- **auth_method** (String) SASL authentication method. One of: plain, scram-sha-256, scram-sha-512
-- **compression_codec** (String) The codec used for compression of your logs. One of: `gzip`, `snappy`, `lz4`
-- **parse_log_keyvals** (Boolean) Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers
-- **password** (String, Sensitive) SASL Pass
-- **request_max_bytes** (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
-- **required_acks** (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1` Wait for all in-sync replicas to respond
-- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format
-- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format
-- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
-- **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
-- **use_tls** (Boolean) Whether to use TLS for secure logging. Can be either `true` or `false`
-- **user** (String) SASL User
+- `auth_method` (String) SASL authentication method. One of: plain, scram-sha-256, scram-sha-512
+- `compression_codec` (String) The codec used for compression of your logs. One of: `gzip`, `snappy`, `lz4`
+- `parse_log_keyvals` (Boolean) Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers
+- `password` (String, Sensitive) SASL Pass
+- `request_max_bytes` (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
+- `required_acks` (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1` Wait for all in-sync replicas to respond
+- `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
+- `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
+- `tls_hostname` (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
+- `use_tls` (Boolean) Whether to use TLS for secure logging. Can be either `true` or `false`
+- `user` (String) SASL User
 
 
 <a id="nestedblock--logging_kinesis"></a>
@@ -438,15 +438,15 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **topic** (String) The Kinesis stream name
+- `name` (String) The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `topic` (String) The Kinesis stream name
 
 Optional:
 
-- **access_key** (String, Sensitive) The AWS access key to be used to write to the stream
-- **iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.
-- **region** (String) The AWS region the stream resides in. (Default: `us-east-1`)
-- **secret_key** (String, Sensitive) The AWS secret access key to authenticate with
+- `access_key` (String, Sensitive) The AWS access key to be used to write to the stream
+- `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.
+- `region` (String) The AWS region the stream resides in. (Default: `us-east-1`)
+- `secret_key` (String, Sensitive) The AWS secret access key to authenticate with
 
 
 <a id="nestedblock--logging_logentries"></a>
@@ -454,13 +454,13 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Logentries logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String) Use token based authentication (https://logentries.com/doc/input-token/)
+- `name` (String) The unique name of the Logentries logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String) Use token based authentication (https://logentries.com/doc/input-token/)
 
 Optional:
 
-- **port** (Number) The port number configured in Logentries
-- **use_tls** (Boolean) Whether to use TLS for secure logging
+- `port` (Number) The port number configured in Logentries
+- `use_tls` (Boolean) Whether to use TLS for secure logging
 
 
 <a id="nestedblock--logging_loggly"></a>
@@ -468,8 +468,8 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Loggly logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
+- `name` (String) The unique name of the Loggly logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
 
 
 <a id="nestedblock--logging_logshuttle"></a>
@@ -477,9 +477,9 @@ Required:
 
 Required:
 
-- **name** (String) The unique name of the Log Shuttle logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The data authentication token associated with this endpoint
-- **url** (String) Your Log Shuttle endpoint URL
+- `name` (String) The unique name of the Log Shuttle logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The data authentication token associated with this endpoint
+- `url` (String) Your Log Shuttle endpoint URL
 
 
 <a id="nestedblock--logging_newrelic"></a>
@@ -487,12 +487,12 @@ Required:
 
 Required:
 
-- **name** (String) The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The Insert API key from the Account page of your New Relic account
+- `name` (String) The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account
 
 Optional:
 
-- **region** (String) The region that log data will be sent to. Default: `US`
+- `region` (String) The region that log data will be sent to. Default: `US`
 
 
 <a id="nestedblock--logging_openstack"></a>
@@ -500,21 +500,21 @@ Optional:
 
 Required:
 
-- **access_key** (String, Sensitive) Your OpenStack account access key
-- **bucket_name** (String) The name of your OpenStack container
-- **name** (String) The unique name of the OpenStack logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **url** (String) Your OpenStack auth url
-- **user** (String) The username for your OpenStack account
+- `access_key` (String, Sensitive) Your OpenStack account access key
+- `bucket_name` (String) The name of your OpenStack container
+- `name` (String) The unique name of the OpenStack logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `url` (String) Your OpenStack auth url
+- `user` (String) The username for your OpenStack account
 
 Optional:
 
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
-- **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
-- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
+- `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
+- `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_papertrail"></a>
@@ -522,9 +522,9 @@ Optional:
 
 Required:
 
-- **address** (String) The address of the Papertrail endpoint
-- **name** (String) A unique name to identify this Papertrail endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **port** (Number) The port associated with the address where the Papertrail endpoint can be accessed
+- `address` (String) The address of the Papertrail endpoint
+- `name` (String) A unique name to identify this Papertrail endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `port` (Number) The port associated with the address where the Papertrail endpoint can be accessed
 
 
 <a id="nestedblock--logging_s3"></a>
@@ -532,26 +532,26 @@ Required:
 
 Required:
 
-- **bucket_name** (String) The name of the bucket in which to store the logs
-- **name** (String) The unique name of the S3 logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `bucket_name` (String) The name of the bucket in which to store the logs
+- `name` (String) The unique name of the S3 logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
-- **acl** (String) The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **domain** (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **path** (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
-- **period** (Number) How frequently the logs should be transferred, in seconds. Default `3600`
-- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **redundancy** (String) The S3 storage class (redundancy level). Should be one of: `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier`, `glacier_ir`, `deep_archive`, or `reduced_redundancy`
-- **s3_access_key** (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
-- **s3_iam_role** (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`
-- **s3_secret_key** (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
-- **server_side_encryption** (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
-- **server_side_encryption_kms_key_id** (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `acl` (String) The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `domain` (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
+- `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
+- `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `redundancy` (String) The S3 storage class (redundancy level). Should be one of: `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier`, `glacier_ir`, `deep_archive`, or `reduced_redundancy`
+- `s3_access_key` (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
+- `s3_iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`
+- `s3_secret_key` (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
+- `server_side_encryption` (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
+- `server_side_encryption_kms_key_id` (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_scalyr"></a>
@@ -559,12 +559,12 @@ Optional:
 
 Required:
 
-- **name** (String) The unique name of the Scalyr logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The token to use for authentication (https://www.scalyr.com/keys)
+- `name` (String) The unique name of the Scalyr logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The token to use for authentication (https://www.scalyr.com/keys)
 
 Optional:
 
-- **region** (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
+- `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 
 
 <a id="nestedblock--logging_sftp"></a>
@@ -572,23 +572,23 @@ Optional:
 
 Required:
 
-- **address** (String) The SFTP address to stream logs to
-- **name** (String) The unique name of the SFTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **path** (String) The path to upload log files to. If the path ends in `/` then it is treated as a directory
-- **ssh_known_hosts** (String) A list of host keys for all hosts we can connect to over SFTP
-- **user** (String) The username for the server
+- `address` (String) The SFTP address to stream logs to
+- `name` (String) The unique name of the SFTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `path` (String) The path to upload log files to. If the path ends in `/` then it is treated as a directory
+- `ssh_known_hosts` (String) A list of host keys for all hosts we can connect to over SFTP
+- `user` (String) The username for the server
 
 Optional:
 
-- **compression_codec** (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
-- **gzip_level** (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **password** (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
-- **period** (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
-- **port** (Number) The port the SFTP service listens on. (Default: `22`)
-- **public_key** (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
-- **secret_key** (String, Sensitive) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
-- **timestamp_format** (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
+- `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
+- `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `password` (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
+- `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
+- `port` (Number) The port the SFTP service listens on. (Default: `22`)
+- `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
+- `secret_key` (String, Sensitive) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
+- `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
 <a id="nestedblock--logging_splunk"></a>
@@ -596,17 +596,17 @@ Optional:
 
 Required:
 
-- **name** (String) A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **token** (String, Sensitive) The Splunk token to be used for authentication
-- **url** (String) The Splunk URL to stream logs to
+- `name` (String) A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The Splunk token to be used for authentication
+- `url` (String) The Splunk URL to stream logs to
 
 Optional:
 
-- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
-- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format.
-- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
-- **tls_hostname** (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
-- **use_tls** (Boolean) Whether to use TLS for secure logging. Default: `false`
+- `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
+- `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format.
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
+- `tls_hostname` (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
+- `use_tls` (Boolean) Whether to use TLS for secure logging. Default: `false`
 
 
 <a id="nestedblock--logging_sumologic"></a>
@@ -614,12 +614,12 @@ Optional:
 
 Required:
 
-- **name** (String) A unique name to identify this Sumologic endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- **url** (String) The URL to Sumologic collector endpoint
+- `name` (String) A unique name to identify this Sumologic endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `url` (String) The URL to Sumologic collector endpoint
 
 Optional:
 
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 
 
 <a id="nestedblock--logging_syslog"></a>
@@ -627,16 +627,16 @@ Optional:
 
 Required:
 
-- **address** (String) A hostname or IPv4 address of the Syslog endpoint
-- **name** (String) A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `address` (String) A hostname or IPv4 address of the Syslog endpoint
+- `name` (String) A unique name to identify this Syslog endpoint. It is important to note that changing this attribute will delete and recreate the resource
 
 Optional:
 
-- **message_type** (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- **port** (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`
-- **tls_ca_cert** (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`
-- **tls_client_cert** (String) The client certificate used to make authenticated requests. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CLIENT_CERT`
-- **tls_client_key** (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`
-- **tls_hostname** (String) Used during the TLS handshake to validate the certificate
-- **token** (String) Whether to prepend each message with a specific token
-- **use_tls** (Boolean) Whether to use TLS for secure logging. Default `false`
+- `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `port` (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`
+- `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`
+- `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CLIENT_CERT`
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`
+- `tls_hostname` (String) Used during the TLS handshake to validate the certificate
+- `token` (String) Whether to prepend each message with a specific token
+- `use_tls` (Boolean) Whether to use TLS for secure logging. Default `false`

@@ -78,20 +78,20 @@ $ terraform import fastly_tls_certificate.demo xxxxxxxxxxx
 
 ### Required
 
-- **certificate_body** (String) PEM-formatted certificate, optionally including any intermediary certificates.
+- `certificate_body` (String) PEM-formatted certificate, optionally including any intermediary certificates.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **name** (String) Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.
+- `name` (String) Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.
 
 ### Read-Only
 
-- **created_at** (String) Timestamp (GMT) when the certificate was created.
-- **domains** (Set of String) All the domains (including wildcard domains) that are listed in the certificate's Subject Alternative Names (SAN) list.
-- **issued_to** (String) The hostname for which a certificate was issued.
-- **issuer** (String) The certificate authority that issued the certificate.
-- **replace** (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.
-- **serial_number** (String) A value assigned by the issuer that is unique to a certificate.
-- **signature_algorithm** (String) The algorithm used to sign the certificate.
-- **updated_at** (String) Timestamp (GMT) when the certificate was last updated.
+- `created_at` (String) Timestamp (GMT) when the certificate was created.
+- `domains` (Set of String) All the domains (including wildcard domains) that are listed in the certificate's Subject Alternative Names (SAN) list.
+- `id` (String) The ID of this resource.
+- `issued_to` (String) The hostname for which a certificate was issued.
+- `issuer` (String) The certificate authority that issued the certificate.
+- `replace` (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.
+- `serial_number` (String) A value assigned by the issuer that is unique to a certificate.
+- `signature_algorithm` (String) The algorithm used to sign the certificate.
+- `updated_at` (String) Timestamp (GMT) when the certificate was last updated.

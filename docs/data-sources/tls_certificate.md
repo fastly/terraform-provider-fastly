@@ -29,16 +29,16 @@ data "fastly_tls_certificate" "example" {
 
 ### Optional
 
-- **domains** (Set of String) Domains that are listed in any certificates' Subject Alternative Names (SAN) list.
-- **id** (String) Unique ID assigned to certificate by Fastly
-- **issued_to** (String) The hostname for which a certificate was issued.
-- **issuer** (String) The certificate authority that issued the certificate.
-- **name** (String) Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.
+- `domains` (Set of String) Domains that are listed in any certificates' Subject Alternative Names (SAN) list.
+- `id` (String) Unique ID assigned to certificate by Fastly
+- `issued_to` (String) The hostname for which a certificate was issued.
+- `issuer` (String) The certificate authority that issued the certificate.
+- `name` (String) Human-readable name used to identify the certificate. Defaults to the certificate's Common Name or first Subject Alternative Name entry.
 
 ### Read-Only
 
-- **created_at** (String) Timestamp (GMT) when the certificate was created
-- **replace** (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation
-- **serial_number** (String) A value assigned by the issuer that is unique to a certificate
-- **signature_algorithm** (String) The algorithm used to sign the certificate
-- **updated_at** (String) Timestamp (GMT) when the certificate was last updated
+- `created_at` (String) Timestamp (GMT) when the certificate was created
+- `replace` (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation
+- `serial_number` (String) A value assigned by the issuer that is unique to a certificate
+- `signature_algorithm` (String) The algorithm used to sign the certificate
+- `updated_at` (String) Timestamp (GMT) when the certificate was last updated

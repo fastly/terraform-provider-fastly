@@ -29,14 +29,14 @@ data "fastly_tls_platform_certificate" "example" {
 
 ### Optional
 
-- **domains** (Set of String) Domains that are listed in any certificate's Subject Alternative Names (SAN) list.
-- **id** (String) Unique ID assigned to certificate by Fastly. Conflicts with all the other filters.
+- `domains` (Set of String) Domains that are listed in any certificate's Subject Alternative Names (SAN) list.
+- `id` (String) Unique ID assigned to certificate by Fastly. Conflicts with all the other filters.
 
 ### Read-Only
 
-- **configuration_id** (String) ID of TLS configuration used to terminate TLS traffic.
-- **created_at** (String) Timestamp (GMT) when the certificate was created.
-- **not_after** (String) Timestamp (GMT) when the certificate will expire.
-- **not_before** (String) Timestamp (GMT) when the certificate will become valid.
-- **replace** (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.
-- **updated_at** (String) Timestamp (GMT) when the certificate was last updated.
+- `configuration_id` (String) ID of TLS configuration used to terminate TLS traffic.
+- `created_at` (String) Timestamp (GMT) when the certificate was created.
+- `not_after` (String) Timestamp (GMT) when the certificate will expire.
+- `not_before` (String) Timestamp (GMT) when the certificate will become valid.
+- `replace` (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.
+- `updated_at` (String) Timestamp (GMT) when the certificate was last updated.

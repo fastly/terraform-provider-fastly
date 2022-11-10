@@ -34,24 +34,24 @@ resource "fastly_tls_activation" "example" {
 
 ### Optional
 
-- **default** (Boolean) Signifies whether Fastly will use this configuration as a default when creating a new TLS activation.
-- **http_protocols** (Set of String) HTTP protocols available on the TLS configuration.
-- **id** (String) ID of the TLS configuration obtained from the Fastly API or another data source. Conflicts with all the other filters.
-- **name** (String) Custom name of the TLS configuration.
-- **tls_protocols** (Set of String) TLS protocols available on the TLS configuration.
-- **tls_service** (String) Whether the configuration should support the `PLATFORM` or `CUSTOM` TLS service.
+- `default` (Boolean) Signifies whether Fastly will use this configuration as a default when creating a new TLS activation.
+- `http_protocols` (Set of String) HTTP protocols available on the TLS configuration.
+- `id` (String) ID of the TLS configuration obtained from the Fastly API or another data source. Conflicts with all the other filters.
+- `name` (String) Custom name of the TLS configuration.
+- `tls_protocols` (Set of String) TLS protocols available on the TLS configuration.
+- `tls_service` (String) Whether the configuration should support the `PLATFORM` or `CUSTOM` TLS service.
 
 ### Read-Only
 
-- **created_at** (String) Timestamp (GMT) when the configuration was created.
-- **dns_records** (Set of Object) The available DNS addresses that can be used to enable TLS for a domain. DNS must be configured for a domain for TLS handshakes to succeed. If enabling TLS on an apex domain (e.g. `example.com`) you must create four A records (or four AAAA records for IPv6 support) using the displayed global A record's IP addresses with your DNS provider. For subdomains and wildcard domains (e.g. `www.example.com` or `*.example.com`) you will need to create a relevant CNAME record. (see [below for nested schema](#nestedatt--dns_records))
-- **updated_at** (String) Timestamp (GMT) when the configuration was last updated.
+- `created_at` (String) Timestamp (GMT) when the configuration was created.
+- `dns_records` (Set of Object) The available DNS addresses that can be used to enable TLS for a domain. DNS must be configured for a domain for TLS handshakes to succeed. If enabling TLS on an apex domain (e.g. `example.com`) you must create four A records (or four AAAA records for IPv6 support) using the displayed global A record's IP addresses with your DNS provider. For subdomains and wildcard domains (e.g. `www.example.com` or `*.example.com`) you will need to create a relevant CNAME record. (see [below for nested schema](#nestedatt--dns_records))
+- `updated_at` (String) Timestamp (GMT) when the configuration was last updated.
 
 <a id="nestedatt--dns_records"></a>
 ### Nested Schema for `dns_records`
 
 Read-Only:
 
-- **record_type** (String)
-- **record_value** (String)
-- **region** (String)
+- `record_type` (String)
+- `record_value` (String)
+- `region` (String)

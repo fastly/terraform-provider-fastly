@@ -76,16 +76,19 @@ resource "fastly_tls_subscription_validation" "example" {
 
 ### Required
 
-- **subscription_id** (String) The ID of the TLS Subscription that should be validated.
+- `subscription_id` (String) The ID of the TLS Subscription that should be validated.
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
+### Read-Only
+
+- `id` (String) The ID of this resource.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
 
-- **create** (String)
+- `create` (String)

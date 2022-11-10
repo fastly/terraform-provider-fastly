@@ -204,11 +204,14 @@ $ terraform state rm fastly_service_dynamic_snippet_content.content
 
 ### Required
 
-- **content** (String) The VCL code that specifies exactly what the snippet does
-- **service_id** (String) The ID of the service that the dynamic snippet belongs to
-- **snippet_id** (String) The ID of the dynamic snippet that the content belong to
+- `content` (String) The VCL code that specifies exactly what the snippet does
+- `service_id` (String) The ID of the service that the dynamic snippet belongs to
+- `snippet_id` (String) The ID of the dynamic snippet that the content belong to
 
 ### Optional
 
-- **id** (String) The ID of this resource.
-- **manage_snippets** (Boolean) Whether to reapply changes if the state of the snippets drifts, i.e. if snippets are managed externally
+- `manage_snippets` (Boolean) Whether to reapply changes if the state of the snippets drifts, i.e. if snippets are managed externally
+
+### Read-Only
+
+- `id` (String) The ID of this resource.

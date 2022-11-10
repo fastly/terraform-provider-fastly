@@ -101,20 +101,20 @@ $ terraform import fastly_tls_platform_certificate.demo xxxxxxxxxxx
 
 ### Required
 
-- **certificate_body** (String) PEM-formatted certificate.
-- **configuration_id** (String) ID of TLS configuration to be used to terminate TLS traffic.
-- **intermediates_blob** (String) PEM-formatted certificate chain from the `certificate_body` to its root.
+- `certificate_body` (String) PEM-formatted certificate.
+- `configuration_id` (String) ID of TLS configuration to be used to terminate TLS traffic.
+- `intermediates_blob` (String) PEM-formatted certificate chain from the `certificate_body` to its root.
 
 ### Optional
 
-- **allow_untrusted_root** (Boolean) Disable checking whether the root of the certificate chain is trusted. Useful for development purposes to allow use of self-signed CAs. Defaults to false. Write-only on create.
-- **id** (String) The ID of this resource.
+- `allow_untrusted_root` (Boolean) Disable checking whether the root of the certificate chain is trusted. Useful for development purposes to allow use of self-signed CAs. Defaults to false. Write-only on create.
 
 ### Read-Only
 
-- **created_at** (String) Timestamp (GMT) when the certificate was created.
-- **domains** (Set of String) All the domains (including wildcard domains) that are listed in any certificate's Subject Alternative Names (SAN) list.
-- **not_after** (String) Timestamp (GMT) when the certificate will expire.
-- **not_before** (String) Timestamp (GMT) when the certificate will become valid.
-- **replace** (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.
-- **updated_at** (String) Timestamp (GMT) when the certificate was last updated.
+- `created_at` (String) Timestamp (GMT) when the certificate was created.
+- `domains` (Set of String) All the domains (including wildcard domains) that are listed in any certificate's Subject Alternative Names (SAN) list.
+- `id` (String) The ID of this resource.
+- `not_after` (String) Timestamp (GMT) when the certificate will expire.
+- `not_before` (String) Timestamp (GMT) when the certificate will become valid.
+- `replace` (Boolean) A recommendation from Fastly indicating the key associated with this certificate is in need of rotation.
+- `updated_at` (String) Timestamp (GMT) when the certificate was last updated.

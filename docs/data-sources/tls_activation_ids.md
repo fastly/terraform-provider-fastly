@@ -32,9 +32,9 @@ output "activation_domains" {
 
 ### Optional
 
-- **certificate_id** (String) ID of TLS certificate used to filter activations
-- **id** (String) The ID of this resource.
+- `certificate_id` (String) ID of TLS certificate used to filter activations
 
 ### Read-Only
 
-- **ids** (Set of String) List of IDs of the TLS Activations.
+- `id` (String) The ID of this resource.
+- `ids` (Set of String) List of IDs of the TLS Activations.

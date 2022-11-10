@@ -29,11 +29,11 @@ data "fastly_tls_activation" "example" {
 
 ### Optional
 
-- **certificate_id** (String) ID of the TLS Certificate used.
-- **configuration_id** (String) ID of the TLS Configuration used.
-- **domain** (String) Domain that TLS was enabled on.
-- **id** (String) Fastly Activation ID. Conflicts with all other filters.
+- `certificate_id` (String) ID of the TLS Certificate used.
+- `configuration_id` (String) ID of the TLS Configuration used.
+- `domain` (String) Domain that TLS was enabled on.
+- `id` (String) Fastly Activation ID. Conflicts with all other filters.
 
 ### Read-Only
 
-- **created_at** (String) Timestamp (GMT) when TLS was enabled.
+- `created_at` (String) Timestamp (GMT) when TLS was enabled.

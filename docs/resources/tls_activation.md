@@ -65,14 +65,14 @@ $ terraform import fastly_tls_activation.demo xxxxxxxx
 
 ### Required
 
-- **certificate_id** (String) ID of certificate to use. Must have the `domain` specified in the certificate's Subject Alternative Names.
-- **domain** (String) Domain to enable TLS on. Must be assigned to an existing Fastly Service.
+- `certificate_id` (String) ID of certificate to use. Must have the `domain` specified in the certificate's Subject Alternative Names.
+- `domain` (String) Domain to enable TLS on. Must be assigned to an existing Fastly Service.
 
 ### Optional
 
-- **configuration_id** (String) ID of TLS configuration to be used to terminate TLS traffic, or use the default one if missing.
-- **id** (String) The ID of this resource.
+- `configuration_id` (String) ID of TLS configuration to be used to terminate TLS traffic, or use the default one if missing.
 
 ### Read-Only
 
-- **created_at** (String) Time-stamp (GMT) when TLS was enabled.
+- `created_at` (String) Time-stamp (GMT) when TLS was enabled.
+- `id` (String) The ID of this resource.

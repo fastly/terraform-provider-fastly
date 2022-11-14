@@ -267,43 +267,43 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 	}
 }
 
-func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, df map[string]any) gofastly.CreateBackendInput {
+func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, resource map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
-		Address:             gofastly.String(df["address"].(string)),
-		AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
-		BetweenBytesTimeout: gofastly.Int(df["between_bytes_timeout"].(int)),
-		ConnectTimeout:      gofastly.Int(df["connect_timeout"].(int)),
-		ErrorThreshold:      gofastly.Int(df["error_threshold"].(int)),
-		FirstByteTimeout:    gofastly.Int(df["first_byte_timeout"].(int)),
-		HealthCheck:         gofastly.String(df["healthcheck"].(string)),
-		MaxConn:             gofastly.Int(df["max_conn"].(int)),
-		MaxTLSVersion:       gofastly.String(df["max_tls_version"].(string)),
-		MinTLSVersion:       gofastly.String(df["min_tls_version"].(string)),
-		Name:                gofastly.String(df["name"].(string)),
-		Port:                gofastly.Int(df["port"].(int)),
-		SSLCACert:           gofastly.String(df["ssl_ca_cert"].(string)),
-		SSLCertHostname:     gofastly.String(df["ssl_cert_hostname"].(string)),
-		SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
-		SSLCiphers:          gofastly.String(df["ssl_ciphers"].(string)),
-		SSLClientCert:       gofastly.String(df["ssl_client_cert"].(string)),
-		SSLClientKey:        gofastly.String(df["ssl_client_key"].(string)),
-		SSLSNIHostname:      gofastly.String(df["ssl_sni_hostname"].(string)),
+		Address:             gofastly.String(resource["address"].(string)),
+		AutoLoadbalance:     gofastly.CBool(resource["auto_loadbalance"].(bool)),
+		BetweenBytesTimeout: gofastly.Int(resource["between_bytes_timeout"].(int)),
+		ConnectTimeout:      gofastly.Int(resource["connect_timeout"].(int)),
+		ErrorThreshold:      gofastly.Int(resource["error_threshold"].(int)),
+		FirstByteTimeout:    gofastly.Int(resource["first_byte_timeout"].(int)),
+		HealthCheck:         gofastly.String(resource["healthcheck"].(string)),
+		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
+		MaxTLSVersion:       gofastly.String(resource["max_tls_version"].(string)),
+		MinTLSVersion:       gofastly.String(resource["min_tls_version"].(string)),
+		Name:                gofastly.String(resource["name"].(string)),
+		Port:                gofastly.Int(resource["port"].(int)),
+		SSLCACert:           gofastly.String(resource["ssl_ca_cert"].(string)),
+		SSLCertHostname:     gofastly.String(resource["ssl_cert_hostname"].(string)),
+		SSLCheckCert:        gofastly.CBool(resource["ssl_check_cert"].(bool)),
+		SSLCiphers:          gofastly.String(resource["ssl_ciphers"].(string)),
+		SSLClientCert:       gofastly.String(resource["ssl_client_cert"].(string)),
+		SSLClientKey:        gofastly.String(resource["ssl_client_key"].(string)),
+		SSLSNIHostname:      gofastly.String(resource["ssl_sni_hostname"].(string)),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
-		Shield:              gofastly.String(df["shield"].(string)),
-		UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
-		Weight:              gofastly.Int(df["weight"].(int)),
+		Shield:              gofastly.String(resource["shield"].(string)),
+		UseSSL:              gofastly.CBool(resource["use_ssl"].(bool)),
+		Weight:              gofastly.Int(resource["weight"].(int)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
-	if df["override_host"].(string) != "" {
-		opts.OverrideHost = gofastly.String(df["override_host"].(string))
+	if resource["override_host"].(string) != "" {
+		opts.OverrideHost = gofastly.String(resource["override_host"].(string))
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		opts.RequestCondition = gofastly.String(df["request_condition"].(string))
+		opts.RequestCondition = gofastly.String(resource["request_condition"].(string))
 	}
 	return opts
 }

@@ -232,7 +232,7 @@ func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap any, servi
 		URL:            gofastly.String(df["url"].(string)),
 	}
 
-	// WARNING: The following fields shouldn't have an emptry string passed.
+	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {

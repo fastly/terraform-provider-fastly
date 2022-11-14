@@ -302,9 +302,10 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d 
 	return nil
 }
 
+// flattenBlobStorages models data into format suitable for saving to Terraform state.
 func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage, state []any) []map[string]any {
-	var bsl []map[string]any
-	for _, bs := range blobStorageList {
+	var result []map[string]any
+	for _, resource := range blobStorageList {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -322,41 +323,40 @@ func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage, state []any) [
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == bs.Name && v["gzip_level"].(int) == -1 {
-				bs.GzipLevel = v["gzip_level"].(int)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
 				break
 			}
 		}
 
-		// Convert Blob Storages to a map for saving to state.
-		nbs := map[string]any{
-			"account_name":       bs.AccountName,
-			"compression_codec":  bs.CompressionCodec,
-			"container":          bs.Container,
-			"file_max_bytes":     bs.FileMaxBytes,
-			"format":             bs.Format,
-			"format_version":     bs.FormatVersion,
-			"gzip_level":         bs.GzipLevel,
-			"message_type":       bs.MessageType,
-			"name":               bs.Name,
-			"path":               bs.Path,
-			"period":             bs.Period,
-			"placement":          bs.Placement,
-			"public_key":         bs.PublicKey,
-			"response_condition": bs.ResponseCondition,
-			"sas_token":          bs.SASToken,
-			"timestamp_format":   bs.TimestampFormat,
+		data := map[string]any{
+			"account_name":       resource.AccountName,
+			"compression_codec":  resource.CompressionCodec,
+			"container":          resource.Container,
+			"file_max_bytes":     resource.FileMaxBytes,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"gzip_level":         resource.GzipLevel,
+			"message_type":       resource.MessageType,
+			"name":               resource.Name,
+			"path":               resource.Path,
+			"period":             resource.Period,
+			"placement":          resource.Placement,
+			"public_key":         resource.PublicKey,
+			"response_condition": resource.ResponseCondition,
+			"sas_token":          resource.SASToken,
+			"timestamp_format":   resource.TimestampFormat,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nbs {
+		for k, v := range data {
 			if v == "" {
-				delete(nbs, k)
+				delete(data, k)
 			}
 		}
 
-		bsl = append(bsl, nbs)
+		result = append(result, data)
 	}
 
-	return bsl
+	return result
 }

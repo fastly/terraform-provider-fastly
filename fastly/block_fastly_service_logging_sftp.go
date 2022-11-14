@@ -297,9 +297,10 @@ func deleteSFTP(conn *gofastly.Client, i *gofastly.DeleteSFTPInput) error {
 	return nil
 }
 
+// flattenSFTP models data into format suitable for saving to Terraform state.
 func flattenSFTP(sftpList []*gofastly.SFTP, state []any) []map[string]any {
-	var ssl []map[string]any
-	for _, sl := range sftpList {
+	var result []map[string]any
+	for _, resource := range sftpList {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -317,45 +318,44 @@ func flattenSFTP(sftpList []*gofastly.SFTP, state []any) []map[string]any {
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == sl.Name && v["gzip_level"].(int) == -1 {
-				sl.GzipLevel = v["gzip_level"].(int)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
 				break
 			}
 		}
 
-		// Convert SFTP logging to a map for saving to state.
-		nsl := map[string]any{
-			"name":               sl.Name,
-			"address":            sl.Address,
-			"user":               sl.User,
-			"path":               sl.Path,
-			"ssh_known_hosts":    sl.SSHKnownHosts,
-			"port":               sl.Port,
-			"password":           sl.Password,
-			"secret_key":         sl.SecretKey,
-			"public_key":         sl.PublicKey,
-			"period":             sl.Period,
-			"gzip_level":         sl.GzipLevel,
-			"timestamp_format":   sl.TimestampFormat,
-			"message_type":       sl.MessageType,
-			"format":             sl.Format,
-			"format_version":     sl.FormatVersion,
-			"response_condition": sl.ResponseCondition,
-			"placement":          sl.Placement,
-			"compression_codec":  sl.CompressionCodec,
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"user":               resource.User,
+			"path":               resource.Path,
+			"ssh_known_hosts":    resource.SSHKnownHosts,
+			"port":               resource.Port,
+			"password":           resource.Password,
+			"secret_key":         resource.SecretKey,
+			"public_key":         resource.PublicKey,
+			"period":             resource.Period,
+			"gzip_level":         resource.GzipLevel,
+			"timestamp_format":   resource.TimestampFormat,
+			"message_type":       resource.MessageType,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
+			"compression_codec":  resource.CompressionCodec,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nsl {
+		for k, v := range data {
 			if v == "" {
-				delete(nsl, k)
+				delete(data, k)
 			}
 		}
 
-		ssl = append(ssl, nsl)
+		result = append(result, data)
 	}
 
-	return ssl
+	return result
 }
 
 func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {

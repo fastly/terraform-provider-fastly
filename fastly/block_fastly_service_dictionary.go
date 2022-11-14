@@ -153,26 +153,27 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
+// flattenDictionaries models data into format suitable for saving to Terraform state.
 func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]any {
-	var dl []map[string]any
-	for _, currentDict := range dictList {
-		dictMapString := map[string]any{
-			"dictionary_id": currentDict.ID,
-			"name":          currentDict.Name,
-			"write_only":    currentDict.WriteOnly,
+	var result []map[string]any
+	for _, resource := range dictList {
+		data := map[string]any{
+			"dictionary_id": resource.ID,
+			"name":          resource.Name,
+			"write_only":    resource.WriteOnly,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range dictMapString {
+		for k, v := range data {
 			if v == "" {
-				delete(dictMapString, k)
+				delete(data, k)
 			}
 		}
 
-		dl = append(dl, dictMapString)
+		result = append(result, data)
 	}
 
-	return dl
+	return result
 }
 
 func buildDictionary(dictMap any) (*gofastly.CreateDictionaryInput, error) {

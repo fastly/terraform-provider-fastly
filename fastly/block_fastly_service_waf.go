@@ -131,26 +131,27 @@ func wafExists(conn *gofastly.Client, s string, v int, id string) bool {
 	return err == nil
 }
 
+// flattenWAFs models data into format suitable for saving to Terraform state.
 func flattenWAFs(wafList []*gofastly.WAF) []map[string]any {
-	var wl []map[string]any
+	var result []map[string]any
 	if len(wafList) == 0 {
-		return wl
+		return result
 	}
 
 	w := wafList[0]
-	m := map[string]any{
+	data := map[string]any{
 		"waf_id":             w.ID,
 		"response_object":    w.Response,
 		"prefetch_condition": w.PrefetchCondition,
 	}
 
 	// prune any empty values that come from the default string value in structs
-	for k, v := range m {
+	for k, v := range data {
 		if v == "" {
-			delete(m, k)
+			delete(data, k)
 		}
 	}
-	return append(wl, m)
+	return append(result, data)
 }
 
 func buildCreateWAF(waf any, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {

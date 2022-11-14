@@ -68,32 +68,33 @@ func readWAFRuleExclusions(meta any, d *schema.ResourceData, wafVersionNumber in
 	return nil
 }
 
+// flattenWAFRuleExclusions models data into format suitable for saving to Terraform state.
 func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[string]any {
 	var result []map[string]any
 
-	for _, exclusion := range exclusions {
-		m := make(map[string]any)
-		if exclusion.Name != nil {
-			m["name"] = *exclusion.Name
+	for _, resource := range exclusions {
+		data := make(map[string]any)
+		if resource.Name != nil {
+			data["name"] = *resource.Name
 		}
-		if exclusion.Number != nil {
-			m["number"] = *exclusion.Number
+		if resource.Number != nil {
+			data["number"] = *resource.Number
 		}
-		if exclusion.Condition != nil {
-			m["condition"] = *exclusion.Condition
+		if resource.Condition != nil {
+			data["condition"] = *resource.Condition
 		}
-		if exclusion.ExclusionType != nil {
-			m["exclusion_type"] = *exclusion.ExclusionType
+		if resource.ExclusionType != nil {
+			data["exclusion_type"] = *resource.ExclusionType
 		}
 
 		var rules []any
-		for _, rule := range exclusion.Rules {
+		for _, rule := range resource.Rules {
 			rules = append(rules, rule.ModSecID)
 		}
 		if len(rules) > 0 {
-			m["modsec_rule_ids"] = schema.NewSet(schema.HashInt, rules)
+			data["modsec_rule_ids"] = schema.NewSet(schema.HashInt, rules)
 		}
-		result = append(result, m)
+		result = append(result, data)
 	}
 
 	return result

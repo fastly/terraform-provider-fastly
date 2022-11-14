@@ -140,15 +140,16 @@ func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// flattenDomains models data into format suitable for saving to Terraform state.
 func flattenDomains(list []*gofastly.Domain) []map[string]any {
-	dl := make([]map[string]any, 0, len(list))
+	result := make([]map[string]any, 0, len(list))
 
-	for _, d := range list {
-		dl = append(dl, map[string]any{
-			"name":    d.Name,
-			"comment": d.Comment,
+	for _, resource := range list {
+		result = append(result, map[string]any{
+			"name":    resource.Name,
+			"comment": resource.Comment,
 		})
 	}
 
-	return dl
+	return result
 }

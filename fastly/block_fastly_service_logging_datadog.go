@@ -189,31 +189,31 @@ func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error 
 	return nil
 }
 
+// flattenDatadog models data into format suitable for saving to Terraform state.
 func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]any {
-	var dsl []map[string]any
-	for _, dl := range datadogList {
-		// Convert Datadog logging to a map for saving to state.
-		ndl := map[string]any{
-			"name":               dl.Name,
-			"token":              dl.Token,
-			"region":             dl.Region,
-			"format":             dl.Format,
-			"format_version":     dl.FormatVersion,
-			"placement":          dl.Placement,
-			"response_condition": dl.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range datadogList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"region":             resource.Region,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range ndl {
+		for k, v := range data {
 			if v == "" {
-				delete(ndl, k)
+				delete(data, k)
 			}
 		}
 
-		dsl = append(dsl, ndl)
+		result = append(result, data)
 	}
 
-	return dsl
+	return result
 }
 
 func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap any, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {

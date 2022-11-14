@@ -284,9 +284,10 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
+// flattenGCS models data into format suitable for saving to Terraform state.
 func flattenGCS(gcsList []*gofastly.GCS, state []any) []map[string]any {
-	var sm []map[string]any
-	for _, currentGCS := range gcsList {
+	var result []map[string]any
+	for _, resources := range gcsList {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -304,39 +305,38 @@ func flattenGCS(gcsList []*gofastly.GCS, state []any) []map[string]any {
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == currentGCS.Name && v["gzip_level"].(int) == -1 {
-				currentGCS.GzipLevel = v["gzip_level"].(int)
+			if v["name"].(string) == resources.Name && v["gzip_level"].(int) == -1 {
+				resources.GzipLevel = v["gzip_level"].(int)
 				break
 			}
 		}
 
-		// Convert gcs to a map for saving to state.
-		m := map[string]any{
-			"name":               currentGCS.Name,
-			"user":               currentGCS.User,
-			"bucket_name":        currentGCS.Bucket,
-			"secret_key":         currentGCS.SecretKey,
-			"path":               currentGCS.Path,
-			"period":             int(currentGCS.Period),
-			"gzip_level":         int(currentGCS.GzipLevel),
-			"response_condition": currentGCS.ResponseCondition,
-			"message_type":       currentGCS.MessageType,
-			"format":             currentGCS.Format,
-			"format_version":     currentGCS.FormatVersion,
-			"timestamp_format":   currentGCS.TimestampFormat,
-			"placement":          currentGCS.Placement,
-			"compression_codec":  currentGCS.CompressionCodec,
+		data := map[string]any{
+			"name":               resources.Name,
+			"user":               resources.User,
+			"bucket_name":        resources.Bucket,
+			"secret_key":         resources.SecretKey,
+			"path":               resources.Path,
+			"period":             int(resources.Period),
+			"gzip_level":         int(resources.GzipLevel),
+			"response_condition": resources.ResponseCondition,
+			"message_type":       resources.MessageType,
+			"format":             resources.Format,
+			"format_version":     resources.FormatVersion,
+			"timestamp_format":   resources.TimestampFormat,
+			"placement":          resources.Placement,
+			"compression_codec":  resources.CompressionCodec,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range m {
+		for k, v := range data {
 			if v == "" {
-				delete(m, k)
+				delete(data, k)
 			}
 		}
 
-		sm = append(sm, m)
+		result = append(result, data)
 	}
 
-	return sm
+	return result
 }

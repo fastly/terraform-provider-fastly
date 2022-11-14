@@ -216,30 +216,30 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
+// flattenLogentries models data into format suitable for saving to Terraform state.
 func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]any {
-	var sm []map[string]any
-	for _, currentLE := range logentriesList {
-		// Convert Logentries to a map for saving to state.
-		m := map[string]any{
-			"name":               currentLE.Name,
-			"port":               currentLE.Port,
-			"use_tls":            currentLE.UseTLS,
-			"token":              currentLE.Token,
-			"format":             currentLE.Format,
-			"format_version":     currentLE.FormatVersion,
-			"response_condition": currentLE.ResponseCondition,
-			"placement":          currentLE.Placement,
+	var result []map[string]any
+	for _, resource := range logentriesList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"port":               resource.Port,
+			"use_tls":            resource.UseTLS,
+			"token":              resource.Token,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range m {
+		for k, v := range data {
 			if v == "" {
-				delete(m, k)
+				delete(data, k)
 			}
 		}
 
-		sm = append(sm, m)
+		result = append(result, data)
 	}
 
-	return sm
+	return result
 }

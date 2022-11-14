@@ -226,34 +226,34 @@ func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// flattenHeaders models data into format suitable for saving to Terraform state.
 func flattenHeaders(headerList []*gofastly.Header) []map[string]any {
-	var hl []map[string]any
-	for _, h := range headerList {
-		// Convert Header to a map for saving to state.
-		nh := map[string]any{
-			"name":               h.Name,
-			"action":             h.Action,
-			"ignore_if_set":      h.IgnoreIfSet,
-			"type":               h.Type,
-			"destination":        h.Destination,
-			"source":             h.Source,
-			"regex":              h.Regex,
-			"substitution":       h.Substitution,
-			"priority":           int(h.Priority),
-			"request_condition":  h.RequestCondition,
-			"cache_condition":    h.CacheCondition,
-			"response_condition": h.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range headerList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"action":             resource.Action,
+			"ignore_if_set":      resource.IgnoreIfSet,
+			"type":               resource.Type,
+			"destination":        resource.Destination,
+			"source":             resource.Source,
+			"regex":              resource.Regex,
+			"substitution":       resource.Substitution,
+			"priority":           int(resource.Priority),
+			"request_condition":  resource.RequestCondition,
+			"cache_condition":    resource.CacheCondition,
+			"response_condition": resource.ResponseCondition,
 		}
 
-		for k, v := range nh {
+		for k, v := range data {
 			if v == "" {
-				delete(nh, k)
+				delete(data, k)
 			}
 		}
 
-		hl = append(hl, nh)
+		result = append(result, data)
 	}
-	return hl
+	return result
 }
 
 func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {

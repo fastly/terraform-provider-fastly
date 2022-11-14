@@ -239,32 +239,32 @@ func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *sc
 	return nil
 }
 
+// flattenBigQuery models data into format suitable for saving to Terraform state.
 func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]any {
-	var sm []map[string]any
-	for _, currentBQ := range bqList {
-		// Convert gcs to a map for saving to state.
-		m := map[string]any{
-			"name":               currentBQ.Name,
-			"format":             currentBQ.Format,
-			"email":              currentBQ.User,
-			"secret_key":         currentBQ.SecretKey,
-			"project_id":         currentBQ.ProjectID,
-			"dataset":            currentBQ.Dataset,
-			"table":              currentBQ.Table,
-			"response_condition": currentBQ.ResponseCondition,
-			"template":           currentBQ.Template,
-			"placement":          currentBQ.Placement,
+	var result []map[string]any
+	for _, resource := range bqList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"format":             resource.Format,
+			"email":              resource.User,
+			"secret_key":         resource.SecretKey,
+			"project_id":         resource.ProjectID,
+			"dataset":            resource.Dataset,
+			"table":              resource.Table,
+			"response_condition": resource.ResponseCondition,
+			"template":           resource.Template,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range m {
+		for k, v := range data {
 			if v == "" {
-				delete(m, k)
+				delete(data, k)
 			}
 		}
 
-		sm = append(sm, m)
+		result = append(result, data)
 	}
 
-	return sm
+	return result
 }

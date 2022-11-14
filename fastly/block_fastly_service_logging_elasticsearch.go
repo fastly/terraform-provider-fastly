@@ -265,40 +265,40 @@ func deleteElasticsearch(conn *gofastly.Client, i *gofastly.DeleteElasticsearchI
 	return nil
 }
 
+// flattenElasticsearch models data into format suitable for saving to Terraform state.
 func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[string]any {
-	var esl []map[string]any
-	for _, el := range elasticsearchList {
-		// Convert Elasticsearch logging to a map for saving to state.
-		nel := map[string]any{
-			"name":                el.Name,
-			"response_condition":  el.ResponseCondition,
-			"format":              el.Format,
-			"index":               el.Index,
-			"url":                 el.URL,
-			"pipeline":            el.Pipeline,
-			"user":                el.User,
-			"password":            el.Password,
-			"request_max_entries": el.RequestMaxEntries,
-			"request_max_bytes":   el.RequestMaxBytes,
-			"placement":           el.Placement,
-			"tls_ca_cert":         el.TLSCACert,
-			"tls_client_cert":     el.TLSClientCert,
-			"tls_client_key":      el.TLSClientKey,
-			"tls_hostname":        el.TLSHostname,
-			"format_version":      el.FormatVersion,
+	var result []map[string]any
+	for _, resource := range elasticsearchList {
+		data := map[string]any{
+			"name":                resource.Name,
+			"response_condition":  resource.ResponseCondition,
+			"format":              resource.Format,
+			"index":               resource.Index,
+			"url":                 resource.URL,
+			"pipeline":            resource.Pipeline,
+			"user":                resource.User,
+			"password":            resource.Password,
+			"request_max_entries": resource.RequestMaxEntries,
+			"request_max_bytes":   resource.RequestMaxBytes,
+			"placement":           resource.Placement,
+			"tls_ca_cert":         resource.TLSCACert,
+			"tls_client_cert":     resource.TLSClientCert,
+			"tls_client_key":      resource.TLSClientKey,
+			"tls_hostname":        resource.TLSHostname,
+			"format_version":      resource.FormatVersion,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nel {
+		for k, v := range data {
 			if v == "" {
-				delete(nel, k)
+				delete(data, k)
 			}
 		}
 
-		esl = append(esl, nel)
+		result = append(result, data)
 	}
 
-	return esl
+	return result
 }
 
 func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.CreateElasticsearchInput {

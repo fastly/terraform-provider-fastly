@@ -262,34 +262,34 @@ func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema
 	return nil
 }
 
+// flattenHealthchecks models data into format suitable for saving to Terraform state.
 func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]any {
-	var hl []map[string]any
-	for _, h := range healthcheckList {
-		// Convert HealthChecks to a map for saving to state.
-		nh := map[string]any{
-			"name":              h.Name,
-			"headers":           h.Headers,
-			"host":              h.Host,
-			"path":              h.Path,
-			"check_interval":    h.CheckInterval,
-			"expected_response": h.ExpectedResponse,
-			"http_version":      h.HTTPVersion,
-			"initial":           h.Initial,
-			"method":            h.Method,
-			"threshold":         h.Threshold,
-			"timeout":           h.Timeout,
-			"window":            h.Window,
+	var result []map[string]any
+	for _, resource := range healthcheckList {
+		data := map[string]any{
+			"name":              resource.Name,
+			"headers":           resource.Headers,
+			"host":              resource.Host,
+			"path":              resource.Path,
+			"check_interval":    resource.CheckInterval,
+			"expected_response": resource.ExpectedResponse,
+			"http_version":      resource.HTTPVersion,
+			"initial":           resource.Initial,
+			"method":            resource.Method,
+			"threshold":         resource.Threshold,
+			"timeout":           resource.Timeout,
+			"window":            resource.Window,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nh {
+		for k, v := range data {
 			if v == "" {
-				delete(nh, k)
+				delete(data, k)
 			}
 		}
 
-		hl = append(hl, nh)
+		result = append(result, data)
 	}
 
-	return hl
+	return result
 }

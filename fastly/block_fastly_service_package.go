@@ -106,14 +106,15 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 	return err
 }
 
+// flattenPackage models data into format suitable for saving to Terraform state.
 func flattenPackage(pkg *gofastly.Package, filename string) []map[string]any {
-	var pa []map[string]any
-	p := map[string]any{
+	var result []map[string]any
+	data := map[string]any{
 		"source_code_hash": pkg.Metadata.HashSum,
 		"filename":         filename,
 	}
 
 	// Convert Package to a map for saving to state.
-	pa = append(pa, p)
-	return pa
+	result = append(result, data)
+	return result
 }

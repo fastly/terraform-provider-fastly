@@ -271,9 +271,10 @@ func deleteCloudfiles(conn *gofastly.Client, i *gofastly.DeleteCloudfilesInput) 
 	return nil
 }
 
+// flattenCloudfiles models data into format suitable for saving to Terraform state.
 func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles, state []any) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range cloudfilesList {
+	var result []map[string]any
+	for _, resource := range cloudfilesList {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -291,43 +292,42 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles, state []any) []map
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == ll.Name && v["gzip_level"].(int) == -1 {
-				ll.GzipLevel = v["gzip_level"].(int)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
 				break
 			}
 		}
 
-		// Convert Cloud Files logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"bucket_name":        ll.BucketName,
-			"user":               ll.User,
-			"access_key":         ll.AccessKey,
-			"public_key":         ll.PublicKey,
-			"gzip_level":         ll.GzipLevel,
-			"message_type":       ll.MessageType,
-			"path":               ll.Path,
-			"region":             ll.Region,
-			"period":             ll.Period,
-			"timestamp_format":   ll.TimestampFormat,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
-			"compression_codec":  ll.CompressionCodec,
+		data := map[string]any{
+			"name":               resource.Name,
+			"bucket_name":        resource.BucketName,
+			"user":               resource.User,
+			"access_key":         resource.AccessKey,
+			"public_key":         resource.PublicKey,
+			"gzip_level":         resource.GzipLevel,
+			"message_type":       resource.MessageType,
+			"path":               resource.Path,
+			"region":             resource.Region,
+			"period":             resource.Period,
+			"timestamp_format":   resource.TimestampFormat,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
+			"compression_codec":  resource.CompressionCodec,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, serviceID string, serviceVersion int) *gofastly.CreateCloudfilesInput {

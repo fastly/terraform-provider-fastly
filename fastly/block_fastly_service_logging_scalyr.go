@@ -186,31 +186,31 @@ func deleteScalyr(conn *gofastly.Client, i *gofastly.DeleteScalyrInput) error {
 	return nil
 }
 
+// flattenScalyr models data into format suitable for saving to Terraform state.
 func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]any {
-	var flattened []map[string]any
-	for _, s := range scalyrList {
-		// Convert logging to a map for saving to state.
-		flatScalyr := map[string]any{
-			"name":               s.Name,
-			"region":             s.Region,
-			"token":              s.Token,
-			"response_condition": s.ResponseCondition,
-			"format":             s.Format,
-			"placement":          s.Placement,
-			"format_version":     s.FormatVersion,
+	var result []map[string]any
+	for _, resource := range scalyrList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"region":             resource.Region,
+			"token":              resource.Token,
+			"response_condition": resource.ResponseCondition,
+			"format":             resource.Format,
+			"placement":          resource.Placement,
+			"format_version":     resource.FormatVersion,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range flatScalyr {
+		for k, v := range data {
 			if v == "" {
-				delete(flatScalyr, k)
+				delete(data, k)
 			}
 		}
 
-		flattened = append(flattened, flatScalyr)
+		result = append(result, data)
 	}
 
-	return flattened
+	return result
 }
 
 func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {

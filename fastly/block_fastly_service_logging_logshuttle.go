@@ -191,31 +191,31 @@ func deleteLogshuttle(conn *gofastly.Client, i *gofastly.DeleteLogshuttleInput) 
 	return nil
 }
 
+// flattenLogshuttle models data into format suitable for saving to Terraform state.
 func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range logshuttleList {
-		// Convert Log Shuttle logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"token":              ll.Token,
-			"url":                ll.URL,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range logshuttleList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap any, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {

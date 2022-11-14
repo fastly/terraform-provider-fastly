@@ -287,42 +287,42 @@ func deleteHTTPS(conn *gofastly.Client, i *gofastly.DeleteHTTPSInput) error {
 	return nil
 }
 
+// flattenHTTPS models data into format suitable for saving to Terraform state.
 func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]any {
-	var hsl []map[string]any
-	for _, hl := range httpsList {
-		// Convert HTTP logging to a map for saving to state.
-		nhl := map[string]any{
-			"name":                hl.Name,
-			"response_condition":  hl.ResponseCondition,
-			"format":              hl.Format,
-			"url":                 hl.URL,
-			"request_max_entries": hl.RequestMaxEntries,
-			"request_max_bytes":   hl.RequestMaxBytes,
-			"content_type":        hl.ContentType,
-			"header_name":         hl.HeaderName,
-			"header_value":        hl.HeaderValue,
-			"method":              hl.Method,
-			"json_format":         hl.JSONFormat,
-			"placement":           hl.Placement,
-			"tls_ca_cert":         hl.TLSCACert,
-			"tls_client_cert":     hl.TLSClientCert,
-			"tls_client_key":      hl.TLSClientKey,
-			"tls_hostname":        hl.TLSHostname,
-			"message_type":        hl.MessageType,
-			"format_version":      hl.FormatVersion,
+	var result []map[string]any
+	for _, resource := range httpsList {
+		data := map[string]any{
+			"name":                resource.Name,
+			"response_condition":  resource.ResponseCondition,
+			"format":              resource.Format,
+			"url":                 resource.URL,
+			"request_max_entries": resource.RequestMaxEntries,
+			"request_max_bytes":   resource.RequestMaxBytes,
+			"content_type":        resource.ContentType,
+			"header_name":         resource.HeaderName,
+			"header_value":        resource.HeaderValue,
+			"method":              resource.Method,
+			"json_format":         resource.JSONFormat,
+			"placement":           resource.Placement,
+			"tls_ca_cert":         resource.TLSCACert,
+			"tls_client_cert":     resource.TLSClientCert,
+			"tls_client_key":      resource.TLSClientKey,
+			"tls_hostname":        resource.TLSHostname,
+			"message_type":        resource.MessageType,
+			"format_version":      resource.FormatVersion,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nhl {
+		for k, v := range data {
 			if v == "" {
-				delete(nhl, k)
+				delete(data, k)
 			}
 		}
 
-		hsl = append(hsl, nhl)
+		result = append(result, data)
 	}
 
-	return hsl
+	return result
 }
 
 func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {

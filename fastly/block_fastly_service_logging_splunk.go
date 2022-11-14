@@ -259,34 +259,34 @@ func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// flattenSplunks models data into format suitable for saving to Terraform state.
 func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]any {
-	var sl []map[string]any
-	for _, s := range splunkList {
-		// Convert Splunk to a map for saving to state.
-		nbs := map[string]any{
-			"name":               s.Name,
-			"url":                s.URL,
-			"format":             s.Format,
-			"format_version":     s.FormatVersion,
-			"response_condition": s.ResponseCondition,
-			"placement":          s.Placement,
-			"token":              s.Token,
-			"use_tls":            s.UseTLS,
-			"tls_hostname":       s.TLSHostname,
-			"tls_ca_cert":        s.TLSCACert,
-			"tls_client_cert":    s.TLSClientCert,
-			"tls_client_key":     s.TLSClientKey,
+	var result []map[string]any
+	for _, resource := range splunkList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
+			"token":              resource.Token,
+			"use_tls":            resource.UseTLS,
+			"tls_hostname":       resource.TLSHostname,
+			"tls_ca_cert":        resource.TLSCACert,
+			"tls_client_cert":    resource.TLSClientCert,
+			"tls_client_key":     resource.TLSClientKey,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nbs {
+		for k, v := range data {
 			if v == "" {
-				delete(nbs, k)
+				delete(data, k)
 			}
 		}
 
-		sl = append(sl, nbs)
+		result = append(result, data)
 	}
 
-	return sl
+	return result
 }

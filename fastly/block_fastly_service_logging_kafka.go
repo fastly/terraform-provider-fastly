@@ -289,43 +289,43 @@ func deleteKafka(conn *gofastly.Client, i *gofastly.DeleteKafkaInput) error {
 	return nil
 }
 
+// flattenKafka models data into format suitable for saving to Terraform state.
 func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]any {
-	var flattened []map[string]any
-	for _, s := range kafkaList {
-		// Convert logging to a map for saving to state.
-		flatKafka := map[string]any{
-			"name":               s.Name,
-			"topic":              s.Topic,
-			"brokers":            s.Brokers,
-			"compression_codec":  s.CompressionCodec,
-			"required_acks":      s.RequiredACKs,
-			"use_tls":            s.UseTLS,
-			"tls_ca_cert":        s.TLSCACert,
-			"tls_client_cert":    s.TLSClientCert,
-			"tls_client_key":     s.TLSClientKey,
-			"tls_hostname":       s.TLSHostname,
-			"format":             s.Format,
-			"format_version":     s.FormatVersion,
-			"placement":          s.Placement,
-			"response_condition": s.ResponseCondition,
-			"parse_log_keyvals":  s.ParseLogKeyvals,
-			"request_max_bytes":  s.RequestMaxBytes,
-			"auth_method":        s.AuthMethod,
-			"user":               s.User,
-			"password":           s.Password,
+	var result []map[string]any
+	for _, resource := range kafkaList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"topic":              resource.Topic,
+			"brokers":            resource.Brokers,
+			"compression_codec":  resource.CompressionCodec,
+			"required_acks":      resource.RequiredACKs,
+			"use_tls":            resource.UseTLS,
+			"tls_ca_cert":        resource.TLSCACert,
+			"tls_client_cert":    resource.TLSClientCert,
+			"tls_client_key":     resource.TLSClientKey,
+			"tls_hostname":       resource.TLSHostname,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
+			"parse_log_keyvals":  resource.ParseLogKeyvals,
+			"request_max_bytes":  resource.RequestMaxBytes,
+			"auth_method":        resource.AuthMethod,
+			"user":               resource.User,
+			"password":           resource.Password,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range flatKafka {
+		for k, v := range data {
 			if v == "" {
-				delete(flatKafka, k)
+				delete(data, k)
 			}
 		}
 
-		flattened = append(flattened, flatKafka)
+		result = append(result, data)
 	}
 
-	return flattened
+	return result
 }
 
 func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap any, serviceID string, serviceVersion int) *gofastly.CreateKafkaInput {

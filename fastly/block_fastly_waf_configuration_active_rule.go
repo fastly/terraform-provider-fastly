@@ -181,16 +181,16 @@ func executeBatchWAFActiveRulesOperations(conn *gofastly.Client, input *gofastly
 	return nil
 }
 
+// flattenWAFActiveRules models data into format suitable for saving to Terraform state.
 func flattenWAFActiveRules(rules []*gofastly.WAFActiveRule) []map[string]any {
-	rl := make([]map[string]any, len(rules))
+	result := make([]map[string]any, len(rules))
 	for i, r := range rules {
-		ruleMapString := map[string]any{
+		data := map[string]any{
 			"modsec_rule_id": r.ModSecID,
 			"revision":       r.Revision,
 			"status":         r.Status,
 		}
-
-		rl[i] = ruleMapString
+		result[i] = data
 	}
-	return rl
+	return result
 }

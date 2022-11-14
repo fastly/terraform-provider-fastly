@@ -217,34 +217,34 @@ func deleteKinesis(conn *gofastly.Client, i *gofastly.DeleteKinesisInput) error 
 	return nil
 }
 
+// flattenKinesis models data into format suitable for saving to Terraform state.
 func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range kinesisList {
-		// Convert Kinesis logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"topic":              ll.StreamName,
-			"region":             ll.Region,
-			"access_key":         ll.AccessKey,
-			"secret_key":         ll.SecretKey,
-			"iam_role":           ll.IAMRole,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range kinesisList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"topic":              resource.StreamName,
+			"region":             resource.Region,
+			"access_key":         resource.AccessKey,
+			"secret_key":         resource.SecretKey,
+			"iam_role":           resource.IAMRole,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID string, serviceVersion int) *gofastly.CreateKinesisInput {

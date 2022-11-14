@@ -189,31 +189,31 @@ func deleteNewRelic(conn *gofastly.Client, i *gofastly.DeleteNewRelicInput) erro
 	return nil
 }
 
+// flattenNewRelic models data into format suitable for saving to Terraform state.
 func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]any {
-	var dsl []map[string]any
-	for _, dl := range newrelicList {
-		// Convert NewRelic logging to a map for saving to state.
-		ndl := map[string]any{
-			"name":               dl.Name,
-			"token":              dl.Token,
-			"format":             dl.Format,
-			"format_version":     dl.FormatVersion,
-			"placement":          dl.Placement,
-			"region":             dl.Region,
-			"response_condition": dl.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range newrelicList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"region":             resource.Region,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range ndl {
+		for k, v := range data {
 			if v == "" {
-				delete(ndl, k)
+				delete(data, k)
 			}
 		}
 
-		dsl = append(dsl, ndl)
+		result = append(result, data)
 	}
 
-	return dsl
+	return result
 }
 
 func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap any, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {

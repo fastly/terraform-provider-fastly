@@ -189,26 +189,26 @@ func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 	return nil
 }
 
+// flattenConditions models data into format suitable for saving to Terraform state.
 func flattenConditions(conditionList []*gofastly.Condition) []map[string]any {
-	var cl []map[string]any
-	for _, c := range conditionList {
-		// Convert Conditions to a map for saving to state.
-		nc := map[string]any{
-			"name":      c.Name,
-			"statement": c.Statement,
-			"type":      c.Type,
-			"priority":  c.Priority,
+	var result []map[string]any
+	for _, resource := range conditionList {
+		data := map[string]any{
+			"name":      resource.Name,
+			"statement": resource.Statement,
+			"type":      resource.Type,
+			"priority":  resource.Priority,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nc {
+		for k, v := range data {
 			if v == "" {
-				delete(nc, k)
+				delete(data, k)
 			}
 		}
 
-		cl = append(cl, nc)
+		result = append(result, data)
 	}
 
-	return cl
+	return result
 }

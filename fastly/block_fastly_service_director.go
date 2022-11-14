@@ -262,39 +262,39 @@ func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.Re
 	return nil
 }
 
+// flattenDirectors models data into format suitable for saving to Terraform state.
 func flattenDirectors(directorList []*gofastly.Director) []map[string]any {
-	var dl []map[string]any
-	for _, d := range directorList {
-		// Convert Director to a map for saving to state.
-		nd := map[string]any{
-			"name":    d.Name,
-			"comment": d.Comment,
-			"shield":  d.Shield,
-			"type":    d.Type,
-			"quorum":  int(d.Quorum),
-			"retries": int(d.Retries),
+	var result []map[string]any
+	for _, resource := range directorList {
+		data := map[string]any{
+			"name":    resource.Name,
+			"comment": resource.Comment,
+			"shield":  resource.Shield,
+			"type":    resource.Type,
+			"quorum":  int(resource.Quorum),
+			"retries": int(resource.Retries),
 		}
 
 		// NOTE: schema.NewSet expects slice of empty interface so we have to build
 		// this from the Dictionary's Backend field.
 		var b []any
-		for _, v := range d.Backends {
+		for _, v := range resource.Backends {
 			b = append(b, v)
 		}
 		if len(b) > 0 {
-			nd["backends"] = schema.NewSet(schema.HashString, b)
+			data["backends"] = schema.NewSet(schema.HashString, b)
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nd {
+		for k, v := range data {
 			if v == "" {
-				delete(nd, k)
+				delete(data, k)
 			}
 		}
 
-		dl = append(dl, nd)
+		result = append(result, data)
 	}
-	return dl
+	return result
 }
 
 func getDirectorBackendChange(d *schema.ResourceData, resource map[string]any) (odb *schema.Set, ndb *schema.Set) {

@@ -187,31 +187,31 @@ func deleteHoneycomb(conn *gofastly.Client, i *gofastly.DeleteHoneycombInput) er
 	return nil
 }
 
+// flattenHoneycomb models data into format suitable for saving to Terraform state.
 func flattenHoneycomb(honeycombList []*gofastly.Honeycomb) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range honeycombList {
-		// Convert Honeycomb logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"token":              ll.Token,
-			"dataset":            ll.Dataset,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range honeycombList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"dataset":            resource.Dataset,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap any, serviceID string, serviceVersion int) *gofastly.CreateHoneycombInput {

@@ -281,36 +281,36 @@ func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// flattenSyslogs models data into format suitable for saving to Terraform state.
 func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]any {
-	var pl []map[string]any
-	for _, p := range syslogList {
-		// Convert Syslog to a map for saving to state.
-		ns := map[string]any{
-			"name":               p.Name,
-			"address":            p.Address,
-			"port":               p.Port,
-			"format":             p.Format,
-			"format_version":     p.FormatVersion,
-			"token":              p.Token,
-			"use_tls":            p.UseTLS,
-			"tls_hostname":       p.TLSHostname,
-			"tls_ca_cert":        p.TLSCACert,
-			"tls_client_cert":    p.TLSClientCert,
-			"tls_client_key":     p.TLSClientKey,
-			"response_condition": p.ResponseCondition,
-			"message_type":       p.MessageType,
-			"placement":          p.Placement,
+	var result []map[string]any
+	for _, resource := range syslogList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"port":               resource.Port,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"token":              resource.Token,
+			"use_tls":            resource.UseTLS,
+			"tls_hostname":       resource.TLSHostname,
+			"tls_ca_cert":        resource.TLSCACert,
+			"tls_client_cert":    resource.TLSClientCert,
+			"tls_client_key":     resource.TLSClientKey,
+			"response_condition": resource.ResponseCondition,
+			"message_type":       resource.MessageType,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
+		for k, v := range data {
 			if v == "" {
-				delete(ns, k)
+				delete(data, k)
 			}
 		}
 
-		pl = append(pl, ns)
+		result = append(result, data)
 	}
 
-	return pl
+	return result
 }

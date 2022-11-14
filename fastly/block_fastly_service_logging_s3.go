@@ -372,9 +372,10 @@ func deleteS3(conn *gofastly.Client, i *gofastly.DeleteS3Input) error {
 	return nil
 }
 
+// flattenS3s models data into format suitable for saving to Terraform state.
 func flattenS3s(s3List []*gofastly.S3, state []any) []map[string]any {
-	var ssl []map[string]any
-	for _, sl := range s3List {
+	var result []map[string]any
+	for _, resource := range s3List {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -392,48 +393,47 @@ func flattenS3s(s3List []*gofastly.S3, state []any) []map[string]any {
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == sl.Name && v["gzip_level"].(int) == -1 {
-				sl.GzipLevel = v["gzip_level"].(int)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
 				break
 			}
 		}
 
-		// Convert S3s to a map for saving to state.
-		ns := map[string]any{
-			"name":                              sl.Name,
-			"bucket_name":                       sl.BucketName,
-			"s3_access_key":                     sl.AccessKey,
-			"s3_secret_key":                     sl.SecretKey,
-			"s3_iam_role":                       sl.IAMRole,
-			"path":                              sl.Path,
-			"period":                            sl.Period,
-			"domain":                            sl.Domain,
-			"gzip_level":                        sl.GzipLevel,
-			"format":                            sl.Format,
-			"format_version":                    sl.FormatVersion,
-			"timestamp_format":                  sl.TimestampFormat,
-			"redundancy":                        sl.Redundancy,
-			"response_condition":                sl.ResponseCondition,
-			"message_type":                      sl.MessageType,
-			"public_key":                        sl.PublicKey,
-			"placement":                         sl.Placement,
-			"server_side_encryption":            sl.ServerSideEncryption,
-			"server_side_encryption_kms_key_id": sl.ServerSideEncryptionKMSKeyID,
-			"compression_codec":                 sl.CompressionCodec,
-			"acl":                               sl.ACL,
+		data := map[string]any{
+			"name":                              resource.Name,
+			"bucket_name":                       resource.BucketName,
+			"s3_access_key":                     resource.AccessKey,
+			"s3_secret_key":                     resource.SecretKey,
+			"s3_iam_role":                       resource.IAMRole,
+			"path":                              resource.Path,
+			"period":                            resource.Period,
+			"domain":                            resource.Domain,
+			"gzip_level":                        resource.GzipLevel,
+			"format":                            resource.Format,
+			"format_version":                    resource.FormatVersion,
+			"timestamp_format":                  resource.TimestampFormat,
+			"redundancy":                        resource.Redundancy,
+			"response_condition":                resource.ResponseCondition,
+			"message_type":                      resource.MessageType,
+			"public_key":                        resource.PublicKey,
+			"placement":                         resource.Placement,
+			"server_side_encryption":            resource.ServerSideEncryption,
+			"server_side_encryption_kms_key_id": resource.ServerSideEncryptionKMSKeyID,
+			"compression_codec":                 resource.CompressionCodec,
+			"acl":                               resource.ACL,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range ns {
+		for k, v := range data {
 			if v == "" {
-				delete(ns, k)
+				delete(data, k)
 			}
 		}
 
-		ssl = append(ssl, ns)
+		result = append(result, data)
 	}
 
-	return ssl
+	return result
 }
 
 func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {

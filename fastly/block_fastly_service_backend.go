@@ -392,41 +392,42 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	return opts
 }
 
+// flattenBackend models data into format suitable for saving to Terraform state.
 func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[string]any {
-	bl := make([]map[string]any, 0, len(backendList))
+	result := make([]map[string]any, 0, len(backendList))
 
-	for _, b := range backendList {
-		backend := map[string]any{
-			"address":               b.Address,
-			"auto_loadbalance":      b.AutoLoadbalance,
-			"between_bytes_timeout": int(b.BetweenBytesTimeout),
-			"connect_timeout":       int(b.ConnectTimeout),
-			"error_threshold":       int(b.ErrorThreshold),
-			"first_byte_timeout":    int(b.FirstByteTimeout),
-			"healthcheck":           b.HealthCheck,
-			"max_conn":              int(b.MaxConn),
-			"max_tls_version":       b.MaxTLSVersion,
-			"min_tls_version":       b.MinTLSVersion,
-			"name":                  b.Name,
-			"override_host":         b.OverrideHost,
-			"port":                  int(b.Port),
-			"shield":                b.Shield,
-			"ssl_ca_cert":           b.SSLCACert,
-			"ssl_cert_hostname":     b.SSLCertHostname,
-			"ssl_check_cert":        b.SSLCheckCert,
-			"ssl_ciphers":           b.SSLCiphers,
-			"ssl_client_cert":       b.SSLClientCert,
-			"ssl_client_key":        b.SSLClientKey,
-			"ssl_sni_hostname":      b.SSLSNIHostname,
-			"use_ssl":               b.UseSSL,
-			"weight":                int(b.Weight),
+	for _, resource := range backendList {
+		data := map[string]any{
+			"address":               resource.Address,
+			"auto_loadbalance":      resource.AutoLoadbalance,
+			"between_bytes_timeout": int(resource.BetweenBytesTimeout),
+			"connect_timeout":       int(resource.ConnectTimeout),
+			"error_threshold":       int(resource.ErrorThreshold),
+			"first_byte_timeout":    int(resource.FirstByteTimeout),
+			"healthcheck":           resource.HealthCheck,
+			"max_conn":              int(resource.MaxConn),
+			"max_tls_version":       resource.MaxTLSVersion,
+			"min_tls_version":       resource.MinTLSVersion,
+			"name":                  resource.Name,
+			"override_host":         resource.OverrideHost,
+			"port":                  int(resource.Port),
+			"shield":                resource.Shield,
+			"ssl_ca_cert":           resource.SSLCACert,
+			"ssl_cert_hostname":     resource.SSLCertHostname,
+			"ssl_check_cert":        resource.SSLCheckCert,
+			"ssl_ciphers":           resource.SSLCiphers,
+			"ssl_client_cert":       resource.SSLClientCert,
+			"ssl_client_key":        resource.SSLClientKey,
+			"ssl_sni_hostname":      resource.SSLSNIHostname,
+			"use_ssl":               resource.UseSSL,
+			"weight":                int(resource.Weight),
 		}
 
 		if sa.serviceType == ServiceTypeVCL {
-			backend["request_condition"] = b.RequestCondition
+			data["request_condition"] = resource.RequestCondition
 		}
 
-		bl = append(bl, backend)
+		result = append(result, data)
 	}
-	return bl
+	return result
 }

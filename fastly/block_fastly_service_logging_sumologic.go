@@ -207,29 +207,29 @@ func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 	return nil
 }
 
+// flattenSumologics models data into format suitable for saving to Terraform state.
 func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]any {
-	var l []map[string]any
-	for _, p := range sumologicList {
-		// Convert Sumologic to a map for saving to state.
-		ns := map[string]any{
-			"name":               p.Name,
-			"url":                p.URL,
-			"format":             p.Format,
-			"response_condition": p.ResponseCondition,
-			"message_type":       p.MessageType,
-			"format_version":     int(p.FormatVersion),
-			"placement":          p.Placement,
+	var result []map[string]any
+	for _, resource := range sumologicList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"response_condition": resource.ResponseCondition,
+			"message_type":       resource.MessageType,
+			"format_version":     int(resource.FormatVersion),
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
+		for k, v := range data {
 			if v == "" {
-				delete(ns, k)
+				delete(data, k)
 			}
 		}
 
-		l = append(l, ns)
+		result = append(result, data)
 	}
 
-	return l
+	return result
 }

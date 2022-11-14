@@ -184,30 +184,30 @@ func deleteLoggly(conn *gofastly.Client, i *gofastly.DeleteLogglyInput) error {
 	return nil
 }
 
+// flattenLoggly models data into format suitable for saving to Terraform state.
 func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range logglyList {
-		// Convert Loggly logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"token":              ll.Token,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range logglyList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap any, serviceID string, serviceVersion int) *gofastly.CreateLogglyInput {

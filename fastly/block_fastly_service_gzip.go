@@ -205,44 +205,44 @@ func (h *GzipServiceAttributeHandler) Delete(_ context.Context, d *schema.Resour
 	return nil
 }
 
+// flattenGzips models data into format suitable for saving to Terraform state.
 func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]any {
-	var gl []map[string]any
-	for _, g := range gzipsList {
-		// Convert Gzip to a map for saving to state.
-		ng := map[string]any{
-			"name":            g.Name,
-			"cache_condition": g.CacheCondition,
+	var result []map[string]any
+	for _, resource := range gzipsList {
+		data := map[string]any{
+			"name":            resource.Name,
+			"cache_condition": resource.CacheCondition,
 		}
 
-		if g.Extensions != "" {
-			e := strings.Split(g.Extensions, " ")
+		if resource.Extensions != "" {
+			e := strings.Split(resource.Extensions, " ")
 			var et []any
 			for _, ev := range e {
 				et = append(et, ev)
 			}
-			ng["extensions"] = et
+			data["extensions"] = et
 		}
 
-		if g.ContentTypes != "" {
-			c := strings.Split(g.ContentTypes, " ")
+		if resource.ContentTypes != "" {
+			c := strings.Split(resource.ContentTypes, " ")
 			var ct []any
 			for _, cv := range c {
 				ct = append(ct, cv)
 			}
-			ng["content_types"] = ct
+			data["content_types"] = ct
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ng {
+		for k, v := range data {
 			if v == "" {
-				delete(ng, k)
+				delete(data, k)
 			}
 		}
 
-		gl = append(gl, ng)
+		result = append(result, data)
 	}
 
-	return gl
+	return result
 }
 
 func sliceToString(src []any) string {

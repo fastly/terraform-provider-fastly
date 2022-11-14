@@ -273,9 +273,10 @@ func deleteOpenstack(conn *gofastly.Client, i *gofastly.DeleteOpenstackInput) er
 	return nil
 }
 
+// flattenOpenstack models data into format suitable for saving to Terraform state.
 func flattenOpenstack(openstackList []*gofastly.Openstack, state []any) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range openstackList {
+	var result []map[string]any
+	for _, resource := range openstackList {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -293,43 +294,42 @@ func flattenOpenstack(openstackList []*gofastly.Openstack, state []any) []map[st
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == ll.Name && v["gzip_level"].(int) == -1 {
-				ll.GzipLevel = v["gzip_level"].(int)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
 				break
 			}
 		}
 
-		// Convert OpenStack logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"url":                ll.URL,
-			"user":               ll.User,
-			"bucket_name":        ll.BucketName,
-			"access_key":         ll.AccessKey,
-			"public_key":         ll.PublicKey,
-			"gzip_level":         ll.GzipLevel,
-			"message_type":       ll.MessageType,
-			"path":               ll.Path,
-			"period":             ll.Period,
-			"timestamp_format":   ll.TimestampFormat,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
-			"compression_codec":  ll.CompressionCodec,
+		data := map[string]any{
+			"name":               resource.Name,
+			"url":                resource.URL,
+			"user":               resource.User,
+			"bucket_name":        resource.BucketName,
+			"access_key":         resource.AccessKey,
+			"public_key":         resource.PublicKey,
+			"gzip_level":         resource.GzipLevel,
+			"message_type":       resource.MessageType,
+			"path":               resource.Path,
+			"period":             resource.Period,
+			"timestamp_format":   resource.TimestampFormat,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
+			"compression_codec":  resource.CompressionCodec,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {

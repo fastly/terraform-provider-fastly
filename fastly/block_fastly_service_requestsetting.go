@@ -235,36 +235,36 @@ func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *sch
 	return nil
 }
 
+// flattenRequestSettings models data into format suitable for saving to Terraform state.
 func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]any {
-	var rl []map[string]any
-	for _, r := range rsList {
-		// Convert Request Settings to a map for saving to state.
-		nrs := map[string]any{
-			"name":              r.Name,
-			"max_stale_age":     r.MaxStaleAge,
-			"force_miss":        r.ForceMiss,
-			"force_ssl":         r.ForceSSL,
-			"action":            r.Action,
-			"bypass_busy_wait":  r.BypassBusyWait,
-			"hash_keys":         r.HashKeys,
-			"xff":               r.XForwardedFor,
-			"timer_support":     r.TimerSupport,
-			"geo_headers":       r.GeoHeaders,
-			"default_host":      r.DefaultHost,
-			"request_condition": r.RequestCondition,
+	var result []map[string]any
+	for _, resource := range rsList {
+		data := map[string]any{
+			"name":              resource.Name,
+			"max_stale_age":     resource.MaxStaleAge,
+			"force_miss":        resource.ForceMiss,
+			"force_ssl":         resource.ForceSSL,
+			"action":            resource.Action,
+			"bypass_busy_wait":  resource.BypassBusyWait,
+			"hash_keys":         resource.HashKeys,
+			"xff":               resource.XForwardedFor,
+			"timer_support":     resource.TimerSupport,
+			"geo_headers":       resource.GeoHeaders,
+			"default_host":      resource.DefaultHost,
+			"request_condition": resource.RequestCondition,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nrs {
+		for k, v := range data {
 			if v == "" {
-				delete(nrs, k)
+				delete(data, k)
 			}
 		}
 
-		rl = append(rl, nrs)
+		result = append(result, data)
 	}
 
-	return rl
+	return result
 }
 
 func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingInput, error) {

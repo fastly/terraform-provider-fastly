@@ -133,36 +133,37 @@ func createFiltersHash(i *gofastly.ListAllWAFRulesInput) int {
 	return hashcode.String(result)
 }
 
+// flattenWAFRules models data into format suitable for saving to Terraform state.
 func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]any {
-	rl := make([]map[string]any, len(ruleList))
+	result := make([]map[string]any, len(ruleList))
 
 	if len(ruleList) == 0 {
-		return rl
+		return result
 	}
 
-	for i, r := range ruleList {
+	for i, resource := range ruleList {
 		latestRevisionNumber := 1
-		if latestRevision, err := determineLatestRuleRevision(r.Revisions); err == nil {
+		if latestRevision, err := determineLatestRuleRevision(resource.Revisions); err == nil {
 			latestRevisionNumber = latestRevision.Revision
 		}
 
-		rulesMapString := map[string]any{
-			"modsec_rule_id":         r.ModSecID,
+		data := map[string]any{
+			"modsec_rule_id":         resource.ModSecID,
 			"latest_revision_number": latestRevisionNumber,
-			"type":                   r.Type,
+			"type":                   resource.Type,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range rulesMapString {
+		for k, v := range data {
 			if v == "" {
-				delete(rulesMapString, k)
+				delete(data, k)
 			}
 		}
 
-		rl[i] = rulesMapString
+		result[i] = data
 	}
 
-	return rl
+	return result
 }
 
 func determineLatestRuleRevision(revisions []*gofastly.WAFRuleRevision) (*gofastly.WAFRuleRevision, error) {

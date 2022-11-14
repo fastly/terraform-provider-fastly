@@ -71,28 +71,29 @@ func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
+// flattenDatacenters models data into format suitable for saving to Terraform state.
 func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]any {
-	pops := make([]map[string]any, len(datacenters))
+	result := make([]map[string]any, len(datacenters))
 	if len(datacenters) == 0 {
-		return pops
+		return result
 	}
 
-	for i, pop := range datacenters {
-		datacentersMapString := map[string]any{
-			"code":   pop.Code,
-			"name":   pop.Name,
-			"group":  pop.Group,
-			"shield": pop.Shield,
+	for i, resource := range datacenters {
+		data := map[string]any{
+			"code":   resource.Code,
+			"name":   resource.Name,
+			"group":  resource.Group,
+			"shield": resource.Shield,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range datacentersMapString {
+		for k, v := range data {
 			if v == "" {
-				delete(datacentersMapString, k)
+				delete(data, k)
 			}
 		}
-		pops[i] = datacentersMapString
+		result[i] = data
 	}
 
-	return pops
+	return result
 }

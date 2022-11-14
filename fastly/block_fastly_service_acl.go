@@ -145,26 +145,26 @@ func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 	return nil
 }
 
+// flattenACLs models data into format suitable for saving to Terraform state.
 func flattenACLs(aclList []*gofastly.ACL) []map[string]any {
-	var al []map[string]any
-	for _, acl := range aclList {
-		// Convert ACLs to a map for saving to state.
-		aclMap := map[string]any{
-			"acl_id": acl.ID,
-			"name":   acl.Name,
+	var result []map[string]any
+	for _, resource := range aclList {
+		data := map[string]any{
+			"acl_id": resource.ID,
+			"name":   resource.Name,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range aclMap {
+		for k, v := range data {
 			if v == "" {
-				delete(aclMap, k)
+				delete(data, k)
 			}
 		}
 
-		al = append(al, aclMap)
+		result = append(result, data)
 	}
 
-	return al
+	return result
 }
 
 func isACLEmpty(serviceID, aclID string, conn *gofastly.Client) (bool, error) {

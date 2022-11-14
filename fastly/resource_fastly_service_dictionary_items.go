@@ -204,13 +204,13 @@ func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceD
 	return []*schema.ResourceData{d}, nil
 }
 
+// flattenDictionaryItems models data into format suitable for saving to Terraform state.
 func flattenDictionaryItems(dictItemList []*gofastly.DictionaryItem) map[string]string {
-	resultList := make(map[string]string)
+	result := make(map[string]string)
 	for _, currentDictItem := range dictItemList {
-		resultList[currentDictItem.ItemKey] = currentDictItem.ItemValue
+		result[currentDictItem.ItemKey] = currentDictItem.ItemValue
 	}
-
-	return resultList
+	return result
 }
 
 func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictionaryID string, batchDictionaryItems []*gofastly.BatchDictionaryItem) error {

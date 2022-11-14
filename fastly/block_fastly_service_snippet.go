@@ -180,31 +180,31 @@ func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 	return &opts, nil
 }
 
+// flattenSnippets models data into format suitable for saving to Terraform state.
 func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]any {
-	var sl []map[string]any
-	for _, snippet := range snippetList {
+	var result []map[string]any
+	for _, resource := range snippetList {
 		// Skip dynamic snippets
-		if snippet.Dynamic == 1 {
+		if resource.Dynamic == 1 {
 			continue
 		}
 
-		// Convert VCLs to a map for saving to state.
-		snippetMap := map[string]any{
-			"name":     snippet.Name,
-			"type":     snippet.Type,
-			"priority": int(snippet.Priority),
-			"content":  snippet.Content,
+		data := map[string]any{
+			"name":     resource.Name,
+			"type":     resource.Type,
+			"priority": int(resource.Priority),
+			"content":  resource.Content,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range snippetMap {
+		for k, v := range data {
 			if v == "" {
-				delete(snippetMap, k)
+				delete(data, k)
 			}
 		}
 
-		sl = append(sl, snippetMap)
+		result = append(result, data)
 	}
 
-	return sl
+	return result
 }

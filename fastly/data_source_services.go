@@ -102,30 +102,32 @@ func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, met
 	return nil
 }
 
+// flattenServiceIDs models data into format suitable for saving to Terraform state.
 func flattenServiceIDs(services []*gofastly.Service) []string {
 	result := make([]string, len(services))
-	for i, s := range services {
-		result[i] = s.ID
+	for i, resource := range services {
+		result[i] = resource.ID
 	}
 	return result
 }
 
+// flattenServiceDetails models data into format suitable for saving to Terraform state.
 func flattenServiceDetails(services []*gofastly.Service) []map[string]any {
 	result := make([]map[string]any, len(services))
 	if len(services) == 0 {
 		return result
 	}
 
-	for i, s := range services {
+	for i, resource := range services {
 		result[i] = map[string]any{
-			"id":          s.ID,
-			"name":        s.Name,
-			"type":        s.Type,
-			"comment":     s.Comment,
-			"customer_id": s.CustomerID,
-			"created_at":  s.CreatedAt.String(),
-			"updated_at":  s.UpdatedAt.String(),
-			"version":     s.ActiveVersion,
+			"id":          resource.ID,
+			"name":        resource.Name,
+			"type":        resource.Type,
+			"comment":     resource.Comment,
+			"customer_id": resource.CustomerID,
+			"created_at":  resource.CreatedAt.String(),
+			"updated_at":  resource.UpdatedAt.String(),
+			"version":     resource.ActiveVersion,
 		}
 	}
 

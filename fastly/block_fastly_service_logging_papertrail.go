@@ -203,29 +203,29 @@ func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
+// flattenPapertrails models data into format suitable for saving to Terraform state.
 func flattenPapertrails(papertrailList []*gofastly.Papertrail) []map[string]any {
-	var pl []map[string]any
-	for _, p := range papertrailList {
-		// Convert Papertrails to a map for saving to state.
-		ns := map[string]any{
-			"name":               p.Name,
-			"address":            p.Address,
-			"port":               p.Port,
-			"format":             p.Format,
-			"format_version":     p.FormatVersion,
-			"response_condition": p.ResponseCondition,
-			"placement":          p.Placement,
+	var result []map[string]any
+	for _, resource := range papertrailList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"port":               resource.Port,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
+		for k, v := range data {
 			if v == "" {
-				delete(ns, k)
+				delete(data, k)
 			}
 		}
 
-		pl = append(pl, ns)
+		result = append(result, data)
 	}
 
-	return pl
+	return result
 }

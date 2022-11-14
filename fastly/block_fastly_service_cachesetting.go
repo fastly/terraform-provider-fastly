@@ -186,27 +186,27 @@ func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) 
 	return &opts, nil
 }
 
+// flattenCacheSettings models data into format suitable for saving to Terraform state.
 func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]any {
-	var csl []map[string]any
-	for _, cl := range csList {
-		// Convert Cache Settings to a map for saving to state.
-		clMap := map[string]any{
-			"name":            cl.Name,
-			"action":          cl.Action,
-			"cache_condition": cl.CacheCondition,
-			"stale_ttl":       cl.StaleTTL,
-			"ttl":             cl.TTL,
+	var result []map[string]any
+	for _, resource := range csList {
+		data := map[string]any{
+			"name":            resource.Name,
+			"action":          resource.Action,
+			"cache_condition": resource.CacheCondition,
+			"stale_ttl":       resource.StaleTTL,
+			"ttl":             resource.TTL,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range clMap {
+		for k, v := range data {
 			if v == "" {
-				delete(clMap, k)
+				delete(data, k)
 			}
 		}
 
-		csl = append(csl, clMap)
+		result = append(result, data)
 	}
 
-	return csl
+	return result
 }

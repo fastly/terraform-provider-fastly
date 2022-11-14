@@ -193,31 +193,31 @@ func deleteHeroku(conn *gofastly.Client, i *gofastly.DeleteHerokuInput) error {
 	return nil
 }
 
+// flattenHeroku models data into format suitable for saving to Terraform state.
 func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]any {
-	var res []map[string]any
-	for _, ll := range herokuList {
-		// Convert Heroku logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"token":              ll.Token,
-			"url":                ll.URL,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range herokuList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		res = append(res, nll)
+		result = append(result, data)
 	}
 
-	return res
+	return result
 }
 
 func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap any, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {

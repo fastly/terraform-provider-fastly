@@ -273,9 +273,10 @@ func deleteFTP(conn *gofastly.Client, i *gofastly.DeleteFTPInput) error {
 	return nil
 }
 
+// flattenFTP models data into format suitable for saving to Terraform state.
 func flattenFTP(ftpList []*gofastly.FTP, state []any) []map[string]any {
-	var fsl []map[string]any
-	for _, fl := range ftpList {
+	var result []map[string]any
+	for _, resource := range ftpList {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -293,43 +294,42 @@ func flattenFTP(ftpList []*gofastly.FTP, state []any) []map[string]any {
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == fl.Name && v["gzip_level"].(int) == -1 {
-				fl.GzipLevel = v["gzip_level"].(int)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
 				break
 			}
 		}
 
-		// Convert FTP logging to a map for saving to state.
-		nfl := map[string]any{
-			"name":               fl.Name,
-			"address":            fl.Address,
-			"user":               fl.Username,
-			"password":           fl.Password,
-			"path":               fl.Path,
-			"port":               fl.Port,
-			"period":             fl.Period,
-			"public_key":         fl.PublicKey,
-			"gzip_level":         fl.GzipLevel,
-			"timestamp_format":   fl.TimestampFormat,
-			"format":             fl.Format,
-			"format_version":     fl.FormatVersion,
-			"message_type":       fl.MessageType,
-			"placement":          fl.Placement,
-			"response_condition": fl.ResponseCondition,
-			"compression_codec":  fl.CompressionCodec,
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"user":               resource.Username,
+			"password":           resource.Password,
+			"path":               resource.Path,
+			"port":               resource.Port,
+			"period":             resource.Period,
+			"public_key":         resource.PublicKey,
+			"gzip_level":         resource.GzipLevel,
+			"timestamp_format":   resource.TimestampFormat,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"message_type":       resource.MessageType,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
+			"compression_codec":  resource.CompressionCodec,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nfl {
+		for k, v := range data {
 			if v == "" {
-				delete(nfl, k)
+				delete(data, k)
 			}
 		}
 
-		fsl = append(fsl, nfl)
+		result = append(result, data)
 	}
 
-	return fsl
+	return result
 }
 
 func (h *FTPServiceAttributeHandler) buildCreate(ftpMap any, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {

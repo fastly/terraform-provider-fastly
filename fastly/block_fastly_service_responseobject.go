@@ -185,29 +185,29 @@ func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *sch
 	return nil
 }
 
+// flattenResponseObjects models data into format suitable for saving to Terraform state.
 func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]any {
-	var rol []map[string]any
-	for _, ro := range responseObjectList {
-		// Convert ResponseObjects to a map for saving to state.
-		nro := map[string]any{
-			"name":              ro.Name,
-			"status":            ro.Status,
-			"response":          ro.Response,
-			"content":           ro.Content,
-			"content_type":      ro.ContentType,
-			"request_condition": ro.RequestCondition,
-			"cache_condition":   ro.CacheCondition,
+	var result []map[string]any
+	for _, resource := range responseObjectList {
+		data := map[string]any{
+			"name":              resource.Name,
+			"status":            resource.Status,
+			"response":          resource.Response,
+			"content":           resource.Content,
+			"content_type":      resource.ContentType,
+			"request_condition": resource.RequestCondition,
+			"cache_condition":   resource.CacheCondition,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nro {
+		for k, v := range data {
 			if v == "" {
-				delete(nro, k)
+				delete(data, k)
 			}
 		}
 
-		rol = append(rol, nro)
+		result = append(result, data)
 	}
 
-	return rol
+	return result
 }

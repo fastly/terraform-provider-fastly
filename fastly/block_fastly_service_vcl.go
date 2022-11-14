@@ -140,27 +140,27 @@ func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 	return nil
 }
 
+// flattenVCLs models data into format suitable for saving to Terraform state.
 func flattenVCLs(vclList []*gofastly.VCL) []map[string]any {
-	var vl []map[string]any
-	for _, vcl := range vclList {
-		// Convert VCLs to a map for saving to state.
-		vclMap := map[string]any{
-			"name":    vcl.Name,
-			"content": vcl.Content,
-			"main":    vcl.Main,
+	var result []map[string]any
+	for _, resource := range vclList {
+		data := map[string]any{
+			"name":    resource.Name,
+			"content": resource.Content,
+			"main":    resource.Main,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range vclMap {
+		for k, v := range data {
 			if v == "" {
-				delete(vclMap, k)
+				delete(data, k)
 			}
 		}
 
-		vl = append(vl, vclMap)
+		result = append(result, data)
 	}
 
-	return vl
+	return result
 }
 
 func validateVCLs(d *schema.ResourceData) error {

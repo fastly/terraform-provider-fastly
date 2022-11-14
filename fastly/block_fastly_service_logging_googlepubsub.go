@@ -208,33 +208,33 @@ func deleteGooglePubSub(conn *gofastly.Client, i *gofastly.DeletePubsubInput) er
 	return nil
 }
 
+// flattenGooglePubSub models data into format suitable for saving to Terraform state.
 func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]any {
-	var flattened []map[string]any
-	for _, s := range googlepubsubList {
-		// Convert logging to a map for saving to state.
-		flatGooglePubSub := map[string]any{
-			"name":               s.Name,
-			"user":               s.User,
-			"secret_key":         s.SecretKey,
-			"project_id":         s.ProjectID,
-			"topic":              s.Topic,
-			"format":             s.Format,
-			"format_version":     s.FormatVersion,
-			"placement":          s.Placement,
-			"response_condition": s.ResponseCondition,
+	var result []map[string]any
+	for _, resource := range googlepubsubList {
+		data := map[string]any{
+			"name":               resource.Name,
+			"user":               resource.User,
+			"secret_key":         resource.SecretKey,
+			"project_id":         resource.ProjectID,
+			"topic":              resource.Topic,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range flatGooglePubSub {
+		for k, v := range data {
 			if v == "" {
-				delete(flatGooglePubSub, k)
+				delete(data, k)
 			}
 		}
 
-		flattened = append(flattened, flatGooglePubSub)
+		result = append(result, data)
 	}
 
-	return flattened
+	return result
 }
 
 func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {

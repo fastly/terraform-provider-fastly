@@ -174,31 +174,31 @@ func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, e
 	return &opts, nil
 }
 
+// flattenDynamicSnippets models data into format suitable for saving to Terraform state.
 func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string]any {
-	var sl []map[string]any
-	for _, dynamicSnippet := range dynamicSnippetList {
+	var result []map[string]any
+	for _, resource := range dynamicSnippetList {
 		// Skip non-dynamic snippets
-		if dynamicSnippet.Dynamic == 0 {
+		if resource.Dynamic == 0 {
 			continue
 		}
 
-		// Convert VCLs to a map for saving to state.
-		dynamicSnippetMap := map[string]any{
-			"snippet_id": dynamicSnippet.ID,
-			"name":       dynamicSnippet.Name,
-			"type":       dynamicSnippet.Type,
-			"priority":   int(dynamicSnippet.Priority),
+		data := map[string]any{
+			"snippet_id": resource.ID,
+			"name":       resource.Name,
+			"type":       resource.Type,
+			"priority":   int(resource.Priority),
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range dynamicSnippetMap {
+		for k, v := range data {
 			if v == "" {
-				delete(dynamicSnippetMap, k)
+				delete(data, k)
 			}
 		}
 
-		sl = append(sl, dynamicSnippetMap)
+		result = append(result, data)
 	}
 
-	return sl
+	return result
 }

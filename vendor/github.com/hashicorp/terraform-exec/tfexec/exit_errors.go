@@ -161,11 +161,8 @@ func (tf *Terraform) wrapExitError(ctx context.Context, err error, stderr string
 		}
 	case statePlanReadErrRegexp.MatchString(stderr):
 		return &ErrStatePlanRead{stderr: stderr}
-<<<<<<< HEAD
-=======
 	case lockIdInvalidErrRegexp.MatchString(stderr):
 		return &ErrLockIdInvalid{stderr: stderr}
->>>>>>> d814537f (bump dependencies)
 	}
 
 	return fmt.Errorf("%w\n%s", &unwrapper{exitErr, ctxErr}, stderr)

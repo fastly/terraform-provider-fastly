@@ -185,20 +185,11 @@ github.com/davecgh/go-spew/spew
 github.com/fastly/go-fastly/v7/fastly
 # github.com/fatih/color v1.13.0
 ## explicit; go 1.13
-<<<<<<< HEAD
->>>>>>> 5c59d2d5 (bump go-fastly)
-github.com/fatih/color
-# github.com/golang/protobuf v1.4.2
-## explicit; go 1.9
-github.com/golang/protobuf/proto
-github.com/golang/protobuf/protoc-gen-go/descriptor
-=======
 github.com/fatih/color
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
->>>>>>> d814537f (bump dependencies)
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
@@ -237,11 +228,7 @@ github.com/hashicorp/go-cty/cty/gocty
 github.com/hashicorp/go-cty/cty/json
 github.com/hashicorp/go-cty/cty/msgpack
 github.com/hashicorp/go-cty/cty/set
-<<<<<<< HEAD
-# github.com/hashicorp/go-hclog v0.16.1
-=======
 # github.com/hashicorp/go-hclog v1.2.1
->>>>>>> d814537f (bump dependencies)
 ## explicit; go 1.13
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-multierror v1.1.1
@@ -281,13 +268,8 @@ github.com/hashicorp/hcl/v2/hclsyntax
 # github.com/hashicorp/logutils v1.0.0
 ## explicit
 github.com/hashicorp/logutils
-<<<<<<< HEAD
-# github.com/hashicorp/terraform-exec v0.17.2
-## explicit; go 1.17
-=======
 # github.com/hashicorp/terraform-exec v0.17.3
 ## explicit; go 1.18
->>>>>>> d814537f (bump dependencies)
 github.com/hashicorp/terraform-exec/internal/version
 github.com/hashicorp/terraform-exec/tfexec
 # github.com/hashicorp/terraform-json v0.14.0
@@ -410,11 +392,7 @@ github.com/shopspring/decimal
 # github.com/spf13/cast v1.5.0
 ## explicit; go 1.18
 github.com/spf13/cast
-<<<<<<< HEAD
 # github.com/stretchr/testify v1.8.1
-=======
-# github.com/stretchr/testify v1.7.2
->>>>>>> d814537f (bump dependencies)
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
@@ -422,10 +400,6 @@ github.com/stretchr/testify/require
 ## explicit
 github.com/vmihailenco/msgpack
 github.com/vmihailenco/msgpack/codes
-<<<<<<< HEAD
-# github.com/zclconf/go-cty v1.10.0
-## explicit; go 1.12
-=======
 # github.com/vmihailenco/msgpack/v4 v4.3.12
 ## explicit; go 1.11
 github.com/vmihailenco/msgpack/v4
@@ -437,7 +411,6 @@ github.com/vmihailenco/tagparser/internal
 github.com/vmihailenco/tagparser/internal/parser
 # github.com/zclconf/go-cty v1.11.0
 ## explicit; go 1.18
->>>>>>> d814537f (bump dependencies)
 github.com/zclconf/go-cty/cty
 github.com/zclconf/go-cty/cty/convert
 github.com/zclconf/go-cty/cty/function
@@ -622,6 +595,7 @@ google.golang.org/protobuf/internal/set
 google.golang.org/protobuf/internal/strs
 google.golang.org/protobuf/internal/version
 google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protodesc
 google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface

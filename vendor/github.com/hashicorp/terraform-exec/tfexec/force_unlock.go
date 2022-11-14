@@ -2,10 +2,7 @@ package tfexec
 
 import (
 	"context"
-<<<<<<< HEAD
-=======
 	"fmt"
->>>>>>> d814537f (bump dependencies)
 	"os/exec"
 )
 

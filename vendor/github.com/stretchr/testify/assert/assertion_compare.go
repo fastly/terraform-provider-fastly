@@ -33,8 +33,7 @@ var (
 
 	stringType = reflect.TypeOf("")
 
-	timeType  = reflect.TypeOf(time.Time{})
-	bytesType = reflect.TypeOf([]byte{})
+	timeType = reflect.TypeOf(time.Time{})
 )
 
 func compare(obj1, obj2 interface{}, kind reflect.Kind) (CompareType, bool) {
@@ -336,7 +335,6 @@ func compare(obj1, obj2 interface{}, kind reflect.Kind) (CompareType, bool) {
 			bytesObj1, ok := obj1.([]byte)
 			if !ok {
 				bytesObj1 = obj1Value.Convert(bytesType).Interface().([]byte)
-
 			}
 			bytesObj2, ok := obj2.([]byte)
 			if !ok {

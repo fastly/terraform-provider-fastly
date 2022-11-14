@@ -48,11 +48,11 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					"domain":             "nyc3.digitaloceanspaces.com",
 					"public_key":         pgpPublicKey(t),
 					"path":               "/",
-					"period":             uint(3600),
+					"period":             3600,
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"gzip_level":         uint8(0),
+					"gzip_level":         0,
 					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     uint(2),
+					"format_version":     2,
 					"message_type":       "classic",
 					"placement":          "none",
 					"response_condition": "always",
@@ -63,7 +63,7 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenDigitalOcean(c.remote)
+		out := flattenDigitalOcean(c.remote, nil)
 		if diff := cmp.Diff(out, c.local); diff != "" {
 			t.Fatalf("Error matching: %s", diff)
 		}

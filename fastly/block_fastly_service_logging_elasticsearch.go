@@ -305,26 +305,37 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any,
 	df := elasticsearchMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateElasticsearchInput{
+	opts := &gofastly.CreateElasticsearchInput{
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     vla.formatVersion,
+		Index:             gofastly.String(df["index"].(string)),
+		Name:              gofastly.String(df["name"].(string)),
+		Password:          gofastly.String(df["password"].(string)),
+		Pipeline:          gofastly.String(df["pipeline"].(string)),
+		Placement:         gofastly.String(vla.placement),
+		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
+		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(df["name"].(string)),
-		Index:             gofastly.String(df["index"].(string)),
-		URL:               gofastly.String(df["url"].(string)),
-		Pipeline:          gofastly.String(df["pipeline"].(string)),
-		User:              gofastly.String(df["user"].(string)),
-		Password:          gofastly.String(df["password"].(string)),
-		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
-		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
 		TLSCACert:         gofastly.String(df["tls_ca_cert"].(string)),
 		TLSClientCert:     gofastly.String(df["tls_client_cert"].(string)),
 		TLSClientKey:      gofastly.String(df["tls_client_key"].(string)),
 		TLSHostname:       gofastly.String(df["tls_hostname"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		ResponseCondition: gofastly.String(vla.responseCondition),
+		URL:               gofastly.String(df["url"].(string)),
+		User:              gofastly.String(df["user"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	// if vla.placement != "" {
+	// 	opts.Placement = gofastly.String(vla.placement)
+	// }
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *ElasticSearchServiceAttributeHandler) buildDelete(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.DeleteElasticsearchInput {

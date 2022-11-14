@@ -91,15 +91,23 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 	vla := h.getVCLLoggingAttributes(resource)
 
 	opts := gofastly.CreatePapertrailInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(resource["name"].(string)),
-		Address:           gofastly.String(resource["address"].(string)),
-		Port:              gofastly.Int(resource["port"].(int)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		ResponseCondition: gofastly.String(vla.responseCondition),
-		Placement:         gofastly.String(vla.placement),
+		Address:        gofastly.String(resource["address"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Port:           gofastly.Int(resource["port"].(int)),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)

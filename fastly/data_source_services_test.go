@@ -11,7 +11,7 @@ import (
 
 func TestAccFastlyDataSourceServices_Config(t *testing.T) {
 	resourceName := "data.fastly_services.some"
-	serviceName := "fastly_service_vcl.example_service"
+	serviceName := "fastly_service_vcl.example_service_for_data_sources"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -24,7 +24,7 @@ func TestAccFastlyDataSourceServices_Config(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ids.*", serviceName, "id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.*", map[string]string{
-						"name":    "example_service",
+						"name":    "example_service_for_data_sources",
 						"comment": "example_comment",
 						"type":    "vcl",
 					}),
@@ -36,8 +36,8 @@ func TestAccFastlyDataSourceServices_Config(t *testing.T) {
 
 func testAccFastlyDataSourceServicesConfig() string {
 	tf := `
-resource "fastly_service_vcl" "example_service" {
-	name    = "example_service"
+resource "fastly_service_vcl" "example_service_for_data_sources" {
+	name    = "example_service_for_data_sources"
 	comment = "example_comment"
 
 	domain {
@@ -48,7 +48,7 @@ resource "fastly_service_vcl" "example_service" {
 }
 
 data "fastly_services" "some" {
-	depends_on = [ fastly_service_vcl.example_service ]
+	depends_on = [ fastly_service_vcl.example_service_for_data_sources ]
 }
 `
 

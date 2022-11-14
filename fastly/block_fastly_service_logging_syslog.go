@@ -135,22 +135,30 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSyslogInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(resource["name"].(string)),
-		Address:           gofastly.String(resource["address"].(string)),
-		Port:              gofastly.Int(resource["port"].(int)),
-		Token:             gofastly.String(resource["token"].(string)),
-		UseTLS:            gofastly.CBool(resource["use_tls"].(bool)),
-		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
-		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
-		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
-		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
-		MessageType:       gofastly.String(resource["message_type"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		ResponseCondition: gofastly.String(vla.responseCondition),
-		Placement:         gofastly.String(vla.placement),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Address:        gofastly.String(resource["address"].(string)),
+		Port:           gofastly.Int(resource["port"].(int)),
+		Token:          gofastly.String(resource["token"].(string)),
+		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
+		TLSHostname:    gofastly.String(resource["tls_hostname"].(string)),
+		TLSCACert:      gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:  gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:   gofastly.String(resource["tls_client_key"].(string)),
+		MessageType:    gofastly.String(resource["message_type"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
 	}
 
 	log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)

@@ -32,7 +32,7 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 					"name":           "newrelic-endpoint",
 					"token":          "token",
 					"region":         "US",
-					"format_version": uint(2),
+					"format_version": 2,
 				},
 			},
 		},

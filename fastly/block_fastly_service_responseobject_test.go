@@ -32,7 +32,7 @@ func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
 			local: []map[string]any{
 				{
 					"name":              "responseObjecttesting",
-					"status":            uint(200),
+					"status":            200,
 					"response":          "OK",
 					"content":           "test content",
 					"content_type":      "text/html",

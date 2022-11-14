@@ -109,21 +109,26 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBigQueryInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(resource["name"].(string)),
-		ProjectID:         gofastly.String(resource["project_id"].(string)),
-		Dataset:           gofastly.String(resource["dataset"].(string)),
-		Table:             gofastly.String(resource["table"].(string)),
-		User:              gofastly.String(resource["email"].(string)),
-		SecretKey:         gofastly.String(resource["secret_key"].(string)),
-		Template:          gofastly.String(resource["template"].(string)),
-		ResponseCondition: gofastly.String(vla.responseCondition),
-		Placement:         gofastly.String(vla.placement),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		ProjectID:      gofastly.String(resource["project_id"].(string)),
+		Dataset:        gofastly.String(resource["dataset"].(string)),
+		Table:          gofastly.String(resource["table"].(string)),
+		User:           gofastly.String(resource["email"].(string)),
+		SecretKey:      gofastly.String(resource["secret_key"].(string)),
+		Template:       gofastly.String(resource["template"].(string)),
+		Placement:      gofastly.String(vla.placement),
 	}
 
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.format != "" {
 		opts.Format = gofastly.String(vla.format)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create BigQuery opts: %#v", opts)
@@ -171,6 +176,8 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 		Name:           resource["name"].(string),
 	}
 
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["project_id"]; ok {
 		opts.ProjectID = gofastly.String(v.(string))
 	}
@@ -198,8 +205,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.String(v.(string))
 	}
-	// NOTE: When converting from an interface{} we lose the underlying type.
-	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.Int(v.(int))
 	}

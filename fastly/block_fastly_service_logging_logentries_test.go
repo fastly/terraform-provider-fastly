@@ -32,10 +32,10 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 			local: []map[string]any{
 				{
 					"name":               "somelogentriesname",
-					"port":               uint(8080),
+					"port":               8080,
 					"token":              "mytoken",
 					"format":             "%h %l %u %t %r %>s",
-					"format_version":     uint(1),
+					"format_version":     1,
 					"response_condition": "response_condition_test",
 					"use_tls":            false,
 				},

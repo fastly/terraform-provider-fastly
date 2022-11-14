@@ -359,7 +359,6 @@ Optional:
 - `use_ssl` (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
 - `weight` (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`
 
-
 <a id="nestedblock--cache_setting"></a>
 ### Nested Schema for `cache_setting`
 

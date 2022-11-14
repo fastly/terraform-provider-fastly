@@ -224,17 +224,27 @@ func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap any, serviceID str
 	df := herokuMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateHerokuInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(df["name"].(string)),
-		Token:             gofastly.String(df["token"].(string)),
-		URL:               gofastly.String(df["url"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		ResponseCondition: gofastly.String(vla.responseCondition),
+	opts := &gofastly.CreateHerokuInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(df["name"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(df["token"].(string)),
+		URL:            gofastly.String(df["url"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap any, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {

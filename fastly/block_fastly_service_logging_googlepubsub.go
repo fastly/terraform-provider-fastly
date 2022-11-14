@@ -241,19 +241,30 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 	df := googlepubsubMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreatePubsubInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(df["name"].(string)),
-		User:              gofastly.String(df["user"].(string)),
-		SecretKey:         gofastly.String(df["secret_key"].(string)),
-		ProjectID:         gofastly.String(df["project_id"].(string)),
-		Topic:             gofastly.String(df["topic"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		ResponseCondition: gofastly.String(vla.responseCondition),
+	opts := &gofastly.CreatePubsubInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(df["name"].(string)),
+		Placement:      gofastly.String(vla.placement),
+		ProjectID:      gofastly.String(df["project_id"].(string)),
+		SecretKey:      gofastly.String(df["secret_key"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Topic:          gofastly.String(df["topic"].(string)),
+		User:           gofastly.String(df["user"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	// if vla.placement != "" {
+	// 	opts.Placement = gofastly.String(vla.placement)
+	// }
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *GooglePubSubServiceAttributeHandler) buildDelete(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.DeletePubsubInput {

@@ -32,7 +32,7 @@ func TestResourceFastlyFlattenDatadog(t *testing.T) {
 					"name":           "datadog-endpoint",
 					"token":          "token",
 					"region":         "US",
-					"format_version": uint(2),
+					"format_version": 2,
 				},
 			},
 		},
@@ -172,10 +172,8 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_datadog.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_datadog.#", "1"),
 				),
 			},
 
@@ -184,10 +182,8 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_datadog.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_datadog.#", "2"),
 				),
 			},
 		},

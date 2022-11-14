@@ -92,15 +92,23 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSumologicInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(resource["name"].(string)),
-		URL:               gofastly.String(resource["url"].(string)),
-		MessageType:       gofastly.String(resource["message_type"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(int(intOrDefault(vla.formatVersion))),
-		ResponseCondition: gofastly.String(vla.responseCondition),
-		Placement:         gofastly.String(vla.placement),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		MessageType:    gofastly.String(resource["message_type"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		URL:            gofastly.String(resource["url"].(string)),
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)

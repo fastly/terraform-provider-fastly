@@ -47,12 +47,12 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					"access_key":         "secret",
 					"public_key":         pgpPublicKey(t),
 					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     uint(2),
-					"gzip_level":         uint8(0),
+					"format_version":     2,
+					"gzip_level":         0,
 					"message_type":       "classic",
 					"path":               "/",
 					"region":             "ORD",
-					"period":             uint(3600),
+					"period":             3600,
 					"placement":          "none",
 					"response_condition": "response_condition",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
@@ -63,7 +63,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenCloudfiles(c.remote)
+		out := flattenCloudfiles(c.remote, nil)
 		if diff := cmp.Diff(out, c.local); diff != "" {
 			t.Fatalf("Error matching: %s", diff)
 		}

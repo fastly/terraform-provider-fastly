@@ -38,14 +38,12 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the Log Shuttle logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
 		"token": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Required:    true, // FIXME: This isn't required in go-fastly.
 			Sensitive:   true,
 			Description: "The data authentication token associated with this endpoint",
 		},
-
 		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -128,27 +126,30 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 // Update updates the resource.
 func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogshuttleInput{
+		Name:           resource["name"].(string),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
 	}
 
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
+	if v, ok := modified["format"]; ok {
+		opts.Format = gofastly.String(v.(string))
+	}
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.Int(v.(int))
 	}
-	if v, ok := modified["url"]; ok {
-		opts.URL = gofastly.String(v.(string))
-	}
-	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.String(v.(string))
+	if v, ok := modified["placement"]; ok {
+		opts.Placement = gofastly.String(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
 	}
-	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+	if v, ok := modified["token"]; ok {
+		opts.Token = gofastly.String(v.(string))
+	}
+	if v, ok := modified["url"]; ok {
+		opts.URL = gofastly.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Log Shuttle Opts: %#v", opts)
@@ -221,17 +222,27 @@ func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap any, servi
 	df := logshuttleMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateLogshuttleInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(df["name"].(string)),
-		Token:             gofastly.String(df["token"].(string)),
-		URL:               gofastly.String(df["url"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		ResponseCondition: gofastly.String(vla.responseCondition),
+	opts := &gofastly.CreateLogshuttleInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(df["name"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(df["token"].(string)),
+		URL:            gofastly.String(df["url"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *LogshuttleServiceAttributeHandler) buildDelete(logshuttleMap any, serviceID string, serviceVersion int) *gofastly.DeleteLogshuttleInput {

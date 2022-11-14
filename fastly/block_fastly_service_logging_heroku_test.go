@@ -38,7 +38,7 @@ func TestResourceFastlyFlattenHeroku(t *testing.T) {
 					"placement":          "none",
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"response_condition": "always",
-					"format_version":     uint(2),
+					"format_version":     2,
 				},
 			},
 		},

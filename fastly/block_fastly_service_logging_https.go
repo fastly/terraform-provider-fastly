@@ -330,26 +330,34 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 
 	vla := h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateHTTPSInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(df["name"].(string)),
-		URL:               gofastly.String(df["url"].(string)),
-		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
-		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
 		ContentType:       gofastly.String(df["content_type"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     vla.formatVersion,
 		HeaderName:        gofastly.String(df["header_name"].(string)),
 		HeaderValue:       gofastly.String(df["header_value"].(string)),
-		Method:            gofastly.String(df["method"].(string)),
 		JSONFormat:        gofastly.String(df["json_format"].(string)),
+		MessageType:       gofastly.String(df["message_type"].(string)),
+		Method:            gofastly.String(df["method"].(string)),
+		Name:              gofastly.String(df["name"].(string)),
+		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
+		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
+		ServiceID:         serviceID,
+		ServiceVersion:    serviceVersion,
 		TLSCACert:         gofastly.String(df["tls_ca_cert"].(string)),
 		TLSClientCert:     gofastly.String(df["tls_client_cert"].(string)),
 		TLSClientKey:      gofastly.String(df["tls_client_key"].(string)),
 		TLSHostname:       gofastly.String(df["tls_hostname"].(string)),
-		MessageType:       gofastly.String(df["message_type"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		ResponseCondition: gofastly.String(vla.responseCondition),
-		Placement:         gofastly.String(vla.placement),
+		URL:               gofastly.String(df["url"].(string)),
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	return &opts

@@ -171,6 +171,7 @@ func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 		Name:     gofastly.String(df["name"].(string)),
 		Content:  gofastly.String(df["content"].(string)),
 		Priority: gofastly.Int(df["priority"].(int)),
+		Dynamic:  gofastly.Int(0),
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))

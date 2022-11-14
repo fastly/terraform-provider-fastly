@@ -64,7 +64,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"healthcheck":           "",
 					"use_ssl":               false,
 					"ssl_check_cert":        true,
-					"ssl_hostname":          "",
 					"ssl_ca_cert":           "",
 					"ssl_cert_hostname":     "",
 					"ssl_sni_hostname":      "",

@@ -47,14 +47,14 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					"access_key":         "secret",
 					"public_key":         pgpPublicKey(t),
 					"format":             "log format",
-					"format_version":     uint(2),
+					"format_version":     2,
 					"message_type":       "classic",
 					"path":               "/",
 					"placement":          "none",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"response_condition": "always",
-					"period":             uint(3600),
-					"gzip_level":         uint8(0),
+					"period":             3600,
+					"gzip_level":         0,
 					"compression_codec":  "zstd",
 				},
 			},
@@ -62,7 +62,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenOpenstack(c.remote)
+		out := flattenOpenstack(c.remote, nil)
 		if diff := cmp.Diff(out, c.local); diff != "" {
 			t.Fatalf("Error matching: %s", diff)
 		}

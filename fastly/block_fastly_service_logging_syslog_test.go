@@ -47,9 +47,9 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 				{
 					"name":               "somesyslogname",
 					"address":            "127.0.0.1",
-					"port":               uint(8080),
+					"port":               8080,
 					"format":             `%h %l %u %t "%r" %>s %b`,
-					"format_version":     uint(1),
+					"format_version":     1,
 					"response_condition": "response_condition_test",
 					"message_type":       "classic",
 					"token":              "abcd1234",
@@ -262,10 +262,8 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_syslog.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_syslog.#", "1"),
 				),
 			},
 		},
@@ -446,11 +444,11 @@ resource "fastly_service_vcl" "foo" {
     name    = "amazon docs"
   }
   logging_syslog {
-    name               = "somesyslogname"
     address            = "127.0.0.1"
+    name               = "somesyslogname"
     port               = 514
-    use_tls            = true
     tls_hostname       = "example.com"
+    use_tls            = true
   }
   force_destroy = true
 }`, name, domain)

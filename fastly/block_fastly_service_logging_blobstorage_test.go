@@ -46,16 +46,16 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					"account_name":       "test",
 					"container":          "fastly",
 					"sas_token":          "test-sas-token",
-					"period":             uint(12),
+					"period":             12,
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"public_key":         "test-public-key",
 					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     uint(2),
-					"gzip_level":         uint8(0),
+					"format_version":     2,
+					"gzip_level":         0,
 					"message_type":       "classic",
 					"placement":          "waf_debug",
 					"response_condition": "error_response",
-					"file_max_bytes":     uint(1048576),
+					"file_max_bytes":     1048576,
 					"compression_codec":  "zstd",
 				},
 			},
@@ -63,7 +63,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenBlobStorages(c.remote)
+		out := flattenBlobStorages(c.remote, nil)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}
@@ -192,10 +192,8 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_blobstorage.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_blobstorage.#", "1"),
 				),
 			},
 		},
@@ -388,17 +386,17 @@ resource "fastly_service_compute" "foo" {
   }
 
   logging_blobstorage {
+    account_name = "test"
+    compression_codec = "zstd"
+    container = "fastly"
+    file_max_bytes     = 1048576
+    message_type = "blank"
     name = "test-blobstorage-1"
     path = "/5XX/"
-    account_name = "test"
-    container = "fastly"
-    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
     period = 12
-    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     public_key = file("test_fixtures/fastly_test_publickey")
-    message_type = "blank"
-    file_max_bytes     = 1048576
-    compression_codec = "zstd"
+    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
   }
 
   package {

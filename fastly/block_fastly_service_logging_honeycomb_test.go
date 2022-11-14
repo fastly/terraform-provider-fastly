@@ -69,7 +69,7 @@ func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 					"placement":          "none",
 					"response_condition": "always",
 					"format":             honeycombDefaultFormat,
-					"format_version":     uint(2),
+					"format_version":     2,
 				},
 			},
 		},

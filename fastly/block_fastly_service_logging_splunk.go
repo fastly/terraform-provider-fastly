@@ -121,20 +121,28 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(resource["name"].(string)),
-		URL:               gofastly.String(resource["url"].(string)),
-		Token:             gofastly.String(resource["token"].(string)),
-		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
-		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
-		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
-		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
-		UseTLS:            gofastly.CBool(resource["use_tls"].(bool)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		ResponseCondition: gofastly.String(vla.responseCondition),
-		Placement:         gofastly.String(vla.placement),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		TLSCACert:      gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:  gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:   gofastly.String(resource["tls_client_key"].(string)),
+		TLSHostname:    gofastly.String(resource["tls_hostname"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
+		URL:            gofastly.String(resource["url"].(string)),
+		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Splunk create opts: %#v", opts)

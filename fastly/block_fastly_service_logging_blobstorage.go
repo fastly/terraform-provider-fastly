@@ -54,9 +54,13 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "Maximum size of an uploaded log file, if non-zero.",
 		},
 		"gzip_level": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
+			Type:     schema.TypeInt,
+			Optional: true,
+			// NOTE: The default represents an unset value
+			// We use this instead of zero because the zero value for an int type is
+			// actually a valid value for the API. The API will attempt to default to
+			// zero if nothing is set by the user in their TF configuration.
+			Default:     -1,
 			Description: GzipLevelDescription,
 		},
 		"message_type": {
@@ -143,24 +147,39 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBlobStorageInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(resource["name"].(string)),
-		Path:              gofastly.String(resource["path"].(string)),
-		AccountName:       gofastly.String(resource["account_name"].(string)),
-		Container:         gofastly.String(resource["container"].(string)),
-		SASToken:          gofastly.String(resource["sas_token"].(string)),
-		Period:            gofastly.Int(resource["period"].(int)),
-		TimestampFormat:   gofastly.String(resource["timestamp_format"].(string)),
-		GzipLevel:         gofastly.Int(resource["gzip_level"].(int)),
-		PublicKey:         gofastly.String(resource["public_key"].(string)),
-		MessageType:       gofastly.String(resource["message_type"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		ResponseCondition: gofastly.String(vla.responseCondition),
-		FileMaxBytes:      gofastly.Int(resource["file_max_bytes"].(int)),
-		CompressionCodec:  gofastly.String(resource["compression_codec"].(string)),
+		AccountName:      gofastly.String(resource["account_name"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
+		Container:        gofastly.String(resource["container"].(string)),
+		FileMaxBytes:     gofastly.Int(resource["file_max_bytes"].(int)),
+		Format:           gofastly.String(vla.format),
+		FormatVersion:    vla.formatVersion,
+		MessageType:      gofastly.String(resource["message_type"].(string)),
+		Name:             gofastly.String(resource["name"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		Period:           gofastly.Int(resource["period"].(int)),
+		PublicKey:        gofastly.String(resource["public_key"].(string)),
+		SASToken:         gofastly.String(resource["sas_token"].(string)),
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
+	}
+
+	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
+	// If we set a default value for an attribute, then it will be sent to the API.
+	// In some scenarios this can cause the API to reject the request.
+	// For example, configuring compression_codec + gzip_level is invalid.
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
+		opts.GzipLevel = gofastly.Int(gl)
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Blob Storage logging create opts: %#v", opts)
@@ -185,7 +204,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 			return fmt.Errorf("error looking up Blob Storages for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		bsl := flattenBlobStorages(blobStorageList)
+		bsl := flattenBlobStorages(blobStorageList, resources)
 
 		for _, element := range bsl {
 			h.pruneVCLLoggingAttributes(element)
@@ -283,27 +302,50 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d 
 	return nil
 }
 
-func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage) []map[string]any {
+func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage, state []any) []map[string]any {
 	var bsl []map[string]any
 	for _, bs := range blobStorageList {
+		// Avoid setting gzip_level to the API default of zero if originally unset.
+		// This avoids an unnecessary diff where the local state would have been
+		// updated to zero and so would be different from the -1 default set.
+		// As the user never set the attribute we don't want to show a diff to say
+		// it should be zero according to the API.
+		//
+		// NOTE: Ideally the local state would be updated when .Create() is called.
+		// e.g. we'd check if the value is -1 for gzip_level and set it in state as
+		// zero instead. This way we could avoid having to do this check here.
+		// The reason that's not possible (or not ideal at least) is because Create
+		// is called multiple times (once for each block defined in configuration)
+		// while the setting of the state must be done holistically, and so what
+		// that means is, if we did the above suggestion we would be resetting the
+		// entire state object multiple times, where as here we're only ever setting
+		// it once.
+		for _, s := range state {
+			v := s.(map[string]any)
+			if v["name"].(string) == bs.Name && v["gzip_level"].(int) == -1 {
+				bs.GzipLevel = v["gzip_level"].(int)
+				break
+			}
+		}
+
 		// Convert Blob Storages to a map for saving to state.
 		nbs := map[string]any{
-			"name":               bs.Name,
-			"path":               bs.Path,
 			"account_name":       bs.AccountName,
+			"compression_codec":  bs.CompressionCodec,
 			"container":          bs.Container,
-			"sas_token":          bs.SASToken,
-			"period":             bs.Period,
-			"timestamp_format":   bs.TimestampFormat,
-			"gzip_level":         bs.GzipLevel,
-			"public_key":         bs.PublicKey,
+			"file_max_bytes":     bs.FileMaxBytes,
 			"format":             bs.Format,
 			"format_version":     bs.FormatVersion,
+			"gzip_level":         bs.GzipLevel,
 			"message_type":       bs.MessageType,
+			"name":               bs.Name,
+			"path":               bs.Path,
+			"period":             bs.Period,
 			"placement":          bs.Placement,
+			"public_key":         bs.PublicKey,
 			"response_condition": bs.ResponseCondition,
-			"file_max_bytes":     bs.FileMaxBytes,
-			"compression_codec":  bs.CompressionCodec,
+			"sas_token":          bs.SASToken,
+			"timestamp_format":   bs.TimestampFormat,
 		}
 
 		// prune any empty values that come from the default string value in structs

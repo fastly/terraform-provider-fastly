@@ -44,7 +44,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					"bucket_name":       "bucketname",
 					"secret_key":        secretKey,
 					"format":            "log format",
-					"format_version":    uint(2),
+					"format_version":    2,
 					"period":            3600,
 					"gzip_level":        0,
 					"compression_codec": "zstd",
@@ -54,7 +54,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenGCS(c.remote)
+		out := flattenGCS(c.remote, nil)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}

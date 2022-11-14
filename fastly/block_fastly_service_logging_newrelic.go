@@ -220,17 +220,27 @@ func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap any, serviceID
 	df := newrelicMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateNewRelicInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(df["name"].(string)),
-		Token:             gofastly.String(df["token"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		Region:            gofastly.String(df["region"].(string)),
-		ResponseCondition: gofastly.String(vla.responseCondition),
+	opts := &gofastly.CreateNewRelicInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(df["name"].(string)),
+		Region:         gofastly.String(df["region"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(df["token"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap any, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {

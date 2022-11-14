@@ -76,9 +76,13 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "s3.amazonaws.com",
 		},
 		"gzip_level": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
+			Type:     schema.TypeInt,
+			Optional: true,
+			// NOTE: The default represents an unset value
+			// We use this instead of zero because the zero value for an int type is
+			// actually a valid value for the API. The API will attempt to default to
+			// zero if nothing is set by the user in their TF configuration.
+			Default:     -1,
 			Description: GzipLevelDescription,
 		},
 		"message_type": {
@@ -241,7 +245,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		sl := flattenS3s(s3List)
+		sl := flattenS3s(s3List, resources)
 
 		for _, element := range sl {
 			h.pruneVCLLoggingAttributes(element)
@@ -368,32 +372,55 @@ func deleteS3(conn *gofastly.Client, i *gofastly.DeleteS3Input) error {
 	return nil
 }
 
-func flattenS3s(s3List []*gofastly.S3) []map[string]any {
-	var sl []map[string]any
-	for _, s := range s3List {
+func flattenS3s(s3List []*gofastly.S3, state []any) []map[string]any {
+	var ssl []map[string]any
+	for _, sl := range s3List {
+		// Avoid setting gzip_level to the API default of zero if originally unset.
+		// This avoids an unnecessary diff where the local state would have been
+		// updated to zero and so would be different from the -1 default set.
+		// As the user never set the attribute we don't want to show a diff to say
+		// it should be zero according to the API.
+		//
+		// NOTE: Ideally the local state would be updated when .Create() is called.
+		// e.g. we'd check if the value is -1 for gzip_level and set it in state as
+		// zero instead. This way we could avoid having to do this check here.
+		// The reason that's not possible (or not ideal at least) is because Create
+		// is called multiple times (once for each block defined in configuration)
+		// while the setting of the state must be done holistically, and so what
+		// that means is, if we did the above suggestion we would be resetting the
+		// entire state object multiple times, where as here we're only ever setting
+		// it once.
+		for _, s := range state {
+			v := s.(map[string]any)
+			if v["name"].(string) == sl.Name && v["gzip_level"].(int) == -1 {
+				sl.GzipLevel = v["gzip_level"].(int)
+				break
+			}
+		}
+
 		// Convert S3s to a map for saving to state.
 		ns := map[string]any{
-			"name":                              s.Name,
-			"bucket_name":                       s.BucketName,
-			"s3_access_key":                     s.AccessKey,
-			"s3_secret_key":                     s.SecretKey,
-			"s3_iam_role":                       s.IAMRole,
-			"path":                              s.Path,
-			"period":                            s.Period,
-			"domain":                            s.Domain,
-			"gzip_level":                        s.GzipLevel,
-			"format":                            s.Format,
-			"format_version":                    s.FormatVersion,
-			"timestamp_format":                  s.TimestampFormat,
-			"redundancy":                        s.Redundancy,
-			"response_condition":                s.ResponseCondition,
-			"message_type":                      s.MessageType,
-			"public_key":                        s.PublicKey,
-			"placement":                         s.Placement,
-			"server_side_encryption":            s.ServerSideEncryption,
-			"server_side_encryption_kms_key_id": s.ServerSideEncryptionKMSKeyID,
-			"compression_codec":                 s.CompressionCodec,
-			"acl":                               s.ACL,
+			"name":                              sl.Name,
+			"bucket_name":                       sl.BucketName,
+			"s3_access_key":                     sl.AccessKey,
+			"s3_secret_key":                     sl.SecretKey,
+			"s3_iam_role":                       sl.IAMRole,
+			"path":                              sl.Path,
+			"period":                            sl.Period,
+			"domain":                            sl.Domain,
+			"gzip_level":                        sl.GzipLevel,
+			"format":                            sl.Format,
+			"format_version":                    sl.FormatVersion,
+			"timestamp_format":                  sl.TimestampFormat,
+			"redundancy":                        sl.Redundancy,
+			"response_condition":                sl.ResponseCondition,
+			"message_type":                      sl.MessageType,
+			"public_key":                        sl.PublicKey,
+			"placement":                         sl.Placement,
+			"server_side_encryption":            sl.ServerSideEncryption,
+			"server_side_encryption_kms_key_id": sl.ServerSideEncryptionKMSKeyID,
+			"compression_codec":                 sl.CompressionCodec,
+			"acl":                               sl.ACL,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -403,10 +430,10 @@ func flattenS3s(s3List []*gofastly.S3) []map[string]any {
 			}
 		}
 
-		sl = append(sl, ns)
+		ssl = append(ssl, ns)
 	}
 
-	return sl
+	return ssl
 }
 
 func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
@@ -414,28 +441,43 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 
 	vla := h.getVCLLoggingAttributes(df)
 	opts := gofastly.CreateS3Input{
+		ACL:                          gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(df["acl"].(string))),
+		AccessKey:                    gofastly.String(df["s3_access_key"].(string)),
+		BucketName:                   gofastly.String(df["bucket_name"].(string)),
+		CompressionCodec:             gofastly.String(df["compression_codec"].(string)),
+		Domain:                       gofastly.String(df["domain"].(string)),
+		Format:                       gofastly.String(vla.format),
+		FormatVersion:                vla.formatVersion,
+		IAMRole:                      gofastly.String(df["s3_iam_role"].(string)),
+		MessageType:                  gofastly.String(df["message_type"].(string)),
+		Name:                         gofastly.String(df["name"].(string)),
+		Path:                         gofastly.String(df["path"].(string)),
+		Period:                       gofastly.Int(df["period"].(int)),
+		PublicKey:                    gofastly.String(df["public_key"].(string)),
+		Redundancy:                   gofastly.S3RedundancyPtr(gofastly.S3Redundancy(df["redundancy"].(string))),
+		SecretKey:                    gofastly.String(df["s3_secret_key"].(string)),
+		ServerSideEncryptionKMSKeyID: gofastly.String(df["server_side_encryption_kms_key_id"].(string)),
 		ServiceID:                    serviceID,
 		ServiceVersion:               serviceVersion,
-		Name:                         gofastly.String(df["name"].(string)),
-		BucketName:                   gofastly.String(df["bucket_name"].(string)),
-		AccessKey:                    gofastly.String(df["s3_access_key"].(string)),
-		SecretKey:                    gofastly.String(df["s3_secret_key"].(string)),
-		IAMRole:                      gofastly.String(df["s3_iam_role"].(string)),
-		Period:                       gofastly.Int(df["period"].(int)),
-		GzipLevel:                    gofastly.Int(df["gzip_level"].(int)),
-		Domain:                       gofastly.String(df["domain"].(string)),
-		Path:                         gofastly.String(df["path"].(string)),
 		TimestampFormat:              gofastly.String(df["timestamp_format"].(string)),
-		MessageType:                  gofastly.String(df["message_type"].(string)),
-		PublicKey:                    gofastly.String(df["public_key"].(string)),
-		ServerSideEncryptionKMSKeyID: gofastly.String(df["server_side_encryption_kms_key_id"].(string)),
-		CompressionCodec:             gofastly.String(df["compression_codec"].(string)),
-		Format:                       gofastly.String(vla.format),
-		FormatVersion:                gofastly.Int(intOrDefault(vla.formatVersion)),
-		ResponseCondition:            gofastly.String(vla.responseCondition),
-		Placement:                    gofastly.String(vla.placement),
-		Redundancy:                   gofastly.S3RedundancyPtr(gofastly.S3Redundancy(df["redundancy"].(string))),
-		ACL:                          gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(df["acl"].(string))),
+	}
+
+	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
+	// If we set a default value for an attribute, then it will be sent to the API.
+	// In some scenarios this can cause the API to reject the request.
+	// For example, configuring compression_codec + gzip_level is invalid.
+	if gl, ok := df["gzip_level"].(int); ok && gl != -1 {
+		opts.GzipLevel = gofastly.Int(gl)
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	encryption := df["server_side_encryption"].(string)

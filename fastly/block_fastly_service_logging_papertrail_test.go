@@ -32,9 +32,9 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 				{
 					"name":               "papertrailtesting",
 					"address":            "test1.papertrailapp.com",
-					"port":               uint(3600),
+					"port":               3600,
 					"format":             "%h %l %u %t %r %>s",
-					"format_version":     uint(2),
+					"format_version":     2,
 					"response_condition": "test_response_condition",
 				},
 			},

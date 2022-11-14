@@ -45,7 +45,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 					"response_condition": "response_condition",
 					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
 					"placement":          "none",
-					"format_version":     uint(2),
+					"format_version":     2,
 				},
 			},
 		},

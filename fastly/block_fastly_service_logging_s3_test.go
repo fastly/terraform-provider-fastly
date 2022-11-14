@@ -58,10 +58,10 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"s3_access_key":                     testAwsPrimaryAccessKey,
 					"s3_secret_key":                     testAwsPrimarySecretKey,
 					"path":                              "/",
-					"period":                            uint(3600),
-					"gzip_level":                        uint8(0),
+					"period":                            3600,
+					"gzip_level":                        0,
 					"format":                            "%h %l %u %t %r %>s",
-					"format_version":                    uint(2),
+					"format_version":                    2,
 					"response_condition":                "response_condition_test",
 					"message_type":                      "classic",
 					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
@@ -105,10 +105,10 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"domain":                            "domain",
 					"s3_iam_role":                       testS3IAMRole,
 					"path":                              "/",
-					"period":                            uint(3600),
-					"gzip_level":                        uint8(5),
+					"period":                            3600,
+					"gzip_level":                        5,
 					"format":                            "%h %l %u %t %r %>s",
-					"format_version":                    uint(2),
+					"format_version":                    2,
 					"response_condition":                "response_condition_test",
 					"message_type":                      "classic",
 					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
@@ -125,7 +125,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			out := flattenS3s(c.remote)
+			out := flattenS3s(c.remote, nil)
 			if diff := cmp.Diff(out, c.local); diff != "" {
 				t.Fatalf("Error matching:%s", diff)
 			}

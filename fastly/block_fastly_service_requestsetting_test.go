@@ -33,7 +33,7 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 					"request_condition": "serve_alt_backend",
 					"default_host":      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
 					"xff":               gofastly.RequestSettingXFFAppend,
-					"max_stale_age":     uint(90),
+					"max_stale_age":     90,
 					"action":            gofastly.RequestSettingActionPass,
 					"bypass_busy_wait":  false,
 					"force_miss":        false,

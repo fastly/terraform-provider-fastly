@@ -49,7 +49,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"name":               "test-splunk",
 					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
 					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     uint(1),
+					"format_version":     1,
 					"response_condition": "error_response",
 					"placement":          "waf_debug",
 					"token":              "test-token",

@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 				{
 					"name":           "loggly-endpoint",
 					"token":          "token",
-					"format_version": uint(2),
+					"format_version": 2,
 				},
 			},
 		},

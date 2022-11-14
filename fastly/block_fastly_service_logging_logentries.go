@@ -97,16 +97,24 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateLogentriesInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(resource["name"].(string)),
-		Port:              gofastly.Int(resource["port"].(int)),
-		UseTLS:            gofastly.CBool(resource["use_tls"].(bool)),
-		Token:             gofastly.String(resource["token"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		ResponseCondition: gofastly.String(vla.responseCondition),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Port:           gofastly.Int(resource["port"].(int)),
+		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
+		Token:          gofastly.String(resource["token"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)

@@ -124,7 +124,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all",
+			Description: "Configure certificate validation. Does not affect SNI at all",
 		},
 		"ssl_check_cert": {
 			Type:        schema.TypeBool,
@@ -152,18 +152,11 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "Client key attached to origin. Used when connecting to the backend",
 			Sensitive:   true,
 		},
-		"ssl_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Used for both SNI during the TLS handshake and to validate the cert",
-			Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
-		},
 		"ssl_sni_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all",
+			Description: "Configure SNI in the TLS handshake. Does not affect cert validation at all",
 		},
 		"use_ssl": {
 			Type:        schema.TypeBool,
@@ -276,32 +269,37 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 
 func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, df map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
-		ServiceID:           service,
-		ServiceVersion:      latestVersion,
-		Name:                gofastly.String(df["name"].(string)),
 		Address:             gofastly.String(df["address"].(string)),
-		OverrideHost:        gofastly.String(df["override_host"].(string)),
 		AutoLoadbalance:     gofastly.CBool(df["auto_loadbalance"].(bool)),
-		SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
-		SSLHostname:         gofastly.String(df["ssl_hostname"].(string)),
-		SSLCACert:           gofastly.String(df["ssl_ca_cert"].(string)),
-		SSLCertHostname:     gofastly.String(df["ssl_cert_hostname"].(string)),
-		SSLSNIHostname:      gofastly.String(df["ssl_sni_hostname"].(string)),
-		UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
-		SSLClientKey:        gofastly.String(df["ssl_client_key"].(string)),
-		SSLClientCert:       gofastly.String(df["ssl_client_cert"].(string)),
-		MaxTLSVersion:       gofastly.String(df["max_tls_version"].(string)),
-		MinTLSVersion:       gofastly.String(df["min_tls_version"].(string)),
-		SSLCiphers:          gofastly.String(df["ssl_ciphers"].(string)),
-		Shield:              gofastly.String(df["shield"].(string)),
-		Port:                gofastly.Int(df["port"].(int)),
 		BetweenBytesTimeout: gofastly.Int(df["between_bytes_timeout"].(int)),
 		ConnectTimeout:      gofastly.Int(df["connect_timeout"].(int)),
 		ErrorThreshold:      gofastly.Int(df["error_threshold"].(int)),
 		FirstByteTimeout:    gofastly.Int(df["first_byte_timeout"].(int)),
-		MaxConn:             gofastly.Int(df["max_conn"].(int)),
-		Weight:              gofastly.Int(df["weight"].(int)),
 		HealthCheck:         gofastly.String(df["healthcheck"].(string)),
+		MaxConn:             gofastly.Int(df["max_conn"].(int)),
+		MaxTLSVersion:       gofastly.String(df["max_tls_version"].(string)),
+		MinTLSVersion:       gofastly.String(df["min_tls_version"].(string)),
+		Name:                gofastly.String(df["name"].(string)),
+		Port:                gofastly.Int(df["port"].(int)),
+		SSLCACert:           gofastly.String(df["ssl_ca_cert"].(string)),
+		SSLCertHostname:     gofastly.String(df["ssl_cert_hostname"].(string)),
+		SSLCheckCert:        gofastly.CBool(df["ssl_check_cert"].(bool)),
+		SSLCiphers:          gofastly.String(df["ssl_ciphers"].(string)),
+		SSLClientCert:       gofastly.String(df["ssl_client_cert"].(string)),
+		SSLClientKey:        gofastly.String(df["ssl_client_key"].(string)),
+		SSLSNIHostname:      gofastly.String(df["ssl_sni_hostname"].(string)),
+		ServiceID:           service,
+		ServiceVersion:      latestVersion,
+		Shield:              gofastly.String(df["shield"].(string)),
+		UseSSL:              gofastly.CBool(df["use_ssl"].(bool)),
+		Weight:              gofastly.Int(df["weight"].(int)),
+	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if df["override_host"].(string) != "" {
+		opts.OverrideHost = gofastly.String(df["override_host"].(string))
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -399,30 +397,29 @@ func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[s
 
 	for _, b := range backendList {
 		backend := map[string]any{
-			"name":                  b.Name,
 			"address":               b.Address,
 			"auto_loadbalance":      b.AutoLoadbalance,
 			"between_bytes_timeout": int(b.BetweenBytesTimeout),
 			"connect_timeout":       int(b.ConnectTimeout),
 			"error_threshold":       int(b.ErrorThreshold),
 			"first_byte_timeout":    int(b.FirstByteTimeout),
+			"healthcheck":           b.HealthCheck,
 			"max_conn":              int(b.MaxConn),
-			"port":                  int(b.Port),
-			"override_host":         b.OverrideHost,
-			"shield":                b.Shield,
-			"ssl_check_cert":        b.SSLCheckCert,
-			"ssl_hostname":          b.SSLHostname,
-			"ssl_ca_cert":           b.SSLCACert,
-			"ssl_client_key":        b.SSLClientKey,
-			"ssl_client_cert":       b.SSLClientCert,
 			"max_tls_version":       b.MaxTLSVersion,
 			"min_tls_version":       b.MinTLSVersion,
-			"ssl_ciphers":           b.SSLCiphers,
-			"use_ssl":               b.UseSSL,
+			"name":                  b.Name,
+			"override_host":         b.OverrideHost,
+			"port":                  int(b.Port),
+			"shield":                b.Shield,
+			"ssl_ca_cert":           b.SSLCACert,
 			"ssl_cert_hostname":     b.SSLCertHostname,
+			"ssl_check_cert":        b.SSLCheckCert,
+			"ssl_ciphers":           b.SSLCiphers,
+			"ssl_client_cert":       b.SSLClientCert,
+			"ssl_client_key":        b.SSLClientKey,
 			"ssl_sni_hostname":      b.SSLSNIHostname,
+			"use_ssl":               b.UseSSL,
 			"weight":                int(b.Weight),
-			"healthcheck":           b.HealthCheck,
 		}
 
 		if sa.serviceType == ServiceTypeVCL {

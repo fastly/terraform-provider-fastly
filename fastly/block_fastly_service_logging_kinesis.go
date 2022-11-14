@@ -251,20 +251,30 @@ func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID s
 	df := kinesisMap.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateKinesisInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              gofastly.String(df["name"].(string)),
-		StreamName:        gofastly.String(df["topic"].(string)),
-		Region:            gofastly.String(df["region"].(string)),
-		AccessKey:         gofastly.String(df["access_key"].(string)),
-		SecretKey:         gofastly.String(df["secret_key"].(string)),
-		IAMRole:           gofastly.String(df["iam_role"].(string)),
-		Format:            gofastly.String(vla.format),
-		FormatVersion:     gofastly.Int(intOrDefault(vla.formatVersion)),
-		Placement:         gofastly.String(vla.placement),
-		ResponseCondition: gofastly.String(vla.responseCondition),
+	opts := &gofastly.CreateKinesisInput{
+		AccessKey:      gofastly.String(df["access_key"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		IAMRole:        gofastly.String(df["iam_role"].(string)),
+		Name:           gofastly.String(df["name"].(string)),
+		Region:         gofastly.String(df["region"].(string)),
+		SecretKey:      gofastly.String(df["secret_key"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		StreamName:     gofastly.String(df["topic"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an emptry string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *KinesisServiceAttributeHandler) buildDelete(kinesisMap any, serviceID string, serviceVersion int) *gofastly.DeleteKinesisInput {

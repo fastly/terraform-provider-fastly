@@ -37,6 +37,12 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"content": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "The VCL code that specifies exactly what the snippet does",
+				},
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
@@ -156,9 +162,10 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *sch
 func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, error) {
 	df := dynamicSnippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
+		Content:  gofastly.String(df["content"].(string)),
+		Dynamic:  gofastly.Int(1),
 		Name:     gofastly.String(df["name"].(string)),
 		Priority: gofastly.Int(df["priority"].(int)),
-		Dynamic:  gofastly.Int(1),
 	}
 
 	snippetType := strings.ToLower(df["type"].(string))

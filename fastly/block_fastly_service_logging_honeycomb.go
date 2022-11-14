@@ -215,17 +215,17 @@ func flattenHoneycomb(honeycombList []*gofastly.Honeycomb) []map[string]any {
 }
 
 func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap any, serviceID string, serviceVersion int) *gofastly.CreateHoneycombInput {
-	df := honeycombMap.(map[string]any)
+	resource := honeycombMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateHoneycombInput{
-		Dataset:        gofastly.String(df["dataset"].(string)),
+		Dataset:        gofastly.String(resource["dataset"].(string)),
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(df["name"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Token:          gofastly.String(df["token"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -242,11 +242,11 @@ func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap any, service
 }
 
 func (h *HoneycombServiceAttributeHandler) buildDelete(honeycombMap any, serviceID string, serviceVersion int) *gofastly.DeleteHoneycombInput {
-	df := honeycombMap.(map[string]any)
+	resource := honeycombMap.(map[string]any)
 
 	return &gofastly.DeleteHoneycombInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

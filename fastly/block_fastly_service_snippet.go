@@ -166,15 +166,15 @@ func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 }
 
 func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
-	df := snippetMap.(map[string]any)
+	resource := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Name:     gofastly.String(df["name"].(string)),
-		Content:  gofastly.String(df["content"].(string)),
-		Priority: gofastly.Int(df["priority"].(int)),
+		Name:     gofastly.String(resource["name"].(string)),
+		Content:  gofastly.String(resource["content"].(string)),
+		Priority: gofastly.Int(resource["priority"].(int)),
 		Dynamic:  gofastly.Int(0),
 	}
 
-	snippetType := strings.ToLower(df["type"].(string))
+	snippetType := strings.ToLower(resource["type"].(string))
 	opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
 
 	return &opts, nil

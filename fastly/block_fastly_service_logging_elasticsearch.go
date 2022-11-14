@@ -302,27 +302,27 @@ func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[str
 }
 
 func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.CreateElasticsearchInput {
-	df := elasticsearchMap.(map[string]any)
+	resource := elasticsearchMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateElasticsearchInput{
 		Format:            gofastly.String(vla.format),
 		FormatVersion:     vla.formatVersion,
-		Index:             gofastly.String(df["index"].(string)),
-		Name:              gofastly.String(df["name"].(string)),
-		Password:          gofastly.String(df["password"].(string)),
-		Pipeline:          gofastly.String(df["pipeline"].(string)),
+		Index:             gofastly.String(resource["index"].(string)),
+		Name:              gofastly.String(resource["name"].(string)),
+		Password:          gofastly.String(resource["password"].(string)),
+		Pipeline:          gofastly.String(resource["pipeline"].(string)),
 		Placement:         gofastly.String(vla.placement),
-		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
-		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
+		RequestMaxBytes:   gofastly.Int(resource["request_max_bytes"].(int)),
+		RequestMaxEntries: gofastly.Int(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		TLSCACert:         gofastly.String(df["tls_ca_cert"].(string)),
-		TLSClientCert:     gofastly.String(df["tls_client_cert"].(string)),
-		TLSClientKey:      gofastly.String(df["tls_client_key"].(string)),
-		TLSHostname:       gofastly.String(df["tls_hostname"].(string)),
-		URL:               gofastly.String(df["url"].(string)),
-		User:              gofastly.String(df["user"].(string)),
+		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
+		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
+		URL:               gofastly.String(resource["url"].(string)),
+		User:              gofastly.String(resource["user"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -339,11 +339,11 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any,
 }
 
 func (h *ElasticSearchServiceAttributeHandler) buildDelete(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.DeleteElasticsearchInput {
-	df := elasticsearchMap.(map[string]any)
+	resource := elasticsearchMap.(map[string]any)
 
 	return &gofastly.DeleteElasticsearchInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

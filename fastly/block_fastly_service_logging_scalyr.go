@@ -214,18 +214,18 @@ func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]any {
 }
 
 func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {
-	df := scalyrMap.(map[string]any)
+	resource := scalyrMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateScalyrInput{
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(df["name"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
 		Placement:      gofastly.String(vla.placement),
-		Region:         gofastly.String(df["region"].(string)),
+		Region:         gofastly.String(resource["region"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Token:          gofastly.String(df["token"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -242,11 +242,11 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 }
 
 func (h *ScalyrServiceAttributeHandler) buildDelete(scalyrMap any, serviceID string, serviceVersion int) *gofastly.DeleteScalyrInput {
-	df := scalyrMap.(map[string]any)
+	resource := scalyrMap.(map[string]any)
 
 	return &gofastly.DeleteScalyrInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

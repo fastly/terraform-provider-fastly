@@ -330,33 +330,33 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean, state []any)
 }
 
 func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap any, serviceID string, serviceVersion int) *gofastly.CreateDigitalOceanInput {
-	df := digitaloceanMap.(map[string]any)
+	resource := digitaloceanMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateDigitalOceanInput{
-		AccessKey:        gofastly.String(df["access_key"].(string)),
-		BucketName:       gofastly.String(df["bucket_name"].(string)),
-		CompressionCodec: gofastly.String(df["compression_codec"].(string)),
-		Domain:           gofastly.String(df["domain"].(string)),
+		AccessKey:        gofastly.String(resource["access_key"].(string)),
+		BucketName:       gofastly.String(resource["bucket_name"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
+		Domain:           gofastly.String(resource["domain"].(string)),
 		Format:           gofastly.String(vla.format),
 		FormatVersion:    vla.formatVersion,
-		MessageType:      gofastly.String(df["message_type"].(string)),
-		Name:             gofastly.String(df["name"].(string)),
-		Path:             gofastly.String(df["path"].(string)),
-		Period:           gofastly.Int(df["period"].(int)),
+		MessageType:      gofastly.String(resource["message_type"].(string)),
+		Name:             gofastly.String(resource["name"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		Period:           gofastly.Int(resource["period"].(int)),
 		Placement:        gofastly.String(vla.placement),
-		PublicKey:        gofastly.String(df["public_key"].(string)),
-		SecretKey:        gofastly.String(df["secret_key"].(string)),
+		PublicKey:        gofastly.String(resource["public_key"].(string)),
+		SecretKey:        gofastly.String(resource["secret_key"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		TimestampFormat:  gofastly.String(df["timestamp_format"].(string)),
+		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
 	// If we set a default value for an attribute, then it will be sent to the API.
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
-	if gl, ok := df["gzip_level"].(int); ok && gl != -1 {
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
 		opts.GzipLevel = gofastly.Int(gl)
 	}
 
@@ -371,11 +371,11 @@ func (h *DigitalOceanServiceAttributeHandler) buildCreate(digitaloceanMap any, s
 }
 
 func (h *DigitalOceanServiceAttributeHandler) buildDelete(digitaloceanMap any, serviceID string, serviceVersion int) *gofastly.DeleteDigitalOceanInput {
-	df := digitaloceanMap.(map[string]any)
+	resource := digitaloceanMap.(map[string]any)
 
 	return &gofastly.DeleteDigitalOceanInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

@@ -257,21 +257,21 @@ func flattenHeaders(headerList []*gofastly.Header) []map[string]any {
 }
 
 func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {
-	df := headerMap.(map[string]any)
+	resource := headerMap.(map[string]any)
 	opts := gofastly.CreateHeaderInput{
-		Name:              gofastly.String(df["name"].(string)),
-		IgnoreIfSet:       gofastly.CBool(df["ignore_if_set"].(bool)),
-		Destination:       gofastly.String(df["destination"].(string)),
-		Priority:          gofastly.Int(df["priority"].(int)),
-		Source:            gofastly.String(df["source"].(string)),
-		Regex:             gofastly.String(df["regex"].(string)),
-		Substitution:      gofastly.String(df["substitution"].(string)),
-		RequestCondition:  gofastly.String(df["request_condition"].(string)),
-		CacheCondition:    gofastly.String(df["cache_condition"].(string)),
-		ResponseCondition: gofastly.String(df["response_condition"].(string)),
+		Name:              gofastly.String(resource["name"].(string)),
+		IgnoreIfSet:       gofastly.CBool(resource["ignore_if_set"].(bool)),
+		Destination:       gofastly.String(resource["destination"].(string)),
+		Priority:          gofastly.Int(resource["priority"].(int)),
+		Source:            gofastly.String(resource["source"].(string)),
+		Regex:             gofastly.String(resource["regex"].(string)),
+		Substitution:      gofastly.String(resource["substitution"].(string)),
+		RequestCondition:  gofastly.String(resource["request_condition"].(string)),
+		CacheCondition:    gofastly.String(resource["cache_condition"].(string)),
+		ResponseCondition: gofastly.String(resource["response_condition"].(string)),
 	}
 
-	act := strings.ToLower(df["action"].(string))
+	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "set":
 		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionSet)
@@ -285,7 +285,7 @@ func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {
 		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionRegexRepeat)
 	}
 
-	ty := strings.ToLower(df["type"].(string))
+	ty := strings.ToLower(resource["type"].(string))
 	switch ty {
 	case "request":
 		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeRequest)

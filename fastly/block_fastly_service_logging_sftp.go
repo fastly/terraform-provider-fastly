@@ -359,34 +359,34 @@ func flattenSFTP(sftpList []*gofastly.SFTP, state []any) []map[string]any {
 }
 
 func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
-	df := sftpMap.(map[string]any)
+	resource := sftpMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateSFTPInput{
-		Address:          gofastly.String(df["address"].(string)),
-		CompressionCodec: gofastly.String(df["compression_codec"].(string)),
+		Address:          gofastly.String(resource["address"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
 		Format:           gofastly.String(vla.format),
 		FormatVersion:    vla.formatVersion,
-		MessageType:      gofastly.String(df["message_type"].(string)),
-		Name:             gofastly.String(df["name"].(string)),
-		Password:         gofastly.String(df["password"].(string)),
-		Path:             gofastly.String(df["path"].(string)),
+		MessageType:      gofastly.String(resource["message_type"].(string)),
+		Name:             gofastly.String(resource["name"].(string)),
+		Password:         gofastly.String(resource["password"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
 		Placement:        gofastly.String(vla.placement),
-		Port:             gofastly.Int(df["port"].(int)),
-		PublicKey:        gofastly.String(df["public_key"].(string)),
-		SSHKnownHosts:    gofastly.String(df["ssh_known_hosts"].(string)),
-		SecretKey:        gofastly.String(df["secret_key"].(string)),
+		Port:             gofastly.Int(resource["port"].(int)),
+		PublicKey:        gofastly.String(resource["public_key"].(string)),
+		SSHKnownHosts:    gofastly.String(resource["ssh_known_hosts"].(string)),
+		SecretKey:        gofastly.String(resource["secret_key"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		TimestampFormat:  gofastly.String(df["timestamp_format"].(string)),
-		User:             gofastly.String(df["user"].(string)),
+		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
+		User:             gofastly.String(resource["user"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
 	// If we set a default value for an attribute, then it will be sent to the API.
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
-	if gl, ok := df["gzip_level"].(int); ok && gl != -1 {
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
 		opts.GzipLevel = gofastly.Int(gl)
 	}
 
@@ -401,11 +401,11 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string,
 }
 
 func (h *SFTPServiceAttributeHandler) buildDelete(sftpMap any, serviceID string, serviceVersion int) *gofastly.DeleteSFTPInput {
-	df := sftpMap.(map[string]any)
+	resource := sftpMap.(map[string]any)
 
 	return &gofastly.DeleteSFTPInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

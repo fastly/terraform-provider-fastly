@@ -437,36 +437,36 @@ func flattenS3s(s3List []*gofastly.S3, state []any) []map[string]any {
 }
 
 func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
-	df := s3Map.(map[string]any)
+	resource := s3Map.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateS3Input{
-		ACL:                          gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(df["acl"].(string))),
-		AccessKey:                    gofastly.String(df["s3_access_key"].(string)),
-		BucketName:                   gofastly.String(df["bucket_name"].(string)),
-		CompressionCodec:             gofastly.String(df["compression_codec"].(string)),
-		Domain:                       gofastly.String(df["domain"].(string)),
+		ACL:                          gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(resource["acl"].(string))),
+		AccessKey:                    gofastly.String(resource["s3_access_key"].(string)),
+		BucketName:                   gofastly.String(resource["bucket_name"].(string)),
+		CompressionCodec:             gofastly.String(resource["compression_codec"].(string)),
+		Domain:                       gofastly.String(resource["domain"].(string)),
 		Format:                       gofastly.String(vla.format),
 		FormatVersion:                vla.formatVersion,
-		IAMRole:                      gofastly.String(df["s3_iam_role"].(string)),
-		MessageType:                  gofastly.String(df["message_type"].(string)),
-		Name:                         gofastly.String(df["name"].(string)),
-		Path:                         gofastly.String(df["path"].(string)),
-		Period:                       gofastly.Int(df["period"].(int)),
-		PublicKey:                    gofastly.String(df["public_key"].(string)),
-		Redundancy:                   gofastly.S3RedundancyPtr(gofastly.S3Redundancy(df["redundancy"].(string))),
-		SecretKey:                    gofastly.String(df["s3_secret_key"].(string)),
-		ServerSideEncryptionKMSKeyID: gofastly.String(df["server_side_encryption_kms_key_id"].(string)),
+		IAMRole:                      gofastly.String(resource["s3_iam_role"].(string)),
+		MessageType:                  gofastly.String(resource["message_type"].(string)),
+		Name:                         gofastly.String(resource["name"].(string)),
+		Path:                         gofastly.String(resource["path"].(string)),
+		Period:                       gofastly.Int(resource["period"].(int)),
+		PublicKey:                    gofastly.String(resource["public_key"].(string)),
+		Redundancy:                   gofastly.S3RedundancyPtr(gofastly.S3Redundancy(resource["redundancy"].(string))),
+		SecretKey:                    gofastly.String(resource["s3_secret_key"].(string)),
+		ServerSideEncryptionKMSKeyID: gofastly.String(resource["server_side_encryption_kms_key_id"].(string)),
 		ServiceID:                    serviceID,
 		ServiceVersion:               serviceVersion,
-		TimestampFormat:              gofastly.String(df["timestamp_format"].(string)),
+		TimestampFormat:              gofastly.String(resource["timestamp_format"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
 	// If we set a default value for an attribute, then it will be sent to the API.
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
-	if gl, ok := df["gzip_level"].(int); ok && gl != -1 {
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
 		opts.GzipLevel = gofastly.Int(gl)
 	}
 
@@ -480,7 +480,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
-	encryption := df["server_side_encryption"].(string)
+	encryption := resource["server_side_encryption"].(string)
 	switch encryption {
 	case string(gofastly.S3ServerSideEncryptionAES):
 		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionPtr(gofastly.S3ServerSideEncryptionAES)
@@ -492,11 +492,11 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 }
 
 func (h *S3LoggingServiceAttributeHandler) buildDelete(s3Map any, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {
-	df := s3Map.(map[string]any)
+	resource := s3Map.(map[string]any)
 
 	return &gofastly.DeleteS3Input{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

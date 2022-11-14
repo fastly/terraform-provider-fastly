@@ -162,18 +162,18 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 }
 
 func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) {
-	df := cacheMap.(map[string]any)
+	resource := cacheMap.(map[string]any)
 	opts := gofastly.CreateCacheSettingInput{
-		Name:           gofastly.String(df["name"].(string)),
-		StaleTTL:       gofastly.Int(df["stale_ttl"].(int)),
-		CacheCondition: gofastly.String(df["cache_condition"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		StaleTTL:       gofastly.Int(resource["stale_ttl"].(int)),
+		CacheCondition: gofastly.String(resource["cache_condition"].(string)),
 	}
 
-	if v, ok := df["ttl"]; ok {
+	if v, ok := resource["ttl"]; ok {
 		opts.TTL = gofastly.Int(v.(int))
 	}
 
-	act := strings.ToLower(df["action"].(string))
+	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "cache":
 		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionCache)

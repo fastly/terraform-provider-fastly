@@ -211,16 +211,16 @@ func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]any {
 }
 
 func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap any, serviceID string, serviceVersion int) *gofastly.CreateLogglyInput {
-	df := logglyMap.(map[string]any)
+	resource := logglyMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateLogglyInput{
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(df["name"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Token:          gofastly.String(df["token"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -237,11 +237,11 @@ func (h *LogglyServiceAttributeHandler) buildCreate(logglyMap any, serviceID str
 }
 
 func (h *LogglyServiceAttributeHandler) buildDelete(logglyMap any, serviceID string, serviceVersion int) *gofastly.DeleteLogglyInput {
-	df := logglyMap.(map[string]any)
+	resource := logglyMap.(map[string]any)
 
 	return &gofastly.DeleteLogglyInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

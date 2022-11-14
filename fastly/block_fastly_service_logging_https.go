@@ -326,28 +326,28 @@ func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]any {
 }
 
 func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
-	df := httpsMap.(map[string]any)
+	resource := httpsMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateHTTPSInput{
-		ContentType:       gofastly.String(df["content_type"].(string)),
+		ContentType:       gofastly.String(resource["content_type"].(string)),
 		Format:            gofastly.String(vla.format),
 		FormatVersion:     vla.formatVersion,
-		HeaderName:        gofastly.String(df["header_name"].(string)),
-		HeaderValue:       gofastly.String(df["header_value"].(string)),
-		JSONFormat:        gofastly.String(df["json_format"].(string)),
-		MessageType:       gofastly.String(df["message_type"].(string)),
-		Method:            gofastly.String(df["method"].(string)),
-		Name:              gofastly.String(df["name"].(string)),
-		RequestMaxBytes:   gofastly.Int(df["request_max_bytes"].(int)),
-		RequestMaxEntries: gofastly.Int(df["request_max_entries"].(int)),
+		HeaderName:        gofastly.String(resource["header_name"].(string)),
+		HeaderValue:       gofastly.String(resource["header_value"].(string)),
+		JSONFormat:        gofastly.String(resource["json_format"].(string)),
+		MessageType:       gofastly.String(resource["message_type"].(string)),
+		Method:            gofastly.String(resource["method"].(string)),
+		Name:              gofastly.String(resource["name"].(string)),
+		RequestMaxBytes:   gofastly.Int(resource["request_max_bytes"].(int)),
+		RequestMaxEntries: gofastly.Int(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		TLSCACert:         gofastly.String(df["tls_ca_cert"].(string)),
-		TLSClientCert:     gofastly.String(df["tls_client_cert"].(string)),
-		TLSClientKey:      gofastly.String(df["tls_client_key"].(string)),
-		TLSHostname:       gofastly.String(df["tls_hostname"].(string)),
-		URL:               gofastly.String(df["url"].(string)),
+		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
+		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
+		URL:               gofastly.String(resource["url"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -364,12 +364,12 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 }
 
 func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap any, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
-	df := httpsMap.(map[string]any)
+	resource := httpsMap.(map[string]any)
 
 	opts := gofastly.DeleteHTTPSInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 
 	return &opts

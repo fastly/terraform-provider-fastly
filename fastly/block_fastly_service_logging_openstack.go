@@ -333,33 +333,33 @@ func flattenOpenstack(openstackList []*gofastly.Openstack, state []any) []map[st
 }
 
 func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, serviceID string, serviceVersion int) *gofastly.CreateOpenstackInput {
-	df := openstackMap.(map[string]any)
+	resource := openstackMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateOpenstackInput{
-		AccessKey:        gofastly.String(df["access_key"].(string)),
-		BucketName:       gofastly.String(df["bucket_name"].(string)),
-		CompressionCodec: gofastly.String(df["compression_codec"].(string)),
+		AccessKey:        gofastly.String(resource["access_key"].(string)),
+		BucketName:       gofastly.String(resource["bucket_name"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
 		Format:           gofastly.String(vla.format),
 		FormatVersion:    vla.formatVersion,
-		MessageType:      gofastly.String(df["message_type"].(string)),
-		Name:             gofastly.String(df["name"].(string)),
-		Path:             gofastly.String(df["path"].(string)),
-		Period:           gofastly.Int(df["period"].(int)),
+		MessageType:      gofastly.String(resource["message_type"].(string)),
+		Name:             gofastly.String(resource["name"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		Period:           gofastly.Int(resource["period"].(int)),
 		Placement:        gofastly.String(vla.placement),
-		PublicKey:        gofastly.String(df["public_key"].(string)),
+		PublicKey:        gofastly.String(resource["public_key"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		TimestampFormat:  gofastly.String(df["timestamp_format"].(string)),
-		URL:              gofastly.String(df["url"].(string)),
-		User:             gofastly.String(df["user"].(string)),
+		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
+		URL:              gofastly.String(resource["url"].(string)),
+		User:             gofastly.String(resource["user"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
 	// If we set a default value for an attribute, then it will be sent to the API.
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
-	if gl, ok := df["gzip_level"].(int); ok && gl != -1 {
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
 		opts.GzipLevel = gofastly.Int(gl)
 	}
 
@@ -374,11 +374,11 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, service
 }
 
 func (h *OpenstackServiceAttributeHandler) buildDelete(openstackMap any, serviceID string, serviceVersion int) *gofastly.DeleteOpenstackInput {
-	df := openstackMap.(map[string]any)
+	resource := openstackMap.(map[string]any)
 
 	return &gofastly.DeleteOpenstackInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

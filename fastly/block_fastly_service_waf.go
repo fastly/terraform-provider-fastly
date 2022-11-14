@@ -154,35 +154,35 @@ func flattenWAFs(wafList []*gofastly.WAF) []map[string]any {
 }
 
 func buildCreateWAF(waf any, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
-	df := waf.(map[string]any)
+	resource := waf.(map[string]any)
 
 	opts := gofastly.CreateWAFInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		ID:                df["waf_id"].(string),
-		PrefetchCondition: df["prefetch_condition"].(string),
-		Response:          df["response_object"].(string),
+		ID:                resource["waf_id"].(string),
+		PrefetchCondition: resource["prefetch_condition"].(string),
+		Response:          resource["response_object"].(string),
 	}
 	return &opts
 }
 
 func buildDeleteWAF(waf any, serviceVersion int) *gofastly.DeleteWAFInput {
-	df := waf.(map[string]any)
+	resource := waf.(map[string]any)
 
 	opts := gofastly.DeleteWAFInput{
-		ID:             df["waf_id"].(string),
+		ID:             resource["waf_id"].(string),
 		ServiceVersion: serviceVersion,
 	}
 	return &opts
 }
 
 func buildUpdateWAF(d *schema.ResourceData, wafMap any, serviceID string, serviceVersion int) *gofastly.UpdateWAFInput {
-	df := wafMap.(map[string]any)
+	resource := wafMap.(map[string]any)
 
 	input := gofastly.UpdateWAFInput{
 		ServiceID:      gofastly.String(serviceID),
 		ServiceVersion: gofastly.Int(serviceVersion),
-		ID:             df["waf_id"].(string),
+		ID:             resource["waf_id"].(string),
 	}
 
 	// NOTE: to access the WAF data we need to link to a specific list index.

@@ -221,17 +221,17 @@ func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]any {
 }
 
 func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap any, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
-	df := herokuMap.(map[string]any)
+	resource := herokuMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateHerokuInput{
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(df["name"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Token:          gofastly.String(df["token"].(string)),
-		URL:            gofastly.String(df["url"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
+		URL:            gofastly.String(resource["url"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -248,11 +248,11 @@ func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap any, serviceID str
 }
 
 func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap any, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
-	df := herokuMap.(map[string]any)
+	resource := herokuMap.(map[string]any)
 
 	return &gofastly.DeleteHerokuInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

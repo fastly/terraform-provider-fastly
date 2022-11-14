@@ -238,20 +238,20 @@ func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]any {
 }
 
 func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
-	df := googlepubsubMap.(map[string]any)
+	resource := googlepubsubMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreatePubsubInput{
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(df["name"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
 		Placement:      gofastly.String(vla.placement),
-		ProjectID:      gofastly.String(df["project_id"].(string)),
-		SecretKey:      gofastly.String(df["secret_key"].(string)),
+		ProjectID:      gofastly.String(resource["project_id"].(string)),
+		SecretKey:      gofastly.String(resource["secret_key"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Topic:          gofastly.String(df["topic"].(string)),
-		User:           gofastly.String(df["user"].(string)),
+		Topic:          gofastly.String(resource["topic"].(string)),
+		User:           gofastly.String(resource["user"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -268,11 +268,11 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 }
 
 func (h *GooglePubSubServiceAttributeHandler) buildDelete(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.DeletePubsubInput {
-	df := googlepubsubMap.(map[string]any)
+	resource := googlepubsubMap.(map[string]any)
 
 	return &gofastly.DeletePubsubInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

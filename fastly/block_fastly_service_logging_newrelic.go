@@ -217,17 +217,17 @@ func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]any {
 }
 
 func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap any, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
-	df := newrelicMap.(map[string]any)
+	resource := newrelicMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateNewRelicInput{
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(df["name"].(string)),
-		Region:         gofastly.String(df["region"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		Region:         gofastly.String(resource["region"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Token:          gofastly.String(df["token"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -244,11 +244,11 @@ func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap any, serviceID
 }
 
 func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap any, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
-	df := newrelicMap.(map[string]any)
+	resource := newrelicMap.(map[string]any)
 
 	return &gofastly.DeleteNewRelicInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

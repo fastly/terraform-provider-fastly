@@ -217,17 +217,17 @@ func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]any {
 }
 
 func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap any, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {
-	df := datadogMap.(map[string]any)
+	resource := datadogMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateDatadogInput{
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(df["name"].(string)),
-		Region:         gofastly.String(df["region"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		Region:         gofastly.String(resource["region"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Token:          gofastly.String(df["token"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -244,11 +244,11 @@ func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap any, serviceID s
 }
 
 func (h *DatadogServiceAttributeHandler) buildDelete(datadogMap any, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
-	df := datadogMap.(map[string]any)
+	resource := datadogMap.(map[string]any)
 
 	return &gofastly.DeleteDatadogInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

@@ -248,20 +248,20 @@ func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]any {
 }
 
 func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID string, serviceVersion int) *gofastly.CreateKinesisInput {
-	df := kinesisMap.(map[string]any)
+	resource := kinesisMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateKinesisInput{
-		AccessKey:      gofastly.String(df["access_key"].(string)),
+		AccessKey:      gofastly.String(resource["access_key"].(string)),
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
-		IAMRole:        gofastly.String(df["iam_role"].(string)),
-		Name:           gofastly.String(df["name"].(string)),
-		Region:         gofastly.String(df["region"].(string)),
-		SecretKey:      gofastly.String(df["secret_key"].(string)),
+		IAMRole:        gofastly.String(resource["iam_role"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		Region:         gofastly.String(resource["region"].(string)),
+		SecretKey:      gofastly.String(resource["secret_key"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		StreamName:     gofastly.String(df["topic"].(string)),
+		StreamName:     gofastly.String(resource["topic"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -278,11 +278,11 @@ func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID s
 }
 
 func (h *KinesisServiceAttributeHandler) buildDelete(kinesisMap any, serviceID string, serviceVersion int) *gofastly.DeleteKinesisInput {
-	df := kinesisMap.(map[string]any)
+	resource := kinesisMap.(map[string]any)
 
 	return &gofastly.DeleteKinesisInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

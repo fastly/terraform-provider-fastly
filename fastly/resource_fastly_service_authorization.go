@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )

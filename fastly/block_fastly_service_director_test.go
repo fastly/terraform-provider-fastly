@@ -6,7 +6,7 @@ import (
 	"sort"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

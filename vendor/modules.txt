@@ -183,11 +183,12 @@ github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v6 v6.8.0
+# github.com/fastly/go-fastly/v7 v7.0.0
 ## explicit; go 1.16
-github.com/fastly/go-fastly/v6/fastly
+github.com/fastly/go-fastly/v7/fastly
 # github.com/fatih/color v1.13.0
 ## explicit; go 1.13
+>>>>>>> 5c59d2d5 (bump go-fastly)
 github.com/fatih/color
 # github.com/golang/protobuf v1.4.2
 ## explicit; go 1.9

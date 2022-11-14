@@ -25,6 +25,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.S3
 		local  []map[string]any
+		unset  bool
 	}{
 		{
 			remote: []*gofastly.S3{
@@ -36,7 +37,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					SecretKey:                    testAwsPrimarySecretKey,
 					Path:                         "/",
 					Period:                       3600,
-					GzipLevel:                    0,
+					GzipLevel:                    0, // API sets this as default if not passed in API request.
 					Format:                       "%h %l %u %t %r %>s",
 					FormatVersion:                2,
 					ResponseCondition:            "response_condition_test",
@@ -59,7 +60,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"s3_secret_key":                     testAwsPrimarySecretKey,
 					"path":                              "/",
 					"period":                            3600,
-					"gzip_level":                        0,
+					"gzip_level":                        -1, // we expect API default to be overridden to avoid diff.
 					"format":                            "%h %l %u %t %r %>s",
 					"format_version":                    2,
 					"response_condition":                "response_condition_test",
@@ -74,6 +75,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"acl":                               gofastly.S3AccessControlList(""),
 				},
 			},
+			unset: true, // validating the user didn't set gzip_level
 		},
 		{
 			remote: []*gofastly.S3{
@@ -125,7 +127,25 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			out := flattenS3s(c.remote, nil)
+			// This lets us validate that when gzip_level is set to -1 locally that we
+			// can avoid a diff caused by the remote state having a value of zero.
+			//
+			// The reason the remote state would be zero is because the default -1
+			// value causes the attribute to not be sent to the API and so the API
+			// will use zero as a default value and return that in its response.
+			//
+			// Because the attribute's default is -1, it is stored like that in the
+			// local state file.
+			var localState []any
+			if c.unset {
+				localState = []any{
+					map[string]any{
+						"gzip_level": -1,
+						"name":       "s3-endpoint",
+					},
+				}
+			}
+			out := flattenS3s(c.remote, localState)
 			if diff := cmp.Diff(out, c.local); diff != "" {
 				t.Fatalf("Error matching:%s", diff)
 			}

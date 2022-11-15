@@ -152,12 +152,12 @@ func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		// Refresh Cloud Files.
 		log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
-		cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
+		remoteState, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -165,7 +165,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Cloud Files logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenCloudfiles(cloudfilesList, resources)
+		ell := flattenCloudfiles(remoteState, localState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -272,9 +272,9 @@ func deleteCloudfiles(conn *gofastly.Client, i *gofastly.DeleteCloudfilesInput) 
 }
 
 // flattenCloudfiles models data into format suitable for saving to Terraform state.
-func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles, state []any) []map[string]any {
+func flattenCloudfiles(remoteState []*gofastly.Cloudfiles, localState []any) []map[string]any {
 	var result []map[string]any
-	for _, resource := range cloudfilesList {
+	for _, resource := range remoteState {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -290,7 +290,7 @@ func flattenCloudfiles(cloudfilesList []*gofastly.Cloudfiles, state []any) []map
 		// that means is, if we did the above suggestion we would be resetting the
 		// entire state object multiple times, where as here we're only ever setting
 		// it once.
-		for _, s := range state {
+		for _, s := range localState {
 			v := s.(map[string]any)
 			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
 				resource.GzipLevel = v["gzip_level"].(int)

@@ -138,11 +138,11 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 
 // Read refreshes the resource state.
 func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
-		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+		remoteState, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -150,7 +150,7 @@ func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dirl := flattenDirectors(directorList)
+		dirl := flattenDirectors(remoteState)
 
 		if err := d.Set(h.GetKey(), dirl); err != nil {
 			log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
@@ -263,9 +263,9 @@ func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.Re
 }
 
 // flattenDirectors models data into format suitable for saving to Terraform state.
-func flattenDirectors(directorList []*gofastly.Director) []map[string]any {
+func flattenDirectors(remoteState []*gofastly.Director) []map[string]any {
 	var result []map[string]any
-	for _, resource := range directorList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":    resource.Name,
 			"comment": resource.Comment,

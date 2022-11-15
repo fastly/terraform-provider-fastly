@@ -50,7 +50,7 @@ func readWAFRuleExclusions(meta any, d *schema.ResourceData, wafVersionNumber in
 	conn := meta.(*APIClient).conn
 	wafID := d.Get("waf_id").(string)
 
-	resp, e := conn.ListAllWAFRuleExclusions(&gofastly.ListAllWAFRuleExclusionsInput{
+	remoteState, e := conn.ListAllWAFRuleExclusions(&gofastly.ListAllWAFRuleExclusionsInput{
 		WAFID:            wafID,
 		WAFVersionNumber: wafVersionNumber,
 		Include:          []string{"waf_rules"},
@@ -60,7 +60,7 @@ func readWAFRuleExclusions(meta any, d *schema.ResourceData, wafVersionNumber in
 		return e
 	}
 
-	err := d.Set("rule_exclusion", flattenWAFRuleExclusions(resp.Items))
+	err := d.Set("rule_exclusion", flattenWAFRuleExclusions(remoteState.Items))
 	if err != nil {
 		log.Printf("[WARN] Error setting WAF rule exclusions for (%s): %s", d.Id(), err)
 	}
@@ -69,10 +69,10 @@ func readWAFRuleExclusions(meta any, d *schema.ResourceData, wafVersionNumber in
 }
 
 // flattenWAFRuleExclusions models data into format suitable for saving to Terraform state.
-func flattenWAFRuleExclusions(exclusions []*gofastly.WAFRuleExclusion) []map[string]any {
+func flattenWAFRuleExclusions(remoteState []*gofastly.WAFRuleExclusion) []map[string]any {
 	var result []map[string]any
 
-	for _, resource := range exclusions {
+	for _, resource := range remoteState {
 		data := make(map[string]any)
 		if resource.Name != nil {
 			data["name"] = *resource.Name

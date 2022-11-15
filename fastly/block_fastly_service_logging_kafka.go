@@ -162,11 +162,11 @@ func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.Resou
 
 // Read refreshes the resource.
 func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
-		kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
+		remoteState, err := conn.ListKafkas(&gofastly.ListKafkasInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -174,7 +174,7 @@ func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.Resourc
 			return fmt.Errorf("error looking up Kafka logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		kafkaLogList := flattenKafka(kafkaList)
+		kafkaLogList := flattenKafka(remoteState)
 
 		for _, element := range kafkaLogList {
 			h.pruneVCLLoggingAttributes(element)
@@ -290,9 +290,9 @@ func deleteKafka(conn *gofastly.Client, i *gofastly.DeleteKafkaInput) error {
 }
 
 // flattenKafka models data into format suitable for saving to Terraform state.
-func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]any {
+func flattenKafka(remoteState []*gofastly.Kafka) []map[string]any {
 	var result []map[string]any
-	for _, resource := range kafkaList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"topic":              resource.Topic,

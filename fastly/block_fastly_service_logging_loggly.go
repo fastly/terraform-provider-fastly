@@ -93,11 +93,11 @@ func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
-		logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
+		remoteState, err := conn.ListLoggly(&gofastly.ListLogglyInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -105,7 +105,7 @@ func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Loggly logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenLoggly(logglyList)
+		ell := flattenLoggly(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -185,9 +185,9 @@ func deleteLoggly(conn *gofastly.Client, i *gofastly.DeleteLogglyInput) error {
 }
 
 // flattenLoggly models data into format suitable for saving to Terraform state.
-func flattenLoggly(logglyList []*gofastly.Loggly) []map[string]any {
+func flattenLoggly(remoteState []*gofastly.Loggly) []map[string]any {
 	var result []map[string]any
-	for _, resource := range logglyList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"token":              resource.Token,

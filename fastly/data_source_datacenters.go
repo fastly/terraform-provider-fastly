@@ -55,16 +55,16 @@ func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Reading datacenters")
 
-	datacenters, err := conn.AllDatacenters()
+	remoteState, err := conn.AllDatacenters()
 	if err != nil {
 		return diag.Errorf("error fetching datacenters: %s", err)
 	}
 
-	hashBase, _ := json.Marshal(datacenters)
+	hashBase, _ := json.Marshal(remoteState)
 	hashString := strconv.Itoa(hashcode.String(string(hashBase)))
 	d.SetId(hashString)
 
-	if err := d.Set("pops", flattenDatacenters(datacenters)); err != nil {
+	if err := d.Set("pops", flattenDatacenters(remoteState)); err != nil {
 		return diag.Errorf("error setting datacenters: %s", err)
 	}
 
@@ -72,13 +72,13 @@ func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, 
 }
 
 // flattenDatacenters models data into format suitable for saving to Terraform state.
-func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]any {
-	result := make([]map[string]any, len(datacenters))
-	if len(datacenters) == 0 {
+func flattenDatacenters(remoteState []gofastly.Datacenter) []map[string]any {
+	result := make([]map[string]any, len(remoteState))
+	if len(remoteState) == 0 {
 		return result
 	}
 
-	for i, resource := range datacenters {
+	for i, resource := range remoteState {
 		data := map[string]any{
 			"code":   resource.Code,
 			"name":   resource.Name,

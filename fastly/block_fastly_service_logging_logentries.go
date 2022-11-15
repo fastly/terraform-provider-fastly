@@ -127,11 +127,11 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
-		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
+		remoteState, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -139,7 +139,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 		}
 
-		lel := flattenLogentries(logentriesList)
+		lel := flattenLogentries(remoteState)
 
 		for _, element := range lel {
 			h.pruneVCLLoggingAttributes(element)
@@ -217,9 +217,9 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 }
 
 // flattenLogentries models data into format suitable for saving to Terraform state.
-func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]any {
+func flattenLogentries(remoteState []*gofastly.Logentries) []map[string]any {
 	var result []map[string]any
-	for _, resource := range logentriesList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"port":               resource.Port,

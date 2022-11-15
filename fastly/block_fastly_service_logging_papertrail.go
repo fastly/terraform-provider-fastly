@@ -120,11 +120,11 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
-		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
+		remoteState, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -132,7 +132,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		pl := flattenPapertrails(papertrailList)
+		pl := flattenPapertrails(remoteState)
 
 		for _, element := range pl {
 			h.pruneVCLLoggingAttributes(element)
@@ -204,9 +204,9 @@ func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.
 }
 
 // flattenPapertrails models data into format suitable for saving to Terraform state.
-func flattenPapertrails(papertrailList []*gofastly.Papertrail) []map[string]any {
+func flattenPapertrails(remoteState []*gofastly.Papertrail) []map[string]any {
 	var result []map[string]any
-	for _, resource := range papertrailList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"address":            resource.Address,

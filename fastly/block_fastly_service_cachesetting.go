@@ -88,11 +88,11 @@ func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
-		cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
+		remoteState, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -100,7 +100,7 @@ func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.
 			return fmt.Errorf("error looking up Cache Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		csl := flattenCacheSettings(cslList)
+		csl := flattenCacheSettings(remoteState)
 
 		if err := d.Set(h.GetKey(), csl); err != nil {
 			log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
@@ -187,9 +187,9 @@ func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) 
 }
 
 // flattenCacheSettings models data into format suitable for saving to Terraform state.
-func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]any {
+func flattenCacheSettings(remoteState []*gofastly.CacheSetting) []map[string]any {
 	var result []map[string]any
-	for _, resource := range csList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":            resource.Name,
 			"action":          resource.Action,

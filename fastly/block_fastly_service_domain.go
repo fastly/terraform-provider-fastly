@@ -74,14 +74,14 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		// TODO: update go-fastly to support an ActiveVersion struct, which contains
 		// domain and backend info in the response. Here we do 2 additional queries
 		// to find out that info
 		log.Printf("[DEBUG] Refreshing Domains for (%s)", d.Id())
-		domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
+		remoteState, err := conn.ListDomains(&gofastly.ListDomainsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -90,7 +90,7 @@ func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		}
 
 		// Refresh Domains
-		dl := flattenDomains(domainList)
+		dl := flattenDomains(remoteState)
 
 		if err := d.Set(h.GetKey(), dl); err != nil {
 			log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
@@ -141,10 +141,10 @@ func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 }
 
 // flattenDomains models data into format suitable for saving to Terraform state.
-func flattenDomains(list []*gofastly.Domain) []map[string]any {
-	result := make([]map[string]any, 0, len(list))
+func flattenDomains(remoteState []*gofastly.Domain) []map[string]any {
+	result := make([]map[string]any, 0, len(remoteState))
 
-	for _, resource := range list {
+	for _, resource := range remoteState {
 		result = append(result, map[string]any{
 			"name":    resource.Name,
 			"comment": resource.Comment,

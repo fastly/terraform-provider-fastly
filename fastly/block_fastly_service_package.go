@@ -74,25 +74,25 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 
 // Read refreshes the attribute state against the Fastly API.
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	resources := d.Get(h.key).([]any)
+	localState := d.Get(h.key).([]any)
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
-		pkg, err := conn.GetPackage(&gofastly.GetPackageInput{
+		remoteState, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: s.ActiveVersion.Number,
 		})
 		if err != nil {
 			if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
 				log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
-				d.Set(h.GetKey(), nil)
+				_ = d.Set(h.GetKey(), nil)
 				return nil
 			}
 			return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 		}
 
 		filename := d.Get("package.0.filename").(string)
-		wp := flattenPackage(pkg, filename)
+		wp := flattenPackage(remoteState, filename)
 		if err := d.Set(h.GetKey(), wp); err != nil {
 			log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
 		}
@@ -107,10 +107,10 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 }
 
 // flattenPackage models data into format suitable for saving to Terraform state.
-func flattenPackage(pkg *gofastly.Package, filename string) []map[string]any {
+func flattenPackage(remoteState *gofastly.Package, filename string) []map[string]any {
 	var result []map[string]any
 	data := map[string]any{
-		"source_code_hash": pkg.Metadata.HashSum,
+		"source_code_hash": remoteState.Metadata.HashSum,
 		"filename":         filename,
 	}
 

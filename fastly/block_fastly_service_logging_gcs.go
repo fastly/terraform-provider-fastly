@@ -180,11 +180,11 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
-		gs, err := conn.ListGCSs(&gofastly.ListGCSsInput{
+		remoteState, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -192,7 +192,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		gcsl := flattenGCS(gs, resources)
+		gcsl := flattenGCS(remoteState, localState)
 
 		for _, element := range gcsl {
 			h.pruneVCLLoggingAttributes(element)
@@ -285,9 +285,9 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.
 }
 
 // flattenGCS models data into format suitable for saving to Terraform state.
-func flattenGCS(gcsList []*gofastly.GCS, state []any) []map[string]any {
+func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 	var result []map[string]any
-	for _, resources := range gcsList {
+	for _, resources := range remoteState {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.

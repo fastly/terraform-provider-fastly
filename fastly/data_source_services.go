@@ -82,20 +82,20 @@ func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Reading services")
 
-	services, err := conn.ListServices(&gofastly.ListServicesInput{})
+	remoteState, err := conn.ListServices(&gofastly.ListServicesInput{})
 	if err != nil {
 		return diag.Errorf("error fetching services: %s", err)
 	}
 
-	hashBase, _ := json.Marshal(services)
+	hashBase, _ := json.Marshal(remoteState)
 	hashString := strconv.Itoa(hashcode.String(string(hashBase)))
 	d.SetId(hashString)
 
-	if err := d.Set("details", flattenServiceDetails(services)); err != nil {
+	if err := d.Set("details", flattenServiceDetails(remoteState)); err != nil {
 		return diag.Errorf("error setting services: %s", err)
 	}
 
-	if err := d.Set("ids", flattenServiceIDs(services)); err != nil {
+	if err := d.Set("ids", flattenServiceIDs(remoteState)); err != nil {
 		return diag.Errorf("error setting service IDs: %s", err)
 	}
 
@@ -103,22 +103,22 @@ func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, met
 }
 
 // flattenServiceIDs models data into format suitable for saving to Terraform state.
-func flattenServiceIDs(services []*gofastly.Service) []string {
-	result := make([]string, len(services))
-	for i, resource := range services {
+func flattenServiceIDs(remoteState []*gofastly.Service) []string {
+	result := make([]string, len(remoteState))
+	for i, resource := range remoteState {
 		result[i] = resource.ID
 	}
 	return result
 }
 
 // flattenServiceDetails models data into format suitable for saving to Terraform state.
-func flattenServiceDetails(services []*gofastly.Service) []map[string]any {
-	result := make([]map[string]any, len(services))
-	if len(services) == 0 {
+func flattenServiceDetails(remoteState []*gofastly.Service) []map[string]any {
+	result := make([]map[string]any, len(remoteState))
+	if len(remoteState) == 0 {
 		return result
 	}
 
-	for i, resource := range services {
+	for i, resource := range remoteState {
 		result[i] = map[string]any{
 			"id":          resource.ID,
 			"name":        resource.Name,

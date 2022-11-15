@@ -84,11 +84,11 @@ func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.Key()).(*schema.Set).List()
+	localState := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
-		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+		remoteState, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -96,7 +96,7 @@ func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		vsl := flattenSnippets(snippetList)
+		vsl := flattenSnippets(remoteState)
 
 		if err := d.Set(h.GetKey(), vsl); err != nil {
 			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
@@ -181,9 +181,9 @@ func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 }
 
 // flattenSnippets models data into format suitable for saving to Terraform state.
-func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]any {
+func flattenSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 	var result []map[string]any
-	for _, resource := range snippetList {
+	for _, resource := range remoteState {
 		// Skip dynamic snippets
 		if resource.Dynamic == 1 {
 			continue

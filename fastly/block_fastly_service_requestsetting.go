@@ -127,11 +127,11 @@ func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *sch
 
 // Read refreshes the resource.
 func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
-		rsList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
+		remoteState, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -139,7 +139,7 @@ func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schem
 			return fmt.Errorf("error looking up Request Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		rl := flattenRequestSettings(rsList)
+		rl := flattenRequestSettings(remoteState)
 
 		if err := d.Set(h.GetKey(), rl); err != nil {
 			log.Printf("[WARN] Error setting Request Settings for (%s): %s", d.Id(), err)
@@ -236,9 +236,9 @@ func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *sch
 }
 
 // flattenRequestSettings models data into format suitable for saving to Terraform state.
-func flattenRequestSettings(rsList []*gofastly.RequestSetting) []map[string]any {
+func flattenRequestSettings(remoteState []*gofastly.RequestSetting) []map[string]any {
 	var result []map[string]any
-	for _, resource := range rsList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":              resource.Name,
 			"max_stale_age":     resource.MaxStaleAge,

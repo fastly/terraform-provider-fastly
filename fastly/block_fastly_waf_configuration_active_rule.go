@@ -103,7 +103,7 @@ func readWAFRules(meta any, d *schema.ResourceData, v int) error {
 	wafID := d.Get("waf_id").(string)
 
 	log.Printf("[INFO] retrieving active rules for WAF: %s", wafID)
-	resp, err := conn.ListAllWAFActiveRules(&gofastly.ListAllWAFActiveRulesInput{
+	remoteState, err := conn.ListAllWAFActiveRules(&gofastly.ListAllWAFActiveRulesInput{
 		WAFID:            wafID,
 		WAFVersionNumber: v,
 	})
@@ -111,7 +111,7 @@ func readWAFRules(meta any, d *schema.ResourceData, v int) error {
 		return err
 	}
 
-	rules := flattenWAFActiveRules(resp.Items)
+	rules := flattenWAFActiveRules(remoteState.Items)
 
 	if err := d.Set("rule", rules); err != nil {
 		log.Printf("[WARN] Error setting WAF rules for (%s): %s", d.Id(), err)
@@ -182,9 +182,9 @@ func executeBatchWAFActiveRulesOperations(conn *gofastly.Client, input *gofastly
 }
 
 // flattenWAFActiveRules models data into format suitable for saving to Terraform state.
-func flattenWAFActiveRules(rules []*gofastly.WAFActiveRule) []map[string]any {
-	result := make([]map[string]any, len(rules))
-	for i, r := range rules {
+func flattenWAFActiveRules(remoteState []*gofastly.WAFActiveRule) []map[string]any {
+	result := make([]map[string]any, len(remoteState))
+	for i, r := range remoteState {
 		data := map[string]any{
 			"modsec_rule_id": r.ModSecID,
 			"revision":       r.Revision,

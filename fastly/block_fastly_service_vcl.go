@@ -78,11 +78,11 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 
 // Read refreshes the resource.
 func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.Key()).(*schema.Set).List()
+	localState := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing VCLs for (%s)", d.Id())
-		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
+		remoteState, err := conn.ListVCLs(&gofastly.ListVCLsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -90,7 +90,7 @@ func (h *VCLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			return fmt.Errorf("error looking up VCLs for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		vl := flattenVCLs(vclList)
+		vl := flattenVCLs(remoteState)
 
 		if err := d.Set(h.GetKey(), vl); err != nil {
 			log.Printf("[WARN] Error setting VCLs for (%s): %s", d.Id(), err)
@@ -141,9 +141,9 @@ func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 }
 
 // flattenVCLs models data into format suitable for saving to Terraform state.
-func flattenVCLs(vclList []*gofastly.VCL) []map[string]any {
+func flattenVCLs(remoteState []*gofastly.VCL) []map[string]any {
 	var result []map[string]any
-	for _, resource := range vclList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":    resource.Name,
 			"content": resource.Content,

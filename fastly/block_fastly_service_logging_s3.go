@@ -233,11 +233,11 @@ func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
-		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
+		remoteState, err := conn.ListS3s(&gofastly.ListS3sInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -245,7 +245,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		sl := flattenS3s(s3List, resources)
+		sl := flattenS3s(remoteState, localState)
 
 		for _, element := range sl {
 			h.pruneVCLLoggingAttributes(element)
@@ -373,9 +373,9 @@ func deleteS3(conn *gofastly.Client, i *gofastly.DeleteS3Input) error {
 }
 
 // flattenS3s models data into format suitable for saving to Terraform state.
-func flattenS3s(s3List []*gofastly.S3, state []any) []map[string]any {
+func flattenS3s(remoteState []*gofastly.S3, localState []any) []map[string]any {
 	var result []map[string]any
-	for _, resource := range s3List {
+	for _, resource := range remoteState {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -391,7 +391,7 @@ func flattenS3s(s3List []*gofastly.S3, state []any) []map[string]any {
 		// that means is, if we did the above suggestion we would be resetting the
 		// entire state object multiple times, where as here we're only ever setting
 		// it once.
-		for _, s := range state {
+		for _, s := range localState {
 			v := s.(map[string]any)
 			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
 				resource.GzipLevel = v["gzip_level"].(int)

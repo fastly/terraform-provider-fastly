@@ -163,11 +163,11 @@ func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
-		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
+		remoteState, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -175,7 +175,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 			return fmt.Errorf("error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		hll := flattenHTTPS(httpsList)
+		hll := flattenHTTPS(remoteState)
 
 		for _, element := range hll {
 			h.pruneVCLLoggingAttributes(element)
@@ -288,9 +288,9 @@ func deleteHTTPS(conn *gofastly.Client, i *gofastly.DeleteHTTPSInput) error {
 }
 
 // flattenHTTPS models data into format suitable for saving to Terraform state.
-func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]any {
+func flattenHTTPS(remoteState []*gofastly.HTTPS) []map[string]any {
 	var result []map[string]any
-	for _, resource := range httpsList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":                resource.Name,
 			"response_condition":  resource.ResponseCondition,

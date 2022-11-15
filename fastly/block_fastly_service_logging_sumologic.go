@@ -121,11 +121,11 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
-		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
+		remoteState, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -133,7 +133,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up Sumologic for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		sul := flattenSumologics(sumologicList)
+		sul := flattenSumologics(remoteState)
 
 		for _, element := range sul {
 			h.pruneVCLLoggingAttributes(element)
@@ -208,9 +208,9 @@ func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 }
 
 // flattenSumologics models data into format suitable for saving to Terraform state.
-func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]any {
+func flattenSumologics(remoteState []*gofastly.Sumologic) []map[string]any {
 	var result []map[string]any
-	for _, resource := range sumologicList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"url":                resource.URL,

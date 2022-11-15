@@ -132,11 +132,11 @@ func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
-		headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
+		remoteState, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -144,7 +144,7 @@ func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		hl := flattenHeaders(headerList)
+		hl := flattenHeaders(remoteState)
 
 		if err := d.Set(h.GetKey(), hl); err != nil {
 			log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
@@ -227,9 +227,9 @@ func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 }
 
 // flattenHeaders models data into format suitable for saving to Terraform state.
-func flattenHeaders(headerList []*gofastly.Header) []map[string]any {
+func flattenHeaders(remoteState []*gofastly.Header) []map[string]any {
 	var result []map[string]any
-	for _, resource := range headerList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"action":             resource.Action,

@@ -209,11 +209,11 @@ func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
-		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		remoteState, err := conn.ListBackends(&gofastly.ListBackendsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -221,7 +221,7 @@ func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		bl := flattenBackend(backendList, h.GetServiceMetadata())
+		bl := flattenBackend(remoteState, h.GetServiceMetadata())
 		if err := d.Set(h.GetKey(), bl); err != nil {
 			log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
 		}
@@ -393,10 +393,10 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 }
 
 // flattenBackend models data into format suitable for saving to Terraform state.
-func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[string]any {
-	result := make([]map[string]any, 0, len(backendList))
+func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[string]any {
+	result := make([]map[string]any, 0, len(remoteState))
 
-	for _, resource := range backendList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"address":               resource.Address,
 			"auto_loadbalance":      resource.AutoLoadbalance,

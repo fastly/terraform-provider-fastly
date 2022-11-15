@@ -143,7 +143,7 @@ func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceDat
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
 
-	dictList, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
+	remoteState, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
 		ServiceID:    serviceID,
 		DictionaryID: dictionaryID,
 	})
@@ -151,7 +151,7 @@ func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("items", flattenDictionaryItems(dictList))
+	err = d.Set("items", flattenDictionaryItems(remoteState))
 	return diag.FromErr(err)
 }
 
@@ -205,9 +205,9 @@ func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceD
 }
 
 // flattenDictionaryItems models data into format suitable for saving to Terraform state.
-func flattenDictionaryItems(dictItemList []*gofastly.DictionaryItem) map[string]string {
+func flattenDictionaryItems(remoteState []*gofastly.DictionaryItem) map[string]string {
 	result := make(map[string]string)
-	for _, currentDictItem := range dictItemList {
+	for _, currentDictItem := range remoteState {
 		result[currentDictItem.ItemKey] = currentDictItem.ItemValue
 	}
 	return result

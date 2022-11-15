@@ -96,11 +96,11 @@ func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
-		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
+		remoteState, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -108,7 +108,7 @@ func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up Honeycomb logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenHoneycomb(honeycombList)
+		ell := flattenHoneycomb(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -188,9 +188,9 @@ func deleteHoneycomb(conn *gofastly.Client, i *gofastly.DeleteHoneycombInput) er
 }
 
 // flattenHoneycomb models data into format suitable for saving to Terraform state.
-func flattenHoneycomb(honeycombList []*gofastly.Honeycomb) []map[string]any {
+func flattenHoneycomb(remoteState []*gofastly.Honeycomb) []map[string]any {
 	var result []map[string]any
-	for _, resource := range honeycombList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"token":              resource.Token,

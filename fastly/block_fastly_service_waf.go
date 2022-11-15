@@ -100,11 +100,11 @@ func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.Resour
 }
 
 func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).([]any)
+	localState := d.Get(h.GetKey()).([]any)
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
-		wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{
+		remoteState, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: d.Id(),
 			FilterVersion: s.ActiveVersion.Number,
 		})
@@ -112,7 +112,7 @@ func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 		}
 
-		waf := flattenWAFs(wafList.Items)
+		waf := flattenWAFs(remoteState.Items)
 
 		if err := d.Set("waf", waf); err != nil {
 			log.Printf("[WARN] Error setting waf for (%s): %s", d.Id(), err)
@@ -132,13 +132,13 @@ func wafExists(conn *gofastly.Client, s string, v int, id string) bool {
 }
 
 // flattenWAFs models data into format suitable for saving to Terraform state.
-func flattenWAFs(wafList []*gofastly.WAF) []map[string]any {
+func flattenWAFs(remoteState []*gofastly.WAF) []map[string]any {
 	var result []map[string]any
-	if len(wafList) == 0 {
+	if len(remoteState) == 0 {
 		return result
 	}
 
-	w := wafList[0]
+	w := remoteState[0]
 	data := map[string]any{
 		"waf_id":             w.ID,
 		"response_object":    w.Response,

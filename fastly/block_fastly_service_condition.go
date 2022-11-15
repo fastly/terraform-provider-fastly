@@ -87,11 +87,11 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
-		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
+		remoteState, err := conn.ListConditions(&gofastly.ListConditionsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -99,7 +99,7 @@ func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up Conditions for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		cl := flattenConditions(conditionList)
+		cl := flattenConditions(remoteState)
 
 		if err := d.Set(h.GetKey(), cl); err != nil {
 			log.Printf("[WARN] Error setting Conditions for (%s): %s", d.Id(), err)
@@ -190,9 +190,9 @@ func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 }
 
 // flattenConditions models data into format suitable for saving to Terraform state.
-func flattenConditions(conditionList []*gofastly.Condition) []map[string]any {
+func flattenConditions(remoteState []*gofastly.Condition) []map[string]any {
 	var result []map[string]any
-	for _, resource := range conditionList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":      resource.Name,
 			"statement": resource.Statement,

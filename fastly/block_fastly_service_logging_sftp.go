@@ -170,11 +170,11 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 // Read refreshes the resource.
 func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
-		sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
+		remoteState, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -182,7 +182,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 			return fmt.Errorf("error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenSFTP(sftpList, resources)
+		ell := flattenSFTP(remoteState, localState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -298,9 +298,9 @@ func deleteSFTP(conn *gofastly.Client, i *gofastly.DeleteSFTPInput) error {
 }
 
 // flattenSFTP models data into format suitable for saving to Terraform state.
-func flattenSFTP(sftpList []*gofastly.SFTP, state []any) []map[string]any {
+func flattenSFTP(remoteState []*gofastly.SFTP, localState []any) []map[string]any {
 	var result []map[string]any
-	for _, resource := range sftpList {
+	for _, resource := range remoteState {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -316,7 +316,7 @@ func flattenSFTP(sftpList []*gofastly.SFTP, state []any) []map[string]any {
 		// that means is, if we did the above suggestion we would be resetting the
 		// entire state object multiple times, where as here we're only ever setting
 		// it once.
-		for _, s := range state {
+		for _, s := range localState {
 			v := s.(map[string]any)
 			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
 				resource.GzipLevel = v["gzip_level"].(int)

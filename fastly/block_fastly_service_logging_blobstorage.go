@@ -192,11 +192,11 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 
 // Read refreshes the resource.
 func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
-		blobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
+		remoteState, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -204,7 +204,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 			return fmt.Errorf("error looking up Blob Storages for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		bsl := flattenBlobStorages(blobStorageList, resources)
+		bsl := flattenBlobStorages(remoteState, localState)
 
 		for _, element := range bsl {
 			h.pruneVCLLoggingAttributes(element)
@@ -303,9 +303,9 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d 
 }
 
 // flattenBlobStorages models data into format suitable for saving to Terraform state.
-func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage, state []any) []map[string]any {
+func flattenBlobStorages(remoteState []*gofastly.BlobStorage, localState []any) []map[string]any {
 	var result []map[string]any
-	for _, resource := range blobStorageList {
+	for _, resource := range remoteState {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -321,7 +321,7 @@ func flattenBlobStorages(blobStorageList []*gofastly.BlobStorage, state []any) [
 		// that means is, if we did the above suggestion we would be resetting the
 		// entire state object multiple times, where as here we're only ever setting
 		// it once.
-		for _, s := range state {
+		for _, s := range localState {
 			v := s.(map[string]any)
 			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
 				resource.GzipLevel = v["gzip_level"].(int)

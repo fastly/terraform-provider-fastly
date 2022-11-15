@@ -97,11 +97,11 @@ func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 
 // Read refreshes the resource.
 func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
-		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
+		remoteState, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -109,7 +109,7 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 			return fmt.Errorf("error looking up New Relic logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dll := flattenNewRelic(newrelicList)
+		dll := flattenNewRelic(remoteState)
 
 		for _, element := range dll {
 			h.pruneVCLLoggingAttributes(element)
@@ -190,9 +190,9 @@ func deleteNewRelic(conn *gofastly.Client, i *gofastly.DeleteNewRelicInput) erro
 }
 
 // flattenNewRelic models data into format suitable for saving to Terraform state.
-func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]any {
+func flattenNewRelic(remoteState []*gofastly.NewRelic) []map[string]any {
 	var result []map[string]any
-	for _, resource := range newrelicList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"token":              resource.Token,

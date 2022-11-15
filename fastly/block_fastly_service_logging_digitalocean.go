@@ -152,11 +152,11 @@ func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing DigitalOcean Spaces logging endpoints for (%s)", d.Id())
-		digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
+		remoteState, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -164,7 +164,7 @@ func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.
 			return fmt.Errorf("error looking up DigitalOcean Spaces logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenDigitalOcean(digitaloceanList, resources)
+		ell := flattenDigitalOcean(remoteState, localState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -271,9 +271,9 @@ func deleteDigitalOcean(conn *gofastly.Client, i *gofastly.DeleteDigitalOceanInp
 }
 
 // flattenDigitalOcean models data into format suitable for saving to Terraform state.
-func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean, state []any) []map[string]any {
+func flattenDigitalOcean(remoteState []*gofastly.DigitalOcean, localState []any) []map[string]any {
 	var result []map[string]any
-	for _, resource := range digitaloceanList {
+	for _, resource := range remoteState {
 		// Avoid setting gzip_level to the API default of zero if originally unset.
 		// This avoids an unnecessary diff where the local state would have been
 		// updated to zero and so would be different from the -1 default set.
@@ -289,7 +289,7 @@ func flattenDigitalOcean(digitaloceanList []*gofastly.DigitalOcean, state []any)
 		// that means is, if we did the above suggestion we would be resetting the
 		// entire state object multiple times, where as here we're only ever setting
 		// it once.
-		for _, s := range state {
+		for _, s := range localState {
 			v := s.(map[string]any)
 			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
 				resource.GzipLevel = v["gzip_level"].(int)

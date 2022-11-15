@@ -97,11 +97,11 @@ func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
-		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
+		remoteState, err := conn.ListDatadog(&gofastly.ListDatadogInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -109,7 +109,7 @@ func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up Datadog logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dll := flattenDatadog(datadogList)
+		dll := flattenDatadog(remoteState)
 
 		for _, element := range dll {
 			h.pruneVCLLoggingAttributes(element)
@@ -190,9 +190,9 @@ func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error 
 }
 
 // flattenDatadog models data into format suitable for saving to Terraform state.
-func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]any {
+func flattenDatadog(remoteState []*gofastly.Datadog) []map[string]any {
 	var result []map[string]any
-	for _, resource := range datadogList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"token":              resource.Token,

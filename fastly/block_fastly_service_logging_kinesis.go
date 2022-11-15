@@ -114,11 +114,11 @@ func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
-		kinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
+		remoteState, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -126,7 +126,7 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenKinesis(kinesisList)
+		ell := flattenKinesis(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -218,9 +218,9 @@ func deleteKinesis(conn *gofastly.Client, i *gofastly.DeleteKinesisInput) error 
 }
 
 // flattenKinesis models data into format suitable for saving to Terraform state.
-func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]any {
+func flattenKinesis(remoteState []*gofastly.Kinesis) []map[string]any {
 	var result []map[string]any
-	for _, resource := range kinesisList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"topic":              resource.StreamName,

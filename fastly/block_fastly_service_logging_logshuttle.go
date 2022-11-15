@@ -97,11 +97,11 @@ func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
-		logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
+		remoteState, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -109,7 +109,7 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Log Shuttle logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenLogshuttle(logshuttleList)
+		ell := flattenLogshuttle(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -192,9 +192,9 @@ func deleteLogshuttle(conn *gofastly.Client, i *gofastly.DeleteLogshuttleInput) 
 }
 
 // flattenLogshuttle models data into format suitable for saving to Terraform state.
-func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]any {
+func flattenLogshuttle(remoteState []*gofastly.Logshuttle) []map[string]any {
 	var result []map[string]any
-	for _, resource := range logshuttleList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"token":              resource.Token,

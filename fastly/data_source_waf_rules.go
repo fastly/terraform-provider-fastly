@@ -104,12 +104,12 @@ func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[INFO] Reading WAF rules with ops: %#v", input)
-	res, err := conn.ListAllWAFRules(input)
+	remoteState, err := conn.ListAllWAFRules(input)
 	if err != nil {
 		return diag.Errorf("error listing WAF rules: %s", err)
 	}
 
-	rules := flattenWAFRules(res.Items)
+	rules := flattenWAFRules(remoteState.Items)
 
 	d.SetId(strconv.Itoa(createFiltersHash(input)))
 	if err := d.Set("rules", rules); err != nil {
@@ -134,14 +134,14 @@ func createFiltersHash(i *gofastly.ListAllWAFRulesInput) int {
 }
 
 // flattenWAFRules models data into format suitable for saving to Terraform state.
-func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]any {
-	result := make([]map[string]any, len(ruleList))
+func flattenWAFRules(remoteState []*gofastly.WAFRule) []map[string]any {
+	result := make([]map[string]any, len(remoteState))
 
-	if len(ruleList) == 0 {
+	if len(remoteState) == 0 {
 		return result
 	}
 
-	for i, resource := range ruleList {
+	for i, resource := range remoteState {
 		latestRevisionNumber := 1
 		if latestRevision, err := determineLatestRuleRevision(resource.Revisions); err == nil {
 			latestRevisionNumber = latestRevision.Revision

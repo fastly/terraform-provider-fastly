@@ -118,7 +118,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	aclEntries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
+	remoteState, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
@@ -126,7 +126,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("entry", flattenACLEntries(aclEntries))
+	err = d.Set("entry", flattenACLEntries(remoteState))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -233,10 +233,10 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 }
 
 // flattenACLEntries models data into format suitable for saving to Terraform state.
-func flattenACLEntries(aclEntryList []*gofastly.ACLEntry) []map[string]any {
+func flattenACLEntries(remoteState []*gofastly.ACLEntry) []map[string]any {
 	var result []map[string]any
 
-	for _, resource := range aclEntryList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"id":      resource.ID,
 			"ip":      resource.IP,

@@ -171,11 +171,11 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
-		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
+		remoteState, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -183,7 +183,7 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Syslog for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 		}
 
-		sll := flattenSyslogs(syslogList)
+		sll := flattenSyslogs(remoteState)
 
 		for _, element := range sll {
 			h.pruneVCLLoggingAttributes(element)
@@ -282,9 +282,9 @@ func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 }
 
 // flattenSyslogs models data into format suitable for saving to Terraform state.
-func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]any {
+func flattenSyslogs(remoteState []*gofastly.Syslog) []map[string]any {
 	var result []map[string]any
-	for _, resource := range syslogList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":               resource.Name,
 			"address":            resource.Address,

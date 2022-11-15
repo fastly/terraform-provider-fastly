@@ -106,11 +106,11 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 
 // Read refreshes the resource.
 func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
-		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
+		remoteState, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -118,7 +118,7 @@ func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schem
 			return fmt.Errorf("error looking up Response Object for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		rol := flattenResponseObjects(responseObjectList)
+		rol := flattenResponseObjects(remoteState)
 
 		if err := d.Set(h.GetKey(), rol); err != nil {
 			log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
@@ -186,9 +186,9 @@ func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *sch
 }
 
 // flattenResponseObjects models data into format suitable for saving to Terraform state.
-func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]any {
+func flattenResponseObjects(remoteState []*gofastly.ResponseObject) []map[string]any {
 	var result []map[string]any
-	for _, resource := range responseObjectList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":              resource.Name,
 			"status":            resource.Status,

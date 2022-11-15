@@ -92,11 +92,11 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 // Read refreshes the resource.
 func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
-		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
+		remoteState, err := conn.ListGzips(&gofastly.ListGzipsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -104,7 +104,7 @@ func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 			return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		gl := flattenGzips(gzipsList)
+		gl := flattenGzips(remoteState)
 
 		// NOTE: Although "content_types" and "extensions" fields are optional in spec,
 		// Fastly API will actually set the default value silently when these fields are not sent
@@ -206,9 +206,9 @@ func (h *GzipServiceAttributeHandler) Delete(_ context.Context, d *schema.Resour
 }
 
 // flattenGzips models data into format suitable for saving to Terraform state.
-func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]any {
+func flattenGzips(remoteState []*gofastly.Gzip) []map[string]any {
 	var result []map[string]any
-	for _, resource := range gzipsList {
+	for _, resource := range remoteState {
 		data := map[string]any{
 			"name":            resource.Name,
 			"cache_condition": resource.CacheCondition,

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -26,13 +26,13 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					Name:                "test.notexample.com",
 					Address:             "www.notexample.com",
 					OverrideHost:        "origin.example.com",
-					Port:                uint(80),
+					Port:                80,
 					AutoLoadbalance:     true,
-					BetweenBytesTimeout: uint(10000),
-					ConnectTimeout:      uint(1000),
-					ErrorThreshold:      uint(0),
-					FirstByteTimeout:    uint(15000),
-					MaxConn:             uint(200),
+					BetweenBytesTimeout: 10000,
+					ConnectTimeout:      1000,
+					ErrorThreshold:      0,
+					FirstByteTimeout:    15000,
+					MaxConn:             200,
 					HealthCheck:         "",
 					UseSSL:              false,
 					SSLCheckCert:        true,
@@ -46,7 +46,7 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					MinTLSVersion:       "",
 					SSLCiphers:          "foo:bar:baz",
 					Shield:              "lga-ny-us",
-					Weight:              uint(100),
+					Weight:              100,
 				},
 			},
 			local: []map[string]any{
@@ -64,7 +64,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"healthcheck":           "",
 					"use_ssl":               false,
 					"ssl_check_cert":        true,
-					"ssl_hostname":          "",
 					"ssl_ca_cert":           "",
 					"ssl_cert_hostname":     "",
 					"ssl_sni_hostname":      "",

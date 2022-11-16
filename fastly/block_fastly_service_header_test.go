@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -61,50 +61,61 @@ func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 	}{
 		{
 			remote: &gofastly.CreateHeaderInput{
-				Name:        "someheadder",
-				Action:      gofastly.HeaderActionDelete,
-				IgnoreIfSet: true,
-				Type:        gofastly.HeaderTypeCache,
-				Destination: "http.aws-id",
-				Priority:    gofastly.Uint(uint(100)),
+				Action:            gofastly.HeaderActionPtr(gofastly.HeaderActionDelete),
+				CacheCondition:    gofastly.String("test"),
+				Destination:       gofastly.String("http.aws-id"),
+				IgnoreIfSet:       gofastly.CBool(true),
+				Name:              gofastly.String("someheadder"),
+				Priority:          gofastly.Int(100),
+				Regex:             gofastly.String("test"),
+				RequestCondition:  gofastly.String("test"),
+				ResponseCondition: gofastly.String("test"),
+				Source:            gofastly.String("test"),
+				Substitution:      gofastly.String("test"),
+				Type:              gofastly.HeaderTypePtr(gofastly.HeaderTypeCache),
 			},
 			local: map[string]any{
-				"name":               "someheadder",
 				"action":             "delete",
-				"ignore_if_set":      true,
+				"cache_condition":    "test",
 				"destination":        "http.aws-id",
+				"ignore_if_set":      true,
+				"name":               "someheadder",
 				"priority":           100,
-				"source":             "",
-				"regex":              "",
-				"substitution":       "",
-				"request_condition":  "",
-				"cache_condition":    "",
-				"response_condition": "",
+				"regex":              "test",
+				"request_condition":  "test",
+				"response_condition": "test",
+				"source":             "test",
+				"substitution":       "test",
 				"type":               "cache",
 			},
 		},
 		{
 			remote: &gofastly.CreateHeaderInput{
-				Name:        "someheadder",
-				Action:      gofastly.HeaderActionSet,
-				IgnoreIfSet: false,
-				Type:        gofastly.HeaderTypeCache,
-				Destination: "http.aws-id",
-				Priority:    gofastly.Uint(uint(100)),
-				Source:      "http.server-name",
+				Action:            gofastly.HeaderActionPtr(gofastly.HeaderActionSet),
+				CacheCondition:    gofastly.String(""),
+				Destination:       gofastly.String("http.aws-id"),
+				IgnoreIfSet:       gofastly.CBool(false),
+				Name:              gofastly.String("someheadder"),
+				Priority:          gofastly.Int(100),
+				Regex:             gofastly.String(""),
+				RequestCondition:  gofastly.String(""),
+				ResponseCondition: gofastly.String(""),
+				Source:            gofastly.String("http.server-name"),
+				Substitution:      gofastly.String(""),
+				Type:              gofastly.HeaderTypePtr(gofastly.HeaderTypeCache),
 			},
 			local: map[string]any{
-				"name":               "someheadder",
 				"action":             "set",
-				"ignore_if_set":      false,
-				"destination":        "http.aws-id",
-				"priority":           100,
-				"source":             "http.server-name",
-				"regex":              "",
-				"substitution":       "",
-				"request_condition":  "",
 				"cache_condition":    "",
+				"destination":        "http.aws-id",
+				"ignore_if_set":      false,
+				"name":               "someheadder",
+				"priority":           100,
+				"regex":              "",
+				"request_condition":  "",
 				"response_condition": "",
+				"source":             "http.server-name",
+				"substitution":       "",
 				"type":               "cache",
 			},
 		},
@@ -129,7 +140,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Destination:    "http.x-amz-request-id",
 		Type:           "cache",
 		Action:         "delete",
-		Priority:       uint(100),
+		Priority:       100,
 	}
 
 	log2 := gofastly.Header{
@@ -139,7 +150,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Type:           "cache",
 		Action:         "delete",
 		IgnoreIfSet:    true,
-		Priority:       uint(100),
+		Priority:       100,
 	}
 
 	log3 := gofastly.Header{
@@ -148,7 +159,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Destination:    "http.Server",
 		Type:           "cache",
 		Action:         "delete",
-		Priority:       uint(100),
+		Priority:       100,
 	}
 
 	log4 := gofastly.Header{
@@ -158,7 +169,7 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 		Type:              "request",
 		Action:            "set",
 		Source:            "server.identity",
-		Priority:          uint(100),
+		Priority:          100,
 		RequestCondition:  "test_req_condition",
 		CacheCondition:    "test_cache_condition",
 		ResponseCondition: "test_res_condition",

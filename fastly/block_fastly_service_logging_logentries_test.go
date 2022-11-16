@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -32,10 +32,10 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 			local: []map[string]any{
 				{
 					"name":               "somelogentriesname",
-					"port":               uint(8080),
+					"port":               8080,
 					"token":              "mytoken",
 					"format":             "%h %l %u %t %r %>s",
-					"format_version":     uint(1),
+					"format_version":     1,
 					"response_condition": "response_condition_test",
 					"use_tls":            false,
 				},
@@ -59,7 +59,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	log1 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesname",
-		Port:              uint(20000),
+		Port:              20000,
 		UseTLS:            true,
 		Token:             "token",
 		Format:            `%h %l %u %t "%r" %>s %b`,
@@ -70,7 +70,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	log2 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesanothername",
-		Port:              uint(10000),
+		Port:              10000,
 		UseTLS:            false,
 		Token:             "newtoken",
 		Format:            "%h %u %t %r %>s",
@@ -119,7 +119,7 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 	log1 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesname",
-		Port:              uint(20000),
+		Port:              20000,
 		UseTLS:            true,
 		Token:             "token",
 		Format:            `%h %l %u %t "%r" %>s %b`,
@@ -210,7 +210,7 @@ func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 	log1 := gofastly.Logentries{
 		ServiceVersion:    1,
 		Name:              "somelogentriesname",
-		Port:              uint(20000),
+		Port:              20000,
 		UseTLS:            true,
 		Token:             "token",
 		Format:            `%h %l %u %t "%r" %>s %b`,

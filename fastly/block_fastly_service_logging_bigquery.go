@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -109,21 +109,26 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBigQueryInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		ProjectID:         resource["project_id"].(string),
-		Dataset:           resource["dataset"].(string),
-		Table:             resource["table"].(string),
-		User:              resource["email"].(string),
-		SecretKey:         resource["secret_key"].(string),
-		Template:          resource["template"].(string),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		ProjectID:      gofastly.String(resource["project_id"].(string)),
+		Dataset:        gofastly.String(resource["dataset"].(string)),
+		Table:          gofastly.String(resource["table"].(string)),
+		User:           gofastly.String(resource["email"].(string)),
+		SecretKey:      gofastly.String(resource["secret_key"].(string)),
+		Template:       gofastly.String(resource["template"].(string)),
+		Placement:      gofastly.String(vla.placement),
 	}
 
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.format != "" {
-		opts.Format = vla.format
+		opts.Format = gofastly.String(vla.format)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create BigQuery opts: %#v", opts)
@@ -137,11 +142,11 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 
 // Read refreshes the resource.
 func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
-		bqs, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
+		remoteState, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -149,7 +154,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *sche
 			return fmt.Errorf("error looking up BigQuery logging for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		bql := flattenBigQuery(bqs)
+		bql := flattenBigQuery(remoteState)
 
 		for _, element := range bql {
 			h.pruneVCLLoggingAttributes(element)
@@ -171,6 +176,8 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 		Name:           resource["name"].(string),
 	}
 
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["project_id"]; ok {
 		opts.ProjectID = gofastly.String(v.(string))
 	}
@@ -198,13 +205,8 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.String(v.(string))
 	}
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update BigQuery Opts: %#v", opts)
@@ -237,32 +239,32 @@ func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *sc
 	return nil
 }
 
-func flattenBigQuery(bqList []*gofastly.BigQuery) []map[string]any {
-	var sm []map[string]any
-	for _, currentBQ := range bqList {
-		// Convert gcs to a map for saving to state.
-		m := map[string]any{
-			"name":               currentBQ.Name,
-			"format":             currentBQ.Format,
-			"email":              currentBQ.User,
-			"secret_key":         currentBQ.SecretKey,
-			"project_id":         currentBQ.ProjectID,
-			"dataset":            currentBQ.Dataset,
-			"table":              currentBQ.Table,
-			"response_condition": currentBQ.ResponseCondition,
-			"template":           currentBQ.Template,
-			"placement":          currentBQ.Placement,
+// flattenBigQuery models data into format suitable for saving to Terraform state.
+func flattenBigQuery(remoteState []*gofastly.BigQuery) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"format":             resource.Format,
+			"email":              resource.User,
+			"secret_key":         resource.SecretKey,
+			"project_id":         resource.ProjectID,
+			"dataset":            resource.Dataset,
+			"table":              resource.Table,
+			"response_condition": resource.ResponseCondition,
+			"template":           resource.Template,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range m {
+		for k, v := range data {
 			if v == "" {
-				delete(m, k)
+				delete(data, k)
 			}
 		}
 
-		sm = append(sm, m)
+		result = append(result, data)
 	}
 
-	return sm
+	return result
 }

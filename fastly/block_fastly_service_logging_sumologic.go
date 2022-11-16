@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -92,15 +92,23 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSumologicInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		URL:               resource["url"].(string),
-		MessageType:       resource["message_type"].(string),
-		Format:            vla.format,
-		FormatVersion:     int(uintOrDefault(vla.formatVersion)),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		MessageType:    gofastly.String(resource["message_type"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		URL:            gofastly.String(resource["url"].(string)),
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
@@ -113,11 +121,11 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
-		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
+		remoteState, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -125,7 +133,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up Sumologic for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		sul := flattenSumologics(sumologicList)
+		sul := flattenSumologics(remoteState)
 
 		for _, element := range sul {
 			h.pruneVCLLoggingAttributes(element)
@@ -147,11 +155,8 @@ func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
 		opts.Address = gofastly.String(v.(string))
 	}
@@ -202,29 +207,29 @@ func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 	return nil
 }
 
-func flattenSumologics(sumologicList []*gofastly.Sumologic) []map[string]any {
-	var l []map[string]any
-	for _, p := range sumologicList {
-		// Convert Sumologic to a map for saving to state.
-		ns := map[string]any{
-			"name":               p.Name,
-			"url":                p.URL,
-			"format":             p.Format,
-			"response_condition": p.ResponseCondition,
-			"message_type":       p.MessageType,
-			"format_version":     int(p.FormatVersion),
-			"placement":          p.Placement,
+// flattenSumologics models data into format suitable for saving to Terraform state.
+func flattenSumologics(remoteState []*gofastly.Sumologic) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"response_condition": resource.ResponseCondition,
+			"message_type":       resource.MessageType,
+			"format_version":     int(resource.FormatVersion),
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
+		for k, v := range data {
 			if v == "" {
-				delete(ns, k)
+				delete(data, k)
 			}
 		}
 
-		l = append(l, ns)
+		result = append(result, data)
 	}
 
-	return l
+	return result
 }

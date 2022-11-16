@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -97,16 +97,24 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateLogentriesInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		Port:              uint(resource["port"].(int)),
-		UseTLS:            gofastly.Compatibool(resource["use_tls"].(bool)),
-		Token:             resource["token"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Port:           gofastly.Int(resource["port"].(int)),
+		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
+		Token:          gofastly.String(resource["token"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
@@ -119,11 +127,11 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
-		logentriesList, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
+		remoteState, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -131,7 +139,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Logentries for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 		}
 
-		lel := flattenLogentries(logentriesList)
+		lel := flattenLogentries(remoteState)
 
 		for _, element := range lel {
 			h.pruneVCLLoggingAttributes(element)
@@ -153,13 +161,10 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["use_tls"]; ok {
 		opts.UseTLS = gofastly.CBool(v.(bool))
@@ -171,7 +176,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -211,30 +216,30 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
-func flattenLogentries(logentriesList []*gofastly.Logentries) []map[string]any {
-	var sm []map[string]any
-	for _, currentLE := range logentriesList {
-		// Convert Logentries to a map for saving to state.
-		m := map[string]any{
-			"name":               currentLE.Name,
-			"port":               currentLE.Port,
-			"use_tls":            currentLE.UseTLS,
-			"token":              currentLE.Token,
-			"format":             currentLE.Format,
-			"format_version":     currentLE.FormatVersion,
-			"response_condition": currentLE.ResponseCondition,
-			"placement":          currentLE.Placement,
+// flattenLogentries models data into format suitable for saving to Terraform state.
+func flattenLogentries(remoteState []*gofastly.Logentries) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"port":               resource.Port,
+			"use_tls":            resource.UseTLS,
+			"token":              resource.Token,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range m {
+		for k, v := range data {
 			if v == "" {
-				delete(m, k)
+				delete(data, k)
 			}
 		}
 
-		sm = append(sm, m)
+		result = append(result, data)
 	}
 
-	return sm
+	return result
 }

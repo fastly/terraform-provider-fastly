@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -46,10 +46,10 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					"password":          "password",
 					"public_key":        pgpPublicKey(t),
 					"path":              "/path",
-					"period":            uint(3600),
-					"port":              uint(21),
-					"gzip_level":        uint8(0),
-					"format_version":    uint(2),
+					"period":            3600,
+					"port":              21,
+					"gzip_level":        0,
+					"format_version":    2,
 					"format":            "%h %l %u %t \"%r\" %>s %b",
 					"timestamp_format":  "%Y-%m-%dT%H:%M:%S.000",
 					"placement":         "none",
@@ -61,7 +61,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenFTP(c.remote)
+		out := flattenFTP(c.remote, nil)
 		if diff := cmp.Diff(out, c.local); diff != "" {
 			t.Fatalf("Error matching: %s", diff)
 		}

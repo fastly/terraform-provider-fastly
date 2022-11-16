@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,44 +55,45 @@ func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Reading datacenters")
 
-	datacenters, err := conn.AllDatacenters()
+	remoteState, err := conn.AllDatacenters()
 	if err != nil {
 		return diag.Errorf("error fetching datacenters: %s", err)
 	}
 
-	hashBase, _ := json.Marshal(datacenters)
+	hashBase, _ := json.Marshal(remoteState)
 	hashString := strconv.Itoa(hashcode.String(string(hashBase)))
 	d.SetId(hashString)
 
-	if err := d.Set("pops", flattenDatacenters(datacenters)); err != nil {
+	if err := d.Set("pops", flattenDatacenters(remoteState)); err != nil {
 		return diag.Errorf("error setting datacenters: %s", err)
 	}
 
 	return nil
 }
 
-func flattenDatacenters(datacenters []gofastly.Datacenter) []map[string]any {
-	pops := make([]map[string]any, len(datacenters))
-	if len(datacenters) == 0 {
-		return pops
+// flattenDatacenters models data into format suitable for saving to Terraform state.
+func flattenDatacenters(remoteState []gofastly.Datacenter) []map[string]any {
+	result := make([]map[string]any, len(remoteState))
+	if len(remoteState) == 0 {
+		return result
 	}
 
-	for i, pop := range datacenters {
-		datacentersMapString := map[string]any{
-			"code":   pop.Code,
-			"name":   pop.Name,
-			"group":  pop.Group,
-			"shield": pop.Shield,
+	for i, resource := range remoteState {
+		data := map[string]any{
+			"code":   resource.Code,
+			"name":   resource.Name,
+			"group":  resource.Group,
+			"shield": resource.Shield,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range datacentersMapString {
+		for k, v := range data {
 			if v == "" {
-				delete(datacentersMapString, k)
+				delete(data, k)
 			}
 		}
-		pops[i] = datacentersMapString
+		result[i] = data
 	}
 
-	return pops
+	return result
 }

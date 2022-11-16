@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -97,11 +97,11 @@ func (h *NewRelicServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 
 // Read refreshes the resource.
 func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing New Relic logging endpoints for (%s)", d.Id())
-		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
+		remoteState, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -109,7 +109,7 @@ func (h *NewRelicServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 			return fmt.Errorf("error looking up New Relic logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dll := flattenNewRelic(newrelicList)
+		dll := flattenNewRelic(remoteState)
 
 		for _, element := range dll {
 			h.pruneVCLLoggingAttributes(element)
@@ -131,11 +131,8 @@ func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["token"]; ok {
 		opts.Token = gofastly.String(v.(string))
 	}
@@ -143,7 +140,7 @@ func (h *NewRelicServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -192,56 +189,66 @@ func deleteNewRelic(conn *gofastly.Client, i *gofastly.DeleteNewRelicInput) erro
 	return nil
 }
 
-func flattenNewRelic(newrelicList []*gofastly.NewRelic) []map[string]any {
-	var dsl []map[string]any
-	for _, dl := range newrelicList {
-		// Convert NewRelic logging to a map for saving to state.
-		ndl := map[string]any{
-			"name":               dl.Name,
-			"token":              dl.Token,
-			"format":             dl.Format,
-			"format_version":     dl.FormatVersion,
-			"placement":          dl.Placement,
-			"region":             dl.Region,
-			"response_condition": dl.ResponseCondition,
+// flattenNewRelic models data into format suitable for saving to Terraform state.
+func flattenNewRelic(remoteState []*gofastly.NewRelic) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"region":             resource.Region,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range ndl {
+		for k, v := range data {
 			if v == "" {
-				delete(ndl, k)
+				delete(data, k)
 			}
 		}
 
-		dsl = append(dsl, ndl)
+		result = append(result, data)
 	}
 
-	return dsl
+	return result
 }
 
 func (h *NewRelicServiceAttributeHandler) buildCreate(newrelicMap any, serviceID string, serviceVersion int) *gofastly.CreateNewRelicInput {
-	df := newrelicMap.(map[string]any)
+	resource := newrelicMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateNewRelicInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Token:             df["token"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		Region:            df["region"].(string),
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateNewRelicInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Region:         gofastly.String(resource["region"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(resource["token"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *NewRelicServiceAttributeHandler) buildDelete(newrelicMap any, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicInput {
-	df := newrelicMap.(map[string]any)
+	resource := newrelicMap.(map[string]any)
 
 	return &gofastly.DeleteNewRelicInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

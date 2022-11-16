@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,7 +31,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					Bucket:           "bucketname",
 					SecretKey:        secretKey,
 					Format:           "log format",
-					FormatVersion:    uint(2),
+					FormatVersion:    2,
 					Period:           3600,
 					GzipLevel:        0,
 					CompressionCodec: "zstd",
@@ -44,7 +44,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					"bucket_name":       "bucketname",
 					"secret_key":        secretKey,
 					"format":            "log format",
-					"format_version":    uint(2),
+					"format_version":    2,
 					"period":            3600,
 					"gzip_level":        0,
 					"compression_codec": "zstd",
@@ -54,7 +54,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenGCS(c.remote)
+		out := flattenGCS(c.remote, nil)
 		if !reflect.DeepEqual(out, c.local) {
 			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}

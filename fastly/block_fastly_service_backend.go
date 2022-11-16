@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -124,7 +124,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all",
+			Description: "Configure certificate validation. Does not affect SNI at all",
 		},
 		"ssl_check_cert": {
 			Type:        schema.TypeBool,
@@ -152,18 +152,11 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "Client key attached to origin. Used when connecting to the backend",
 			Sensitive:   true,
 		},
-		"ssl_hostname": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Used for both SNI during the TLS handshake and to validate the cert",
-			Deprecated:  "Use ssl_cert_hostname and ssl_sni_hostname instead.",
-		},
 		"ssl_sni_hostname": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all",
+			Description: "Configure SNI in the TLS handshake. Does not affect cert validation at all",
 		},
 		"use_ssl": {
 			Type:        schema.TypeBool,
@@ -216,11 +209,11 @@ func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
-		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		remoteState, err := conn.ListBackends(&gofastly.ListBackendsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -228,7 +221,7 @@ func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		bl := flattenBackend(backendList, h.GetServiceMetadata())
+		bl := flattenBackend(remoteState, h.GetServiceMetadata())
 		if err := d.Set(h.GetKey(), bl); err != nil {
 			log.Printf("[WARN] Error setting Backends for (%s): %s", d.Id(), err)
 		}
@@ -274,38 +267,43 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 	}
 }
 
-func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, df map[string]any) gofastly.CreateBackendInput {
+func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, resource map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
+		Address:             gofastly.String(resource["address"].(string)),
+		AutoLoadbalance:     gofastly.CBool(resource["auto_loadbalance"].(bool)),
+		BetweenBytesTimeout: gofastly.Int(resource["between_bytes_timeout"].(int)),
+		ConnectTimeout:      gofastly.Int(resource["connect_timeout"].(int)),
+		ErrorThreshold:      gofastly.Int(resource["error_threshold"].(int)),
+		FirstByteTimeout:    gofastly.Int(resource["first_byte_timeout"].(int)),
+		HealthCheck:         gofastly.String(resource["healthcheck"].(string)),
+		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
+		MaxTLSVersion:       gofastly.String(resource["max_tls_version"].(string)),
+		MinTLSVersion:       gofastly.String(resource["min_tls_version"].(string)),
+		Name:                gofastly.String(resource["name"].(string)),
+		Port:                gofastly.Int(resource["port"].(int)),
+		SSLCACert:           gofastly.String(resource["ssl_ca_cert"].(string)),
+		SSLCertHostname:     gofastly.String(resource["ssl_cert_hostname"].(string)),
+		SSLCheckCert:        gofastly.CBool(resource["ssl_check_cert"].(bool)),
+		SSLCiphers:          gofastly.String(resource["ssl_ciphers"].(string)),
+		SSLClientCert:       gofastly.String(resource["ssl_client_cert"].(string)),
+		SSLClientKey:        gofastly.String(resource["ssl_client_key"].(string)),
+		SSLSNIHostname:      gofastly.String(resource["ssl_sni_hostname"].(string)),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
-		Name:                df["name"].(string),
-		Address:             df["address"].(string),
-		OverrideHost:        df["override_host"].(string),
-		AutoLoadbalance:     gofastly.Compatibool(df["auto_loadbalance"].(bool)),
-		SSLCheckCert:        gofastly.Compatibool(df["ssl_check_cert"].(bool)),
-		SSLHostname:         df["ssl_hostname"].(string),
-		SSLCACert:           df["ssl_ca_cert"].(string),
-		SSLCertHostname:     df["ssl_cert_hostname"].(string),
-		SSLSNIHostname:      df["ssl_sni_hostname"].(string),
-		UseSSL:              gofastly.Compatibool(df["use_ssl"].(bool)),
-		SSLClientKey:        df["ssl_client_key"].(string),
-		SSLClientCert:       df["ssl_client_cert"].(string),
-		MaxTLSVersion:       df["max_tls_version"].(string),
-		MinTLSVersion:       df["min_tls_version"].(string),
-		SSLCiphers:          df["ssl_ciphers"].(string),
-		Shield:              df["shield"].(string),
-		Port:                gofastly.Uint(uint(df["port"].(int))),
-		BetweenBytesTimeout: gofastly.Uint(uint(df["between_bytes_timeout"].(int))),
-		ConnectTimeout:      gofastly.Uint(uint(df["connect_timeout"].(int))),
-		ErrorThreshold:      gofastly.Uint(uint(df["error_threshold"].(int))),
-		FirstByteTimeout:    gofastly.Uint(uint(df["first_byte_timeout"].(int))),
-		MaxConn:             gofastly.Uint(uint(df["max_conn"].(int))),
-		Weight:              gofastly.Uint(uint(df["weight"].(int))),
-		HealthCheck:         df["healthcheck"].(string),
+		Shield:              gofastly.String(resource["shield"].(string)),
+		UseSSL:              gofastly.CBool(resource["use_ssl"].(bool)),
+		Weight:              gofastly.Int(resource["weight"].(int)),
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if resource["override_host"].(string) != "" {
+		opts.OverrideHost = gofastly.String(resource["override_host"].(string))
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		opts.RequestCondition = df["request_condition"].(string)
+		opts.RequestCondition = gofastly.String(resource["request_condition"].(string))
 	}
 	return opts
 }
@@ -317,43 +315,37 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
-	if v, ok := modified["comment"]; ok {
-		opts.Comment = gofastly.String(v.(string))
-	}
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
 		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["override_host"]; ok {
 		opts.OverrideHost = gofastly.String(v.(string))
 	}
 	if v, ok := modified["connect_timeout"]; ok {
-		opts.ConnectTimeout = gofastly.Uint(uint(v.(int)))
+		opts.ConnectTimeout = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["max_conn"]; ok {
-		opts.MaxConn = gofastly.Uint(uint(v.(int)))
+		opts.MaxConn = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["error_threshold"]; ok {
-		opts.ErrorThreshold = gofastly.Uint(uint(v.(int)))
+		opts.ErrorThreshold = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["first_byte_timeout"]; ok {
-		opts.FirstByteTimeout = gofastly.Uint(uint(v.(int)))
+		opts.FirstByteTimeout = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["between_bytes_timeout"]; ok {
-		opts.BetweenBytesTimeout = gofastly.Uint(uint(v.(int)))
+		opts.BetweenBytesTimeout = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["auto_loadbalance"]; ok {
 		opts.AutoLoadbalance = gofastly.CBool(v.(bool))
 	}
 	if v, ok := modified["weight"]; ok {
-		opts.Weight = gofastly.Uint(uint(v.(int)))
+		opts.Weight = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_condition"]; ok {
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -381,9 +373,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["ssl_client_key"]; ok {
 		opts.SSLClientKey = gofastly.String(v.(string))
 	}
-	if v, ok := modified["ssl_hostname"]; ok {
-		opts.SSLHostname = gofastly.String(v.(string))
-	}
 	if v, ok := modified["ssl_cert_hostname"]; ok {
 		opts.SSLCertHostname = gofastly.String(v.(string))
 	}
@@ -397,48 +386,48 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 		opts.MaxTLSVersion = gofastly.String(v.(string))
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
-		opts.SSLCiphers = v.(string)
+		opts.SSLCiphers = gofastly.String(v.(string))
 	}
 
 	return opts
 }
 
-func flattenBackend(backendList []*gofastly.Backend, sa ServiceMetadata) []map[string]any {
-	bl := make([]map[string]any, 0, len(backendList))
+// flattenBackend models data into format suitable for saving to Terraform state.
+func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[string]any {
+	result := make([]map[string]any, 0, len(remoteState))
 
-	for _, b := range backendList {
-		backend := map[string]any{
-			"name":                  b.Name,
-			"address":               b.Address,
-			"auto_loadbalance":      b.AutoLoadbalance,
-			"between_bytes_timeout": int(b.BetweenBytesTimeout),
-			"connect_timeout":       int(b.ConnectTimeout),
-			"error_threshold":       int(b.ErrorThreshold),
-			"first_byte_timeout":    int(b.FirstByteTimeout),
-			"max_conn":              int(b.MaxConn),
-			"port":                  int(b.Port),
-			"override_host":         b.OverrideHost,
-			"shield":                b.Shield,
-			"ssl_check_cert":        b.SSLCheckCert,
-			"ssl_hostname":          b.SSLHostname,
-			"ssl_ca_cert":           b.SSLCACert,
-			"ssl_client_key":        b.SSLClientKey,
-			"ssl_client_cert":       b.SSLClientCert,
-			"max_tls_version":       b.MaxTLSVersion,
-			"min_tls_version":       b.MinTLSVersion,
-			"ssl_ciphers":           b.SSLCiphers,
-			"use_ssl":               b.UseSSL,
-			"ssl_cert_hostname":     b.SSLCertHostname,
-			"ssl_sni_hostname":      b.SSLSNIHostname,
-			"weight":                int(b.Weight),
-			"healthcheck":           b.HealthCheck,
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"address":               resource.Address,
+			"auto_loadbalance":      resource.AutoLoadbalance,
+			"between_bytes_timeout": int(resource.BetweenBytesTimeout),
+			"connect_timeout":       int(resource.ConnectTimeout),
+			"error_threshold":       int(resource.ErrorThreshold),
+			"first_byte_timeout":    int(resource.FirstByteTimeout),
+			"healthcheck":           resource.HealthCheck,
+			"max_conn":              int(resource.MaxConn),
+			"max_tls_version":       resource.MaxTLSVersion,
+			"min_tls_version":       resource.MinTLSVersion,
+			"name":                  resource.Name,
+			"override_host":         resource.OverrideHost,
+			"port":                  int(resource.Port),
+			"shield":                resource.Shield,
+			"ssl_ca_cert":           resource.SSLCACert,
+			"ssl_cert_hostname":     resource.SSLCertHostname,
+			"ssl_check_cert":        resource.SSLCheckCert,
+			"ssl_ciphers":           resource.SSLCiphers,
+			"ssl_client_cert":       resource.SSLClientCert,
+			"ssl_client_key":        resource.SSLClientKey,
+			"ssl_sni_hostname":      resource.SSLSNIHostname,
+			"use_ssl":               resource.UseSSL,
+			"weight":                int(resource.Weight),
 		}
 
 		if sa.serviceType == ServiceTypeVCL {
-			backend["request_condition"] = b.RequestCondition
+			data["request_condition"] = resource.RequestCondition
 		}
 
-		bl = append(bl, backend)
+		result = append(result, data)
 	}
-	return bl
+	return result
 }

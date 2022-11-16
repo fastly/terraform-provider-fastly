@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -91,15 +91,23 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 	vla := h.getVCLLoggingAttributes(resource)
 
 	opts := gofastly.CreatePapertrailInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		Address:           resource["address"].(string),
-		Port:              uint(resource["port"].(int)),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Address:        gofastly.String(resource["address"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Port:           gofastly.Int(resource["port"].(int)),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -112,11 +120,11 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
-		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
+		remoteState, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -124,7 +132,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		pl := flattenPapertrails(papertrailList)
+		pl := flattenPapertrails(remoteState)
 
 		for _, element := range pl {
 			h.pruneVCLLoggingAttributes(element)
@@ -146,19 +154,16 @@ func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
 		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -198,29 +203,29 @@ func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
-func flattenPapertrails(papertrailList []*gofastly.Papertrail) []map[string]any {
-	var pl []map[string]any
-	for _, p := range papertrailList {
-		// Convert Papertrails to a map for saving to state.
-		ns := map[string]any{
-			"name":               p.Name,
-			"address":            p.Address,
-			"port":               p.Port,
-			"format":             p.Format,
-			"format_version":     p.FormatVersion,
-			"response_condition": p.ResponseCondition,
-			"placement":          p.Placement,
+// flattenPapertrails models data into format suitable for saving to Terraform state.
+func flattenPapertrails(remoteState []*gofastly.Papertrail) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"port":               resource.Port,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
+		for k, v := range data {
 			if v == "" {
-				delete(ns, k)
+				delete(data, k)
 			}
 		}
 
-		pl = append(pl, ns)
+		result = append(result, data)
 	}
 
-	return pl
+	return result
 }

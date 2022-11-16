@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -108,11 +108,11 @@ func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
-		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
+		remoteState, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -120,7 +120,7 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 			return fmt.Errorf("error looking up Google Cloud Pub/Sub logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		googlepubsubLogList := flattenGooglePubSub(googlepubsubList)
+		googlepubsubLogList := flattenGooglePubSub(remoteState)
 
 		for _, element := range googlepubsubLogList {
 			h.pruneVCLLoggingAttributes(element)
@@ -142,11 +142,8 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["topic"]; ok {
 		opts.Topic = gofastly.String(v.(string))
 	}
@@ -160,7 +157,7 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.ProjectID = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -211,60 +208,68 @@ func deleteGooglePubSub(conn *gofastly.Client, i *gofastly.DeletePubsubInput) er
 	return nil
 }
 
-func flattenGooglePubSub(googlepubsubList []*gofastly.Pubsub) []map[string]any {
-	var flattened []map[string]any
-	for _, s := range googlepubsubList {
-		// Convert logging to a map for saving to state.
-		flatGooglePubSub := map[string]any{
-			"name":               s.Name,
-			"user":               s.User,
-			"secret_key":         s.SecretKey,
-			"project_id":         s.ProjectID,
-			"topic":              s.Topic,
-			"format":             s.Format,
-			"format_version":     s.FormatVersion,
-			"placement":          s.Placement,
-			"response_condition": s.ResponseCondition,
+// flattenGooglePubSub models data into format suitable for saving to Terraform state.
+func flattenGooglePubSub(remoteState []*gofastly.Pubsub) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"user":               resource.User,
+			"secret_key":         resource.SecretKey,
+			"project_id":         resource.ProjectID,
+			"topic":              resource.Topic,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range flatGooglePubSub {
+		for k, v := range data {
 			if v == "" {
-				delete(flatGooglePubSub, k)
+				delete(data, k)
 			}
 		}
 
-		flattened = append(flattened, flatGooglePubSub)
+		result = append(result, data)
 	}
 
-	return flattened
+	return result
 }
 
 func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.CreatePubsubInput {
-	df := googlepubsubMap.(map[string]any)
+	resource := googlepubsubMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreatePubsubInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		User:              df["user"].(string),
-		SecretKey:         df["secret_key"].(string),
-		ProjectID:         df["project_id"].(string),
-		Topic:             df["topic"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreatePubsubInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Placement:      gofastly.String(vla.placement),
+		ProjectID:      gofastly.String(resource["project_id"].(string)),
+		SecretKey:      gofastly.String(resource["secret_key"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Topic:          gofastly.String(resource["topic"].(string)),
+		User:           gofastly.String(resource["user"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *GooglePubSubServiceAttributeHandler) buildDelete(googlepubsubMap any, serviceID string, serviceVersion int) *gofastly.DeletePubsubInput {
-	df := googlepubsubMap.(map[string]any)
+	resource := googlepubsubMap.(map[string]any)
 
 	return &gofastly.DeletePubsubInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

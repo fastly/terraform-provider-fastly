@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -44,9 +44,13 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 		"gzip_level": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
+			Type:     schema.TypeInt,
+			Optional: true,
+			// NOTE: The default represents an unset value
+			// We use this instead of zero because the zero value for an int type is
+			// actually a valid value for the API. The API will attempt to default to
+			// zero if nothing is set by the user in their TF configuration.
+			Default:     -1,
 			Description: GzipLevelDescription,
 		},
 		"message_type": {
@@ -155,7 +159,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
-	if opts.Password == "" && opts.SecretKey == "" {
+	if *opts.Password == "" && *opts.SecretKey == "" {
 		return fmt.Errorf("either password or secret_key must be set")
 	}
 
@@ -166,11 +170,11 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 // Read refreshes the resource.
 func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
-		sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
+		remoteState, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -178,7 +182,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 			return fmt.Errorf("error looking up SFTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenSFTP(sftpList)
+		ell := flattenSFTP(remoteState, localState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -200,16 +204,13 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
 		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.String(v.(string))
@@ -230,16 +231,16 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		opts.Path = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -296,77 +297,115 @@ func deleteSFTP(conn *gofastly.Client, i *gofastly.DeleteSFTPInput) error {
 	return nil
 }
 
-func flattenSFTP(sftpList []*gofastly.SFTP) []map[string]any {
-	var ssl []map[string]any
-	for _, sl := range sftpList {
-		// Convert SFTP logging to a map for saving to state.
-		nsl := map[string]any{
-			"name":               sl.Name,
-			"address":            sl.Address,
-			"user":               sl.User,
-			"path":               sl.Path,
-			"ssh_known_hosts":    sl.SSHKnownHosts,
-			"port":               sl.Port,
-			"password":           sl.Password,
-			"secret_key":         sl.SecretKey,
-			"public_key":         sl.PublicKey,
-			"period":             sl.Period,
-			"gzip_level":         sl.GzipLevel,
-			"timestamp_format":   sl.TimestampFormat,
-			"message_type":       sl.MessageType,
-			"format":             sl.Format,
-			"format_version":     sl.FormatVersion,
-			"response_condition": sl.ResponseCondition,
-			"placement":          sl.Placement,
-			"compression_codec":  sl.CompressionCodec,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range nsl {
-			if v == "" {
-				delete(nsl, k)
+// flattenSFTP models data into format suitable for saving to Terraform state.
+func flattenSFTP(remoteState []*gofastly.SFTP, localState []any) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		// Avoid setting gzip_level to the API default of zero if originally unset.
+		// This avoids an unnecessary diff where the local state would have been
+		// updated to zero and so would be different from the -1 default set.
+		// As the user never set the attribute we don't want to show a diff to say
+		// it should be zero according to the API.
+		//
+		// NOTE: Ideally the local state would be updated when .Create() is called.
+		// e.g. we'd check if the value is -1 for gzip_level and set it in state as
+		// zero instead. This way we could avoid having to do this check here.
+		// The reason that's not possible (or not ideal at least) is because Create
+		// is called multiple times (once for each block defined in configuration)
+		// while the setting of the state must be done holistically, and so what
+		// that means is, if we did the above suggestion we would be resetting the
+		// entire state object multiple times, where as here we're only ever setting
+		// it once.
+		for _, s := range localState {
+			v := s.(map[string]any)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
+				break
 			}
 		}
 
-		ssl = append(ssl, nsl)
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"user":               resource.User,
+			"path":               resource.Path,
+			"ssh_known_hosts":    resource.SSHKnownHosts,
+			"port":               resource.Port,
+			"password":           resource.Password,
+			"secret_key":         resource.SecretKey,
+			"public_key":         resource.PublicKey,
+			"period":             resource.Period,
+			"gzip_level":         resource.GzipLevel,
+			"timestamp_format":   resource.TimestampFormat,
+			"message_type":       resource.MessageType,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
+			"compression_codec":  resource.CompressionCodec,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range data {
+			if v == "" {
+				delete(data, k)
+			}
+		}
+
+		result = append(result, data)
 	}
 
-	return ssl
+	return result
 }
 
 func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string, serviceVersion int) *gofastly.CreateSFTPInput {
-	df := sftpMap.(map[string]any)
+	resource := sftpMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateSFTPInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Address:           df["address"].(string),
-		Name:              df["name"].(string),
-		User:              df["user"].(string),
-		Path:              df["path"].(string),
-		PublicKey:         df["public_key"].(string),
-		SecretKey:         df["secret_key"].(string),
-		SSHKnownHosts:     df["ssh_known_hosts"].(string),
-		Port:              uint(df["port"].(int)),
-		Password:          df["password"].(string),
-		GzipLevel:         uint8(df["gzip_level"].(int)),
-		TimestampFormat:   df["timestamp_format"].(string),
-		MessageType:       df["message_type"].(string),
-		CompressionCodec:  df["compression_codec"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateSFTPInput{
+		Address:          gofastly.String(resource["address"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
+		Format:           gofastly.String(vla.format),
+		FormatVersion:    vla.formatVersion,
+		MessageType:      gofastly.String(resource["message_type"].(string)),
+		Name:             gofastly.String(resource["name"].(string)),
+		Password:         gofastly.String(resource["password"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		Placement:        gofastly.String(vla.placement),
+		Port:             gofastly.Int(resource["port"].(int)),
+		PublicKey:        gofastly.String(resource["public_key"].(string)),
+		SSHKnownHosts:    gofastly.String(resource["ssh_known_hosts"].(string)),
+		SecretKey:        gofastly.String(resource["secret_key"].(string)),
+		ServiceID:        serviceID,
+		ServiceVersion:   serviceVersion,
+		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
+		User:             gofastly.String(resource["user"].(string)),
 	}
+
+	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
+	// If we set a default value for an attribute, then it will be sent to the API.
+	// In some scenarios this can cause the API to reject the request.
+	// For example, configuring compression_codec + gzip_level is invalid.
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
+		opts.GzipLevel = gofastly.Int(gl)
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *SFTPServiceAttributeHandler) buildDelete(sftpMap any, serviceID string, serviceVersion int) *gofastly.DeleteSFTPInput {
-	df := sftpMap.(map[string]any)
+	resource := sftpMap.(map[string]any)
 
 	return &gofastly.DeleteSFTPInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

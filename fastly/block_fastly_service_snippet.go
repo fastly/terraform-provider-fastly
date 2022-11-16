@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -84,11 +84,11 @@ func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.Key()).(*schema.Set).List()
+	localState := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
-		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+		remoteState, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -96,7 +96,7 @@ func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		vsl := flattenSnippets(snippetList)
+		vsl := flattenSnippets(remoteState)
 
 		if err := d.Set(h.GetKey(), vsl); err != nil {
 			log.Printf("[WARN] Error setting VCL Snippets for (%s): %s", d.Id(), err)
@@ -121,14 +121,11 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		NewName:        gofastly.String(name),
 		Priority:       gofastly.Int(priority),
 		Content:        gofastly.String(content),
-		Type:           gofastly.SnippetTypeToString(stype),
+		Type:           gofastly.SnippetTypePtr(gofastly.SnippetType(stype)),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
 		opts.Priority = gofastly.Int(v.(int))
 	}
@@ -137,7 +134,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	}
 	if v, ok := modified["type"]; ok {
 		snippetType := strings.ToLower(v.(string))
-		opts.Type = gofastly.SnippetTypeToString(snippetType)
+		opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
 	}
 
 	log.Printf("[DEBUG] Update VCL Snippet Opts: %#v", opts)
@@ -169,44 +166,45 @@ func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 }
 
 func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
-	df := snippetMap.(map[string]any)
+	resource := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Name:     df["name"].(string),
-		Content:  df["content"].(string),
-		Priority: gofastly.Int(df["priority"].(int)),
+		Name:     gofastly.String(resource["name"].(string)),
+		Content:  gofastly.String(resource["content"].(string)),
+		Priority: gofastly.Int(resource["priority"].(int)),
+		Dynamic:  gofastly.Int(0),
 	}
 
-	snippetType := strings.ToLower(df["type"].(string))
-	opts.Type = gofastly.SnippetType(snippetType)
+	snippetType := strings.ToLower(resource["type"].(string))
+	opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
 
 	return &opts, nil
 }
 
-func flattenSnippets(snippetList []*gofastly.Snippet) []map[string]any {
-	var sl []map[string]any
-	for _, snippet := range snippetList {
+// flattenSnippets models data into format suitable for saving to Terraform state.
+func flattenSnippets(remoteState []*gofastly.Snippet) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
 		// Skip dynamic snippets
-		if snippet.Dynamic == 1 {
+		if resource.Dynamic == 1 {
 			continue
 		}
 
-		// Convert VCLs to a map for saving to state.
-		snippetMap := map[string]any{
-			"name":     snippet.Name,
-			"type":     snippet.Type,
-			"priority": int(snippet.Priority),
-			"content":  snippet.Content,
+		data := map[string]any{
+			"name":     resource.Name,
+			"type":     resource.Type,
+			"priority": int(resource.Priority),
+			"content":  resource.Content,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range snippetMap {
+		for k, v := range data {
 			if v == "" {
-				delete(snippetMap, k)
+				delete(data, k)
 			}
 		}
 
-		sl = append(sl, snippetMap)
+		result = append(result, data)
 	}
 
-	return sl
+	return result
 }

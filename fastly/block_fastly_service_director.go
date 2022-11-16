@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -90,22 +90,22 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 	opts := gofastly.CreateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		Comment:        resource["comment"].(string),
-		Shield:         resource["shield"].(string),
-		Quorum:         gofastly.Uint(uint(resource["quorum"].(int))),
-		Retries:        gofastly.Uint(uint(resource["retries"].(int))),
+		Name:           gofastly.String(resource["name"].(string)),
+		Comment:        gofastly.String(resource["comment"].(string)),
+		Shield:         gofastly.String(resource["shield"].(string)),
+		Quorum:         gofastly.Int(resource["quorum"].(int)),
+		Retries:        gofastly.Int(resource["retries"].(int)),
 	}
 
 	switch resource["type"].(int) {
 	case 1:
-		opts.Type = gofastly.DirectorTypeRandom
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRandom)
 	case 2:
-		opts.Type = gofastly.DirectorTypeRoundRobin
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRoundRobin)
 	case 3:
-		opts.Type = gofastly.DirectorTypeHash
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeHash)
 	case 4:
-		opts.Type = gofastly.DirectorTypeClient
+		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeClient)
 	}
 
 	log.Printf("[DEBUG] Director Create opts: %#v", opts)
@@ -138,11 +138,11 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 
 // Read refreshes the resource state.
 func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
-		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+		remoteState, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -150,7 +150,7 @@ func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dirl := flattenDirectors(directorList)
+		dirl := flattenDirectors(remoteState)
 
 		if err := d.Set(h.GetKey(), dirl); err != nil {
 			log.Printf("[WARN] Error setting Directors for (%s): %s", d.Id(), err)
@@ -168,11 +168,8 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["comment"]; ok {
 		opts.Comment = gofastly.String(v.(string))
 	}
@@ -180,7 +177,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		opts.Shield = gofastly.String(v.(string))
 	}
 	if v, ok := modified["quorum"]; ok {
-		opts.Quorum = gofastly.Uint(uint(v.(int)))
+		opts.Quorum = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["type"]; ok {
 		switch v.(int) {
@@ -195,7 +192,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		}
 	}
 	if v, ok := modified["retries"]; ok {
-		opts.Retries = gofastly.Uint(uint(v.(int)))
+		opts.Retries = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update Director Opts: %#v", opts)
@@ -265,39 +262,39 @@ func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.Re
 	return nil
 }
 
-func flattenDirectors(directorList []*gofastly.Director) []map[string]any {
-	var dl []map[string]any
-	for _, d := range directorList {
-		// Convert Director to a map for saving to state.
-		nd := map[string]any{
-			"name":    d.Name,
-			"comment": d.Comment,
-			"shield":  d.Shield,
-			"type":    d.Type,
-			"quorum":  int(d.Quorum),
-			"retries": int(d.Retries),
+// flattenDirectors models data into format suitable for saving to Terraform state.
+func flattenDirectors(remoteState []*gofastly.Director) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":    resource.Name,
+			"comment": resource.Comment,
+			"shield":  resource.Shield,
+			"type":    resource.Type,
+			"quorum":  int(resource.Quorum),
+			"retries": int(resource.Retries),
 		}
 
 		// NOTE: schema.NewSet expects slice of empty interface so we have to build
 		// this from the Dictionary's Backend field.
 		var b []any
-		for _, v := range d.Backends {
+		for _, v := range resource.Backends {
 			b = append(b, v)
 		}
 		if len(b) > 0 {
-			nd["backends"] = schema.NewSet(schema.HashString, b)
+			data["backends"] = schema.NewSet(schema.HashString, b)
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nd {
+		for k, v := range data {
 			if v == "" {
-				delete(nd, k)
+				delete(data, k)
 			}
 		}
 
-		dl = append(dl, nd)
+		result = append(result, data)
 	}
-	return dl
+	return result
 }
 
 func getDirectorBackendChange(d *schema.ResourceData, resource map[string]any) (odb *schema.Set, ndb *schema.Set) {

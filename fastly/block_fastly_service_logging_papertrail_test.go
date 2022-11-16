@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -32,9 +32,9 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 				{
 					"name":               "papertrailtesting",
 					"address":            "test1.papertrailapp.com",
-					"port":               uint(3600),
+					"port":               3600,
 					"format":             "%h %l %u %t %r %>s",
-					"format_version":     uint(2),
+					"format_version":     2,
 					"response_condition": "test_response_condition",
 				},
 			},
@@ -58,9 +58,9 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		ServiceVersion:    1,
 		Name:              "papertrailtesting",
 		Address:           "test1.papertrailapp.com",
-		Port:              uint(3600),
+		Port:              3600,
 		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     uint(2),
+		FormatVersion:     2,
 		ResponseCondition: "test_response_condition",
 	}
 
@@ -68,9 +68,9 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "papertrailtesting2",
 		Address:        "test2.papertrailapp.com",
-		Port:           uint(8080),
+		Port:           8080,
 		Format:         `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:  uint(2),
+		FormatVersion:  2,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -116,7 +116,7 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 		ServiceVersion: 1,
 		Name:           "papertrailtesting",
 		Address:        "test1.papertrailapp.com",
-		Port:           uint(3600),
+		Port:           3600,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

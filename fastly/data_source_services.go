@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -82,50 +82,52 @@ func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Reading services")
 
-	services, err := conn.ListServices(&gofastly.ListServicesInput{})
+	remoteState, err := conn.ListServices(&gofastly.ListServicesInput{})
 	if err != nil {
 		return diag.Errorf("error fetching services: %s", err)
 	}
 
-	hashBase, _ := json.Marshal(services)
+	hashBase, _ := json.Marshal(remoteState)
 	hashString := strconv.Itoa(hashcode.String(string(hashBase)))
 	d.SetId(hashString)
 
-	if err := d.Set("details", flattenServiceDetails(services)); err != nil {
+	if err := d.Set("details", flattenServiceDetails(remoteState)); err != nil {
 		return diag.Errorf("error setting services: %s", err)
 	}
 
-	if err := d.Set("ids", flattenServiceIDs(services)); err != nil {
+	if err := d.Set("ids", flattenServiceIDs(remoteState)); err != nil {
 		return diag.Errorf("error setting service IDs: %s", err)
 	}
 
 	return nil
 }
 
-func flattenServiceIDs(services []*gofastly.Service) []string {
-	result := make([]string, len(services))
-	for i, s := range services {
-		result[i] = s.ID
+// flattenServiceIDs models data into format suitable for saving to Terraform state.
+func flattenServiceIDs(remoteState []*gofastly.Service) []string {
+	result := make([]string, len(remoteState))
+	for i, resource := range remoteState {
+		result[i] = resource.ID
 	}
 	return result
 }
 
-func flattenServiceDetails(services []*gofastly.Service) []map[string]any {
-	result := make([]map[string]any, len(services))
-	if len(services) == 0 {
+// flattenServiceDetails models data into format suitable for saving to Terraform state.
+func flattenServiceDetails(remoteState []*gofastly.Service) []map[string]any {
+	result := make([]map[string]any, len(remoteState))
+	if len(remoteState) == 0 {
 		return result
 	}
 
-	for i, s := range services {
+	for i, resource := range remoteState {
 		result[i] = map[string]any{
-			"id":          s.ID,
-			"name":        s.Name,
-			"type":        s.Type,
-			"comment":     s.Comment,
-			"customer_id": s.CustomerID,
-			"created_at":  s.CreatedAt.String(),
-			"updated_at":  s.UpdatedAt.String(),
-			"version":     s.ActiveVersion,
+			"id":          resource.ID,
+			"name":        resource.Name,
+			"type":        resource.Type,
+			"comment":     resource.Comment,
+			"customer_id": resource.CustomerID,
+			"created_at":  resource.CreatedAt.String(),
+			"updated_at":  resource.UpdatedAt.String(),
+			"version":     resource.ActiveVersion,
 		}
 	}
 

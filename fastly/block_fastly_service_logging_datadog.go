@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -97,11 +97,11 @@ func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
-		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
+		remoteState, err := conn.ListDatadog(&gofastly.ListDatadogInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -109,7 +109,7 @@ func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up Datadog logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dll := flattenDatadog(datadogList)
+		dll := flattenDatadog(remoteState)
 
 		for _, element := range dll {
 			h.pruneVCLLoggingAttributes(element)
@@ -129,16 +129,11 @@ func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           resource["name"].(string),
+		Token:          gofastly.String(resource["token"].(string)),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
-	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.String(v.(string))
-	}
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["region"]; ok {
 		opts.Region = gofastly.String(v.(string))
 	}
@@ -146,7 +141,7 @@ func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -194,56 +189,66 @@ func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error 
 	return nil
 }
 
-func flattenDatadog(datadogList []*gofastly.Datadog) []map[string]any {
-	var dsl []map[string]any
-	for _, dl := range datadogList {
-		// Convert Datadog logging to a map for saving to state.
-		ndl := map[string]any{
-			"name":               dl.Name,
-			"token":              dl.Token,
-			"region":             dl.Region,
-			"format":             dl.Format,
-			"format_version":     dl.FormatVersion,
-			"placement":          dl.Placement,
-			"response_condition": dl.ResponseCondition,
+// flattenDatadog models data into format suitable for saving to Terraform state.
+func flattenDatadog(remoteState []*gofastly.Datadog) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"region":             resource.Region,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range ndl {
+		for k, v := range data {
 			if v == "" {
-				delete(ndl, k)
+				delete(data, k)
 			}
 		}
 
-		dsl = append(dsl, ndl)
+		result = append(result, data)
 	}
 
-	return dsl
+	return result
 }
 
 func (h *DatadogServiceAttributeHandler) buildCreate(datadogMap any, serviceID string, serviceVersion int) *gofastly.CreateDatadogInput {
-	df := datadogMap.(map[string]any)
+	resource := datadogMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateDatadogInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Token:             df["token"].(string),
-		Region:            df["region"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateDatadogInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Region:         gofastly.String(resource["region"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(resource["token"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *DatadogServiceAttributeHandler) buildDelete(datadogMap any, serviceID string, serviceVersion int) *gofastly.DeleteDatadogInput {
-	df := datadogMap.(map[string]any)
+	resource := datadogMap.(map[string]any)
 
 	return &gofastly.DeleteDatadogInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

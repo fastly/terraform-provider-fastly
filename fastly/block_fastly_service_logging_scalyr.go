@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -97,11 +97,11 @@ func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
-		scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
+		remoteState, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -109,7 +109,7 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Scalyr logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		scalyrLogList := flattenScalyr(scalyrList)
+		scalyrLogList := flattenScalyr(remoteState)
 
 		for _, element := range scalyrLogList {
 			h.pruneVCLLoggingAttributes(element)
@@ -131,16 +131,10 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
-	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
-	}
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["token"]; ok {
 		opts.Token = gofastly.String(v.(string))
@@ -192,56 +186,67 @@ func deleteScalyr(conn *gofastly.Client, i *gofastly.DeleteScalyrInput) error {
 	return nil
 }
 
-func flattenScalyr(scalyrList []*gofastly.Scalyr) []map[string]any {
-	var flattened []map[string]any
-	for _, s := range scalyrList {
-		// Convert logging to a map for saving to state.
-		flatScalyr := map[string]any{
-			"name":               s.Name,
-			"region":             s.Region,
-			"token":              s.Token,
-			"response_condition": s.ResponseCondition,
-			"format":             s.Format,
-			"placement":          s.Placement,
-			"format_version":     s.FormatVersion,
+// flattenScalyr models data into format suitable for saving to Terraform state.
+func flattenScalyr(remoteState []*gofastly.Scalyr) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"region":             resource.Region,
+			"token":              resource.Token,
+			"response_condition": resource.ResponseCondition,
+			"format":             resource.Format,
+			"placement":          resource.Placement,
+			"format_version":     resource.FormatVersion,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range flatScalyr {
+		for k, v := range data {
 			if v == "" {
-				delete(flatScalyr, k)
+				delete(data, k)
 			}
 		}
 
-		flattened = append(flattened, flatScalyr)
+		result = append(result, data)
 	}
 
-	return flattened
+	return result
 }
 
 func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID string, serviceVersion int) *gofastly.CreateScalyrInput {
-	df := scalyrMap.(map[string]any)
+	resource := scalyrMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateScalyrInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Region:            df["region"].(string),
-		Token:             df["token"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateScalyrInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Placement:      gofastly.String(vla.placement),
+		Region:         gofastly.String(resource["region"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(resource["token"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	// if vla.placement != "" {
+	// 	opts.Placement = gofastly.String(vla.placement)
+	// }
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *ScalyrServiceAttributeHandler) buildDelete(scalyrMap any, serviceID string, serviceVersion int) *gofastly.DeleteScalyrInput {
-	df := scalyrMap.(map[string]any)
+	resource := scalyrMap.(map[string]any)
 
 	return &gofastly.DeleteScalyrInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -69,11 +69,11 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	opts := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		Type:           resource["type"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
+		Type:           gofastly.String(resource["type"].(string)),
 		// need to trim leading/tailing spaces, incase the config has HEREDOC
 		// formatting and contains a trailing new line
-		Statement: strings.TrimSpace(resource["statement"].(string)),
+		Statement: gofastly.String(strings.TrimSpace(resource["statement"].(string))),
 		Priority:  gofastly.Int(resource["priority"].(int)),
 	}
 
@@ -87,11 +87,11 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
-		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
+		remoteState, err := conn.ListConditions(&gofastly.ListConditionsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -99,7 +99,7 @@ func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up Conditions for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		cl := flattenConditions(conditionList)
+		cl := flattenConditions(remoteState)
 
 		if err := d.Set(h.GetKey(), cl); err != nil {
 			log.Printf("[WARN] Error setting Conditions for (%s): %s", d.Id(), err)
@@ -114,9 +114,9 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	optsCreate := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		Type:           resource["type"].(string),
-		Statement:      strings.TrimSpace(resource["statement"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		Type:           gofastly.String(resource["type"].(string)),
+		Statement:      gofastly.String(strings.TrimSpace(resource["statement"].(string))),
 		Priority:       gofastly.Int(resource["priority"].(int)),
 	}
 
@@ -126,16 +126,13 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["comment"]; ok {
 		optsUpdate.Comment = gofastly.String(v.(string))
 	}
 	if v, ok := modified["statement"]; ok {
-		optsCreate.Statement = v.(string)
+		optsCreate.Statement = gofastly.String(v.(string))
 		optsUpdate.Statement = gofastly.String(v.(string))
 	}
 	if v, ok := modified["priority"]; ok {
@@ -145,7 +142,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	// NOTE: Fastly API doesn't support updating the condition "type".
 	// Therefore, we need to DELETE and CREATE if "type" attribute is changed.
 	if v, ok := modified["type"]; ok {
-		optsCreate.Type = v.(string)
+		optsCreate.Type = gofastly.String(v.(string))
 		log.Printf("[DEBUG] Delete Condition: %s (type changed)", resource["name"].(string))
 		err := conn.DeleteCondition(&gofastly.DeleteConditionInput{
 			ServiceID:      d.Id(),
@@ -192,26 +189,26 @@ func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 	return nil
 }
 
-func flattenConditions(conditionList []*gofastly.Condition) []map[string]any {
-	var cl []map[string]any
-	for _, c := range conditionList {
-		// Convert Conditions to a map for saving to state.
-		nc := map[string]any{
-			"name":      c.Name,
-			"statement": c.Statement,
-			"type":      c.Type,
-			"priority":  c.Priority,
+// flattenConditions models data into format suitable for saving to Terraform state.
+func flattenConditions(remoteState []*gofastly.Condition) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":      resource.Name,
+			"statement": resource.Statement,
+			"type":      resource.Type,
+			"priority":  resource.Priority,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nc {
+		for k, v := range data {
 			if v == "" {
-				delete(nc, k)
+				delete(data, k)
 			}
 		}
 
-		cl = append(cl, nc)
+		result = append(result, data)
 	}
 
-	return cl
+	return result
 }

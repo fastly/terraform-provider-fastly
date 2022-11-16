@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -104,12 +104,12 @@ func dataSourceFastlyWAFRulesRead(_ context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[INFO] Reading WAF rules with ops: %#v", input)
-	res, err := conn.ListAllWAFRules(input)
+	remoteState, err := conn.ListAllWAFRules(input)
 	if err != nil {
 		return diag.Errorf("error listing WAF rules: %s", err)
 	}
 
-	rules := flattenWAFRules(res.Items)
+	rules := flattenWAFRules(remoteState.Items)
 
 	d.SetId(strconv.Itoa(createFiltersHash(input)))
 	if err := d.Set("rules", rules); err != nil {
@@ -133,36 +133,37 @@ func createFiltersHash(i *gofastly.ListAllWAFRulesInput) int {
 	return hashcode.String(result)
 }
 
-func flattenWAFRules(ruleList []*gofastly.WAFRule) []map[string]any {
-	rl := make([]map[string]any, len(ruleList))
+// flattenWAFRules models data into format suitable for saving to Terraform state.
+func flattenWAFRules(remoteState []*gofastly.WAFRule) []map[string]any {
+	result := make([]map[string]any, len(remoteState))
 
-	if len(ruleList) == 0 {
-		return rl
+	if len(remoteState) == 0 {
+		return result
 	}
 
-	for i, r := range ruleList {
+	for i, resource := range remoteState {
 		latestRevisionNumber := 1
-		if latestRevision, err := determineLatestRuleRevision(r.Revisions); err == nil {
+		if latestRevision, err := determineLatestRuleRevision(resource.Revisions); err == nil {
 			latestRevisionNumber = latestRevision.Revision
 		}
 
-		rulesMapString := map[string]any{
-			"modsec_rule_id":         r.ModSecID,
+		data := map[string]any{
+			"modsec_rule_id":         resource.ModSecID,
 			"latest_revision_number": latestRevisionNumber,
-			"type":                   r.Type,
+			"type":                   resource.Type,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range rulesMapString {
+		for k, v := range data {
 			if v == "" {
-				delete(rulesMapString, k)
+				delete(data, k)
 			}
 		}
 
-		rl[i] = rulesMapString
+		result[i] = data
 	}
 
-	return rl
+	return result
 }
 
 func determineLatestRuleRevision(revisions []*gofastly.WAFRuleRevision) (*gofastly.WAFRuleRevision, error) {

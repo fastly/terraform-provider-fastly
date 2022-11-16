@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -133,18 +133,18 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 	opts := gofastly.CreateHealthCheckInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             resource["name"].(string),
-		Headers:          hs,
-		Host:             resource["host"].(string),
-		Path:             resource["path"].(string),
-		CheckInterval:    gofastly.Uint(uint(resource["check_interval"].(int))),
-		ExpectedResponse: gofastly.Uint(uint(resource["expected_response"].(int))),
-		HTTPVersion:      resource["http_version"].(string),
-		Initial:          gofastly.Uint(uint(resource["initial"].(int))),
-		Method:           resource["method"].(string),
-		Threshold:        gofastly.Uint(uint(resource["threshold"].(int))),
-		Timeout:          gofastly.Uint(uint(resource["timeout"].(int))),
-		Window:           gofastly.Uint(uint(resource["window"].(int))),
+		Name:             gofastly.String(resource["name"].(string)),
+		Headers:          &hs,
+		Host:             gofastly.String(resource["host"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		CheckInterval:    gofastly.Int(resource["check_interval"].(int)),
+		ExpectedResponse: gofastly.Int(resource["expected_response"].(int)),
+		HTTPVersion:      gofastly.String(resource["http_version"].(string)),
+		Initial:          gofastly.Int(resource["initial"].(int)),
+		Method:           gofastly.String(resource["method"].(string)),
+		Threshold:        gofastly.Int(resource["threshold"].(int)),
+		Timeout:          gofastly.Int(resource["timeout"].(int)),
+		Window:           gofastly.Int(resource["window"].(int)),
 	}
 
 	log.Printf("[DEBUG] Create Healthcheck Opts: %#v", opts)
@@ -157,11 +157,11 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 
 // Read refreshes the resource.
 func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
-		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
+		remoteState, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -169,7 +169,7 @@ func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.R
 			return fmt.Errorf("error looking up Healthcheck for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		hcl := flattenHealthchecks(healthcheckList)
+		hcl := flattenHealthchecks(remoteState)
 
 		if err := d.Set(h.GetKey(), hcl); err != nil {
 			log.Printf("[WARN] Error setting Healthcheck for (%s): %s", d.Id(), err)
@@ -187,11 +187,8 @@ func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["comment"]; ok {
 		opts.Comment = gofastly.String(v.(string))
 	}
@@ -208,22 +205,22 @@ func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema
 		opts.HTTPVersion = gofastly.String(v.(string))
 	}
 	if v, ok := modified["timeout"]; ok {
-		opts.Timeout = gofastly.Uint(uint(v.(int)))
+		opts.Timeout = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["check_interval"]; ok {
-		opts.CheckInterval = gofastly.Uint(uint(v.(int)))
+		opts.CheckInterval = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["expected_response"]; ok {
-		opts.ExpectedResponse = gofastly.Uint(uint(v.(int)))
+		opts.ExpectedResponse = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["window"]; ok {
-		opts.Window = gofastly.Uint(uint(v.(int)))
+		opts.Window = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["threshold"]; ok {
-		opts.Threshold = gofastly.Uint(uint(v.(int)))
+		opts.Threshold = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["initial"]; ok {
-		opts.Initial = gofastly.Uint(uint(v.(int)))
+		opts.Initial = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["headers"]; ok {
 		h, ok := v.(*schema.Set)
@@ -265,34 +262,34 @@ func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema
 	return nil
 }
 
-func flattenHealthchecks(healthcheckList []*gofastly.HealthCheck) []map[string]any {
-	var hl []map[string]any
-	for _, h := range healthcheckList {
-		// Convert HealthChecks to a map for saving to state.
-		nh := map[string]any{
-			"name":              h.Name,
-			"headers":           h.Headers,
-			"host":              h.Host,
-			"path":              h.Path,
-			"check_interval":    h.CheckInterval,
-			"expected_response": h.ExpectedResponse,
-			"http_version":      h.HTTPVersion,
-			"initial":           h.Initial,
-			"method":            h.Method,
-			"threshold":         h.Threshold,
-			"timeout":           h.Timeout,
-			"window":            h.Window,
+// flattenHealthchecks models data into format suitable for saving to Terraform state.
+func flattenHealthchecks(remoteState []*gofastly.HealthCheck) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":              resource.Name,
+			"headers":           resource.Headers,
+			"host":              resource.Host,
+			"path":              resource.Path,
+			"check_interval":    resource.CheckInterval,
+			"expected_response": resource.ExpectedResponse,
+			"http_version":      resource.HTTPVersion,
+			"initial":           resource.Initial,
+			"method":            resource.Method,
+			"threshold":         resource.Threshold,
+			"timeout":           resource.Timeout,
+			"window":            resource.Window,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nh {
+		for k, v := range data {
 			if v == "" {
-				delete(nh, k)
+				delete(data, k)
 			}
 		}
 
-		hl = append(hl, nh)
+		result = append(result, data)
 	}
 
-	return hl
+	return result
 }

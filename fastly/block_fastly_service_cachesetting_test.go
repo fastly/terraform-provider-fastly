@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -31,8 +31,8 @@ func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
 					"name":            "alt_backend",
 					"action":          gofastly.CacheSettingActionPass,
 					"cache_condition": "serve_alt_backend",
-					"stale_ttl":       uint(3600),
-					"ttl":             uint(300),
+					"stale_ttl":       3600,
+					"ttl":             300,
 				},
 			},
 		},
@@ -54,16 +54,16 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 	cq1 := gofastly.CacheSetting{
 		Name:           "alt_backend",
 		Action:         "pass",
-		StaleTTL:       uint(3600),
+		StaleTTL:       3600,
 		CacheCondition: "serve_alt_backend",
 	}
 
 	cq2 := gofastly.CacheSetting{
 		Name:           "cache_backend",
 		Action:         "restart",
-		StaleTTL:       uint(1600),
+		StaleTTL:       1600,
 		CacheCondition: "cache_alt_backend",
-		TTL:            uint(300),
+		TTL:            300,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

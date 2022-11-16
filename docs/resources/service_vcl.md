@@ -349,13 +349,12 @@ Optional:
 - `request_condition` (String) Name of a condition, which if met, will select this backend during a request.
 - `shield` (String) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response
 - `ssl_ca_cert` (String) CA certificate attached to origin.
-- `ssl_cert_hostname` (String) Overrides ssl_hostname, but only for cert verification. Does not affect SNI at all
+- `ssl_cert_hostname` (String) Configure certificate validation. Does not affect SNI at all
 - `ssl_check_cert` (Boolean) Be strict about checking SSL certs. Default `true`
 - `ssl_ciphers` (String) Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.
 - `ssl_client_cert` (String, Sensitive) Client certificate attached to origin. Used when connecting to the backend
 - `ssl_client_key` (String, Sensitive) Client key attached to origin. Used when connecting to the backend
-- `ssl_hostname` (String, Deprecated) Used for both SNI during the TLS handshake and to validate the cert
-- `ssl_sni_hostname` (String) Overrides ssl_hostname, but only for SNI in the handshake. Does not affect cert validation at all
+- `ssl_sni_hostname` (String) Configure SNI in the TLS handshake. Does not affect cert validation at all
 - `use_ssl` (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
 - `weight` (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`
 
@@ -433,6 +432,7 @@ Required:
 
 Optional:
 
+- `content` (String) The VCL code that specifies exactly what the snippet does
 - `priority` (Number) Priority determines the ordering for multiple snippets. Lower numbers execute first. Defaults to `100`
 
 Read-Only:

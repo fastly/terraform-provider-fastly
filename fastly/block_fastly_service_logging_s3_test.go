@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -25,6 +25,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 	cases := []struct {
 		remote []*gofastly.S3
 		local  []map[string]any
+		unset  bool
 	}{
 		{
 			remote: []*gofastly.S3{
@@ -36,7 +37,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					SecretKey:                    testAwsPrimarySecretKey,
 					Path:                         "/",
 					Period:                       3600,
-					GzipLevel:                    0,
+					GzipLevel:                    0, // API sets this as default if not passed in API request.
 					Format:                       "%h %l %u %t %r %>s",
 					FormatVersion:                2,
 					ResponseCondition:            "response_condition_test",
@@ -58,10 +59,10 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"s3_access_key":                     testAwsPrimaryAccessKey,
 					"s3_secret_key":                     testAwsPrimarySecretKey,
 					"path":                              "/",
-					"period":                            uint(3600),
-					"gzip_level":                        uint8(0),
+					"period":                            3600,
+					"gzip_level":                        -1, // we expect API default to be overridden to avoid diff.
 					"format":                            "%h %l %u %t %r %>s",
-					"format_version":                    uint(2),
+					"format_version":                    2,
 					"response_condition":                "response_condition_test",
 					"message_type":                      "classic",
 					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
@@ -74,6 +75,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"acl":                               gofastly.S3AccessControlList(""),
 				},
 			},
+			unset: true, // validating the user didn't set gzip_level
 		},
 		{
 			remote: []*gofastly.S3{
@@ -105,10 +107,10 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"domain":                            "domain",
 					"s3_iam_role":                       testS3IAMRole,
 					"path":                              "/",
-					"period":                            uint(3600),
-					"gzip_level":                        uint8(5),
+					"period":                            3600,
+					"gzip_level":                        5,
 					"format":                            "%h %l %u %t %r %>s",
-					"format_version":                    uint(2),
+					"format_version":                    2,
 					"response_condition":                "response_condition_test",
 					"message_type":                      "classic",
 					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
@@ -125,7 +127,25 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			out := flattenS3s(c.remote)
+			// This lets us validate that when gzip_level is set to -1 locally that we
+			// can avoid a diff caused by the remote state having a value of zero.
+			//
+			// The reason the remote state would be zero is because the default -1
+			// value causes the attribute to not be sent to the API and so the API
+			// will use zero as a default value and return that in its response.
+			//
+			// Because the attribute's default is -1, it is stored like that in the
+			// local state file.
+			var localState []any
+			if c.unset {
+				localState = []any{
+					map[string]any{
+						"gzip_level": -1,
+						"name":       "s3-endpoint",
+					},
+				}
+			}
+			out := flattenS3s(c.remote, localState)
 			if diff := cmp.Diff(out, c.local); diff != "" {
 				t.Fatalf("Error matching:%s", diff)
 			}
@@ -145,7 +165,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		Domain:            "s3-us-west-2.amazonaws.com",
 		AccessKey:         testAwsPrimaryAccessKey,
 		SecretKey:         testAwsPrimarySecretKey,
-		Period:            uint(3600),
+		Period:            3600,
 		PublicKey:         pgpPublicKey(t),
 		Format:            `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:     2,
@@ -161,9 +181,9 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		BucketName:        "fastlytestlogging",
 		Domain:            "s3-us-west-2.amazonaws.com",
 		IAMRole:           testS3IAMRole,
-		Period:            uint(3600),
+		Period:            3600,
 		PublicKey:         pgpPublicKey(t),
-		GzipLevel:         uint8(3),
+		GzipLevel:         3,
 		Format:            `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:     2,
 		MessageType:       "blank",
@@ -179,8 +199,8 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		BucketName:       "fastlytestlogging2",
 		Domain:           "s3-us-west-2.amazonaws.com",
 		IAMRole:          testS3IAMRole,
-		GzipLevel:        uint8(0),
-		Period:           uint(60),
+		GzipLevel:        0,
+		Period:           60,
 		Format:           `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:    2,
 		MessageType:      "classic",
@@ -234,9 +254,9 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 		Domain:           "s3-us-west-2.amazonaws.com",
 		AccessKey:        testAwsPrimaryAccessKey,
 		SecretKey:        testAwsPrimarySecretKey,
-		Period:           uint(3600),
+		Period:           3600,
 		PublicKey:        pgpPublicKey(t),
-		GzipLevel:        uint8(0),
+		GzipLevel:        0,
 		MessageType:      "classic",
 		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
 		CompressionCodec: "zstd",
@@ -276,8 +296,8 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 		Domain:            "s3.amazonaws.com",
 		AccessKey:         testAwsPrimaryAccessKey,
 		SecretKey:         testAwsPrimarySecretKey,
-		Period:            uint(3600),
-		GzipLevel:         uint8(0),
+		Period:            3600,
+		GzipLevel:         0,
 		Format:            `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:     2,
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
@@ -319,8 +339,8 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 		Domain:          "s3-us-west-2.amazonaws.com",
 		AccessKey:       testAwsPrimaryAccessKey,
 		SecretKey:       testAwsPrimarySecretKey,
-		Period:          uint(3600),
-		GzipLevel:       uint8(0),
+		Period:          3600,
+		GzipLevel:       0,
 		Format:          "%a %l %u %t %m %U%q %H %>s %b %T",
 		FormatVersion:   2,
 		MessageType:     "classic",

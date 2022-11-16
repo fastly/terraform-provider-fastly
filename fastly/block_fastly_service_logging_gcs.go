@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -44,9 +44,13 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 		"gzip_level": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
+			Type:     schema.TypeInt,
+			Optional: true,
+			// NOTE: The default represents an unset value
+			// We use this instead of zero because the zero value for an int type is
+			// actually a valid value for the API. The API will attempt to default to
+			// zero if nothing is set by the user in their TF configuration.
+			Default:     -1,
 			Description: GzipLevelDescription,
 		},
 		"message_type": {
@@ -134,21 +138,36 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateGCSInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		User:              resource["user"].(string),
-		Bucket:            resource["bucket_name"].(string),
-		SecretKey:         resource["secret_key"].(string),
-		Path:              resource["path"].(string),
-		Period:            uint(resource["period"].(int)),
-		GzipLevel:         uint8(resource["gzip_level"].(int)),
-		TimestampFormat:   resource["timestamp_format"].(string),
-		MessageType:       resource["message_type"].(string),
-		CompressionCodec:  resource["compression_codec"].(string),
-		Format:            vla.format,
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Bucket:           gofastly.String(resource["bucket_name"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
+		Format:           gofastly.String(vla.format),
+		MessageType:      gofastly.String(resource["message_type"].(string)),
+		Name:             gofastly.String(resource["name"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		Period:           gofastly.Int(resource["period"].(int)),
+		SecretKey:        gofastly.String(resource["secret_key"].(string)),
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
+		User:             gofastly.String(resource["user"].(string)),
+	}
+
+	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
+	// If we set a default value for an attribute, then it will be sent to the API.
+	// In some scenarios this can cause the API to reject the request.
+	// For example, configuring compression_codec + gzip_level is invalid.
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
+		opts.GzipLevel = gofastly.Int(gl)
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
@@ -161,11 +180,11 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
-		gs, err := conn.ListGCSs(&gofastly.ListGCSsInput{
+		remoteState, err := conn.ListGCSs(&gofastly.ListGCSsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -173,7 +192,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up GCS for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		gcsl := flattenGCS(gs)
+		gcsl := flattenGCS(remoteState, localState)
 
 		for _, element := range gcsl {
 			h.pruneVCLLoggingAttributes(element)
@@ -195,11 +214,8 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["bucket_name"]; ok {
 		opts.Bucket = gofastly.String(v.(string))
 	}
@@ -213,16 +229,16 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 		opts.Path = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
@@ -268,36 +284,59 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
-func flattenGCS(gcsList []*gofastly.GCS) []map[string]any {
-	var sm []map[string]any
-	for _, currentGCS := range gcsList {
-		// Convert gcs to a map for saving to state.
-		m := map[string]any{
-			"name":               currentGCS.Name,
-			"user":               currentGCS.User,
-			"bucket_name":        currentGCS.Bucket,
-			"secret_key":         currentGCS.SecretKey,
-			"path":               currentGCS.Path,
-			"period":             int(currentGCS.Period),
-			"gzip_level":         int(currentGCS.GzipLevel),
-			"response_condition": currentGCS.ResponseCondition,
-			"message_type":       currentGCS.MessageType,
-			"format":             currentGCS.Format,
-			"format_version":     currentGCS.FormatVersion,
-			"timestamp_format":   currentGCS.TimestampFormat,
-			"placement":          currentGCS.Placement,
-			"compression_codec":  currentGCS.CompressionCodec,
-		}
-
-		// prune any empty values that come from the default string value in structs
-		for k, v := range m {
-			if v == "" {
-				delete(m, k)
+// flattenGCS models data into format suitable for saving to Terraform state.
+func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
+	var result []map[string]any
+	for _, resources := range remoteState {
+		// Avoid setting gzip_level to the API default of zero if originally unset.
+		// This avoids an unnecessary diff where the local state would have been
+		// updated to zero and so would be different from the -1 default set.
+		// As the user never set the attribute we don't want to show a diff to say
+		// it should be zero according to the API.
+		//
+		// NOTE: Ideally the local state would be updated when .Create() is called.
+		// e.g. we'd check if the value is -1 for gzip_level and set it in state as
+		// zero instead. This way we could avoid having to do this check here.
+		// The reason that's not possible (or not ideal at least) is because Create
+		// is called multiple times (once for each block defined in configuration)
+		// while the setting of the state must be done holistically, and so what
+		// that means is, if we did the above suggestion we would be resetting the
+		// entire state object multiple times, where as here we're only ever setting
+		// it once.
+		for _, s := range state {
+			v := s.(map[string]any)
+			if v["name"].(string) == resources.Name && v["gzip_level"].(int) == -1 {
+				resources.GzipLevel = v["gzip_level"].(int)
+				break
 			}
 		}
 
-		sm = append(sm, m)
+		data := map[string]any{
+			"name":               resources.Name,
+			"user":               resources.User,
+			"bucket_name":        resources.Bucket,
+			"secret_key":         resources.SecretKey,
+			"path":               resources.Path,
+			"period":             int(resources.Period),
+			"gzip_level":         int(resources.GzipLevel),
+			"response_condition": resources.ResponseCondition,
+			"message_type":       resources.MessageType,
+			"format":             resources.Format,
+			"format_version":     resources.FormatVersion,
+			"timestamp_format":   resources.TimestampFormat,
+			"placement":          resources.Placement,
+			"compression_codec":  resources.CompressionCodec,
+		}
+
+		// prune any empty values that come from the default string value in structs
+		for k, v := range data {
+			if v == "" {
+				delete(data, k)
+			}
+		}
+
+		result = append(result, data)
 	}
 
-	return sm
+	return result
 }

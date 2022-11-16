@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -100,11 +100,11 @@ func (h *WAFServiceAttributeHandler) Process(_ context.Context, d *schema.Resour
 }
 
 func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).([]any)
+	localState := d.Get(h.GetKey()).([]any)
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
-		wafList, err := conn.ListWAFs(&gofastly.ListWAFsInput{
+		remoteState, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: d.Id(),
 			FilterVersion: s.ActiveVersion.Number,
 		})
@@ -112,7 +112,7 @@ func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
 		}
 
-		waf := flattenWAFs(wafList.Items)
+		waf := flattenWAFs(remoteState.Items)
 
 		if err := d.Set("waf", waf); err != nil {
 			log.Printf("[WARN] Error setting waf for (%s): %s", d.Id(), err)
@@ -131,58 +131,59 @@ func wafExists(conn *gofastly.Client, s string, v int, id string) bool {
 	return err == nil
 }
 
-func flattenWAFs(wafList []*gofastly.WAF) []map[string]any {
-	var wl []map[string]any
-	if len(wafList) == 0 {
-		return wl
+// flattenWAFs models data into format suitable for saving to Terraform state.
+func flattenWAFs(remoteState []*gofastly.WAF) []map[string]any {
+	var result []map[string]any
+	if len(remoteState) == 0 {
+		return result
 	}
 
-	w := wafList[0]
-	m := map[string]any{
+	w := remoteState[0]
+	data := map[string]any{
 		"waf_id":             w.ID,
 		"response_object":    w.Response,
 		"prefetch_condition": w.PrefetchCondition,
 	}
 
 	// prune any empty values that come from the default string value in structs
-	for k, v := range m {
+	for k, v := range data {
 		if v == "" {
-			delete(m, k)
+			delete(data, k)
 		}
 	}
-	return append(wl, m)
+	return append(result, data)
 }
 
 func buildCreateWAF(waf any, serviceID string, serviceVersion int) *gofastly.CreateWAFInput {
-	df := waf.(map[string]any)
+	resource := waf.(map[string]any)
 
 	opts := gofastly.CreateWAFInput{
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		ID:                df["waf_id"].(string),
-		PrefetchCondition: df["prefetch_condition"].(string),
-		Response:          df["response_object"].(string),
+		ID:                resource["waf_id"].(string),
+		PrefetchCondition: resource["prefetch_condition"].(string),
+		Response:          resource["response_object"].(string),
 	}
 	return &opts
 }
 
 func buildDeleteWAF(waf any, serviceVersion int) *gofastly.DeleteWAFInput {
-	df := waf.(map[string]any)
+	resource := waf.(map[string]any)
 
 	opts := gofastly.DeleteWAFInput{
-		ID:             df["waf_id"].(string),
+		ID:             resource["waf_id"].(string),
 		ServiceVersion: serviceVersion,
 	}
 	return &opts
 }
 
 func buildUpdateWAF(d *schema.ResourceData, wafMap any, serviceID string, serviceVersion int) *gofastly.UpdateWAFInput {
-	df := wafMap.(map[string]any)
+	resource := wafMap.(map[string]any)
 
 	input := gofastly.UpdateWAFInput{
 		ServiceID:      gofastly.String(serviceID),
 		ServiceVersion: gofastly.Int(serviceVersion),
-		ID:             df["waf_id"].(string),
+		ID:             resource["waf_id"].(string),
 	}
 
 	// NOTE: to access the WAF data we need to link to a specific list index.

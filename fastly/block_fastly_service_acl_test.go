@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -146,7 +146,7 @@ func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 		_, err := conn.CreateACLEntry(&gofastly.CreateACLEntryInput{
 			ServiceID: acl.ServiceID,
 			ACLID:     acl.ID,
-			IP:        "192.168.0.1",
+			IP:        gofastly.String("192.168.0.1"),
 		})
 		if err != nil {
 			return fmt.Errorf("error adding entry to ACL (%s) on service (%s): %w", acl.ID, acl.ServiceID, err)

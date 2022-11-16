@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 				{
 					"name":           "loggly-endpoint",
 					"token":          "token",
-					"format_version": uint(2),
+					"format_version": 2,
 				},
 			},
 		},

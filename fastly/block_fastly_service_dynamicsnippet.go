@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -37,6 +37,12 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"content": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Default:     "",
+					Description: "The VCL code that specifies exactly what the snippet does",
+				},
 				"name": {
 					Type:        schema.TypeString,
 					Required:    true,
@@ -84,11 +90,11 @@ func (h *DynamicSnippetServiceAttributeHandler) Create(_ context.Context, d *sch
 
 // Read refreshes the resource.
 func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
-		snippetList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+		remoteState, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -96,7 +102,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schem
 			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dynamicSnippets := flattenDynamicSnippets(snippetList)
+		dynamicSnippets := flattenDynamicSnippets(remoteState)
 		if err := d.Set(h.GetKey(), dynamicSnippets); err != nil {
 			log.Printf("[WARN] Error setting VCL Dynamic Snippets for (%s): %s", d.Id(), err)
 		}
@@ -113,11 +119,8 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
 		opts.Priority = gofastly.Int(v.(int))
 	}
@@ -125,7 +128,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 		opts.Content = gofastly.String(v.(string))
 	}
 	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.SnippetTypeToString(v.(string))
+		opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(v.(string)))
 	}
 
 	log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
@@ -157,44 +160,45 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *sch
 }
 
 func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, error) {
-	df := dynamicSnippetMap.(map[string]any)
+	resource := dynamicSnippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Name:     df["name"].(string),
-		Priority: gofastly.Int(df["priority"].(int)),
-		Dynamic:  1,
+		Content:  gofastly.String(resource["content"].(string)),
+		Dynamic:  gofastly.Int(1),
+		Name:     gofastly.String(resource["name"].(string)),
+		Priority: gofastly.Int(resource["priority"].(int)),
 	}
 
-	snippetType := strings.ToLower(df["type"].(string))
-	opts.Type = gofastly.SnippetType(snippetType)
+	snippetType := strings.ToLower(resource["type"].(string))
+	opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
 
 	return &opts, nil
 }
 
-func flattenDynamicSnippets(dynamicSnippetList []*gofastly.Snippet) []map[string]any {
-	var sl []map[string]any
-	for _, dynamicSnippet := range dynamicSnippetList {
+// flattenDynamicSnippets models data into format suitable for saving to Terraform state.
+func flattenDynamicSnippets(remoteState []*gofastly.Snippet) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
 		// Skip non-dynamic snippets
-		if dynamicSnippet.Dynamic == 0 {
+		if resource.Dynamic == 0 {
 			continue
 		}
 
-		// Convert VCLs to a map for saving to state.
-		dynamicSnippetMap := map[string]any{
-			"snippet_id": dynamicSnippet.ID,
-			"name":       dynamicSnippet.Name,
-			"type":       dynamicSnippet.Type,
-			"priority":   int(dynamicSnippet.Priority),
+		data := map[string]any{
+			"snippet_id": resource.ID,
+			"name":       resource.Name,
+			"type":       resource.Type,
+			"priority":   int(resource.Priority),
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range dynamicSnippetMap {
+		for k, v := range data {
 			if v == "" {
-				delete(dynamicSnippetMap, k)
+				delete(data, k)
 			}
 		}
 
-		sl = append(sl, dynamicSnippetMap)
+		result = append(result, data)
 	}
 
-	return sl
+	return result
 }

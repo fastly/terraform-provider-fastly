@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -118,7 +118,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	aclEntries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
+	remoteState, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
@@ -126,7 +126,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("entry", flattenACLEntries(aclEntries))
+	err = d.Set("entry", flattenACLEntries(remoteState))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -232,33 +232,34 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func flattenACLEntries(aclEntryList []*gofastly.ACLEntry) []map[string]any {
-	var resultList []map[string]any
+// flattenACLEntries models data into format suitable for saving to Terraform state.
+func flattenACLEntries(remoteState []*gofastly.ACLEntry) []map[string]any {
+	var result []map[string]any
 
-	for _, currentACLEntry := range aclEntryList {
-		aes := map[string]any{
-			"id":      currentACLEntry.ID,
-			"ip":      currentACLEntry.IP,
-			"negated": currentACLEntry.Negated,
-			"comment": currentACLEntry.Comment,
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"id":      resource.ID,
+			"ip":      resource.IP,
+			"negated": resource.Negated,
+			"comment": resource.Comment,
 		}
 
 		// NOTE: Fastly API may return "null" or int value
 		// we only want to set the value if subnet is not null
-		if currentACLEntry.Subnet != nil {
-			aes["subnet"] = strconv.Itoa(*currentACLEntry.Subnet)
+		if resource.Subnet != nil {
+			data["subnet"] = strconv.Itoa(*resource.Subnet)
 		}
 
-		for k, v := range aes {
+		for k, v := range data {
 			if v == "" {
-				delete(aes, k)
+				delete(data, k)
 			}
 		}
 
-		resultList = append(resultList, aes)
+		result = append(result, data)
 	}
 
-	return resultList
+	return result
 }
 
 func resourceServiceACLEntriesImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {

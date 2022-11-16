@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -96,11 +96,11 @@ func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.R
 
 // Read refreshes the resource.
 func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
-		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
+		remoteState, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -108,7 +108,7 @@ func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 			return fmt.Errorf("error looking up Honeycomb logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenHoneycomb(honeycombList)
+		ell := flattenHoneycomb(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -130,16 +130,10 @@ func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
-	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
-	}
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["dataset"]; ok {
 		opts.Dataset = gofastly.String(v.(string))
@@ -193,56 +187,66 @@ func deleteHoneycomb(conn *gofastly.Client, i *gofastly.DeleteHoneycombInput) er
 	return nil
 }
 
-func flattenHoneycomb(honeycombList []*gofastly.Honeycomb) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range honeycombList {
-		// Convert Honeycomb logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"token":              ll.Token,
-			"dataset":            ll.Dataset,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+// flattenHoneycomb models data into format suitable for saving to Terraform state.
+func flattenHoneycomb(remoteState []*gofastly.Honeycomb) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"dataset":            resource.Dataset,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap any, serviceID string, serviceVersion int) *gofastly.CreateHoneycombInput {
-	df := honeycombMap.(map[string]any)
+	resource := honeycombMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateHoneycombInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Token:             df["token"].(string),
-		Dataset:           df["dataset"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateHoneycombInput{
+		Dataset:        gofastly.String(resource["dataset"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(resource["token"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *HoneycombServiceAttributeHandler) buildDelete(honeycombMap any, serviceID string, serviceVersion int) *gofastly.DeleteHoneycombInput {
-	df := honeycombMap.(map[string]any)
+	resource := honeycombMap.(map[string]any)
 
 	return &gofastly.DeleteHoneycombInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

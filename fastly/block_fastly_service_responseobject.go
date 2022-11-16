@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -87,13 +87,13 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 	opts := gofastly.CreateResponseObjectInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             resource["name"].(string),
-		Status:           gofastly.Uint(uint(resource["status"].(int))),
-		Response:         resource["response"].(string),
-		Content:          resource["content"].(string),
-		ContentType:      resource["content_type"].(string),
-		RequestCondition: resource["request_condition"].(string),
-		CacheCondition:   resource["cache_condition"].(string),
+		Name:             gofastly.String(resource["name"].(string)),
+		Status:           gofastly.Int(resource["status"].(int)),
+		Response:         gofastly.String(resource["response"].(string)),
+		Content:          gofastly.String(resource["content"].(string)),
+		ContentType:      gofastly.String(resource["content_type"].(string)),
+		RequestCondition: gofastly.String(resource["request_condition"].(string)),
+		CacheCondition:   gofastly.String(resource["cache_condition"].(string)),
 	}
 
 	log.Printf("[DEBUG] Create Response Object Opts: %#v", opts)
@@ -106,11 +106,11 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 
 // Read refreshes the resource.
 func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
-		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
+		remoteState, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -118,7 +118,7 @@ func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schem
 			return fmt.Errorf("error looking up Response Object for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		rol := flattenResponseObjects(responseObjectList)
+		rol := flattenResponseObjects(remoteState)
 
 		if err := d.Set(h.GetKey(), rol); err != nil {
 			log.Printf("[WARN] Error setting Response Object for (%s): %s", d.Id(), err)
@@ -136,13 +136,10 @@ func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *sch
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["status"]; ok {
-		opts.Status = gofastly.Uint(uint(v.(int)))
+		opts.Status = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response"]; ok {
 		opts.Response = gofastly.String(v.(string))
@@ -188,29 +185,29 @@ func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *sch
 	return nil
 }
 
-func flattenResponseObjects(responseObjectList []*gofastly.ResponseObject) []map[string]any {
-	var rol []map[string]any
-	for _, ro := range responseObjectList {
-		// Convert ResponseObjects to a map for saving to state.
-		nro := map[string]any{
-			"name":              ro.Name,
-			"status":            ro.Status,
-			"response":          ro.Response,
-			"content":           ro.Content,
-			"content_type":      ro.ContentType,
-			"request_condition": ro.RequestCondition,
-			"cache_condition":   ro.CacheCondition,
+// flattenResponseObjects models data into format suitable for saving to Terraform state.
+func flattenResponseObjects(remoteState []*gofastly.ResponseObject) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":              resource.Name,
+			"status":            resource.Status,
+			"response":          resource.Response,
+			"content":           resource.Content,
+			"content_type":      resource.ContentType,
+			"request_condition": resource.RequestCondition,
+			"cache_condition":   resource.CacheCondition,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nro {
+		for k, v := range data {
 			if v == "" {
-				delete(nro, k)
+				delete(data, k)
 			}
 		}
 
-		rol = append(rol, nro)
+		result = append(result, data)
 	}
 
-	return rol
+	return result
 }

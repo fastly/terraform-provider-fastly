@@ -3,7 +3,7 @@ package fastly
 import (
 	"context"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -63,7 +63,7 @@ func (h *DefaultServiceAttributeHandler) MustProcess(d *schema.ResourceData, _ b
 // VCLLoggingAttributes represents VCL log configuration.
 type VCLLoggingAttributes struct {
 	format            string
-	formatVersion     *uint
+	formatVersion     *int
 	placement         string
 	responseCondition string
 }
@@ -78,7 +78,7 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 			vla.format = val.(string)
 		}
 		if val, ok := data["format_version"]; ok {
-			vla.formatVersion = gofastly.Uint(uint(val.(int)))
+			vla.formatVersion = gofastly.Int(val.(int))
 		}
 		if val, ok := data["placement"]; ok {
 			vla.placement = val.(string)

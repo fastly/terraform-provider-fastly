@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -135,22 +135,30 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSyslogInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		Address:           resource["address"].(string),
-		Port:              uint(resource["port"].(int)),
-		Token:             resource["token"].(string),
-		UseTLS:            gofastly.Compatibool(resource["use_tls"].(bool)),
-		TLSHostname:       resource["tls_hostname"].(string),
-		TLSCACert:         resource["tls_ca_cert"].(string),
-		TLSClientCert:     resource["tls_client_cert"].(string),
-		TLSClientKey:      resource["tls_client_key"].(string),
-		MessageType:       resource["message_type"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		Address:        gofastly.String(resource["address"].(string)),
+		Port:           gofastly.Int(resource["port"].(int)),
+		Token:          gofastly.String(resource["token"].(string)),
+		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
+		TLSHostname:    gofastly.String(resource["tls_hostname"].(string)),
+		TLSCACert:      gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:  gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:   gofastly.String(resource["tls_client_key"].(string)),
+		MessageType:    gofastly.String(resource["message_type"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
 	}
 
 	log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -163,11 +171,11 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
-		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
+		remoteState, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -175,7 +183,7 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Syslog for (%s), version (%d): %s", d.Id(), serviceVersion, err)
 		}
 
-		sll := flattenSyslogs(syslogList)
+		sll := flattenSyslogs(remoteState)
 
 		for _, element := range sll {
 			h.pruneVCLLoggingAttributes(element)
@@ -197,11 +205,8 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
 		opts.Address = gofastly.String(v.(string))
 	}
@@ -209,7 +214,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Hostname = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["use_tls"]; ok {
 		opts.UseTLS = gofastly.CBool(v.(bool))
@@ -236,7 +241,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["message_type"]; ok {
 		opts.MessageType = gofastly.String(v.(string))
@@ -276,36 +281,36 @@ func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenSyslogs(syslogList []*gofastly.Syslog) []map[string]any {
-	var pl []map[string]any
-	for _, p := range syslogList {
-		// Convert Syslog to a map for saving to state.
-		ns := map[string]any{
-			"name":               p.Name,
-			"address":            p.Address,
-			"port":               p.Port,
-			"format":             p.Format,
-			"format_version":     p.FormatVersion,
-			"token":              p.Token,
-			"use_tls":            p.UseTLS,
-			"tls_hostname":       p.TLSHostname,
-			"tls_ca_cert":        p.TLSCACert,
-			"tls_client_cert":    p.TLSClientCert,
-			"tls_client_key":     p.TLSClientKey,
-			"response_condition": p.ResponseCondition,
-			"message_type":       p.MessageType,
-			"placement":          p.Placement,
+// flattenSyslogs models data into format suitable for saving to Terraform state.
+func flattenSyslogs(remoteState []*gofastly.Syslog) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"port":               resource.Port,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"token":              resource.Token,
+			"use_tls":            resource.UseTLS,
+			"tls_hostname":       resource.TLSHostname,
+			"tls_ca_cert":        resource.TLSCACert,
+			"tls_client_cert":    resource.TLSClientCert,
+			"tls_client_key":     resource.TLSClientKey,
+			"response_condition": resource.ResponseCondition,
+			"message_type":       resource.MessageType,
+			"placement":          resource.Placement,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ns {
+		for k, v := range data {
 			if v == "" {
-				delete(ns, k)
+				delete(data, k)
 			}
 		}
 
-		pl = append(pl, ns)
+		result = append(result, data)
 	}
 
-	return pl
+	return result
 }

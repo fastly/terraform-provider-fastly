@@ -6,7 +6,7 @@ import (
 	"sort"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -41,14 +41,14 @@ func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
 					"headers":           []string{"Foo: Bar", "Baz: Qux"},
 					"host":              "example1.com",
 					"path":              "/test1.txt",
-					"check_interval":    uint(4000),
-					"expected_response": uint(200),
+					"check_interval":    4000,
+					"expected_response": 200,
 					"http_version":      "1.1",
-					"initial":           uint(2),
+					"initial":           2,
 					"method":            "HEAD",
-					"threshold":         uint(3),
-					"timeout":           uint(5000),
-					"window":            uint(5),
+					"threshold":         3,
+					"timeout":           5000,
+					"window":            5,
 				},
 			},
 		},

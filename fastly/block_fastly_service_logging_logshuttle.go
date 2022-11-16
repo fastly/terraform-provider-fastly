@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -38,14 +38,12 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the Log Shuttle logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
-
 		"token": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Required:    true, // FIXME: This isn't required in go-fastly.
 			Sensitive:   true,
 			Description: "The data authentication token associated with this endpoint",
 		},
-
 		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -99,11 +97,11 @@ func (h *LogshuttleServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Log Shuttle logging endpoints for (%s)", d.Id())
-		logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
+		remoteState, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -111,7 +109,7 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Log Shuttle logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenLogshuttle(logshuttleList)
+		ell := flattenLogshuttle(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -128,33 +126,30 @@ func (h *LogshuttleServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 // Update updates the resource.
 func (h *LogshuttleServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogshuttleInput{
+		Name:           resource["name"].(string),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
-	if v, ok := modified["url"]; ok {
-		opts.URL = gofastly.String(v.(string))
-	}
-	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.String(v.(string))
+	if v, ok := modified["placement"]; ok {
+		opts.Placement = gofastly.String(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
 	}
-	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+	if v, ok := modified["token"]; ok {
+		opts.Token = gofastly.String(v.(string))
+	}
+	if v, ok := modified["url"]; ok {
+		opts.URL = gofastly.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Log Shuttle Opts: %#v", opts)
@@ -196,56 +191,66 @@ func deleteLogshuttle(conn *gofastly.Client, i *gofastly.DeleteLogshuttleInput) 
 	return nil
 }
 
-func flattenLogshuttle(logshuttleList []*gofastly.Logshuttle) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range logshuttleList {
-		// Convert Log Shuttle logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"token":              ll.Token,
-			"url":                ll.URL,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+// flattenLogshuttle models data into format suitable for saving to Terraform state.
+func flattenLogshuttle(remoteState []*gofastly.Logshuttle) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *LogshuttleServiceAttributeHandler) buildCreate(logshuttleMap any, serviceID string, serviceVersion int) *gofastly.CreateLogshuttleInput {
-	df := logshuttleMap.(map[string]any)
+	resource := logshuttleMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateLogshuttleInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Token:             df["token"].(string),
-		URL:               df["url"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateLogshuttleInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(resource["token"].(string)),
+		URL:            gofastly.String(resource["url"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *LogshuttleServiceAttributeHandler) buildDelete(logshuttleMap any, serviceID string, serviceVersion int) *gofastly.DeleteLogshuttleInput {
-	df := logshuttleMap.(map[string]any)
+	resource := logshuttleMap.(map[string]any)
 
 	return &gofastly.DeleteLogshuttleInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -47,9 +47,9 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 				{
 					"name":               "somesyslogname",
 					"address":            "127.0.0.1",
-					"port":               uint(8080),
+					"port":               8080,
 					"format":             `%h %l %u %t "%r" %>s %b`,
-					"format_version":     uint(1),
+					"format_version":     1,
 					"response_condition": "response_condition_test",
 					"message_type":       "classic",
 					"token":              "abcd1234",
@@ -81,7 +81,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		Name:              "somesyslogname",
 		Address:           "127.0.0.1",
 		IPV4:              "127.0.0.1",
-		Port:              uint(514),
+		Port:              514,
 		Format:            `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
@@ -93,7 +93,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		Name:              "somesyslogname",
 		Address:           "127.0.0.1",
 		IPV4:              "127.0.0.1",
-		Port:              uint(514),
+		Port:              514,
 		Format:            `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:     2,
 		ResponseCondition: "response_condition_test",
@@ -105,7 +105,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		Name:           "somesyslogname2",
 		Address:        "127.0.0.2",
 		IPV4:           "127.0.0.2",
-		Port:           uint(10514),
+		Port:           10514,
 		Format:         `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:  2,
 		MessageType:    "classic",
@@ -155,7 +155,7 @@ func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
 		Name:           "somesyslogname",
 		Address:        "127.0.0.1",
 		IPV4:           "127.0.0.1",
-		Port:           uint(514),
+		Port:           514,
 		MessageType:    "classic",
 	}
 
@@ -191,7 +191,7 @@ func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
 		Name:           "somesyslogname",
 		Address:        "127.0.0.1",
 		IPV4:           "127.0.0.1",
-		Port:           uint(514),
+		Port:           514,
 		Format:         "%a %l %u %t %m %U%q %H %>s %b %T",
 		FormatVersion:  2,
 		MessageType:    "classic",
@@ -239,7 +239,7 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 		Name:           "somesyslogname",
 		Address:        "127.0.0.1",
 		IPV4:           "127.0.0.1",
-		Port:           uint(514),
+		Port:           514,
 		Format:         `%h %l %u %t "%r" %>s %b`,
 		FormatVersion:  2,
 		MessageType:    "classic",
@@ -262,10 +262,8 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_syslog.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_syslog.#", "1"),
 				),
 			},
 		},
@@ -446,11 +444,11 @@ resource "fastly_service_vcl" "foo" {
     name    = "amazon docs"
   }
   logging_syslog {
-    name               = "somesyslogname"
     address            = "127.0.0.1"
+    name               = "somesyslogname"
     port               = 514
-    use_tls            = true
     tls_hostname       = "example.com"
+    use_tls            = true
   }
   force_destroy = true
 }`, name, domain)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -59,7 +59,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	opts := gofastly.CreateACLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: latestVersion,
-		Name:           resource["name"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
 	}
 
 	log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
@@ -73,11 +73,11 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 
 // Read refreshes the resource.
 func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, latestVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.Key()).(*schema.Set).List()
+	localState := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
-		aclList, err := conn.ListACLs(&gofastly.ListACLsInput{
+		remoteState, err := conn.ListACLs(&gofastly.ListACLsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
 		})
@@ -85,7 +85,7 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			return fmt.Errorf("error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
 		}
 
-		al := flattenACLs(aclList)
+		al := flattenACLs(remoteState)
 
 		// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
 		stateACLs := d.Get(h.Key()).(*schema.Set).List()
@@ -145,26 +145,26 @@ func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func flattenACLs(aclList []*gofastly.ACL) []map[string]any {
-	var al []map[string]any
-	for _, acl := range aclList {
-		// Convert ACLs to a map for saving to state.
-		aclMap := map[string]any{
-			"acl_id": acl.ID,
-			"name":   acl.Name,
+// flattenACLs models data into format suitable for saving to Terraform state.
+func flattenACLs(remoteState []*gofastly.ACL) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"acl_id": resource.ID,
+			"name":   resource.Name,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range aclMap {
+		for k, v := range data {
 			if v == "" {
-				delete(aclMap, k)
+				delete(data, k)
 			}
 		}
 
-		al = append(al, aclMap)
+		result = append(result, data)
 	}
 
-	return al
+	return result
 }
 
 func isACLEmpty(serviceID, aclID string, conn *gofastly.Client) (bool, error) {

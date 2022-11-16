@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -99,11 +99,11 @@ func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Heroku logging endpoints for (%s)", d.Id())
-		herokuList, err := conn.ListHerokus(&gofastly.ListHerokusInput{
+		remoteState, err := conn.ListHerokus(&gofastly.ListHerokusInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -111,7 +111,7 @@ func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Heroku logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenHeroku(herokuList)
+		ell := flattenHeroku(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -133,16 +133,13 @@ func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["url"]; ok {
 		opts.URL = gofastly.String(v.(string))
@@ -196,56 +193,66 @@ func deleteHeroku(conn *gofastly.Client, i *gofastly.DeleteHerokuInput) error {
 	return nil
 }
 
-func flattenHeroku(herokuList []*gofastly.Heroku) []map[string]any {
-	var res []map[string]any
-	for _, ll := range herokuList {
-		// Convert Heroku logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"token":              ll.Token,
-			"url":                ll.URL,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+// flattenHeroku models data into format suitable for saving to Terraform state.
+func flattenHeroku(remoteState []*gofastly.Heroku) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"token":              resource.Token,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		res = append(res, nll)
+		result = append(result, data)
 	}
 
-	return res
+	return result
 }
 
 func (h *HerokuServiceAttributeHandler) buildCreate(herokuMap any, serviceID string, serviceVersion int) *gofastly.CreateHerokuInput {
-	df := herokuMap.(map[string]any)
+	resource := herokuMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateHerokuInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Token:             df["token"].(string),
-		URL:               df["url"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateHerokuInput{
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		Token:          gofastly.String(resource["token"].(string)),
+		URL:            gofastly.String(resource["url"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *HerokuServiceAttributeHandler) buildDelete(herokuMap any, serviceID string, serviceVersion int) *gofastly.DeleteHerokuInput {
-	df := herokuMap.(map[string]any)
+	resource := herokuMap.(map[string]any)
 
 	return &gofastly.DeleteHerokuInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

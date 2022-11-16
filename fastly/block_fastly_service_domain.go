@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -57,11 +57,11 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	opts := gofastly.CreateDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
 	}
 
 	if v, ok := resource["comment"]; ok {
-		opts.Comment = v.(string)
+		opts.Comment = gofastly.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Fastly Domain Addition opts: %#v", opts)
@@ -74,14 +74,14 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		// TODO: update go-fastly to support an ActiveVersion struct, which contains
 		// domain and backend info in the response. Here we do 2 additional queries
 		// to find out that info
 		log.Printf("[DEBUG] Refreshing Domains for (%s)", d.Id())
-		domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
+		remoteState, err := conn.ListDomains(&gofastly.ListDomainsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -90,7 +90,7 @@ func (h *DomainServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 		}
 
 		// Refresh Domains
-		dl := flattenDomains(domainList)
+		dl := flattenDomains(remoteState)
 
 		if err := d.Set(h.GetKey(), dl); err != nil {
 			log.Printf("[WARN] Error setting Domains for (%s): %s", d.Id(), err)
@@ -140,15 +140,16 @@ func (h *DomainServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenDomains(list []*gofastly.Domain) []map[string]any {
-	dl := make([]map[string]any, 0, len(list))
+// flattenDomains models data into format suitable for saving to Terraform state.
+func flattenDomains(remoteState []*gofastly.Domain) []map[string]any {
+	result := make([]map[string]any, 0, len(remoteState))
 
-	for _, d := range list {
-		dl = append(dl, map[string]any{
-			"name":    d.Name,
-			"comment": d.Comment,
+	for _, resource := range remoteState {
+		result = append(result, map[string]any{
+			"name":    resource.Name,
+			"comment": resource.Comment,
 		})
 	}
 
-	return dl
+	return result
 }

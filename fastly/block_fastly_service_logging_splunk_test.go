@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,7 +49,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"name":               "test-splunk",
 					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
 					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     uint(1),
+					"format_version":     1,
 					"response_condition": "error_response",
 					"placement":          "waf_debug",
 					"token":              "test-token",

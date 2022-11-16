@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -87,8 +87,8 @@ func testAccCheckServiceAuthorizationDestroy(s *terraform.State) error {
 
 func testAccServiceAuthorizationConfig(permission string) string {
 	tf := `
-resource "fastly_service_vcl" "demo" {
-	name = "demo"
+resource "fastly_service_vcl" "demo-of-service-authorization" {
+	name = "demo-of-service-authorization"
 
 	domain {
 		name = "%s.com"
@@ -98,13 +98,13 @@ resource "fastly_service_vcl" "demo" {
 }
 
 resource "fastly_user" "user" {
-	login = "tf-test@example.com"
+	login = "tf-test-of-service-authorization@example.com"
 	name = "tf-test"
 	role = "engineer"
 }
 
 resource "fastly_service_authorization" "auth" {
-	service_id = fastly_service_vcl.demo.id
+	service_id = fastly_service_vcl.demo-of-service-authorization.id
 	user_id    = fastly_user.user.id
 	permission = "%s"
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -114,11 +114,11 @@ func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 
 // Read refreshes the resource.
 func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
-		kinesisList, err := conn.ListKinesis(&gofastly.ListKinesisInput{
+		remoteState, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -126,7 +126,7 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up Kinesis logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenKinesis(kinesisList)
+		ell := flattenKinesis(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -148,11 +148,8 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["topic"]; ok {
 		opts.StreamName = gofastly.String(v.(string))
 	}
@@ -172,7 +169,7 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -220,62 +217,72 @@ func deleteKinesis(conn *gofastly.Client, i *gofastly.DeleteKinesisInput) error 
 	return nil
 }
 
-func flattenKinesis(kinesisList []*gofastly.Kinesis) []map[string]any {
-	var lsl []map[string]any
-	for _, ll := range kinesisList {
-		// Convert Kinesis logging to a map for saving to state.
-		nll := map[string]any{
-			"name":               ll.Name,
-			"topic":              ll.StreamName,
-			"region":             ll.Region,
-			"access_key":         ll.AccessKey,
-			"secret_key":         ll.SecretKey,
-			"iam_role":           ll.IAMRole,
-			"format":             ll.Format,
-			"format_version":     ll.FormatVersion,
-			"placement":          ll.Placement,
-			"response_condition": ll.ResponseCondition,
+// flattenKinesis models data into format suitable for saving to Terraform state.
+func flattenKinesis(remoteState []*gofastly.Kinesis) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"topic":              resource.StreamName,
+			"region":             resource.Region,
+			"access_key":         resource.AccessKey,
+			"secret_key":         resource.SecretKey,
+			"iam_role":           resource.IAMRole,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nll {
+		for k, v := range data {
 			if v == "" {
-				delete(nll, k)
+				delete(data, k)
 			}
 		}
 
-		lsl = append(lsl, nll)
+		result = append(result, data)
 	}
 
-	return lsl
+	return result
 }
 
 func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID string, serviceVersion int) *gofastly.CreateKinesisInput {
-	df := kinesisMap.(map[string]any)
+	resource := kinesisMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateKinesisInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		StreamName:        df["topic"].(string),
-		Region:            df["region"].(string),
-		AccessKey:         df["access_key"].(string),
-		SecretKey:         df["secret_key"].(string),
-		IAMRole:           df["iam_role"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateKinesisInput{
+		AccessKey:      gofastly.String(resource["access_key"].(string)),
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		IAMRole:        gofastly.String(resource["iam_role"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		Region:         gofastly.String(resource["region"].(string)),
+		SecretKey:      gofastly.String(resource["secret_key"].(string)),
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+		StreamName:     gofastly.String(resource["topic"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *KinesisServiceAttributeHandler) buildDelete(kinesisMap any, serviceID string, serviceVersion int) *gofastly.DeleteKinesisInput {
-	df := kinesisMap.(map[string]any)
+	resource := kinesisMap.(map[string]any)
 
 	return &gofastly.DeleteKinesisInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

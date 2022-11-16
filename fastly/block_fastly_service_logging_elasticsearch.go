@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -148,11 +148,11 @@ func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *sche
 
 // Read refreshes the resource.
 func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
-		elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
+		remoteState, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -160,7 +160,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema
 			return fmt.Errorf("error looking up Elasticsearch logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenElasticsearch(elasticsearchList)
+		ell := flattenElasticsearch(remoteState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -182,11 +182,8 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
 	}
@@ -209,10 +206,10 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 		opts.Password = gofastly.String(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxEntries = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.String(v.(string))
@@ -230,7 +227,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 		opts.TLSHostname = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update Elasticsearch Opts: %#v", opts)
@@ -268,74 +265,85 @@ func deleteElasticsearch(conn *gofastly.Client, i *gofastly.DeleteElasticsearchI
 	return nil
 }
 
-func flattenElasticsearch(elasticsearchList []*gofastly.Elasticsearch) []map[string]any {
-	var esl []map[string]any
-	for _, el := range elasticsearchList {
-		// Convert Elasticsearch logging to a map for saving to state.
-		nel := map[string]any{
-			"name":                el.Name,
-			"response_condition":  el.ResponseCondition,
-			"format":              el.Format,
-			"index":               el.Index,
-			"url":                 el.URL,
-			"pipeline":            el.Pipeline,
-			"user":                el.User,
-			"password":            el.Password,
-			"request_max_entries": el.RequestMaxEntries,
-			"request_max_bytes":   el.RequestMaxBytes,
-			"placement":           el.Placement,
-			"tls_ca_cert":         el.TLSCACert,
-			"tls_client_cert":     el.TLSClientCert,
-			"tls_client_key":      el.TLSClientKey,
-			"tls_hostname":        el.TLSHostname,
-			"format_version":      el.FormatVersion,
+// flattenElasticsearch models data into format suitable for saving to Terraform state.
+func flattenElasticsearch(remoteState []*gofastly.Elasticsearch) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":                resource.Name,
+			"response_condition":  resource.ResponseCondition,
+			"format":              resource.Format,
+			"index":               resource.Index,
+			"url":                 resource.URL,
+			"pipeline":            resource.Pipeline,
+			"user":                resource.User,
+			"password":            resource.Password,
+			"request_max_entries": resource.RequestMaxEntries,
+			"request_max_bytes":   resource.RequestMaxBytes,
+			"placement":           resource.Placement,
+			"tls_ca_cert":         resource.TLSCACert,
+			"tls_client_cert":     resource.TLSClientCert,
+			"tls_client_key":      resource.TLSClientKey,
+			"tls_hostname":        resource.TLSHostname,
+			"format_version":      resource.FormatVersion,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nel {
+		for k, v := range data {
 			if v == "" {
-				delete(nel, k)
+				delete(data, k)
 			}
 		}
 
-		esl = append(esl, nel)
+		result = append(result, data)
 	}
 
-	return esl
+	return result
 }
 
 func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.CreateElasticsearchInput {
-	df := elasticsearchMap.(map[string]any)
+	resource := elasticsearchMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateElasticsearchInput{
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateElasticsearchInput{
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     vla.formatVersion,
+		Index:             gofastly.String(resource["index"].(string)),
+		Name:              gofastly.String(resource["name"].(string)),
+		Password:          gofastly.String(resource["password"].(string)),
+		Pipeline:          gofastly.String(resource["pipeline"].(string)),
+		Placement:         gofastly.String(vla.placement),
+		RequestMaxBytes:   gofastly.Int(resource["request_max_bytes"].(int)),
+		RequestMaxEntries: gofastly.Int(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Index:             df["index"].(string),
-		URL:               df["url"].(string),
-		Pipeline:          df["pipeline"].(string),
-		User:              df["user"].(string),
-		Password:          df["password"].(string),
-		RequestMaxEntries: uint(df["request_max_entries"].(int)),
-		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
-		TLSCACert:         df["tls_ca_cert"].(string),
-		TLSClientCert:     df["tls_client_cert"].(string),
-		TLSClientKey:      df["tls_client_key"].(string),
-		TLSHostname:       df["tls_hostname"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
+		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
+		URL:               gofastly.String(resource["url"].(string)),
+		User:              gofastly.String(resource["user"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	// if vla.placement != "" {
+	// 	opts.Placement = gofastly.String(vla.placement)
+	// }
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *ElasticSearchServiceAttributeHandler) buildDelete(elasticsearchMap any, serviceID string, serviceVersion int) *gofastly.DeleteElasticsearchInput {
-	df := elasticsearchMap.(map[string]any)
+	resource := elasticsearchMap.(map[string]any)
 
 	return &gofastly.DeleteElasticsearchInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

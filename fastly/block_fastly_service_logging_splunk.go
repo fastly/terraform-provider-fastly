@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -121,20 +121,28 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
-		ServiceID:         d.Id(),
-		ServiceVersion:    serviceVersion,
-		Name:              resource["name"].(string),
-		URL:               resource["url"].(string),
-		Token:             resource["token"].(string),
-		TLSHostname:       resource["tls_hostname"].(string),
-		TLSCACert:         resource["tls_ca_cert"].(string),
-		TLSClientCert:     resource["tls_client_cert"].(string),
-		TLSClientKey:      resource["tls_client_key"].(string),
-		UseTLS:            gofastly.Compatibool(resource["use_tls"].(bool)),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		Format:         gofastly.String(vla.format),
+		FormatVersion:  vla.formatVersion,
+		Name:           gofastly.String(resource["name"].(string)),
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		TLSCACert:      gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:  gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:   gofastly.String(resource["tls_client_key"].(string)),
+		TLSHostname:    gofastly.String(resource["tls_hostname"].(string)),
+		Token:          gofastly.String(resource["token"].(string)),
+		URL:            gofastly.String(resource["url"].(string)),
+		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Splunk create opts: %#v", opts)
@@ -147,11 +155,11 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
-		splunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
+		remoteState, err := conn.ListSplunks(&gofastly.ListSplunksInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -159,7 +167,7 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Splunks for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		spl := flattenSplunks(splunkList)
+		spl := flattenSplunks(remoteState)
 
 		for _, element := range spl {
 			h.pruneVCLLoggingAttributes(element)
@@ -181,25 +189,22 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["url"]; ok {
 		opts.URL = gofastly.String(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxEntries = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -254,34 +259,34 @@ func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenSplunks(splunkList []*gofastly.Splunk) []map[string]any {
-	var sl []map[string]any
-	for _, s := range splunkList {
-		// Convert Splunk to a map for saving to state.
-		nbs := map[string]any{
-			"name":               s.Name,
-			"url":                s.URL,
-			"format":             s.Format,
-			"format_version":     s.FormatVersion,
-			"response_condition": s.ResponseCondition,
-			"placement":          s.Placement,
-			"token":              s.Token,
-			"use_tls":            s.UseTLS,
-			"tls_hostname":       s.TLSHostname,
-			"tls_ca_cert":        s.TLSCACert,
-			"tls_client_cert":    s.TLSClientCert,
-			"tls_client_key":     s.TLSClientKey,
+// flattenSplunks models data into format suitable for saving to Terraform state.
+func flattenSplunks(remoteState []*gofastly.Splunk) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"url":                resource.URL,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"response_condition": resource.ResponseCondition,
+			"placement":          resource.Placement,
+			"token":              resource.Token,
+			"use_tls":            resource.UseTLS,
+			"tls_hostname":       resource.TLSHostname,
+			"tls_ca_cert":        resource.TLSCACert,
+			"tls_client_cert":    resource.TLSClientCert,
+			"tls_client_key":     resource.TLSClientKey,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nbs {
+		for k, v := range data {
 			if v == "" {
-				delete(nbs, k)
+				delete(data, k)
 			}
 		}
 
-		sl = append(sl, nbs)
+		result = append(result, data)
 	}
 
-	return sl
+	return result
 }

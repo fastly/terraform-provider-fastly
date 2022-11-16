@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -44,9 +44,13 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			ValidateDiagFunc: validateLoggingCompressionCodec(),
 		},
 		"gzip_level": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
+			Type:     schema.TypeInt,
+			Optional: true,
+			// NOTE: The default represents an unset value
+			// We use this instead of zero because the zero value for an int type is
+			// actually a valid value for the API. The API will attempt to default to
+			// zero if nothing is set by the user in their TF configuration.
+			Default:     -1,
 			Description: GzipLevelDescription,
 		},
 		"message_type": {
@@ -149,11 +153,11 @@ func (h *FTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 
 // Read refreshes the resource.
 func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing FTP logging endpoints for (%s)", d.Id())
-		ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
+		remoteState, err := conn.ListFTPs(&gofastly.ListFTPsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -161,7 +165,7 @@ func (h *FTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			return fmt.Errorf("error looking up FTP logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		ell := flattenFTP(ftpList)
+		ell := flattenFTP(remoteState, localState)
 
 		for _, element := range ell {
 			h.pruneVCLLoggingAttributes(element)
@@ -183,16 +187,13 @@ func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
 		opts.Address = gofastly.String(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Uint(uint(v.(int)))
+		opts.Port = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.String(v.(string))
@@ -207,13 +208,13 @@ func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 		opts.Path = gofastly.String(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Uint(uint(v.(int)))
+		opts.Period = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -222,7 +223,7 @@ func (h *FTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 		opts.Placement = gofastly.String(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Uint8(uint8(v.(int)))
+		opts.GzipLevel = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
 		opts.CompressionCodec = gofastly.String(v.(string))
@@ -272,74 +273,112 @@ func deleteFTP(conn *gofastly.Client, i *gofastly.DeleteFTPInput) error {
 	return nil
 }
 
-func flattenFTP(ftpList []*gofastly.FTP) []map[string]any {
-	var fsl []map[string]any
-	for _, fl := range ftpList {
-		// Convert FTP logging to a map for saving to state.
-		nfl := map[string]any{
-			"name":               fl.Name,
-			"address":            fl.Address,
-			"user":               fl.Username,
-			"password":           fl.Password,
-			"path":               fl.Path,
-			"port":               fl.Port,
-			"period":             fl.Period,
-			"public_key":         fl.PublicKey,
-			"gzip_level":         fl.GzipLevel,
-			"timestamp_format":   fl.TimestampFormat,
-			"format":             fl.Format,
-			"format_version":     fl.FormatVersion,
-			"message_type":       fl.MessageType,
-			"placement":          fl.Placement,
-			"response_condition": fl.ResponseCondition,
-			"compression_codec":  fl.CompressionCodec,
-		}
-
-		// Prune any empty values that come from the default string value in structs.
-		for k, v := range nfl {
-			if v == "" {
-				delete(nfl, k)
+// flattenFTP models data into format suitable for saving to Terraform state.
+func flattenFTP(remoteState []*gofastly.FTP, localState []any) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		// Avoid setting gzip_level to the API default of zero if originally unset.
+		// This avoids an unnecessary diff where the local state would have been
+		// updated to zero and so would be different from the -1 default set.
+		// As the user never set the attribute we don't want to show a diff to say
+		// it should be zero according to the API.
+		//
+		// NOTE: Ideally the local state would be updated when .Create() is called.
+		// e.g. we'd check if the value is -1 for gzip_level and set it in state as
+		// zero instead. This way we could avoid having to do this check here.
+		// The reason that's not possible (or not ideal at least) is because Create
+		// is called multiple times (once for each block defined in configuration)
+		// while the setting of the state must be done holistically, and so what
+		// that means is, if we did the above suggestion we would be resetting the
+		// entire state object multiple times, where as here we're only ever setting
+		// it once.
+		for _, s := range localState {
+			v := s.(map[string]any)
+			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = v["gzip_level"].(int)
+				break
 			}
 		}
 
-		fsl = append(fsl, nfl)
+		data := map[string]any{
+			"name":               resource.Name,
+			"address":            resource.Address,
+			"user":               resource.Username,
+			"password":           resource.Password,
+			"path":               resource.Path,
+			"port":               resource.Port,
+			"period":             resource.Period,
+			"public_key":         resource.PublicKey,
+			"gzip_level":         resource.GzipLevel,
+			"timestamp_format":   resource.TimestampFormat,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"message_type":       resource.MessageType,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
+			"compression_codec":  resource.CompressionCodec,
+		}
+
+		// Prune any empty values that come from the default string value in structs.
+		for k, v := range data {
+			if v == "" {
+				delete(data, k)
+			}
+		}
+
+		result = append(result, data)
 	}
 
-	return fsl
+	return result
 }
 
 func (h *FTPServiceAttributeHandler) buildCreate(ftpMap any, serviceID string, serviceVersion int) *gofastly.CreateFTPInput {
-	df := ftpMap.(map[string]any)
+	resource := ftpMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateFTPInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Address:           df["address"].(string),
-		Username:          df["user"].(string),
-		Password:          df["password"].(string),
-		Path:              df["path"].(string),
-		Port:              uint(df["port"].(int)),
-		Period:            uint(df["period"].(int)),
-		PublicKey:         df["public_key"].(string),
-		GzipLevel:         uint8(df["gzip_level"].(int)),
-		TimestampFormat:   df["timestamp_format"].(string),
-		MessageType:       df["message_type"].(string),
-		CompressionCodec:  df["compression_codec"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateFTPInput{
+		Address:          gofastly.String(resource["address"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
+		Format:           gofastly.String(vla.format),
+		FormatVersion:    vla.formatVersion,
+		MessageType:      gofastly.String(resource["message_type"].(string)),
+		Name:             gofastly.String(resource["name"].(string)),
+		Password:         gofastly.String(resource["password"].(string)),
+		Path:             gofastly.String(resource["path"].(string)),
+		Period:           gofastly.Int(resource["period"].(int)),
+		Placement:        gofastly.String(vla.placement),
+		Port:             gofastly.Int(resource["port"].(int)),
+		PublicKey:        gofastly.String(resource["public_key"].(string)),
+		ServiceID:        serviceID,
+		ServiceVersion:   serviceVersion,
+		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
+		Username:         gofastly.String(resource["user"].(string)),
 	}
+
+	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
+	// If we set a default value for an attribute, then it will be sent to the API.
+	// In some scenarios this can cause the API to reject the request.
+	// For example, configuring compression_codec + gzip_level is invalid.
+	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
+		opts.GzipLevel = gofastly.Int(gl)
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *FTPServiceAttributeHandler) buildDelete(ftpMap any, serviceID string, serviceVersion int) *gofastly.DeleteFTPInput {
-	df := ftpMap.(map[string]any)
+	resource := ftpMap.(map[string]any)
 
 	return &gofastly.DeleteFTPInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

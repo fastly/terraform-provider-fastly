@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -57,9 +57,9 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					"response_condition": "response_condition",
 					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
 					"placement":          "none",
-					"format_version":     uint(2),
+					"format_version":     2,
 					"parse_log_keyvals":  true,
-					"request_max_bytes":  uint(12345),
+					"request_max_bytes":  12345,
 					"auth_method":        "scram-sha-512",
 					"user":               "user",
 					"password":           "password",

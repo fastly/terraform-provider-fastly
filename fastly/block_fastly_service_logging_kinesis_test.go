@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -44,7 +44,7 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 					"format":             "%h %l %u %t \"%r\" %>s %b %T",
 					"placement":          "none",
 					"response_condition": "always",
-					"format_version":     uint(2),
+					"format_version":     2,
 				},
 			},
 		},
@@ -71,7 +71,7 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 					"format":             "%h %l %u %t \"%r\" %>s %b %T",
 					"placement":          "none",
 					"response_condition": "always",
-					"format_version":     uint(2),
+					"format_version":     2,
 				},
 			},
 		},

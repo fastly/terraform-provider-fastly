@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -88,11 +88,11 @@ func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
-		cslList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
+		remoteState, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -100,7 +100,7 @@ func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.
 			return fmt.Errorf("error looking up Cache Settings for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		csl := flattenCacheSettings(cslList)
+		csl := flattenCacheSettings(remoteState)
 
 		if err := d.Set(h.GetKey(), csl); err != nil {
 			log.Printf("[WARN] Error setting Cache Settings for (%s): %s", d.Id(), err)
@@ -118,19 +118,16 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["action"]; ok {
 		opts.Action = gofastly.CacheSettingAction(v.(string))
 	}
 	if v, ok := modified["ttl"]; ok {
-		opts.TTL = gofastly.Uint(uint(v.(int)))
+		opts.TTL = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["stale_ttl"]; ok {
-		opts.StaleTTL = gofastly.Uint(uint(v.(int)))
+		opts.StaleTTL = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["cache_condition"]; ok {
 		opts.CacheCondition = gofastly.String(v.(string))
@@ -165,51 +162,51 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 }
 
 func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) {
-	df := cacheMap.(map[string]any)
+	resource := cacheMap.(map[string]any)
 	opts := gofastly.CreateCacheSettingInput{
-		Name:           df["name"].(string),
-		StaleTTL:       uint(df["stale_ttl"].(int)),
-		CacheCondition: df["cache_condition"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
+		StaleTTL:       gofastly.Int(resource["stale_ttl"].(int)),
+		CacheCondition: gofastly.String(resource["cache_condition"].(string)),
 	}
 
-	if v, ok := df["ttl"]; ok {
-		opts.TTL = uint(v.(int))
+	if v, ok := resource["ttl"]; ok {
+		opts.TTL = gofastly.Int(v.(int))
 	}
 
-	act := strings.ToLower(df["action"].(string))
+	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "cache":
-		opts.Action = gofastly.CacheSettingActionCache
+		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionCache)
 	case "pass":
-		opts.Action = gofastly.CacheSettingActionPass
+		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionPass)
 	case "restart":
-		opts.Action = gofastly.CacheSettingActionRestart
+		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionRestart)
 	}
 
 	return &opts, nil
 }
 
-func flattenCacheSettings(csList []*gofastly.CacheSetting) []map[string]any {
-	var csl []map[string]any
-	for _, cl := range csList {
-		// Convert Cache Settings to a map for saving to state.
-		clMap := map[string]any{
-			"name":            cl.Name,
-			"action":          cl.Action,
-			"cache_condition": cl.CacheCondition,
-			"stale_ttl":       cl.StaleTTL,
-			"ttl":             cl.TTL,
+// flattenCacheSettings models data into format suitable for saving to Terraform state.
+func flattenCacheSettings(remoteState []*gofastly.CacheSetting) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":            resource.Name,
+			"action":          resource.Action,
+			"cache_condition": resource.CacheCondition,
+			"stale_ttl":       resource.StaleTTL,
+			"ttl":             resource.TTL,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range clMap {
+		for k, v := range data {
 			if v == "" {
-				delete(clMap, k)
+				delete(data, k)
 			}
 		}
 
-		csl = append(csl, clMap)
+		result = append(result, data)
 	}
 
-	return csl
+	return result
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -163,11 +163,11 @@ func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schem
 
 // Read refreshes the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
-		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
+		remoteState, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -175,7 +175,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 			return fmt.Errorf("error looking up HTTPS logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		hll := flattenHTTPS(httpsList)
+		hll := flattenHTTPS(remoteState)
 
 		for _, element := range hll {
 			h.pruneVCLLoggingAttributes(element)
@@ -197,14 +197,8 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
-	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
-	}
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.String(v.(string))
 	}
@@ -212,10 +206,10 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.URL = gofastly.String(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxEntries = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["content_type"]; ok {
 		opts.ContentType = gofastly.String(v.(string))
@@ -251,7 +245,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.MessageType = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
@@ -293,81 +287,89 @@ func deleteHTTPS(conn *gofastly.Client, i *gofastly.DeleteHTTPSInput) error {
 	return nil
 }
 
-func flattenHTTPS(httpsList []*gofastly.HTTPS) []map[string]any {
-	var hsl []map[string]any
-	for _, hl := range httpsList {
-		// Convert HTTP logging to a map for saving to state.
-		nhl := map[string]any{
-			"name":                hl.Name,
-			"response_condition":  hl.ResponseCondition,
-			"format":              hl.Format,
-			"url":                 hl.URL,
-			"request_max_entries": hl.RequestMaxEntries,
-			"request_max_bytes":   hl.RequestMaxBytes,
-			"content_type":        hl.ContentType,
-			"header_name":         hl.HeaderName,
-			"header_value":        hl.HeaderValue,
-			"method":              hl.Method,
-			"json_format":         hl.JSONFormat,
-			"placement":           hl.Placement,
-			"tls_ca_cert":         hl.TLSCACert,
-			"tls_client_cert":     hl.TLSClientCert,
-			"tls_client_key":      hl.TLSClientKey,
-			"tls_hostname":        hl.TLSHostname,
-			"message_type":        hl.MessageType,
-			"format_version":      hl.FormatVersion,
+// flattenHTTPS models data into format suitable for saving to Terraform state.
+func flattenHTTPS(remoteState []*gofastly.HTTPS) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":                resource.Name,
+			"response_condition":  resource.ResponseCondition,
+			"format":              resource.Format,
+			"url":                 resource.URL,
+			"request_max_entries": resource.RequestMaxEntries,
+			"request_max_bytes":   resource.RequestMaxBytes,
+			"content_type":        resource.ContentType,
+			"header_name":         resource.HeaderName,
+			"header_value":        resource.HeaderValue,
+			"method":              resource.Method,
+			"json_format":         resource.JSONFormat,
+			"placement":           resource.Placement,
+			"tls_ca_cert":         resource.TLSCACert,
+			"tls_client_cert":     resource.TLSClientCert,
+			"tls_client_key":      resource.TLSClientKey,
+			"tls_hostname":        resource.TLSHostname,
+			"message_type":        resource.MessageType,
+			"format_version":      resource.FormatVersion,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range nhl {
+		for k, v := range data {
 			if v == "" {
-				delete(nhl, k)
+				delete(data, k)
 			}
 		}
 
-		hsl = append(hsl, nhl)
+		result = append(result, data)
 	}
 
-	return hsl
+	return result
 }
 
 func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceID string, serviceVersion int) *gofastly.CreateHTTPSInput {
-	df := httpsMap.(map[string]any)
+	resource := httpsMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
+	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateHTTPSInput{
+		ContentType:       gofastly.String(resource["content_type"].(string)),
+		Format:            gofastly.String(vla.format),
+		FormatVersion:     vla.formatVersion,
+		HeaderName:        gofastly.String(resource["header_name"].(string)),
+		HeaderValue:       gofastly.String(resource["header_value"].(string)),
+		JSONFormat:        gofastly.String(resource["json_format"].(string)),
+		MessageType:       gofastly.String(resource["message_type"].(string)),
+		Method:            gofastly.String(resource["method"].(string)),
+		Name:              gofastly.String(resource["name"].(string)),
+		RequestMaxBytes:   gofastly.Int(resource["request_max_bytes"].(int)),
+		RequestMaxEntries: gofastly.Int(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		URL:               df["url"].(string),
-		RequestMaxEntries: uint(df["request_max_entries"].(int)),
-		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
-		ContentType:       df["content_type"].(string),
-		HeaderName:        df["header_name"].(string),
-		HeaderValue:       df["header_value"].(string),
-		Method:            df["method"].(string),
-		JSONFormat:        df["json_format"].(string),
-		TLSCACert:         df["tls_ca_cert"].(string),
-		TLSClientCert:     df["tls_client_cert"].(string),
-		TLSClientKey:      df["tls_client_key"].(string),
-		TLSHostname:       df["tls_hostname"].(string),
-		MessageType:       df["message_type"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		ResponseCondition: vla.responseCondition,
-		Placement:         vla.placement,
+		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
+		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
+		URL:               gofastly.String(resource["url"].(string)),
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
 
 	return &opts
 }
 
 func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap any, serviceID string, serviceVersion int) *gofastly.DeleteHTTPSInput {
-	df := httpsMap.(map[string]any)
+	resource := httpsMap.(map[string]any)
 
 	opts := gofastly.DeleteHTTPSInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 
 	return &opts

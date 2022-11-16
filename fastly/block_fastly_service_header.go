@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -132,11 +132,11 @@ func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 
 // Read refreshes the resource.
 func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Headers for (%s)", d.Id())
-		headerList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
+		remoteState, err := conn.ListHeaders(&gofastly.ListHeadersInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -144,7 +144,7 @@ func (h *HeaderServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 			return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		hl := flattenHeaders(headerList)
+		hl := flattenHeaders(remoteState)
 
 		if err := d.Set(h.GetKey(), hl); err != nil {
 			log.Printf("[WARN] Error setting Headers for (%s): %s", d.Id(), err)
@@ -162,19 +162,16 @@ func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["action"]; ok {
-		opts.Action = gofastly.PHeaderAction(gofastly.HeaderAction(v.(string)))
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderAction(v.(string)))
 	}
 	if v, ok := modified["ignore_if_set"]; ok {
 		opts.IgnoreIfSet = gofastly.CBool(v.(bool))
 	}
 	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.PHeaderType(gofastly.HeaderType(v.(string)))
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderType(v.(string)))
 	}
 	if v, ok := modified["destination"]; ok {
 		opts.Destination = gofastly.String(v.(string))
@@ -189,7 +186,7 @@ func (h *HeaderServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 		opts.Substitution = gofastly.String(v.(string))
 	}
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.Uint(uint(v.(int)))
+		opts.Priority = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["request_condition"]; ok {
 		opts.RequestCondition = gofastly.String(v.(string))
@@ -229,75 +226,75 @@ func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func flattenHeaders(headerList []*gofastly.Header) []map[string]any {
-	var hl []map[string]any
-	for _, h := range headerList {
-		// Convert Header to a map for saving to state.
-		nh := map[string]any{
-			"name":               h.Name,
-			"action":             h.Action,
-			"ignore_if_set":      h.IgnoreIfSet,
-			"type":               h.Type,
-			"destination":        h.Destination,
-			"source":             h.Source,
-			"regex":              h.Regex,
-			"substitution":       h.Substitution,
-			"priority":           int(h.Priority),
-			"request_condition":  h.RequestCondition,
-			"cache_condition":    h.CacheCondition,
-			"response_condition": h.ResponseCondition,
+// flattenHeaders models data into format suitable for saving to Terraform state.
+func flattenHeaders(remoteState []*gofastly.Header) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"action":             resource.Action,
+			"ignore_if_set":      resource.IgnoreIfSet,
+			"type":               resource.Type,
+			"destination":        resource.Destination,
+			"source":             resource.Source,
+			"regex":              resource.Regex,
+			"substitution":       resource.Substitution,
+			"priority":           int(resource.Priority),
+			"request_condition":  resource.RequestCondition,
+			"cache_condition":    resource.CacheCondition,
+			"response_condition": resource.ResponseCondition,
 		}
 
-		for k, v := range nh {
+		for k, v := range data {
 			if v == "" {
-				delete(nh, k)
+				delete(data, k)
 			}
 		}
 
-		hl = append(hl, nh)
+		result = append(result, data)
 	}
-	return hl
+	return result
 }
 
 func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {
-	df := headerMap.(map[string]any)
+	resource := headerMap.(map[string]any)
 	opts := gofastly.CreateHeaderInput{
-		Name:              df["name"].(string),
-		IgnoreIfSet:       gofastly.Compatibool(df["ignore_if_set"].(bool)),
-		Destination:       df["destination"].(string),
-		Priority:          gofastly.Uint(uint(df["priority"].(int))),
-		Source:            df["source"].(string),
-		Regex:             df["regex"].(string),
-		Substitution:      df["substitution"].(string),
-		RequestCondition:  df["request_condition"].(string),
-		CacheCondition:    df["cache_condition"].(string),
-		ResponseCondition: df["response_condition"].(string),
+		Name:              gofastly.String(resource["name"].(string)),
+		IgnoreIfSet:       gofastly.CBool(resource["ignore_if_set"].(bool)),
+		Destination:       gofastly.String(resource["destination"].(string)),
+		Priority:          gofastly.Int(resource["priority"].(int)),
+		Source:            gofastly.String(resource["source"].(string)),
+		Regex:             gofastly.String(resource["regex"].(string)),
+		Substitution:      gofastly.String(resource["substitution"].(string)),
+		RequestCondition:  gofastly.String(resource["request_condition"].(string)),
+		CacheCondition:    gofastly.String(resource["cache_condition"].(string)),
+		ResponseCondition: gofastly.String(resource["response_condition"].(string)),
 	}
 
-	act := strings.ToLower(df["action"].(string))
+	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "set":
-		opts.Action = gofastly.HeaderActionSet
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionSet)
 	case "append":
-		opts.Action = gofastly.HeaderActionAppend
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionAppend)
 	case "delete":
-		opts.Action = gofastly.HeaderActionDelete
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionDelete)
 	case "regex":
-		opts.Action = gofastly.HeaderActionRegex
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionRegex)
 	case "regex_repeat":
-		opts.Action = gofastly.HeaderActionRegexRepeat
+		opts.Action = gofastly.HeaderActionPtr(gofastly.HeaderActionRegexRepeat)
 	}
 
-	ty := strings.ToLower(df["type"].(string))
+	ty := strings.ToLower(resource["type"].(string))
 	switch ty {
 	case "request":
-		opts.Type = gofastly.HeaderTypeRequest
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeRequest)
 	case "fetch":
-		opts.Type = gofastly.HeaderTypeFetch
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeFetch)
 	case "cache":
-		opts.Type = gofastly.HeaderTypeCache
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeCache)
 	case "response":
-		opts.Type = gofastly.HeaderTypeResponse
+		opts.Type = gofastly.HeaderTypePtr(gofastly.HeaderTypeResponse)
 	}
 
 	return &opts, nil

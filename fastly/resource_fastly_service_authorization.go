@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -89,8 +89,8 @@ func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceD
 
 	if d.HasChanges("permission") {
 		_, err := conn.UpdateServiceAuthorization(&gofastly.UpdateServiceAuthorizationInput{
-			ID:          d.Id(),
-			Permissions: d.Get("permission").(string),
+			ID:         d.Id(),
+			Permission: d.Get("permission").(string),
 		})
 		if err != nil {
 			return diag.FromErr(err)

@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -70,16 +70,16 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 	opts := gofastly.CreateGzipInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-		CacheCondition: resource["cache_condition"].(string),
+		Name:           gofastly.String(resource["name"].(string)),
+		CacheCondition: gofastly.String(resource["cache_condition"].(string)),
 	}
 
 	if v, ok := resource["content_types"]; ok {
-		opts.ContentTypes = sliceToString(v.([]any))
+		opts.ContentTypes = gofastly.String(sliceToString(v.([]any)))
 	}
 
 	if v, ok := resource["extensions"]; ok {
-		opts.Extensions = sliceToString(v.([]any))
+		opts.Extensions = gofastly.String(sliceToString(v.([]any)))
 	}
 
 	log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
@@ -92,11 +92,11 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 // Read refreshes the resource.
 func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
-		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
+		remoteState, err := conn.ListGzips(&gofastly.ListGzipsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -104,7 +104,7 @@ func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 			return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		gl := flattenGzips(gzipsList)
+		gl := flattenGzips(remoteState)
 
 		// NOTE: Although "content_types" and "extensions" fields are optional in spec,
 		// Fastly API will actually set the default value silently when these fields are not sent
@@ -152,11 +152,8 @@ func (h *GzipServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["content_types"]; ok {
 		// NOTE: this particular line was added to address a change in the backend API
 		// where it used to accept an empty value but now will use a default value if no value provided.
@@ -208,44 +205,44 @@ func (h *GzipServiceAttributeHandler) Delete(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenGzips(gzipsList []*gofastly.Gzip) []map[string]any {
-	var gl []map[string]any
-	for _, g := range gzipsList {
-		// Convert Gzip to a map for saving to state.
-		ng := map[string]any{
-			"name":            g.Name,
-			"cache_condition": g.CacheCondition,
+// flattenGzips models data into format suitable for saving to Terraform state.
+func flattenGzips(remoteState []*gofastly.Gzip) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":            resource.Name,
+			"cache_condition": resource.CacheCondition,
 		}
 
-		if g.Extensions != "" {
-			e := strings.Split(g.Extensions, " ")
+		if resource.Extensions != "" {
+			e := strings.Split(resource.Extensions, " ")
 			var et []any
 			for _, ev := range e {
 				et = append(et, ev)
 			}
-			ng["extensions"] = et
+			data["extensions"] = et
 		}
 
-		if g.ContentTypes != "" {
-			c := strings.Split(g.ContentTypes, " ")
+		if resource.ContentTypes != "" {
+			c := strings.Split(resource.ContentTypes, " ")
 			var ct []any
 			for _, cv := range c {
 				ct = append(ct, cv)
 			}
-			ng["content_types"] = ct
+			data["content_types"] = ct
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range ng {
+		for k, v := range data {
 			if v == "" {
-				delete(ng, k)
+				delete(data, k)
 			}
 		}
 
-		gl = append(gl, ng)
+		result = append(result, data)
 	}
 
-	return gl
+	return result
 }
 
 func sliceToString(src []any) string {

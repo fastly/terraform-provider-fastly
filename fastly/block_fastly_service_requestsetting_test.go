@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -33,7 +33,7 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 					"request_condition": "serve_alt_backend",
 					"default_host":      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
 					"xff":               gofastly.RequestSettingXFFAppend,
-					"max_stale_age":     uint(90),
+					"max_stale_age":     90,
 					"action":            gofastly.RequestSettingActionPass,
 					"bypass_busy_wait":  false,
 					"force_miss":        false,
@@ -63,14 +63,14 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		RequestCondition: "serve_alt_backend",
 		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
 		XForwardedFor:    "append",
-		MaxStaleAge:      uint(90),
+		MaxStaleAge:      90,
 	}
 	rq2 := gofastly.RequestSetting{
 		Name:             "alt_backend",
 		RequestCondition: "serve_alt_backend",
 		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
 		XForwardedFor:    "append",
-		MaxStaleAge:      uint(900),
+		MaxStaleAge:      900,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

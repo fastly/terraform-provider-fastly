@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -32,7 +32,7 @@ func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
 			local: []map[string]any{
 				{
 					"name":              "responseObjecttesting",
-					"status":            uint(200),
+					"status":            200,
 					"response":          "OK",
 					"content":           "test content",
 					"content_type":      "text/html",

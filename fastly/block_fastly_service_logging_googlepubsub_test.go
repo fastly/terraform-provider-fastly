@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -45,7 +45,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 					"response_condition": "response_condition",
 					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
 					"placement":          "none",
-					"format_version":     uint(2),
+					"format_version":     2,
 				},
 			},
 		},

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -162,11 +162,11 @@ func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.Resou
 
 // Read refreshes the resource.
 func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
-		kafkaList, err := conn.ListKafkas(&gofastly.ListKafkasInput{
+		remoteState, err := conn.ListKafkas(&gofastly.ListKafkasInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -174,7 +174,7 @@ func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.Resourc
 			return fmt.Errorf("error looking up Kafka logging endpoints for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		kafkaLogList := flattenKafka(kafkaList)
+		kafkaLogList := flattenKafka(remoteState)
 
 		for _, element := range kafkaLogList {
 			h.pruneVCLLoggingAttributes(element)
@@ -196,11 +196,8 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 		Name:           resource["name"].(string),
 	}
 
-	// NOTE: where we transition between any we lose the ability to
-	// infer the underlying type being either a uint vs an int. This
-	// materializes as a panic (yay) and so it's only at runtime we discover
-	// this and so we've updated the below code to convert the type asserted
-	// int into a uint before passing the value to gofastly.Uint().
+	// NOTE: When converting from an interface{} we lose the underlying type.
+	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["brokers"]; ok {
 		opts.Brokers = gofastly.String(v.(string))
 	}
@@ -220,7 +217,7 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 		opts.Format = gofastly.String(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Uint(uint(v.(int)))
+		opts.FormatVersion = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
 		opts.ResponseCondition = gofastly.String(v.(string))
@@ -244,7 +241,7 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 		opts.ParseLogKeyvals = gofastly.CBool(v.(bool))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Uint(uint(v.(int)))
+		opts.RequestMaxBytes = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["auth_method"]; ok {
 		opts.AuthMethod = gofastly.String(v.(string))
@@ -292,80 +289,88 @@ func deleteKafka(conn *gofastly.Client, i *gofastly.DeleteKafkaInput) error {
 	return nil
 }
 
-func flattenKafka(kafkaList []*gofastly.Kafka) []map[string]any {
-	var flattened []map[string]any
-	for _, s := range kafkaList {
-		// Convert logging to a map for saving to state.
-		flatKafka := map[string]any{
-			"name":               s.Name,
-			"topic":              s.Topic,
-			"brokers":            s.Brokers,
-			"compression_codec":  s.CompressionCodec,
-			"required_acks":      s.RequiredACKs,
-			"use_tls":            s.UseTLS,
-			"tls_ca_cert":        s.TLSCACert,
-			"tls_client_cert":    s.TLSClientCert,
-			"tls_client_key":     s.TLSClientKey,
-			"tls_hostname":       s.TLSHostname,
-			"format":             s.Format,
-			"format_version":     s.FormatVersion,
-			"placement":          s.Placement,
-			"response_condition": s.ResponseCondition,
-			"parse_log_keyvals":  s.ParseLogKeyvals,
-			"request_max_bytes":  s.RequestMaxBytes,
-			"auth_method":        s.AuthMethod,
-			"user":               s.User,
-			"password":           s.Password,
+// flattenKafka models data into format suitable for saving to Terraform state.
+func flattenKafka(remoteState []*gofastly.Kafka) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"name":               resource.Name,
+			"topic":              resource.Topic,
+			"brokers":            resource.Brokers,
+			"compression_codec":  resource.CompressionCodec,
+			"required_acks":      resource.RequiredACKs,
+			"use_tls":            resource.UseTLS,
+			"tls_ca_cert":        resource.TLSCACert,
+			"tls_client_cert":    resource.TLSClientCert,
+			"tls_client_key":     resource.TLSClientKey,
+			"tls_hostname":       resource.TLSHostname,
+			"format":             resource.Format,
+			"format_version":     resource.FormatVersion,
+			"placement":          resource.Placement,
+			"response_condition": resource.ResponseCondition,
+			"parse_log_keyvals":  resource.ParseLogKeyvals,
+			"request_max_bytes":  resource.RequestMaxBytes,
+			"auth_method":        resource.AuthMethod,
+			"user":               resource.User,
+			"password":           resource.Password,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range flatKafka {
+		for k, v := range data {
 			if v == "" {
-				delete(flatKafka, k)
+				delete(data, k)
 			}
 		}
 
-		flattened = append(flattened, flatKafka)
+		result = append(result, data)
 	}
 
-	return flattened
+	return result
 }
 
 func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap any, serviceID string, serviceVersion int) *gofastly.CreateKafkaInput {
-	df := kafkaMap.(map[string]any)
+	resource := kafkaMap.(map[string]any)
 
-	vla := h.getVCLLoggingAttributes(df)
-	return &gofastly.CreateKafkaInput{
-		ServiceID:         serviceID,
-		ServiceVersion:    serviceVersion,
-		Name:              df["name"].(string),
-		Brokers:           df["brokers"].(string),
-		Topic:             df["topic"].(string),
-		RequiredACKs:      df["required_acks"].(string),
-		UseTLS:            gofastly.Compatibool(df["use_tls"].(bool)),
-		CompressionCodec:  df["compression_codec"].(string),
-		TLSCACert:         df["tls_ca_cert"].(string),
-		TLSClientCert:     df["tls_client_cert"].(string),
-		TLSClientKey:      df["tls_client_key"].(string),
-		TLSHostname:       df["tls_hostname"].(string),
-		Format:            vla.format,
-		FormatVersion:     uintOrDefault(vla.formatVersion),
-		Placement:         vla.placement,
-		ResponseCondition: vla.responseCondition,
-		ParseLogKeyvals:   gofastly.Compatibool(df["parse_log_keyvals"].(bool)),
-		RequestMaxBytes:   uint(df["request_max_bytes"].(int)),
-		AuthMethod:        df["auth_method"].(string),
-		User:              df["user"].(string),
-		Password:          df["password"].(string),
+	vla := h.getVCLLoggingAttributes(resource)
+	opts := &gofastly.CreateKafkaInput{
+		AuthMethod:       gofastly.String(resource["auth_method"].(string)),
+		Brokers:          gofastly.String(resource["brokers"].(string)),
+		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
+		Format:           gofastly.String(vla.format),
+		FormatVersion:    vla.formatVersion,
+		Name:             gofastly.String(resource["name"].(string)),
+		ParseLogKeyvals:  gofastly.CBool(resource["parse_log_keyvals"].(bool)),
+		Password:         gofastly.String(resource["password"].(string)),
+		Placement:        gofastly.String(vla.placement),
+		RequestMaxBytes:  gofastly.Int(resource["request_max_bytes"].(int)),
+		RequiredACKs:     gofastly.String(resource["required_acks"].(string)),
+		ServiceID:        serviceID,
+		ServiceVersion:   serviceVersion,
+		TLSCACert:        gofastly.String(resource["tls_ca_cert"].(string)),
+		TLSClientCert:    gofastly.String(resource["tls_client_cert"].(string)),
+		TLSClientKey:     gofastly.String(resource["tls_client_key"].(string)),
+		TLSHostname:      gofastly.String(resource["tls_hostname"].(string)),
+		Topic:            gofastly.String(resource["topic"].(string)),
+		UseTLS:           gofastly.CBool(resource["use_tls"].(bool)),
+		User:             gofastly.String(resource["user"].(string)),
 	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.responseCondition != "" {
+		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+
+	return opts
 }
 
 func (h *KafkaServiceAttributeHandler) buildDelete(kafkaMap any, serviceID string, serviceVersion int) *gofastly.DeleteKafkaInput {
-	df := kafkaMap.(map[string]any)
+	resource := kafkaMap.(map[string]any)
 
 	return &gofastly.DeleteKafkaInput{
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Name:           df["name"].(string),
+		Name:           resource["name"].(string),
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -54,10 +54,10 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"password":           "password",
 					"message_type":       "classic",
-					"gzip_level":         uint8(0),
-					"format_version":     uint(2),
-					"period":             uint(3600),
-					"port":               uint(22),
+					"gzip_level":         0,
+					"format_version":     2,
+					"period":             3600,
+					"port":               22,
 					"response_condition": "response_condition",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"placement":          "none",
@@ -68,7 +68,7 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenSFTP(c.remote)
+		out := flattenSFTP(c.remote, nil)
 		if diff := cmp.Diff(out, c.local); diff != "" {
 			t.Fatalf("Error matching: %s", diff)
 		}
@@ -222,10 +222,8 @@ func TestAccFastlyServiceVCL_logging_sftp_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_sftp.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_sftp.#", "1"),
 				),
 			},
 		},

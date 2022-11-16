@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v6/fastly"
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -83,11 +83,11 @@ func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.
 
 // Read refreshes the resource.
 func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	resources := d.Get(h.GetKey()).(*schema.Set).List()
+	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(resources) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) {
 		log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
-		dictList, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+		remoteState, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -95,7 +95,7 @@ func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 			return fmt.Errorf("error looking up Dictionaries for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
-		dictionaries := flattenDictionaries(dictList)
+		dictionaries := flattenDictionaries(remoteState)
 
 		// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
 		stateDicts := d.Get(h.GetKey()).(*schema.Set).List()
@@ -153,33 +153,34 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	return nil
 }
 
-func flattenDictionaries(dictList []*gofastly.Dictionary) []map[string]any {
-	var dl []map[string]any
-	for _, currentDict := range dictList {
-		dictMapString := map[string]any{
-			"dictionary_id": currentDict.ID,
-			"name":          currentDict.Name,
-			"write_only":    currentDict.WriteOnly,
+// flattenDictionaries models data into format suitable for saving to Terraform state.
+func flattenDictionaries(remoteState []*gofastly.Dictionary) []map[string]any {
+	var result []map[string]any
+	for _, resource := range remoteState {
+		data := map[string]any{
+			"dictionary_id": resource.ID,
+			"name":          resource.Name,
+			"write_only":    resource.WriteOnly,
 		}
 
 		// prune any empty values that come from the default string value in structs
-		for k, v := range dictMapString {
+		for k, v := range data {
 			if v == "" {
-				delete(dictMapString, k)
+				delete(data, k)
 			}
 		}
 
-		dl = append(dl, dictMapString)
+		result = append(result, data)
 	}
 
-	return dl
+	return result
 }
 
 func buildDictionary(dictMap any) (*gofastly.CreateDictionaryInput, error) {
-	df := dictMap.(map[string]any)
+	resource := dictMap.(map[string]any)
 	opts := gofastly.CreateDictionaryInput{
-		Name:      df["name"].(string),
-		WriteOnly: gofastly.Compatibool(df["write_only"].(bool)),
+		Name:      gofastly.String(resource["name"].(string)),
+		WriteOnly: gofastly.CBool(resource["write_only"].(bool)),
 	}
 
 	return &opts, nil

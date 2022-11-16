@@ -510,6 +510,7 @@ Required:
 
 Optional:
 
+- `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `email` (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
 - `format` (String) The logging format desired.
 - `placement` (String) Where in the generated VCL the logging call should be placed.
@@ -675,6 +676,7 @@ Required:
 
 Optional:
 
+- `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `compression_codec` (String) The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.
 - `format` (String) Apache-style string or VCL variables to use for log formatting
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
@@ -700,6 +702,7 @@ Required:
 
 Optional:
 
+- `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `placement` (String) Where in the generated VCL the logging call should be placed.

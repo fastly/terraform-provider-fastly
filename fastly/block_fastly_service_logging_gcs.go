@@ -32,6 +32,12 @@ func (h *GCSLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
+		"account_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
+			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+		},
 		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -169,6 +175,9 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
+	if v, ok := resource["account_name"].(string); ok && v != "" {
+		opts.AccountName = gofastly.String(v)
+	}
 
 	log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
 	_, err := conn.CreateGCS(&opts)
@@ -221,6 +230,9 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 	}
 	if v, ok := modified["user"]; ok {
 		opts.User = gofastly.String(v.(string))
+	}
+	if v, ok := modified["account_name"]; ok {
+		opts.AccountName = gofastly.String(v.(string))
 	}
 	if v, ok := modified["secret_key"]; ok {
 		opts.SecretKey = gofastly.String(v.(string))
@@ -314,6 +326,7 @@ func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 		data := map[string]any{
 			"name":               resources.Name,
 			"user":               resources.User,
+			"account_name":       resources.AccountName,
 			"bucket_name":        resources.Bucket,
 			"secret_key":         resources.SecretKey,
 			"path":               resources.Path,

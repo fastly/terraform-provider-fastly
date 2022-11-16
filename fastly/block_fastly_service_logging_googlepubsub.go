@@ -32,6 +32,12 @@ func (h *GooglePubSubServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
+		"account_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
+			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -150,6 +156,9 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 	if v, ok := modified["user"]; ok {
 		opts.User = gofastly.String(v.(string))
 	}
+	if v, ok := modified["account_name"]; ok {
+		opts.AccountName = gofastly.String(v.(string))
+	}
 	if v, ok := modified["secret_key"]; ok {
 		opts.SecretKey = gofastly.String(v.(string))
 	}
@@ -215,6 +224,7 @@ func flattenGooglePubSub(remoteState []*gofastly.Pubsub) []map[string]any {
 		data := map[string]any{
 			"name":               resource.Name,
 			"user":               resource.User,
+			"account_name":       resource.AccountName,
 			"secret_key":         resource.SecretKey,
 			"project_id":         resource.ProjectID,
 			"topic":              resource.Topic,
@@ -259,6 +269,9 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+	if v, ok := resource["account_name"].(string); ok && v != "" {
+		opts.AccountName = gofastly.String(v)
 	}
 
 	return opts

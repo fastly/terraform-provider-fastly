@@ -32,6 +32,12 @@ func (h *BigQueryLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
+		"account_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
+			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+		},
 		"dataset": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -130,6 +136,9 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}
+	if v, ok := resource["account_name"].(string); ok && v != "" {
+		opts.AccountName = gofastly.String(v)
+	}
 
 	log.Printf("[DEBUG] Create BigQuery opts: %#v", opts)
 	_, err := conn.CreateBigQuery(&opts)
@@ -205,6 +214,9 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.String(v.(string))
 	}
+	if v, ok := modified["account_name"]; ok {
+		opts.AccountName = gofastly.String(v.(string))
+	}
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.Int(v.(int))
 	}
@@ -253,6 +265,7 @@ func flattenBigQuery(remoteState []*gofastly.BigQuery) []map[string]any {
 			"table":              resource.Table,
 			"response_condition": resource.ResponseCondition,
 			"template":           resource.Template,
+			"account_name":       resource.AccountName,
 			"placement":          resource.Placement,
 		}
 

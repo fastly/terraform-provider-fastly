@@ -35,6 +35,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					Period:           3600,
 					GzipLevel:        0,
 					CompressionCodec: "zstd",
+					AccountName:      "service-account",
 				},
 			},
 			local: []map[string]any{
@@ -48,6 +49,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					"period":            3600,
 					"gzip_level":        0,
 					"compression_codec": "zstd",
+					"account_name":      "service-account",
 				},
 			},
 		},
@@ -205,6 +207,7 @@ resource "fastly_service_vcl" "foo" {
     name = "%s"
     user = "email@example.com"
     bucket_name = "bucketname"
+    account_name = "service-account"
     secret_key = %q
     format = "log format"
     response_condition = ""
@@ -236,6 +239,7 @@ resource "fastly_service_compute" "foo" {
   logging_gcs {
     name = "%s"
     user = "email@example.com"
+    account_name = "service-account"
     bucket_name = "bucketname"
     secret_key = %q
     compression_codec = "zstd"

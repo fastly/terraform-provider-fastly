@@ -95,6 +95,12 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_EMAIL", ""),
 			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.",
 		},
+		"account_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
+			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -143,6 +149,7 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 		Format:           gofastly.String(vla.format),
 		MessageType:      gofastly.String(resource["message_type"].(string)),
 		Name:             gofastly.String(resource["name"].(string)),
+		AccountName:      gofastly.String(resource["account_name"].(string)),
 		Path:             gofastly.String(resource["path"].(string)),
 		Period:           gofastly.Int(resource["period"].(int)),
 		SecretKey:        gofastly.String(resource["secret_key"].(string)),
@@ -221,6 +228,9 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 	}
 	if v, ok := modified["user"]; ok {
 		opts.User = gofastly.String(v.(string))
+	}
+	if v, ok := modified["account_name"]; ok {
+		opts.AccountName = gofastly.String(v.(string))
 	}
 	if v, ok := modified["secret_key"]; ok {
 		opts.SecretKey = gofastly.String(v.(string))
@@ -314,6 +324,7 @@ func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 		data := map[string]any{
 			"name":               resources.Name,
 			"user":               resources.User,
+			"account_name":       resources.AccountName,
 			"bucket_name":        resources.Bucket,
 			"secret_key":         resources.SecretKey,
 			"path":               resources.Path,

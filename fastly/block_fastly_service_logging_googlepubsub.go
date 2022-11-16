@@ -60,6 +60,12 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.",
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GOOGLE_PUBSUB_EMAIL", ""),
 		},
+		"account_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
+			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+		},
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
@@ -150,6 +156,9 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 	if v, ok := modified["user"]; ok {
 		opts.User = gofastly.String(v.(string))
 	}
+	if v, ok := modified["account_name"]; ok {
+		opts.AccountName = gofastly.String(v.(string))
+	}
 	if v, ok := modified["secret_key"]; ok {
 		opts.SecretKey = gofastly.String(v.(string))
 	}
@@ -215,6 +224,7 @@ func flattenGooglePubSub(remoteState []*gofastly.Pubsub) []map[string]any {
 		data := map[string]any{
 			"name":               resource.Name,
 			"user":               resource.User,
+			"account_name":       resource.AccountName,
 			"secret_key":         resource.SecretKey,
 			"project_id":         resource.ProjectID,
 			"topic":              resource.Topic,
@@ -245,6 +255,7 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
 		Name:           gofastly.String(resource["name"].(string)),
+		AccountName:    gofastly.String(resource["account_name"].(string)),
 		Placement:      gofastly.String(vla.placement),
 		ProjectID:      gofastly.String(resource["project_id"].(string)),
 		SecretKey:      gofastly.String(resource["secret_key"].(string)),

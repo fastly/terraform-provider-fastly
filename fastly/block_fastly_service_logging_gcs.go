@@ -32,6 +32,12 @@ func (h *GCSLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
+		"account_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
+			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+		},
 		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -94,12 +100,6 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_EMAIL", ""),
 			Description: "Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.",
-		},
-		"account_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
-			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
 		},
 	}
 

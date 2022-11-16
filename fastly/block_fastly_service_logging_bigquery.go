@@ -32,6 +32,12 @@ func (h *BigQueryLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
+		"account_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
+			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
+		},
 		"dataset": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -72,12 +78,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Default:     "",
 			Description: "BigQuery table name suffix template",
-		},
-		"account_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
-			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
 		},
 	}
 

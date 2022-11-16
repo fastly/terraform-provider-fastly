@@ -149,7 +149,6 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 		Format:           gofastly.String(vla.format),
 		MessageType:      gofastly.String(resource["message_type"].(string)),
 		Name:             gofastly.String(resource["name"].(string)),
-		AccountName:      gofastly.String(resource["account_name"].(string)),
 		Path:             gofastly.String(resource["path"].(string)),
 		Period:           gofastly.Int(resource["period"].(int)),
 		SecretKey:        gofastly.String(resource["secret_key"].(string)),
@@ -175,6 +174,9 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 	}
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+	if v, ok := resource["account_name"].(string); ok && v != "" {
+		opts.AccountName = gofastly.String(v)
 	}
 
 	log.Printf("[DEBUG] Create GCS Opts: %#v", opts)

@@ -255,7 +255,6 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
 		Name:           gofastly.String(resource["name"].(string)),
-		AccountName:    gofastly.String(resource["account_name"].(string)),
 		Placement:      gofastly.String(vla.placement),
 		ProjectID:      gofastly.String(resource["project_id"].(string)),
 		SecretKey:      gofastly.String(resource["secret_key"].(string)),
@@ -270,6 +269,9 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+	if v, ok := resource["account_name"].(string); ok && v != "" {
+		opts.AccountName = gofastly.String(v)
 	}
 
 	return opts

@@ -122,7 +122,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 		Dataset:        gofastly.String(resource["dataset"].(string)),
 		Table:          gofastly.String(resource["table"].(string)),
 		User:           gofastly.String(resource["email"].(string)),
-		AccountName:    gofastly.String(resource["account_name"].(string)),
 		SecretKey:      gofastly.String(resource["secret_key"].(string)),
 		Template:       gofastly.String(resource["template"].(string)),
 		Placement:      gofastly.String(vla.placement),
@@ -136,6 +135,9 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 	}
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+	}
+	if v, ok := resource["account_name"].(string); ok && v != "" {
+		opts.AccountName = gofastly.String(v)
 	}
 
 	log.Printf("[DEBUG] Create BigQuery opts: %#v", opts)

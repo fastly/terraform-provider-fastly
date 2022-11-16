@@ -1,4 +1,36 @@
-## 2.5.0 (Unreleased)
+## 3.1.0 (Unreleased)
+
+## 3.0.0 (November 16, 2022)
+
+The major v7 release of the go-fastly API client resulted in substantial changes to the internals of the Fastly Terraform provider, and so we felt it was safer to release a new major version.
+
+Additionally, the long deprecated `ssl_hostname` backend attribute has now officially been removed from the provider (refer to the documentation for `ssl_cert_hostname` and `ssl_sni_hostname`).
+
+There has also been many bug fixes as part of the integration with the latest go-fastly release.
+
+BREAKING:
+
+* Bump go-fastly to new v7 major release [#614](https://github.com/fastly/terraform-provider-fastly/pull/614)
+
+ENHANCEMENTS:
+
+* feat: dependabot workflow automation for updating dependency [#604](https://github.com/fastly/terraform-provider-fastly/pull/604)
+* Add google account name to all gcp logging endpoints [#603](https://github.com/fastly/terraform-provider-fastly/pull/603)
+
+BUG FIXES:
+
+* fix incorrect update reference [#599](https://github.com/fastly/terraform-provider-fastly/pull/599)
+
+DEPENDENCIES:
+
+* Bump actions/checkout from 2 to 3 [#605](https://github.com/fastly/terraform-provider-fastly/pull/605)
+* Bump goreleaser/goreleaser-action from 2 to 3 [#606](https://github.com/fastly/terraform-provider-fastly/pull/606)
+* Bump github.com/bflad/tfproviderlint from 0.27.1 to 0.28.1 [#611](https://github.com/fastly/terraform-provider-fastly/pull/611)
+* Bump github.com/stretchr/testify from 1.7.0 to 1.8.1 [#610](https://github.com/fastly/terraform-provider-fastly/pull/610)
+* Bump github.com/google/go-cmp from 0.5.6 to 0.5.9 [#608](https://github.com/fastly/terraform-provider-fastly/pull/608)
+* Bump actions/setup-go from 2 to 3 [#607](https://github.com/fastly/terraform-provider-fastly/pull/607)
+* Bump github.com/hashicorp/terraform-plugin-docs from 0.5.0 to 0.13.0 [#612](https://github.com/fastly/terraform-provider-fastly/pull/612)
+* Bump actions/cache from 2 to 3 [#616](https://github.com/fastly/terraform-provider-fastly/pull/616)
 
 ## 2.4.0 (October 13, 2022)
 

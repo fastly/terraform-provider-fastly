@@ -2,7 +2,6 @@ package fastly
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -18,125 +17,6 @@ func init() {
 		Name: "fastly_service_vcl",
 		F:    testSweepServices,
 	})
-}
-
-func TestResourceFastlyFlattenDomains(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Domain
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Domain{
-				{
-					Name:    "test.notexample.com",
-					Comment: "not comment",
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":    "test.notexample.com",
-					"comment": "not comment",
-				},
-			},
-		},
-		{
-			remote: []*gofastly.Domain{
-				{
-					Name: "test.notexample.com",
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":    "test.notexample.com",
-					"comment": "",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenDomains(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
-	}
-}
-
-func TestResourceFastlyFlattenBackend(t *testing.T) {
-	cases := []struct {
-		serviceMetadata ServiceMetadata
-		remote          []*gofastly.Backend
-		local           []map[string]any
-	}{
-		{
-			serviceMetadata: ServiceMetadata{
-				serviceType: ServiceTypeVCL,
-			},
-			remote: []*gofastly.Backend{
-				{
-					Name:                "test.notexample.com",
-					Address:             "www.notexample.com",
-					OverrideHost:        "origin.example.com",
-					Port:                80,
-					AutoLoadbalance:     false,
-					BetweenBytesTimeout: 10000,
-					ConnectTimeout:      1000,
-					ErrorThreshold:      0,
-					FirstByteTimeout:    15000,
-					MaxConn:             200,
-					RequestCondition:    "",
-					HealthCheck:         "",
-					UseSSL:              false,
-					SSLCheckCert:        true,
-					SSLCACert:           "",
-					SSLCertHostname:     "",
-					SSLSNIHostname:      "",
-					SSLClientKey:        "",
-					SSLClientCert:       "",
-					MaxTLSVersion:       "",
-					MinTLSVersion:       "",
-					SSLCiphers:          "foo:bar:baz",
-					Shield:              "lga-ny-us",
-					Weight:              100,
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":                  "test.notexample.com",
-					"address":               "www.notexample.com",
-					"override_host":         "origin.example.com",
-					"port":                  80,
-					"auto_loadbalance":      false,
-					"between_bytes_timeout": 10000,
-					"connect_timeout":       1000,
-					"error_threshold":       0,
-					"first_byte_timeout":    15000,
-					"max_conn":              200,
-					"request_condition":     "",
-					"healthcheck":           "",
-					"use_ssl":               false,
-					"ssl_check_cert":        true,
-					"ssl_ca_cert":           "",
-					"ssl_cert_hostname":     "",
-					"ssl_sni_hostname":      "",
-					"ssl_client_key":        "",
-					"ssl_client_cert":       "",
-					"max_tls_version":       "",
-					"min_tls_version":       "",
-					"ssl_ciphers":           "foo:bar:baz",
-					"shield":                "lga-ny-us",
-					"weight":                100,
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenBackend(c.remote, c.serviceMetadata)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
-		}
-	}
 }
 
 func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {

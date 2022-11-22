@@ -2,7 +2,6 @@ package fastly
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v7/fastly"
@@ -10,82 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
-	cases := []struct {
-		serviceMetadata ServiceMetadata
-		remote          []*gofastly.Backend
-		local           []map[string]any
-	}{
-		{
-			serviceMetadata: ServiceMetadata{
-				serviceType: ServiceTypeCompute,
-			},
-			remote: []*gofastly.Backend{
-				{
-					Name:                "test.notexample.com",
-					Address:             "www.notexample.com",
-					OverrideHost:        "origin.example.com",
-					Port:                80,
-					AutoLoadbalance:     true,
-					BetweenBytesTimeout: 10000,
-					ConnectTimeout:      1000,
-					ErrorThreshold:      0,
-					FirstByteTimeout:    15000,
-					MaxConn:             200,
-					HealthCheck:         "",
-					UseSSL:              false,
-					SSLCheckCert:        true,
-					SSLHostname:         "",
-					SSLCACert:           "",
-					SSLCertHostname:     "",
-					SSLSNIHostname:      "",
-					SSLClientKey:        "",
-					SSLClientCert:       "",
-					MaxTLSVersion:       "",
-					MinTLSVersion:       "",
-					SSLCiphers:          "foo:bar:baz",
-					Shield:              "lga-ny-us",
-					Weight:              100,
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":                  "test.notexample.com",
-					"address":               "www.notexample.com",
-					"override_host":         "origin.example.com",
-					"port":                  80,
-					"auto_loadbalance":      true,
-					"between_bytes_timeout": 10000,
-					"connect_timeout":       1000,
-					"error_threshold":       0,
-					"first_byte_timeout":    15000,
-					"max_conn":              200,
-					"healthcheck":           "",
-					"use_ssl":               false,
-					"ssl_check_cert":        true,
-					"ssl_ca_cert":           "",
-					"ssl_cert_hostname":     "",
-					"ssl_sni_hostname":      "",
-					"ssl_client_key":        "",
-					"ssl_client_cert":       "",
-					"max_tls_version":       "",
-					"min_tls_version":       "",
-					"ssl_ciphers":           "foo:bar:baz",
-					"shield":                "lga-ny-us",
-					"weight":                100,
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenBackend(c.remote, c.serviceMetadata)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
-		}
-	}
-}
 
 func TestAccFastlyServiceCompute_basic(t *testing.T) {
 	var service gofastly.ServiceDetail

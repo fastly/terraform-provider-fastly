@@ -277,16 +277,10 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		FirstByteTimeout:    gofastly.Int(resource["first_byte_timeout"].(int)),
 		HealthCheck:         gofastly.String(resource["healthcheck"].(string)),
 		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
-		MaxTLSVersion:       gofastly.String(resource["max_tls_version"].(string)),
-		MinTLSVersion:       gofastly.String(resource["min_tls_version"].(string)),
 		Name:                gofastly.String(resource["name"].(string)),
 		Port:                gofastly.Int(resource["port"].(int)),
-		SSLCACert:           gofastly.String(resource["ssl_ca_cert"].(string)),
 		SSLCertHostname:     gofastly.String(resource["ssl_cert_hostname"].(string)),
 		SSLCheckCert:        gofastly.CBool(resource["ssl_check_cert"].(bool)),
-		SSLCiphers:          gofastly.String(resource["ssl_ciphers"].(string)),
-		SSLClientCert:       gofastly.String(resource["ssl_client_cert"].(string)),
-		SSLClientKey:        gofastly.String(resource["ssl_client_key"].(string)),
 		SSLSNIHostname:      gofastly.String(resource["ssl_sni_hostname"].(string)),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
@@ -298,8 +292,26 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if resource["min_tls_version"].(string) != "" {
+		opts.MinTLSVersion = gofastly.String(resource["min_tls_version"].(string))
+	}
+	if resource["max_tls_version"].(string) != "" {
+		opts.MaxTLSVersion = gofastly.String(resource["max_tls_version"].(string))
+	}
 	if resource["override_host"].(string) != "" {
 		opts.OverrideHost = gofastly.String(resource["override_host"].(string))
+	}
+	if resource["ssl_ca_cert"].(string) != "" {
+		opts.SSLCACert = gofastly.String(resource["ssl_ca_cert"].(string))
+	}
+	if resource["ssl_ciphers"].(string) != "" {
+		opts.SSLCiphers = gofastly.String(resource["ssl_ciphers"].(string))
+	}
+	if resource["ssl_client_cert"].(string) != "" {
+		opts.SSLClientCert = gofastly.String(resource["ssl_client_cert"].(string))
+	}
+	if resource["ssl_client_key"].(string) != "" {
+		opts.SSLClientKey = gofastly.String(resource["ssl_client_key"].(string))
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {

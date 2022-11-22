@@ -1,5 +1,11 @@
 ## 3.1.0 (Unreleased)
 
+## 3.0.1 (November 22, 2022)
+
+BUG FIXES:
+
+* Backends send empty string to API [#618](https://github.com/fastly/terraform-provider-fastly/pull/618)
+
 ## 3.0.0 (November 16, 2022)
 
 The major v7 release of the go-fastly API client resulted in substantial changes to the internals of the Fastly Terraform provider, and so we felt it was safer to release a new major version.

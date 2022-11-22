@@ -174,7 +174,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	b1 := gofastly.Backend{
 		Address: backendAddress,
 		Name:    backendName,
-		Port:    80,
+		Port:    443,
 
 		// NOTE: The following are defaults applied by the API.
 		BetweenBytesTimeout: 10000,
@@ -188,7 +188,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	b2 := gofastly.Backend{
 		Address: backendAddress,
 		Name:    backendName + " updated",
-		Port:    80,
+		Port:    443,
 
 		// NOTE: The following are defaults applied by the API.
 		BetweenBytesTimeout: 10000,
@@ -229,6 +229,8 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	})
 }
 
+// NOTE: We set the port to 443 so we can validate the API is expecting SSL/TLS
+// related attributes to not be accidentally sent with empty strings.
 func testAccServiceVCLBackend(serviceName, domainName, backendAddress, backendName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
@@ -242,13 +244,15 @@ resource "fastly_service_vcl" "foo" {
   backend {
     address = "%s"
     name    = "%s"
-    port    = 80
+    port    = 443
   }
 
   force_destroy = true
 }`, serviceName, domainName, backendAddress, backendName)
 }
 
+// NOTE: We set the port to 443 so we can validate the API is expecting SSL/TLS
+// related attributes to not be accidentally sent with empty strings.
 func testAccServiceVCLBackendUpdate(serviceName, domainName, backendAddress, backendName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
@@ -262,13 +266,13 @@ resource "fastly_service_vcl" "foo" {
   backend {
     address = "%s"
     name    = "%s"
-    port    = 80
+    port    = 443
   }
 
   backend {
     address = "%s"
     name    = "%s updated"
-    port    = 80
+    port    = 443
   }
 
   force_destroy = true

@@ -346,7 +346,6 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, service
 		Name:             gofastly.String(resource["name"].(string)),
 		Path:             gofastly.String(resource["path"].(string)),
 		Period:           gofastly.Int(resource["period"].(int)),
-		Placement:        gofastly.String(vla.placement),
 		PublicKey:        gofastly.String(resource["public_key"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
@@ -366,6 +365,9 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, service
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}

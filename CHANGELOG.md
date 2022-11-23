@@ -1,5 +1,11 @@
 ## 3.1.0 (Unreleased)
 
+## 3.0.2 (November 23, 2022)
+
+BUG FIXES:
+
+* Fix logging endpoints to not send empty placement value [#620](https://github.com/fastly/terraform-provider-fastly/pull/620)
+
 ## 3.0.1 (November 22, 2022)
 
 BUG FIXES:

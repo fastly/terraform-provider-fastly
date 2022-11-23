@@ -189,8 +189,7 @@ resource "fastly_service_vcl" "foo" {
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
-	format     = "%%h %%l %%u %%t %%r %%>s"
-	placement  = "waf_debug"
+    format     = "%%h %%l %%u %%t %%r %%>s"
   }
 
   force_destroy = true

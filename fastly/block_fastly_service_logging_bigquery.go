@@ -124,7 +124,6 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 		User:           gofastly.String(resource["email"].(string)),
 		SecretKey:      gofastly.String(resource["secret_key"].(string)),
 		Template:       gofastly.String(resource["template"].(string)),
-		Placement:      gofastly.String(vla.placement),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -132,6 +131,9 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.format != "" {
 		opts.Format = gofastly.String(vla.format)
+	}
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
 	}
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)

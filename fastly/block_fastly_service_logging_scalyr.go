@@ -221,7 +221,6 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 		Format:         gofastly.String(vla.format),
 		FormatVersion:  vla.formatVersion,
 		Name:           gofastly.String(resource["name"].(string)),
-		Placement:      gofastly.String(vla.placement),
 		Region:         gofastly.String(resource["region"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
@@ -234,6 +233,9 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 	// if vla.placement != "" {
 	// 	opts.Placement = gofastly.String(vla.placement)
 	// }
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}

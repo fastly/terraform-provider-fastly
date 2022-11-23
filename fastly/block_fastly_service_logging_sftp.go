@@ -371,7 +371,6 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string,
 		Name:             gofastly.String(resource["name"].(string)),
 		Password:         gofastly.String(resource["password"].(string)),
 		Path:             gofastly.String(resource["path"].(string)),
-		Placement:        gofastly.String(vla.placement),
 		Port:             gofastly.Int(resource["port"].(int)),
 		PublicKey:        gofastly.String(resource["public_key"].(string)),
 		SSHKnownHosts:    gofastly.String(resource["ssh_known_hosts"].(string)),
@@ -393,6 +392,9 @@ func (h *SFTPServiceAttributeHandler) buildCreate(sftpMap any, serviceID string,
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}

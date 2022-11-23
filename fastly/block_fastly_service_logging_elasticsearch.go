@@ -312,7 +312,6 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any,
 		Name:              gofastly.String(resource["name"].(string)),
 		Password:          gofastly.String(resource["password"].(string)),
 		Pipeline:          gofastly.String(resource["pipeline"].(string)),
-		Placement:         gofastly.String(vla.placement),
 		RequestMaxBytes:   gofastly.Int(resource["request_max_bytes"].(int)),
 		RequestMaxEntries: gofastly.Int(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
@@ -328,9 +327,9 @@ func (h *ElasticSearchServiceAttributeHandler) buildCreate(elasticsearchMap any,
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
-	// if vla.placement != "" {
-	// 	opts.Placement = gofastly.String(vla.placement)
-	// }
+	if vla.placement != "" {
+		opts.Placement = gofastly.String(vla.placement)
+	}
 	if vla.responseCondition != "" {
 		opts.ResponseCondition = gofastly.String(vla.responseCondition)
 	}

@@ -204,8 +204,13 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		Weight:              100,
 	}
 	b3 := gofastly.Backend{
-		Address:         backendAddress,
-		Name:            backendName + " new with use ssl",
+		Address: backendAddress,
+		Name:    backendName + " new with use ssl",
+		// NOTE: We don't set the port attribute in the Terraform configuration, and
+		// so the Terraform provider defaults to setting that to port 80. This test
+		// validates that the Fastly API currently accepts port 80 (although the
+		// setting of use_ssl would otherwise cause you to expect some kind of API
+		// validation to prevent port 80 from being used).
 		Port:            80,
 		SSLCertHostname: "httpbin.org",
 		UseSSL:          true,

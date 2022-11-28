@@ -279,9 +279,7 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
 		Name:                gofastly.String(resource["name"].(string)),
 		Port:                gofastly.Int(resource["port"].(int)),
-		SSLCertHostname:     gofastly.String(resource["ssl_cert_hostname"].(string)),
 		SSLCheckCert:        gofastly.CBool(resource["ssl_check_cert"].(bool)),
-		SSLSNIHostname:      gofastly.String(resource["ssl_sni_hostname"].(string)),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
 		Shield:              gofastly.String(resource["shield"].(string)),
@@ -304,6 +302,9 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	if resource["ssl_ca_cert"].(string) != "" {
 		opts.SSLCACert = gofastly.String(resource["ssl_ca_cert"].(string))
 	}
+	if resource["ssl_cert_hostname"].(string) != "" {
+		opts.SSLCertHostname = gofastly.String(resource["ssl_cert_hostname"].(string))
+	}
 	if resource["ssl_ciphers"].(string) != "" {
 		opts.SSLCiphers = gofastly.String(resource["ssl_ciphers"].(string))
 	}
@@ -312,6 +313,9 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	}
 	if resource["ssl_client_key"].(string) != "" {
 		opts.SSLClientKey = gofastly.String(resource["ssl_client_key"].(string))
+	}
+	if resource["ssl_sni_hostname"].(string) != "" {
+		opts.SSLSNIHostname = gofastly.String(resource["ssl_sni_hostname"].(string))
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {

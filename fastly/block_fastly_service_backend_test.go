@@ -171,6 +171,10 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
 	backendAddress := "httpbin.org"
 
+	// The following backends are what we expect to exist after all our Terraform
+	// configuration settings have been applied. We expect them to correlate to
+	// the specific backend definitions in the Terraform configuration.
+
 	b1 := gofastly.Backend{
 		Address: backendAddress,
 		Name:    backendName,
@@ -187,8 +191,29 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	}
 	b2 := gofastly.Backend{
 		Address: backendAddress,
-		Name:    backendName + " updated",
+		Name:    backendName + " new",
 		Port:    443,
+
+		// NOTE: The following are defaults applied by the API.
+		BetweenBytesTimeout: 10000,
+		ConnectTimeout:      1000,
+		FirstByteTimeout:    15000,
+		Hostname:            backendAddress,
+		MaxConn:             200,
+		SSLCheckCert:        true,
+		Weight:              100,
+	}
+	b3 := gofastly.Backend{
+		Address: backendAddress,
+		Name:    backendName + " new with use ssl",
+		// NOTE: We don't set the port attribute in the Terraform configuration, and
+		// so the Terraform provider defaults to setting that to port 80. This test
+		// validates that the Fastly API currently accepts port 80 (although the
+		// setting of use_ssl would otherwise cause you to expect some kind of API
+		// validation to prevent port 80 from being used).
+		Port:            80,
+		SSLCertHostname: "httpbin.org",
+		UseSSL:          true,
 
 		// NOTE: The following are defaults applied by the API.
 		BetweenBytesTimeout: 10000,
@@ -221,8 +246,8 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 				Config: testAccServiceVCLBackendUpdate(serviceName, domainName, backendAddress, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "2"),
-					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1, &b2}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "3"),
+					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1, &b2, &b3}),
 				),
 			},
 		},
@@ -271,12 +296,19 @@ resource "fastly_service_vcl" "foo" {
 
   backend {
     address = "%s"
-    name    = "%s updated"
+    name    = "%s new"
     port    = 443
   }
 
+  backend {
+    address           = "%s"
+    name              = "%s new with use ssl"
+    use_ssl           = true
+    ssl_cert_hostname = "httpbin.org"
+  }
+
   force_destroy = true
-}`, serviceName, domainName, backendAddress, backendName, backendAddress, backendName)
+}`, serviceName, domainName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName)
 }
 
 func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDetail, want []*gofastly.Backend) resource.TestCheckFunc {

@@ -1,5 +1,15 @@
 ## 3.1.0 (Unreleased)
 
+## 3.0.3 (December 7, 2022)
+
+BUG FIXES:
+
+* Prevent SSL related fields from being sent empty to the Fastly API [#622](https://github.com/fastly/terraform-provider-fastly/pull/622)
+
+DOCUMENTATION:
+
+* docs: remove 'alpha' notice from custom health check http headers feature [#623](https://github.com/fastly/terraform-provider-fastly/pull/623)
+
 ## 3.0.2 (November 23, 2022)
 
 BUG FIXES:
@@ -505,7 +515,7 @@ BUG FIXES:
 
 NOTES:
 
-* provider: Add a [CONTRIBUTING.md](https://github.com/fastly/terraform-provider-fastly/blob/main/CONTRIBUTING.md) containing contributing guidlines and documentation. ([#305](https://github.com/fastly/terraform-provider-fastly/pull/307))
+* provider: Add a [CONTRIBUTING.md](https://github.com/fastly/terraform-provider-fastly/blob/main/CONTRIBUTING.md) containing contributing guidelines and documentation. ([#305](https://github.com/fastly/terraform-provider-fastly/pull/307))
 
 ## 0.20.0 (August 10, 2020)
 

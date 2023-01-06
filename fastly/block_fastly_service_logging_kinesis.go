@@ -116,7 +116,7 @@ func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(localState) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
 		remoteState, err := conn.ListKinesis(&gofastly.ListKinesisInput{
 			ServiceID:      d.Id(),

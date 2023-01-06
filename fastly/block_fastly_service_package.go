@@ -76,7 +76,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	localState := d.Get(h.key).([]any)
 
-	if len(localState) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
 		remoteState, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      d.Id(),

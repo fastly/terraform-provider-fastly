@@ -154,7 +154,7 @@ func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.
 func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(localState) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		// Refresh Cloud Files.
 		log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
 		remoteState, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{

@@ -116,6 +116,11 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Description:   "Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`",
 				ConflictsWith: []string{"reuse"},
 			},
+			"force_refresh": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Used internally by the provider to temporarily indicate if all resources should call their associated API to update the local state. This is for scenarios where the service version has been reverted outside of Terraform (e.g. via the Fastly UI) and the provider needs to resync the state for a different active version (this is only if `activate` is `true`).",
+			},
 			"imported": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -452,6 +457,35 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	var activeVersionFromPriorState int
+	if i := d.Get("active_version"); i != nil {
+		activeVersionFromPriorState = i.(int)
+	}
+
+	var activate bool
+	if i := d.Get("activate"); i != nil {
+		activate = i.(bool)
+	}
+
+	// If the user has reverted a service version via the Fastly UI, then the
+	// active version of the service will no longer match the version being
+	// tracked in the state file. This means we can use this information to help
+	// force each nested service resource to call its API to update the state.
+	//
+	// REFERENCE:
+	// https://github.com/fastly/terraform-provider-fastly/issues/629
+	//
+	// NOTE: We only force a refresh if `activate = true` in config.
+	// This is because if the user has set it to false, then the expectation is
+	// for the version to drift and so there will be no active version to use.
+	if activeVersionFromPriorState != s.ActiveVersion.Number && activate {
+		err = d.Set("force_refresh", true)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	err = d.Set("active_version", s.ActiveVersion.Number)
 	if err != nil {
 		return diag.FromErr(err)
@@ -528,9 +562,15 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	}
 
 	// To ensure nested resources (e.g. backends, domains etc) don't continue to
-	// call the API to refresh the internal Terraform state, once an import is
-	// complete, we reset the 'imported' computed attribute to false.
+	// call the API to refresh the internal Terraform state, once an import or a
+	// forced refresh is complete, we reset both the 'imported' and
+	// 'force_refresh' computed attributes back to false.
 	err = d.Set("imported", false)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("force_refresh", false)
 	if err != nil {
 		return diag.FromErr(err)
 	}

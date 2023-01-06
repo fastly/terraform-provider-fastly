@@ -157,7 +157,7 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(localState) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
 		remoteState, err := conn.ListSplunks(&gofastly.ListSplunksInput{
 			ServiceID:      d.Id(),

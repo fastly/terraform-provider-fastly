@@ -165,7 +165,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schem
 func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
-	if len(localState) > 0 || d.Get("imported").(bool) {
+	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
 		remoteState, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
 			ServiceID:      d.Id(),

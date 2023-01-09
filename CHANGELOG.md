@@ -1,5 +1,15 @@
 ## 3.1.0 (Unreleased)
 
+## 3.0.4 (January 9, 2023)
+
+BUG FIXES:
+
+* fix: force refresh when service version is reverted outside of Terraform [#630](https://github.com/fastly/terraform-provider-fastly/pull/630)
+
+DEPENDENCIES:
+
+* Bump goreleaser/goreleaser-action from 3 to 4 [#626](https://github.com/fastly/terraform-provider-fastly/pull/626)
+
 ## 3.0.3 (December 7, 2022)
 
 BUG FIXES:

@@ -230,6 +230,8 @@ resource "fastly_service_dictionary_items" "items" {
 
 ## Import
 
+~> **Note:** The dictionary resouce should be empty before importing
+
 This is an example of the import command being applied to the resource named `fastly_service_dictionary_items.items`
 The resource ID is a combined value of the `service_id` and `dictionary_id` separated by a forward slash.
 

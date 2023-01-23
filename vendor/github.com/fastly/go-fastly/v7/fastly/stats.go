@@ -7,7 +7,7 @@ import (
 
 // Stats represent metrics of a Fastly service
 type Stats struct {
-	AttachRequestHeaderBytes  uint64      `mapstructure:"attack_req_header_bytes"` // Total header bytes received from requests that triggered a WAF rule.
+	AttackRequestHeaderBytes  uint64      `mapstructure:"attack_req_header_bytes"` // Total header bytes received from requests that triggered a WAF rule.
 	AttackRequestBodyBytes    uint64      `mapstructure:"attack_req_body_bytes"`   // Total body bytes received from requests that triggered a WAF rule.
 	AttackResponseSynthBytes  uint64      `mapstructure:"attack_resp_synth_bytes"` // Total bytes delivered for requests that triggered a WAF rule and returned a synthetic response.
 	BERequestBodyBytes        uint64      `mapstructure:"bereq_body_bytes"`        // Total body bytes sent to origin.
@@ -183,8 +183,9 @@ type UsageStatsResponse struct {
 
 // Usage represents usage data of a single service or region
 type Usage struct {
-	Bandwidth uint64 `mapstructure:"bandwidth"`
-	Requests  uint64 `mapstructure:"requests"`
+	Bandwidth       uint64 `mapstructure:"bandwidth"`
+	Requests        uint64 `mapstructure:"requests"`
+	ComputeRequests uint64 `mapstructure:"compute_requests"`
 }
 
 // RegionsUsage is a list of aggregated usage data by Fastly's region

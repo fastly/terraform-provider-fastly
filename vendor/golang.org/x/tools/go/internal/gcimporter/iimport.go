@@ -45,24 +45,15 @@ func (r *intReader) uint64() uint64 {
 }
 
 // Keep this in sync with constants in iexport.go.
-//
-// Temporarily, the x/tools importer accepts generic code at both version 1 and
-// 2. However, version 2 contains some breaking changes on top of version 1:
-//   - the 'implicit' bit is added to exported constraints
-//   - a 'kind' byte is added to constant values (not yet done)
-//
-// Once we've completed the bump to version 2 in the standard library, we'll
-// remove support for generics here at version 1.
 const (
-	iexportVersionGo1_11 = 0
-	iexportVersionPosCol = 1
-	iexportVersionGo1_18 = 2
-	// TODO: before release, change this back to 2.
-	iexportVersionGenerics = iexportVersionPosCol
+	iexportVersionGo1_11   = 0
+	iexportVersionPosCol   = 1
+	iexportVersionGo1_18   = 2
+	iexportVersionGenerics = 2
 )
 
 type ident struct {
-	pkg  string
+	pkg  *types.Package
 	name string
 }
 
@@ -109,7 +100,9 @@ func iimportCommon(fset *token.FileSet, imports map[string]*types.Package, data 
 	if !debug {
 		defer func() {
 			if e := recover(); e != nil {
-				if version > currentVersion {
+				if bundle {
+					err = fmt.Errorf("%v", e)
+				} else if version > currentVersion {
 					err = fmt.Errorf("cannot import %q (%v), export data is newer version - update tool", path, e)
 				} else {
 					err = fmt.Errorf("cannot import %q (%v), possibly version skew - reinstall package", path, e)
@@ -246,11 +239,25 @@ func iimportCommon(fset *token.FileSet, imports map[string]*types.Package, data 
 		pkg.MarkComplete()
 	}
 
+	// SetConstraint can't be called if the constraint type is not yet complete.
+	// When type params are created in the 'P' case of (*importReader).obj(),
+	// the associated constraint type may not be complete due to recursion.
+	// Therefore, we defer calling SetConstraint there, and call it here instead
+	// after all types are complete.
+	for _, d := range p.later {
+		typeparams.SetTypeParamConstraint(d.t, d.constraint)
+	}
+
 	for _, typ := range p.interfaceList {
 		typ.Complete()
 	}
 
 	return pkgs, nil
+}
+
+type setConstraintArgs struct {
+	t          *typeparams.TypeParam
+	constraint types.Type
 }
 
 type iimporter struct {
@@ -268,6 +275,9 @@ type iimporter struct {
 
 	fake          fakeFileSet
 	interfaceList []*types.Interface
+
+	// Arguments for calls to SetConstraint that are deferred due to recursive types
+	later []setConstraintArgs
 
 	indent int // for tracing support
 }
@@ -447,18 +457,13 @@ func (r *importReader) obj(name string) {
 		if r.p.version < iexportVersionGenerics {
 			errorf("unexpected type param type")
 		}
-		// Remove the "path" from the type param name that makes it unique
-		ix := strings.LastIndex(name, ".")
-		if ix < 0 {
-			errorf("missing path for type param")
-		}
-		name0 := name[ix+1:]
+		name0 := tparamName(name)
 		tn := types.NewTypeName(pos, r.currPkg, name0, nil)
 		t := typeparams.NewTypeParam(tn, nil)
 
 		// To handle recursive references to the typeparam within its
 		// bound, save the partial type in tparamIndex before reading the bounds.
-		id := ident{r.currPkg.Name(), name}
+		id := ident{r.currPkg, name}
 		r.p.tparamIndex[id] = t
 		var implicit bool
 		if r.p.version >= iexportVersionGo1_18 {
@@ -472,7 +477,11 @@ func (r *importReader) obj(name string) {
 			}
 			typeparams.MarkImplicit(iface)
 		}
-		typeparams.SetTypeParamConstraint(t, constraint)
+		// The constraint type may not be complete, if we
+		// are in the middle of a type recursion involving type
+		// constraints. So, we defer SetConstraint until we have
+		// completely set up all types in ImportData.
+		r.p.later = append(r.p.later, setConstraintArgs{t: t, constraint: constraint})
 
 	case 'V':
 		typ := r.typ()
@@ -770,7 +779,7 @@ func (r *importReader) doType(base *types.Named) (res types.Type) {
 			errorf("unexpected type param type")
 		}
 		pkg, name := r.qualifiedIdent()
-		id := ident{pkg.Name(), name}
+		id := ident{pkg, name}
 		if t, ok := r.p.tparamIndex[id]; ok {
 			// We're already in the process of importing this typeparam.
 			return t

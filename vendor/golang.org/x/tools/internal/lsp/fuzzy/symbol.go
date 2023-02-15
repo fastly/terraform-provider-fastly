@@ -10,21 +10,22 @@ import (
 
 // SymbolMatcher implements a fuzzy matching algorithm optimized for Go symbols
 // of the form:
-//  example.com/path/to/package.object.field
+//
+//	example.com/path/to/package.object.field
 //
 // Knowing that we are matching symbols like this allows us to make the
 // following optimizations:
-//  - We can incorporate right-to-left relevance directly into the score
-//    calculation.
-//  - We can match from right to left, discarding leading bytes if the input is
-//    too long.
-//  - We just take the right-most match without losing too much precision. This
-//    allows us to use an O(n) algorithm.
-//  - We can operate directly on chunked strings; in many cases we will
-//    be storing the package path and/or package name separately from the
-//    symbol or identifiers, so doing this avoids allocating strings.
-//  - We can return the index of the right-most match, allowing us to trim
-//    irrelevant qualification.
+//   - We can incorporate right-to-left relevance directly into the score
+//     calculation.
+//   - We can match from right to left, discarding leading bytes if the input is
+//     too long.
+//   - We just take the right-most match without losing too much precision. This
+//     allows us to use an O(n) algorithm.
+//   - We can operate directly on chunked strings; in many cases we will
+//     be storing the package path and/or package name separately from the
+//     symbol or identifiers, so doing this avoids allocating strings.
+//   - We can return the index of the right-most match, allowing us to trim
+//     irrelevant qualification.
 //
 // This implementation is experimental, serving as a reference fast algorithm
 // to compare to the fuzzy algorithm implemented by Matcher.
@@ -48,11 +49,6 @@ const (
 // search pattern.
 //
 // Currently this matcher only accepts case-insensitive fuzzy patterns.
-//
-// TODO(rfindley):
-//  - implement smart-casing
-//  - implement space-separated groups
-//  - implement ', ^, and $ modifiers
 //
 // An empty pattern matches no input.
 func NewSymbolMatcher(pattern string) *SymbolMatcher {
@@ -176,7 +172,12 @@ input:
 	//   1. 1.0 if the character starts a segment, .8 if the character start a
 	//      mid-segment word, otherwise 0.6. This carries over to immediately
 	//      following characters.
-	//   2. 1.0 if the character is part of the last segment, otherwise
+	//   2. For the final character match, the multiplier from (1) is reduced to
+	//     .8 if the next character in the input is a mid-segment word, or 0.6 if
+	//      the next character in the input is not a word or segment start. This
+	//      ensures that we favor whole-word or whole-segment matches over prefix
+	//      matches.
+	//   3. 1.0 if the character is part of the last segment, otherwise
 	//      1.0-.2*<segments from the right>, with a max segment count of 3.
 	//
 	// This is a very naive algorithm, but it is fast. There's lots of prior art
@@ -211,8 +212,20 @@ input:
 			case m.roles[ii]&wordStart != 0 && wordStreak > streakBonus:
 				streakBonus = wordStreak
 			}
+			finalChar := pi >= m.patternLen
+			// finalCost := 1.0
+			if finalChar && streakBonus > noStreak {
+				switch {
+				case ii == inputLen-1 || m.roles[ii+1]&segmentStart != 0:
+					// Full segment: no reduction
+				case m.roles[ii+1]&wordStart != 0:
+					streakBonus = wordStreak
+				default:
+					streakBonus = noStreak
+				}
+			}
 			totScore += streakBonus * (1.0 - float64(m.segments[ii])*perSegment)
-			if pi >= m.patternLen {
+			if finalChar {
 				break
 			}
 		} else {

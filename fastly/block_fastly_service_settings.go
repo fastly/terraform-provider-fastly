@@ -39,6 +39,21 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
 	_, err := conn.UpdateSettings(&opts)
 
+	if attr, ok := d.GetOk("http3"); ok {
+		if attr.(bool) {
+			_, err = conn.EnableHTTP3(&gofastly.EnableHTTP3Input{
+				FeatureRevision: gofastly.Int(1),
+				ServiceID:       d.Id(),
+				ServiceVersion:  latestVersion,
+			})
+		}
+	} else {
+		err = conn.DisableHTTP3(&gofastly.DisableHTTP3Input{
+			ServiceID:      d.Id(),
+			ServiceVersion: latestVersion,
+		})
+	}
+
 	return err
 }
 
@@ -55,15 +70,26 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 
 	d.Set("default_host", settings.DefaultHost)
 	d.Set("default_ttl", int(settings.DefaultTTL))
+	d.Set("http3", false)
 	d.Set("stale_if_error", bool(settings.StaleIfError))
 	d.Set("stale_if_error_ttl", int(settings.StaleIfErrorTTL))
+
+	// The API returns a 404 if HTTP3 is not enabled.
+	// The API client returns an error for non-2xx responses.
+	// So if there is no error, then HTTP3 is enabled.
+	if _, err = conn.GetHTTP3(&gofastly.GetHTTP3Input{
+		ServiceID:      d.Id(),
+		ServiceVersion: s.ActiveVersion.Number,
+	}); err == nil {
+		d.Set("http3", true)
+	}
 
 	return nil
 }
 
 // HasChange returns whether the state of the attribute has changed against Terraform stored state.
 func (h *SettingsServiceAttributeHandler) HasChange(d *schema.ResourceData) bool {
-	return d.HasChanges("default_ttl", "default_host", "stale_if_error", "stale_if_error_ttl")
+	return d.HasChanges("default_ttl", "default_host", "http3", "stale_if_error", "stale_if_error_ttl")
 }
 
 // MustProcess returns whether we must process the resource
@@ -88,6 +114,12 @@ func (h *SettingsServiceAttributeHandler) Register(s *schema.Resource) error {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "The default hostname",
+	}
+	s.Schema["http3"] = &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
+		Description: "Enables support for the HTTP/3 (QUIC) protocol",
 	}
 	s.Schema["stale_if_error"] = &schema.Schema{
 		Type:        schema.TypeBool,

@@ -281,6 +281,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `logging_splunk` (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
 - `logging_sumologic` (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
 - `logging_syslog` (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
+- `product_enablement` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--product_enablement))
 - `request_setting` (Block Set) (see [below for nested schema](#nestedblock--request_setting))
 - `response_object` (Block Set) (see [below for nested schema](#nestedblock--response_object))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
@@ -1072,6 +1073,22 @@ Optional:
 - `tls_hostname` (String) Used during the TLS handshake to validate the certificate
 - `token` (String) Whether to prepend each message with a specific token
 - `use_tls` (Boolean) Whether to use TLS for secure logging. Default `false`
+
+
+<a id="nestedblock--product_enablement"></a>
+### Nested Schema for `product_enablement`
+
+Optional:
+
+- `brotli_compression` (Boolean) Enable Brotli Compression support
+- `domain_inspector` (Boolean) Enable Domain Inspector support
+- `image_optimizer` (Boolean) Enable Image Optimizer support
+- `origin_inspector` (Boolean) Enable Origin Inspector support
+- `websockets` (Boolean) Enable WebSockets support
+
+Read-Only:
+
+- `name` (String) Internal property used to calculate plan diff
 
 
 <a id="nestedblock--request_setting"></a>

@@ -77,6 +77,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 
 	// NOTE: Min/MaxItems: 1 (to enforce only one product_enablement per service).
+	// lintignore:S018
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

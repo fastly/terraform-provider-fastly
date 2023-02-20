@@ -254,6 +254,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `gzip` (Block Set) (see [below for nested schema](#nestedblock--gzip))
 - `header` (Block Set) (see [below for nested schema](#nestedblock--header))
 - `healthcheck` (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
+- `http3` (Boolean) Enables support for the HTTP/3 (QUIC) protocol
 - `logging_bigquery` (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_cloudfiles` (Block Set) (see [below for nested schema](#nestedblock--logging_cloudfiles))

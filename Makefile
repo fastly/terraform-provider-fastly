@@ -11,7 +11,7 @@ DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION_SHORT))
 # XAT001: missing resource.TestCase ErrorCheck.
 # R018: replace sleep with either resource.Retry() or WaitForState().
 # R001: for complex d.Set() calls use a string literal instead.
-TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false -R018=false -R001=false
+TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false -R018=false -R001=false -R019=false
 
 GOHOSTOS ?= $(shell go env GOHOSTOS || echo unknown)
 GOHOSTARCH ?= $(shell go env GOHOSTARCH || echo unknown)

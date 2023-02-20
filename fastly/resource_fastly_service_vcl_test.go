@@ -314,6 +314,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "active_version", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "http3", "true"),
 				),
 			},
 			{
@@ -336,6 +337,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "active_version", "2"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "http3", "true"),
 				),
 			},
 			{
@@ -363,7 +365,7 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the service
 		conn := testAccProvider.Meta().(*APIClient).conn
-		// deactivate active version to destoy
+		// deactivate active version to destroy
 		_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
@@ -696,6 +698,7 @@ func testAccServiceVCLConfigUpdateServiceComment(name, comment string, domain st
 resource "fastly_service_vcl" "foo" {
   name = "%s"
   comment = "%s"
+  http3 = true
 
   domain {
     name    = "%s"
@@ -717,6 +720,7 @@ func testAccServiceVCLConfigInitWithVersionComment(name, versionComment, domain 
 resource "fastly_service_vcl" "foo" {
   name = "%s"
   version_comment = "%s"
+  http3 = true
 
   domain {
     name    = "%s"
@@ -759,6 +763,7 @@ resource "fastly_service_vcl" "foo" {
   name    = "%s"
   comment = "%s"
   version_comment = "%s"
+  http3 = true
 
   domain {
     name    = "%s"

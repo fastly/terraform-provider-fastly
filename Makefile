@@ -79,10 +79,10 @@ goreleaser-bin:
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip-validate will skip the checks
-# --rm-dist will save you deleting the dist dir
+# --clean will save you deleting the dist dir
 # --single-target will be quicker and only build for your os & architecture
 # e.g.
-# make goreleaser GORELEASER_ARGS="--skip-validate --rm-dist"
+# make goreleaser GORELEASER_ARGS="--skip-validate --clean"
 goreleaser: goreleaser-bin
 	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" goreleaser build ${GORELEASER_ARGS}
 

@@ -19,6 +19,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceDomain(vclAttributes),
 		NewServiceHealthCheck(vclAttributes),
 		NewServiceBackend(vclAttributes),
+		NewServiceProductEnablement(vclAttributes),
 		NewServiceDirector(vclAttributes),
 		NewServiceHeader(vclAttributes),
 		NewServiceGzip(vclAttributes),

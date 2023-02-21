@@ -48,7 +48,7 @@ const DefaultRealtimeStatsEndpoint = "https://rt.fastly.com"
 var ProjectURL = "github.com/fastly/go-fastly"
 
 // ProjectVersion is the version of this library.
-var ProjectVersion = "7.2.0"
+var ProjectVersion = "7.3.0"
 
 // UserAgent is the user agent for this particular client.
 var UserAgent = fmt.Sprintf("FastlyGo/%s (+%s; %s)",
@@ -293,6 +293,7 @@ func (c *Client) Request(verb, p string, ro *RequestOptions) (*http.Response, er
 		c.updateLock.Lock()
 		defer c.updateLock.Unlock()
 	}
+	// nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 	resp, err := checkResp(c.HTTPClient.Do(req))
 	if err != nil {
 		return resp, err

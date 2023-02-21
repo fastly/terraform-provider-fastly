@@ -180,7 +180,7 @@ github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v7 v7.2.0
+# github.com/fastly/go-fastly/v7 v7.3.0
 ## explicit; go 1.18
 github.com/fastly/go-fastly/v7/fastly
 # github.com/fatih/color v1.13.0
@@ -500,8 +500,6 @@ golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/span
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
-# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-## explicit; go 1.11
 # google.golang.org/appengine v1.6.6
 ## explicit; go 1.11
 google.golang.org/appengine

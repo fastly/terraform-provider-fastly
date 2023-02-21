@@ -345,9 +345,42 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "imported"},
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "imported", "product_enablement"},
 				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
 					return fmt.Sprintf("%s@2", service.ID), nil
+				},
+				// Validate product_enablement state after import.
+				// If nothing has been configured, which is the default, we expect the
+				// following state to be the result.
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %+v", s)
+					}
+					if s[0].Attributes["product_enablement.#"] != "1" {
+						return fmt.Errorf("expected product_enablement to be imported into state")
+					}
+					if s[0].Attributes["product_enablement.0.%"] != "6" {
+						return fmt.Errorf("expected product_enablement to contain 6 keys")
+					}
+					if s[0].Attributes["product_enablement.0.brotli_compression"] != "false" {
+						return fmt.Errorf("expected brotli_compression to be false")
+					}
+					if s[0].Attributes["product_enablement.0.domain_inspector"] != "false" {
+						return fmt.Errorf("expected domain_inspector to be false")
+					}
+					if s[0].Attributes["product_enablement.0.image_optimizer"] != "false" {
+						return fmt.Errorf("expected image_optimizer to be false")
+					}
+					if s[0].Attributes["product_enablement.0.origin_inspector"] != "false" {
+						return fmt.Errorf("expected origin_inspector to be false")
+					}
+					if s[0].Attributes["product_enablement.0.websockets"] != "false" {
+						return fmt.Errorf("expected websockets to be false")
+					}
+					if s[0].Attributes["product_enablement.0.name"] != "product_enablement" {
+						return fmt.Errorf("expected the generated 'name' key to be 'product_enablement'")
+					}
+					return nil
 				},
 			},
 		},

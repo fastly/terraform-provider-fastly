@@ -656,4 +656,4 @@ Optional:
 
 Read-Only:
 
-- `name` (String) Internal property used to calculate plan diff
+- `name` (String) Used internally by the provider to identify modified settings

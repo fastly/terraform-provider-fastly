@@ -34,7 +34,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		"name": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Description: "Internal property used to calculate plan diff",
+			Description: "Used internally by the provider to identify modified settings",
 		},
 	}
 
@@ -60,7 +60,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["image_optimizer"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Enable Image Optimizer support",
+			Description: "Enable Image Optimizer support (requires at least one backend with a `shield` attribute)",
 		}
 		blockAttributes["origin_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,

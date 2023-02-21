@@ -1082,13 +1082,13 @@ Optional:
 
 - `brotli_compression` (Boolean) Enable Brotli Compression support
 - `domain_inspector` (Boolean) Enable Domain Inspector support
-- `image_optimizer` (Boolean) Enable Image Optimizer support
+- `image_optimizer` (Boolean) Enable Image Optimizer support (requires at least one backend with a `shield` attribute)
 - `origin_inspector` (Boolean) Enable Origin Inspector support
 - `websockets` (Boolean) Enable WebSockets support
 
 Read-Only:
 
-- `name` (String) Internal property used to calculate plan diff
+- `name` (String) Used internally by the provider to identify modified settings
 
 
 <a id="nestedblock--request_setting"></a>

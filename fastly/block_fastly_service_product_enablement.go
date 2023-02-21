@@ -92,7 +92,6 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 // Create creates the resource.
 func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-	log.Printf("[DEBUG] Service ID: %s\n", serviceID)
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		if resource["fanout"].(bool) {
@@ -273,8 +272,6 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 // Update updates the resource.
 func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
-
-	log.Printf("[DEBUG] modified: %+v\n", modified)
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		if v, ok := modified["fanout"]; ok {

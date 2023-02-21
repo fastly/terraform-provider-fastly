@@ -1,4 +1,11 @@
-## 3.1.0 (Unreleased)
+## 3.2.0 (Unreleased)
+
+## 3.1.0 (February 21, 2023)
+
+ENHANCEMENTS:
+
+* feat(http3): implementing the HTTP3 API [#640](https://github.com/fastly/terraform-provider-fastly/pull/640)
+* feat(product_enablement): implement product enablement APIs [#641](https://github.com/fastly/terraform-provider-fastly/pull/641)
 
 ## 3.0.4 (January 9, 2023)
 

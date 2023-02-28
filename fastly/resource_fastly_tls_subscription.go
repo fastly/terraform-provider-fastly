@@ -36,10 +36,10 @@ func resourceFastlyTLSSubscription() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"certificate_authority": {
 				Type:         schema.TypeString,
-				Description:  "The entity that issues and certifies the TLS certificates for your subscription. Valid values are `lets-encrypt` or `globalsign`.",
+				Description:  "The entity that issues and certifies the TLS certificates for your subscription. Valid values are `lets-encrypt`, `globalsign` or `certainly` (beta).",
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"lets-encrypt", "globalsign"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"lets-encrypt", "globalsign", "certainly"}, false),
 			},
 			"certificate_id": {
 				Type:        schema.TypeString,

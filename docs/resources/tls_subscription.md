@@ -178,7 +178,7 @@ $ terraform import fastly_tls_subscription.demo xxxxxxxxxxx
 
 ### Required
 
-- `certificate_authority` (String) The entity that issues and certifies the TLS certificates for your subscription. Valid values are `lets-encrypt` or `globalsign`.
+- `certificate_authority` (String) The entity that issues and certifies the TLS certificates for your subscription. Valid values are `lets-encrypt`, `globalsign` or `certainly`.
 - `domains` (Set of String) List of domains on which to enable TLS.
 
 ### Optional

@@ -29,9 +29,9 @@ resource "aws_route53domains_registered_domain" "example" {
 }
 
 locals {
-  subdomains = [
-    "a.example.com",
-    "b.example.com",
+  domains = [
+    "example.com",
+    "*.example.com",
   ]
 }
 
@@ -39,7 +39,7 @@ resource "fastly_service_vcl" "example" {
   name = "example-service"
 
   dynamic "domain" {
-    for_each = local.subdomains
+    for_each = local.domains
 
     content {
       name = domain.value
@@ -64,20 +64,25 @@ resource "aws_route53_record" "domain_validation" {
 
   for_each = {
     # The following `for` expression (due to the outer {}) will produce an object with key/value pairs.
-    # The 'key' is the domain name we've configured (e.g. a.example.com, b.example.com)
-    # The 'value' is a specific 'challenge' object whose record_name matches the domain (e.g. record_name is _acme-challenge.a.example.com).
+    # In this example we are defining an apex (example.com) and a wildcard (*.example.com) which causes the API to return a single challenge (e.g. _acme-challenge.example.com)
+    # To ensure we can match the single challenge for both domains we need to normalise the wildcard domain.
+    # The 'key' is the normalised domain name (e.g. example.com)
+    # The 'value' is the single 'challenge' object whose record_name matches the normalised version of the domain (e.g. record_name is _acme-challenge.example.com).
     for domain in fastly_tls_subscription.testing_tls.domains :
-    domain => element([
+    replace(domain, "*.", "") => element([
       for obj in fastly_tls_subscription.testing_tls.managed_dns_challenges :
-      obj if obj.record_name == "_acme-challenge.${domain}" # We use an `if` conditional to filter the list to a single element
-    ], 0)                                                   # `element()` returns the first object in the list which should be the relevant 'challenge' object we need
+      obj if obj.record_name == "_acme-challenge.${replace(domain, "*.", "")}" # We use an `if` conditional to filter the list to a single element
+    ], 0)...                                                                   # `element()` returns the first object in the list which should be the relevant 'challenge' object we need
+    # The ellipsis ... avoids Terraform complaining that the resulting object will contain multiple keys that are duplicates (e.g. multiple 'example.com' keys).
+    # It essentially groups the 'values' (the single challenge) under the common key (the normalised domain).
+    # Then below we extract the first value (as they'll all be the same 'challenge' value).
   }
 
-  name            = each.value.record_name
-  type            = each.value.record_type
+  name            = each.value[0].record_name
+  type            = each.value[0].record_type
   zone_id         = aws_route53_zone.production.zone_id
   allow_overwrite = true
-  records         = [each.value.record_value]
+  records         = [each.value[0].record_value]
   ttl             = 60
 }
 
@@ -96,11 +101,19 @@ data "fastly_tls_configuration" "default_tls" {
   depends_on = [fastly_tls_subscription_validation.testing_tls]
 }
 
-# Once validation is complete and we've retrieved the TLS configuration data, we can create multiple subdomain records.
-resource "aws_route53_record" "subdomain" {
-  for_each = toset(local.subdomains) # Because `subdomains` is ultimately a list, the `each` variable produced will contain only a `value` property which will be the subdomain.
+# Once validation is complete and we've retrieved the TLS configuration data, we can create multiple records...
 
-  name    = each.value # e.g. a.example.com, b.example.com
+resource "aws_route53_record" "apex" {
+  name    = "example.com"
+  records = [for record in data.fastly_tls_configuration.default_tls.dns_records : record.record_value if record.record_type == "A"]
+  ttl     = 300
+  type    = "A"
+  zone_id = aws_route53_zone.production.zone_id
+}
+
+# NOTE: This subdomain matches our Fastly service because of the wildcard domain (`*.example.com`) that was added to the service.
+resource "aws_route53_record" "subdomain" {
+  name    = "test.example.com"
   records = [for record in data.fastly_tls_configuration.default_tls.dns_records : record.record_value if record.record_type == "CNAME"]
   ttl     = 300
   type    = "CNAME"

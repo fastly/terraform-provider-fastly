@@ -16,50 +16,64 @@ There are two options for doing this: the `managed_dns_challenges`, which is the
 
 ~> See the [Fastly documentation](https://docs.fastly.com/en/guides/serving-https-traffic-using-fastly-managed-certificates#verifying-domain-ownership) for more information on verifying domain ownership.
 
-The example below demonstrates usage with AWS Route53 to configure DNS, and the `fastly_tls_subscription_validation` resource to wait for validation to complete.
+The examples below demonstrate usage with AWS Route53 to configure DNS, and the `fastly_tls_subscription_validation` resource to wait for validation to complete.
 
 ## Example Usage
 
-Basic usage:
+**Basic usage:**
+
+The following example demonstrates how to configured two subdomains (e.g. `a.example.com`, `b.example.com`).
+
+The workflow configures a `fastly_tls_subscription` resource, then a `aws_route53_record` resource for handling the creation of the 'challenge' DNS records (e.g. `_acme-challenge.a.example.com` and `_acme-challenge.b.example.com`).
+
+We configure the `fastly_tls_subscription_validation` resource, which blocks other resources until the challenge DNS records have been validated by Fastly.
+
+Once the validation has been successful, the configured `fastly_tls_configuration` data source will filter the available results looking for an appropriate TLS configuration object. If that filtering process is successful, then the subsequent `aws_route53_record` resources (for configuring the subdomains) will be executed using the returned TLS configuration data.
 
 ```terraform
-resource "fastly_service_vcl" "example" {
-  name = "example-service"
-
-  domain {
-    name = "example.com"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "4.55.0"
+    }
+    fastly = {
+      source  = "fastly/fastly"
+      version = "3.1.0"
+    }
   }
-
-  backend {
-    address = "127.0.0.1"
-    name    = "localhost"
-  }
-
-  force_destroy = true
 }
 
-resource "fastly_tls_subscription" "example" {
-  domains = [for domain in fastly_service_vcl.example.domain : domain.name]
-  certificate_authority = "lets-encrypt"
+# NOTE: Creating a hosted zone will automatically create SOA/NS records.
+resource "aws_route53_zone" "production" {
+  name = "example.com"
 }
-```
 
-Usage with AWS Route 53:
+resource "aws_route53domains_registered_domain" "example" {
+  domain_name = "example.com"
 
-```terraform
+  dynamic "name_server" {
+    for_each = aws_route53_zone.production.name_servers
+
+    content {
+      name = name_server.value
+    }
+  }
+}
+
 locals {
-  domains = [
-    "example.com",
-    "*.example.com",
+  subdomains = [
+    "a.example.com",
+    "b.example.com",
   ]
-  aws_route53_zone_id = "your_route53_zone_id"
 }
 
 resource "fastly_service_vcl" "example" {
   name = "example-service"
 
-  dynamic domain {
-    for_each = local.domains
+  dynamic "domain" {
+    for_each = local.subdomains
+
     content {
       name = domain.value
     }
@@ -73,54 +87,187 @@ resource "fastly_service_vcl" "example" {
   force_destroy = true
 }
 
-resource "fastly_tls_subscription" "example" {
-  domains               = [for domain in fastly_service_vcl.example.domain : domain.name]
+resource "fastly_tls_subscription" "testing_tls" {
+  domains               = [for domain in fastly_service_vcl.testing-tls.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 
-# Set up DNS record for managed DNS domain validation method
 resource "aws_route53_record" "domain_validation" {
-  depends_on = [fastly_tls_subscription.example]
+  depends_on = [fastly_tls_subscription.testing_tls]
 
-  # NOTE: in this example, two domains are added to the cert ("example.com" and "*.example.com").
-  # The "managed_dns_challenges" read-only attribute only includes one object
-  # for "_acme-challenge.example.com" as the challenge record is common in these two domains.
-  # 
-  # In order to process a cert containing wildcard entries, remove wildcard prefix "*." from the key
-  # and use ellipsis (...) to group results by key to avoid "Duplicate object key" error.
-  # Therefore, a key may have multiple elements. For example, domains "example.com" and "*.example.com"
-  # find the exact same object in the "managed_dns_challenges" attribute due to the "if" statement below.
-  # 
-  # A simplified version of this complex "for_each" usage would be:
-  # ```
-  # for_each = {
-  #   for challenge in fastly_tls_subscription.example.managed_dns_challenges :
-  #   trimprefix(challenge.record_name, "_acme-challenge.") => challenge
-  # }
-  # ```
-  # but since the "managed_dns_challenges" attribute is only known after apply,
-  # you will need to create this resource separately ("-target" option) and may not be ideal.
   for_each = {
-    for domain in fastly_tls_subscription.example.domains :
-    replace(domain, "*.", "") => element([
-      for obj in fastly_tls_subscription.example.managed_dns_challenges :
-      obj if obj.record_name == "_acme-challenge.${replace(domain, "*.", "")}"
-    ], 0)...
+    # The following `for` expression (due to the outer {}) will produce an object with key/value pairs.
+    # The 'key' is the domain name we've configured (e.g. a.example.com, b.example.com)
+    # The 'value' is a specific 'challenge' object whose record_name matches the domain (e.g. record_name is _acme-challenge.a.example.com).
+    for domain in fastly_tls_subscription.testing_tls.domains :
+    domain => element([
+      for obj in fastly_tls_subscription.testing_tls.managed_dns_challenges :
+      obj if obj.record_name == "_acme-challenge.${domain}" # We use an `if` conditional to filter the list to a single element
+    ], 0)                                                   # `element()` returns the first object in the list which should be the relevant 'challenge' object we need
   }
-  
-  # only reads the first element in the list since all elements are exactly the same (see above)
+
+  name            = each.value.record_name
+  type            = each.value.record_type
+  zone_id         = aws_route53_zone.production.zone_id
+  allow_overwrite = true
+  records         = [each.value.record_value]
+  ttl             = 60
+}
+
+# This is a resource that other resources can depend on if they require the certificate to be issued.
+# NOTE: Internally the resource keeps retrying `GetTLSSubscription` until no error is returned (or the configured timeout is reached).
+resource "fastly_tls_subscription_validation" "testing_tls" {
+  subscription_id = fastly_tls_subscription.testing_tls.id
+  depends_on      = [aws_route53_record.domain_validation]
+}
+
+# This data source lists all configuration and uses the `default` attribute to narrow down the configuration to just one object.
+# If the filtered list has a length that is not exactly one element, you'll see an error returned.
+# That single TLS configuration element is then returned.
+data "fastly_tls_configuration" "default_tls" {
+  default    = true
+  depends_on = [fastly_tls_subscription_validation.testing_tls]
+}
+
+# Once validation is complete and we've retrieved the TLS configuration data, we can create multiple subdomain records.
+resource "aws_route53_record" "subdomain" {
+  for_each = toset(local.subdomains) # Because `subdomains` is ultimately a list, the `each` variable produced will contain only a `value` property which will be the subdomain.
+
+  name    = each.value # e.g. a.example.com, b.example.com
+  records = [for record in data.fastly_tls_configuration.default_tls.dns_records : record.record_value if record.record_type == "CNAME"]
+  ttl     = 300
+  type    = "CNAME"
+  zone_id = aws_route53_zone.production.zone_id
+}
+```
+
+**Configuring an apex and a wildcard domain:**
+
+The following example is similar to the above but differs by demonstrating how to handle configuring an apex domain (e.g. `example.com`) and a wildcard domain (e.g. `*.example.com`) so you can support multiple subdomains to your service.
+
+The difference in the workflow is with how to handle the Fastly API returning a single 'challenge' for both domains (e.g. `_acme-challenge.example.com`). This is done by normalising the wildcard (i.e. replacing `*.example.com` with `example.com`) and then working around the issue of the returned object having two identical keys.
+
+```terraform
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "4.55.0"
+    }
+    fastly = {
+      source  = "fastly/fastly"
+      version = "3.1.0"
+    }
+  }
+}
+
+# NOTE: Creating a hosted zone will automatically create SOA/NS records.
+resource "aws_route53_zone" "production" {
+  name = "example.com"
+}
+
+resource "aws_route53domains_registered_domain" "example" {
+  domain_name = "example.com"
+
+  dynamic "name_server" {
+    for_each = aws_route53_zone.production.name_servers
+
+    content {
+      name = name_server.value
+    }
+  }
+}
+
+locals {
+  domains = [
+    "example.com",
+    "*.example.com",
+  ]
+}
+
+resource "fastly_service_vcl" "example" {
+  name = "example-service"
+
+  dynamic "domain" {
+    for_each = local.domains
+
+    content {
+      name = domain.value
+    }
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_tls_subscription" "testing_tls" {
+  domains               = [for domain in fastly_service_vcl.testing-tls.domain : domain.name]
+  certificate_authority = "lets-encrypt"
+}
+
+resource "aws_route53_record" "domain_validation" {
+  depends_on = [fastly_tls_subscription.testing_tls]
+
+  for_each = {
+    # The following `for` expression (due to the outer {}) will produce an object with key/value pairs.
+    # In this example we are defining an apex (example.com) and a wildcard (*.example.com) which causes the API to return a single challenge (e.g. _acme-challenge.example.com)
+    # To ensure we can match the single challenge for both domains we need to normalise the wildcard domain.
+    # The 'key' is the normalised domain name (e.g. example.com)
+    # The 'value' is the single 'challenge' object whose record_name matches the normalised version of the domain (e.g. record_name is _acme-challenge.example.com).
+    for domain in fastly_tls_subscription.testing_tls.domains :
+    replace(domain, "*.", "") => element([
+      for obj in fastly_tls_subscription.testing_tls.managed_dns_challenges :
+      obj if obj.record_name == "_acme-challenge.${replace(domain, "*.", "")}" # We use an `if` conditional to filter the list to a single element
+    ], 0)...                                                                   # `element()` returns the first object in the list which should be the relevant 'challenge' object we need
+    # The ellipsis ... avoids Terraform complaining that the resulting object will contain multiple keys that are duplicates (e.g. multiple 'example.com' keys).
+    # It essentially groups the 'values' (the single challenge) under the common key (the normalised domain).
+    # Then below we extract the first value (as they'll all be the same 'challenge' value).
+  }
+
   name            = each.value[0].record_name
   type            = each.value[0].record_type
-  zone_id         = local.aws_route53_zone_id
+  zone_id         = aws_route53_zone.production.zone_id
   allow_overwrite = true
   records         = [each.value[0].record_value]
   ttl             = 60
 }
 
-# Resource that other resources can depend on if they require the certificate to be issued
-resource "fastly_tls_subscription_validation" "example" {
-  subscription_id = fastly_tls_subscription.example.id
+# This is a resource that other resources can depend on if they require the certificate to be issued.
+# NOTE: Internally the resource keeps retrying `GetTLSSubscription` until no error is returned (or the configured timeout is reached).
+resource "fastly_tls_subscription_validation" "testing_tls" {
+  subscription_id = fastly_tls_subscription.testing_tls.id
   depends_on      = [aws_route53_record.domain_validation]
+}
+
+# This data source lists all configuration and uses the `default` attribute to narrow down the configuration to just one object.
+# If the filtered list has a length that is not exactly one element, you'll see an error returned.
+# That single TLS configuration element is then returned.
+data "fastly_tls_configuration" "default_tls" {
+  default    = true
+  depends_on = [fastly_tls_subscription_validation.testing_tls]
+}
+
+# Once validation is complete and we've retrieved the TLS configuration data, we can create multiple records...
+
+resource "aws_route53_record" "apex" {
+  name    = "example.com"
+  records = [for record in data.fastly_tls_configuration.default_tls.dns_records : record.record_value if record.record_type == "A"]
+  ttl     = 300
+  type    = "A"
+  zone_id = aws_route53_zone.production.zone_id
+}
+
+# NOTE: This subdomain matches our Fastly service because of the wildcard domain (`*.example.com`) that was added to the service.
+resource "aws_route53_record" "subdomain" {
+  name    = "test.example.com"
+  records = [for record in data.fastly_tls_configuration.default_tls.dns_records : record.record_value if record.record_type == "CNAME"]
+  ttl     = 300
+  type    = "CNAME"
+  zone_id = aws_route53_zone.production.zone_id
 }
 ```
 

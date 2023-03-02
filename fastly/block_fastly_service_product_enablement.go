@@ -42,6 +42,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["fanout"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Enable Fanout support",
 		}
 	}
@@ -50,21 +51,25 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["brotli_compression"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Enable Brotli Compression support",
 		}
 		blockAttributes["domain_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Enable Domain Inspector support",
 		}
 		blockAttributes["image_optimizer"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Enable Image Optimizer support (requires at least one backend with a `shield` attribute)",
 		}
 		blockAttributes["origin_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Enable Origin Inspector support",
 		}
 	}
@@ -73,6 +78,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes["websockets"] = &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
+		Default:     false,
 		Description: "Enable WebSockets support",
 	}
 
@@ -191,7 +197,7 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 		// This is done so we can benefit from the 'modified' map data passed to the
 		// 'update' CRUD method.
 		result := map[string]any{
-			"name": "product_enablement",
+			"name": "products",
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeCompute {

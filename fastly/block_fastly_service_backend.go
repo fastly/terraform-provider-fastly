@@ -73,6 +73,12 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "",
 			Description: "Name of a defined `healthcheck` to assign to this backend",
 		},
+		"keepalive_time": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     null,
+			Description: "How long in seconds to keep a persistent connection to the backend between requests.",
+		},
 		"max_conn": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -276,6 +282,7 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		ErrorThreshold:      gofastly.Int(resource["error_threshold"].(int)),
 		FirstByteTimeout:    gofastly.Int(resource["first_byte_timeout"].(int)),
 		HealthCheck:         gofastly.String(resource["healthcheck"].(string)),
+		KeepAliveTime:       gofastly.Int(resource["keepalive_time"].(int)),
 		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
 		Name:                gofastly.String(resource["name"].(string)),
 		Port:                gofastly.Int(resource["port"].(int)),
@@ -344,6 +351,9 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["connect_timeout"]; ok {
 		opts.ConnectTimeout = gofastly.Int(v.(int))
+	}
+	if v, ok := modified["keepalive_time"]; ok {
+		opts.KeepAliveTime = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["max_conn"]; ok {
 		opts.MaxConn = gofastly.Int(v.(int))
@@ -421,6 +431,7 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 			"error_threshold":       int(resource.ErrorThreshold),
 			"first_byte_timeout":    int(resource.FirstByteTimeout),
 			"healthcheck":           resource.HealthCheck,
+			"keepalive_time":        int(resource.KeepAliveTime),
 			"max_conn":              int(resource.MaxConn),
 			"max_tls_version":       resource.MaxTLSVersion,
 			"min_tls_version":       resource.MinTLSVersion,

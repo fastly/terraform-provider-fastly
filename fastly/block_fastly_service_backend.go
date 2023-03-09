@@ -67,6 +67,11 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "",
 			Description: "Name of a defined `healthcheck` to assign to this backend",
 		},
+		"keepalive_time": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "How long in seconds to keep a persistent connection to the backend between requests.",
+		},
 		"max_conn": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -286,6 +291,10 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		Weight:              gofastly.Int(resource["weight"].(int)),
 	}
 
+	if resource["keepalive_time"].(int) > 0 {
+		opts.KeepAliveTime = gofastly.Int(resource["keepalive_time"].(int))
+	}
+	
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
@@ -344,6 +353,9 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["connect_timeout"]; ok {
 		opts.ConnectTimeout = gofastly.Int(v.(int))
+	}
+	if v, ok := modified["keepalive_time"]; ok {
+		opts.KeepAliveTime = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["max_conn"]; ok {
 		opts.MaxConn = gofastly.Int(v.(int))
@@ -422,6 +434,7 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 			"error_threshold":       int(resource.ErrorThreshold),
 			"first_byte_timeout":    int(resource.FirstByteTimeout),
 			"healthcheck":           resource.HealthCheck,
+			"keepalive_time":        int(resource.KeepAliveTime),
 			"max_conn":              int(resource.MaxConn),
 			"max_tls_version":       resource.MaxTLSVersion,
 			"min_tls_version":       resource.MinTLSVersion,

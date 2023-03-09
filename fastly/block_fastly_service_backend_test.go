@@ -105,7 +105,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					Address:             "www.notexample.com",
 					OverrideHost:        "origin.example.com",
 					Port:                80,
-					AutoLoadbalance:     true,
 					BetweenBytesTimeout: 10000,
 					ConnectTimeout:      1000,
 					ErrorThreshold:      0,
@@ -133,7 +132,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"address":               "www.notexample.com",
 					"override_host":         "origin.example.com",
 					"port":                  80,
-					"auto_loadbalance":      true,
 					"between_bytes_timeout": 10000,
 					"connect_timeout":       1000,
 					"error_threshold":       0,
@@ -335,7 +333,7 @@ func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDeta
 					// we don't know these things ahead of time, so populate them now
 					w.ServiceID = service.ID
 					w.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					h.CreatedAt = nil
 					h.UpdatedAt = nil

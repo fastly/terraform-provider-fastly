@@ -377,8 +377,8 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 					if s[0].Attributes["product_enablement.0.websockets"] != "false" {
 						return fmt.Errorf("expected websockets to be false")
 					}
-					if s[0].Attributes["product_enablement.0.name"] != "product_enablement" {
-						return fmt.Errorf("expected the generated 'name' key to be 'product_enablement'")
+					if s[0].Attributes["product_enablement.0.name"] != "products" {
+						return fmt.Errorf("expected the generated 'name' key to be 'products'")
 					}
 					return nil
 				},

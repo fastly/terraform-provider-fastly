@@ -37,12 +37,6 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "An IPv4, hostname, or IPv6 address for the Backend",
 		},
-		"auto_loadbalance": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `false`",
-		},
 		"between_bytes_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -182,6 +176,12 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 	required := false
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["auto_loadbalance"] = &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `false`",
+		}
 		blockAttributes["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -276,7 +276,6 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, resource map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
 		Address:             gofastly.String(resource["address"].(string)),
-		AutoLoadbalance:     gofastly.CBool(resource["auto_loadbalance"].(bool)),
 		BetweenBytesTimeout: gofastly.Int(resource["between_bytes_timeout"].(int)),
 		ConnectTimeout:      gofastly.Int(resource["connect_timeout"].(int)),
 		ErrorThreshold:      gofastly.Int(resource["error_threshold"].(int)),
@@ -326,6 +325,7 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		opts.AutoLoadbalance = gofastly.CBool(resource["auto_loadbalance"].(bool))
 		opts.RequestCondition = gofastly.String(resource["request_condition"].(string))
 	}
 	return opts
@@ -368,7 +368,9 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 		opts.BetweenBytesTimeout = gofastly.Int(v.(int))
 	}
 	if v, ok := modified["auto_loadbalance"]; ok {
-		opts.AutoLoadbalance = gofastly.CBool(v.(bool))
+		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+			opts.AutoLoadbalance = gofastly.CBool(v.(bool))
+		}
 	}
 	if v, ok := modified["weight"]; ok {
 		opts.Weight = gofastly.Int(v.(int))
@@ -425,7 +427,6 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 	for _, resource := range remoteState {
 		data := map[string]any{
 			"address":               resource.Address,
-			"auto_loadbalance":      resource.AutoLoadbalance,
 			"between_bytes_timeout": int(resource.BetweenBytesTimeout),
 			"connect_timeout":       int(resource.ConnectTimeout),
 			"error_threshold":       int(resource.ErrorThreshold),
@@ -451,6 +452,7 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 		}
 
 		if sa.serviceType == ServiceTypeVCL {
+			data["auto_loadbalance"] = resource.AutoLoadbalance
 			data["request_condition"] = resource.RequestCondition
 		}
 

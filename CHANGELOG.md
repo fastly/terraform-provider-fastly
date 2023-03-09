@@ -1,4 +1,18 @@
-## 3.2.0 (Unreleased)
+## 3.3.0 (Unreleased)
+
+## 3.2.0 (March 2, 2023)
+
+ENHANCEMENTS:
+
+* Allow certainly as a certificate authority [#648](https://github.com/fastly/terraform-provider-fastly/pull/648)
+
+BUG FIXES:
+
+* fix(product_enablement): improve error handling for user scenarios without self-enablement [#651](https://github.com/fastly/terraform-provider-fastly/pull/651)
+
+DOCUMENTATION:
+
+* docs: tls subscriptions [#649](https://github.com/fastly/terraform-provider-fastly/pull/649)
 
 ## 3.1.0 (February 21, 2023)
 

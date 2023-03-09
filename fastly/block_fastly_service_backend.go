@@ -291,6 +291,10 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		Weight:              gofastly.Int(resource["weight"].(int)),
 	}
 
+	if resource["keepalive_time"].(int) > 0 {
+		opts.KeepAliveTime = gofastly.Int(resource["keepalive_time"].(int))
+	}
+	
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.

@@ -37,12 +37,6 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "An IPv4, hostname, or IPv6 address for the Backend",
 		},
-		"auto_loadbalance": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `false`",
-		},
 		"between_bytes_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,

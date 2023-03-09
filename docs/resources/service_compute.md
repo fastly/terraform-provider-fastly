@@ -155,6 +155,7 @@ Optional:
 - `error_threshold` (Number) Number of errors to allow before the Backend is marked as down. Default `0`
 - `first_byte_timeout` (Number) How long to wait for the first bytes in milliseconds. Default `15000`
 - `healthcheck` (String) Name of a defined `healthcheck` to assign to this backend
+- `keepalive_time` (Number) How long in seconds to keep a persistent connection to the backend between requests.
 - `max_conn` (Number) Maximum number of connections for this Backend. Default `200`
 - `max_tls_version` (String) Maximum allowed TLS version on SSL connections to this backend.
 - `min_tls_version` (String) Minimum allowed TLS version on SSL connections to this backend.

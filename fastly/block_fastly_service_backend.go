@@ -298,9 +298,6 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
-	if resource["keepalive_time"].(int) > 0 {
-		opts.KeepAliveTime = gofastly.Int(resource["keepalive_time"].(int))
-	}
 	if resource["min_tls_version"].(string) != "" {
 		opts.MinTLSVersion = gofastly.String(resource["min_tls_version"].(string))
 	}

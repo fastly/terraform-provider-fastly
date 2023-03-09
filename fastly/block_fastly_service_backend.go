@@ -275,7 +275,6 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, resource map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
 		Address:             gofastly.String(resource["address"].(string)),
-		AutoLoadbalance:     gofastly.CBool(resource["auto_loadbalance"].(bool)),
 		BetweenBytesTimeout: gofastly.Int(resource["between_bytes_timeout"].(int)),
 		ConnectTimeout:      gofastly.Int(resource["connect_timeout"].(int)),
 		ErrorThreshold:      gofastly.Int(resource["error_threshold"].(int)),

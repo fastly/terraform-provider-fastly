@@ -35,16 +35,14 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"content": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The contents of the Wasm deployment package (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
-					ConflictsWith: []string{"filename"},
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The contents of the Wasm deployment package (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
 				},
 				"filename": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
-					ConflictsWith: []string{"content"},
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
 				},
 				// sha512 hash of the file
 				"source_code_hash": {

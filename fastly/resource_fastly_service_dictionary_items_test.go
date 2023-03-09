@@ -418,7 +418,7 @@ func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 	})
 
 	if err != nil {
-		t.Fatalf("[ERR] Error Createing Dictionary item for (%s), dictionary (%s): %s", service.Name, dict.Name, err)
+		t.Fatalf("[ERR] Error Creating Dictionary item for (%s), dictionary (%s): %s", service.Name, dict.Name, err)
 	}
 }
 

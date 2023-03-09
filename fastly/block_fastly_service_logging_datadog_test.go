@@ -248,7 +248,7 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ID
 					d.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					dl.CreatedAt = nil
 					dl.UpdatedAt = nil

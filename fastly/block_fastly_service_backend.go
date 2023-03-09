@@ -326,6 +326,7 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		opts.AutoLoadbalance = gofastly.CBool(resource["auto_loadbalance"].(bool))
 		opts.RequestCondition = gofastly.String(resource["request_condition"].(string))
 	}
 	return opts

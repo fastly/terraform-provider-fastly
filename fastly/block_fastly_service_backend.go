@@ -428,7 +428,6 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 	for _, resource := range remoteState {
 		data := map[string]any{
 			"address":               resource.Address,
-			"auto_loadbalance":      resource.AutoLoadbalance,
 			"between_bytes_timeout": int(resource.BetweenBytesTimeout),
 			"connect_timeout":       int(resource.ConnectTimeout),
 			"error_threshold":       int(resource.ErrorThreshold),

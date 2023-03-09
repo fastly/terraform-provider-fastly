@@ -40,7 +40,7 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 		},
 		"token": {
 			Type:        schema.TypeString,
-			Required:    true, // FIXME: This isn't required in go-fastly.
+			Required:    true,
 			Sensitive:   true,
 			Description: "The data authentication token associated with this endpoint",
 		},

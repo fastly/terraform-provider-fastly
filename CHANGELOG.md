@@ -1,4 +1,20 @@
-## 3.3.0 (Unreleased)
+## 4.1.0 (Unreleased)
+
+## 4.0.0 (March 9, 2023)
+
+BREAKING:
+
+Only one minor breaking interface change has been made: the removal of the `auto_loadbalance` attribute from the `backend` block, which is still supported for the `fastly_service_vcl` resource but was never actually supported under the `fastly_service_compute` resource.
+
+* fix(backend): remove `auto_loadbalance` from compute service [#657](https://github.com/fastly/terraform-provider-fastly/pull/657)
+
+BUG FIXES:
+
+* fix: add missing format attribute when updating [#659](https://github.com/fastly/terraform-provider-fastly/pull/659)
+
+ENHANCEMENTS:
+
+* Enable the declaration of the keepalive_time backend attribute [#658](https://github.com/fastly/terraform-provider-fastly/pull/658)
 
 ## 3.2.0 (March 2, 2023)
 

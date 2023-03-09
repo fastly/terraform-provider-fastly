@@ -3,13 +3,14 @@
 1. Merge all PRs intended for the release.
 2. Rebase latest remote main branch locally (`git pull --rebase origin main`).
 3. Ensure all analysis checks and tests are passing (`TEST_PARALLELISM=8 make testacc`).
-4. Open a new PR to update CHANGELOG ([example](https://github.com/fastly/terraform-provider-fastly/pull/498/files))<sup>[1](#note1)</sup>.
-5. Merge CHANGELOG.
-6. Rebase latest remote main branch locally (`git pull --rebase origin main`)<sup>[2](#note2)</sup>.
-7. Tag a new release (`tag=vX.Y.Z && git tag -s $tag -m "$tag" && git push origin $tag`)<sup>[3](#note3)</sup>.
-8. Copy/paste CHANGELOG into the [draft release](https://github.com/fastly/terraform-provider-fastly/releases).
-9. Publish draft release<sup>[4](#note4)</sup>.
-10. Communicate the release in the relevant Slack channels<sup>[5](#note5)</sup>.
+4. Run `go mod vendor` and `make goreleaser GORELEASER_ARGS="--skip-validate --rm-dist"`.
+5. Open a new PR to update CHANGELOG ([example](https://github.com/fastly/terraform-provider-fastly/pull/498/files))<sup>[1](#note1)</sup>.
+6. Merge CHANGELOG.
+7. Rebase latest remote main branch locally (`git pull --rebase origin main`)<sup>[2](#note2)</sup>.
+8. Tag a new release (`tag=vX.Y.Z && git tag -s $tag -m "$tag" && git push origin $tag`)<sup>[3](#note3)</sup>.
+9. Copy/paste CHANGELOG into the [draft release](https://github.com/fastly/terraform-provider-fastly/releases).
+10. Publish draft release<sup>[4](#note4)</sup>.
+11. Communicate the release in the relevant Slack channels<sup>[5](#note5)</sup>.
 
 ## Footnotes
 

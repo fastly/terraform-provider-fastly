@@ -56,7 +56,6 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"address":               "www.notexample.com",
 					"override_host":         "origin.example.com",
 					"port":                  80,
-					"auto_loadbalance":      false,
 					"between_bytes_timeout": 10000,
 					"connect_timeout":       1000,
 					"error_threshold":       0,

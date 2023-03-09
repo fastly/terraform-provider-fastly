@@ -175,6 +175,12 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 	required := false
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["auto_loadbalance"] = &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `false`",
+		}
 		blockAttributes["request_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,

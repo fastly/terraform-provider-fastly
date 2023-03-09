@@ -52,7 +52,7 @@ func TestAccFastlyServiceWAFVersionV1_DetermineVersion(t *testing.T) {
 	for _, c := range cases {
 		out, err := determineLatestVersion(c.remote)
 		if (err == nil) == c.Errored {
-			t.Fatalf("Error expected to be %v but wan't", c.Errored)
+			t.Fatalf("Error expected to be %v", c.Errored)
 		}
 		if out == nil {
 			continue

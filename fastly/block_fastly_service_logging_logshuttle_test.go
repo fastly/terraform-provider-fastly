@@ -173,7 +173,7 @@ func testAccCheckFastlyServiceVCLLogshuttleAttributes(service *gofastly.ServiceD
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
 					e.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					el.CreatedAt = nil
 					el.UpdatedAt = nil

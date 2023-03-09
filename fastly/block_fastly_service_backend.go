@@ -453,6 +453,7 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 		}
 
 		if sa.serviceType == ServiceTypeVCL {
+			data["auto_loadbalance"] = resource.AutoLoadbalance
 			data["request_condition"] = resource.RequestCondition
 		}
 

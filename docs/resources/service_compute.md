@@ -150,11 +150,13 @@ Required:
 
 Optional:
 
+- `auto_loadbalance` (Boolean) Denotes if this Backend should be included in the pool of backends that requests are load balanced against. Default `false`
 - `between_bytes_timeout` (Number) How long to wait between bytes in milliseconds. Default `10000`
 - `connect_timeout` (Number) How long to wait for a timeout in milliseconds. Default `1000`
 - `error_threshold` (Number) Number of errors to allow before the Backend is marked as down. Default `0`
 - `first_byte_timeout` (Number) How long to wait for the first bytes in milliseconds. Default `15000`
 - `healthcheck` (String) Name of a defined `healthcheck` to assign to this backend
+- `keepalive_time` (Number) How long in seconds to keep a persistent connection to the backend between requests.
 - `max_conn` (Number) Maximum number of connections for this Backend. Default `200`
 - `max_tls_version` (String) Maximum allowed TLS version on SSL connections to this backend.
 - `min_tls_version` (String) Minimum allowed TLS version on SSL connections to this backend.

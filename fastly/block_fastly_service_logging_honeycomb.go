@@ -132,6 +132,9 @@ func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.R
 
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
+	if v, ok := modified["format"]; ok {
+		opts.Format = gofastly.String(v.(string))
+	}
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.Int(v.(int))
 	}

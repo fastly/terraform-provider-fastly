@@ -134,7 +134,7 @@ func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.Serv
 					// we don't know these things ahead of time, so populate them now
 					p.ServiceID = service.ID
 					p.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lp.CreatedAt = nil
 					lp.UpdatedAt = nil

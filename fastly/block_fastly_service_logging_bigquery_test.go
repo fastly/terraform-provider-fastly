@@ -259,7 +259,7 @@ type currentBQEnv struct {
 
 func getBQEnv() *currentBQEnv {
 	// Grab any existing Fastly BigQuery keys and preserve, in the off chance
-	// they're actually set in the enviornment
+	// they're actually set in the environment
 	return &currentBQEnv{
 		Key:    os.Getenv("FASTLY_BQ_SECRET_KEY"),
 		Secret: os.Getenv("FASTLY_BQ_SECRET_KEY"),

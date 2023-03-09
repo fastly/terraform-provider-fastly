@@ -184,7 +184,7 @@ func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetai
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
 					s.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					sl.CreatedAt = nil
 					sl.UpdatedAt = nil

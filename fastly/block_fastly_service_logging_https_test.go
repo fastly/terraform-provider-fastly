@@ -204,7 +204,7 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 						h.ResponseCondition = hl.ResponseCondition
 					}
 
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					hl.CreatedAt = nil
 					hl.UpdatedAt = nil

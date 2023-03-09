@@ -301,7 +301,7 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 						lbs.Placement = rbs.Placement
 					}
 
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					rbs.CreatedAt = nil
 					rbs.UpdatedAt = nil
@@ -530,7 +530,7 @@ type currentBlobStorageEnv struct {
 
 func getBlobStorageEnv() *currentBlobStorageEnv {
 	// Grab the existing Fastly Azure SAS token and preserve, in the off chance
-	// they're actually set in the enviornment
+	// they're actually set in the environment
 	return &currentBlobStorageEnv{
 		SASToken: os.Getenv("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE"),
 	}

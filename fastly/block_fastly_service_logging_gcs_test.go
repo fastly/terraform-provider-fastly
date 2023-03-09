@@ -311,7 +311,7 @@ type currentGcsEnv struct {
 
 func getGcsEnv() *currentGcsEnv {
 	// Grab any existing Fastly GCS keys and preserve, in the off chance
-	// they're actually set in the enviornment
+	// they're actually set in the environment
 	return &currentGcsEnv{
 		Key:    os.Getenv("FASTLY_GCS_EMAIL"),
 		Secret: os.Getenv("FASTLY_GCS_SECRET_KEY"),

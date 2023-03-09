@@ -47,10 +47,10 @@ func TestAccFastlyServiceWAFVersion_DeploymentStatus(t *testing.T) {
 			err := statusCheck.waitForDeployment(context.Background(), wafID, latestVersion)
 			hasErrored := err != nil
 			if c.ExpectError && !hasErrored {
-				t.Fatalf("Error expected to be %v but wan't", c.ExpectError)
+				t.Fatalf("Error expected to be %v", c.ExpectError)
 			}
 			if !c.ExpectError && hasErrored {
-				t.Fatalf("Error expected to be %v but wan't. Error: %v", c.ExpectError, err)
+				t.Fatalf("Error expected to be %v. Error: %v", c.ExpectError, err)
 			}
 		})
 	}

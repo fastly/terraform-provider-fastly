@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 
@@ -37,7 +38,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 				"content": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: "The contents of the Wasm deployment package (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
+					Description: "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
 				},
 				"filename": {
 					Type:        schema.TypeString,
@@ -69,7 +70,11 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 		pkg := v.([]any)[0].(map[string]any)
 
 		if v := pkg["content"].(string); v != "" {
-			input.PackageContent = []byte(v)
+			decoded, err := base64.StdEncoding.DecodeString(v)
+			if err != nil {
+				return fmt.Errorf("error decoding base64 string for package %s: %s", d.Id(), err)
+			}
+			input.PackageContent = []byte(decoded)
 		}
 		if v := pkg["filename"].(string); v != "" {
 			input.PackagePath = v
@@ -116,6 +121,8 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			pkgType PkgType
 		)
 
+		// We extract data from the state and reuse it when updating the state.
+		// The value is provided by the user's config as the API doesn't return it.
 		if v := d.Get("package.0.content").(string); v != "" {
 			pkgData = v
 			pkgType = PkgContent

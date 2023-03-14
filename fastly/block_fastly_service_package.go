@@ -47,7 +47,6 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 					Description:   "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
 					ConflictsWith: []string{"package.0.content"},
 				},
-				// sha512 hash of the file
 				"source_code_hash": {
 					Type:          schema.TypeString,
 					Optional:      true,

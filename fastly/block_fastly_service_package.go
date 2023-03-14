@@ -36,16 +36,16 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"content": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
-					ConflictsWith: []string{"package.0.filename"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
+					ExactlyOneOf: []string{"package.0.content", "package.0.filename"},
 				},
 				"filename": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
-					ConflictsWith: []string{"package.0.content"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
+					ExactlyOneOf: []string{"package.0.content", "package.0.filename"},
 				},
 				"source_code_hash": {
 					Type:          schema.TypeString,

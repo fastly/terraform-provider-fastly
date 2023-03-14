@@ -94,7 +94,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 type PkgType int64
 
 const (
-	PkgUndefined PkgType = iota
+	_ PkgType = iota
 	PkgContent
 	PkgFilename
 )

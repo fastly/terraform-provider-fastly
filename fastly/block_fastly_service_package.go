@@ -121,7 +121,6 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			pkgType PkgType
 		)
 
-		// We extract data from the state and reuse it when updating the state.
 		// The value is provided by the user's config as the API doesn't return it.
 		if v := d.Get("package.0.content").(string); v != "" {
 			pkgData = v

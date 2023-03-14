@@ -36,21 +36,24 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"content": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
+					ConflictsWith: []string{"package.0.filename"},
 				},
 				"filename": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
+					ConflictsWith: []string{"package.0.content"},
 				},
 				// sha512 hash of the file
 				"source_code_hash": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Computed:    true,
-					Description: `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					Description:   `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
+					ConflictsWith: []string{"package.0.content"},
 				},
 			},
 		},

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 
@@ -34,17 +35,24 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		MinItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"filename": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The path to the Wasm deployment package within your local filesystem",
+				"content": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
+					ExactlyOneOf: []string{"package.0.content", "package.0.filename"},
 				},
-				// sha512 hash of the file
+				"filename": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
+					ExactlyOneOf: []string{"package.0.content", "package.0.filename"},
+				},
 				"source_code_hash": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Computed:    true,
-					Description: `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					Description:   `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
+					ConflictsWith: []string{"package.0.content"},
 				},
 			},
 		},
@@ -55,15 +63,26 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 // Process creates or updates the attribute against the Fastly API.
 func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	if v, ok := d.GetOk(h.GetKey()); ok {
-		// Schema guarantees one package block.
-		pkg := v.([]any)[0].(map[string]any)
-		packageFilename := pkg["filename"].(string)
-
-		err := updatePackage(conn, &gofastly.UpdatePackageInput{
+		input := &gofastly.UpdatePackageInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
-			PackagePath:    packageFilename,
-		})
+		}
+
+		// Schema guarantees one package block.
+		pkg := v.([]any)[0].(map[string]any)
+
+		if v := pkg["content"].(string); v != "" {
+			decoded, err := base64.StdEncoding.DecodeString(v)
+			if err != nil {
+				return fmt.Errorf("error decoding base64 string for package %s: %s", d.Id(), err)
+			}
+			input.PackageContent = []byte(decoded)
+		}
+		if v := pkg["filename"].(string); v != "" {
+			input.PackagePath = v
+		}
+
+		err := updatePackage(conn, input)
 		if err != nil {
 			return fmt.Errorf("error modifying package %s: %s", d.Id(), err)
 		}
@@ -71,6 +90,14 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 
 	return nil
 }
+
+type PkgType int64
+
+const (
+	_ PkgType = iota
+	PkgContent
+	PkgFilename
+)
 
 // Read refreshes the attribute state against the Fastly API.
 func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
@@ -91,8 +118,22 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 			return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
 		}
 
-		filename := d.Get("package.0.filename").(string)
-		wp := flattenPackage(remoteState, filename)
+		var (
+			pkgData string
+			pkgType PkgType
+		)
+
+		// The value is provided by the user's config as the API doesn't return it.
+		if v := d.Get("package.0.content").(string); v != "" {
+			pkgData = v
+			pkgType = PkgContent
+		}
+		if v := d.Get("package.0.filename").(string); v != "" {
+			pkgData = v
+			pkgType = PkgFilename
+		}
+
+		wp := flattenPackage(remoteState, pkgType, pkgData)
 		if err := d.Set(h.GetKey(), wp); err != nil {
 			log.Printf("[WARN] Error setting Package for (%s): %s", d.Id(), err)
 		}
@@ -107,11 +148,19 @@ func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error 
 }
 
 // flattenPackage models data into format suitable for saving to Terraform state.
-func flattenPackage(remoteState *gofastly.Package, filename string) []map[string]any {
+func flattenPackage(remoteState *gofastly.Package, pkgType PkgType, pkgData string) []map[string]any {
 	var result []map[string]any
 	data := map[string]any{
 		"source_code_hash": remoteState.Metadata.HashSum,
-		"filename":         filename,
+	}
+
+	switch pkgType {
+	case PkgContent:
+		data["content"] = pkgData
+		data["filename"] = ""
+	case PkgFilename:
+		data["content"] = ""
+		data["filename"] = pkgData
 	}
 
 	// Convert Package to a map for saving to state.

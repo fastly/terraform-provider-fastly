@@ -190,7 +190,7 @@ func buildUpdateWAF(d *schema.ResourceData, wafMap any, serviceID string, servic
 	// This is because the schema defines the service as being of TypeList.
 	//
 	// Although there should only ever be one service (hence MaxItems: 1) we are
-	// unable to change the schema to a TypeMap as that would contrain the map's
+	// unable to change the schema to a TypeMap as that would constrain the map's
 	// value to a single type (e.g. TypeString, TypeBool, TypeInt, or TypeFloat).
 
 	if v, ok := d.GetOk("waf.0.prefetch_condition"); ok {

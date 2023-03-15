@@ -1,7 +1,9 @@
 package fastly
 
 import (
+	"encoding/base64"
 	"fmt"
+	"os"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v7/fastly"
@@ -87,10 +89,85 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDetail, computePackage *gofastly.Package) resource.TestCheckFunc {
+func TestAccFastlyServiceVCL_package_content(t *testing.T) {
+	validPackageContent, _ := os.ReadFile("test_fixtures/package/valid.tar.gz")
+	b64Content := base64.StdEncoding.EncodeToString(validPackageContent)
+
+	validPackageContent2, _ := os.ReadFile("test_fixtures/package/valid2.tar.gz")
+	b64Content2 := base64.StdEncoding.EncodeToString(validPackageContent2)
+
+	var service gofastly.ServiceDetail
+	name01 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain01 := fmt.Sprintf("fastly-test.%s.com", name01)
+	name02 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain02 := fmt.Sprintf("fastly-test.%s.com", name02)
+
+	want := gofastly.Package{
+		Metadata: gofastly.PackageMetadata{
+			Name:        "wasm-test",
+			Description: "Test Package",
+			Authors:     []string{"fastly@fastly.com"},
+			Language:    "rust",
+			Size:        2015936,
+			HashSum:     "f99485bd301e23f028474d26d398da525de17a372ae9e7026891d7f85361d2540d14b3b091929c3f170eade573595e20b3405a9e29651ede59915f2e1652f616",
+		},
+	}
+
+	want2 := gofastly.Package{
+		Metadata: gofastly.PackageMetadata{
+			Name:        "edge-compute-test",
+			Description: "Test Package",
+			Authors:     []string{"fastly@fastly.com"},
+			Language:    "rust",
+			Size:        2158517,
+			HashSum:     "ef62109f363007037d678120459008efb17b4cba5af2188d2eb0c6c6a69113b1925c44f5cbc7792b4421cad6f307bf3dd59adf0a73387291e0b854d3c25f2e48",
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLPackageConfigContent(name01, domain01, b64Content),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name01),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
+				),
+			},
+			{
+				Config: testAccServiceVCLPackageConfigContent(name02, domain02, b64Content),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "2"),
+				),
+			},
+			{
+				Config: testAccServiceVCLPackageConfigContent(name02, domain02, b64Content2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want2),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "3"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDetail, want *gofastly.Package) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		wp, err := conn.GetPackage(&gofastly.GetPackageInput{
+		got, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      service.ID,
 			ServiceVersion: service.ActiveVersion.Number,
 		})
@@ -98,20 +175,20 @@ func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDeta
 			return fmt.Errorf("error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		if computePackage.Metadata.Size != wp.Metadata.Size {
-			return fmt.Errorf("package size mismatch, expected: %v, got: %v", computePackage.Metadata.Size, wp.Metadata.Size)
+		if want.Metadata.Size != got.Metadata.Size {
+			return fmt.Errorf("package size mismatch, expected: %v, got: %v", want.Metadata.Size, got.Metadata.Size)
 		}
 
-		if computePackage.Metadata.HashSum != wp.Metadata.HashSum {
-			return fmt.Errorf("package hashsum mismatch, expected: %v, got: %v", computePackage.Metadata.HashSum, wp.Metadata.HashSum)
+		if want.Metadata.HashSum != got.Metadata.HashSum {
+			return fmt.Errorf("package hashsum mismatch, expected: %v, got: %v", want.Metadata.HashSum, got.Metadata.HashSum)
 		}
 
-		if computePackage.Metadata.Language != wp.Metadata.Language {
-			return fmt.Errorf("package language mismatch, expected: %v, got: %v", computePackage.Metadata.Language, wp.Metadata.Language)
+		if want.Metadata.Language != got.Metadata.Language {
+			return fmt.Errorf("package language mismatch, expected: %v, got: %v", want.Metadata.Language, got.Metadata.Language)
 		}
 
-		if computePackage.Metadata.Name != wp.Metadata.Name {
-			return fmt.Errorf("package name mismatch, expected: %v, got: %v", computePackage.Metadata.Name, wp.Metadata.Name)
+		if want.Metadata.Name != got.Metadata.Name {
+			return fmt.Errorf("package name mismatch, expected: %v, got: %v", want.Metadata.Name, got.Metadata.Name)
 		}
 
 		return nil
@@ -158,4 +235,35 @@ resource "fastly_service_compute" "foo" {
   force_destroy = true
 }
 `, name, domain)
+}
+
+// NOTE: Test config was unable to use input variable implementation.
+// This is because we can't set `-var` via test suite.
+// Instead we need to use exported environment variable: TF_VAR_package_content.
+// Problem with that is the base64 encoded string is larger the OS limit.
+// So instead we had to use locals value as a workaround.
+// https://developer.hashicorp.com/terraform/language/values/locals
+// The use of `-var` and input variables will work fine with actual TF project.
+func testAccServiceVCLPackageConfigContent(name, domain, b64Content string) string {
+	return fmt.Sprintf(`
+locals {
+  package_content = "%s"
+}
+
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-package-test"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+  package {
+    content = local.package_content
+  }
+  force_destroy = true
+}
+`, b64Content, name, domain)
 }

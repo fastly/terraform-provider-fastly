@@ -1,4 +1,21 @@
-## 4.1.0 (Unreleased)
+## 4.2.0 (Unreleased)
+
+## 4.1.0 (March 16, 2023)
+
+ENHANCEMENTS:
+
+* feat(fastly_service_compute): support new `content` attribute [#661](https://github.com/fastly/terraform-provider-fastly/pull/661)
+
+DOCUMENTATION:
+
+* docs(dictionary): add import note [#662](https://github.com/fastly/terraform-provider-fastly/pull/662)
+
+DEPENDENCIES:
+
+* Bump github.com/hashicorp/terraform-plugin-docs from 0.13.0 to 0.14.1 [#656](https://github.com/fastly/terraform-provider-fastly/pull/656)
+* Bump golang.org/x/net from 0.0.0-20211112202133-69e39bad7dc2 to 0.8.0 [#655](https://github.com/fastly/terraform-provider-fastly/pull/655)
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.24.0 to 2.25 [#642](https://github.com/fastly/terraform-provider-fastly/pull/642)
+* Bump github.com/stretchr/testify from 1.8.1 to 1.8.2 [#647](https://github.com/fastly/terraform-provider-fastly/pull/647)
 
 ## 4.0.0 (March 9, 2023)
 

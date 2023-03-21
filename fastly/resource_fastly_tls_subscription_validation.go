@@ -9,7 +9,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v7/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -39,21 +39,21 @@ const (
 func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
 			ID: d.Get("subscription_id").(string),
 		})
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if subscription.State != subscriptionStateIssued {
-			return resource.RetryableError(fmt.Errorf("expected subscription state to be %s but it was %s", subscriptionStateIssued, subscription.State))
+			return retry.RetryableError(fmt.Errorf("expected subscription state to be %s but it was %s", subscriptionStateIssued, subscription.State))
 		}
 
 		err = diagToErr(resourceFastlyTLSSubscriptionValidationRead(ctx, d, meta))
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

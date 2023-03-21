@@ -6,7 +6,7 @@ import (
 	"time"
 
 	gofastly "github.com/fastly/go-fastly/v7/fastly"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -44,7 +44,7 @@ func DefaultWAFDeploymentChecker(conn *gofastly.Client) func(wafID string, versi
 }
 
 func (c *WAFDeploymentChecker) waitForDeployment(ctx context.Context, wafID string, latestVersion *gofastly.WAFVersion) error {
-	createStateConf := &resource.StateChangeConf{
+	createStateConf := &retry.StateChangeConf{
 		Pending: []string{
 			gofastly.WAFVersionDeploymentStatusPending,
 			gofastly.WAFVersionDeploymentStatusInProgress,

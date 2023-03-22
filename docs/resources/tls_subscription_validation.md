@@ -75,21 +75,21 @@ resource "fastly_service_vcl" "example" {
   force_destroy = true
 }
 
-resource "fastly_tls_subscription" "testing_tls" {
-  domains               = [for domain in fastly_service_vcl.testing-tls.domain : domain.name]
+resource "fastly_tls_subscription" "example" {
+  domains               = [for domain in fastly_service_vcl.example.domain : domain.name]
   certificate_authority = "lets-encrypt"
 }
 
 resource "aws_route53_record" "domain_validation" {
-  depends_on = [fastly_tls_subscription.testing_tls]
+  depends_on = [fastly_tls_subscription.example]
 
   for_each = {
     # The following `for` expression (due to the outer {}) will produce an object with key/value pairs.
     # The 'key' is the domain name we've configured (e.g. a.example.com, b.example.com)
     # The 'value' is a specific 'challenge' object whose record_name matches the domain (e.g. record_name is _acme-challenge.a.example.com).
-    for domain in fastly_tls_subscription.testing_tls.domains :
+    for domain in fastly_tls_subscription.example.domains :
     domain => element([
-      for obj in fastly_tls_subscription.testing_tls.managed_dns_challenges :
+      for obj in fastly_tls_subscription.example.managed_dns_challenges :
       obj if obj.record_name == "_acme-challenge.${domain}" # We use an `if` conditional to filter the list to a single element
     ], 0)                                                   # `element()` returns the first object in the list which should be the relevant 'challenge' object we need
   }
@@ -104,17 +104,23 @@ resource "aws_route53_record" "domain_validation" {
 
 # This is a resource that other resources can depend on if they require the certificate to be issued.
 # NOTE: Internally the resource keeps retrying `GetTLSSubscription` until no error is returned (or the configured timeout is reached).
-resource "fastly_tls_subscription_validation" "testing_tls" {
-  subscription_id = fastly_tls_subscription.testing_tls.id
+resource "fastly_tls_subscription_validation" "example" {
+  subscription_id = fastly_tls_subscription.example.id
   depends_on      = [aws_route53_record.domain_validation]
 }
 
-# This data source lists all configuration and uses the `default` attribute to narrow down the configuration to just one object.
+# This data source lists all available configuration objects.
+# It uses a `default` attribute to narrow down the list to just one configuration object.
 # If the filtered list has a length that is not exactly one element, you'll see an error returned.
-# That single TLS configuration element is then returned.
+# The single TLS configuration is then returned and can be referenced by other resources (see aws_route53_record below).
+#
+# IMPORTANT: Not all customers will have a 'default' configuration.
+# If you have issues filtering with `default = true`, then you may need another attribute.
+# Refer to the fastly_tls_configuration documentation for available attributes:
+# https://registry.terraform.io/providers/fastly/fastly/latest/docs/data-sources/tls_configuration#optional
 data "fastly_tls_configuration" "default_tls" {
   default    = true
-  depends_on = [fastly_tls_subscription_validation.testing_tls]
+  depends_on = [fastly_tls_subscription_validation.example]
 }
 
 # Once validation is complete and we've retrieved the TLS configuration data, we can create multiple subdomain records.

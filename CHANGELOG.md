@@ -1,5 +1,21 @@
 ## 4.2.0 (Unreleased)
 
+## 4.1.1 (March 27, 2023)
+
+BUG FIXES:
+
+* fix(tls/subscriptions): tls configuration id should always be passed [#670](https://github.com/fastly/terraform-provider-fastly/pull/670)
+
+DOCUMENTATION:
+
+* docs(tls/subscriptions): clarify default tls config [commit](https://github.com/fastly/terraform-provider-fastly/commit/e0c80d39060082271f382965d21d341e1affaeb0)
+
+DEPENDENCIES:
+
+* build(dependencies): bump github.com/hashicorp/terraform-plugin-sdk/v2 [#667](https://github.com/fastly/terraform-provider-fastly/pull/667)
+* Bump actions/setup-go from 3 to 4 [#664](https://github.com/fastly/terraform-provider-fastly/pull/664)
+* Bump github.com/fastly/go-fastly/v7 from 7.4.0 to 7.5.0 [#665](https://github.com/fastly/terraform-provider-fastly/pull/665)
+
 ## 4.1.0 (March 16, 2023)
 
 ENHANCEMENTS:

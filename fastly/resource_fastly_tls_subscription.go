@@ -336,7 +336,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 	// This is why we wrap the API request in the following conditional check.
 	// We then send BOTH "domains" and "common_name" in the API request.
 	// This is because they both will have a pre-existing value.
-	if d.HasChange("domains") || d.HasChange("common_name") {
+	if d.HasChanges("domains", "common_name") {
 		// NOTE: The API doesn't care if the domains are in a different order.
 		// I mention this because if it did, then we'd only want to set the Domains
 		// field on the input struct if there was a change because we otherwise

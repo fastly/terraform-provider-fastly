@@ -16,7 +16,7 @@ Use this data source to get the IDs of available TLS configurations for use with
 data "fastly_tls_configuration_ids" "example" {}
 
 resource "fastly_tls_activation" "example" {
-  configuration_id = data.fastly_tls_configuration.example.ids[0]
+  configuration_id = data.fastly_tls_configuration_ids.example.ids[0]
   // ...
 }
 ```

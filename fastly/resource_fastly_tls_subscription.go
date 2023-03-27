@@ -323,32 +323,47 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 }
 
 func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*APIClient).conn
-
-	updates := &gofastly.UpdateTLSSubscriptionInput{
-		ID:    d.Id(),
-		Force: d.Get("force_update").(bool),
-	}
-
-	if d.HasChange("domains") {
+	// NOTE: Terraform might trigger an update even when it doesn't make sense.
+	//
+	// This is because along with the "domains" and "common_name" attributes,
+	// there are other attributes a customer might modify, such as
+	// "force_update" (which has no effect on the upstream data model).
+	//
+	// So we don't want to call the API if the customer neither passes a change to
+	// domains or to the common_name attributes as that would be a waste of
+	// network resources.
+	//
+	// This is why we wrap the API request in the following conditional check.
+	// We then send BOTH "domains" and "common_name" in the API request.
+	// This is because they both will have a pre-existing value.
+	if d.HasChanges("domains", "common_name") {
+		// NOTE: The API doesn't care if the domains are in a different order.
+		// I mention this because if it did, then we'd only want to set the Domains
+		// field on the input struct if there was a change because we otherwise
+		// can't guarantee the order.
 		var domains []*gofastly.TLSDomain
 		for _, domain := range d.Get("domains").(*schema.Set).List() {
 			domains = append(domains, &gofastly.TLSDomain{ID: domain.(string)})
 		}
-		updates.Domains = domains
-	}
-	if d.HasChange("common_name") {
-		updates.CommonName = &gofastly.TLSDomain{ID: d.Get("common_name").(string)}
-	}
-	if d.HasChange("configuration_id") {
-		updates.Configuration = &gofastly.TLSConfiguration{ID: d.Get("configuration_id").(string)}
+
+		updates := &gofastly.UpdateTLSSubscriptionInput{
+			ID:         d.Id(),
+			Force:      d.Get("force_update").(bool),
+			CommonName: &gofastly.TLSDomain{ID: d.Get("common_name").(string)},
+			Domains:    domains,
+
+			// IMPORTANT: We should always pass the configuration_id to the API.
+			Configuration: &gofastly.TLSConfiguration{ID: d.Get("configuration_id").(string)},
+		}
+
+		conn := meta.(*APIClient).conn
+		_, err := conn.UpdateTLSSubscription(updates)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
-	_, err := conn.UpdateTLSSubscription(updates)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
+	// If no meaningful attributes are passed, we just return the read data.
 	return resourceFastlyTLSSubscriptionRead(ctx, d, meta)
 }
 

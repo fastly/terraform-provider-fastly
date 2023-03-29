@@ -77,6 +77,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				// activate flag) then the active_version will be recomputed too.
 				return d.HasChange("cloned_version") && d.Get("activate").(bool)
 			}),
+			validateSnippetNames,
 		),
 		Schema: map[string]*schema.Schema{
 			"activate": {
@@ -153,6 +154,36 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 	}
 
 	return s
+}
+
+func validateSnippetNames(_ context.Context, rd *schema.ResourceDiff, _ any) error {
+	names := make(map[string]int)
+
+	c := rd.GetRawConfig()
+	m := c.AsValueMap()
+	s, ok := m["snippet"]
+	if ok {
+		set := s.AsValueSet()
+		vs := set.Values()
+		for _, v := range vs {
+			m := v.AsValueMap()
+			if val, ok := m["name"]; ok {
+				name := val.AsString()
+				if n, ok := names[name]; ok {
+					names[name] = n + 1
+				} else {
+					names[name] = 1
+				}
+			}
+		}
+	}
+
+	for k, v := range names {
+		if v > 1 {
+			return fmt.Errorf("multiple snippets with the same name '%s' (each snippet name should be unique)", k)
+		}
+	}
+	return nil
 }
 
 // resourceCreate satisfies the Terraform resource schema Create "interface"

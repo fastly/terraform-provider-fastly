@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v7/fastly"
@@ -121,6 +122,11 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 					}),
 				),
 			},
+
+			{
+				Config:      testAccServiceVCLMultipleSnippets(name, domainName1),
+				ExpectError: regexp.MustCompile("multiple snippets with the same name"),
+			},
 		},
 	})
 }
@@ -224,6 +230,53 @@ resource "fastly_service_vcl" "foo" {
     name     = "fetch_test"
     type     = "fetch"
     priority = 50
+    content  = "restart;\n"
+  }
+
+  default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
+
+  force_destroy = true
+}`, name, domain)
+}
+
+// IMPORTANT: The following config defines two snippets with the same 'name'.
+// Although allowed by the Fastly API, this isn't ideal.
+// That's because it results in 'last entry wins' behaviour.
+// The Fastly Terraform provider should return an error when generating the diff.
+func testAccServiceVCLMultipleSnippets(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  backend {
+    address = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
+    name    = "AWS S3 hosting"
+    port    = 80
+  }
+
+  snippet {
+    name     = "recv_test"
+    type     = "recv"
+    priority = 110
+    content  = "if ( req.url ) {\n set req.http.different-header = \"true\";\n}"
+  }
+
+  snippet {
+    name     = "fetch_test"
+    type     = "fetch"
+    priority = 50
+    content  = "restart;\n"
+  }
+
+  snippet {
+    name     = "fetch_test"
+    type     = "fetch"
+    priority = 110
     content  = "restart;\n"
   }
 

@@ -1,5 +1,16 @@
 ## 4.2.0 (Unreleased)
 
+## 4.1.2 (March 29, 2023)
+
+BUG FIXES:
+
+* fix(fastly_service_vcl): validate snippet names [#673](https://github.com/fastly/terraform-provider-fastly/pull/673)
+* fix(fastly_service_vcl): don't call http3 endpoint if already enabled [#675](https://github.com/fastly/terraform-provider-fastly/pull/675)
+
+DEPENDENCIES:
+
+* Bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.26.0 to 2.26.1 [#671](https://github.com/fastly/terraform-provider-fastly/pull/671)
+
 ## 4.1.1 (March 27, 2023)
 
 BUG FIXES:

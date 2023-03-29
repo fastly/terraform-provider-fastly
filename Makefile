@@ -113,6 +113,12 @@ tfproviderlintx: $(BIN)/tfproviderlintx
 tfproviderlint: $(BIN)/tfproviderlint
 	$(BIN)/tfproviderlint $(TFPROVIDERLINT_ARGS) ./...
 
+# Run third-party static analysis.
+# To ignore lines use: //lint:ignore <CODE> <REASON>
+.PHONY: staticcheck
+staticcheck:
+	staticcheck -f json ./... | jq
+
 sweep:
 	@if [ "$(SILENCE)" != "true" ]; then \
 		echo "WARNING: This will destroy infrastructure. Use only in development accounts."; \

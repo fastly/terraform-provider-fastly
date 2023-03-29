@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 
@@ -25,11 +24,7 @@ func main() {
 	log.SetFlags(noLogPrefix)
 
 	if debugMode {
-		err := plugin.Debug(context.Background(), "fastly/fastly", opts)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		return
+		opts.Debug = true
 	}
 
 	plugin.Serve(opts)

@@ -41,11 +41,22 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 
 	if attr, ok := d.GetOk("http3"); ok {
 		if attr.(bool) {
-			_, err = conn.EnableHTTP3(&gofastly.EnableHTTP3Input{
-				FeatureRevision: gofastly.Int(1),
-				ServiceID:       d.Id(),
-				ServiceVersion:  latestVersion,
-			})
+			// IMPORTANT: API will 400 when trying to enable HTTP3 when already on.
+			//
+			// So we first check the HTTP3 status.
+			// The API returns a 404 if HTTP3 is not enabled.
+			// The API client returns an error for non-2xx responses.
+			// So if there is no error, then HTTP3 is enabled.
+			if _, err = conn.GetHTTP3(&gofastly.GetHTTP3Input{
+				ServiceID:      d.Id(),
+				ServiceVersion: latestVersion,
+			}); err != nil {
+				_, err = conn.EnableHTTP3(&gofastly.EnableHTTP3Input{
+					FeatureRevision: gofastly.Int(1),
+					ServiceID:       d.Id(),
+					ServiceVersion:  latestVersion,
+				})
+			}
 		}
 	} else {
 		err = conn.DisableHTTP3(&gofastly.DisableHTTP3Input{

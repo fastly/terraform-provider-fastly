@@ -8,10 +8,13 @@ VERSION=$(shell git describe --tags --always)
 VERSION_SHORT=$(shell git describe --tags --always --abbrev=0)
 DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION_SHORT))
 
-# XAT001: missing resource.TestCase ErrorCheck.
+# R019: ignore large number of arguments passed to HasChanges().
 # R018: replace sleep with either resource.Retry() or WaitForState().
 # R001: for complex d.Set() calls use a string literal instead.
-TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false -R018=false -R001=false -R019=false
+TFPROVIDERLINT_DEFAULT_FLAGS=-R001=false -R018=false -R019=false
+
+# XAT001: missing resource.TestCase ErrorCheck.
+TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false
 
 GOHOSTOS ?= $(shell go env GOHOSTOS || echo unknown)
 GOHOSTARCH ?= $(shell go env GOHOSTARCH || echo unknown)
@@ -108,10 +111,10 @@ validate-docs: $(BIN)/tfplugindocs
 	$(BIN)/tfplugindocs validate
 
 tfproviderlintx: $(BIN)/tfproviderlintx
-	$(BIN)/tfproviderlintx $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
+	$(BIN)/tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
 
 tfproviderlint: $(BIN)/tfproviderlint
-	$(BIN)/tfproviderlint $(TFPROVIDERLINT_ARGS) ./...
+	$(BIN)/tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
 
 # Run third-party static analysis.
 # To ignore lines use: //lint:ignore <CODE> <REASON>

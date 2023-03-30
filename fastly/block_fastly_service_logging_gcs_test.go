@@ -254,35 +254,6 @@ resource "fastly_service_compute" "foo" {
 }`, name, domainName, backendName, gcsName, secretKey)
 }
 
-func testAccServiceVCLConfigGCSEnv(name, gcsName string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
-  name = "%s"
-
-  domain {
-    name = "%s"
-    comment = "tf-testing-domain"
-  }
-
-  backend {
-    address = "%s"
-    name = "tf -test backend"
-  }
-
-  logging_gcs {
-    name = "%s"
-    bucket_name = "bucketname"
-    format = "log format"
-    response_condition = ""
-  }
-
-  force_destroy = true
-}`, name, domainName, backendName, gcsName)
-}
-
 func setGcsEnv(email, secretKey string, t *testing.T) func() {
 	e := getGcsEnv()
 	// Set all the envs to a dummy value

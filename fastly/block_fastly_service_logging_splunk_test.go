@@ -673,32 +673,6 @@ resource "fastly_service_vcl" "foo" {
 }`, serviceName, domainName)
 }
 
-func testAccServiceVCLSplunkConfigEnv(serviceName string) string {
-	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
-  name = %q
-
-  domain {
-    name    = %q
-    comment = "tf-testing-domain"
-  }
-
-  backend {
-    address = "aws.amazon.com"
-    name    = "tf-test-backend"
-  }
-
-  logging_splunk {
-    name = "test-splunk"
-    url  = "https://mysplunkendpoint.example.com/services/collector/event"
-  }
-
-  force_destroy = true
-}`, serviceName, domainName)
-}
-
 // setSplunkEnv sets the specified values as environment variables and returns a
 // function that can be used to reset the environment variables in case the
 // same variables happen to be in the user's environment when running the tests.

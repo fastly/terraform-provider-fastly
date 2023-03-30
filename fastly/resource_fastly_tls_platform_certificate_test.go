@@ -138,6 +138,7 @@ func testSweepTLSPlatformCertificates(region string) error {
 
 	for _, certificate := range certificates {
 		for _, domain := range certificate.Domains {
+			//lint:ignore SA4017 ignoring because HasPrefix returned value IS being used.
 			if !strings.HasPrefix(domain.ID, testResourcePrefix) || !strings.HasPrefix(domain.ID, ".test") {
 				continue
 			}

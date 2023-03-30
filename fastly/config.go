@@ -74,9 +74,9 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	http2DefaultTransport := &http2.Transport{}
 
 	if c.ForceHTTP2 {
-		fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", http2DefaultTransport)
+		fastlyClient.HTTPClient.Transport = logging.NewSubsystemLoggingHTTPTransport("Fastly", http2DefaultTransport)
 	} else {
-		fastlyClient.HTTPClient.Transport = logging.NewTransport("Fastly", httpDefaultTransport)
+		fastlyClient.HTTPClient.Transport = logging.NewSubsystemLoggingHTTPTransport("Fastly", httpDefaultTransport)
 	}
 
 	client.conn = fastlyClient

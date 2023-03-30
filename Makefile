@@ -48,7 +48,7 @@ test:
 # reference:
 # https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#running-acceptance-tests
 #
-testacc: fmtcheck
+testacc: staticcheck tfproviderlintx fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -parallel=$(TEST_PARALLELISM) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
 
 # WARNING: This target will delete infrastructure.

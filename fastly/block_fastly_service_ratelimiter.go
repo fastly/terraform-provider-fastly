@@ -147,6 +147,11 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "Upper limit of requests per second allowed by the rate limiter",
 		},
+		"uri_dictionary_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of an Edge Dictionary containing URIs as keys. If not defined or null, all origin URIs will be rate limited",
+		},
 		"window_size": {
 			Type:        schema.TypeInt,
 			Required:    true,
@@ -321,6 +326,11 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 		input.ResponseObjectName = gofastly.String(respObjName)
 	}
 
+	uriDictName := resource["uri_dictionary_name"].(string)
+	if uriDictName != "" {
+		input.URIDictionaryName = gofastly.String(uriDictName)
+	}
+
 	windowSize := resource["window_size"].(int)
 	for _, w := range gofastly.ERLWindowSizes {
 		if windowSize == int(w) {
@@ -395,6 +405,10 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 
 	if v, ok := modified["rps_limit"]; ok {
 		input.RpsLimit = gofastly.Int(v.(int))
+	}
+
+	if v, ok := modified["uri_dictionary_name"]; ok {
+		input.URIDictionaryName = gofastly.String(v.(string))
 	}
 
 	if v, ok := modified["window_size"]; ok {

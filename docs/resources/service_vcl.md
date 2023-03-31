@@ -1112,6 +1112,7 @@ Optional:
 - `logger_type` (String) Name of the type of logging endpoint to be used when action is log_only (one of: azureblob, bigquery, cloudfiles, datadog, digitalocean, elasticsearch, ftp, gcs, googleanalytics, heroku, honeycomb, http, https, kafka, kinesis, logentries, loggly, logshuttle, newrelic, openstack, papertrail, pubsub, s3, scalyr, sftp, splunk, stackdriver, sumologic, syslog)
 - `response` (Block List, Max: 1) Custom response to be sent when the rate limit is exceeded. Required if action is response (see [below for nested schema](#nestedblock--rate_limiter--response))
 - `response_object_name` (String) Name of existing response object. Required if action is response_object
+- `uri_dictionary_name` (String) The name of an Edge Dictionary containing URIs as keys. If not defined or null, all origin URIs will be rate limited
 
 Read-Only:
 

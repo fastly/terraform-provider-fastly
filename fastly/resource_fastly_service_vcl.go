@@ -49,6 +49,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingDigitalOcean(vclAttributes),
 		NewServiceLoggingCloudfiles(vclAttributes),
 		NewServiceLoggingKinesis(vclAttributes),
+		NewServiceRateLimiter(vclAttributes),
 		NewServiceResponseObject(vclAttributes),
 		NewServiceRequestSetting(vclAttributes),
 		NewServiceVCL(vclAttributes),

@@ -112,7 +112,7 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Description: "Alphanumeric string identifying the rate limiter",
 		},
 		"response": {
-			Type:        schema.TypeSet,
+			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "Custom response to be sent when the rate limit is exceeded. Required if action is response",
 			MinItems:    1,
@@ -281,7 +281,7 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 		}
 	}
 
-	response := resource["response"].(*schema.Set).List()
+	response := resource["response"].([]any)
 	if len(response) > 0 {
 		for _, v := range response {
 			m := v.(map[string]any)

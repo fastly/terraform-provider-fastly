@@ -186,7 +186,7 @@ func validateUniqueNames(block string) func(_ context.Context, rd *schema.Resour
 
 		for k, v := range names {
 			if v > 1 {
-				return fmt.Errorf("multiple %s with the same name '%s' (each %s name should be unique)", block, k, block)
+				return fmt.Errorf("multiple %ss with the same name '%s' (each %s name should be unique)", block, k, block)
 			}
 		}
 		return nil

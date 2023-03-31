@@ -176,7 +176,6 @@ func (h *RateLimiterAttributeHandler) Create(_ context.Context, d *schema.Resour
 	opts := h.buildCreateERLInput(d.Id(), serviceVersion, resource)
 
 	log.Printf("[DEBUG] Create Rate Limiter: %#v", opts)
-	log.Printf("[DEBUG] Response: %+v", opts.Response)
 	_, err := conn.CreateERL(&opts)
 	if err != nil {
 		return err
@@ -188,7 +187,6 @@ func (h *RateLimiterAttributeHandler) Create(_ context.Context, d *schema.Resour
 // Read refreshes the resource.
 func (h *RateLimiterAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
-	log.Printf("[DEBUG] localState: %+v", localState)
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Rate Limiters for (%s)", d.Id())
@@ -201,7 +199,6 @@ func (h *RateLimiterAttributeHandler) Read(_ context.Context, d *schema.Resource
 		}
 
 		data := flattenRateLimiter(remoteState, h.GetServiceMetadata())
-		log.Printf("[DEBUG] data to set: %+v", data)
 		if err := d.Set(h.GetKey(), data); err != nil {
 			log.Printf("[WARN] Error setting Rate Limiters for (%s): %s", d.Id(), err)
 		}
@@ -252,7 +249,7 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := h.createDeleteERLInput(d.Id(), serviceVersion, resource)
 
-	log.Printf("[DEBUG] Fastly Rate Limiter removal opts: %#v", input)
+	log.Printf("[DEBUG] Delete Rate Limiter: %#v", input)
 	err := conn.DeleteERL(&input)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {

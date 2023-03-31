@@ -100,7 +100,6 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A unique human readable name for the rate limiting rule",
-			// FIXME: Enforce name uniqueness.
 		},
 		"penalty_box_duration": {
 			Type:        schema.TypeInt,

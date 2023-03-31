@@ -1,10 +1,15 @@
 package fastly
 
 import (
+	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v7/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestResourceFastlyFlattenRateLimiter(t *testing.T) {
@@ -78,268 +83,295 @@ func TestResourceFastlyFlattenRateLimiter(t *testing.T) {
 	}
 }
 
-//
-// func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
-// 	cases := []struct {
-// 		serviceMetadata ServiceMetadata
-// 		remote          []*gofastly.Backend
-// 		local           []map[string]any
-// 	}{
-// 		{
-// 			serviceMetadata: ServiceMetadata{
-// 				serviceType: ServiceTypeCompute,
-// 			},
-// 			remote: []*gofastly.Backend{
-// 				{
-// 					Name:                "test.notexample.com",
-// 					Address:             "www.notexample.com",
-// 					OverrideHost:        "origin.example.com",
-// 					Port:                80,
-// 					BetweenBytesTimeout: 10000,
-// 					ConnectTimeout:      1000,
-// 					ErrorThreshold:      0,
-// 					FirstByteTimeout:    15000,
-// 					KeepAliveTime:       1500,
-// 					MaxConn:             200,
-// 					HealthCheck:         "",
-// 					UseSSL:              false,
-// 					SSLCheckCert:        true,
-// 					SSLHostname:         "",
-// 					SSLCACert:           "",
-// 					SSLCertHostname:     "",
-// 					SSLSNIHostname:      "",
-// 					SSLClientKey:        "",
-// 					SSLClientCert:       "",
-// 					MaxTLSVersion:       "",
-// 					MinTLSVersion:       "",
-// 					SSLCiphers:          "foo:bar:baz",
-// 					Shield:              "lga-ny-us",
-// 					Weight:              100,
-// 				},
-// 			},
-// 			local: []map[string]any{
-// 				{
-// 					"name":                  "test.notexample.com",
-// 					"address":               "www.notexample.com",
-// 					"override_host":         "origin.example.com",
-// 					"port":                  80,
-// 					"between_bytes_timeout": 10000,
-// 					"connect_timeout":       1000,
-// 					"error_threshold":       0,
-// 					"first_byte_timeout":    15000,
-// 					"keepalive_time":        1500,
-// 					"max_conn":              200,
-// 					"healthcheck":           "",
-// 					"use_ssl":               false,
-// 					"ssl_check_cert":        true,
-// 					"ssl_ca_cert":           "",
-// 					"ssl_cert_hostname":     "",
-// 					"ssl_sni_hostname":      "",
-// 					"ssl_client_key":        "",
-// 					"ssl_client_cert":       "",
-// 					"max_tls_version":       "",
-// 					"min_tls_version":       "",
-// 					"ssl_ciphers":           "foo:bar:baz",
-// 					"shield":                "lga-ny-us",
-// 					"weight":                100,
-// 				},
-// 			},
-// 		},
-// 	}
-//
-// 	for _, c := range cases {
-// 		out := flattenBackend(c.remote, c.serviceMetadata)
-// 		if !reflect.DeepEqual(out, c.local) {
-// 			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
-// 		}
-// 	}
-// }
-//
-// func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
-// 	var service gofastly.ServiceDetail
-// 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-// 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-// 	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
-// 	backendAddress := "httpbin.org"
-//
-// 	// The following backends are what we expect to exist after all our Terraform
-// 	// configuration settings have been applied. We expect them to correlate to
-// 	// the specific backend definitions in the Terraform configuration.
-//
-// 	b1 := gofastly.Backend{
-// 		Address: backendAddress,
-// 		Name:    backendName,
-// 		Port:    443,
-//
-// 		// NOTE: The following are defaults applied by the API.
-// 		BetweenBytesTimeout: 10000,
-// 		ConnectTimeout:      1000,
-// 		FirstByteTimeout:    15000,
-// 		Hostname:            backendAddress,
-// 		MaxConn:             200,
-// 		SSLCheckCert:        true,
-// 		Weight:              100,
-// 	}
-// 	b2 := gofastly.Backend{
-// 		Address: backendAddress,
-// 		Name:    backendName + " new",
-// 		Port:    443,
-//
-// 		// NOTE: The following are defaults applied by the API.
-// 		BetweenBytesTimeout: 10000,
-// 		ConnectTimeout:      1000,
-// 		FirstByteTimeout:    15000,
-// 		Hostname:            backendAddress,
-// 		MaxConn:             200,
-// 		SSLCheckCert:        true,
-// 		Weight:              100,
-// 	}
-// 	b3 := gofastly.Backend{
-// 		Address: backendAddress,
-// 		Name:    backendName + " new with use ssl",
-// 		// NOTE: We don't set the port attribute in the Terraform configuration, and
-// 		// so the Terraform provider defaults to setting that to port 80. This test
-// 		// validates that the Fastly API currently accepts port 80 (although the
-// 		// setting of use_ssl would otherwise cause you to expect some kind of API
-// 		// validation to prevent port 80 from being used).
-// 		Port:            80,
-// 		SSLCertHostname: "httpbin.org",
-// 		UseSSL:          true,
-//
-// 		// NOTE: The following are defaults applied by the API.
-// 		BetweenBytesTimeout: 10000,
-// 		ConnectTimeout:      1000,
-// 		FirstByteTimeout:    15000,
-// 		Hostname:            backendAddress,
-// 		MaxConn:             200,
-// 		SSLCheckCert:        true,
-// 		Weight:              100,
-// 	}
-//
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			testAccPreCheck(t)
-// 		},
-// 		ProviderFactories: testAccProviders,
-// 		CheckDestroy:      testAccCheckServiceVCLDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccServiceVCLBackend(serviceName, domainName, backendAddress, backendName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-// 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
-// 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
-// 					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1}),
-// 				),
-// 			},
-//
-// 			{
-// 				Config: testAccServiceVCLBackendUpdate(serviceName, domainName, backendAddress, backendName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
-// 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "3"),
-// 					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1, &b2, &b3}),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
-//
-// // NOTE: We set the port to 443 so we can validate the API is expecting SSL/TLS
-// // related attributes to not be accidentally sent with empty strings.
-// func testAccServiceVCLBackend(serviceName, domainName, backendAddress, backendName string) string {
-// 	return fmt.Sprintf(`
-// resource "fastly_service_vcl" "foo" {
-//   name = "%s"
-//
-//   domain {
-//     name    = "%s"
-//     comment = "demo"
-//   }
-//
-//   backend {
-//     address = "%s"
-//     name    = "%s"
-//     port    = 443
-//   }
-//
-//   force_destroy = true
-// }`, serviceName, domainName, backendAddress, backendName)
-// }
-//
-// // NOTE: We set the port to 443 so we can validate the API is expecting SSL/TLS
-// // related attributes to not be accidentally sent with empty strings.
-// func testAccServiceVCLBackendUpdate(serviceName, domainName, backendAddress, backendName string) string {
-// 	return fmt.Sprintf(`
-// resource "fastly_service_vcl" "foo" {
-//   name = "%s"
-//
-//   domain {
-//     name    = "%s"
-//     comment = "demo"
-//   }
-//
-//   backend {
-//     address = "%s"
-//     name    = "%s"
-//     port    = 443
-//   }
-//
-//   backend {
-//     address = "%s"
-//     name    = "%s new"
-//     port    = 443
-//   }
-//
-//   backend {
-//     address           = "%s"
-//     name              = "%s new with use ssl"
-//     use_ssl           = true
-//     ssl_cert_hostname = "httpbin.org"
-//   }
-//
-//   force_destroy = true
-// }`, serviceName, domainName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName)
-// }
-//
-// func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDetail, want []*gofastly.Backend) resource.TestCheckFunc {
-// 	return func(_ *terraform.State) error {
-// 		conn := testAccProvider.Meta().(*APIClient).conn
-// 		have, err := conn.ListBackends(&gofastly.ListBackendsInput{
-// 			ServiceID:      service.ID,
-// 			ServiceVersion: service.ActiveVersion.Number,
-// 		})
-// 		if err != nil {
-// 			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
-// 		}
-//
-// 		if len(have) != len(want) {
-// 			return fmt.Errorf("backend list count mismatch, expected (%d), got (%d)", len(want), len(have))
-// 		}
-//
-// 		var found int
-// 		for _, w := range want {
-// 			for _, h := range have {
-// 				if w.Name == h.Name {
-// 					// we don't know these things ahead of time, so populate them now
-// 					w.ServiceID = service.ID
-// 					w.ServiceVersion = service.ActiveVersion.Number
-// 					// We don't track these, so clear them out because we also won't know
-// 					// these ahead of time
-// 					h.CreatedAt = nil
-// 					h.UpdatedAt = nil
-// 					if !reflect.DeepEqual(w, h) {
-// 						return fmt.Errorf("bad match Backend match, expected (%#v), got (%#v)", w, h)
-// 					}
-// 					found++
-// 				}
-// 			}
-// 		}
-//
-// 		if found != len(want) {
-// 			return fmt.Errorf("error matching Backends (%d/%d)", found, len(want))
-// 		}
-//
-// 		return nil
-// 	}
-// }
+func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	rateLimiterName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
+
+	// The following Rate Limiters are what we expect to exist after all our
+	// Terraform configuration settings have been applied. We expect them to
+	// correlate to the specific Rate Limiter definitions in the Terraform config.
+
+	erl1 := gofastly.ERL{
+		Action: gofastly.ERLActionResponse,
+		ClientKey: []string{
+			"req.http.Fastly-Client-IP",
+			"req.http.User-Agent",
+		},
+		FeatureRevision: 1,
+		HTTPMethods: []string{
+			"POST",
+			"PUT",
+			"PATCH",
+			"DELETE",
+		},
+		Name:               rateLimiterName,
+		PenaltyBoxDuration: 30,
+		Response: &gofastly.ERLResponse{
+			ERLContent:     "example",
+			ERLContentType: "plain/text",
+			ERLStatus:      429,
+		},
+		RpsLimit:   100,
+		WindowSize: gofastly.ERLSize60,
+	}
+
+	erl2 := gofastly.ERL{
+		Action: gofastly.ERLActionResponse,
+		ClientKey: []string{
+			"req.http.Fastly-Client-IP",
+			"req.http.User-Agent",
+		},
+		FeatureRevision: 1,
+		HTTPMethods: []string{
+			"POST",
+			"PUT",
+			"PATCH",
+			"DELETE",
+		},
+		Name:               rateLimiterName + "-2",
+		PenaltyBoxDuration: 30,
+		Response: &gofastly.ERLResponse{
+			ERLContent:     "example",
+			ERLContentType: "plain/text",
+			ERLStatus:      429,
+		},
+		RpsLimit:   100,
+		WindowSize: gofastly.ERLSize60,
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceVCLRateLimiter(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "rate_limiter.#", "1"),
+					testAccCheckFastlyServiceVCLRateLimiterAttributes(&service, []*gofastly.ERL{&erl1}),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLRateLimiterUpdate(serviceName, domainName, rateLimiterName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "rate_limiter.#", "2"),
+					testAccCheckFastlyServiceVCLRateLimiterAttributes(&service, []*gofastly.ERL{&erl1, &erl2}),
+				),
+			},
+
+			{
+				Config:      testAccServiceVCLMultipleRateLimiters(serviceName, domainName, rateLimiterName),
+				ExpectError: regexp.MustCompile("multiple rate_limiters with the same name"),
+			},
+		},
+	})
+}
+
+func testAccServiceVCLRateLimiter(serviceName, domainName, rateLimiterName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  rate_limiter {
+    action               = "response"
+    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+    http_methods         = "POST,PUT,PATCH,DELETE"
+    name                 = "%s"
+    penalty_box_duration = 30
+
+    response {
+      content      = "example"
+      content_type = "plain/text"
+      status       = 429
+    }
+
+    rps_limit   = 100
+    window_size = 60
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, rateLimiterName)
+}
+
+func testAccServiceVCLRateLimiterUpdate(serviceName, domainName, rateLimiterName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  rate_limiter {
+    action               = "response"
+    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+    http_methods         = "POST,PUT,PATCH,DELETE"
+    name                 = "%s"
+    penalty_box_duration = 30
+
+    response {
+      content      = "example"
+      content_type = "plain/text"
+      status       = 429
+    }
+
+    rps_limit   = 100
+    window_size = 60
+  }
+
+  rate_limiter {
+    action               = "response"
+    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+    http_methods         = "POST,PUT,PATCH,DELETE"
+    name                 = "%s-2"
+    penalty_box_duration = 30
+
+    response {
+      content      = "example"
+      content_type = "plain/text"
+      status       = 429
+    }
+
+    rps_limit   = 100
+    window_size = 60
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, rateLimiterName, rateLimiterName)
+}
+
+// IMPORTANT: The following config defines two rate limiters with the same 'name'.
+// Although allowed by the Fastly API, this isn't ideal.
+// That's because we need the names to be unique for the purpose of updating
+// rate limiters (as the API also causes each Rate Limiter's ID to change when a
+// service is cloned).
+// The Fastly Terraform provider should return an error when generating the diff.
+func testAccServiceVCLMultipleRateLimiters(serviceName, domainName, rateLimiterName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "demo"
+  }
+
+  rate_limiter {
+    action               = "response"
+    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+    http_methods         = "POST,PUT,PATCH,DELETE"
+    name                 = "%s"
+    penalty_box_duration = 30
+
+    response {
+      content      = "example"
+      content_type = "plain/text"
+      status       = 429
+    }
+
+    rps_limit   = 100
+    window_size = 60
+  }
+
+  rate_limiter {
+    action               = "response"
+    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+    http_methods         = "POST,PUT,PATCH,DELETE"
+    name                 = "%s-2"
+    penalty_box_duration = 30
+
+    response {
+      content      = "example"
+      content_type = "plain/text"
+      status       = 429
+    }
+
+    rps_limit   = 100
+    window_size = 60
+  }
+
+  # IMPORTANT: The following Rate Limiter has the same 'name' as above.
+  # But to ensure the error is reported we have to have some other difference.
+  # In this case we change the rps_limit.
+  # If we just took an exact copy of the above rate limiter, then we'd have no
+  # error reported from Terraform because the TypeSet behaviour would kick in
+  # and prevent the plan/diff from even showing any change because a set data
+  # structure doesn't allow any duplicates (hence we need a small difference
+  # just for the sake of validating the 'name' fields don't match).
+  rate_limiter {
+    action               = "response"
+    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+    http_methods         = "POST,PUT,PATCH,DELETE"
+    name                 = "%s-2"
+    penalty_box_duration = 30
+
+    response {
+      content      = "example"
+      content_type = "plain/text"
+      status       = 429
+    }
+
+    rps_limit   = 1
+    window_size = 60
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, rateLimiterName, rateLimiterName, rateLimiterName)
+}
+
+func testAccCheckFastlyServiceVCLRateLimiterAttributes(service *gofastly.ServiceDetail, want []*gofastly.ERL) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		have, err := conn.ListERLs(&gofastly.ListERLsInput{
+			ServiceID:      service.ID,
+			ServiceVersion: service.ActiveVersion.Number,
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Rate Limiters for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		}
+
+		if len(have) != len(want) {
+			return fmt.Errorf("backend list count mismatch, expected (%d), got (%d)", len(want), len(have))
+		}
+
+		var found int
+		for _, w := range want {
+			for _, h := range have {
+				if w.Name == h.Name {
+					// we don't know these things ahead of time, so populate them now
+					w.ID = h.ID
+					w.ServiceID = service.ID
+					w.Version = service.ActiveVersion.Number
+					// We don't track these, so clear them out because we also won't know
+					// these ahead of time
+					h.CreatedAt = nil
+					h.UpdatedAt = nil
+					if !reflect.DeepEqual(w, h) {
+						return fmt.Errorf("bad match Rate Limiters match, expected (%#v), got (%#v)", w, h)
+					}
+					found++
+				}
+			}
+		}
+
+		if found != len(want) {
+			return fmt.Errorf("error matching Rate Limiters (%d/%d)", found, len(want))
+		}
+
+		return nil
+	}
+}

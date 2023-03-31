@@ -1,83 +1,83 @@
 package fastly
 
-// func TestResourceFastlyFlattenBackend(t *testing.T) {
-// 	cases := []struct {
-// 		serviceMetadata ServiceMetadata
-// 		remote          []*gofastly.Backend
-// 		local           []map[string]any
-// 	}{
-// 		{
-// 			serviceMetadata: ServiceMetadata{
-// 				serviceType: ServiceTypeVCL,
-// 			},
-// 			remote: []*gofastly.Backend{
-// 				{
-// 					Name:                "test.notexample.com",
-// 					Address:             "www.notexample.com",
-// 					OverrideHost:        "origin.example.com",
-// 					Port:                80,
-// 					AutoLoadbalance:     false,
-// 					BetweenBytesTimeout: 10000,
-// 					ConnectTimeout:      1000,
-// 					ErrorThreshold:      0,
-// 					FirstByteTimeout:    15000,
-// 					KeepAliveTime:       1500,
-// 					MaxConn:             200,
-// 					RequestCondition:    "",
-// 					HealthCheck:         "",
-// 					UseSSL:              false,
-// 					SSLCheckCert:        true,
-// 					SSLCACert:           "",
-// 					SSLCertHostname:     "",
-// 					SSLSNIHostname:      "",
-// 					SSLClientKey:        "",
-// 					SSLClientCert:       "",
-// 					MaxTLSVersion:       "",
-// 					MinTLSVersion:       "",
-// 					SSLCiphers:          "foo:bar:baz",
-// 					Shield:              "lga-ny-us",
-// 					Weight:              100,
-// 				},
-// 			},
-// 			local: []map[string]any{
-// 				{
-// 					"name":                  "test.notexample.com",
-// 					"address":               "www.notexample.com",
-// 					"override_host":         "origin.example.com",
-// 					"port":                  80,
-// 					"auto_loadbalance":      false,
-// 					"between_bytes_timeout": 10000,
-// 					"connect_timeout":       1000,
-// 					"error_threshold":       0,
-// 					"first_byte_timeout":    15000,
-// 					"keepalive_time":        1500,
-// 					"max_conn":              200,
-// 					"request_condition":     "",
-// 					"healthcheck":           "",
-// 					"use_ssl":               false,
-// 					"ssl_check_cert":        true,
-// 					"ssl_ca_cert":           "",
-// 					"ssl_cert_hostname":     "",
-// 					"ssl_sni_hostname":      "",
-// 					"ssl_client_key":        "",
-// 					"ssl_client_cert":       "",
-// 					"max_tls_version":       "",
-// 					"min_tls_version":       "",
-// 					"ssl_ciphers":           "foo:bar:baz",
-// 					"shield":                "lga-ny-us",
-// 					"weight":                100,
-// 				},
-// 			},
-// 		},
-// 	}
-//
-// 	for _, c := range cases {
-// 		out := flattenBackend(c.remote, c.serviceMetadata)
-// 		if !reflect.DeepEqual(out, c.local) {
-// 			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
-// 		}
-// 	}
-// }
+import (
+	"reflect"
+	"testing"
+
+	gofastly "github.com/fastly/go-fastly/v7/fastly"
+)
+
+func TestResourceFastlyFlattenRateLimiter(t *testing.T) {
+	cases := []struct {
+		serviceMetadata ServiceMetadata
+		remote          []*gofastly.ERL
+		local           []map[string]any
+	}{
+		{
+			serviceMetadata: ServiceMetadata{
+				serviceType: ServiceTypeVCL,
+			},
+			remote: []*gofastly.ERL{
+				{
+					Action: gofastly.ERLActionResponse,
+					ClientKey: []string{
+						"req.http.Fastly-Client-IP",
+						"req.http.User-Agent",
+					},
+					FeatureRevision: 1,
+					HTTPMethods: []string{
+						"POST",
+						"PUT",
+						"PATCH",
+						"DELETE",
+					},
+					ID:                 "123abc",
+					LoggerType:         gofastly.ERLLogBigQuery,
+					Name:               "example",
+					PenaltyBoxDuration: 123,
+					Response: &gofastly.ERLResponse{
+						ERLContent:     "example",
+						ERLContentType: "plain/text",
+						ERLStatus:      429,
+					},
+					ResponseObjectName: "example",
+					RpsLimit:           123,
+					WindowSize:         gofastly.ERLSize1,
+				},
+			},
+			local: []map[string]any{
+				{
+					"action":               "response",
+					"client_key":           "req.http.Fastly-Client-IP,req.http.User-Agent",
+					"feature_revision":     1,
+					"http_methods":         "POST,PUT,PATCH,DELETE",
+					"logger_type":          "bigquery",
+					"name":                 "example",
+					"penalty_box_duration": 123,
+					"ratelimiter_id":       "123abc",
+					"response": []map[string]any{
+						{
+							"content":      "example",
+							"content_type": "plain/text",
+							"status":       429,
+						},
+					},
+					"response_object_name": "example",
+					"rps_limit":            123,
+					"window_size":          1,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenRateLimiter(c.remote, c.serviceMetadata)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", c.local, out)
+		}
+	}
+}
+
 //
 // func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 // 	cases := []struct {

@@ -11,27 +11,34 @@ import (
 
 // ERL models the response from the Fastly API.
 type ERL struct {
-	Action             ERLAction        `mapstructure:"action"`
-	ClientKey          []string         `mapstructure:"client_key"`
-	CreatedAt          *time.Time       `mapstructure:"created_at"`
-	DeletedAt          *time.Time       `mapstructure:"deleted_at"`
-	FeatureRevision    int              `mapstructure:"feature_revision"` // 1..
-	HTTPMethods        []string         `mapstructure:"http_methods"`
-	ID                 string           `mapstructure:"id"`
-	LoggerType         ERLLogger        `mapstructure:"logger_type"`
-	Name               string           `mapstructure:"name"`
-	PenaltyBoxDuration int              `mapstructure:"penalty_box_duration"` // 1..60
-	Response           *ERLResponseType `mapstructure:"response"`             // required if Action != Log
-	ResponseObjectName string           `mapstructure:"response_object_name"`
-	RpsLimit           int              `mapstructure:"rps_limit"` // 10..10000
-	ServiceID          string           `mapstructure:"service_id"`
-	UpdatedAt          *time.Time       `mapstructure:"updated_at"`
-	URIDictionaryName  string           `mapstructure:"uri_dictionary_name"`
-	Version            int              `mapstructure:"version"` // 1..
-	WindowSize         ERLWindowSize    `mapstructure:"window_size"`
+	Action             ERLAction     `mapstructure:"action"`
+	ClientKey          []string      `mapstructure:"client_key"`
+	CreatedAt          *time.Time    `mapstructure:"created_at"`
+	DeletedAt          *time.Time    `mapstructure:"deleted_at"`
+	FeatureRevision    int           `mapstructure:"feature_revision"` // 1..
+	HTTPMethods        []string      `mapstructure:"http_methods"`
+	ID                 string        `mapstructure:"id"`
+	LoggerType         ERLLogger     `mapstructure:"logger_type"`
+	Name               string        `mapstructure:"name"`
+	PenaltyBoxDuration int           `mapstructure:"penalty_box_duration"` // 1..60
+	Response           *ERLResponse  `mapstructure:"response"`             // required if Action != Log
+	ResponseObjectName string        `mapstructure:"response_object_name"`
+	RpsLimit           int           `mapstructure:"rps_limit"` // 10..10000
+	ServiceID          string        `mapstructure:"service_id"`
+	UpdatedAt          *time.Time    `mapstructure:"updated_at"`
+	URIDictionaryName  string        `mapstructure:"uri_dictionary_name"`
+	Version            int           `mapstructure:"version"` // 1..
+	WindowSize         ERLWindowSize `mapstructure:"window_size"`
 }
 
-// ERLResponseType models the response from the Fastly API.
+// ERLResponse models the response from the Fastly API.
+type ERLResponse struct {
+	ERLContent     string `mapstructure:"content,omitempty"`
+	ERLContentType string `mapstructure:"content_type,omitempty"`
+	ERLStatus      int    `mapstructure:"status,omitempty"`
+}
+
+// ERLResponseType models the input to the Fastly API.
 type ERLResponseType struct {
 	ERLContent     string `url:"content,omitempty"`
 	ERLContentType string `url:"content_type,omitempty"`
@@ -56,8 +63,20 @@ const (
 	ERLActionResponseObject ERLAction = "response_object"
 )
 
+// ERLActions is a list of supported actions.
+var ERLActions = []ERLAction{
+	ERLActionLogOnly,
+	ERLActionResponse,
+	ERLActionResponseObject,
+}
+
 // ERLLogger represents the supported log provider variants.
 type ERLLogger string
+
+// ERLLoggerPtr is a helper that returns a pointer to the type passed in.
+func ERLLoggerPtr(v ERLLogger) *ERLLogger {
+	return &v
+}
 
 const (
 	// ERLLogAzureBlob represents a log provider variant.
@@ -120,6 +139,39 @@ const (
 	ERLLogSysLog ERLLogger = "syslog"
 )
 
+// ERLLoggers is a list of supported logger types.
+var ERLLoggers = []ERLLogger{
+	ERLLogAzureBlob,
+	ERLLogBigQuery,
+	ERLLogCloudFiles,
+	ERLLogDataDog,
+	ERLLogDigitalOcean,
+	ERLLogElasticSearch,
+	ERLLogFtp,
+	ERLLogGcs,
+	ERLLogGoogleAnalytics,
+	ERLLogHeroku,
+	ERLLogHoneycomb,
+	ERLLogHTTP,
+	ERLLogHTTPS,
+	ERLLogKafta,
+	ERLLogKinesis,
+	ERLLogLogEntries,
+	ERLLogLoggly,
+	ERLLogLogShuttle,
+	ERLLogNewRelic,
+	ERLLogOpenStack,
+	ERLLogPaperTrail,
+	ERLLogPubSub,
+	ERLLogS3,
+	ERLLogScalyr,
+	ERLLogSftp,
+	ERLLogSplunk,
+	ERLLogStackDriver,
+	ERLLogSumoLogic,
+	ERLLogSysLog,
+}
+
 // ERLWindowSize represents the duration variants for when the RPS limit is
 // exceeded.
 type ERLWindowSize int
@@ -137,6 +189,13 @@ const (
 	// ERLSize60 represents a duration variant.
 	ERLSize60 ERLWindowSize = 60
 )
+
+// ERLWindowSizes is a list of supported time window sizes.
+var ERLWindowSizes = []ERLWindowSize{
+	ERLSize1,
+	ERLSize10,
+	ERLSize60,
+}
 
 // ERLsByName is a sortable list of ERLs
 type ERLsByName []*ERL
@@ -195,20 +254,28 @@ type CreateERLInput struct {
 	Action *ERLAction `url:"action,omitempty"`
 	// ClientKey is an array of VCL variables used to generate a counter key to identify a client.
 	ClientKey *[]string `url:"client_key,brackets,omitempty"`
+	// FeatureRevision is the number of the rate limiting feature implementation. Defaults to the most recent revision.
+	FeatureRevision *int `url:"feature_revision,omitempty"`
 	// HTTPMethods is an array of HTTP methods to apply rate limiting to.
 	HTTPMethods *[]string `url:"http_methods,brackets,omitempty"`
+	// LoggerType is the name of the type of logging endpoint to be used when `action` is log_only.
+	LoggerType *ERLLogger `url:"logger_type,omitempty"`
 	// Name is a human readable name for the rate limiting rule.
 	Name *string `url:"name,omitempty"`
 	// PenaltyBoxDuration is a length of time in minutes that the rate limiter is in effect after the initial violation is detected.
 	PenaltyBoxDuration *int `url:"penalty_box_duration,omitempty"`
 	// Response is a custom response to be sent when the rate limit is exceeded. Required if action is response.
 	Response *ERLResponseType `url:"response,omitempty"`
+	// ResponseObjectName is the name of existing response object. Required if action is response_object.
+	ResponseObjectName *string `url:"response_object_name,omitempty"`
 	// RpsLimit is an upper limit of requests per second allowed by the rate limiter.
 	RpsLimit *int `url:"rps_limit,omitempty"`
 	// ServiceID is an alphanumeric string identifying the service (required).
 	ServiceID string `url:"-"`
 	// ServiceVersion is the specific configuration version (required).
 	ServiceVersion int `url:"-"`
+	// URIDictionaryName is the name of an Edge Dictionary containing URIs as keys. If not defined or null, all origin URIs will be rate limited.
+	URIDictionaryName *string `url:"uri_dictionary_name,omitempty"`
 	// WindowSize is the number of seconds during which the RPS limit must be exceeded in order to trigger a violation (1, 10, 60).
 	WindowSize *ERLWindowSize `url:"window_size,omitempty"`
 }
@@ -302,16 +369,24 @@ type UpdateERLInput struct {
 	ClientKey *[]string `url:"client_key,omitempty,brackets,omitempty"`
 	// ERLID is an alphanumeric string identifying the rate limiter (required).
 	ERLID string `url:"-"`
+	// FeatureRevision is the number of the rate limiting feature implementation. Defaults to the most recent revision.
+	FeatureRevision *int `url:"feature_revision,omitempty"`
 	// HTTPMethods is an array of HTTP methods to apply rate limiting to.
 	HTTPMethods *[]string `url:"http_methods,omitempty,brackets,omitempty"`
+	// LoggerType is the name of the type of logging endpoint to be used when `action` is log_only.
+	LoggerType *ERLLogger `url:"logger_type,omitempty"`
 	// Name is a human readable name for the rate limiting rule.
 	Name *string `url:"name,omitempty"`
 	// PenaltyBoxDuration is a length of time in minutes that the rate limiter is in effect after the initial violation is detected.
 	PenaltyBoxDuration *int `url:"penalty_box_duration,omitempty"`
 	// Response is a custom response to be sent when the rate limit is exceeded. Required if action is response.
 	Response *ERLResponseType `url:"response,omitempty"`
+	// ResponseObjectName is the name of existing response object. Required if action is response_object.
+	ResponseObjectName *string `url:"response_object_name,omitempty"`
 	// RpsLimit is an upper limit of requests per second allowed by the rate limiter.
 	RpsLimit *int `url:"rps_limit,omitempty"`
+	// URIDictionaryName is the name of an Edge Dictionary containing URIs as keys. If not defined or null, all origin URIs will be rate limited.
+	URIDictionaryName *string `url:"uri_dictionary_name,omitempty"`
 	// WindowSize is the number of seconds during which the RPS limit must be exceeded in order to trigger a violation (1, 10, 60).
 	WindowSize *ERLWindowSize `url:"window_size,omitempty"`
 }

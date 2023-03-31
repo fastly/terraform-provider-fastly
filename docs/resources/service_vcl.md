@@ -282,6 +282,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `logging_sumologic` (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
 - `logging_syslog` (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
 - `product_enablement` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--product_enablement))
+- `rate_limiter` (Block Set) (see [below for nested schema](#nestedblock--rate_limiter))
 - `request_setting` (Block Set) (see [below for nested schema](#nestedblock--request_setting))
 - `response_object` (Block Set) (see [below for nested schema](#nestedblock--response_object))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
@@ -1090,6 +1091,42 @@ Optional:
 Read-Only:
 
 - `name` (String) Used internally by the provider to identify modified settings
+
+
+<a id="nestedblock--rate_limiter"></a>
+### Nested Schema for `rate_limiter`
+
+Required:
+
+- `action` (String) The action to take when a rate limiter violation is detected (one of: log_only, log_only, response_object)
+- `client_key` (String) Comma-separated list of VCL variables used to generate a counter key to identify a client
+- `http_methods` (String) Comma-separated list of HTTP methods to apply rate limiting to
+- `name` (String) A unique human readable name for the rate limiting rule
+- `penalty_box_duration` (Number) Length of time in minutes that the rate limiter is in effect after the initial violation is detected
+- `rps_limit` (Number) Upper limit of requests per second allowed by the rate limiter
+- `window_size` (Number) Number of seconds during which the RPS limit must be exceeded in order to trigger a violation (one of: 1, 10, 60)
+
+Optional:
+
+- `feature_revision` (Number) Revision number of the rate limiting feature implementation
+- `logger_type` (String) Name of the type of logging endpoint to be used when action is log_only (one of: azureblob, bigquery, cloudfiles, datadog, digitalocean, elasticsearch, ftp, gcs, googleanalytics, heroku, honeycomb, http, https, kafka, kinesis, logentries, loggly, logshuttle, newrelic, openstack, papertrail, pubsub, s3, scalyr, sftp, splunk, stackdriver, sumologic, syslog)
+- `response` (Block List, Max: 1) Custom response to be sent when the rate limit is exceeded. Required if action is response (see [below for nested schema](#nestedblock--rate_limiter--response))
+- `response_object_name` (String) Name of existing response object. Required if action is response_object
+- `uri_dictionary_name` (String) The name of an Edge Dictionary containing URIs as keys. If not defined or null, all origin URIs will be rate limited
+
+Read-Only:
+
+- `ratelimiter_id` (String) Alphanumeric string identifying the rate limiter
+
+<a id="nestedblock--rate_limiter--response"></a>
+### Nested Schema for `rate_limiter.response`
+
+Required:
+
+- `content` (String) HTTP response body data
+- `content_type` (String) HTTP Content-Type (e.g. application/json)
+- `status` (Number) HTTP response status code (e.g. 429)
+
 
 
 <a id="nestedblock--request_setting"></a>

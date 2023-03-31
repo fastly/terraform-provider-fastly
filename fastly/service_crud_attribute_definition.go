@@ -117,9 +117,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 
 	for _, resource := range diffResult.Modified {
 		resource := resource.(map[string]any)
-
 		modified := setDiff.Filter(resource, oldSet)
-
 		err := h.handler.Update(ctx, d, resource, modified, serviceVersion, conn)
 		if err != nil {
 			return err

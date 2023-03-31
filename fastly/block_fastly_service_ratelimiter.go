@@ -99,7 +99,8 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A human readable name for the rate limiting rule",
+			Description: "A unique human readable name for the rate limiting rule",
+			// FIXME: Enforce name uniqueness.
 		},
 		"penalty_box_duration": {
 			Type:        schema.TypeInt,
@@ -212,10 +213,36 @@ func (h *RateLimiterAttributeHandler) Read(_ context.Context, d *schema.Resource
 
 // Update updates the resource.
 func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	input := h.buildUpdateERLInput(d.Id(), serviceVersion, resource, modified)
+	var rateLimiterID string
+
+	// IMPORTANT: Cloning a Service will result in new Rate Limiter IDs.
+	//
+	// This means, to update a Rate Limiter we have to first get a list of all
+	// available Rate Limiters on the cloned service version, then identify the
+	// one we need by its 'name' (which the API doesn't treat as unique, so
+	// multiple Rate Limiters in theory can have the same name, but in Terraform
+	// we enforce that the name must be unique otherwise we can't safely determine
+	// the Rate Limiter ID).
+
+	erls, err := conn.ListERLs(&gofastly.ListERLsInput{
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, e := range erls {
+		if e.Name == resource["name"].(string) {
+			rateLimiterID = e.ID
+			break
+		}
+	}
+
+	input := h.buildUpdateERLInput(rateLimiterID, d.Id(), serviceVersion, resource, modified)
 
 	log.Printf("[DEBUG] Update Rate Limiter: %#v", input)
-	_, err := conn.UpdateERL(&input)
+	_, err = conn.UpdateERL(&input)
 	if err != nil {
 		return err
 	}
@@ -309,9 +336,9 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 	return input
 }
 
-func (h *RateLimiterAttributeHandler) buildUpdateERLInput(serviceID string, latestVersion int, resource, modified map[string]any) gofastly.UpdateERLInput {
+func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, serviceID string, latestVersion int, resource, modified map[string]any) gofastly.UpdateERLInput {
 	input := gofastly.UpdateERLInput{
-		ERLID: resource["ratelimiter_id"].(string),
+		ERLID: rateLimiterID,
 	}
 
 	// NOTE: When converting from an interface{} we lose the underlying type.
@@ -358,7 +385,7 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(serviceID string, late
 	}
 
 	if v, ok := modified["response"]; ok {
-		m := v.(*schema.Set).List()[0].(map[string]any)
+		m := v.([]any)[0].(map[string]any)
 		input.Response = &gofastly.ERLResponseType{
 			ERLContent:     m["content"].(string),
 			ERLContentType: m["content_type"].(string),

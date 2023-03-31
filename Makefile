@@ -8,6 +8,9 @@ VERSION=$(shell git describe --tags --always)
 VERSION_SHORT=$(shell git describe --tags --always --abbrev=0)
 DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION_SHORT))
 
+# Enables support for tools such as https://github.com/rakyll/gotest
+TEST_COMMAND ?= go test
+
 # R019: ignore large number of arguments passed to HasChanges().
 # R018: replace sleep with either resource.Retry() or WaitForState().
 # R001: for complex d.Set() calls use a string literal instead.
@@ -33,9 +36,9 @@ build: clean
 	@sh -c "'$(CURDIR)/scripts/generate-dev-overrides.sh'"
 
 test:
-	go test $(TEST) || exit 1
+	$(TEST_COMMAND) $(TEST) || exit 1
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=$(TEST_PARALLELISM)
+		xargs -t -n4 $(TEST_COMMAND) $(TESTARGS) -timeout=30s -parallel=$(TEST_PARALLELISM)
 
 # prefix `go test` with TF_LOG=debug or 'trace' for additional terraform output
 # such as all the requests and responses it handles.
@@ -49,7 +52,7 @@ test:
 # https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#running-acceptance-tests
 #
 testacc: staticcheck tfproviderlintx fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -parallel=$(TEST_PARALLELISM) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
+	TF_ACC=1 $(TEST_COMMAND) $(TEST) -v $(TESTARGS) -parallel=$(TEST_PARALLELISM) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
 
 # WARNING: This target will delete infrastructure.
 clean_test:
@@ -95,7 +98,7 @@ test-compile:
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
 		exit 1; \
 	fi
-	go test -c $(TEST) $(TESTARGS)
+	$(TEST_COMMAND) -c $(TEST) $(TESTARGS)
 
 BIN=$(CURDIR)/bin
 $(BIN)/%:
@@ -126,7 +129,7 @@ sweep:
 	@if [ "$(SILENCE)" != "true" ]; then \
 		echo "WARNING: This will destroy infrastructure. Use only in development accounts."; \
 	fi
-	go test ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m || true
+	$(TEST_COMMAND) ./fastly -v -sweep=ALL $(SWEEPARGS) -timeout 30m || true
 
 clean:
 	rm -rf ./bin

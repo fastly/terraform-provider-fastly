@@ -1,4 +1,10 @@
-## 4.2.0 (Unreleased)
+## 4.3.0 (Unreleased)
+
+## 4.2.0 (April 1, 2023)
+
+ENHANCEMENTS:
+
+* feat(ratelimiter): implement Rate Limiter API [#678](https://github.com/fastly/terraform-provider-fastly/pull/678)
 
 ## 4.1.2 (March 29, 2023)
 

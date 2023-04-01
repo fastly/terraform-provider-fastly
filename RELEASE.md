@@ -3,7 +3,7 @@
 1. Merge all PRs intended for the release.
 2. Rebase latest remote main branch locally (`git pull --rebase origin main`).
 3. Ensure all analysis checks and tests are passing (`TEST_PARALLELISM=8 make testacc`).
-4. Run `go mod vendor` and `make goreleaser GORELEASER_ARGS="--skip-validate --rm-dist"`.
+4. Run `go mod vendor` and `make goreleaser GORELEASER_ARGS="--skip-validate --clean"`.
 5. Open a new PR to update CHANGELOG ([example](https://github.com/fastly/terraform-provider-fastly/pull/498/files))<sup>[1](#note1)</sup>.
 6. Merge CHANGELOG.
 7. Rebase latest remote main branch locally (`git pull --rebase origin main`)<sup>[2](#note2)</sup>.

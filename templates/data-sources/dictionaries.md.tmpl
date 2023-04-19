@@ -1,0 +1,19 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_dictionaries"
+sidebar_current: "docs-fastly-datasource-fastly_dictionaries"
+description: |-
+  Get information on Fastly service dictionaries.
+---
+
+# fastly_dictionaries
+
+Use this data source to get a list of [Fastly dictionaries][1] for the specified service/version.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/dictionaries.tf"}}
+
+[1]: https://developer.fastly.com/reference/api/dictionaries/
+
+{{ .SchemaMarkdown | trimspace }}

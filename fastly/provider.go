@@ -4,9 +4,10 @@ import (
 	"context"
 
 	gofastly "github.com/fastly/go-fastly/v7/fastly"
-	"github.com/fastly/terraform-provider-fastly/version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/fastly/terraform-provider-fastly/version"
 )
 
 // TerraformProviderProductUserAgent is included in the User-Agent header for
@@ -44,6 +45,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"fastly_datacenters":                  dataSourceFastlyDatacenters(),
+			"fastly_dictionaries":                 dataSourceFastlyDictionaries(),
 			"fastly_services":                     dataSourceFastlyServices(),
 			"fastly_ip_ranges":                    dataSourceFastlyIPRanges(),
 			"fastly_tls_activation":               dataSourceFastlyTLSActivation(),

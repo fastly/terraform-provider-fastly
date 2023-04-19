@@ -84,7 +84,7 @@ resource "fastly_service_vcl" "example" {
 }
 
 data "fastly_dictionaries" "example" {
-	depends_on      = [fastly_service_vcl.example]
+  depends_on      = [fastly_service_vcl.example]
   service_id      = fastly_service_vcl.example.id
   service_version = fastly_service_vcl.example.active_version
 }

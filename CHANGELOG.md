@@ -1,4 +1,15 @@
-## 4.3.0 (Unreleased)
+## 4.4.0 (Unreleased)
+
+## 4.3.0 (April 19, 2023)
+
+ENHANCEMENTS:
+
+* feat(data_source): new dictionaries data source [#682](https://github.com/fastly/terraform-provider-fastly/pull/682)
+
+DEPENDENCIES:
+
+* build(deps): bump golang.org/x/net from 0.8.0 to 0.9.0 [#680](https://github.com/fastly/terraform-provider-fastly/pull/680)
+* build(deps): bump github.com/bflad/tfproviderlint from 0.28.1 to 0.29.0 [#681](https://github.com/fastly/terraform-provider-fastly/pull/681)
 
 ## 4.2.0 (April 1, 2023)
 

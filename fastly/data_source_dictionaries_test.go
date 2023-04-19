@@ -64,7 +64,7 @@ func testAccFastlyDataSourceDictionariesConfig(h string) string {
 resource "fastly_service_vcl" "example" {
   name = "tf_example_service_for_dictionaries_data_source"
 
-	domain {
+  domain {
 		name = "%s.com"
 	}
 

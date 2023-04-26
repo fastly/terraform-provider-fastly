@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v7/fastly"
+	gofastly "github.com/fastly/go-fastly/v8/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -36,6 +36,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					GzipLevel:        0,
 					CompressionCodec: "zstd",
 					AccountName:      "service-account",
+					ProjectID:        "project-id",
 				},
 			},
 			local: []map[string]any{
@@ -50,6 +51,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					"gzip_level":        0,
 					"compression_codec": "zstd",
 					"account_name":      "service-account",
+					"project_id":        "project-id",
 				},
 			},
 		},
@@ -208,6 +210,7 @@ resource "fastly_service_vcl" "foo" {
     user = "email@example.com"
     bucket_name = "bucketname"
     account_name = "service-account"
+	project_id = "project-id"
     secret_key = %q
     format = "log format"
     response_condition = ""
@@ -240,6 +243,7 @@ resource "fastly_service_compute" "foo" {
     name = "%s"
     user = "email@example.com"
     account_name = "service-account"
+	project_id = "project-id"
     bucket_name = "bucketname"
     secret_key = %q
     compression_codec = "zstd"

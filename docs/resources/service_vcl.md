@@ -678,6 +678,7 @@ Required:
 
 - `bucket_name` (String) The name of the bucket in which to store the logs
 - `name` (String) A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `project_id` (String) The ID of your Google Cloud Platform project
 
 Optional:
 

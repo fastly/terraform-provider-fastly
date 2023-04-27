@@ -38,11 +38,6 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_GCS_ACCOUNT_NAME", ""),
 			Description: "The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.",
 		},
-		"project_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The ID of your Google Cloud Platform project",
-		},
 		"bucket_name": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -86,6 +81,11 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Default:     3600,
 			Description: "How frequently the logs should be transferred, in seconds (Default 3600)",
+		},
+		"project_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your Google Cloud Platform project",
 		},
 		"secret_key": {
 			Type:        schema.TypeString,

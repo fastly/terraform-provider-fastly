@@ -156,7 +156,7 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 		Name:             gofastly.String(resource["name"].(string)),
 		Path:             gofastly.String(resource["path"].(string)),
 		Period:           gofastly.Int(resource["period"].(int)),
-		ProjectID:        gofastly.String(resource["project-id"].(string)),
+		ProjectID:        gofastly.String(resource["project_id"].(string)),
 		SecretKey:        gofastly.String(resource["secret_key"].(string)),
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,

@@ -99,7 +99,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, _ int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
@@ -176,7 +176,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 }
 
 // Read refreshes the resource.
-func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	localState := d.Get(h.Key()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
@@ -279,7 +279,7 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 }
 
 // Update updates the resource.
-func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, _ int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
@@ -453,7 +453,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 // `Process` method that handles both CREATE and UPDATE stages and doesn't get
 // passed a data structure that indicates what has changed like we do with the
 // TypeSet data type. So it'll be a trade-off.
-func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		log.Println("[DEBUG] disable fanout")
 		err := conn.DisableProduct(&gofastly.ProductEnablementInput{

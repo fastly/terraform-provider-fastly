@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v7/fastly"
+	gofastly "github.com/fastly/go-fastly/v8/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -82,6 +82,11 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     3600,
 			Description: "How frequently the logs should be transferred, in seconds (Default 3600)",
 		},
+		"project_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your Google Cloud Platform project",
+		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -151,6 +156,7 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 		Name:             gofastly.String(resource["name"].(string)),
 		Path:             gofastly.String(resource["path"].(string)),
 		Period:           gofastly.Int(resource["period"].(int)),
+		ProjectID:        gofastly.String(resource["project_id"].(string)),
 		SecretKey:        gofastly.String(resource["secret_key"].(string)),
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
@@ -327,6 +333,7 @@ func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 			"name":               resources.Name,
 			"user":               resources.User,
 			"account_name":       resources.AccountName,
+			"project_id":         resources.ProjectID,
 			"bucket_name":        resources.Bucket,
 			"secret_key":         resources.SecretKey,
 			"path":               resources.Path,

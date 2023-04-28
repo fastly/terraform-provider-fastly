@@ -453,6 +453,19 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 // `Process` method that handles both CREATE and UPDATE stages and doesn't get
 // passed a data structure that indicates what has changed like we do with the
 // TypeSet data type. So it'll be a trade-off.
+//
+// IMPORTANT: There is no public API for checking user entitlement.
+// This means if a user adds product_enablement and realises they can't enable
+// products, then they'll need to delete the block from their config and that
+// will cause this Delete function to be run. The problem now, is that the
+// Product Enablement API allows you to disable the IO product even if you don't
+// have entitlement to 'enable' it (this is because we need to allow a user to
+// disable IO before their 'pro' free trial auto-renews). The reason this is a
+// problem is because a user might have requested Fastly Support add IO to their
+// service and now Terraform will go ahead and disable it by accident. The only
+// way to prevent that from happening is to make an additional API call (for IO
+// only) to try and 'enable' IO and then if it fails with the error about
+// missing entitlement we know we can skip trying to 'disable' it.
 func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		log.Println("[DEBUG] disable fanout")

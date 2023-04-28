@@ -492,48 +492,40 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 
 		log.Println("[DEBUG] disable image_optimizer")
 
-		// IMPORTANT: There is no public API for checking user entitlement.
+		// IMPORTANT: Attempt to 'enable' the IO product to validate entitlement.
+		//
 		// This means if a user adds product_enablement and realises they can't
-		// enable products, then they'll need to delete the block from their config
-		// and that will cause this Delete function to be run. The problem now, is
-		// that the Product Enablement API allows you to disable the IO product even
-		// if you don't have entitlement to 'enable' it (this is because we need to
-		// allow a user to disable IO before their 'pro' free trial auto-renews).
+		// enable products, then they'll need to delete the block from their config.
+		// Doing that will cause the TF 'delete' flow to be run.
+		//
+		// The problem now, is that the Product Enablement API allows you to
+		// disable the IO product even if you don't have entitlement to 'enable' it.
+		// This is because an internal Fastly monitoring system needs to be able to
+		// disable access once a 'free trial' access has expired.
+		//
 		// The reason this is a problem is because a user might have requested
 		// Fastly Support add IO to their service and now Terraform will go ahead
-		// and disable it by accident. The only way to prevent that from happening
-		// is to make an additional API call (for IO only) to try and 'enable' IO
-		// and then if it fails with the error about missing entitlement we know we
-		// can skip trying to 'disable' it.
+		// and disable it by accident.
+		//
+		// The only way to prevent that from happening is to first call the 'enable'
+		// endpoint (for IO only) and then if it fails we know the user isn't
+		// entitled to disable it.
+		//
+		// This works because the Product Enablement API allows you to call the
+		// 'enable' endpoint multiple times and it will still 2xx if you've already
+		// enabled the product.
 		_, err = conn.EnableProduct(&gofastly.ProductEnablementInput{
 			ProductID: gofastly.ProductImageOptimizer,
 			ServiceID: d.Id(),
 		})
-		if err != nil {
-			if he, ok := err.(*gofastly.HTTPError); ok {
-				if he.StatusCode == http.StatusBadRequest {
-					for _, e := range he.Errors {
-						if !strings.Contains(e.Title, "not entitled to enable") && !strings.Contains(e.Title, "product cannot be self enabled") {
-							// NOTE: If this user is not entitled to disable IO it's still OK.
-							// For example, if the user has added product_enablement by
-							// accident (they don't have entitlement), then this call to
-							// disable the product will not get executed and the rest of the
-							// Delete method will run through until completion and because we
-							// ignore errors returned from the API when deleting it means the
-							// other calls to disable the other products won't cause the
-							// Delete method to fail and thus allows the user to clean-up
-							// their Terraform state.
-							err = conn.DisableProduct(&gofastly.ProductEnablementInput{
-								ProductID: gofastly.ProductImageOptimizer,
-								ServiceID: d.Id(),
-							})
-							if err != nil {
-								if e := h.checkAPIError(err); e != nil {
-									return e
-								}
-							}
-						}
-					}
+		if err == nil {
+			err = conn.DisableProduct(&gofastly.ProductEnablementInput{
+				ProductID: gofastly.ProductImageOptimizer,
+				ServiceID: d.Id(),
+			})
+			if err != nil {
+				if e := h.checkAPIError(err); e != nil {
+					return e
 				}
 			}
 		}

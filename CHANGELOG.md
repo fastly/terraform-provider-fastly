@@ -1,5 +1,15 @@
 ## 4.4.0 (Unreleased)
 
+## 4.3.1 (April 29, 2023)
+
+ENHANCEMENTS:
+
+* Bump go-fastly to new v8 major release to add project-id in GCS for logging [#685](https://github.com/fastly/terraform-provider-fastly/pull/685)
+
+BUG FIXES:
+
+* fix(product_enablement): error message check was too specific [#687](https://github.com/fastly/terraform-provider-fastly/pull/687)
+
 ## 4.3.0 (April 19, 2023)
 
 ENHANCEMENTS:

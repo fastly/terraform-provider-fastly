@@ -179,7 +179,36 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
+	// IMPORTANT: Avoid a diff unless state actually contains product_enablement.
+	//
+	// For all other nested blocks we go to the API to get the latest data if the
+	// user has already configured the block in their config (hence it exists in
+	// their state file) OR if the user is doing a `terraform import` OR if the
+	// user has changed the active service version outside of Terraform and the
+	// provider now needs to re-sync so it's tracking the correct version.
+	//
+	// But that approach means that users who don't configure a product_enablement
+	// block but fall into the other two categories (i.e. importing or service
+	// version drift) will unexpectedly see a `product_enablement` block in their
+	// next plan/diff output and it will be suggesting that the block be deleted.
+	//
+	// This causes confusion for users and they're not sure how to resolve the
+	// diff and sometimes will ADD the block into their config and try to set
+	// different values, which then causes other errors as they may not be
+	// entitled to actually use the Product Enablement API.
+	//
+	// To avoid this confusion, for product_enablement only, we only go to the API
+	// if the user has either configured the product_enablement block in their
+	// config or if they've configured it AND they're either importing or if there
+	// is a force refresh due to the service version drifting.
+	//
+	// The reason we have to treat the Product Enablement (PE) API differently is
+	// because its access is restricted to entitled users and so unlike other API
+	// endpoints (e.g. backends or domains etc), including calls to the PE API can
+	// cause unexpected diffs and runtime errors that stop a plan from being
+	// applied successfully.
+	existsInState := len(localState) > 0
+	if existsInState || (existsInState && (d.Get("imported").(bool) || d.Get("force_refresh").(bool))) {
 		log.Printf("[DEBUG] Refreshing Product Enablement Configuration for (%s)", d.Id())
 
 		// The API returns a 400 if a product is not enabled.

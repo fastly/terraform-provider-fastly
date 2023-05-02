@@ -1,5 +1,11 @@
 ## 4.4.0 (Unreleased)
 
+## 4.3.2 (May 2, 2023)
+
+BUG FIXES:
+
+* fix(product_enablement): avoid unexpected diff [#689](https://github.com/fastly/terraform-provider-fastly/pull/689)
+
 ## 4.3.1 (April 29, 2023)
 
 ENHANCEMENTS:

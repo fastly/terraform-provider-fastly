@@ -40,31 +40,7 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported", "product_enablement"},
-				// Validate product_enablement state after import.
-				// If nothing has been configured, which is the default, we expect the
-				// following state to be the result.
-				ImportStateCheck: func(s []*terraform.InstanceState) error {
-					if len(s) != 1 {
-						return fmt.Errorf("expected 1 state: %+v", s)
-					}
-					if s[0].Attributes["product_enablement.#"] != "1" {
-						return fmt.Errorf("expected product_enablement to be imported into state")
-					}
-					if s[0].Attributes["product_enablement.0.%"] != "3" {
-						return fmt.Errorf("expected product_enablement to contain 3 keys")
-					}
-					if s[0].Attributes["product_enablement.0.fanout"] != "false" {
-						return fmt.Errorf("expected brotli_compression to be false")
-					}
-					if s[0].Attributes["product_enablement.0.websockets"] != "false" {
-						return fmt.Errorf("expected websockets to be false")
-					}
-					if s[0].Attributes["product_enablement.0.name"] != "products" {
-						return fmt.Errorf("expected the generated 'name' key to be 'products'")
-					}
-					return nil
-				},
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported"},
 			},
 		},
 	})

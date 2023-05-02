@@ -99,7 +99,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, _ int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
@@ -176,10 +176,39 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 }
 
 // Read refreshes the resource.
-func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	localState := d.Get(h.Key()).(*schema.Set).List()
 
-	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
+	// IMPORTANT: Avoid a diff unless state actually contains product_enablement.
+	//
+	// For all other nested blocks we go to the API to get the latest data if the
+	// user has already configured the block in their config (hence it exists in
+	// their state file) OR if the user is doing a `terraform import` OR if the
+	// user has changed the active service version outside of Terraform and the
+	// provider now needs to re-sync so it's tracking the correct version.
+	//
+	// But that approach means that users who don't configure a product_enablement
+	// block but fall into the other two categories (i.e. importing or service
+	// version drift) will unexpectedly see a `product_enablement` block in their
+	// next plan/diff output and it will be suggesting that the block be deleted.
+	//
+	// This causes confusion for users and they're not sure how to resolve the
+	// diff and sometimes will ADD the block into their config and try to set
+	// different values, which then causes other errors as they may not be
+	// entitled to actually use the Product Enablement API.
+	//
+	// To avoid this confusion, for product_enablement only, we only go to the API
+	// if the user has either configured the product_enablement block in their
+	// config or if they've configured it AND they're either importing or if there
+	// is a force refresh due to the service version drifting.
+	//
+	// The reason we have to treat the Product Enablement (PE) API differently is
+	// because its access is restricted to entitled users and so unlike other API
+	// endpoints (e.g. backends or domains etc), including calls to the PE API can
+	// cause unexpected diffs and runtime errors that stop a plan from being
+	// applied successfully.
+	existsInState := len(localState) > 0
+	if existsInState || (existsInState && (d.Get("imported").(bool) || d.Get("force_refresh").(bool))) {
 		log.Printf("[DEBUG] Refreshing Product Enablement Configuration for (%s)", d.Id())
 
 		// The API returns a 400 if a product is not enabled.
@@ -279,7 +308,7 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 }
 
 // Update updates the resource.
-func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
@@ -435,13 +464,14 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 // then we'll skip the error as we want the `terraform apply` to be successful
 // and for the user to end up with a clean state.
 //
-// NOTE: We don't return the nil error, ensuring all products are processed.
-// We don't want to return the nil error (e.g. when a user is trying to clean-up
-// their state as they're not entitled to enable/disable the product) because
-// returning nil will short-circuit the `Delete` method and we'll not process
-// the disabling of other products they might be entitled to disable!
+// NOTE: We avoid returning early because there are multiple API calls.
+// For example, if the first API call to disable a product failed because the
+// user didn't have entitlement to disable, then returning either the error or
+// skipping it and returning nil would cause the Delete function to finish and
+// we wouldn't have a chance to attempt disabling the other products which they
+// might be allowed to disable.
 //
-// FIXME: Looks like the use of a TypeSet means unnecessary API calls.
+// TODO: Consider switching from a TypeSet to avoid unnecessary API calls.
 // In a scenario where a new product is set to `true` (e.g. to be enabled) the
 // set hash changes and so the set 'as a whole' is deleted (causing all the
 // products to be disabled) and then all the APIs are called again to re-enable
@@ -453,7 +483,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 // `Process` method that handles both CREATE and UPDATE stages and doesn't get
 // passed a data structure that indicates what has changed like we do with the
 // TypeSet data type. So it'll be a trade-off.
-func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		log.Println("[DEBUG] disable fanout")
 		err := conn.DisableProduct(&gofastly.ProductEnablementInput{

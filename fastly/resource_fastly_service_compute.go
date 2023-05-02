@@ -43,6 +43,7 @@ var computeService = &BaseServiceDefinition{
 		NewServiceLoggingDigitalOcean(computeAttributes),
 		NewServiceLoggingCloudfiles(computeAttributes),
 		NewServiceLoggingKinesis(computeAttributes),
+		NewServiceDictionary(computeAttributes),
 		NewServiceKVStore(computeAttributes),
 		NewServicePackage(computeAttributes),
 	},

@@ -464,13 +464,14 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 // then we'll skip the error as we want the `terraform apply` to be successful
 // and for the user to end up with a clean state.
 //
-// NOTE: We don't return the nil error, ensuring all products are processed.
-// We don't want to return the nil error (e.g. when a user is trying to clean-up
-// their state as they're not entitled to enable/disable the product) because
-// returning nil will short-circuit the `Delete` method and we'll not process
-// the disabling of other products they might be entitled to disable!
+// NOTE: We avoid returning early because there are multiple API calls.
+// For example, if the first API call to disable a product failed because the
+// user didn't have entitlement to disable, then returning either the error or
+// skipping it and returning nil would cause the Delete function to finish and
+// we wouldn't have a chance to attempt disabling the other products which they
+// might be allowed to disable.
 //
-// FIXME: Looks like the use of a TypeSet means unnecessary API calls.
+// TODO: Consider switching from a TypeSet to avoid unnecessary API calls.
 // In a scenario where a new product is set to `true` (e.g. to be enabled) the
 // set hash changes and so the set 'as a whole' is deleted (causing all the
 // products to be disabled) and then all the APIs are called again to re-enable

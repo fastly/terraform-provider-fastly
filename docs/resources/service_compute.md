@@ -77,7 +77,6 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
-- `kv_store` (Block Set) (see [below for nested schema](#nestedblock--kv_store))
 - `logging_bigquery` (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_cloudfiles` (Block Set) (see [below for nested schema](#nestedblock--logging_cloudfiles))
@@ -186,22 +185,6 @@ Optional:
 Read-Only:
 
 - `dictionary_id` (String) The ID of the dictionary
-
-
-<a id="nestedblock--kv_store"></a>
-### Nested Schema for `kv_store`
-
-Required:
-
-- `name` (String) A unique name to identify the KV Store. It is important to note that changing this attribute will delete and recreate the KV Store, and discard the current entries.
-
-Optional:
-
-- `force_destroy` (Boolean) Allow the KV store to be deleted, even if it contains entries. Defaults to false.
-
-Read-Only:
-
-- `store_id` (String) The ID of the KV Store
 
 
 <a id="nestedblock--logging_bigquery"></a>

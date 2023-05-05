@@ -38,12 +38,14 @@ func resourceFastlyKVStore() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Alphanumeric string identifying the service.",
 						},
 						"service_version": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "Integer identifying a service version.",
 						},
 					},
 				},

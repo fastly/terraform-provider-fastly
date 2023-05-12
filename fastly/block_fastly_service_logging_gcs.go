@@ -84,7 +84,7 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 		},
 		"project_id": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "The ID of your Google Cloud Platform project",
 		},
 		"secret_key": {

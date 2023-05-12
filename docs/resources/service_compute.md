@@ -336,7 +336,6 @@ Required:
 
 - `bucket_name` (String) The name of the bucket in which to store the logs
 - `name` (String) A unique name to identify this GCS endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `project_id` (String) The ID of your Google Cloud Platform project
 
 Optional:
 
@@ -346,6 +345,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default 3600)
+- `project_id` (String) The ID of your Google Cloud Platform project
 - `secret_key` (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 - `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.

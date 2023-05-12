@@ -1,5 +1,15 @@
 ## 4.4.0 (Unreleased)
 
+## 4.3.3 (May 12, 2023)
+
+BUG FIXES:
+
+* fix(gcs): `project_id` should be optional [#693](https://github.com/fastly/terraform-provider-fastly/pull/693)
+
+DEPENDENCIES:
+
+* build(deps): bump golang.org/x/net from 0.9.0 to 0.10.0 [#692](https://github.com/fastly/terraform-provider-fastly/pull/692)
+
 ## 4.3.2 (May 2, 2023)
 
 BUG FIXES:

@@ -1,3 +1,7 @@
+variable "hash" {
+  type = string
+}
+
 resource "fastly_service_compute" "demo" {
   name = "demofastly"
 
@@ -7,9 +11,10 @@ resource "fastly_service_compute" "demo" {
   }
 
   package {
-    filename = "package.tar.gz"
-    source_code_hash = filesha512("package.tar.gz")
+    filename         = "package.tar.gz"
+    source_code_hash = var.hash
   }
 
   force_destroy = true
 }
+

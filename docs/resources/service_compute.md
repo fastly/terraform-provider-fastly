@@ -10,15 +10,17 @@ description: |-
 
 Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target. A compute service encompasses Domains and Backends.
 
-The Service resource requires a domain name that is correctly set up to direct
-traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]
-on their documentation site for guidance.
+The Service resource requires a domain name that is correctly set up to direct traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records](https://docs.fastly.com/en/guides/adding-cname-records) on their documentation site for guidance.
 
 ## Example Usage
 
-Basic usage:
+Basic usage involves defining an input variable to contain the hash of the package files (in sorted order):
 
 ```terraform
+variable "hash" {
+  type = string
+}
+
 resource "fastly_service_compute" "demo" {
   name = "demofastly"
 
@@ -28,12 +30,18 @@ resource "fastly_service_compute" "demo" {
   }
 
   package {
-    filename = "package.tar.gz"
-    source_code_hash = filesha512("package.tar.gz")
+    filename         = "package.tar.gz"
+    source_code_hash = var.hash
   }
 
   force_destroy = true
 }
+```
+
+The easiest way to generate the hash is to use the Fastly CLI v10.1.0+:
+
+```shell
+terraform apply -var="hash=$(fastly compute hash-files --quiet)"
 ```
 
 <!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
@@ -41,11 +49,6 @@ resource "fastly_service_compute" "demo" {
 
 The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
 [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
-
-[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
-[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
-[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
-[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
 
 ## Import
 

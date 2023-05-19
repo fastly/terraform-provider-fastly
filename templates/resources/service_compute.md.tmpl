@@ -21,7 +21,7 @@ Basic usage involves defining an input variable to contain the hash of the packa
 The easiest way to generate the hash is to use the Fastly CLI v10.1.0+:
 
 ```shell
-terraform apply -var="hash=$(fastly compute hash-files --quiet)"
+terraform apply -var="hash=$(fastly compute hash-files --quiet --skip-build)"
 ```
 
 <!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->

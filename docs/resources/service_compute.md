@@ -41,7 +41,7 @@ resource "fastly_service_compute" "demo" {
 The easiest way to generate the hash is to use the Fastly CLI v10.1.0+:
 
 ```shell
-terraform apply -var="hash=$(fastly compute hash-files --quiet)"
+terraform apply -var="hash=$(fastly compute hash-files --quiet --skip-build)"
 ```
 
 <!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
@@ -138,7 +138,7 @@ Optional:
 
 - `content` (String) The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified
 - `filename` (String) The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified
-- `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of all files within the package (in sorted order). The usual way to set this is with an input variable, where the value is provided via the Terraform CLI '-var' flag. The easiest way to generate the hash is using the Fastly CLI v10.1.0+ (e.g. terraform apply -var="my_variable=$(fastly compute hash-files --quiet)").
+- `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of all files within the package (in sorted order). The usual way to set this is with an input variable, where the value is provided via the Terraform CLI '-var' flag. The easiest way to generate the hash is using the Fastly CLI v10.1.0+ (e.g. terraform apply -var="my_variable=$(fastly compute hash-files --quiet --skip-build)").
 
 
 <a id="nestedblock--backend"></a>

@@ -145,8 +145,9 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 // flattenPackage models data into format suitable for saving to Terraform state.
 func flattenPackage(remoteState *gofastly.Package, pkgType PkgType, pkgData string) []map[string]any {
 	var result []map[string]any
+
 	data := map[string]any{
-		"source_code_hash": remoteState.Metadata.HashSum,
+		"source_code_hash": remoteState.Metadata.FilesHash,
 	}
 
 	switch pkgType {

@@ -12,6 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+// IMPORTANT: To run these tests requires Fastly CLI v10.1.0+
+// Two input variables need to be set `hash` and `hash_new` via env variables.
+//
+// EXAMPLE:
+// TF_VAR_hash=$(fastly compute hash-files --package fastly/test_fixtures/package/valid.tar.gz --quiet --skip-build) TF_VAR_hash_new=$(fastly compute hash-files --package fastly/test_fixtures/package/valid2.tar.gz --quiet --skip-build) make testacc TESTARGS="-run=TestAccFastlyServiceVCL_package_basic"
 func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name01 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -19,25 +24,25 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 	name02 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain02 := fmt.Sprintf("fastly-test.%s.com", name02)
 
-	wp1 := gofastly.Package{
+	want := gofastly.Package{
 		Metadata: gofastly.PackageMetadata{
 			Name:        "wasm-test",
 			Description: "Test Package",
 			Authors:     []string{"fastly@fastly.com"},
 			Language:    "rust",
 			Size:        2015936,
-			HashSum:     "f99485bd301e23f028474d26d398da525de17a372ae9e7026891d7f85361d2540d14b3b091929c3f170eade573595e20b3405a9e29651ede59915f2e1652f616",
+			FilesHash:   "a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d",
 		},
 	}
 
-	wp2 := gofastly.Package{
+	want2 := gofastly.Package{
 		Metadata: gofastly.PackageMetadata{
 			Name:        "edge-compute-test",
 			Description: "Test Package",
 			Authors:     []string{"fastly@fastly.com"},
 			Language:    "rust",
 			Size:        2158517,
-			HashSum:     "ef62109f363007037d678120459008efb17b4cba5af2188d2eb0c6c6a69113b1925c44f5cbc7792b4421cad6f307bf3dd59adf0a73387291e0b854d3c25f2e48",
+			FilesHash:   "d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7",
 		},
 	}
 
@@ -52,37 +57,29 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 				Config: testAccServiceVCLPackageConfig(name01, domain01),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &wp1),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name01),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "package.#", "1"),
+					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name01),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
 				),
 			},
 			{
 				Config: testAccServiceVCLPackageConfig(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &wp1),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name02),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "package.#", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "active_version", "2"),
+					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "2"),
 				),
 			},
 			{
 				Config: testAccServiceVCLPackageConfigNew(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &wp2),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name02),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "package.#", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "active_version", "3"),
+					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want2),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "3"),
 				),
 			},
 		},
@@ -109,7 +106,6 @@ func TestAccFastlyServiceVCL_package_content(t *testing.T) {
 			Authors:     []string{"fastly@fastly.com"},
 			Language:    "rust",
 			Size:        2015936,
-			HashSum:     "f99485bd301e23f028474d26d398da525de17a372ae9e7026891d7f85361d2540d14b3b091929c3f170eade573595e20b3405a9e29651ede59915f2e1652f616",
 		},
 	}
 
@@ -120,7 +116,6 @@ func TestAccFastlyServiceVCL_package_content(t *testing.T) {
 			Authors:     []string{"fastly@fastly.com"},
 			Language:    "rust",
 			Size:        2158517,
-			HashSum:     "ef62109f363007037d678120459008efb17b4cba5af2188d2eb0c6c6a69113b1925c44f5cbc7792b4421cad6f307bf3dd59adf0a73387291e0b854d3c25f2e48",
 		},
 	}
 
@@ -179,8 +174,8 @@ func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDeta
 			return fmt.Errorf("package size mismatch, expected: %v, got: %v", want.Metadata.Size, got.Metadata.Size)
 		}
 
-		if want.Metadata.HashSum != got.Metadata.HashSum {
-			return fmt.Errorf("package hashsum mismatch, expected: %v, got: %v", want.Metadata.HashSum, got.Metadata.HashSum)
+		if want.Metadata.FilesHash != got.Metadata.FilesHash {
+			return fmt.Errorf("package files_hash mismatch, expected: %v, got: %v", want.Metadata.FilesHash, got.Metadata.FilesHash)
 		}
 
 		if want.Metadata.Language != got.Metadata.Language {
@@ -197,6 +192,10 @@ func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDeta
 
 func testAccServiceVCLPackageConfig(name string, domain string) string {
 	return fmt.Sprintf(`
+variable "hash" {
+  type = string
+}
+
 resource "fastly_service_compute" "foo" {
   name = "%s"
   domain {
@@ -209,7 +208,7 @@ resource "fastly_service_compute" "foo" {
   }
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = var.hash
   }
   force_destroy = true
 }
@@ -218,6 +217,10 @@ resource "fastly_service_compute" "foo" {
 
 func testAccServiceVCLPackageConfigNew(name string, domain string) string {
 	return fmt.Sprintf(`
+variable "hash_new" {
+  type = string
+}
+
 resource "fastly_service_compute" "foo" {
   name = "%s"
   domain {
@@ -230,7 +233,7 @@ resource "fastly_service_compute" "foo" {
   }
   package {
     filename = "test_fixtures/package/valid2.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid2.tar.gz")
+    source_code_hash = var.hash_new
   }
   force_destroy = true
 }

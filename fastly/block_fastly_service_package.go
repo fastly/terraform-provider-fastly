@@ -82,7 +82,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			input.PackagePath = v
 		}
 
-		err := updatePackage(conn, input)
+		_, err := conn.UpdatePackage(input)
 		if err != nil {
 			return fmt.Errorf("error modifying package %s: %s", d.Id(), err)
 		}
@@ -140,11 +140,6 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	}
 
 	return nil
-}
-
-func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error {
-	_, err := conn.UpdatePackage(i)
-	return err
 }
 
 // flattenPackage models data into format suitable for saving to Terraform state.

@@ -499,6 +499,10 @@ resource "fastly_service_vcl" "foo" {
 
 func testAccServiceVCLS3LoggingComputeConfig(name, domain, key, secret string) string {
 	return fmt.Sprintf(`
+variable "hash" {
+  type = string
+}
+
 resource "fastly_service_compute" "foo" {
   name = "%s"
 
@@ -523,8 +527,8 @@ resource "fastly_service_compute" "foo" {
   }
 
   package {
-      	filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = var.hash
   }
 
   force_destroy = true

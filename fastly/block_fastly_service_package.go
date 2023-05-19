@@ -51,7 +51,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
-					Description:   `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
+					Description:   `Used to trigger updates. Must be set to a SHA512 hash of all files within the package (in sorted order). The usual way to set this is with an input variable, where the value is provided via the Terraform CLI '-var' flag. The easiest way to generate the hash is using the Fastly CLI (e.g. terraform apply -var="my_variable=$(fastly compute hash-files)").`,
 					ConflictsWith: []string{"package.0.content"},
 				},
 			},

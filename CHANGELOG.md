@@ -1,4 +1,41 @@
-## 4.4.0 (Unreleased)
+## 5.1.0 (Unreleased)
+
+## 5.0.0 (May 22, 2023)
+
+BREAKING:
+
+There was a long-standing issue with how Terraform reacted to the `package.tar.gz` file that the CLI produces. Effectively, hashing the package was inconsistent and caused Terraform to think the code had changed even when it hadn't.
+
+To resolve the issue the Package API now returns a new metadata property (`files_hash`) that calculates the hash from a sorted list of the files within the package.
+
+This PR updates the Terraform provider to use this new property instead of the original `hashsum` metadata property and exposes a new `fastly_package_hash` data source that will generate the appropriate value for the `source_code_hash` attribute. 
+
+Although the public interface has not changed, the underlying implementation changes have meant customers will no longer be able to use the previous approach of using `filesha512` to generate a hash from their package file. So we must consider this PR a breaking change.
+
+This does require a slight change to a customer's process, which prior to this release looked like this...
+
+```tf
+source_code_hash = filesha512("package.tar.gz")
+```
+
+As of this release, we recommend the use of the `fastly_package_hash` data source...
+
+```tf
+data "fastly_package_hash" "example" {
+  filename = "./path/to/package.tar.gz"
+}
+
+resource "fastly_service_compute" "example" {
+  # ...
+
+  package {
+    filename         = "./path/to/package.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
+  }
+}
+```
+
+* breaking(compute): fix package hash bug [#698](https://github.com/fastly/terraform-provider-fastly/pull/698)
 
 ## 4.3.3 (May 12, 2023)
 

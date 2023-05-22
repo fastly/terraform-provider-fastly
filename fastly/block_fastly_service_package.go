@@ -51,7 +51,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
-					Description:   `Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package`,
+					Description:   "Used to trigger updates. Must be set to a SHA512 hash of all files (in sorted order) within the package. The usual way to set this is using the fastly_package_hash data source.",
 					ConflictsWith: []string{"package.0.content"},
 				},
 			},
@@ -82,7 +82,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			input.PackagePath = v
 		}
 
-		err := updatePackage(conn, input)
+		_, err := conn.UpdatePackage(input)
 		if err != nil {
 			return fmt.Errorf("error modifying package %s: %s", d.Id(), err)
 		}
@@ -142,16 +142,12 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	return nil
 }
 
-func updatePackage(conn *gofastly.Client, i *gofastly.UpdatePackageInput) error {
-	_, err := conn.UpdatePackage(i)
-	return err
-}
-
 // flattenPackage models data into format suitable for saving to Terraform state.
 func flattenPackage(remoteState *gofastly.Package, pkgType PkgType, pkgData string) []map[string]any {
 	var result []map[string]any
+
 	data := map[string]any{
-		"source_code_hash": remoteState.Metadata.HashSum,
+		"source_code_hash": remoteState.Metadata.FilesHash,
 	}
 
 	switch pkgType {

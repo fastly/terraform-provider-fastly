@@ -269,6 +269,10 @@ resource "fastly_service_vcl" "foo" {
 
 func testAccServiceVCLLogshuttleComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
+}
+
 resource "fastly_service_compute" "foo" {
   name = "%s"
 
@@ -285,12 +289,12 @@ resource "fastly_service_compute" "foo" {
   logging_logshuttle {
     name   = "logshuttle-endpoint"
     token  = "s3cr3t"
-	url    = "https://example.com"
+    url    = "https://example.com"
   }
 
   package {
-      	filename = "test_fixtures/package/valid.tar.gz"
-	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
   }
 
   force_destroy = true

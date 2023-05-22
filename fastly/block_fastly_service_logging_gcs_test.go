@@ -226,6 +226,10 @@ func testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey string) string {
 	domainName := fmt.Sprintf("fastly-test-compute.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
+}
+
 resource "fastly_service_compute" "foo" {
   name = "%s"
 
@@ -243,7 +247,7 @@ resource "fastly_service_compute" "foo" {
     name = "%s"
     user = "email@example.com"
     account_name = "service-account"
-	project_id = "project-id"
+    project_id = "project-id"
     bucket_name = "bucketname"
     secret_key = %q
     compression_codec = "zstd"
@@ -251,7 +255,7 @@ resource "fastly_service_compute" "foo" {
 
  package {
     filename = "test_fixtures/package/valid.tar.gz"
-    source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = data.fastly_package_hash.example.hash
   }
 
   force_destroy = true

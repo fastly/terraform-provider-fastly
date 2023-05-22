@@ -10,16 +10,18 @@ description: |-
 
 Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target. A compute service encompasses Domains and Backends.
 
-The Service resource requires a domain name that is correctly set up to direct
-traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records][fastly-cname]
-on their documentation site for guidance.
+The Service resource requires a domain name that is correctly set up to direct traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records](https://docs.fastly.com/en/guides/adding-cname-records) on their documentation site for guidance.
 
 ## Example Usage
 
 Basic usage:
 
 ```terraform
-resource "fastly_service_compute" "demo" {
+data "fastly_package_hash" "example" {
+  filename = "./path/to/package.tar.gz"
+}
+
+resource "fastly_service_compute" "example" {
   name = "demofastly"
 
   domain {
@@ -28,8 +30,8 @@ resource "fastly_service_compute" "demo" {
   }
 
   package {
-    filename = "package.tar.gz"
-    source_code_hash = filesha512("package.tar.gz")
+    filename         = "package.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
   }
 
   force_destroy = true
@@ -41,11 +43,6 @@ resource "fastly_service_compute" "demo" {
 
 The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
 [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
-
-[fastly-cname]: https://docs.fastly.com/en/guides/adding-cname-records
-[fastly-conditionals]: https://docs.fastly.com/en/guides/using-conditions
-[fastly-sumologic]: https://developer.fastly.com/reference/api/logging/sumologic/
-[fastly-gcs]: https://developer.fastly.com/reference/api/logging/gcs/
 
 ## Import
 
@@ -135,7 +132,7 @@ Optional:
 
 - `content` (String) The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified
 - `filename` (String) The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified
-- `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of the package file specified with the filename. The usual way to set this is filesha512("package.tar.gz") (Terraform 0.11.12 and later) or filesha512(file("package.tar.gz")) (Terraform 0.11.11 and earlier), where "package.tar.gz" is the local filename of the Wasm deployment package
+- `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of all files (in sorted order) within the package. The usual way to set this is using the fastly_package_hash data source.
 
 
 <a id="nestedblock--backend"></a>

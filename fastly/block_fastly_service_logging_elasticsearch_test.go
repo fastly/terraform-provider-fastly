@@ -267,6 +267,10 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDet
 
 func testAccServiceVCLElasticsearchComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
+}
+
 resource "fastly_service_compute" "foo" {
   name = "%s"
 
@@ -284,18 +288,18 @@ resource "fastly_service_compute" "foo" {
     name     = "elasticsearch-endpoint"
     index    = "#{%%F}"
     url      = "https://es.example.com"
-	pipeline = "my-pipeline"
-	user     = "user"
-	password = "password"
-	tls_ca_cert       = file("test_fixtures/fastly_test_cacert")
-	tls_client_cert   = file("test_fixtures/fastly_test_certificate")
-	tls_client_key    = file("test_fixtures/fastly_test_privatekey")
-	tls_hostname       = "example.com"
+    pipeline = "my-pipeline"
+    user     = "user"
+    password = "password"
+    tls_ca_cert       = file("test_fixtures/fastly_test_cacert")
+    tls_client_cert   = file("test_fixtures/fastly_test_certificate")
+    tls_client_key    = file("test_fixtures/fastly_test_privatekey")
+    tls_hostname       = "example.com"
   }
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
+    source_code_hash = data.fastly_package_hash.example.hash
   }
 
   force_destroy = true

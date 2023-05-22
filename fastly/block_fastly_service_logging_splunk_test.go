@@ -406,6 +406,10 @@ func testAccServiceVCLSplunkConfigComputeBasic(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
+}
+
 resource "fastly_service_compute" "foo" {
   name = %q
 
@@ -426,10 +430,9 @@ resource "fastly_service_compute" "foo" {
   }
 
   package {
-      	filename = "test_fixtures/package/valid.tar.gz"
-	  	source_code_hash = filesha512("test_fixtures/package/valid.tar.gz")
-   	}
-
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
+  }
 
   force_destroy = true
 }`, serviceName, domainName)

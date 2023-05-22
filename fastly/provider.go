@@ -47,6 +47,8 @@ func Provider() *schema.Provider {
 			"fastly_datacenters":                  dataSourceFastlyDatacenters(),
 			"fastly_dictionaries":                 dataSourceFastlyDictionaries(),
 			"fastly_ip_ranges":                    dataSourceFastlyIPRanges(),
+			"fastly_package_hash":                 dataSourceFastlyPackageHash(),
+			"fastly_services":                     dataSourceFastlyServices(),
 			"fastly_tls_activation":               dataSourceFastlyTLSActivation(),
 			"fastly_tls_activation_ids":           dataSourceFastlyTLSActivationIds(),
 			"fastly_tls_certificate":              dataSourceFastlyTLSCertificate(),
@@ -61,7 +63,6 @@ func Provider() *schema.Provider {
 			"fastly_tls_subscription":             dataSourceFastlyTLSSubscription(),
 			"fastly_tls_subscription_ids":         dataSourceFastlyTLSSubscriptionIDs(),
 			"fastly_waf_rules":                    dataSourceFastlyWAFRules(),
-			"fastly_services":                     dataSourceFastlyServices(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"fastly_service_acl_entries":             resourceServiceACLEntries(),

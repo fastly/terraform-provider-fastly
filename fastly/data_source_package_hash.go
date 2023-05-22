@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"sort"
 
@@ -47,7 +48,7 @@ func dataSourceFastlyPackageHash() *schema.Resource {
 func dataSourceFastlyPackageHashRead(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	log.Printf("[DEBUG] Generating Package hash")
 
-	pkg := "package.tar.gz"
+	pkg := fmt.Sprintf("temp-%s-package.tar.gz", randStringBytes(10))
 	filename := d.Get("filename").(string)
 
 	if filename != "" {
@@ -101,6 +102,16 @@ func dataSourceFastlyPackageHashRead(_ context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func randStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 // https://developer.fastly.com/learning/compute/#limitations-and-constraints

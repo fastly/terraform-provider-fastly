@@ -12,11 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-// IMPORTANT: To run these tests requires Fastly CLI v10.1.0+
-// Two input variables need to be set `hash` and `hash_new` via env variables.
-//
-// EXAMPLE:
-// TF_VAR_hash=$(fastly compute hash-files --package fastly/test_fixtures/package/valid.tar.gz --quiet --skip-build) TF_VAR_hash_new=$(fastly compute hash-files --package fastly/test_fixtures/package/valid2.tar.gz --quiet --skip-build) make testacc TESTARGS="-run=TestAccFastlyServiceVCL_package_basic"
 func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name01 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -194,8 +189,8 @@ func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDeta
 
 func testAccServiceVCLPackageConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-variable "hash" {
-  type = string
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
 }
 
 resource "fastly_service_compute" "foo" {
@@ -210,7 +205,7 @@ resource "fastly_service_compute" "foo" {
   }
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-    source_code_hash = var.hash
+    source_code_hash = data.fastly_package_hash.example.hash
   }
   force_destroy = true
 }
@@ -219,8 +214,8 @@ resource "fastly_service_compute" "foo" {
 
 func testAccServiceVCLPackageConfigNew(name string, domain string) string {
 	return fmt.Sprintf(`
-variable "hash_new" {
-  type = string
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid2.tar.gz"
 }
 
 resource "fastly_service_compute" "foo" {
@@ -235,7 +230,7 @@ resource "fastly_service_compute" "foo" {
   }
   package {
     filename = "test_fixtures/package/valid2.tar.gz"
-    source_code_hash = var.hash_new
+    source_code_hash = data.fastly_package_hash.example.hash
   }
   force_destroy = true
 }
@@ -245,8 +240,8 @@ resource "fastly_service_compute" "foo" {
 // NOTE: Test config was unable to use input variable implementation.
 // This is because we can't set `-var` via test suite.
 // Instead we need to use exported environment variable: TF_VAR_package_content.
-// Problem with that is the base64 encoded string is larger the OS limit.
-// So instead we had to use locals value as a workaround.
+// Problem with that is the base64 encoded string is larger than the OS limit.
+// So instead we had to use `locals` variable as a workaround.
 // https://developer.hashicorp.com/terraform/language/values/locals
 // The use of `-var` and input variables will work fine with actual TF project.
 func testAccServiceVCLPackageConfigContent(name, domain, b64Content string) string {

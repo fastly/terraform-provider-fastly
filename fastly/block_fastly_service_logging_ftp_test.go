@@ -258,8 +258,8 @@ func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, 
 
 func testAccServiceVCLFTPComputeConfig(name string, domain string) string {
 	return fmt.Sprintf(`
-variable "hash" {
-  type = string
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
 }
 
 resource "fastly_service_compute" "foo" {
@@ -290,7 +290,7 @@ resource "fastly_service_compute" "foo" {
 
   package {
     filename = "test_fixtures/package/valid.tar.gz"
-    source_code_hash = var.hash
+    source_code_hash = data.fastly_package_hash.example.hash
   }
 
   force_destroy = true

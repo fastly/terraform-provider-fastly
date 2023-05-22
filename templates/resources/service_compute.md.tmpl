@@ -14,15 +14,9 @@ The Service resource requires a domain name that is correctly set up to direct t
 
 ## Example Usage
 
-Basic usage involves defining an input variable to contain the hash of the package files (in sorted order):
+Basic usage:
 
 {{ tffile "examples/resources/service_compute_basic_usage.tf" }}
-
-The easiest way to generate the hash is to use the Fastly CLI v10.1.0+:
-
-```shell
-terraform apply -var="hash=$(fastly compute hash-files --quiet --skip-build)"
-```
 
 <!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
 ### package block

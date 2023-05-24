@@ -44,7 +44,6 @@ var computeService = &BaseServiceDefinition{
 		NewServiceLoggingCloudfiles(computeAttributes),
 		NewServiceLoggingKinesis(computeAttributes),
 		NewServiceDictionary(computeAttributes),
-		NewServiceKVStore(computeAttributes),
 		NewServicePackage(computeAttributes),
 	},
 }

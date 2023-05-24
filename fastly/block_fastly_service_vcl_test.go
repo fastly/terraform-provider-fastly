@@ -58,7 +58,7 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLVCLConfig(name, domainName1, backendName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLVCLAttributes(&service, name, 1),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -70,7 +70,7 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLVCLConfigUpdate(name, domainName1, backendName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLVCLAttributes(&service, name, 2),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),

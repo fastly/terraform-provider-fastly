@@ -256,14 +256,14 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckExclusions(&service, exclusions1, 1),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckExclusions(&service, exclusions2, 2),
 				),
 			},

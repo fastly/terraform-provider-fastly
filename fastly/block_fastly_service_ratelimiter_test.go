@@ -151,7 +151,7 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLRateLimiter(serviceName, domainName, rateLimiterName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "rate_limiter.#", "1"),
 					testAccCheckFastlyServiceVCLRateLimiterAttributes(&service, []*gofastly.ERL{&erl1}),
@@ -161,7 +161,7 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLRateLimiterUpdate(serviceName, domainName, rateLimiterName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "rate_limiter.#", "2"),
 					testAccCheckFastlyServiceVCLRateLimiterAttributes(&service, []*gofastly.ERL{&erl1, &erl2}),
 				),

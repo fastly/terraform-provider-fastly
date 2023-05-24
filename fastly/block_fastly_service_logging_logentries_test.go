@@ -88,7 +88,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLLogentriesConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -99,7 +99,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLLogentriesConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -137,7 +137,7 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLLogentriesComputeConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
@@ -228,7 +228,7 @@ func TestAccFastlyServiceVCL_logentries_formatVersion(t *testing.T) {
 			{
 				Config: testAccServiceVCLLogentriesConfigFormatVersion(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogentriesAttributes(&service, []*gofastly.Logentries{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),

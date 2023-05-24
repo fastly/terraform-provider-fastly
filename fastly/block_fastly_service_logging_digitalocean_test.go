@@ -143,7 +143,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDigitalOceanConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -155,7 +155,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDigitalOceanConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -197,7 +197,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLDigitalOceanComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

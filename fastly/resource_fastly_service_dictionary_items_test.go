@@ -67,7 +67,7 @@ func TestAccFastlyServiceDictionaryItem_create(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItems, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
@@ -112,7 +112,7 @@ func TestAccFastlyServiceDictionaryItem_create_inactive_service(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItems, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
@@ -143,7 +143,7 @@ func TestAccFastlyServiceDictionaryItem_create_dynamic(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigCreateDynamic(name, dictName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.myservice", &service),
+					testAccCheckServiceExists("fastly_service_vcl.myservice", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.common", "items.%", "4"),
 				),
@@ -178,7 +178,7 @@ func TestAccFastlyServiceDictionaryItem_update(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItems, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
@@ -186,7 +186,7 @@ func TestAccFastlyServiceDictionaryItem_update(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItemsAfterUpdate, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItemsAfterUpdate),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "3"),
 				),
@@ -218,7 +218,7 @@ func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
@@ -229,7 +229,7 @@ func TestAccFastlyServiceDictionaryItem_external_item_is_removed(t *testing.T) {
 				},
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
@@ -261,7 +261,7 @@ func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItems, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
@@ -272,7 +272,7 @@ func TestAccFastlyServiceDictionaryItem_external_item_deleted(t *testing.T) {
 				},
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryNoItems(name, dictName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItemsAfterUpdate),
 					testAccCheckFastlyServiceDictionaryItemsDoesNotExists("fastly_service_dictionary_items.items"),
 				),
@@ -304,7 +304,7 @@ func TestAccFastlyServiceDictionaryItem_batch_1001_items(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, expectedRemoteItems, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, expectedRemoteItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", strconv.Itoa(expectedBatchSize)),
 				),
@@ -339,7 +339,7 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, initialItems, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, initialItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),
@@ -347,7 +347,7 @@ func TestAccFastlyServiceDictionaryItem_manage_items_false(t *testing.T) {
 			{
 				Config: testAccServiceDictionaryItemsConfigOneDictionaryWithItems(name, dictName, updatedItems, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceDictionaryItemsRemoteState(&service, name, dictName, initialItems),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "2"),
 				),

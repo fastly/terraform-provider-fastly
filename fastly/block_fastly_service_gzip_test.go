@@ -108,7 +108,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLGzipsConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log1, &log2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -120,7 +120,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLGzipsConfigDeleteCreate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log3}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -132,7 +132,7 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLGzipsConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log4}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),

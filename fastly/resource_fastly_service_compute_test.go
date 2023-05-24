@@ -25,7 +25,7 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 			{
 				Config: testAccServiceComputeConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "comment", "Managed by Terraform"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "version_comment", ""),

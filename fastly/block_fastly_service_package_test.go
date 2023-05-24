@@ -51,7 +51,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLPackageConfig(name01, domain01),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name01),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
@@ -60,7 +60,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLPackageConfig(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
@@ -70,7 +70,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLPackageConfigNew(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want2),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
@@ -126,7 +126,7 @@ func TestAccFastlyServiceVCL_package_content(t *testing.T) {
 			{
 				Config: testAccServiceVCLPackageConfigContent(name01, domain01, b64Content),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name01),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
@@ -135,7 +135,7 @@ func TestAccFastlyServiceVCL_package_content(t *testing.T) {
 			{
 				Config: testAccServiceVCLPackageConfigContent(name02, domain02, b64Content),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
@@ -145,7 +145,7 @@ func TestAccFastlyServiceVCL_package_content(t *testing.T) {
 			{
 				Config: testAccServiceVCLPackageConfigContent(name02, domain02, b64Content2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want2),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),

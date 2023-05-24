@@ -123,7 +123,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLSplunkConfigBasic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "1"),
@@ -133,7 +133,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLSplunkConfigUpdate(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "2"),
@@ -163,7 +163,7 @@ func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLSplunkConfigComputeBasic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", serviceName),
@@ -197,7 +197,7 @@ func TestAccFastlyServiceVCL_splunk_default(t *testing.T) {
 			{
 				Config: testAccServiceVCLSplunkConfigDefault(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLog}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "1"),
@@ -283,7 +283,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 			{
 				Config: testAccServiceVCLSplunkConfigUseTLS(serviceName, cert, key),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", serviceName),
@@ -295,7 +295,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 			{
 				Config: testAccServiceVCLSplunkConfigUpdateUseTLS(serviceName, cert, key),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", serviceName),

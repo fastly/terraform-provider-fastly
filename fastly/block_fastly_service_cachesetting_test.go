@@ -76,7 +76,7 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLCacheSetting(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLCacheSettingsAttributes(&service, []*gofastly.CacheSetting{&cq1}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -90,7 +90,7 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLCacheSettingUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLCacheSettingsAttributes(&service, []*gofastly.CacheSetting{&cq1, &cq2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "cache_setting.#", "2"),

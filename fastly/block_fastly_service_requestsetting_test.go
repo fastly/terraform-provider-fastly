@@ -83,7 +83,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLRequestSetting(name, domainName1, "90"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLRequestSettingsAttributes(&service, []*gofastly.RequestSetting{&rq1}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -96,7 +96,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLRequestSetting(name, domainName1, "900"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLRequestSettingsAttributes(&service, []*gofastly.RequestSetting{&rq2}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),

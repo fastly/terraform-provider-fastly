@@ -109,7 +109,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLHTTPSConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -121,7 +121,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLHTTPSConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -159,7 +159,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLHTTPSComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&https}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

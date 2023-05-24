@@ -138,7 +138,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLBlobStorageLoggingConfigComplete(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", serviceName),
@@ -150,7 +150,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLBlobStorageLoggingConfigUpdate(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneUpdated, &blobStorageLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", serviceName),
@@ -190,7 +190,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLBlobStorageLoggingConfigCompleteCompute(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOne}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_blobstorage.#", "1"),
@@ -226,7 +226,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 			{
 				Config: testAccServiceVCLBlobStorageLoggingConfigDefault(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLog}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", serviceName),

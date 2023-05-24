@@ -36,14 +36,14 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email),
 				),
 			},
 			{
 				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, emailUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate),
 				),
 			},
@@ -74,14 +74,14 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email),
 				),
 			},
 			{
 				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey, emailUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate),
 				),
 			},

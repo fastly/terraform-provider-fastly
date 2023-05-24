@@ -109,14 +109,14 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteRules(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckRules(&service, rules1, 1),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckRules(&service, rules2, 2),
 				),
 			},

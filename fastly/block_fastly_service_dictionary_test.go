@@ -69,14 +69,14 @@ func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigDictionary(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, false),
 				),
 			},
 			{
 				Config: testAccServiceVCLConfigDictionary(name, updatedDictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, false),
 				),
 			},
@@ -91,14 +91,14 @@ func TestAccFastlyServiceVCL_dictionary(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigDictionaryForceDestroy(name, updatedDictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, false),
 				),
 			},
 			{
 				Config: testAccServiceVCLConfigDictionaryForceDestroy(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, false),
 				),
 			},
@@ -124,7 +124,7 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigDictionaryWriteOnly(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, true),
 				),
 			},

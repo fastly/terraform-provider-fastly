@@ -102,7 +102,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLScalyrConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -114,7 +114,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLScalyrConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -148,7 +148,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLScalyrComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

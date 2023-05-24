@@ -121,7 +121,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLSyslogConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -133,7 +133,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLSyslogConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -169,7 +169,7 @@ func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLSyslogComputeConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
@@ -207,7 +207,7 @@ func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
 			{
 				Config: testAccServiceVCLSyslogConfigFormatVersion(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -260,7 +260,7 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 			{
 				Config: testAccServiceVCLSyslogConfigUseTLS(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_syslog.#", "1"),

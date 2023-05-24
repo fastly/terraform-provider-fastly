@@ -83,7 +83,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLPapertrailConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLPapertrailConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -129,7 +129,7 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLPapertrailComputeConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

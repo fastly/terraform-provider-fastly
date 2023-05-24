@@ -137,7 +137,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLFTPConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLFTPAttributes(&service, []*gofastly.FTP{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -149,7 +149,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLFTPConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLFTPAttributes(&service, []*gofastly.FTP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -190,7 +190,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLFTPComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLFTPAttributes(&service, []*gofastly.FTP{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

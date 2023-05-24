@@ -29,7 +29,7 @@ func TestAccFastlyServiceVCL_creation_with_versionless_resources(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigCreateServiceWithOneACLDictionaryAndDynamicSnippet(serviceName, dictionaryName, aclName, dynamicSnippetName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.service", &service),
+					testAccCheckServiceExists("fastly_service_vcl.service", &service),
 					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_dictionary_items.items", "items.%", "3"),
 					resource.TestCheckResourceAttrSet("fastly_service_dynamic_snippet_content.dyn_content", "content"),

@@ -12,6 +12,8 @@ Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform c
 
 The Service resource requires a domain name that is correctly set up to direct traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records](https://docs.fastly.com/en/guides/adding-cname-records) on their documentation site for guidance.
 
+-> **Note** The `kv_store` feature does not support seeding the store with data. This is because the size of objects that can be stored is very large and Terraform is designed for containing [configuration, not data](https://developer.fastly.com/learning/integrations/orchestration/terraform/#configuration-not-data). You should use either the [Fastly CLI](https://developer.fastly.com/learning/tools/cli/), [Fastly API](https://developer.fastly.com/reference/api/) or one of the available [Fastly API Clients](https://developer.fastly.com/reference/api/#clients) to populate your KV Store.
+
 ## Example Usage
 
 Basic usage:

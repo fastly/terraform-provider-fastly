@@ -31,83 +31,43 @@ func resourceFastlyKVStore() *schema.Resource {
 				Required:    true,
 				Description: "A unique name to identify the KV Store. It is important to note that changing this attribute will delete and recreate the KV Store, and discard the current entries.",
 			},
-			"resource_link": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Resource you want to link the KV Store to.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"service_id": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Alphanumeric string identifying the service.",
-						},
-						"service_version": {
-							Type:        schema.TypeInt,
-							Required:    true,
-							Description: "Integer identifying a service version.",
-						},
-					},
-				},
-			},
-			"store_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The ID of the KV Store.",
-			},
 		},
 	}
 }
 
-func resourceFastlyKVStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.CreateKVStoreInput{
 		Name: d.Get("name").(string),
 	}
 
-	log.Printf("[DEBUG] Fastly KV Store Addition input: %#v", input)
+	log.Printf("[DEBUG] CREATE: KV Store input: %#v", input)
+
 	store, err := conn.CreateKVStore(input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	resources := d.Get("resource_link").(*schema.Set).List()
-	for _, v := range resources {
-		resource := v.(map[string]any)
-		sid := resource["service_id"].(string)
-		sv := resource["service_version"].(int)
-		log.Printf("[DEBUG] Fastly KV Store link to resource: %s (version: %d)", sid, sv)
-		_, err = conn.CreateResource(&gofastly.CreateResourceInput{
-			ServiceID:      sid,
-			ServiceVersion: sv,
-			Name:           gofastly.String(store.Name),
-			ResourceID:     gofastly.String(store.ID),
-		})
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
+	// NOTE: `id` is exposed as a read-only attribute.
 	d.SetId(store.ID)
 
-	return resourceFastlyKVStoreRead(ctx, d, meta)
+	return nil
 }
 
 func resourceFastlyKVStoreRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	log.Printf("[DEBUG] Refreshing KV Store for (%s)", d.Id())
-
 	conn := meta.(*APIClient).conn
 
-	store, err := conn.GetKVStore(&gofastly.GetKVStoreInput{
+	input := &gofastly.GetKVStoreInput{
 		ID: d.Id(),
-	})
-	if err != nil {
-		return diag.FromErr(err)
 	}
 
-	err = d.Set("store_id", store.ID)
+	log.Printf("[DEBUG] REFRESH: KV Store input: %#v", input)
+
+	store, err := conn.GetKVStore(input)
 	if err != nil {
+		log.Printf("[WARN] No KV Store found '%s'", d.Id())
+		d.SetId("")
 		return diag.FromErr(err)
 	}
 
@@ -116,58 +76,54 @@ func resourceFastlyKVStoreRead(_ context.Context, d *schema.ResourceData, meta a
 		return diag.FromErr(err)
 	}
 
-	// TODO: check if we need to reset force_destroy
-	// TODO: update all resource links for this service (i.e. resources_links)
-
 	return nil
 }
 
-func resourceFastlyKVStoreUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	// TODO: Keep resource_links in-sync.
+// NOTE: There is no UPDATE endpoint for KV Stores.
+func resourceFastlyKVStoreUpdate(_ context.Context, _ *schema.ResourceData, _ any) diag.Diagnostics {
 	return nil
 }
 
 func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	storeID := d.Get("store_id").(string)
-
 	if !d.Get("force_destroy").(bool) {
-		mayDelete, err := isKVStoreEmpty(storeID, conn)
+		mayDelete, err := isKVStoreEmpty(d.Id(), conn)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
 		if !mayDelete {
-			return diag.FromErr(fmt.Errorf("cannot delete KV Store (%s), it is not empty. Either delete the entries first, or set force_destroy to true and apply it before making this change", storeID))
+			return diag.FromErr(fmt.Errorf("cannot delete KV Store (%s), it is not empty. Either delete the entries first, or set force_destroy to true and apply it before making this change", d.Id()))
 		}
 	}
 
 	input := gofastly.DeleteKVStoreInput{
-		ID: storeID,
+		ID: d.Id(),
 	}
 
-	log.Printf("[DEBUG] Fastly KV Store Removal input: %#v", input)
+	log.Printf("[DEBUG] DELETE: KV Store input: %#v", input)
+
 	err := conn.DeleteKVStore(&input)
-	if errRes, ok := err.(*gofastly.HTTPError); ok {
-		// NOTE: If the ID provided by the user is unrecognised, fail silently.
-		if errRes.StatusCode != 404 {
-			return diag.FromErr(err)
+	if err != nil {
+		if errRes, ok := err.(*gofastly.HTTPError); ok {
+			// If error is because the resource looks to already be deleted (i.e. 404),
+			// then skip returning the error and allow it to fail silently.
+			if errRes.StatusCode != 404 {
+				return diag.FromErr(err)
+			}
 		}
-	} else if err != nil {
-		return diag.FromErr(err)
 	}
 
-	return nil
+	return diag.FromErr(err)
 }
 
-func isKVStoreEmpty(dictID string, conn *gofastly.Client) (bool, error) {
+func isKVStoreEmpty(storeID string, conn *gofastly.Client) (bool, error) {
 	keys, err := conn.ListKVStoreKeys(&gofastly.ListKVStoreKeysInput{
-		ID: dictID,
+		ID: storeID,
 	})
 	if err != nil {
 		return false, err
 	}
-
 	return len(keys.Data) == 0, nil
 }

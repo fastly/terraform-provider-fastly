@@ -45,6 +45,7 @@ var computeService = &BaseServiceDefinition{
 		NewServiceLoggingKinesis(computeAttributes),
 		NewServiceDictionary(computeAttributes),
 		NewServicePackage(computeAttributes),
+		NewServiceResourceLink(computeAttributes),
 	},
 }
 

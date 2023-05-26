@@ -1,11 +1,8 @@
+# IMPORTANT: Deleting a KV Store requires first deleting its resource_link.
+# This requires a two-step `terraform apply` as we can't guarantee deletion order.
+# e.g. resource_link deletion within fastly_service_compute might not finish first.
 resource "fastly_kvstore" "example" {
   name = "my_kv_store"
-
-  # Provide a service to link the KV Store to.
-  resource_link {
-    service_id      = fastly_service_compute.example.id
-    service_version = 1
-  }
 }
 
 resource "fastly_service_compute" "example" {
@@ -18,6 +15,11 @@ resource "fastly_service_compute" "example" {
   package {
     filename         = "package.tar.gz"
     source_code_hash = data.fastly_package_hash.example.hash
+  }
+
+  resource_link {
+    name        = "my_resource_link"
+    resource_id = fastly_kvstore.example.id
   }
 
   force_destroy = true

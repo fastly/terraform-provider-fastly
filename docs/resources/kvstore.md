@@ -17,14 +17,11 @@ Provides a persistent, globally consistent key-value store accessible to Compute
 Basic usage:
 
 ```terraform
+# IMPORTANT: Deleting a KV Store requires first deleting its resource_link.
+# This requires a two-step `terraform apply` as we can't guarantee deletion order.
+# e.g. resource_link deletion within fastly_service_compute might not finish first.
 resource "fastly_kvstore" "example" {
   name = "my_kv_store"
-
-  # Provide a service to link the KV Store to.
-  resource_link {
-    service_id      = fastly_service_compute.example.id
-    service_version = 1
-  }
 }
 
 resource "fastly_service_compute" "example" {
@@ -37,6 +34,11 @@ resource "fastly_service_compute" "example" {
   package {
     filename         = "package.tar.gz"
     source_code_hash = data.fastly_package_hash.example.hash
+  }
+
+  resource_link {
+    name        = "my_resource_link"
+    resource_id = fastly_kvstore.example.id
   }
 
   force_destroy = true
@@ -65,17 +67,7 @@ $ terraform import fastly_kvstore.example xxxxxxxxxxxxxxxxxxxx
 ### Optional
 
 - `force_destroy` (Boolean) Allow the KV store to be deleted, even if it contains entries. Defaults to false.
-- `resource_link` (Block Set) Resource you want to link the KV Store to. (see [below for nested schema](#nestedblock--resource_link))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `store_id` (String) The ID of the KV Store.
-
-<a id="nestedblock--resource_link"></a>
-### Nested Schema for `resource_link`
-
-Required:
-
-- `service_id` (String) Alphanumeric string identifying the service.
-- `service_version` (Number) Integer identifying a service version.

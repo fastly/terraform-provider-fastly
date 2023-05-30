@@ -11,7 +11,10 @@ import (
 )
 
 func TestAccFastlyKVStore_validate(t *testing.T) {
-	var service gofastly.ServiceDetail
+	var (
+		kvStore gofastly.KVStore
+		service gofastly.ServiceDetail
+	)
 	kvStoreName := fmt.Sprintf("KV Store %s", acctest.RandString(10))
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -28,7 +31,7 @@ func TestAccFastlyKVStore_validate(t *testing.T) {
 				Config: testAccKVStoreConfig(kvStoreName, serviceName, domainName, linkName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.example", &service),
-					testAccCheckFastlyKVStoreRemoteState(&service, serviceName, kvStoreName, linkName),
+					testAccCheckFastlyKVStoreRemoteState(&service, &kvStore, serviceName, kvStoreName, linkName),
 				),
 			},
 			{
@@ -37,6 +40,11 @@ func TestAccFastlyKVStore_validate(t *testing.T) {
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
 				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported"},
+			},
+			// IMPORTANT: Add a key to the store so we can validate force delete.
+			{
+				Config: testAccKVStoreConfig(kvStoreName, serviceName, domainName, linkName),
+				Check:  testAccAddKVStoreItems(&kvStore), // triggers side-effect of adding a KV Store key/value
 			},
 			{
 				Config: testAccKVStoreConfigDeleteStep1(kvStoreName, serviceName, domainName),
@@ -48,7 +56,7 @@ func TestAccFastlyKVStore_validate(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, serviceName, kvStoreName, linkName string) resource.TestCheckFunc {
+func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, kvStore *gofastly.KVStore, serviceName, kvStoreName, linkName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if service.Name != serviceName {
 			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
@@ -65,6 +73,8 @@ func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, servi
 		for _, store := range stores.Data {
 			if store.Name == kvStoreName {
 				found = true
+				*kvStore = store
+				break
 			}
 		}
 		if !found {
@@ -157,6 +167,8 @@ data "fastly_package_hash" "example" {
     `, kvStoreName, serviceName, domainName)
 }
 
+// Step 1 deleted the resource_link first.
+// Step 2 will now delete the fastly_kvstore.
 func testAccKVStoreConfigDeleteStep2(serviceName, domainName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_compute" "example" {
@@ -178,4 +190,23 @@ data "fastly_package_hash" "example" {
   filename = "./test_fixtures/package/valid.tar.gz"
 }
     `, serviceName, domainName)
+}
+
+// testAccAddKVStoreItems doesn't technically check for anything despite
+// returning a TestCheckFunc. Instead it is used for its side effect of adding
+// a single KV Store entry so we can later validate we're able to force delete
+// the KV Store resource even though it contains data.
+func testAccAddKVStoreItems(kvStore *gofastly.KVStore) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		err := conn.InsertKVStoreKey(&gofastly.InsertKVStoreKeyInput{
+			ID:    kvStore.ID,
+			Key:   "test_key",
+			Value: "test_value",
+		})
+		if err != nil {
+			return fmt.Errorf("error adding item to KV Store '%s': %w", kvStore.ID, err)
+		}
+		return nil
+	}
 }

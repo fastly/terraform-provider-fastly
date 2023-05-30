@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 
 	gofastly "github.com/fastly/go-fastly/v8/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -96,6 +97,27 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 		if !mayDelete {
 			return diag.FromErr(fmt.Errorf("cannot delete KV Store (%s), it is not empty. Either delete the entries first, or set force_destroy to true and apply it before making this change", d.Id()))
 		}
+	}
+
+	// IMPORTANT: We must delete all keys first before we can delete the store.
+	p := conn.NewListKVStoreKeysPaginator(&gofastly.ListKVStoreKeysInput{
+		ID: d.Id(),
+	})
+	for p.Next() {
+		keys := p.Keys()
+		sort.Strings(keys)
+		for _, key := range keys {
+			err := conn.DeleteKVStoreKey(&gofastly.DeleteKVStoreKeyInput{
+				ID:  d.Id(),
+				Key: key,
+			})
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error during KV Store key cleanup: %w", err))
+			}
+		}
+	}
+	if err := p.Err(); err != nil {
+		return diag.FromErr(fmt.Errorf("error during KV Store cleanup pagination: %w", err))
 	}
 
 	input := gofastly.DeleteKVStoreInput{

@@ -5,9 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/fastly/go-fastly/v8/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -43,6 +42,11 @@ func resourceFastlyTLSActivation() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Domain to enable TLS on. Must be assigned to an existing Fastly Service.",
+			},
+			"mutual_authentication_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "An alphanumeric string identifying a mutual authentication.",
 			},
 		},
 	}
@@ -105,10 +109,19 @@ func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, 
 func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	_, err := conn.UpdateTLSActivation(&fastly.UpdateTLSActivationInput{
+	input := &fastly.UpdateTLSActivationInput{
 		ID:          d.Id(),
 		Certificate: &fastly.CustomTLSCertificate{ID: d.Get("certificate_id").(string)},
-	})
+	}
+
+	mtlsID := d.Get("mutual_authentication_id").(string)
+	if mtlsID != "" {
+		input.MutualAuthentication = &fastly.TLSMutualAuthentication{
+			ID: mtlsID,
+		}
+	}
+
+	_, err := conn.UpdateTLSActivation(input)
 	if err != nil {
 		return diag.FromErr(err)
 	}

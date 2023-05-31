@@ -78,7 +78,7 @@ func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigSumologic(name, domainName, backendName, s),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesSumologic(&service, name, s, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -89,7 +89,7 @@ func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigSumologic(name, domainName, backendName, sn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesSumologic(&service, name, sn, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -122,7 +122,7 @@ func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigSumologicCompute(name, domainName, backendName, s),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesSumologic(&service, name, s, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

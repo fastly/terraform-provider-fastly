@@ -195,7 +195,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDirectorsConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(&service, []*gofastly.Director{&directorDeveloper, &directorApps}),
 					testAccCheckFastlyServiceVCLDirectorBackends(&service, []*gofastly.DirectorBackend{&dbDeveloper, &dbApps}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
@@ -206,7 +206,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDirectorsConfigUpdate1(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(&service, []*gofastly.Director{&directorDeveloperUpdated, &directorApps, &directorWWWDemo}),
 					testAccCheckFastlyServiceVCLDirectorBackends(&service, []*gofastly.DirectorBackend{&dbDeveloperUpdated, &dbApps, &dbWWW, &dbDemo}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
@@ -217,7 +217,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDirectorsConfigUpdate2(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDirectorsAttributes(&service, []*gofastly.Director{&directorApps, &directorWWWDemo2}),
 					testAccCheckFastlyServiceVCLDirectorBackends(&service, []*gofastly.DirectorBackend{&dbApps, &dbWWW}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),

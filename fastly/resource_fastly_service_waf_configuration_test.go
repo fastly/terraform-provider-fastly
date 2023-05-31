@@ -79,7 +79,7 @@ func TestAccFastlyServiceWAFVersionV1_Add(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput, 1),
 				),
 			},
@@ -103,13 +103,13 @@ func TestAccFastlyServiceWAFVersionV1_AddExistingService(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput, 1),
 				),
 			},
@@ -141,14 +141,14 @@ func TestAccFastlyServiceWAFVersionV1_Update(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput1, 1),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput2, 2),
 					resource.TestCheckResourceAttr(resourceName, "active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "number", "2"),
@@ -157,7 +157,7 @@ func TestAccFastlyServiceWAFVersionV1_Update(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput3, 2),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "number", "2"),
@@ -183,14 +183,14 @@ func TestAccFastlyServiceWAFVersionV1_Delete(t *testing.T) {
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, wafVer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckAttributes(&service, wafVerInput, 1),
 				),
 			},
 			{
 				Config: testAccFastlyServiceWAFVersionV1(name, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceWAFVersionV1CheckEmpty(&service, 2),
 				),
 			},
@@ -265,7 +265,7 @@ func TestAccFastlyServiceWAFVersionV1_Config(t *testing.T) {
 			{
 				Config: wafSvcCfg,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 				),
 			},
 			{

@@ -170,7 +170,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDatadogConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_datadog.#", "1"),
@@ -180,7 +180,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDatadogConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_datadog.#", "2"),
@@ -212,7 +212,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLDatadogComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLDatadogAttributes(&service, []*gofastly.Datadog{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

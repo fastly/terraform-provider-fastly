@@ -145,7 +145,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLCloudfilesConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.none", &service),
+					testAccCheckServiceExists("fastly_service_vcl.none", &service),
 					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.none", "name", name),
@@ -157,7 +157,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLCloudfilesConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.none", &service),
+					testAccCheckServiceExists("fastly_service_vcl.none", &service),
 					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.none", "name", name),
@@ -200,7 +200,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLComputeCloudfilesConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.none", &service),
+					testAccCheckServiceExists("fastly_service_compute.none", &service),
 					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1Compute}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.none", "name", name),

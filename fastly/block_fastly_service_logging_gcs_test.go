@@ -84,7 +84,7 @@ func TestAccFastlyServiceVCL_gcslogging(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigGCS(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
 				),
 			},

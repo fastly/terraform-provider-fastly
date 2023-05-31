@@ -77,7 +77,7 @@ func TestAccFastlyServiceVCLWAF_Add(t *testing.T) {
 			{
 				Config: testAccServiceVCLWAF(name, "", waf, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceVCLAttributesWAF(&service, response, condition),
 				),
 			},
@@ -100,20 +100,20 @@ func TestAccFastlyServiceVCLWAF_AddAndRemove(t *testing.T) {
 			{
 				Config: testAccServiceVCLWAF(name, "", "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 				),
 			},
 			{
 				Config: testAccServiceVCLWAF(name, "", waf, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceVCLAttributesWAF(&service, response, condition),
 				),
 			},
 			{
 				Config: testAccServiceVCLWAF(name, "", "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceVCLDeletedWAF(&service),
 				),
 			},
@@ -138,14 +138,14 @@ func TestAccFastlyServiceVCLWAF_UpdateResponse(t *testing.T) {
 			{
 				Config: testAccServiceVCLWAF(name, "", waf, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceVCLAttributesWAF(&service, response, condition),
 				),
 			},
 			{
 				Config: testAccServiceVCLWAF(name, extraResponse, updatedWaf, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceVCLAttributesWAF(&service, updateResponse, condition),
 				),
 			},
@@ -170,14 +170,14 @@ func TestAccFastlyServiceVCLWAF_UpdateCondition(t *testing.T) {
 			{
 				Config: testAccServiceVCLWAF(name, "", waf, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceVCLAttributesWAF(&service, response, condition),
 				),
 			},
 			{
 				Config: testAccServiceVCLWAF(name, extraCondition, updatedWaf, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists(serviceRef, &service),
+					testAccCheckServiceExists(serviceRef, &service),
 					testAccCheckFastlyServiceVCLAttributesWAF(&service, response, updatedCondition),
 				),
 			},

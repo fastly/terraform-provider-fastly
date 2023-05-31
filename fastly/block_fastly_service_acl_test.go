@@ -67,7 +67,7 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigACL(name, aclName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclName, &aclA),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclName, &aclB),
 				),
@@ -75,7 +75,7 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigACL(name, aclNameUpdated, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclNameUpdated, &aclA),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclNameUpdated, &aclB),
 				),
@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigACLForceDestroy(name, aclNameUpdated, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclNameUpdated, &aclA),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclNameUpdated, &aclB),
 				),
@@ -103,7 +103,7 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 			{
 				Config: testAccServiceVCLConfigACLForceDestroy(name, aclName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "a_"+aclName, &aclA),
 					testAccCheckFastlyServiceVCLAttributesACL(&service, name, "b_"+aclName, &aclB),
 				),

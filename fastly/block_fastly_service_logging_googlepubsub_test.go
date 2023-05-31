@@ -210,7 +210,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLGooglePubSubConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -222,7 +222,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLGooglePubSubConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -258,7 +258,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLGooglePubSubComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLGooglePubSubAttributes(&service, []*gofastly.Pubsub{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

@@ -96,7 +96,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLHerokuConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -108,7 +108,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLHerokuConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -142,7 +142,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLHerokuComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

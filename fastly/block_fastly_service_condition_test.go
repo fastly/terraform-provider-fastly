@@ -73,7 +73,7 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLConditionConfig(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLConditionalAttributes(&service, name, []*gofastly.Condition{&con1}),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -84,7 +84,7 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLConditionConfigUpdate(name, domainName1, "CACHE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLConditionalAttributes(&service, name, []*gofastly.Condition{&con2}),
 				),
 			},

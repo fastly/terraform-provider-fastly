@@ -91,7 +91,7 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDynamicSnippet(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDynamicSnippetAttributes(&service, []*gofastly.Snippet{&s1}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "dynamicsnippet.#", "1"),
@@ -106,7 +106,7 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLDynamicSnippetUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDynamicSnippetAttributes(&service, []*gofastly.Snippet{&updatedS1, &updatedS2}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "dynamicsnippet.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "dynamicsnippet.*", map[string]string{

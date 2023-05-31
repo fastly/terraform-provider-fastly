@@ -218,7 +218,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLS3LoggingConfig(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -230,7 +230,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLS3LoggingConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -272,7 +272,7 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLS3LoggingComputeConfig(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
@@ -315,7 +315,7 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 			{
 				Config: testAccServiceVCLS3LoggingConfigDomainDefault(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -357,7 +357,7 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 			{
 				Config: testAccServiceVCLS3LoggingConfigFormatVersion(name, domainName1, testAwsPrimaryAccessKey, testAwsPrimarySecretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),

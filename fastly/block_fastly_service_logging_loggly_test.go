@@ -83,7 +83,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLLogglyConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogglyAttributes(&service, []*gofastly.Loggly{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -95,7 +95,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLLogglyConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_vcl.foo", &service),
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLLogglyAttributes(&service, []*gofastly.Loggly{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
@@ -128,7 +128,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic_compute(t *testing.T) {
 			{
 				Config: testAccServiceVCLLogglyComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceVCLExists("fastly_service_compute.foo", &service),
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLLogglyAttributes(&service, []*gofastly.Loggly{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),

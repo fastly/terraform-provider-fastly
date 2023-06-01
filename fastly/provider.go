@@ -75,6 +75,7 @@ func Provider() *schema.Provider {
 			"fastly_service_waf_configuration":       resourceServiceWAFConfiguration(),
 			"fastly_tls_activation":                  resourceFastlyTLSActivation(),
 			"fastly_tls_certificate":                 resourceFastlyTLSCertificate(),
+			"fastly_tls_mutual_authentication":       resourceFastlyTLSMutualAuthentication(),
 			"fastly_tls_platform_certificate":        resourceFastlyTLSPlatformCertificate(),
 			"fastly_tls_private_key":                 resourceFastlyTLSPrivateKey(),
 			"fastly_tls_subscription":                resourceFastlyTLSSubscription(),

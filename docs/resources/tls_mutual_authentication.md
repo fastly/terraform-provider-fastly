@@ -21,7 +21,7 @@ description: |-
 
 ### Optional
 
-- `enforced` (Boolean) Determines whether Mutual TLS will fail closed (enforced) or fail open. A true value will require a successful Mutual TLS handshake for the connection to continue and will fail closed if unsuccessful. A false value will fail open and allow the connection to proceed.
+- `enforced` (Boolean) Determines whether Mutual TLS will fail closed (enforced) or fail open. A true value will require a successful Mutual TLS handshake for the connection to continue and will fail closed if unsuccessful. A false value will fail open and allow the connection to proceed (if this attribute is not set we default to `false`).
 - `include` (String) Comma-separated list of related objects to include (e.g. `tls_activations` will provide you with the TLS domain names that are related to your Mutual TLS authentication).
 - `name` (String) A custom name for your mutual authentication. If name is not supplied we will auto-generate one.
 

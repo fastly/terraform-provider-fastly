@@ -108,7 +108,7 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("created_at", tma.CreatedAt); err != nil {
+	if err := d.Set("created_at", tma.CreatedAt.String()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("enforced", tma.Enforced); err != nil {
@@ -117,7 +117,7 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 	if err := d.Set("name", tma.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("updated_at", tma.UpdatedAt); err != nil {
+	if err := d.Set("updated_at", tma.UpdatedAt.String()); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -127,7 +127,11 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 			activations = append(activations, a.ID)
 		}
 		sort.Strings(activations)
-		d.Set("tls_activations", activations)
+
+		err := d.Set("tls_activations", activations)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil
@@ -142,12 +146,10 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 	}
 
 	if d.HasChange("enforced") {
-		_, v := d.GetChange("enforced")
-		input.Enforced = v.(bool)
+		input.Enforced = d.Get("enforced").(bool)
 	}
 	if d.HasChange("name") {
-		_, v := d.GetChange("name")
-		input.Name = v.(string)
+		input.Name = d.Get("name").(string)
 	}
 
 	log.Printf("[DEBUG] UPDATE: TLS Mutual Authentication input: %#v", input)

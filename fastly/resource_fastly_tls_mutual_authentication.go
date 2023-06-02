@@ -32,7 +32,7 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 			},
 			"enforced": {
 				Type:        schema.TypeBool,
-				Description: "Determines whether Mutual TLS will fail closed (enforced) or fail open. A true value will require a successful Mutual TLS handshake for the connection to continue and will fail closed if unsuccessful. A false value will fail open and allow the connection to proceed.",
+				Description: "Determines whether Mutual TLS will fail closed (enforced) or fail open. A true value will require a successful Mutual TLS handshake for the connection to continue and will fail closed if unsuccessful. A false value will fail open and allow the connection to proceed (if this attribute is not set we default to `false`).",
 				Optional:    true,
 				Computed:    true,
 			},
@@ -64,7 +64,7 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 	}
 }
 
-func resourceFastlyTLSMutualAuthenticationCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &fastly.CreateTLSMutualAuthenticationInput{
@@ -87,7 +87,7 @@ func resourceFastlyTLSMutualAuthenticationCreate(_ context.Context, d *schema.Re
 
 	d.SetId(output.ID)
 
-	return nil
+	return resourceFastlyTLSMutualAuthenticationRead(ctx, d, meta)
 }
 
 func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -122,16 +122,14 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 	}
 
 	var activations []string
-	if len(tma.Activations) > 0 {
-		for _, a := range tma.Activations {
-			activations = append(activations, a.ID)
-		}
-		sort.Strings(activations)
+	for _, a := range tma.Activations {
+		activations = append(activations, a.ID)
+	}
+	sort.Strings(activations)
 
-		err := d.Set("tls_activations", activations)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+	err = d.Set("tls_activations", activations)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	return nil

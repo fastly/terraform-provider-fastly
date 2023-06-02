@@ -177,7 +177,7 @@ github.com/bgentry/speakeasy
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v8 v8.3.0
+# github.com/fastly/go-fastly/v8 v8.4.1
 ## explicit; go 1.18
 github.com/fastly/go-fastly/v8/fastly
 # github.com/fatih/color v1.13.0

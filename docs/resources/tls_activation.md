@@ -71,6 +71,7 @@ $ terraform import fastly_tls_activation.demo xxxxxxxx
 ### Optional
 
 - `configuration_id` (String) ID of TLS configuration to be used to terminate TLS traffic, or use the default one if missing.
+- `mutual_authentication_id` (String) An alphanumeric string identifying a mutual authentication.
 
 ### Read-Only
 

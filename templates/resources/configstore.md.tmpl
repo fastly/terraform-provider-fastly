@@ -1,0 +1,25 @@
+---
+layout: "fastly"
+page_title: "Fastly: configstore"
+sidebar_current: "docs-fastly-resource-configstore"
+description: |-
+  Provides a container that lets you store data in key-value pairs that are accessible to Compute@Edge services during request processing.
+---
+
+# fastly_configstore
+
+Provides a container that lets you store data in key-value pairs that are accessible to Compute@Edge services during request processing.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/configstore_basic_usage.tf" }}
+
+## Import
+
+Fastly Config Stores can be imported using their Store ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/configstore_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

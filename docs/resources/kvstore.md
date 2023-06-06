@@ -66,7 +66,7 @@ $ terraform import fastly_kvstore.example xxxxxxxxxxxxxxxxxxxx
 
 ### Optional
 
-- `force_destroy` (Boolean) Allow the KV store to be deleted, even if it contains entries. Defaults to false.
+- `force_destroy` (Boolean) Allow the KV Store to be deleted, even if it contains entries. Defaults to false.
 
 ### Read-Only
 

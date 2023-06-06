@@ -25,7 +25,7 @@ func resourceFastlyKVStore() *schema.Resource {
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
-				Description: "Allow the KV store to be deleted, even if it contains entries. Defaults to false.",
+				Description: "Allow the KV Store to be deleted, even if it contains entries. Defaults to false.",
 			},
 			"name": {
 				Type:        schema.TypeString,

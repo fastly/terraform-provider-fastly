@@ -129,16 +129,9 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 
 	err := conn.DeleteKVStore(&input)
 	if err != nil {
-		if errRes, ok := err.(*gofastly.HTTPError); ok {
-			// If error is because the resource looks to already be deleted (i.e. 404),
-			// then skip returning the error and allow it to fail silently.
-			if errRes.StatusCode != 404 {
-				return diag.FromErr(err)
-			}
-		}
+		return diag.FromErr(err)
 	}
-
-	return diag.FromErr(err)
+	return nil
 }
 
 func isKVStoreEmpty(storeID string, conn *gofastly.Client) (bool, error) {

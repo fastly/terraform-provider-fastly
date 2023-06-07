@@ -82,7 +82,7 @@ func resourceFastlyConfigStoreRead(_ context.Context, d *schema.ResourceData, me
 
 // NOTE: There is no UPDATE endpoint for Config Stores.
 // A change in the name will result in a delete and recreate.
-func resourceFastlyConfigStoreUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreUpdate(_ context.Context, _ *schema.ResourceData, _ any) diag.Diagnostics {
 	return nil
 }
 
@@ -126,16 +126,9 @@ func resourceFastlyConfigStoreDelete(_ context.Context, d *schema.ResourceData, 
 
 	err = conn.DeleteConfigStore(&input)
 	if err != nil {
-		if errRes, ok := err.(*gofastly.HTTPError); ok {
-			// If error is because the resource looks to already be deleted (i.e. 404),
-			// then skip returning the error and allow it to fail silently.
-			if errRes.StatusCode != 404 {
-				return diag.FromErr(err)
-			}
-		}
+		return diag.FromErr(err)
 	}
-
-	return diag.FromErr(err)
+	return nil
 }
 
 func isConfigStoreEmpty(storeID string, conn *gofastly.Client) (bool, error) {

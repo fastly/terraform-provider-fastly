@@ -44,7 +44,7 @@ func TestAccFastlyConfigStore_validate(t *testing.T) {
 			// IMPORTANT: Add a key to the store so we can validate force delete.
 			{
 				Config: testAccConfigStoreConfig(configStoreName, serviceName, domainName, linkName),
-				Check:  testAccAddConfigStoreItems(&configStore), // triggers side-effect of adding a KV Store key/value
+				Check:  testAccAddConfigStoreItems(&configStore), // triggers side-effect of adding a Config Store key/value
 			},
 			{
 				Config: testAccConfigStoreConfigDeleteStep1(configStoreName, serviceName, domainName),
@@ -136,7 +136,7 @@ data "fastly_package_hash" "example" {
     `, configStoreName, serviceName, domainName, linkName)
 }
 
-// IMPORTANT: Deleting a KV Store requires first deleting its resource_link.
+// IMPORTANT: Deleting a Config Store requires first deleting its resource_link.
 // This requires a two-step `terraform apply` as we can't guarantee deletion order.
 // e.g. resource_link deletion within fastly_service_compute might not finish first.
 func testAccConfigStoreConfigDeleteStep1(configStoreName, serviceName, domainName string) string {
@@ -194,8 +194,8 @@ data "fastly_package_hash" "example" {
 
 // testAccAddConfigStoreItems doesn't technically check for anything despite
 // returning a TestCheckFunc. Instead it is used for its side effect of adding
-// a single KV Store entry so we can later validate we're able to force delete
-// the KV Store resource even though it contains data.
+// a single Config Store entry so we can later validate we're able to force
+// delete the Config Store resource even though it contains data.
 func testAccAddConfigStoreItems(configStore *gofastly.ConfigStore) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn

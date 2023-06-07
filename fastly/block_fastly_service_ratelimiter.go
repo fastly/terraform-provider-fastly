@@ -42,7 +42,7 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The action to take when a rate limiter violation is detected (one of: log_only, log_only, response_object)",
-			ValidateDiagFunc: func(i interface{}, _ cty.Path) diag.Diagnostics {
+			ValidateDiagFunc: func(i any, _ cty.Path) diag.Diagnostics {
 				for _, a := range gofastly.ERLActions {
 					if i.(string) == string(a) {
 						return nil
@@ -55,7 +55,7 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Comma-separated list of VCL variables used to generate a counter key to identify a client",
-			ValidateDiagFunc: func(i interface{}, _ cty.Path) diag.Diagnostics {
+			ValidateDiagFunc: func(i any, _ cty.Path) diag.Diagnostics {
 				if strings.Contains(i.(string), " ") {
 					return diag.Errorf("invalid client_key: should contain no spaces")
 				}
@@ -72,7 +72,7 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Comma-separated list of HTTP methods to apply rate limiting to",
-			ValidateDiagFunc: func(i interface{}, _ cty.Path) diag.Diagnostics {
+			ValidateDiagFunc: func(i any, _ cty.Path) diag.Diagnostics {
 				v := i.(string)
 				if strings.Contains(v, " ") {
 					return diag.Errorf("invalid http_methods: should contain no spaces")
@@ -87,7 +87,7 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Name of the type of logging endpoint to be used when action is log_only (one of: azureblob, bigquery, cloudfiles, datadog, digitalocean, elasticsearch, ftp, gcs, googleanalytics, heroku, honeycomb, http, https, kafka, kinesis, logentries, loggly, logshuttle, newrelic, openstack, papertrail, pubsub, s3, scalyr, sftp, splunk, stackdriver, sumologic, syslog)",
-			ValidateDiagFunc: func(i interface{}, _ cty.Path) diag.Diagnostics {
+			ValidateDiagFunc: func(i any, _ cty.Path) diag.Diagnostics {
 				for _, l := range gofastly.ERLLoggers {
 					if i.(string) == string(l) {
 						return nil
@@ -156,7 +156,7 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Required:    true,
 			Description: "Number of seconds during which the RPS limit must be exceeded in order to trigger a violation (one of: 1, 10, 60)",
-			ValidateDiagFunc: func(i interface{}, _ cty.Path) diag.Diagnostics {
+			ValidateDiagFunc: func(i any, _ cty.Path) diag.Diagnostics {
 				for _, w := range gofastly.ERLWindowSizes {
 					if i.(int) == int(w) {
 						return nil
@@ -347,7 +347,7 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 		ERLID: rateLimiterID,
 	}
 
-	// NOTE: When converting from an interface{} we lose the underlying type.
+	// NOTE: When converting from an `any` type, we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 
 	if v, ok := modified["action"]; ok {
@@ -391,11 +391,14 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 	}
 
 	if v, ok := modified["response"]; ok {
-		m := v.([]any)[0].(map[string]any)
-		input.Response = &gofastly.ERLResponseType{
-			ERLContent:     m["content"].(string),
-			ERLContentType: m["content_type"].(string),
-			ERLStatus:      m["status"].(int),
+		s := v.([]any)
+		if len(s) > 0 {
+			m := s[0].(map[string]any)
+			input.Response = &gofastly.ERLResponseType{
+				ERLContent:     m["content"].(string),
+				ERLContentType: m["content_type"].(string),
+				ERLStatus:      m["status"].(int),
+			}
 		}
 	}
 
@@ -437,16 +440,19 @@ func flattenRateLimiter(remoteState []*gofastly.ERL, _ ServiceMetadata) []map[st
 			"name":                 o.Name,
 			"penalty_box_duration": o.PenaltyBoxDuration,
 			"ratelimiter_id":       o.ID,
-			"response": []map[string]any{
+			"response_object_name": o.ResponseObjectName,
+			"rps_limit":            o.RpsLimit,
+			"window_size":          int(o.WindowSize),
+		}
+
+		if o.Response != nil {
+			data["response"] = []map[string]any{
 				{
 					"content":      o.Response.ERLContent,
 					"content_type": o.Response.ERLContentType,
 					"status":       o.Response.ERLStatus,
 				},
-			},
-			"response_object_name": o.ResponseObjectName,
-			"rps_limit":            o.RpsLimit,
-			"window_size":          int(o.WindowSize),
+			}
 		}
 
 		result = append(result, data)

@@ -391,11 +391,14 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 	}
 
 	if v, ok := modified["response"]; ok {
-		m := v.([]any)[0].(map[string]any)
-		input.Response = &gofastly.ERLResponseType{
-			ERLContent:     m["content"].(string),
-			ERLContentType: m["content_type"].(string),
-			ERLStatus:      m["status"].(int),
+		s := v.([]any)
+		if len(s) > 0 {
+			m := s[0].(map[string]any)
+			input.Response = &gofastly.ERLResponseType{
+				ERLContent:     m["content"].(string),
+				ERLContentType: m["content_type"].(string),
+				ERLStatus:      m["status"].(int),
+			}
 		}
 	}
 

@@ -14,6 +14,8 @@ After the first `terraform apply` the default behaviour is to ignore any further
 
 To change the default behaviour (so Terraform continues to manage the key-value pairs within the configuration) set `manage_entries = true`.
 
+~> **Note:** Terraform should not be used to store large amounts of data, so it's recommended you leave the default behaviour in place and only seed the store with a small amount of key-value pairs. For more information see ["Configuration not data"](https://developer.fastly.com/learning/integrations/orchestration/terraform/#configuration-not-data).
+
 ## Example Usage
 
 Basic usage (with seeded values):

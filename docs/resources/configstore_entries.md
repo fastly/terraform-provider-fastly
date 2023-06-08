@@ -123,7 +123,7 @@ $ terraform import fastly_configstore_entries.example xxxxxxxxxxxxxxxxxxxx/entri
 
 ### Optional
 
-- `manage_entries` (Boolean) Have Terraform manage the entries (default: false). If set to `true` Terraform will replace any entries that were added externally from the config seeded values.
+- `manage_entries` (Boolean) Have Terraform manage the entries (default: false). If set to `true` Terraform will remove any entries that were added externally from the config seeded values.
 
 ### Read-Only
 

@@ -35,7 +35,7 @@ func resourceFastlyConfigStoreEntries() *schema.Resource {
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
-				Description: "Have Terraform manage the entries (default: false). If set to `true` Terraform will replace any entries that were added externally from the config seeded values.",
+				Description: "Have Terraform manage the entries (default: false). If set to `true` Terraform will remove any entries that were added externally from the config seeded values.",
 			},
 			"store_id": {
 				Type:        schema.TypeString,

@@ -8,9 +8,11 @@ description: |-
 
 # fastly_configstore_entries
 
-A key-value pair within a config store.
+The Config Store (`fastly_configstore`) can be seeded with initial key-value pairs using the `fastly_configstore_entries` resource.
 
-The store can be seeded with initial key-value pairs but afterwards the default behaviour is to ignore any further configuration changes to those key-value pairs and expect modifications to happen outside of Terraform (e.g. new key-value pairs to be managed using the [Fastly API](https://developer.fastly.com/reference/api/) or [Fastly CLI](https://developer.fastly.com/learning/tools/cli/)).
+After the first `terraform apply` the default behaviour is to ignore any further configuration changes to those key-value pairs. Terraform will expect modifications to happen outside of Terraform (e.g. new key-value pairs to be managed using the [Fastly API](https://developer.fastly.com/reference/api/) or [Fastly CLI](https://developer.fastly.com/learning/tools/cli/)).
+
+To change the default behaviour (so Terraform continues to manage the key-value pairs within the configuration) set `manage_entries = true`.
 
 ## Example Usage
 

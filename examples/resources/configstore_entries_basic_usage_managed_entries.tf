@@ -11,7 +11,7 @@ resource "fastly_configstore_entries" "example" {
     key1 : "value1"
     key2 : "value2"
   }
-  managed_entries = true
+  manage_entries = true
 }
 
 resource "fastly_service_compute" "example" {

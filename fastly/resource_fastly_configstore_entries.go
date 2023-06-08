@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v8/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -17,7 +18,7 @@ func resourceFastlyConfigStoreEntries() *schema.Resource {
 		UpdateContext: resourceFastlyConfigStoreEntriesUpdate,
 		DeleteContext: resourceFastlyConfigStoreEntriesDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceConfigStoreEntriesImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"entries": {
@@ -88,7 +89,7 @@ func resourceFastlyConfigStoreEntriesRead(_ context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("items", flattenConfigStoreEntries(remoteState))
+	err = d.Set("entries", flattenConfigStoreEntries(remoteState))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -96,8 +97,6 @@ func resourceFastlyConfigStoreEntriesRead(_ context.Context, d *schema.ResourceD
 	return nil
 }
 
-// NOTE: There is no UPDATE endpoint for Config Stores.
-// A change in the name will result in a delete and recreate.
 func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
@@ -108,14 +107,14 @@ func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.Resourc
 	if d.HasChange("entries") {
 		var batchEntries []*gofastly.BatchConfigStoreItem
 
-		o, n := d.GetChange("items")
+		o, n := d.GetChange("entries")
 
-		os := o.(map[string]any)
-		ns := n.(map[string]any)
+		om := o.(map[string]any)
+		nm := n.(map[string]any)
 
 		// Deletions
-		for key := range os {
-			if _, ok := ns[key]; !ok {
+		for key := range om {
+			if _, ok := nm[key]; !ok {
 				batchEntries = append(batchEntries, &gofastly.BatchConfigStoreItem{
 					Operation: gofastly.DeleteBatchOperation,
 					ItemKey:   key,
@@ -123,9 +122,9 @@ func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.Resourc
 			}
 		}
 
-		for key, val := range ns {
+		for key, val := range nm {
 			// Updates
-			if _, ok := os[key]; ok {
+			if _, ok := om[key]; ok {
 				batchEntries = append(batchEntries, &gofastly.BatchConfigStoreItem{
 					Operation: gofastly.UpdateBatchOperation,
 					ItemKey:   key,
@@ -134,7 +133,7 @@ func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.Resourc
 			}
 
 			// Additions
-			if _, ok := os[key]; !ok {
+			if _, ok := om[key]; !ok {
 				batchEntries = append(batchEntries, &gofastly.BatchConfigStoreItem{
 					Operation: gofastly.CreateBatchOperation,
 					ItemKey:   key,
@@ -143,7 +142,6 @@ func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.Resourc
 			}
 		}
 
-		// Process the batch operations
 		err := executeBatchConfigStoreOperations(conn, storeID, batchEntries)
 		if err != nil {
 			return diag.Errorf("error updating Config Store (%s) elements: %s", storeID, err)
@@ -211,4 +209,21 @@ func executeBatchConfigStoreOperations(conn *gofastly.Client, storeID string, ba
 	}
 
 	return nil
+}
+
+func resourceConfigStoreEntriesImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+	split := strings.Split(d.Id(), "/")
+
+	if len(split) != 2 {
+		return nil, fmt.Errorf("invalid id: %s. The ID should be in the format [store_id]/entries", d.Id())
+	}
+
+	storeID := split[0]
+
+	err := d.Set("store_id", storeID)
+	if err != nil {
+		return nil, fmt.Errorf("error setting Config Store ID (%s): %s", storeID, err)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

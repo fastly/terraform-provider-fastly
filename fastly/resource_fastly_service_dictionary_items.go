@@ -6,9 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -174,7 +173,7 @@ func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceD
 	// Process the batch operations
 	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
-		return diag.Errorf("error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
+		return diag.Errorf("error deleting dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
 
 	d.SetId("")

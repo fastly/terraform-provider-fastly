@@ -41,7 +41,7 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 		"action": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The action to take when a rate limiter violation is detected (one of: log_only, log_only, response_object)",
+			Description: "The action to take when a rate limiter violation is detected (one of: log_only, response, response_object)",
 			ValidateDiagFunc: func(i any, _ cty.Path) diag.Diagnostics {
 				for _, a := range gofastly.ERLActions {
 					if i.(string) == string(a) {

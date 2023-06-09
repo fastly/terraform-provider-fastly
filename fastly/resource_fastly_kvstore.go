@@ -25,12 +25,12 @@ func resourceFastlyKVStore() *schema.Resource {
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
-				Description: "Allow the KV store to be deleted, even if it contains entries. Defaults to false.",
+				Description: "Allow the KV Store to be deleted, even if it contains entries. Defaults to false.",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "A unique name to identify the KV Store. It is important to note that changing this attribute will delete and recreate the KV Store, and discard the current entries.",
+				Description: "A unique name to identify the KV Store. It is important to note that changing this attribute will delete and recreate the KV Store, and discard the current entries. You MUST first delete the associated resource_link block from your service before modifying this field.",
 				ForceNew:    true,
 			},
 		},
@@ -129,16 +129,9 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 
 	err := conn.DeleteKVStore(&input)
 	if err != nil {
-		if errRes, ok := err.(*gofastly.HTTPError); ok {
-			// If error is because the resource looks to already be deleted (i.e. 404),
-			// then skip returning the error and allow it to fail silently.
-			if errRes.StatusCode != 404 {
-				return diag.FromErr(err)
-			}
-		}
+		return diag.FromErr(err)
 	}
-
-	return diag.FromErr(err)
+	return nil
 }
 
 func isKVStoreEmpty(storeID string, conn *gofastly.Client) (bool, error) {

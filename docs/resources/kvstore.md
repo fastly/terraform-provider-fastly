@@ -62,11 +62,11 @@ $ terraform import fastly_kvstore.example xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
-- `name` (String) A unique name to identify the KV Store. It is important to note that changing this attribute will delete and recreate the KV Store, and discard the current entries.
+- `name` (String) A unique name to identify the KV Store. It is important to note that changing this attribute will delete and recreate the KV Store, and discard the current entries. You MUST first delete the associated resource_link block from your service before modifying this field.
 
 ### Optional
 
-- `force_destroy` (Boolean) Allow the KV store to be deleted, even if it contains entries. Defaults to false.
+- `force_destroy` (Boolean) Allow the KV Store to be deleted, even if it contains entries. Defaults to false.
 
 ### Read-Only
 

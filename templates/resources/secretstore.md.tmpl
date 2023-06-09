@@ -6,7 +6,7 @@ description: |-
   A secret store is a persistent, globally distributed store for secrets accessible to Compute@Edge services during request processing.
 ---
 
-# fastly_configstore
+# fastly_secretstore
 
 A secret store is a persistent, globally distributed store for secrets accessible to Compute@Edge services during request processing.
 

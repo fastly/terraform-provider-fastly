@@ -99,6 +99,7 @@ func testAccCheckFastlySecretStoreRemoteState(service *gofastly.ServiceDetail, s
 		for _, link := range links {
 			if link.Name == linkName {
 				found = true
+				break
 			}
 		}
 		if !found {

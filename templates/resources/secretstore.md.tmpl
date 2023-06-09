@@ -12,7 +12,9 @@ A secret store is a persistent, globally distributed store for secrets accessibl
 
 In order for a Secret Store (`fastly_secretstore`) to be accessible to a [Compute@Edge](https://developer.fastly.com/learning/compute/) service you'll first need to define a Compute service (`fastly_service_compute`) in your configuration, and then create a link to the Secret Store from within the service using the `resource_link` block (shown in the below examples).
 
-~> **Note:** Unlike other stores (Config Store, KV Store etc) deleting a Secret Store will automatically delete all the secrets it contains. There is no need to manually delete the secrets first.
+~> **Warning:** Unlike other stores (Config Store, KV Store etc) deleting a Secret Store will automatically delete all the secrets it contains. There is no need to manually delete the secrets first.
+
+~> **Note:** The Fastly Terraform provider does not provide a means to seed the Secret Store with secrets (this is because the values are persisted into the Terraform state file as plaintext). To populate the Secret Store with secrets please use the [Fastly API](https://developer.fastly.com/reference/api/services/resources/secret-store-secret/) directly or the [Fastly CLI](https://developer.fastly.com/reference/cli/secret-store-entry/).
 
 ## Example Usage
 

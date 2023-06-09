@@ -13,7 +13,6 @@ func resourceFastlySecretStore() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceFastlySecretStoreCreate,
 		ReadContext:   resourceFastlySecretStoreRead,
-		UpdateContext: resourceFastlySecretStoreUpdate,
 		DeleteContext: resourceFastlySecretStoreDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -23,6 +22,7 @@ func resourceFastlySecretStore() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "A human-readable name for the Secret Store. The value must contain only letters, numbers, dashes (-), underscores (_), or periods (.). It is important to note that changing this attribute will delete and recreate the Secret Store, and discard the current entries. You MUST first delete the associated resource_link block from your service before modifying this field.",
+				ForceNew:    true,
 			},
 		},
 	}
@@ -69,12 +69,6 @@ func resourceFastlySecretStoreRead(_ context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	return nil
-}
-
-// NOTE: There is no UPDATE endpoint for Secret Stores.
-// A change in the name will result in a delete and recreate.
-func resourceFastlySecretStoreUpdate(_ context.Context, _ *schema.ResourceData, _ any) diag.Diagnostics {
 	return nil
 }
 

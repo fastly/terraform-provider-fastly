@@ -19,7 +19,7 @@ resource "fastly_service_compute" "example" {
 
   resource_link {
     name        = "my_resource_link"
-    resource_id = fastly_kvstore.example.id
+    resource_id = fastly_secretstore.example.id
   }
 
   force_destroy = true

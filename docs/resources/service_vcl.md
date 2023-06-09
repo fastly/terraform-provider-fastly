@@ -1099,7 +1099,7 @@ Read-Only:
 
 Required:
 
-- `action` (String) The action to take when a rate limiter violation is detected (one of: log_only, log_only, response_object)
+- `action` (String) The action to take when a rate limiter violation is detected (one of: log_only, response, response_object)
 - `client_key` (String) Comma-separated list of VCL variables used to generate a counter key to identify a client
 - `http_methods` (String) Comma-separated list of HTTP methods to apply rate limiting to
 - `name` (String) A unique human readable name for the rate limiting rule

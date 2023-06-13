@@ -1,4 +1,22 @@
-## 5.1.0 (Unreleased)
+## 5.2.0 (Unreleased)
+
+## 5.1.0 (June 13, 2023)
+
+ENHANCEMENTS:
+
+* feat(kv_store): support KV Store [#691](https://github.com/fastly/terraform-provider-fastly/pull/691)
+* feat(mutual_authentication): implement mTLS resource [#702](https://github.com/fastly/terraform-provider-fastly/pull/702)
+* feat(config_store): implement config store resource [#705](https://github.com/fastly/terraform-provider-fastly/pull/705)
+
+BUG FIXES:
+
+* fix(rate_limiter): fix multiple runtime panics [#706](https://github.com/fastly/terraform-provider-fastly/pull/706)
+
+DEPENDENCIES:
+
+* build(deps): bump github.com/stretchr/testify from 1.8.2 to 1.8.3 [#700](https://github.com/fastly/terraform-provider-fastly/pull/700)
+* build(deps): bump github.com/stretchr/testify from 1.8.3 to 1.8.4 [#704](https://github.com/fastly/terraform-provider-fastly/pull/704)
+* build(deps): bump github.com/hashicorp/terraform-plugin-docs from 0.14.1 to 0.15.0 [#709](https://github.com/fastly/terraform-provider-fastly/pull/709)
 
 ## 5.0.0 (May 22, 2023)
 

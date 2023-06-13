@@ -31,5 +31,3 @@ description: |-
 - `id` (String) The ID of this resource.
 - `tls_activations` (List of String) List of alphanumeric strings identifying TLS activations.
 - `updated_at` (String) Date and time in ISO 8601 format.
-
-

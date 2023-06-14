@@ -75,6 +75,11 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`",
 			Default:     "s3.amazonaws.com",
 		},
+		"file_max_bytes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Maximum size of an uploaded log file, if non-zero.",
+		},
 		"gzip_level": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -329,6 +334,9 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	if v, ok := modified["acl"]; ok {
 		opts.ACL = gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(v.(string)))
 	}
+	if v, ok := modified["file_max_bytes"]; ok {
+		opts.FileMaxBytes = gofastly.Int(v.(int))
+	}
 
 	log.Printf("[DEBUG] Update S3 Opts: %#v", opts)
 	_, err := conn.UpdateS3(&opts)
@@ -408,6 +416,7 @@ func flattenS3s(remoteState []*gofastly.S3, localState []any) []map[string]any {
 			"path":                              resource.Path,
 			"period":                            resource.Period,
 			"domain":                            resource.Domain,
+			"file_max_bytes":                    resource.FileMaxBytes,
 			"gzip_level":                        resource.GzipLevel,
 			"format":                            resource.Format,
 			"format_version":                    resource.FormatVersion,
@@ -446,6 +455,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 		BucketName:                   gofastly.String(resource["bucket_name"].(string)),
 		CompressionCodec:             gofastly.String(resource["compression_codec"].(string)),
 		Domain:                       gofastly.String(resource["domain"].(string)),
+		FileMaxBytes:                 gofastly.Int(resource["file_max_bytes"].(int)),
 		Format:                       gofastly.String(vla.format),
 		FormatVersion:                vla.formatVersion,
 		IAMRole:                      gofastly.String(resource["s3_iam_role"].(string)),

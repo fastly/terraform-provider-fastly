@@ -73,6 +73,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"server_side_encryption_kms_key_id": "kmskey",
 					"compression_codec":                 "zstd",
 					"acl":                               gofastly.S3AccessControlList(""),
+					"file_max_bytes":                    0,
 				},
 			},
 			unset: true, // validating the user didn't set gzip_level
@@ -98,6 +99,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					ServerSideEncryptionKMSKeyID: "kmskey",
 					ServerSideEncryption:         gofastly.S3ServerSideEncryptionAES,
 					ACL:                          gofastly.S3AccessControlListPrivate,
+					FileMaxBytes:                 12345,
 				},
 			},
 			local: []map[string]any{
@@ -120,6 +122,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"server_side_encryption":            gofastly.S3ServerSideEncryptionAES,
 					"server_side_encryption_kms_key_id": "kmskey",
 					"acl":                               gofastly.S3AccessControlListPrivate,
+					"file_max_bytes":                    12345,
 				},
 			},
 		},
@@ -488,6 +491,7 @@ resource "fastly_service_vcl" "foo" {
   logging_s3 {
     name               = "somebucketlog"
     bucket_name        = "fastlytestlogging"
+    file_max_bytes     = 1048576
     s3_access_key      = "%s"
     s3_secret_key      = "%s"
     response_condition = "response_condition_test"
@@ -520,6 +524,7 @@ resource "fastly_service_compute" "foo" {
     name = "somebucketlog"
     bucket_name = "fastlytestlogging"
     domain = "s3-us-west-2.amazonaws.com"
+    file_max_bytes     = 1048576
     s3_access_key = "%s"
     s3_secret_key = "%s"
     public_key = file("test_fixtures/fastly_test_publickey")

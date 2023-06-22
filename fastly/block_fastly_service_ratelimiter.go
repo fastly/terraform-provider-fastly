@@ -269,7 +269,7 @@ func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.Resour
 
 func (h *RateLimiterAttributeHandler) createDeleteERLInput(service string, latestVersion int, resource map[string]any) gofastly.DeleteERLInput {
 	return gofastly.DeleteERLInput{
-		ERLID: resource[""].(string),
+		ERLID: resource["ratelimiter_id"].(string),
 	}
 }
 

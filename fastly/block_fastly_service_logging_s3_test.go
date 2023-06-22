@@ -263,6 +263,7 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 		MessageType:      "classic",
 		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
 		CompressionCodec: "zstd",
+		FileMaxBytes:     1048576,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -277,10 +278,8 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_s3.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_s3.#", "1"),
 				),
 			},
 		},
@@ -306,6 +305,7 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
 		MessageType:       "classic",
 		ResponseCondition: "response_condition_test",
+		FileMaxBytes:      1048576,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

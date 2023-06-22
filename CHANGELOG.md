@@ -1,4 +1,19 @@
-## 5.2.0 (Unreleased)
+## 5.3.0 (Unreleased)
+
+## 5.2.0 (June 22, 2023)
+
+ENHANCEMENTS:
+
+* feat: add file_max_bytes attribute to logging_s3 resource [#711](https://github.com/fastly/terraform-provider-fastly/pull/711)
+
+BUG FIXES:
+
+* fix(rate_limiter): add rate limter ID to delete call [#714](https://github.com/fastly/terraform-provider-fastly/pull/714)
+* fix(rate_limiter): lookup new ID before actioning a deletion [#715](https://github.com/fastly/terraform-provider-fastly/pull/715)
+
+DEPENDENCIES:
+
+* build(deps): bump golang.org/x/net from 0.10.0 to 0.11.0 [#712](https://github.com/fastly/terraform-provider-fastly/pull/712)
 
 ## 5.1.0 (June 13, 2023)
 

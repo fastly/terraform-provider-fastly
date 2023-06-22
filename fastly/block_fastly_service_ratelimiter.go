@@ -252,10 +252,35 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 
 // Delete deletes the resource.
 func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	input := h.createDeleteERLInput(d.Id(), serviceVersion, resource)
+	var rateLimiterID string
+
+	// IMPORTANT: Cloning a Service will result in new Rate Limiter IDs.
+	//
+	// This means, to update a Rate Limiter we have to first get a list of all
+	// available Rate Limiters on the cloned service version, then identify the
+	// one we need by its 'name' (which the API doesn't treat as unique, so
+	// multiple Rate Limiters in theory can have the same name, but in Terraform
+	// we enforce that the name must be unique otherwise we can't safely determine
+	// the Rate Limiter ID).
+
+	erls, err := conn.ListERLs(&gofastly.ListERLsInput{
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, e := range erls {
+		if e.Name == resource["name"].(string) {
+			rateLimiterID = e.ID
+			break
+		}
+	}
+	input := h.createDeleteERLInput(rateLimiterID)
 
 	log.Printf("[DEBUG] Delete Rate Limiter: %#v", input)
-	err := conn.DeleteERL(&input)
+	err = conn.DeleteERL(&input)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err
@@ -267,9 +292,9 @@ func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.Resour
 	return nil
 }
 
-func (h *RateLimiterAttributeHandler) createDeleteERLInput(service string, latestVersion int, resource map[string]any) gofastly.DeleteERLInput {
+func (h *RateLimiterAttributeHandler) createDeleteERLInput(rateLimiterID string) gofastly.DeleteERLInput {
 	return gofastly.DeleteERLInput{
-		ERLID: resource["ratelimiter_id"].(string),
+		ERLID: rateLimiterID,
 	}
 }
 

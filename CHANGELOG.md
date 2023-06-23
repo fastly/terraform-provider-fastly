@@ -1,5 +1,11 @@
 ## 5.3.0 (Unreleased)
 
+## 5.2.1 (June 23, 2023)
+
+DEPENDENCIES:
+
+* build(deps): update go-fastly to latest 8.5.2 release [#717](https://github.com/fastly/terraform-provider-fastly/pull/717)
+
 ## 5.2.0 (June 22, 2023)
 
 ENHANCEMENTS:

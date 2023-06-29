@@ -33,7 +33,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
-          version: latest
+          version: v1.18.2 # TODO: change to 'latest' once Go 1.21 is released (August 2023). This is so we can bump min Go version to 1.19.x which will fix a goreleaser dependency requirement.
           args: release --clean
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

@@ -1,5 +1,15 @@
 ## 5.3.0 (Unreleased)
 
+## 5.2.2 (June 29, 2023)
+
+BUG FIXES:
+
+* fix(stores): remove store from state if not found remotely [#719](https://github.com/fastly/terraform-provider-fastly/pull/719)
+
+DEPENDENCIES:
+
+* build(deps): bump go-fastly to latest 8.5.4 [#720](https://github.com/fastly/terraform-provider-fastly/pull/720)
+
 ## 5.2.1 (June 23, 2023)
 
 DEPENDENCIES:

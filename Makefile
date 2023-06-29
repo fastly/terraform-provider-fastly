@@ -81,7 +81,7 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 goreleaser-bin:
-	go install github.com/goreleaser/goreleaser@latest
+	go install github.com/goreleaser/goreleaser@v1.18.2
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip-validate will skip the checks

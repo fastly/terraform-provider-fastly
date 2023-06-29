@@ -67,8 +67,11 @@ func resourceFastlyConfigStoreRead(_ context.Context, d *schema.ResourceData, me
 
 	store, err := conn.GetConfigStore(input)
 	if err != nil {
-		log.Printf("[WARN] No Config Store found '%s'", d.Id())
-		d.SetId("")
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
+			log.Printf("[WARN] No Config Store found '%s'", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 

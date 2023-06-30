@@ -89,7 +89,7 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Default:     "",
-					Description: "Name of already defined `condition` to determine if this request setting should be applied",
+					Description: "Name of already defined `condition` to determine if this request setting should be applied (should be unique across multiple instances of `request_setting`)",
 				},
 				"timer_support": {
 					Type:        schema.TypeBool,
@@ -270,16 +270,19 @@ func flattenRequestSettings(remoteState []*gofastly.RequestSetting) []map[string
 func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingInput, error) {
 	resource := requestSettingMap.(map[string]any)
 	opts := gofastly.CreateRequestSettingInput{
-		Name:             gofastly.String(resource["name"].(string)),
-		MaxStaleAge:      gofastly.Int(resource["max_stale_age"].(int)),
-		ForceMiss:        gofastly.CBool(resource["force_miss"].(bool)),
-		ForceSSL:         gofastly.CBool(resource["force_ssl"].(bool)),
-		BypassBusyWait:   gofastly.CBool(resource["bypass_busy_wait"].(bool)),
-		HashKeys:         gofastly.String(resource["hash_keys"].(string)),
-		TimerSupport:     gofastly.CBool(resource["timer_support"].(bool)),
-		GeoHeaders:       gofastly.CBool(resource["geo_headers"].(bool)),
-		DefaultHost:      gofastly.String(resource["default_host"].(string)),
-		RequestCondition: gofastly.String(resource["request_condition"].(string)),
+		Name:           gofastly.String(resource["name"].(string)),
+		MaxStaleAge:    gofastly.Int(resource["max_stale_age"].(int)),
+		ForceMiss:      gofastly.CBool(resource["force_miss"].(bool)),
+		ForceSSL:       gofastly.CBool(resource["force_ssl"].(bool)),
+		BypassBusyWait: gofastly.CBool(resource["bypass_busy_wait"].(bool)),
+		HashKeys:       gofastly.String(resource["hash_keys"].(string)),
+		TimerSupport:   gofastly.CBool(resource["timer_support"].(bool)),
+		GeoHeaders:     gofastly.CBool(resource["geo_headers"].(bool)),
+		DefaultHost:    gofastly.String(resource["default_host"].(string)),
+	}
+
+	if v := resource["request_condition"].(string); v != "" {
+		opts.RequestCondition = gofastly.String(v)
 	}
 
 	act := strings.ToLower(resource["action"].(string))

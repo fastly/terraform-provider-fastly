@@ -277,7 +277,7 @@ type ListKVStoreKeysPaginator struct {
 }
 
 // NewListKVStoreKeysPaginator returns a new paginator for the provided LitKVStoreKeysInput.
-func (c *Client) NewListKVStoreKeysPaginator(i *ListKVStoreKeysInput) *ListKVStoreKeysPaginator {
+func (c *Client) NewListKVStoreKeysPaginator(i *ListKVStoreKeysInput) PaginatorKVStoreEntries {
 	return &ListKVStoreKeysPaginator{
 		client: c,
 		input:  i,
@@ -443,8 +443,12 @@ func (c *Client) DeleteKVStoreKey(i *DeleteKVStoreKeyInput) error {
 		return ErrMissingKey
 	}
 
+	ro := RequestOptions{
+		Parallel: true, // This will allow the Fastly CLI to make bulk deletes.
+	}
+
 	path := "/resources/stores/kv/" + i.ID + "/keys/" + i.Key
-	resp, err := c.Delete(path, nil)
+	resp, err := c.Delete(path, &ro)
 	if err != nil {
 		return err
 	}

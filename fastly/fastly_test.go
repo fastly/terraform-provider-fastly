@@ -1,6 +1,9 @@
 package fastly
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"reflect"
 	"strings"
@@ -121,4 +124,22 @@ func assertEqualsSliceOfMaps(t *testing.T, actualSlice []map[string]any, expecte
 	if !reflect.DeepEqual(actualSlice, expectedSlice) {
 		t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", expectedSlice, actualSlice)
 	}
+}
+
+// generateHex produces a slice of 16 random bytes.
+// This is useful for dynamically generating resource names.
+func generateHex() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+// generateNames produces slice of names seeded with initial unique value.
+// e.g. generateNames(generateHex(), 3)
+func generateNames(unique string, size int) []string {
+	names := []string{}
+	for i := 1; i < size+1; i++ {
+		names = append(names, fmt.Sprintf("tf_%s_%d", unique, i))
+	}
+	return names
 }

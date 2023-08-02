@@ -1,8 +1,6 @@
 package fastly
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"testing"
@@ -39,7 +37,7 @@ func TestAccFastlyDataSourceDictionaries_Config(t *testing.T) {
 						// NOTE: API doesn't guarantee dictionary order.
 						for i := 0; i < 3; i++ {
 							var found bool
-							for _, d := range genDictNames(h) {
+							for _, d := range generateNames(h, 3) {
 								if a[fmt.Sprintf("dictionaries.%d.name", i)] == d {
 									found = true
 									break
@@ -91,20 +89,4 @@ data "fastly_dictionaries" "example" {
 `
 
 	return fmt.Sprintf(tf, h, h, h, h)
-}
-
-// generateHex produces a slice of 16 random bytes.
-// This is useful for dynamically generating resource names.
-func generateHex() string {
-	b := make([]byte, 16)
-	_, _ = rand.Read(b)
-	return hex.EncodeToString(b)
-}
-
-func genDictNames(h string) []string {
-	dicts := []string{}
-	for i := 1; i < 4; i++ {
-		dicts = append(dicts, fmt.Sprintf("tf_%s_%d", h, i))
-	}
-	return dicts
 }

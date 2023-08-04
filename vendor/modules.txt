@@ -211,7 +211,7 @@ github.com/cloudflare/circl/sign/ed448
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/fastly/go-fastly/v8 v8.5.7
+# github.com/fastly/go-fastly/v8 v8.5.8
 ## explicit; go 1.18
 github.com/fastly/go-fastly/v8/fastly
 # github.com/fatih/color v1.13.0

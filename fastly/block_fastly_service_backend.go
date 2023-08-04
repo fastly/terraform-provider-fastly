@@ -49,12 +49,6 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     1000,
 			Description: "How long to wait for a timeout in milliseconds. Default `1000`",
 		},
-		"error_threshold": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
-			Description: "Number of errors to allow before the Backend is marked as down. Default `0`",
-		},
 		"first_byte_timeout": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -277,7 +271,6 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		Address:             gofastly.String(resource["address"].(string)),
 		BetweenBytesTimeout: gofastly.Int(resource["between_bytes_timeout"].(int)),
 		ConnectTimeout:      gofastly.Int(resource["connect_timeout"].(int)),
-		ErrorThreshold:      gofastly.Int(resource["error_threshold"].(int)),
 		FirstByteTimeout:    gofastly.Int(resource["first_byte_timeout"].(int)),
 		HealthCheck:         gofastly.String(resource["healthcheck"].(string)),
 		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
@@ -360,9 +353,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["max_conn"]; ok {
 		opts.MaxConn = gofastly.Int(v.(int))
 	}
-	if v, ok := modified["error_threshold"]; ok {
-		opts.ErrorThreshold = gofastly.Int(v.(int))
-	}
 	if v, ok := modified["first_byte_timeout"]; ok {
 		opts.FirstByteTimeout = gofastly.Int(v.(int))
 	}
@@ -431,7 +421,6 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 			"address":               resource.Address,
 			"between_bytes_timeout": int(resource.BetweenBytesTimeout),
 			"connect_timeout":       int(resource.ConnectTimeout),
-			"error_threshold":       int(resource.ErrorThreshold),
 			"first_byte_timeout":    int(resource.FirstByteTimeout),
 			"healthcheck":           resource.HealthCheck,
 			"keepalive_time":        int(resource.KeepAliveTime),

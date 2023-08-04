@@ -10,6 +10,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * fix(request_settings): don't send empty string for request_condition [#722](https://github.com/fastly/terraform-provider-fastly/pull/722)
+* fix(backend): remove redundant error_threshold attribute [#731](https://github.com/fastly/terraform-provider-fastly/pull/731)
 
 DEPENDENCIES:
 

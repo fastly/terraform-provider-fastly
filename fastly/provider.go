@@ -48,6 +48,7 @@ func Provider() *schema.Provider {
 			"fastly_datacenters":                  dataSourceFastlyDatacenters(),
 			"fastly_dictionaries":                 dataSourceFastlyDictionaries(),
 			"fastly_ip_ranges":                    dataSourceFastlyIPRanges(),
+			"fastly_kvstores":                     dataSourceFastlyKVStores(),
 			"fastly_package_hash":                 dataSourceFastlyPackageHash(),
 			"fastly_services":                     dataSourceFastlyServices(),
 			"fastly_tls_activation":               dataSourceFastlyTLSActivation(),

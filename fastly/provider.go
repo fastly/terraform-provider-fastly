@@ -50,6 +50,7 @@ func Provider() *schema.Provider {
 			"fastly_ip_ranges":                    dataSourceFastlyIPRanges(),
 			"fastly_kvstores":                     dataSourceFastlyKVStores(),
 			"fastly_package_hash":                 dataSourceFastlyPackageHash(),
+			"fastly_secretstores":                 dataSourceFastlySecretStores(),
 			"fastly_services":                     dataSourceFastlyServices(),
 			"fastly_tls_activation":               dataSourceFastlyTLSActivation(),
 			"fastly_tls_activation_ids":           dataSourceFastlyTLSActivationIds(),

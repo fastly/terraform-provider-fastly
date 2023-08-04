@@ -1,4 +1,22 @@
-## 5.3.0 (Unreleased)
+## 5.4.0 (Unreleased)
+
+## 5.3.0 (August 4, 2023)
+
+ENHANCEMENTS:
+
+* feat: create fastly_configstores data source [#729](https://github.com/fastly/terraform-provider-fastly/pull/729)
+* feat: create fastly_kvstores data source [#730](https://github.com/fastly/terraform-provider-fastly/pull/730)
+
+BUG FIXES:
+
+* fix(request_settings): don't send empty string for request_condition [#722](https://github.com/fastly/terraform-provider-fastly/pull/722)
+
+DEPENDENCIES:
+
+* build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 [#723](https://github.com/fastly/terraform-provider-fastly/pull/723)
+* build(deps): bump github.com/hashicorp/terraform-plugin-docs [#726](https://github.com/fastly/terraform-provider-fastly/pull/726)
+* build(deps): bump golang.org/x/net from 0.11.0 to 0.12.0 [#725](https://github.com/fastly/terraform-provider-fastly/pull/725)
+* build(deps): bump github.com/fastly/go-fastly/v8 from 8.5.4 to 8.5.7 [#727](https://github.com/fastly/terraform-provider-fastly/pull/727)
 
 ## 5.2.2 (June 29, 2023)
 

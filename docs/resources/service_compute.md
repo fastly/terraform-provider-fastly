@@ -12,6 +12,8 @@ Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform c
 
 The Service resource requires a domain name that is correctly set up to direct traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records](https://docs.fastly.com/en/guides/adding-cname-records) on their documentation site for guidance.
 
+~> **Note:** If you omit the `package` block, you must set `activate = false` to avoid service validation errors.
+
 ## Example Usage
 
 Basic usage:
@@ -66,7 +68,6 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 - `domain` (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - `name` (String) The unique name for the Service to create
-- `package` (Block List, Min: 1, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
 
 ### Optional
 
@@ -101,6 +102,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `logging_splunk` (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
 - `logging_sumologic` (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
 - `logging_syslog` (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
+- `package` (Block List, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service (if omitted, ensure `activate = false` is set on `fastly_service_compute` to avoid service validation errors). See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
 - `product_enablement` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--product_enablement))
 - `resource_link` (Block Set) A resource link represents a link between a shared resource (such as an KV Store or Config Store) and a service version. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
@@ -124,16 +126,6 @@ Required:
 Optional:
 
 - `comment` (String) An optional comment about the Domain.
-
-
-<a id="nestedblock--package"></a>
-### Nested Schema for `package`
-
-Optional:
-
-- `content` (String) The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified
-- `filename` (String) The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified
-- `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of all files (in sorted order) within the package. The usual way to set this is using the fastly_package_hash data source.
 
 
 <a id="nestedblock--backend"></a>
@@ -641,6 +633,16 @@ Optional:
 - `tls_hostname` (String) Used during the TLS handshake to validate the certificate
 - `token` (String) Whether to prepend each message with a specific token
 - `use_tls` (Boolean) Whether to use TLS for secure logging. Default `false`
+
+
+<a id="nestedblock--package"></a>
+### Nested Schema for `package`
+
+Optional:
+
+- `content` (String) The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified
+- `filename` (String) The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified
+- `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of all files (in sorted order) within the package. The usual way to set this is using the fastly_package_hash data source.
 
 
 <a id="nestedblock--product_enablement"></a>

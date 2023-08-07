@@ -403,21 +403,30 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		// Validate version.
-		log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-		valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
-			ServiceID:      d.Id(),
-			ServiceVersion: latestVersion,
-		})
-		if err != nil {
-			return diag.Errorf("error checking validation: %s", err)
+		// Only validate the service if `activate = true`.
+		// This is primarily for compute services with no package defined.
+		// The user needs to set `activate = false` to prevent errors.
+		// As they can't activate a service without a package.
+		// There's no value showing validation errors to users in 'draft' mode.
+		if i := d.Get("activate"); i != nil {
+			if i.(bool) {
+				// Validate version.
+				log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+				valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
+					ServiceID:      d.Id(),
+					ServiceVersion: latestVersion,
+				})
+				if err != nil {
+					return diag.Errorf("error checking validation: %s", err)
+				}
+
+				if !valid {
+					return diag.Errorf("invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
+				}
+			}
 		}
 
-		if !valid {
-			return diag.Errorf("invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
-		}
-
-		err = d.Set("cloned_version", latestVersion)
+		err := d.Set("cloned_version", latestVersion)
 		if err != nil {
 			return diag.FromErr(err)
 		}

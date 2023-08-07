@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
+func TestAccFastlyServiceCompute_package_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name01 := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain01 := fmt.Sprintf("fastly-test.%s.com", name01)
@@ -49,29 +49,29 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLPackageConfig(name01, domain01),
+				Config: testAccServiceComputePackageConfig(name01, domain01),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					testAccCheckFastlyServiceComputePackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name01),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
 				),
 			},
 			{
-				Config: testAccServiceVCLPackageConfig(name02, domain02),
+				Config: testAccServiceComputePackageConfig(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					testAccCheckFastlyServiceComputePackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "2"),
 				),
 			},
 			{
-				Config: testAccServiceVCLPackageConfigNew(name02, domain02),
+				Config: testAccServiceComputePackageConfigNew(name02, domain02),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want2),
+					testAccCheckFastlyServiceComputePackageAttributes(&service, &want2),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "3"),
@@ -81,7 +81,7 @@ func TestAccFastlyServiceVCL_package_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_package_content(t *testing.T) {
+func TestAccFastlyServiceCompute_package_content(t *testing.T) {
 	validPackageContent, _ := os.ReadFile("test_fixtures/package/valid.tar.gz")
 	b64Content := base64.StdEncoding.EncodeToString(validPackageContent)
 
@@ -124,29 +124,29 @@ func TestAccFastlyServiceVCL_package_content(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLPackageConfigContent(name01, domain01, b64Content),
+				Config: testAccServiceComputePackageConfigContent(name01, domain01, b64Content),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					testAccCheckFastlyServiceComputePackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name01),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
 				),
 			},
 			{
-				Config: testAccServiceVCLPackageConfigContent(name02, domain02, b64Content),
+				Config: testAccServiceComputePackageConfigContent(name02, domain02, b64Content),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want),
+					testAccCheckFastlyServiceComputePackageAttributes(&service, &want),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "2"),
 				),
 			},
 			{
-				Config: testAccServiceVCLPackageConfigContent(name02, domain02, b64Content2),
+				Config: testAccServiceComputePackageConfigContent(name02, domain02, b64Content2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLPackageAttributes(&service, &want2),
+					testAccCheckFastlyServiceComputePackageAttributes(&service, &want2),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name02),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "3"),
@@ -156,7 +156,31 @@ func TestAccFastlyServiceVCL_package_content(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDetail, want *gofastly.Package) resource.TestCheckFunc {
+func TestAccFastlyServiceCompute_package_optional(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceComputePackageOptional(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckFastlyServiceComputePackageAttributes(service *gofastly.ServiceDetail, want *gofastly.Package) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		got, err := conn.GetPackage(&gofastly.GetPackageInput{
@@ -187,7 +211,7 @@ func testAccCheckFastlyServiceVCLPackageAttributes(service *gofastly.ServiceDeta
 	}
 }
 
-func testAccServiceVCLPackageConfig(name string, domain string) string {
+func testAccServiceComputePackageConfig(name string, domain string) string {
 	return fmt.Sprintf(`
 data "fastly_package_hash" "example" {
   filename = "./test_fixtures/package/valid.tar.gz"
@@ -212,7 +236,7 @@ resource "fastly_service_compute" "foo" {
 `, name, domain)
 }
 
-func testAccServiceVCLPackageConfigNew(name string, domain string) string {
+func testAccServiceComputePackageConfigNew(name string, domain string) string {
 	return fmt.Sprintf(`
 data "fastly_package_hash" "example" {
   filename = "./test_fixtures/package/valid2.tar.gz"
@@ -244,7 +268,7 @@ resource "fastly_service_compute" "foo" {
 // So instead we had to use `locals` variable as a workaround.
 // https://developer.hashicorp.com/terraform/language/values/locals
 // The use of `-var` and input variables will work fine with actual TF project.
-func testAccServiceVCLPackageConfigContent(name, domain, b64Content string) string {
+func testAccServiceComputePackageConfigContent(name, domain, b64Content string) string {
 	return fmt.Sprintf(`
 locals {
   package_content = "%s"
@@ -266,4 +290,24 @@ resource "fastly_service_compute" "foo" {
   force_destroy = true
 }
 `, b64Content, name, domain)
+}
+
+// NOTE: Config must set `activate = false` to avoid validation errors.
+// You can't activate a compute service without a package.
+func testAccServiceComputePackageOptional(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-package-test"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+  force_destroy = true
+  activate = false
+}
+`, name, domain)
 }

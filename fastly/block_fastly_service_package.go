@@ -29,10 +29,9 @@ func NewServicePackage(sa ServiceMetadata) ServiceAttributeDefinition {
 func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 	s.Schema[h.GetKey()] = &schema.Schema{
 		Type:        schema.TypeList,
-		Required:    true,
-		Description: "The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/)",
+		Optional:    true,
+		Description: "The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service (if omitted, ensure `activate = false` is set on `fastly_service_compute` to avoid service validation errors). See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/)",
 		MaxItems:    1,
-		MinItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"content": {

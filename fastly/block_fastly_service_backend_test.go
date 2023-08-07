@@ -37,6 +37,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					RequestCondition:    "",
 					HealthCheck:         "",
 					UseSSL:              false,
+					ShareKey:            "sharedkey",
 					SSLCheckCert:        true,
 					SSLCACert:           "",
 					SSLCertHostname:     "",
@@ -75,6 +76,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"max_tls_version":       "",
 					"min_tls_version":       "",
 					"ssl_ciphers":           "foo:bar:baz",
+					"share_key":             "sharedkey",
 					"shield":                "lga-ny-us",
 					"weight":                100,
 				},
@@ -153,6 +155,7 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"ssl_ciphers":           "foo:bar:baz",
 					"shield":                "lga-ny-us",
 					"weight":                100,
+					"share_key":             "",
 				},
 			},
 		},
@@ -269,9 +272,10 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "%s"
-    name    = "%s"
-    port    = 443
+    address   = "%s"
+    name      = "%s"
+    port      = 443
+    share_key = "sharedkey"
   }
 
   force_destroy = true

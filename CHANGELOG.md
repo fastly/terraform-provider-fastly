@@ -1,5 +1,11 @@
 ## 5.4.0 (Unreleased)
 
+## 5.3.1 (August 9, 2023)
+
+BUG FIXES:
+
+* revert(backend): revert removal of `error_threshold` attribute [#731](https://github.com/fastly/terraform-provider-fastly/pull/731)
+
 ## 5.3.0 (August 4, 2023)
 
 ENHANCEMENTS:

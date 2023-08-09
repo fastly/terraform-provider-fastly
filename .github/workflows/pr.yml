@@ -84,3 +84,25 @@ jobs:
       run: make validate-interface
       env:
         FASTLY_API_KEY: ${{ secrets.FASTLY_API_TOKEN }}
+  validate-goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.19.x
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-mod-
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          install-only: true
+      - name: Validate Goreleaser
+        run: make goreleaser GORELEASER_ARGS="--skip-validate --clean --snapshot" # snapshot is needed as local git has no tags

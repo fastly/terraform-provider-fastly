@@ -63,6 +63,7 @@ jobs:
       run: |
         git diff --exit-code --ignore-all-space ./docs/
   validate-interface:
+    if: "!contains(github.event.pull_request.labels.*.name, 'breaking-change')"
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code

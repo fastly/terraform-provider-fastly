@@ -62,3 +62,25 @@ jobs:
     - name: Check diff
       run: |
         git diff --exit-code --ignore-all-space ./docs/
+  validate-interface:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.19.x
+    - name: Restore cache
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-mod-
+    - name: Install Terraform CLI
+      uses: hashicorp/setup-terraform@v2
+    - name: Validate Interface
+      run: make validate-interface
+      env:
+        FASTLY_API_KEY: ${{ secrets.FASTLY_API_TOKEN }}

@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: 1.18.x
+          go-version: 1.19.x
       - name: Import GPG key
         id: import_gpg
         uses: fastly/ghaction-import-gpg@v2.1.0
@@ -33,7 +33,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
-          version: v1.18.2 # TODO: change to 'latest' once Go 1.21 is released (August 2023). This is so we can bump min Go version to 1.19.x which will fix a goreleaser dependency requirement.
+          version: latest
           args: release --clean
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

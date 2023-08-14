@@ -4,6 +4,7 @@
 example.tf
 terraform.tfplan
 terraform.tfstate
+terraform.tfstate*
 bin/
 dist/
 modules-dev/
@@ -16,6 +17,7 @@ website/node_modules
 *.backup
 ./*.tfstate
 .terraform/
+.terraform*
 *.log
 *.bak
 *~

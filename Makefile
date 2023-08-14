@@ -134,4 +134,7 @@ sweep:
 clean:
 	rm -rf ./bin
 
-.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin sweep test test-compile testacc validate-docs vet
+validate-interface:
+	@./tests/interface/script.sh
+
+.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin sweep test test-compile testacc validate-docs validate-interface vet

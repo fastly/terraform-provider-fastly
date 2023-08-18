@@ -44,7 +44,7 @@ func TestResourceFastlyFlattenConfigStoreEntries(t *testing.T) {
 	}
 }
 
-func TestAccFastlyServiceConfigStoreEntries_validate(t *testing.T) {
+func TestAccFastlyConfigStoreEntries_validate(t *testing.T) {
 	storeName := fmt.Sprintf("store_%s", acctest.RandString(10))
 
 	want1 := map[string]string{

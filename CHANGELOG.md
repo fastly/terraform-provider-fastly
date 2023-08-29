@@ -2,6 +2,10 @@
 
 ## 5.3.1 (August 9, 2023)
 
+ENHANCEMENTS:
+
+* feat(package): make package optional [#733](https://github.com/fastly/terraform-provider-fastly/pull/733)
+
 BUG FIXES:
 
 * revert(backend): revert removal of `error_threshold` attribute [#731](https://github.com/fastly/terraform-provider-fastly/pull/731)

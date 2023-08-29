@@ -12,11 +12,11 @@ var (
 	equalRegexp      = regexp.MustCompile(` *= *`)
 	keyRegexp        = regexp.MustCompile(`[a-z*]+`)
 	linkRegexp       = regexp.MustCompile(`\A<(.+)>;(.+)\z`)
-	semiRegexp       = regexp.MustCompile(`; +`)
+	semiRegexp       = regexp.MustCompile(`;\s{0,}`)
 	valRegexp        = regexp.MustCompile(`"+([^"]+)"+`)
 )
 
-// Group returned by Parse, contains multiple links indexed by "rel"
+// Group returned by Parse, contains multiple links indexed by "rel".
 type Group map[string]*Link
 
 // Link contains a Link item with URI, Rel, and other non-URI components in Extra.
@@ -26,12 +26,12 @@ type Link struct {
 	Extra map[string]string
 }
 
-// String returns the URI
+// String returns the URI.
 func (l *Link) String() string {
 	return l.URI
 }
 
-// ParseRequest parses the provided *http.Request into a Group
+// ParseRequest parses the provided *http.Request into a Group.
 func ParseRequest(req *http.Request) Group {
 	if req == nil {
 		return nil
@@ -40,7 +40,7 @@ func ParseRequest(req *http.Request) Group {
 	return ParseHeader(req.Header)
 }
 
-// ParseResponse parses the provided *http.Response into a Group
+// ParseResponse parses the provided *http.Response into a Group.
 func ParseResponse(resp *http.Response) Group {
 	if resp == nil {
 		return nil
@@ -49,7 +49,7 @@ func ParseResponse(resp *http.Response) Group {
 	return ParseHeader(resp.Header)
 }
 
-// ParseHeader retrieves the Link header from the provided http.Header and parses it into a Group
+// ParseHeader retrieves the Link header from the provided http.Header and parses it into a Group.
 func ParseHeader(h http.Header) Group {
 	if headers, found := h["Link"]; found {
 		return Parse(strings.Join(headers, ", "))
@@ -58,7 +58,7 @@ func ParseHeader(h http.Header) Group {
 	return nil
 }
 
-// Parse parses the provided string into a Group
+// Parse parses the provided string into a Group.
 func Parse(s string) Group {
 	if s == "" {
 		return nil
@@ -82,8 +82,17 @@ func Parse(s string) Group {
 		for _, extra := range semiRegexp.Split(pieces[2], -1) {
 			vals := equalRegexp.Split(extra, -1)
 
+			if len(vals) != 2 {
+				continue
+			}
+
+			val := strings.TrimSpace(vals[1])
 			key := keyRegexp.FindString(vals[0])
-			val := valRegexp.FindStringSubmatch(vals[1])[1]
+			vsm := valRegexp.FindStringSubmatch(vals[1])
+
+			if len(vsm) == 2 {
+				val = vsm[1]
+			}
 
 			if key == "rel" {
 				vals := strings.Split(val, " ")

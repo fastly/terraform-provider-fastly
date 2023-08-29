@@ -1,8 +1,8 @@
 # link
 
-[![Build Status](https://travis-ci.org/peterhellberg/link.svg?branch=master)](https://travis-ci.org/peterhellberg/link)
+[![Build status](https://github.com/peterhellberg/link/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/peterhellberg/link/actions/workflows/test.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/peterhellberg/link)](https://goreportcard.com/report/github.com/peterhellberg/link)
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/peterhellberg/link)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://pkg.go.dev/github.com/peterhellberg/link)
 [![License MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg?style=flat)](https://github.com/peterhellberg/link#license-mit)
 
 Parses **Link** headers used for pagination, as defined in [RFC 5988](https://tools.ietf.org/html/rfc5988).
@@ -60,7 +60,7 @@ func main() {
 
 ## License (MIT)
 
-Copyright (c) 2015-2019 [Peter Hellberg](https://c7.se)
+Copyright (c) 2015-2022 [Peter Hellberg](https://c7.se)
 
 > Permission is hereby granted, free of charge, to any person obtaining
 > a copy of this software and associated documentation files (the

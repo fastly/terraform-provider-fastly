@@ -565,7 +565,7 @@ func (h *ProductEnablementServiceAttributeHandler) checkAPIError(err error) erro
 	if he, ok := err.(*gofastly.HTTPError); ok {
 		if he.StatusCode == http.StatusBadRequest {
 			for _, e := range he.Errors {
-				if strings.Contains(e.Title, "not entitled to disable") || strings.Contains(e.Title, "product cannot be disabled") {
+				if strings.Contains(e.Title, "not entitled to disable") || strings.Contains(e.Title, "product cannot be disabled") || strings.Contains(e.Title, "cannot self-disable") {
 					return nil
 				}
 			}

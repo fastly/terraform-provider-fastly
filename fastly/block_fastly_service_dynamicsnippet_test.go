@@ -66,13 +66,15 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 		Type:     gofastly.SnippetTypeRecv,
 		Priority: int(110),
 		Dynamic:  1,
+		Content:  "#vcl_content",
 	}
 
 	updatedS1 := gofastly.Snippet{
 		Name:     "recv_test",
 		Type:     gofastly.SnippetTypeRecv,
-		Priority: int(110),
+		Priority: int(10),
 		Dynamic:  1,
+		Content:  "#vcl_content_updated",
 	}
 	updatedS2 := gofastly.Snippet{
 		Name:     "fetch_test",
@@ -99,6 +101,7 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 						"name":     "recv_test",
 						"type":     "recv",
 						"priority": "110",
+						"content":  "#vcl_content",
 					}),
 				),
 			},
@@ -112,7 +115,8 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "dynamicsnippet.*", map[string]string{
 						"name":     "recv_test",
 						"type":     "recv",
-						"priority": "110",
+						"priority": "10",
+						"content":  "#vcl_content_updated",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "dynamicsnippet.*", map[string]string{
 						"name":     "fetch_test",
@@ -126,7 +130,7 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 }
 
 func testAccCheckFastlyServiceVCLDynamicSnippetAttributes(service *gofastly.ServiceDetail, snippets []*gofastly.Snippet) resource.TestCheckFunc {
-	return func(_ *terraform.State) error {
+	return func(state *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
 			ServiceID:      service.ID,
@@ -147,6 +151,17 @@ func testAccCheckFastlyServiceVCLDynamicSnippetAttributes(service *gofastly.Serv
 					expected.ServiceID = service.ID
 					expected.ServiceVersion = service.ActiveVersion.Number
 
+					// The ListSnippets endpoint doesn't return the 'content' field for
+					// dynamic snippets and so we have to make a separate API call.
+					snippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
+						ServiceID: service.ID,
+						ID:        lr.ID,
+					})
+					if err != nil {
+						return fmt.Errorf("error looking up VCL Dynamic Snippet '%s': %s", lr.Name, err)
+					}
+					lr.Content = snippet.Content
+
 					// We don't know these things ahead of time, so ignore them
 					lr.ID = ""
 					lr.CreatedAt = nil
@@ -162,6 +177,12 @@ func testAccCheckFastlyServiceVCLDynamicSnippetAttributes(service *gofastly.Serv
 
 		if found != len(snippets) {
 			return fmt.Errorf("error matching VCL Dynamic Snippets (expected: %d, got: %d)", len(snippets), found)
+		}
+
+		for _, m := range state.Modules {
+			for _, v := range m.Resources {
+				fmt.Printf("state debug: %#v\n", v.Primary.Attributes)
+			}
 		}
 
 		return nil
@@ -188,6 +209,7 @@ resource "fastly_service_vcl" "foo" {
     name     = "recv_test"
     type     = "recv"
     priority = 110
+    content  = "#vcl_content"
   }
 
   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
@@ -196,6 +218,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain)
 }
 
+// NOTE: snippet recv_test has updated priority but API doesn't support that.
 func testAccServiceVCLDynamicSnippetUpdate(name, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
@@ -215,7 +238,8 @@ resource "fastly_service_vcl" "foo" {
   dynamicsnippet {
     name     = "recv_test"
     type     = "recv"
-    priority = 110
+    priority = 10
+    content  = "#vcl_content_updated"
   }
 
   dynamicsnippet {

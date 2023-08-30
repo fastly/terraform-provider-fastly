@@ -102,37 +102,64 @@ func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schem
 			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", d.Id(), serviceVersion, err)
 		}
 
+		// The ListSnippets endpoint doesn't return the 'content' field for
+		// dynamic snippets and so we have to make a separate API call so that we
+		// can then store the VCL content into the state file.
+		for _, snippet := range remoteState {
+			if snippet.Dynamic == 0 {
+				continue
+			}
+
+			s, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
+				ServiceID: d.Id(),
+				ID:        snippet.ID,
+			})
+			if err != nil {
+				return fmt.Errorf("error looking up VCL Dynamic Snippet '%s': %s", snippet.Name, err)
+			}
+			snippet.Content = s.Content
+		}
+
 		dynamicSnippets := flattenDynamicSnippets(remoteState)
+
+		fmt.Printf("remoteState: %#v\n", remoteState[0])
+		fmt.Printf("dynamicSnippets: %#v\n", dynamicSnippets)
+
 		if err := d.Set(h.GetKey(), dynamicSnippets); err != nil {
 			log.Printf("[WARN] Error setting VCL Dynamic Snippets for (%s): %s", d.Id(), err)
 		}
+
+		updatedState := d.Get(h.GetKey()).(*schema.Set)
+		fmt.Printf("updatedState: %#v\n", updatedState)
 	}
 
 	return nil
 }
 
 // Update updates the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts := gofastly.UpdateSnippetInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
+func (h *DynamicSnippetServiceAttributeHandler) Update(
+	_ context.Context,
+	d *schema.ResourceData,
+	resource, modified map[string]any,
+	_ int, // service version
+	conn *gofastly.Client,
+) error {
+	localState := d.Get(h.GetKey()).(*schema.Set)
+	fmt.Printf("localState: %#v\n", localState)
+	fmt.Printf("d.Get(dynamicsnippet): %#v\n", d.Get("dynamicsnippet"))
+	fmt.Printf("resource: %#v\n", resource)
+	fmt.Printf("modified: %#v\n", modified)
+	opts := gofastly.UpdateDynamicSnippetInput{
+		ServiceID: d.Id(),
+		ID:        resource["snippet_id"].(string), // FIXME: "" as it's computed!
 	}
 
-	// NOTE: When converting from an interface{} we lose the underlying type.
-	// Converting to the wrong type will result in a runtime panic.
-	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.Int(v.(int))
-	}
 	if v, ok := modified["content"]; ok {
 		opts.Content = gofastly.String(v.(string))
 	}
-	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(v.(string)))
-	}
 
 	log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
-	_, err := conn.UpdateSnippet(&opts)
+	_, err := conn.UpdateDynamicSnippet(&opts)
 	if err != nil {
 		return err
 	}
@@ -188,6 +215,7 @@ func flattenDynamicSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 			"name":       resource.Name,
 			"type":       resource.Type,
 			"priority":   int(resource.Priority),
+			"content":    resource.Content,
 		}
 
 		// prune any empty values that come from the default string value in structs

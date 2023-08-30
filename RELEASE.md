@@ -11,7 +11,6 @@
 9. Tag a new release (`tag=vX.Y.Z && git tag -s $tag -m "$tag" && git push origin $tag`)<sup>[3](#note3)</sup>.
 10. Copy/paste CHANGELOG into the [draft release](https://github.com/fastly/terraform-provider-fastly/releases).
 11. Publish draft release<sup>[4](#note4)</sup>.
-12. Communicate the release in the relevant Slack channels<sup>[5](#note5)</sup>.
 
 ## Footnotes
 
@@ -19,4 +18,3 @@
 2. <a name="note2"></a>🚨 Manually update generated `docs/index.md` and force push (as we're not able to update the git tag until the next step).
 3. <a name="note3"></a>Triggers a [github action](https://github.com/fastly/terraform-provider-fastly/blob/main/.github/workflows/release.yml) that produces a 'draft' release.
 4. <a name="note4"></a>Triggers a [github webhook](https://github.com/fastly/terraform-provider-fastly/settings/hooks) that produces a release on the [terraform registry](https://registry.terraform.io/providers/fastly/fastly/latest).
-5. <a name="note5"></a>Fastly make internal announcements in the Slack channels: `#api-clients`, `#ecp-languages`.

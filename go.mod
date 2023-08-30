@@ -13,8 +13,6 @@ require (
 	golang.org/x/net v0.14.0
 )
 
-replace github.com/fastly/go-fastly/v8 v8.5.9 => ../go-fastly
-
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect

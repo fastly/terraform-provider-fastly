@@ -191,6 +191,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		FirstByteTimeout:    15000,
 		Hostname:            backendAddress,
 		MaxConn:             200,
+		ShareKey:            "sharedkey",
 		SSLCheckCert:        true,
 		Weight:              100,
 	}

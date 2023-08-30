@@ -289,7 +289,6 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
 		Name:                gofastly.String(resource["name"].(string)),
 		Port:                gofastly.Int(resource["port"].(int)),
-		ShareKey:            gofastly.String(resource["share_key"].(string)),
 		SSLCheckCert:        gofastly.CBool(resource["ssl_check_cert"].(bool)),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
@@ -313,6 +312,9 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	}
 	if resource["override_host"].(string) != "" {
 		opts.OverrideHost = gofastly.String(resource["override_host"].(string))
+	}
+	if resource["share_key"].(string) != "" {
+		opts.ShareKey = gofastly.String(resource["share_key"].(string))
 	}
 	if resource["ssl_ca_cert"].(string) != "" {
 		opts.SSLCACert = gofastly.String(resource["ssl_ca_cert"].(string))
@@ -392,9 +394,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["healthcheck"]; ok {
 		opts.HealthCheck = gofastly.String(v.(string))
 	}
-	if v, ok := modified["share_key"]; ok {
-		opts.ShareKey = gofastly.String(v.(string))
-	}
 	if v, ok := modified["shield"]; ok {
 		opts.Shield = gofastly.String(v.(string))
 	}
@@ -427,6 +426,12 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
 		opts.SSLCiphers = gofastly.String(v.(string))
+	}
+
+	// WARNING: The following fields shouldn't have an empty string passed.
+	// As it will cause the Fastly API to return an error.
+	if v, ok := modified["share_key"]; ok && v != "" {
+		opts.ShareKey = gofastly.String(v.(string))
 	}
 
 	return opts

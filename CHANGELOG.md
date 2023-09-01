@@ -1,4 +1,19 @@
-## 5.4.0 (Unreleased)
+## 5.5.0 (Unreleased)
+
+## 5.4.0 (September 1, 2023)
+
+ENHANCEMENTS:
+
+* feat(fastly_secretstore): implement resource and documentation [#707](https://github.com/fastly/terraform-provider-fastly/pull/707)
+* ci: validate interface not broken [#735](https://github.com/fastly/terraform-provider-fastly/pull/735)
+
+BUG FIXES:
+
+* fix(product_enablement): add additional error message filter [#740](https://github.com/fastly/terraform-provider-fastly/pull/740)
+DEPENDENCIES:
+
+* build: update all dependencies [#739](https://github.com/fastly/terraform-provider-fastly/pull/739)
+* build(deps): bump golang.org/x/net from 0.12.0 to 0.14.0 [#734](https://github.com/fastly/terraform-provider-fastly/pull/734)
 
 ## 5.3.1 (August 9, 2023)
 

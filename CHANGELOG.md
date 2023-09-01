@@ -10,6 +10,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * fix(product_enablement): add additional error message filter [#740](https://github.com/fastly/terraform-provider-fastly/pull/740)
+
 DEPENDENCIES:
 
 * build: update all dependencies [#739](https://github.com/fastly/terraform-provider-fastly/pull/739)

@@ -352,6 +352,7 @@ Optional:
 - `override_host` (String) The hostname to override the Host header
 - `port` (Number) The port number on which the Backend responds. Default `80`
 - `request_condition` (String) Name of a condition, which if met, will select this backend during a request.
+- `share_key` (String) Value that when shared across backends will enable those backends to share the same health check.
 - `shield` (String) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response
 - `ssl_ca_cert` (String) CA certificate attached to origin.
 - `ssl_cert_hostname` (String) Configure certificate validation. Does not affect SNI at all

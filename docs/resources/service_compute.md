@@ -149,6 +149,7 @@ Optional:
 - `min_tls_version` (String) Minimum allowed TLS version on SSL connections to this backend.
 - `override_host` (String) The hostname to override the Host header
 - `port` (Number) The port number on which the Backend responds. Default `80`
+- `share_key` (String) Value that when shared across backends will enable those backends to share the same health check.
 - `shield` (String) The POP of the shield designated to reduce inbound load. Valid values for `shield` are included in the `GET /datacenters` API response
 - `ssl_ca_cert` (String) CA certificate attached to origin.
 - `ssl_cert_hostname` (String) Configure certificate validation. Does not affect SNI at all

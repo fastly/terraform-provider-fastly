@@ -394,6 +394,11 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["healthcheck"]; ok {
 		opts.HealthCheck = gofastly.String(v.(string))
 	}
+	// NOTE: An empty string value will be coerced by Northstar into a null.
+	// This will allow the share_key to be unset.
+	if v, ok := modified["share_key"]; ok {
+		opts.ShareKey = gofastly.String(v.(string))
+	}
 	if v, ok := modified["shield"]; ok {
 		opts.Shield = gofastly.String(v.(string))
 	}
@@ -426,12 +431,6 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
 		opts.SSLCiphers = gofastly.String(v.(string))
-	}
-
-	// WARNING: The following fields shouldn't have an empty string passed.
-	// As it will cause the Fastly API to return an error.
-	if v, ok := modified["share_key"]; ok && v != "" {
-		opts.ShareKey = gofastly.String(v.(string))
 	}
 
 	return opts

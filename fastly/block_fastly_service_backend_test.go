@@ -37,6 +37,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					RequestCondition:    "",
 					HealthCheck:         "",
 					UseSSL:              false,
+					ShareKey:            "sharedkey",
 					SSLCheckCert:        true,
 					SSLCACert:           "",
 					SSLCertHostname:     "",
@@ -75,6 +76,7 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 					"max_tls_version":       "",
 					"min_tls_version":       "",
 					"ssl_ciphers":           "foo:bar:baz",
+					"share_key":             "sharedkey",
 					"shield":                "lga-ny-us",
 					"weight":                100,
 				},
@@ -153,6 +155,7 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"ssl_ciphers":           "foo:bar:baz",
 					"shield":                "lga-ny-us",
 					"weight":                100,
+					"share_key":             "",
 				},
 			},
 		},
@@ -178,6 +181,22 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	// the specific backend definitions in the Terraform configuration.
 
 	b1 := gofastly.Backend{
+		Address:  backendAddress,
+		Name:     backendName,
+		Port:     443,
+		ShareKey: "sharedkey",
+
+		// NOTE: The following are defaults applied by the API.
+		BetweenBytesTimeout: 10000,
+		ConnectTimeout:      1000,
+		FirstByteTimeout:    15000,
+		Hostname:            backendAddress,
+		MaxConn:             200,
+		SSLCheckCert:        true,
+		Weight:              100,
+	}
+	// This validates the ShareKey is unset.
+	b1_updated := gofastly.Backend{
 		Address: backendAddress,
 		Name:    backendName,
 		Port:    443,
@@ -249,7 +268,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "3"),
-					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1, &b2, &b3}),
+					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1_updated, &b2, &b3}),
 				),
 			},
 		},
@@ -269,9 +288,10 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "%s"
-    name    = "%s"
-    port    = 443
+    address   = "%s"
+    name      = "%s"
+    port      = 443
+    share_key = "sharedkey"
   }
 
   force_destroy = true

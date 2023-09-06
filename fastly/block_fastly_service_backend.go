@@ -107,6 +107,12 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     80,
 			Description: "The port number on which the Backend responds. Default `80`",
 		},
+		"share_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Value that when shared across backends will enable those backends to share the same health check.",
+		},
 		"shield": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -307,6 +313,9 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 	if resource["override_host"].(string) != "" {
 		opts.OverrideHost = gofastly.String(resource["override_host"].(string))
 	}
+	if resource["share_key"].(string) != "" {
+		opts.ShareKey = gofastly.String(resource["share_key"].(string))
+	}
 	if resource["ssl_ca_cert"].(string) != "" {
 		opts.SSLCACert = gofastly.String(resource["ssl_ca_cert"].(string))
 	}
@@ -385,6 +394,11 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	if v, ok := modified["healthcheck"]; ok {
 		opts.HealthCheck = gofastly.String(v.(string))
 	}
+	// NOTE: An empty string value will be coerced by Northstar into a null.
+	// This will allow the share_key to be unset.
+	if v, ok := modified["share_key"]; ok {
+		opts.ShareKey = gofastly.String(v.(string))
+	}
 	if v, ok := modified["shield"]; ok {
 		opts.Shield = gofastly.String(v.(string))
 	}
@@ -441,6 +455,7 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 			"name":                  resource.Name,
 			"override_host":         resource.OverrideHost,
 			"port":                  int(resource.Port),
+			"share_key":             resource.ShareKey,
 			"shield":                resource.Shield,
 			"ssl_ca_cert":           resource.SSLCACert,
 			"ssl_cert_hostname":     resource.SSLCertHostname,

@@ -3,12 +3,12 @@ layout: "fastly"
 page_title: "Fastly: service_compute"
 sidebar_current: "docs-fastly-resource-service-compute"
 description: |-
-  Provides an Fastly Compute@Edge service
+  Provides an Fastly Compute service
 ---
 
 # fastly_service_compute
 
-Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target. A compute service encompasses Domains and Backends.
+Provides a Fastly Compute service. Compute is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target. A compute service encompasses Domains and Backends.
 
 The Service resource requires a domain name that is correctly set up to direct traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records](https://docs.fastly.com/en/guides/adding-cname-records) on their documentation site for guidance.
 
@@ -43,8 +43,8 @@ resource "fastly_service_compute" "example" {
 <!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
 ### package block
 
-The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
-[Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
+The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute service. See Fastly's documentation on
+[Compute](https://www.fastly.com/products/edge-compute/serverless)
 
 ## Import
 
@@ -102,7 +102,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `logging_splunk` (Block Set) (see [below for nested schema](#nestedblock--logging_splunk))
 - `logging_sumologic` (Block Set) (see [below for nested schema](#nestedblock--logging_sumologic))
 - `logging_syslog` (Block Set) (see [below for nested schema](#nestedblock--logging_syslog))
-- `package` (Block List, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service (if omitted, ensure `activate = false` is set on `fastly_service_compute` to avoid service validation errors). See Fastly's documentation on [Compute@Edge](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
+- `package` (Block List, Max: 1) The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute service (if omitted, ensure `activate = false` is set on `fastly_service_compute` to avoid service validation errors). See Fastly's documentation on [Compute](https://developer.fastly.com/learning/compute/) (see [below for nested schema](#nestedblock--package))
 - `product_enablement` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--product_enablement))
 - `resource_link` (Block Set) A resource link represents a link between a shared resource (such as an KV Store or Config Store) and a service version. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`

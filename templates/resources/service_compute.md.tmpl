@@ -3,12 +3,12 @@ layout: "fastly"
 page_title: "Fastly: service_compute"
 sidebar_current: "docs-fastly-resource-service-compute"
 description: |-
-  Provides an Fastly Compute@Edge service
+  Provides an Fastly Compute service
 ---
 
 # fastly_service_compute
 
-Provides a Fastly Compute@Edge service. Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target. A compute service encompasses Domains and Backends.
+Provides a Fastly Compute service. Compute is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly. Security and portability is provided by compiling your code to [WebAssembly](https://webassembly.org/) using the `wasm32-wasi` target. A compute service encompasses Domains and Backends.
 
 The Service resource requires a domain name that is correctly set up to direct traffic to the Fastly service. See Fastly's guide on [Adding CNAME Records](https://docs.fastly.com/en/guides/adding-cname-records) on their documentation site for guidance.
 
@@ -23,8 +23,8 @@ Basic usage:
 <!-- remove this curated references once https://github.com/hashicorp/terraform-plugin-docs/issues/28 is resolved -->
 ### package block
 
-The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
-[Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
+The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute service. See Fastly's documentation on
+[Compute](https://www.fastly.com/products/edge-compute/serverless)
 
 ## Import
 

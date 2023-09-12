@@ -102,7 +102,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-mod-
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         with:
           install-only: true
       - name: Validate Goreleaser

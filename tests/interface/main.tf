@@ -120,4 +120,12 @@ resource "fastly_service_vcl" "interface-test-project" {
     table        = "test_logging_bigquery_table"
     template     = "test_logging_bigquery_template"
   }
+
+  product_enablement {
+    brotli_compression = false
+    domain_inspector   = false
+    image_optimizer    = false
+    origin_inspector   = false
+    websockets         = false
+  }
 }

@@ -8,7 +8,16 @@ terraform {
 }
 
 resource "fastly_service_vcl" "interface-test-project" {
-  name = "interface-test-project"
+  activate           = true
+  comment            = "Fastly Terraform Provider: Interface Test Suite"
+  default_host       = "interface-test-project.fastly-terraform.com"
+  default_ttl        = 3600
+  force_destroy      = true # Omitted `reuse` as it conflicts
+  http3              = false
+  name               = "interface-test-project"
+  stale_if_error     = false
+  stale_if_error_ttl = 43200
+  version_comment    = "Fastly Terraform Provider: Version comment example"
 
   acl {
     name = "test_acl"
@@ -36,9 +45,24 @@ resource "fastly_service_vcl" "interface-test-project" {
   }
 
   condition {
+    name      = "test_prefetch_condition"
+    priority  = 15
+    statement = "req.url~+\"index.html\""
+    type      = "PREFETCH"
+  }
+
+  condition {
     name      = "test_req_condition"
     priority  = 5
     statement = "req.url ~ \"^/foo/bar$\""
+    type      = "REQUEST"
+  }
+
+  # Required for `waf` to work with no diff (see waf test file for details).
+  condition {
+    name      = "test_req_condition_ALWAYS_FALSE"
+    priority  = 10
+    statement = "!req.url"
     type      = "REQUEST"
   }
 
@@ -101,5 +125,95 @@ resource "fastly_service_vcl" "interface-test-project" {
     window            = 10
   }
 
-  force_destroy = true
+  logging_bigquery {
+    account_name = "testloggingbigqueryaccountname"
+    dataset      = "test_logging_bigquery_dataset"
+    email        = "test_logging_bigquery@example.com"
+    name         = "test_logging_bigquery"
+    project_id   = "example-gcp-project"
+    secret_key   = "<SECRET_KEY>"
+    table        = "test_logging_bigquery_table"
+    template     = "test_logging_bigquery_template"
+  }
+
+  product_enablement {
+    brotli_compression = false
+    domain_inspector   = false
+    image_optimizer    = false
+    origin_inspector   = false
+    websockets         = false
+  }
+
+  # rate_limiter {
+  #   action               = "response"
+  #   client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+  #   feature_revision     = 1
+  #   http_methods         = "POST,PUT,PATCH,DELETE"
+  #   logger_type          = "bigquery"
+  #   name                 = "test_rate_limiter"
+  #   penalty_box_duration = 30
+  #
+  #   response {
+  #     content      = "test_rate_limiter_content"
+  #     content_type = "plain/text"
+  #     status       = 429
+  #   }
+  #
+  #   response_object_name = "test_rate_limiter_response_object"
+  #   rps_limit            = 10
+  #   # uri_dictionary_name  = "test_dictionary" # Omitted as dictionary needs to exist before this is executed
+  #   window_size = 60
+  # }
+
+  request_setting {
+    action            = "pass"
+    bypass_busy_wait  = true
+    default_host      = "interface-test-project.fastly-terraform.com"
+    force_miss        = true
+    force_ssl         = false
+    geo_headers       = false                         # DEPRECATED
+    hash_keys         = "req.url.path, req.http.host" # Omitted because of error... Syntax error: Expected string variable or constant
+    max_stale_age     = "300"
+    name              = "test_request_setting"
+    request_condition = "test_req_condition"
+    timer_support     = true
+    xff               = "append"
+  }
+
+  response_object {
+    cache_condition   = "test_cache_condition"
+    content           = "test content"
+    content_type      = "text/html"
+    name              = "test_response_object"
+    request_condition = "test_req_condition"
+    response          = "OK"
+    status            = 200
+  }
+
+  response_object {
+    content           = "content"
+    name              = "test_response_object_waf"
+    request_condition = "test_req_condition_ALWAYS_FALSE"
+    response          = "Forbidden"
+    status            = "403"
+  }
+
+  snippet {
+    content  = "if ( req.url ) { set req.http.different-header = \"true\"; }"
+    name     = "recv_test"
+    priority = 110
+    type     = "recv"
+  }
+
+  vcl {
+    content = "# some vcl here"
+    main    = true
+    name    = "test_vcl"
+  }
+
+  waf {
+    disabled           = false
+    prefetch_condition = "test_prefetch_condition"
+    response_object    = "test_response_object_waf"
+  }
 }

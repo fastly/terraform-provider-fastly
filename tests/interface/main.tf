@@ -17,7 +17,7 @@ resource "fastly_service_vcl" "interface-test-project" {
   name               = "interface-test-project"
   stale_if_error     = false
   stale_if_error_ttl = 43200
-  version_comment    = "Fastly Terraform Provider: Version comment example"
+  # version_comment    = "Fastly Terraform Provider: Version comment example"
 
   acl {
     name = "test_acl"

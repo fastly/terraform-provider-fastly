@@ -174,4 +174,11 @@ resource "fastly_service_vcl" "interface-test-project" {
     response          = "OK"
     status            = 200
   }
+
+  snippet {
+    content  = "if ( req.url ) { set req.http.different-header = \"true\"; }"
+    name     = "recv_test"
+    priority = 110
+    type     = "recv"
+  }
 }

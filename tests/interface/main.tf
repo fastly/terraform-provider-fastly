@@ -129,24 +129,39 @@ resource "fastly_service_vcl" "interface-test-project" {
     websockets         = false
   }
 
-  rate_limiter {
-    action               = "response"
-    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
-    feature_revision     = 1
-    http_methods         = "POST,PUT,PATCH,DELETE"
-    logger_type          = "bigquery"
-    name                 = "test_rate_limiter"
-    penalty_box_duration = 30
+  # rate_limiter {
+  #   action               = "response"
+  #   client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+  #   feature_revision     = 1
+  #   http_methods         = "POST,PUT,PATCH,DELETE"
+  #   logger_type          = "bigquery"
+  #   name                 = "test_rate_limiter"
+  #   penalty_box_duration = 30
+  #
+  #   response {
+  #     content      = "test_rate_limiter_content"
+  #     content_type = "plain/text"
+  #     status       = 429
+  #   }
+  #
+  #   response_object_name = "test_rate_limiter_response_object"
+  #   rps_limit            = 10
+  #   # uri_dictionary_name  = "test_dictionary" # omitted as dictionary needs to exist before this is executed
+  #   window_size = 60
+  # }
 
-    response {
-      content      = "test_rate_limiter_content"
-      content_type = "plain/text"
-      status       = 429
-    }
-
-    response_object_name = "test_rate_limiter_response_object"
-    rps_limit            = 10
-    # uri_dictionary_name  = "test_dictionary" # omitted as dictionary needs to exist before this is executed
-    window_size = 60
+  request_setting {
+    action           = "pass"
+    bypass_busy_wait = true
+    default_host     = "interface-test-project.fastly-terraform.com"
+    force_miss       = true
+    force_ssl        = false
+    geo_headers      = false # DEPRECATED
+    # hash_keys         = "test_request_setting" # Omitted because of error... Syntax error: Expected string variable or constant
+    max_stale_age     = "300"
+    name              = "test_request_setting"
+    request_condition = "test_req_condition"
+    timer_support     = true
+    xff               = "append"
   }
 }

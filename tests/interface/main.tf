@@ -181,4 +181,10 @@ resource "fastly_service_vcl" "interface-test-project" {
     priority = 110
     type     = "recv"
   }
+
+  vcl {
+    content = "# some vcl here"
+    main    = true
+    name    = "test_vcl"
+  }
 }

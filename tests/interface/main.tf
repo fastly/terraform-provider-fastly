@@ -45,9 +45,24 @@ resource "fastly_service_vcl" "interface-test-project" {
   }
 
   condition {
+    name      = "test_prefetch_condition"
+    priority  = 15
+    statement = "req.url~+\"index.html\""
+    type      = "PREFETCH"
+  }
+
+  condition {
     name      = "test_req_condition"
     priority  = 5
     statement = "req.url ~ \"^/foo/bar$\""
+    type      = "REQUEST"
+  }
+
+  # Required for `waf` to work with no diff (see waf test file for details).
+  condition {
+    name      = "test_req_condition_ALWAYS_FALSE"
+    priority  = 10
+    statement = "!req.url"
     type      = "REQUEST"
   }
 
@@ -151,13 +166,13 @@ resource "fastly_service_vcl" "interface-test-project" {
   # }
 
   request_setting {
-    action           = "pass"
-    bypass_busy_wait = true
-    default_host     = "interface-test-project.fastly-terraform.com"
-    force_miss       = true
-    force_ssl        = false
-    geo_headers      = false # DEPRECATED
-    # hash_keys         = "test_request_setting" # Omitted because of error... Syntax error: Expected string variable or constant
+    action            = "pass"
+    bypass_busy_wait  = true
+    default_host      = "interface-test-project.fastly-terraform.com"
+    force_miss        = true
+    force_ssl         = false
+    geo_headers       = false                         # DEPRECATED
+    hash_keys         = "req.url.path, req.http.host" # Omitted because of error... Syntax error: Expected string variable or constant
     max_stale_age     = "300"
     name              = "test_request_setting"
     request_condition = "test_req_condition"
@@ -175,6 +190,14 @@ resource "fastly_service_vcl" "interface-test-project" {
     status            = 200
   }
 
+  response_object {
+    content           = "content"
+    name              = "test_response_object_waf"
+    request_condition = "test_req_condition_ALWAYS_FALSE"
+    response          = "Forbidden"
+    status            = "403"
+  }
+
   snippet {
     content  = "if ( req.url ) { set req.http.different-header = \"true\"; }"
     name     = "recv_test"
@@ -186,5 +209,11 @@ resource "fastly_service_vcl" "interface-test-project" {
     content = "# some vcl here"
     main    = true
     name    = "test_vcl"
+  }
+
+  waf {
+    disabled           = false
+    prefetch_condition = "test_prefetch_condition"
+    response_object    = "test_response_object_waf"
   }
 }

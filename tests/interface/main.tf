@@ -12,7 +12,7 @@ resource "fastly_service_vcl" "interface-test-project" {
   comment            = "Fastly Terraform Provider: Interface Test Suite"
   default_host       = "interface-test-project.fastly-terraform.com"
   default_ttl        = 3600
-  force_destroy      = true # omitted `reuse` as it conflicts
+  force_destroy      = true # Omitted `reuse` as it conflicts
   http3              = false
   name               = "interface-test-project"
   stale_if_error     = false
@@ -146,7 +146,7 @@ resource "fastly_service_vcl" "interface-test-project" {
   #
   #   response_object_name = "test_rate_limiter_response_object"
   #   rps_limit            = 10
-  #   # uri_dictionary_name  = "test_dictionary" # omitted as dictionary needs to exist before this is executed
+  #   # uri_dictionary_name  = "test_dictionary" # Omitted as dictionary needs to exist before this is executed
   #   window_size = 60
   # }
 
@@ -163,5 +163,15 @@ resource "fastly_service_vcl" "interface-test-project" {
     request_condition = "test_req_condition"
     timer_support     = true
     xff               = "append"
+  }
+
+  response_object {
+    cache_condition   = "test_cache_condition"
+    content           = "test content"
+    content_type      = "text/html"
+    name              = "test_response_object"
+    request_condition = "test_req_condition"
+    response          = "OK"
+    status            = 200
   }
 }

@@ -109,4 +109,15 @@ resource "fastly_service_vcl" "interface-test-project" {
     timeout           = 4000
     window            = 10
   }
+
+  logging_bigquery {
+    account_name = "test_logging_bigquery_account_name"
+    dataset      = "test_logging_bigquery_dataset"
+    email        = "test_logging_bigquery@example.com"
+    name         = "test_logging_bigquery"
+    project_id   = "example-gcp-project"
+    secret_key   = "<SECRET_KEY>"
+    table        = "test_logging_bigquery_table"
+    template     = "test_logging_bigquery_template"
+  }
 }

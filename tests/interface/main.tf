@@ -8,7 +8,16 @@ terraform {
 }
 
 resource "fastly_service_vcl" "interface-test-project" {
-  name = "interface-test-project"
+  activate           = true
+  comment            = "Fastly Terraform Provider: Interface Test Suite"
+  default_host       = "interface-test-project.fastly-terraform.com"
+  default_ttl        = 3600
+  force_destroy      = true # omitted `reuse` as it conflicts
+  http3              = false
+  name               = "interface-test-project"
+  stale_if_error     = false
+  stale_if_error_ttl = 43200
+  version_comment    = "Fastly Terraform Provider: Version comment example"
 
   acl {
     name = "test_acl"
@@ -100,6 +109,4 @@ resource "fastly_service_vcl" "interface-test-project" {
     timeout           = 4000
     window            = 10
   }
-
-  force_destroy = true
 }

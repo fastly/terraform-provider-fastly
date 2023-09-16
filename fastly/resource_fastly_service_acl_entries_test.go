@@ -102,6 +102,49 @@ func TestAccFastlyServiceAclEntries_create(t *testing.T) {
 	})
 }
 
+func TestAccFastlyServiceAclEntries_create_more_than_one_page(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	aclName := fmt.Sprintf("ACL %s", acctest.RandString(10))
+
+	defaultPerPage := 100
+	var expectedRemoteEntries []map[string]any
+	for i := 1; i <= defaultPerPage*2; i++ {
+		entry := map[string]any{
+			"id":      "",
+			"ip":      fmt.Sprintf("%d.0.0.1", i),
+			"subnet":  "24",
+			"negated": false,
+			"comment": "ACL Entry 1",
+		}
+		expectedRemoteEntries = append(expectedRemoteEntries, entry)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceVCLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceACLEntriesConfigOneACLWithEntries(serviceName, aclName, expectedRemoteEntries, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceACLEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntries),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "1"),
+				),
+			},
+			{
+				ResourceName:            "fastly_service_acl_entries.entries",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"manage_entries"},
+			},
+		},
+	})
+}
+
 func TestAccFastlyServiceAclEntries_create_update(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -388,12 +431,17 @@ func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDet
 			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		aclEntries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
+		paginator := conn.NewListACLEntriesPaginator(&gofastly.ListACLEntriesInput{
 			ServiceID: service.ID,
 			ACLID:     acl.ID,
 		})
-		if err != nil {
-			return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", service.Name, acl.ID, err)
+		var aclEntries []*gofastly.ACLEntry
+		for paginator.HasNext() {
+			results, err := paginator.GetNext()
+			if err != nil {
+				return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", service.Name, acl.ID, err)
+			}
+			aclEntries = append(aclEntries, results...)
 		}
 
 		flatACLEntries := flattenACLEntries(aclEntries)

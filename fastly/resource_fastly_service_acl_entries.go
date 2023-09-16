@@ -118,15 +118,21 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	remoteState, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
+	paginator := conn.NewListACLEntriesPaginator(&gofastly.ListACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
-	if err != nil {
-		return diag.FromErr(err)
+
+	var remoteState []*gofastly.ACLEntry
+	for paginator.HasNext() {
+		results, err := paginator.GetNext()
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		remoteState = append(remoteState, results...)
 	}
 
-	err = d.Set("entry", flattenACLEntries(remoteState))
+	err := d.Set("entry", flattenACLEntries(remoteState))
 	if err != nil {
 		return diag.FromErr(err)
 	}

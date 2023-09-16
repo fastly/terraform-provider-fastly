@@ -431,17 +431,12 @@ func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDet
 			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
 		}
 
-		paginator := conn.NewListACLEntriesPaginator(&gofastly.ListACLEntriesInput{
+		aclEntries, err := getAllAclEntriesViaPaginator(conn, &gofastly.ListACLEntriesInput{
 			ServiceID: service.ID,
 			ACLID:     acl.ID,
 		})
-		var aclEntries []*gofastly.ACLEntry
-		for paginator.HasNext() {
-			results, err := paginator.GetNext()
-			if err != nil {
-				return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", service.Name, acl.ID, err)
-			}
-			aclEntries = append(aclEntries, results...)
+		if err != nil {
+			return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", service.Name, acl.ID, err)
 		}
 
 		flatACLEntries := flattenACLEntries(aclEntries)

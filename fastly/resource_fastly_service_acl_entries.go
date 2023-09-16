@@ -118,21 +118,15 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	paginator := conn.NewListACLEntriesPaginator(&gofastly.ListACLEntriesInput{
+	remoteState, err := getAllAclEntriesViaPaginator(conn, &gofastly.ListACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
-
-	var remoteState []*gofastly.ACLEntry
-	for paginator.HasNext() {
-		results, err := paginator.GetNext()
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		remoteState = append(remoteState, results...)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	err := d.Set("entry", flattenACLEntries(remoteState))
+	err = d.Set("entry", flattenACLEntries(remoteState))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -334,4 +328,18 @@ func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.
 func convertSubnetToInt(s string) int {
 	subnet, _ := strconv.Atoi(s)
 	return subnet
+}
+
+func getAllAclEntriesViaPaginator(conn *gofastly.Client, input *gofastly.ListACLEntriesInput) ([]*gofastly.ACLEntry, error) {
+	paginator := conn.NewListACLEntriesPaginator(input)
+
+	var entries []*gofastly.ACLEntry
+	for paginator.HasNext() {
+		results, err := paginator.GetNext()
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, results...)
+	}
+	return entries, nil
 }

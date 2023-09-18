@@ -85,6 +85,8 @@ jobs:
       run: make validate-interface
       env:
         FASTLY_API_KEY: ${{ secrets.FASTLY_API_TOKEN }}
+        # IMPORTANT: Workflows from forks do not have access to sensitive data such as secrets
+        # https://bit.ly/gh-actions-fork-secret-access
   validate-goreleaser:
     runs-on: ubuntu-latest
     steps:

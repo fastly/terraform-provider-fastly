@@ -132,7 +132,7 @@ func TestAccFastlyServiceAclEntries_create_more_than_one_page(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceACLEntriesRemoteState(&service, serviceName, aclName, expectedRemoteEntries),
-					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_acl_entries.entries", "entry.#", "200"),
 				),
 			},
 			{

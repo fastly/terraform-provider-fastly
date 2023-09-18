@@ -144,26 +144,26 @@ resource "fastly_service_vcl" "interface-test-project" {
     websockets         = false
   }
 
-  # rate_limiter {
-  #   action               = "response"
-  #   client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
-  #   feature_revision     = 1
-  #   http_methods         = "POST,PUT,PATCH,DELETE"
-  #   logger_type          = "bigquery"
-  #   name                 = "test_rate_limiter"
-  #   penalty_box_duration = 30
-  #
-  #   response {
-  #     content      = "test_rate_limiter_content"
-  #     content_type = "plain/text"
-  #     status       = 429
-  #   }
-  #
-  #   response_object_name = "test_rate_limiter_response_object"
-  #   rps_limit            = 10
-  #   # uri_dictionary_name  = "test_dictionary" # Omitted as dictionary needs to exist before this is executed
-  #   window_size = 60
-  # }
+  rate_limiter {
+    action               = "response"
+    client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
+    feature_revision     = 1
+    http_methods         = "POST,PUT,PATCH,DELETE"
+    logger_type          = "bigquery"
+    name                 = "test_rate_limiter"
+    penalty_box_duration = 30
+
+    response {
+      content      = "test_rate_limiter_content"
+      content_type = "plain/text"
+      status       = 429
+    }
+
+    response_object_name = "test_rate_limiter_response_object"
+    rps_limit            = 10
+    # uri_dictionary_name  = "test_dictionary" # Omitted as dictionary needs to exist before this is executed
+    window_size = 60
+  }
 
   request_setting {
     action            = "pass"

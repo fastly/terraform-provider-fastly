@@ -1,4 +1,25 @@
-## 5.5.0 (Unreleased)
+## 5.6.0 (Unreleased)
+
+## 5.5.0 (September 19, 2023)
+
+ENHANCEMENTS:
+
+* feat(backend): support share_key attribute [#747](https://github.com/fastly/terraform-provider-fastly/pull/747)
+* test(interface): add more resources [#746](https://github.com/fastly/terraform-provider-fastly/pull/746)
+* test(interface): add more fastly_service_vcl attributes/blocks [#756](https://github.com/fastly/terraform-provider-fastly/pull/756)
+* test(interface): add rate_limiter resource [#759](https://github.com/fastly/terraform-provider-fastly/pull/759)
+
+BUG FIXES:
+
+* fix: use paginator to fetch all ACL entries [#758](https://github.com/fastly/terraform-provider-fastly/pull/758)
+
+DEPENDENCIES:
+
+* build(deps): bump actions/checkout from 3 to 4 [#744](https://github.com/fastly/terraform-provider-fastly/pull/744)
+* build(deps): bump github.com/fastly/go-fastly/v8 from 8.5.9 to 8.6.1 [#745](https://github.com/fastly/terraform-provider-fastly/pull/745)
+* build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 from 2.28.0 to 2.29.0 [#752](https://github.com/fastly/terraform-provider-fastly/pull/752)
+* build(deps): bump goreleaser/goreleaser-action from 4 to 5 [#754](https://github.com/fastly/terraform-provider-fastly/pull/754)
+* build(deps): bump golang.org/x/net from 0.14.0 to 0.15.0 [#753](https://github.com/fastly/terraform-provider-fastly/pull/753)
 
 ## 5.4.0 (September 1, 2023)
 

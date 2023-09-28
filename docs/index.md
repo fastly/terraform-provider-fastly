@@ -15,7 +15,7 @@ Pricing and signup information can be found at https://www.fastly.com/signup
 Use the navigation to the left to read about the available resources.
 
 The Fastly provider prior to version v0.13.0 requires using
-[--parallelism=1](/docs/commands/apply.html#parallelism-n) for `apply` operations.
+[--parallelism=1](https://developer.hashicorp.com/terraform/cli/commands/apply#parallelism-n) for `apply` operations.
 
 ## Example Usage
 

@@ -46,6 +46,14 @@ resource "fastly_service_compute" "example" {
 The `package` block supports uploading or modifying Wasm packages for use in a Fastly Compute@Edge service. See Fastly's documentation on
 [Compute@Edge](https://www.fastly.com/products/edge-compute/serverless)
 
+## Product Enablement
+
+The [Product Enablement](https://developer.fastly.com/reference/api/products/enablement/) APIs allow customers to enable and disable specific products.
+
+Not all customers are entitled to use these endpoints and so care needs to be given when configuring a `product_enablement` block in your Terraform configuration.
+
+Consult the [Product Enablement Guide](/docs/guides/product_enablement) to understand the internal workings for the `product_enablement` block.
+
 ## Import
 
 Fastly Services can be imported using their service ID, e.g.

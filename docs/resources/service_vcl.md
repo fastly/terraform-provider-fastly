@@ -1093,12 +1093,9 @@ Optional:
 - `brotli_compression` (Boolean) Enable Brotli Compression support
 - `domain_inspector` (Boolean) Enable Domain Inspector support
 - `image_optimizer` (Boolean) Enable Image Optimizer support (requires at least one backend with a `shield` attribute)
+- `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)
 - `origin_inspector` (Boolean) Enable Origin Inspector support
 - `websockets` (Boolean) Enable WebSockets support
-
-Read-Only:
-
-- `name` (String) Used internally by the provider to identify modified settings
 
 
 <a id="nestedblock--rate_limiter"></a>

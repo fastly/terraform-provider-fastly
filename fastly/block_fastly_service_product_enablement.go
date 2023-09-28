@@ -308,6 +308,26 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 }
 
 // Update updates the resource.
+//
+// IMPORTANT: The Update method is never called due to an implementation bug.
+//
+// It's a side-effect of the SetDiff logic https://github.com/fastly/terraform-provider-fastly/blob/6e03cce3127a30db94c1cdfa8eb621d9a7231989/fastly/service_crud_attribute_definition.go#L89-L95
+// The SetDiff logic uses `name` as a computed key (i.e. if there’s a change to
+// `name`, then it means the resource has changed and needs to be recreated).
+//
+// The problem is we defined `name` as a Computed attribute, which means it will
+// always be marked as being changed as it's reset to an empty string due to it
+// being a Computed attribute where the value is known only AFTER an apply.
+//
+// Fixing this bug would mean needing to change `name` from being Computed to
+// Optional and also setting a default to match the hardcoded value "products"
+// that we used when it was Computed, and to configure the attribute to be
+// ignored by the Terraform diff processing logic. That should in theory make it
+// a non-breaking change.
+//
+// This isn't the end of the world, it just means there are a few more API calls
+// made. We're also (as of Sept 2023) in the process of rewriting the Terraform
+// provider and so it might be best to resolve this as part of the rewrite.
 func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
@@ -336,8 +356,6 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		// FIXME: Looks like `modified` contains products that haven't been updated.
-		// The only practical issue here is that an unnecessary API request is made.
 		if v, ok := modified["brotli_compression"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] brotli_compression set")

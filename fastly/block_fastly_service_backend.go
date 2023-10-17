@@ -177,7 +177,7 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 		},
 	}
 
-	// backend is optional in both VCL and C@E
+	// backend is optional in both VCL and Compute
 	required := false
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {

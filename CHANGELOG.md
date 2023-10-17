@@ -1,4 +1,21 @@
-## 5.6.0 (Unreleased)
+## 5.7.0 (Unreleased)
+
+## 5.6.0 (October 17, 2023)
+
+BUG FIXES:
+
+* fix(product_enablement): avoid accidentally disabling products on update [#763](https://github.com/fastly/terraform-provider-fastly/pull/763)
+
+DEPENDENCIES:
+
+* build(deps): bump github.com/fastly/go-fastly/v8 from 8.6.1 to 8.6.2 [#765](https://github.com/fastly/terraform-provider-fastly/pull/765)
+* build(deps): bump golang.org/x/net from 0.15.0 to 0.17.0 [#771](https://github.com/fastly/terraform-provider-fastly/pull/771)
+* build(deps): bump github.com/google/go-cmp from 0.5.9 to 0.6.0 [#770](https://github.com/fastly/terraform-provider-fastly/pull/770)
+
+DOCUMENTATION:
+
+* docs: product enablement [#762](https://github.com/fastly/terraform-provider-fastly/pull/762)
+* doc: rename Compute@Edge to Compute [#769](https://github.com/fastly/terraform-provider-fastly/pull/769)
 
 ## 5.5.0 (September 19, 2023)
 

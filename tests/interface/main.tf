@@ -137,11 +137,7 @@ resource "fastly_service_vcl" "interface-test-project" {
   }
 
   product_enablement {
-    brotli_compression = false
-    domain_inspector   = false
-    image_optimizer    = false
-    origin_inspector   = false
-    websockets         = false
+    brotli_compression = true
   }
 
   rate_limiter {

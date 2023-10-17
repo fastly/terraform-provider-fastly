@@ -36,8 +36,9 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
 		"name": {
 			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Used internally by the provider to identify modified settings",
+			Optional:    true,
+			Default:     "products",
+			Description: "Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)",
 		},
 	}
 
@@ -45,7 +46,6 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["fanout"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
 			Description: "Enable Fanout support",
 		}
 	}
@@ -54,25 +54,21 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["brotli_compression"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
 			Description: "Enable Brotli Compression support",
 		}
 		blockAttributes["domain_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
 			Description: "Enable Domain Inspector support",
 		}
 		blockAttributes["image_optimizer"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
 			Description: "Enable Image Optimizer support (requires at least one backend with a `shield` attribute)",
 		}
 		blockAttributes["origin_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
 			Description: "Enable Origin Inspector support",
 		}
 	}
@@ -81,7 +77,6 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes["websockets"] = &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
-		Default:     false,
 		Description: "Enable WebSockets support",
 	}
 
@@ -214,11 +209,6 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 		// The API returns a 400 if a product is not enabled.
 		// The API client returns an error if a non-2xx is returned from the API.
 
-		var (
-			enabled bool
-			err     error
-		)
-
 		// NOTE: We must set name to a unique value for a plan diff to be calculated.
 		//
 		// This value can be static because (like with the 'package' block) there can
@@ -229,72 +219,54 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 		// This is done so we can benefit from the 'modified' map data passed to the
 		// 'update' CRUD method.
 		result := map[string]any{
-			"name": "products",
+			"name": localState[0].(map[string]any)["name"].(string),
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
-			enabled = false
-			_, err = conn.GetProduct(&gofastly.ProductEnablementInput{
+			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductFanout,
 				ServiceID: d.Id(),
-			})
-			if err == nil {
-				enabled = true
+			}); err == nil {
+				result["fanout"] = true
 			}
-			result["fanout"] = enabled
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			enabled = false
-			_, err = conn.GetProduct(&gofastly.ProductEnablementInput{
+			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductBrotliCompression,
 				ServiceID: d.Id(),
-			})
-			if err == nil {
-				enabled = true
+			}); err == nil {
+				result["brotli_compression"] = true
 			}
-			result["brotli_compression"] = enabled
 
-			enabled = false
-			_, err = conn.GetProduct(&gofastly.ProductEnablementInput{
+			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductDomainInspector,
 				ServiceID: d.Id(),
-			})
-			if err == nil {
-				enabled = true
+			}); err == nil {
+				result["domain_inspector"] = true
 			}
-			result["domain_inspector"] = enabled
 
-			enabled = false
-			_, err = conn.GetProduct(&gofastly.ProductEnablementInput{
+			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductImageOptimizer,
 				ServiceID: d.Id(),
-			})
-			if err == nil {
-				enabled = true
+			}); err == nil {
+				result["image_optimizer"] = true
 			}
-			result["image_optimizer"] = enabled
 
-			enabled = false
-			_, err = conn.GetProduct(&gofastly.ProductEnablementInput{
+			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductOriginInspector,
 				ServiceID: d.Id(),
-			})
-			if err == nil {
-				enabled = true
+			}); err == nil {
+				result["origin_inspector"] = true
 			}
-			result["origin_inspector"] = enabled
 		}
 
-		enabled = false
-		_, err = conn.GetProduct(&gofastly.ProductEnablementInput{
+		if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
 			ProductID: gofastly.ProductWebSockets,
 			ServiceID: d.Id(),
-		})
-		if err == nil {
-			enabled = true
+		}); err == nil {
+			result["websockets"] = true
 		}
-		result["websockets"] = enabled
 
 		results := []map[string]any{result}
 
@@ -309,32 +281,19 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 
 // Update updates the resource.
 //
-// IMPORTANT: The Update method is never called due to an implementation bug.
+// IMPORTANT: We ignore errors related to entitlement when updating.
 //
-// It's a side-effect of the SetDiff logic https://github.com/fastly/terraform-provider-fastly/blob/6e03cce3127a30db94c1cdfa8eb621d9a7231989/fastly/service_crud_attribute_definition.go#L89-L95
-// The SetDiff logic uses `name` as a computed key (i.e. if there’s a change to
-// `name`, then it means the resource has changed and needs to be recreated).
-//
-// The problem is we defined `name` as a Computed attribute, which means it will
-// always be marked as being changed as it's reset to an empty string due to it
-// being a Computed attribute where the value is known only AFTER an apply.
-//
-// Fixing this bug would mean needing to change `name` from being Computed to
-// Optional and also setting a default to match the hardcoded value "products"
-// that we used when it was Computed, and to configure the attribute to be
-// ignored by the Terraform diff processing logic. That should in theory make it
-// a non-breaking change.
-//
-// This isn't the end of the world, it just means there are a few more API calls
-// made. We're also (as of Sept 2023) in the process of rewriting the Terraform
-// provider and so it might be best to resolve this as part of the rewrite.
+// This is to provide a non-breaking workaround for customers who used an older
+// version of the Fastly Terraform provider. See details in the PR:
+// https://github.com/fastly/terraform-provider-fastly/pull/763
 func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
+	log.Println("[DEBUG] Update Product Enablement")
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		if v, ok := modified["fanout"]; ok {
 			if v.(bool) {
-				log.Println("[DEBUG] fanout set")
+				log.Println("[DEBUG] fanout will be enabled")
 				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductFanout,
 					ServiceID: serviceID,
@@ -343,13 +302,15 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 					return fmt.Errorf("failed to enable fanout: %w", err)
 				}
 			} else {
-				log.Println("[DEBUG] fanout not set")
+				log.Println("[DEBUG] fanout will be disabled")
 				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductFanout,
 					ServiceID: serviceID,
 				})
 				if err != nil {
-					return fmt.Errorf("failed to disable fanout: %w", err)
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
 				}
 			}
 		}
@@ -358,7 +319,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		if v, ok := modified["brotli_compression"]; ok {
 			if v.(bool) {
-				log.Println("[DEBUG] brotli_compression set")
+				log.Println("[DEBUG] brotli_compression will be enabled")
 				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductBrotliCompression,
 					ServiceID: serviceID,
@@ -367,20 +328,22 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 					return fmt.Errorf("failed to enable brotli_compression: %w", err)
 				}
 			} else {
-				log.Println("[DEBUG] brotli_compression not set")
+				log.Println("[DEBUG] brotli_compression will be disabled")
 				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductBrotliCompression,
 					ServiceID: serviceID,
 				})
 				if err != nil {
-					return fmt.Errorf("failed to disable brotli_compression: %w", err)
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
 				}
 			}
 		}
 
 		if v, ok := modified["domain_inspector"]; ok {
 			if v.(bool) {
-				log.Println("[DEBUG] domain_inspector set")
+				log.Println("[DEBUG] domain_inspector will be enabled")
 				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductDomainInspector,
 					ServiceID: serviceID,
@@ -389,20 +352,22 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 					return fmt.Errorf("failed to enable domain_inspector: %w", err)
 				}
 			} else {
-				log.Println("[DEBUG] domain_inspector not set")
+				log.Println("[DEBUG] domain_inspector will be disabled")
 				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductDomainInspector,
 					ServiceID: serviceID,
 				})
 				if err != nil {
-					return fmt.Errorf("failed to disable domain_inspector: %w", err)
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
 				}
 			}
 		}
 
 		if v, ok := modified["image_optimizer"]; ok {
 			if v.(bool) {
-				log.Println("[DEBUG] image_optimizer set")
+				log.Println("[DEBUG] image_optimizer will be enabled")
 				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductImageOptimizer,
 					ServiceID: serviceID,
@@ -411,20 +376,22 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 					return fmt.Errorf("failed to enable image_optimizer: %w", err)
 				}
 			} else {
-				log.Println("[DEBUG] image_optimizer not set")
+				log.Println("[DEBUG] image_optimizer will be disabled")
 				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductImageOptimizer,
 					ServiceID: serviceID,
 				})
 				if err != nil {
-					return fmt.Errorf("failed to disable image_optimizer: %w", err)
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
 				}
 			}
 		}
 
 		if v, ok := modified["origin_inspector"]; ok {
 			if v.(bool) {
-				log.Println("[DEBUG] origin_inspector set")
+				log.Println("[DEBUG] origin_inspector will be enabled")
 				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductOriginInspector,
 					ServiceID: serviceID,
@@ -433,13 +400,15 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 					return fmt.Errorf("failed to enable origin_inspector: %w", err)
 				}
 			} else {
-				log.Println("[DEBUG] origin_inspector not set")
+				log.Println("[DEBUG] origin_inspector will be disabled")
 				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
 					ProductID: gofastly.ProductOriginInspector,
 					ServiceID: serviceID,
 				})
 				if err != nil {
-					return fmt.Errorf("failed to disable origin_inspector: %w", err)
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
 				}
 			}
 		}
@@ -447,7 +416,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 
 	if v, ok := modified["websockets"]; ok {
 		if v.(bool) {
-			log.Println("[DEBUG] websockets set")
+			log.Println("[DEBUG] websockets will be enabled")
 			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductWebSockets,
 				ServiceID: serviceID,
@@ -456,13 +425,15 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 				return fmt.Errorf("failed to enable websockets: %w", err)
 			}
 		} else {
-			log.Println("[DEBUG] websockets not set")
+			log.Println("[DEBUG] websockets will be disabled")
 			err := conn.DisableProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductWebSockets,
 				ServiceID: serviceID,
 			})
 			if err != nil {
-				return fmt.Errorf("failed to disable websockets: %w", err)
+				if e := h.checkAPIError(err); e != nil {
+					return e
+				}
 			}
 		}
 	}

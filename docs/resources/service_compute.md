@@ -661,11 +661,8 @@ Optional:
 Optional:
 
 - `fanout` (Boolean) Enable Fanout support
+- `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)
 - `websockets` (Boolean) Enable WebSockets support
-
-Read-Only:
-
-- `name` (String) Used internally by the provider to identify modified settings
 
 
 <a id="nestedblock--resource_link"></a>

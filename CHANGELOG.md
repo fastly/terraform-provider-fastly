@@ -1,10 +1,14 @@
 ## 5.7.0 (Unreleased)
 
-## 5.6.0 (October 17, 2023)
+## 5.6.0 (October 18, 2023)
 
 BUG FIXES:
 
 * fix(product_enablement): avoid accidentally disabling products on update [#763](https://github.com/fastly/terraform-provider-fastly/pull/763)
+
+ENHANCEMENTS:
+
+* refactor(product_enablement): make Read() logic consistent with other resource types [#773](https://github.com/fastly/terraform-provider-fastly/pull/773)
 
 DEPENDENCIES:
 

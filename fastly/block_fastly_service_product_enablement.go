@@ -174,52 +174,29 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	localState := d.Get(h.Key()).(*schema.Set).List()
 
-	// IMPORTANT: Avoid a diff unless state actually contains product_enablement.
-	//
-	// For all other nested blocks we go to the API to get the latest data if the
-	// user has already configured the block in their config (hence it exists in
-	// their state file) OR if the user is doing a `terraform import` OR if the
-	// user has changed the active service version outside of Terraform and the
-	// provider now needs to re-sync so it's tracking the correct version.
-	//
-	// But that approach means that users who don't configure a product_enablement
-	// block but fall into the other two categories (i.e. importing or service
-	// version drift) will unexpectedly see a `product_enablement` block in their
-	// next plan/diff output and it will be suggesting that the block be deleted.
-	//
-	// This causes confusion for users and they're not sure how to resolve the
-	// diff and sometimes will ADD the block into their config and try to set
-	// different values, which then causes other errors as they may not be
-	// entitled to actually use the Product Enablement API.
-	//
-	// To avoid this confusion, for product_enablement only, we only go to the API
-	// if the user has either configured the product_enablement block in their
-	// config or if they've configured it AND they're either importing or if there
-	// is a force refresh due to the service version drifting.
-	//
-	// The reason we have to treat the Product Enablement (PE) API differently is
-	// because its access is restricted to entitled users and so unlike other API
-	// endpoints (e.g. backends or domains etc), including calls to the PE API can
-	// cause unexpected diffs and runtime errors that stop a plan from being
-	// applied successfully.
-	existsInState := len(localState) > 0
-	if existsInState || (existsInState && (d.Get("imported").(bool) || d.Get("force_refresh").(bool))) {
+	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Product Enablement Configuration for (%s)", d.Id())
 
 		// The API returns a 400 if a product is not enabled.
 		// The API client returns an error if a non-2xx is returned from the API.
 
-		// NOTE: We must set name to a unique value for a plan diff to be calculated.
+		result := map[string]any{}
+
+		// The `name` attribute in this resource is used by default as a key for calculating diffs.
+		// This is handled as part of the internal abstraction logic.
 		//
-		// This value can be static because (like with the 'package' block) there can
-		// only ever be one 'product_enablement' block per service resource.
-		// This is ensured via the schema where we set MinItems/MaxItems to 1.
+		// See the call ToServiceAttributeDefinition() inside NewServiceProductEnablement()
+		// See also the diffing logic:
+		//   - https://github.com/fastly/terraform-provider-fastly/blob/4b9506fba1fd17e2bf760f447cbd8c394bb1e153/fastly/service_crud_attribute_definition.go#L94
+		//   - https://github.com/fastly/terraform-provider-fastly/blob/4b9506fba1fd17e2bf760f447cbd8c394bb1e153/fastly/diff.go#L108-L117
 		//
-		// Unlike the 'package' block we use a structure copied from 'backend'.
-		// This is done so we can benefit from the 'modified' map data passed to the
-		// 'update' CRUD method.
-		result := map[string]any{
-			"name": localState[0].(map[string]any)["name"].(string),
+		// Because the name can be set by a user, we first check if the resource
+		// exists in their state, and if so we'll use the value assigned there. If
+		// they've not explicitly defined a name in their config, then the default
+		// value will be returned.
+		if len(localState) > 0 {
+			name := localState[0].(map[string]any)["name"].(string)
+			result["name"] = name
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
@@ -270,9 +247,14 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 
 		results := []map[string]any{result}
 
-		if err := d.Set(h.Key(), results); err != nil {
-			log.Printf("[WARN] Error setting Product Enablement for (%s): %s", d.Id(), err)
-			return err
+		// IMPORTANT: Avoid runtime panic "set item just set doesn't exist".
+		// TF will panic when trying to append an empty map to a TypeSet.
+		// i.e. a typed nil.
+		if len(results[0]) > 0 {
+			if err := d.Set(h.Key(), results); err != nil {
+				log.Printf("[WARN] Error setting Product Enablement for (%s): %s", d.Id(), err)
+				return err
+			}
 		}
 	}
 

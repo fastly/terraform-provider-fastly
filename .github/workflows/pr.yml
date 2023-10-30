@@ -80,7 +80,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-mod-
     - name: Install Terraform CLI
-      uses: hashicorp/setup-terraform@v2
+      uses: hashicorp/setup-terraform@v3
     - name: Validate Interface
       run: make validate-interface
       env:

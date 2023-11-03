@@ -137,4 +137,7 @@ clean:
 validate-interface:
 	@./tests/interface/script.sh
 
-.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin sweep test test-compile testacc validate-docs validate-interface vet
+lint:
+	golangci-lint run --verbose
+
+.PHONY: all build clean clean_test default errcheck fmt fmtcheck generate-docs goreleaser goreleaser-bin lint sweep test test-compile testacc validate-docs validate-interface vet

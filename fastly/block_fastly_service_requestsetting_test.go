@@ -80,6 +80,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	}
 
 	rq2 := gofastly.RequestSetting{
+		Action:           gofastly.ToPointer(gofastly.RequestSettingActionLookup),
 		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
 		MaxStaleAge:      gofastly.ToPointer(900),
 		Name:             gofastly.ToPointer("alt_backend"),
@@ -100,6 +101,9 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		TimerSupport:   gofastly.ToPointer(false),
 	}
 
+	createAction := ""        // initially we expect no action to be set in HTTP request
+	updateAction1 := "lookup" // give it a value and expect it to be set
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -108,23 +112,30 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLRequestSetting(name, domainName1, "90"),
+				Config: testAccServiceVCLRequestSetting(name, domainName1, createAction, "90"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLRequestSettingsAttributes(&service, []*gofastly.RequestSetting{&rq1}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "request_setting.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "request_setting.*", map[string]string{
+						"action":        "", // IMPORTANT: To validate this attribute we need at least one map key to have a non-empty value (hence the `max_stale_age` check below).
+						"max_stale_age": "900",
+					}),
 				),
 			},
 			{
-				Config: testAccServiceVCLRequestSetting(name, domainName1, "900"),
+				Config: testAccServiceVCLRequestSetting(name, domainName1, updateAction1, "900"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLRequestSettingsAttributes(&service, []*gofastly.RequestSetting{&rq2}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "request_setting.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "request_setting.*", map[string]string{
+						"action": "lookup",
+					}),
 				),
 			},
 		},
@@ -173,7 +184,7 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 	}
 }
 
-func testAccServiceVCLRequestSetting(name, domain, maxStaleAge string) string {
+func testAccServiceVCLRequestSetting(name, domain, action, maxStaleAge string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -203,6 +214,7 @@ resource "fastly_service_vcl" "foo" {
   }
 
   request_setting {
+    action            = "%s"
     default_host      = "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"
     name              = "alt_backend"
     request_condition = "serve_alt_backend"
@@ -212,5 +224,5 @@ resource "fastly_service_vcl" "foo" {
   default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
 
   force_destroy = true
-}`, name, domain, maxStaleAge)
+}`, name, domain, action, maxStaleAge)
 }

@@ -169,6 +169,8 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionLookup)
 		case "pass":
 			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionPass)
+		default:
+			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionUnset)
 		}
 	}
 	if v, ok := modified["bypass_busy_wait"]; ok {

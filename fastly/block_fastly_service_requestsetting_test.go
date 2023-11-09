@@ -100,9 +100,17 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		HashKeys:       gofastly.ToPointer(""),
 		TimerSupport:   gofastly.ToPointer(false),
 	}
+	rq3 := gofastly.RequestSetting{
+		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
+		MaxStaleAge:      900,
+		Name:             "alt_backend",
+		RequestCondition: "serve_alt_backend",
+		XForwardedFor:    "append",
+	}
 
-	createAction := ""        // initially we expect no action to be set in HTTP request
-	updateAction1 := "lookup" // give it a value and expect it to be set
+	createAction := ""        // initially we expect no action to be set in HTTP request.
+	updateAction1 := "lookup" // give it a value and expect it to be set.
+	updateAction2 := ""       // set an empty value and expect the empty string to be sent to the API.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -135,6 +143,20 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "request_setting.*", map[string]string{
 						"action": "lookup",
+					}),
+				),
+			},
+			{
+				Config: testAccServiceVCLRequestSetting(name, domainName1, updateAction2, "900"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLRequestSettingsAttributes(&service, []*gofastly.RequestSetting{&rq3}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "request_setting.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs("fastly_service_vcl.foo", "request_setting.*", map[string]string{
+						"action":        "", // IMPORTANT: To validate this attribute we need at least one map key to have a non-empty value (hence the `max_stale_age` check below).
+						"max_stale_age": "900",
 					}),
 				),
 			},

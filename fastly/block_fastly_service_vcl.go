@@ -63,9 +63,9 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	opts := gofastly.CreateVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Content:        gofastly.String(resource["content"].(string)),
-		Main:           gofastly.Bool(resource["main"].(bool)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Content:        gofastly.ToPointer(resource["content"].(string)),
+		Main:           gofastly.ToPointer(resource["main"].(bool)),
 	}
 
 	log.Printf("[DEBUG] Fastly VCL Addition opts: %#v", opts)
@@ -109,7 +109,7 @@ func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 	}
 
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.String(v.(string))
+		opts.Content = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update VCL Opts: %#v", opts)

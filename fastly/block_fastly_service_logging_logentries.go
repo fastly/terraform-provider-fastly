@@ -99,11 +99,11 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 	opts := gofastly.CreateLogentriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Port:           gofastly.Int(resource["port"].(int)),
-		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
-		Token:          gofastly.String(resource["token"].(string)),
-		Format:         gofastly.String(vla.format),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Port:           gofastly.ToPointer(resource["port"].(int)),
+		UseTLS:         gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
+		Token:          gofastly.ToPointer(resource["token"].(string)),
+		Format:         gofastly.ToPointer(vla.format),
 		FormatVersion:  vla.formatVersion,
 	}
 
@@ -111,10 +111,10 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
@@ -164,28 +164,28 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Int(v.(int))
+		opts.Port = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["use_tls"]; ok {
-		opts.UseTLS = gofastly.CBool(v.(bool))
+		opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.String(v.(string))
+		opts.Token = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["region"]; ok {
-		opts.Region = gofastly.String(v.(string))
+		opts.Region = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Logentries Opts: %#v", opts)

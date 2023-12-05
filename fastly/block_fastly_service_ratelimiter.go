@@ -300,9 +300,9 @@ func (h *RateLimiterAttributeHandler) createDeleteERLInput(rateLimiterID string)
 
 func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latestVersion int, resource map[string]any) gofastly.CreateERLInput {
 	input := gofastly.CreateERLInput{
-		Name:               gofastly.String(resource["name"].(string)),
-		PenaltyBoxDuration: gofastly.Int(resource["penalty_box_duration"].(int)),
-		RpsLimit:           gofastly.Int(resource["rps_limit"].(int)),
+		Name:               gofastly.ToPointer(resource["name"].(string)),
+		PenaltyBoxDuration: gofastly.ToPointer(resource["penalty_box_duration"].(int)),
+		RpsLimit:           gofastly.ToPointer(resource["rps_limit"].(int)),
 		ServiceID:          service,
 		ServiceVersion:     latestVersion,
 	}
@@ -310,7 +310,7 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 	action := resource["action"].(string)
 	for _, a := range gofastly.ERLActions {
 		if action == string(a) {
-			input.Action = gofastly.ERLActionPtr(a)
+			input.Action = gofastly.ToPointer(a)
 			break
 		}
 	}
@@ -320,7 +320,7 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 
 	featRevision := resource["feature_revision"].(int)
 	if featRevision > 0 {
-		input.FeatureRevision = gofastly.Int(featRevision)
+		input.FeatureRevision = gofastly.ToPointer(featRevision)
 	}
 
 	httpMethods := strings.Split(strings.ReplaceAll(resource["http_methods"].(string), " ", ""), ",")
@@ -329,7 +329,7 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 	loggerType := resource["logger_type"].(string)
 	for _, l := range gofastly.ERLLoggers {
 		if loggerType == string(l) {
-			input.LoggerType = gofastly.ERLLoggerPtr(l)
+			input.LoggerType = gofastly.ToPointer(l)
 			break
 		}
 	}
@@ -348,18 +348,18 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 
 	respObjName := resource["response_object_name"].(string)
 	if respObjName != "" {
-		input.ResponseObjectName = gofastly.String(respObjName)
+		input.ResponseObjectName = gofastly.ToPointer(respObjName)
 	}
 
 	uriDictName := resource["uri_dictionary_name"].(string)
 	if uriDictName != "" {
-		input.URIDictionaryName = gofastly.String(uriDictName)
+		input.URIDictionaryName = gofastly.ToPointer(uriDictName)
 	}
 
 	windowSize := resource["window_size"].(int)
 	for _, w := range gofastly.ERLWindowSizes {
 		if windowSize == int(w) {
-			input.WindowSize = gofastly.ERLWindowSizePtr(w)
+			input.WindowSize = gofastly.ToPointer(w)
 			break
 		}
 	}
@@ -378,7 +378,7 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 	if v, ok := modified["action"]; ok {
 		for _, a := range gofastly.ERLActions {
 			if v.(string) == string(a) {
-				input.Action = gofastly.ERLActionPtr(a)
+				input.Action = gofastly.ToPointer(a)
 				break
 			}
 		}
@@ -390,7 +390,7 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 	}
 
 	if v, ok := modified["feature_revision"]; ok {
-		input.FeatureRevision = gofastly.Int(v.(int))
+		input.FeatureRevision = gofastly.ToPointer(v.(int))
 	}
 
 	if v, ok := modified["http_methods"]; ok {
@@ -401,18 +401,18 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 	if v, ok := modified["logger_type"]; ok {
 		for _, l := range gofastly.ERLLoggers {
 			if v.(string) == string(l) {
-				input.LoggerType = gofastly.ERLLoggerPtr(l)
+				input.LoggerType = gofastly.ToPointer(l)
 				break
 			}
 		}
 	}
 
 	if v, ok := modified["name"]; ok {
-		input.Name = gofastly.String(v.(string))
+		input.Name = gofastly.ToPointer(v.(string))
 	}
 
 	if v, ok := modified["penalty_box_duration"]; ok {
-		input.PenaltyBoxDuration = gofastly.Int(v.(int))
+		input.PenaltyBoxDuration = gofastly.ToPointer(v.(int))
 	}
 
 	if v, ok := modified["response"]; ok {
@@ -428,21 +428,21 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 	}
 
 	if v, ok := modified["response_object_name"]; ok {
-		input.ResponseObjectName = gofastly.String(v.(string))
+		input.ResponseObjectName = gofastly.ToPointer(v.(string))
 	}
 
 	if v, ok := modified["rps_limit"]; ok {
-		input.RpsLimit = gofastly.Int(v.(int))
+		input.RpsLimit = gofastly.ToPointer(v.(int))
 	}
 
 	if v, ok := modified["uri_dictionary_name"]; ok {
-		input.URIDictionaryName = gofastly.String(v.(string))
+		input.URIDictionaryName = gofastly.ToPointer(v.(string))
 	}
 
 	if v, ok := modified["window_size"]; ok {
 		for _, w := range gofastly.ERLWindowSizes {
 			if v.(int) == int(w) {
-				input.WindowSize = gofastly.ERLWindowSizePtr(w)
+				input.WindowSize = gofastly.ToPointer(w)
 				break
 			}
 		}

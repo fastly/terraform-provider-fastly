@@ -151,31 +151,31 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["topic"]; ok {
-		opts.Topic = gofastly.String(v.(string))
+		opts.Topic = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["user"]; ok {
-		opts.User = gofastly.String(v.(string))
+		opts.User = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["account_name"]; ok {
-		opts.AccountName = gofastly.String(v.(string))
+		opts.AccountName = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["secret_key"]; ok {
-		opts.SecretKey = gofastly.String(v.(string))
+		opts.SecretKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["project_id"]; ok {
-		opts.ProjectID = gofastly.String(v.(string))
+		opts.ProjectID = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Google Cloud Pub/Sub Opts: %#v", opts)
@@ -252,28 +252,28 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreatePubsubInput{
-		Format:         gofastly.String(vla.format),
+		Format:         gofastly.ToPointer(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		ProjectID:      gofastly.String(resource["project_id"].(string)),
-		SecretKey:      gofastly.String(resource["secret_key"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		ProjectID:      gofastly.ToPointer(resource["project_id"].(string)),
+		SecretKey:      gofastly.ToPointer(resource["secret_key"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Topic:          gofastly.String(resource["topic"].(string)),
-		User:           gofastly.String(resource["user"].(string)),
+		Topic:          gofastly.ToPointer(resource["topic"].(string)),
+		User:           gofastly.ToPointer(resource["user"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 	if v, ok := resource["account_name"].(string); ok && v != "" {
-		opts.AccountName = gofastly.String(v)
+		opts.AccountName = gofastly.ToPointer(v)
 	}
 
 	return opts

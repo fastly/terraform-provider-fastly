@@ -179,8 +179,8 @@ func flattenDictionaries(remoteState []*gofastly.Dictionary) []map[string]any {
 func buildDictionary(dictMap any) (*gofastly.CreateDictionaryInput, error) {
 	resource := dictMap.(map[string]any)
 	opts := gofastly.CreateDictionaryInput{
-		Name:      gofastly.String(resource["name"].(string)),
-		WriteOnly: gofastly.CBool(resource["write_only"].(bool)),
+		Name:      gofastly.ToPointer(resource["name"].(string)),
+		WriteOnly: gofastly.ToPointer(gofastly.Compatibool(resource["write_only"].(bool))),
 	}
 
 	return &opts, nil

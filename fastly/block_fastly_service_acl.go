@@ -59,7 +59,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	opts := gofastly.CreateACLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: latestVersion,
-		Name:           gofastly.String(resource["name"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
 	}
 
 	log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)

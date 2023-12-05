@@ -124,13 +124,13 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 		opts.Action = gofastly.CacheSettingAction(v.(string))
 	}
 	if v, ok := modified["ttl"]; ok {
-		opts.TTL = gofastly.Int(v.(int))
+		opts.TTL = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["stale_ttl"]; ok {
-		opts.StaleTTL = gofastly.Int(v.(int))
+		opts.StaleTTL = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.String(v.(string))
+		opts.CacheCondition = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Cache Setting Opts: %#v", opts)
@@ -164,23 +164,23 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) {
 	resource := cacheMap.(map[string]any)
 	opts := gofastly.CreateCacheSettingInput{
-		Name:           gofastly.String(resource["name"].(string)),
-		StaleTTL:       gofastly.Int(resource["stale_ttl"].(int)),
-		CacheCondition: gofastly.String(resource["cache_condition"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		StaleTTL:       gofastly.ToPointer(resource["stale_ttl"].(int)),
+		CacheCondition: gofastly.ToPointer(resource["cache_condition"].(string)),
 	}
 
 	if v, ok := resource["ttl"]; ok {
-		opts.TTL = gofastly.Int(v.(int))
+		opts.TTL = gofastly.ToPointer(v.(int))
 	}
 
 	act := strings.ToLower(resource["action"].(string))
 	switch act {
 	case "cache":
-		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionCache)
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionCache)
 	case "pass":
-		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionPass)
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionPass)
 	case "restart":
-		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionRestart)
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionRestart)
 	}
 
 	return &opts, nil

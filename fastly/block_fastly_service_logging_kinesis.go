@@ -151,31 +151,31 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["topic"]; ok {
-		opts.StreamName = gofastly.String(v.(string))
+		opts.StreamName = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["region"]; ok {
-		opts.Region = gofastly.String(v.(string))
+		opts.Region = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["access_key"]; ok {
-		opts.AccessKey = gofastly.String(v.(string))
+		opts.AccessKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["secret_key"]; ok {
-		opts.SecretKey = gofastly.String(v.(string))
+		opts.SecretKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["iam_role"]; ok {
-		opts.IAMRole = gofastly.String(v.(string))
+		opts.IAMRole = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Kinesis Opts: %#v", opts)
@@ -252,26 +252,26 @@ func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID s
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateKinesisInput{
-		AccessKey:      gofastly.String(resource["access_key"].(string)),
-		Format:         gofastly.String(vla.format),
+		AccessKey:      gofastly.ToPointer(resource["access_key"].(string)),
+		Format:         gofastly.ToPointer(vla.format),
 		FormatVersion:  vla.formatVersion,
-		IAMRole:        gofastly.String(resource["iam_role"].(string)),
-		Name:           gofastly.String(resource["name"].(string)),
-		Region:         gofastly.String(resource["region"].(string)),
-		SecretKey:      gofastly.String(resource["secret_key"].(string)),
+		IAMRole:        gofastly.ToPointer(resource["iam_role"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Region:         gofastly.ToPointer(resource["region"].(string)),
+		SecretKey:      gofastly.ToPointer(resource["secret_key"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		StreamName:     gofastly.String(resource["topic"].(string)),
+		StreamName:     gofastly.ToPointer(resource["topic"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	return opts

@@ -266,9 +266,9 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*APIClient).conn
 	service, err := conn.CreateService(&gofastly.CreateServiceInput{
-		Name:    gofastly.String(d.Get("name").(string)),
-		Comment: gofastly.String(d.Get("comment").(string)),
-		Type:    gofastly.String(serviceDef.GetType()),
+		Name:    gofastly.ToPointer(d.Get("name").(string)),
+		Comment: gofastly.ToPointer(d.Get("comment").(string)),
+		Type:    gofastly.ToPointer(serviceDef.GetType()),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -299,8 +299,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	if d.HasChanges("name", "comment") && shouldActivate {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
-			Name:      gofastly.String(d.Get("name").(string)),
-			Comment:   gofastly.String(d.Get("comment").(string)),
+			Name:      gofastly.ToPointer(d.Get("name").(string)),
+			Comment:   gofastly.ToPointer(d.Get("comment").(string)),
 		})
 		if err != nil {
 			return diag.FromErr(err)
@@ -325,7 +325,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		opts := gofastly.UpdateVersionInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: d.Get("cloned_version").(int),
-			Comment:        gofastly.String(d.Get("version_comment").(string)),
+			Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
 		}
 
 		log.Printf("[DEBUG] Update Version opts: %#v", opts)
@@ -373,7 +373,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				opts := gofastly.UpdateVersionInput{
 					ServiceID:      d.Id(),
 					ServiceVersion: latestVersion,
-					Comment:        gofastly.String(d.Get("version_comment").(string)),
+					Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
 				}
 
 				log.Printf("[DEBUG] Update Version opts: %#v", opts)

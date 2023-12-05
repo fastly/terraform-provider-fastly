@@ -90,22 +90,22 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 	opts := gofastly.CreateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Comment:        gofastly.String(resource["comment"].(string)),
-		Shield:         gofastly.String(resource["shield"].(string)),
-		Quorum:         gofastly.Int(resource["quorum"].(int)),
-		Retries:        gofastly.Int(resource["retries"].(int)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Comment:        gofastly.ToPointer(resource["comment"].(string)),
+		Shield:         gofastly.ToPointer(resource["shield"].(string)),
+		Quorum:         gofastly.ToPointer(resource["quorum"].(int)),
+		Retries:        gofastly.ToPointer(resource["retries"].(int)),
 	}
 
 	switch resource["type"].(int) {
 	case 1:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRandom)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeRandom)
 	case 2:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRoundRobin)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeRoundRobin)
 	case 3:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeHash)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeHash)
 	case 4:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeClient)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeClient)
 	}
 
 	log.Printf("[DEBUG] Director Create opts: %#v", opts)
@@ -171,13 +171,13 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["comment"]; ok {
-		opts.Comment = gofastly.String(v.(string))
+		opts.Comment = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["shield"]; ok {
-		opts.Shield = gofastly.String(v.(string))
+		opts.Shield = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["quorum"]; ok {
-		opts.Quorum = gofastly.Int(v.(int))
+		opts.Quorum = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["type"]; ok {
 		switch v.(int) {
@@ -192,7 +192,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 		}
 	}
 	if v, ok := modified["retries"]; ok {
-		opts.Retries = gofastly.Int(v.(int))
+		opts.Retries = gofastly.ToPointer(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update Director Opts: %#v", opts)

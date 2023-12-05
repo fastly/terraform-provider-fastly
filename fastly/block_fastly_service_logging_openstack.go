@@ -189,49 +189,49 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["access_key"]; ok {
-		opts.AccessKey = gofastly.String(v.(string))
+		opts.AccessKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["bucket_name"]; ok {
-		opts.BucketName = gofastly.String(v.(string))
+		opts.BucketName = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["url"]; ok {
-		opts.URL = gofastly.String(v.(string))
+		opts.URL = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["user"]; ok {
-		opts.User = gofastly.String(v.(string))
+		opts.User = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["path"]; ok {
-		opts.Path = gofastly.String(v.(string))
+		opts.Path = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Int(v.(int))
+		opts.Period = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
-		opts.CompressionCodec = gofastly.String(v.(string))
+		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Int(v.(int))
+		opts.GzipLevel = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.String(v.(string))
+		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["timestamp_format"]; ok {
-		opts.TimestampFormat = gofastly.String(v.(string))
+		opts.TimestampFormat = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["public_key"]; ok {
-		opts.PublicKey = gofastly.String(v.(string))
+		opts.PublicKey = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update OpenStack Opts: %#v", opts)
@@ -337,21 +337,21 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, service
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateOpenstackInput{
-		AccessKey:        gofastly.String(resource["access_key"].(string)),
-		BucketName:       gofastly.String(resource["bucket_name"].(string)),
-		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
-		Format:           gofastly.String(vla.format),
+		AccessKey:        gofastly.ToPointer(resource["access_key"].(string)),
+		BucketName:       gofastly.ToPointer(resource["bucket_name"].(string)),
+		CompressionCodec: gofastly.ToPointer(resource["compression_codec"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
 		FormatVersion:    vla.formatVersion,
-		MessageType:      gofastly.String(resource["message_type"].(string)),
-		Name:             gofastly.String(resource["name"].(string)),
-		Path:             gofastly.String(resource["path"].(string)),
-		Period:           gofastly.Int(resource["period"].(int)),
-		PublicKey:        gofastly.String(resource["public_key"].(string)),
+		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Path:             gofastly.ToPointer(resource["path"].(string)),
+		Period:           gofastly.ToPointer(resource["period"].(int)),
+		PublicKey:        gofastly.ToPointer(resource["public_key"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
-		URL:              gofastly.String(resource["url"].(string)),
-		User:             gofastly.String(resource["user"].(string)),
+		TimestampFormat:  gofastly.ToPointer(resource["timestamp_format"].(string)),
+		URL:              gofastly.ToPointer(resource["url"].(string)),
+		User:             gofastly.ToPointer(resource["user"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
@@ -359,17 +359,17 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, service
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
 	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
-		opts.GzipLevel = gofastly.Int(gl)
+		opts.GzipLevel = gofastly.ToPointer(gl)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	return opts

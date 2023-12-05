@@ -23,17 +23,17 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 	opts := gofastly.UpdateSettingsInput{
 		ServiceID:       d.Id(),
 		ServiceVersion:  latestVersion,
-		DefaultHost:     gofastly.String(d.Get("default_host").(string)),
+		DefaultHost:     gofastly.ToPointer(d.Get("default_host").(string)),
 		DefaultTTL:      uint(d.Get("default_ttl").(int)),
-		StaleIfErrorTTL: gofastly.Uint(uint(d.Get("stale_if_error_ttl").(int))),
+		StaleIfErrorTTL: gofastly.ToPointer(uint(d.Get("stale_if_error_ttl").(int))),
 	}
 
 	if attr, ok := d.GetOk("default_host"); ok {
-		opts.DefaultHost = gofastly.String(attr.(string))
+		opts.DefaultHost = gofastly.ToPointer(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("stale_if_error"); ok {
-		opts.StaleIfError = gofastly.Bool(attr.(bool))
+		opts.StaleIfError = gofastly.ToPointer(attr.(bool))
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
@@ -52,7 +52,7 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 				ServiceVersion: latestVersion,
 			}); err != nil {
 				_, err = conn.EnableHTTP3(&gofastly.EnableHTTP3Input{
-					FeatureRevision: gofastly.Int(1),
+					FeatureRevision: gofastly.ToPointer(1),
 					ServiceID:       d.Id(),
 					ServiceVersion:  latestVersion,
 				})

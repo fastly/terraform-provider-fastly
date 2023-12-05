@@ -181,8 +181,8 @@ func buildUpdateWAF(d *schema.ResourceData, wafMap any, serviceID string, servic
 	resource := wafMap.(map[string]any)
 
 	input := gofastly.UpdateWAFInput{
-		ServiceID:      gofastly.String(serviceID),
-		ServiceVersion: gofastly.Int(serviceVersion),
+		ServiceID:      gofastly.ToPointer(serviceID),
+		ServiceVersion: gofastly.ToPointer(serviceVersion),
 		ID:             resource["waf_id"].(string),
 	}
 
@@ -194,13 +194,13 @@ func buildUpdateWAF(d *schema.ResourceData, wafMap any, serviceID string, servic
 	// value to a single type (e.g. TypeString, TypeBool, TypeInt, or TypeFloat).
 
 	if v, ok := d.GetOk("waf.0.prefetch_condition"); ok {
-		input.PrefetchCondition = gofastly.String(v.(string))
+		input.PrefetchCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := d.GetOk("waf.0.response_object"); ok {
-		input.Response = gofastly.String(v.(string))
+		input.Response = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := d.GetOk("waf.0.disabled"); ok {
-		input.Disabled = gofastly.Bool(v.(bool))
+		input.Disabled = gofastly.ToPointer(v.(bool))
 	}
 
 	return &input

@@ -200,52 +200,52 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["url"]; ok {
-		opts.URL = gofastly.String(v.(string))
+		opts.URL = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Int(v.(int))
+		opts.RequestMaxEntries = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Int(v.(int))
+		opts.RequestMaxBytes = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["content_type"]; ok {
-		opts.ContentType = gofastly.String(v.(string))
+		opts.ContentType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["header_name"]; ok {
-		opts.HeaderName = gofastly.String(v.(string))
+		opts.HeaderName = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["header_value"]; ok {
-		opts.HeaderValue = gofastly.String(v.(string))
+		opts.HeaderValue = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["method"]; ok {
-		opts.Method = gofastly.String(v.(string))
+		opts.Method = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["json_format"]; ok {
-		opts.JSONFormat = gofastly.String(v.(string))
+		opts.JSONFormat = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
-		opts.TLSCACert = gofastly.String(v.(string))
+		opts.TLSCACert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_client_cert"]; ok {
-		opts.TLSClientCert = gofastly.String(v.(string))
+		opts.TLSClientCert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_client_key"]; ok {
-		opts.TLSClientKey = gofastly.String(v.(string))
+		opts.TLSClientKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_hostname"]; ok {
-		opts.TLSHostname = gofastly.String(v.(string))
+		opts.TLSHostname = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.String(v.(string))
+		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
@@ -330,34 +330,34 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateHTTPSInput{
-		ContentType:       gofastly.String(resource["content_type"].(string)),
-		Format:            gofastly.String(vla.format),
+		ContentType:       gofastly.ToPointer(resource["content_type"].(string)),
+		Format:            gofastly.ToPointer(vla.format),
 		FormatVersion:     vla.formatVersion,
-		HeaderName:        gofastly.String(resource["header_name"].(string)),
-		HeaderValue:       gofastly.String(resource["header_value"].(string)),
-		JSONFormat:        gofastly.String(resource["json_format"].(string)),
-		MessageType:       gofastly.String(resource["message_type"].(string)),
-		Method:            gofastly.String(resource["method"].(string)),
-		Name:              gofastly.String(resource["name"].(string)),
-		RequestMaxBytes:   gofastly.Int(resource["request_max_bytes"].(int)),
-		RequestMaxEntries: gofastly.Int(resource["request_max_entries"].(int)),
+		HeaderName:        gofastly.ToPointer(resource["header_name"].(string)),
+		HeaderValue:       gofastly.ToPointer(resource["header_value"].(string)),
+		JSONFormat:        gofastly.ToPointer(resource["json_format"].(string)),
+		MessageType:       gofastly.ToPointer(resource["message_type"].(string)),
+		Method:            gofastly.ToPointer(resource["method"].(string)),
+		Name:              gofastly.ToPointer(resource["name"].(string)),
+		RequestMaxBytes:   gofastly.ToPointer(resource["request_max_bytes"].(int)),
+		RequestMaxEntries: gofastly.ToPointer(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
 		ServiceVersion:    serviceVersion,
-		TLSCACert:         gofastly.String(resource["tls_ca_cert"].(string)),
-		TLSClientCert:     gofastly.String(resource["tls_client_cert"].(string)),
-		TLSClientKey:      gofastly.String(resource["tls_client_key"].(string)),
-		TLSHostname:       gofastly.String(resource["tls_hostname"].(string)),
-		URL:               gofastly.String(resource["url"].(string)),
+		TLSCACert:         gofastly.ToPointer(resource["tls_ca_cert"].(string)),
+		TLSClientCert:     gofastly.ToPointer(resource["tls_client_cert"].(string)),
+		TLSClientKey:      gofastly.ToPointer(resource["tls_client_key"].(string)),
+		TLSHostname:       gofastly.ToPointer(resource["tls_hostname"].(string)),
+		URL:               gofastly.ToPointer(resource["url"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	return &opts

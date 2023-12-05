@@ -149,19 +149,19 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateGCSInput{
-		Bucket:           gofastly.String(resource["bucket_name"].(string)),
-		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
-		Format:           gofastly.String(vla.format),
-		MessageType:      gofastly.String(resource["message_type"].(string)),
-		Name:             gofastly.String(resource["name"].(string)),
-		Path:             gofastly.String(resource["path"].(string)),
-		Period:           gofastly.Int(resource["period"].(int)),
-		ProjectID:        gofastly.String(resource["project_id"].(string)),
-		SecretKey:        gofastly.String(resource["secret_key"].(string)),
+		Bucket:           gofastly.ToPointer(resource["bucket_name"].(string)),
+		CompressionCodec: gofastly.ToPointer(resource["compression_codec"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Path:             gofastly.ToPointer(resource["path"].(string)),
+		Period:           gofastly.ToPointer(resource["period"].(int)),
+		ProjectID:        gofastly.ToPointer(resource["project_id"].(string)),
+		SecretKey:        gofastly.ToPointer(resource["secret_key"].(string)),
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
-		User:             gofastly.String(resource["user"].(string)),
+		TimestampFormat:  gofastly.ToPointer(resource["timestamp_format"].(string)),
+		User:             gofastly.ToPointer(resource["user"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
@@ -169,20 +169,20 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
 	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
-		opts.GzipLevel = gofastly.Int(gl)
+		opts.GzipLevel = gofastly.ToPointer(gl)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 	if v, ok := resource["account_name"].(string); ok && v != "" {
-		opts.AccountName = gofastly.String(v)
+		opts.AccountName = gofastly.ToPointer(v)
 	}
 
 	log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
@@ -232,46 +232,46 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["bucket_name"]; ok {
-		opts.Bucket = gofastly.String(v.(string))
+		opts.Bucket = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["user"]; ok {
-		opts.User = gofastly.String(v.(string))
+		opts.User = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["account_name"]; ok {
-		opts.AccountName = gofastly.String(v.(string))
+		opts.AccountName = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["secret_key"]; ok {
-		opts.SecretKey = gofastly.String(v.(string))
+		opts.SecretKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["path"]; ok {
-		opts.Path = gofastly.String(v.(string))
+		opts.Path = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Int(v.(int))
+		opts.Period = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
-		opts.CompressionCodec = gofastly.String(v.(string))
+		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Int(v.(int))
+		opts.GzipLevel = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.String(v.(string))
+		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["timestamp_format"]; ok {
-		opts.TimestampFormat = gofastly.String(v.(string))
+		opts.TimestampFormat = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update GCS Opts: %#v", opts)

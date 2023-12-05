@@ -121,28 +121,28 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
-		Format:         gofastly.String(vla.format),
+		Format:         gofastly.ToPointer(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(resource["name"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		TLSCACert:      gofastly.String(resource["tls_ca_cert"].(string)),
-		TLSClientCert:  gofastly.String(resource["tls_client_cert"].(string)),
-		TLSClientKey:   gofastly.String(resource["tls_client_key"].(string)),
-		TLSHostname:    gofastly.String(resource["tls_hostname"].(string)),
-		Token:          gofastly.String(resource["token"].(string)),
-		URL:            gofastly.String(resource["url"].(string)),
-		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
+		TLSCACert:      gofastly.ToPointer(resource["tls_ca_cert"].(string)),
+		TLSClientCert:  gofastly.ToPointer(resource["tls_client_cert"].(string)),
+		TLSClientKey:   gofastly.ToPointer(resource["tls_client_key"].(string)),
+		TLSHostname:    gofastly.ToPointer(resource["tls_hostname"].(string)),
+		Token:          gofastly.ToPointer(resource["token"].(string)),
+		URL:            gofastly.ToPointer(resource["url"].(string)),
+		UseTLS:         gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Splunk create opts: %#v", opts)
@@ -192,43 +192,43 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["url"]; ok {
-		opts.URL = gofastly.String(v.(string))
+		opts.URL = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["request_max_entries"]; ok {
-		opts.RequestMaxEntries = gofastly.Int(v.(int))
+		opts.RequestMaxEntries = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["request_max_bytes"]; ok {
-		opts.RequestMaxBytes = gofastly.Int(v.(int))
+		opts.RequestMaxBytes = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.String(v.(string))
+		opts.Token = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
-		opts.TLSCACert = gofastly.String(v.(string))
+		opts.TLSCACert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_hostname"]; ok {
-		opts.TLSHostname = gofastly.String(v.(string))
+		opts.TLSHostname = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_client_cert"]; ok {
-		opts.TLSClientCert = gofastly.String(v.(string))
+		opts.TLSClientCert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_client_key"]; ok {
-		opts.TLSClientKey = gofastly.String(v.(string))
+		opts.TLSClientKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["use_tls"]; ok {
-		opts.UseTLS = gofastly.CBool(v.(bool))
+		opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 
 	log.Printf("[DEBUG] Update Splunk Opts: %#v", opts)

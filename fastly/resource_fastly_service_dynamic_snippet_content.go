@@ -60,7 +60,7 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 	_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 		ServiceID: serviceID,
 		ID:        snippetID,
-		Content:   gofastly.String(content),
+		Content:   gofastly.ToPointer(content),
 	})
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
@@ -87,7 +87,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 			ServiceID: serviceID,
 			ID:        snippetID,
-			Content:   gofastly.String(content),
+			Content:   gofastly.ToPointer(content),
 		})
 		if err != nil {
 			return diag.Errorf("error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)

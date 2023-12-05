@@ -7,9 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -174,7 +173,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 				Operation: gofastly.DeleteBatchOperation,
-				ID:        gofastly.String(resource["id"].(string)),
+				ID:        gofastly.ToPointer(resource["id"].(string)),
 			})
 		}
 
@@ -218,7 +217,7 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 			Operation: gofastly.DeleteBatchOperation,
-			ID:        gofastly.String(val["id"].(string)),
+			ID:        gofastly.ToPointer(val["id"].(string)),
 		})
 	}
 
@@ -310,16 +309,16 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
 	entry := &gofastly.BatchACLEntry{
 		Operation: op,
-		ID:        gofastly.String(v["id"].(string)),
-		IP:        gofastly.String(v["ip"].(string)),
-		Negated:   gofastly.CBool(v["negated"].(bool)),
-		Comment:   gofastly.String(v["comment"].(string)),
+		ID:        gofastly.ToPointer(v["id"].(string)),
+		IP:        gofastly.ToPointer(v["ip"].(string)),
+		Negated:   gofastly.ToPointer(gofastly.Compatibool(v["negated"].(bool))),
+		Comment:   gofastly.ToPointer(v["comment"].(string)),
 	}
 
 	subnet := convertSubnetToInt(v["subnet"].(string))
 	// only set zero subnet if the attribute is explicitly set
 	if v["subnet"].(string) == "0" || subnet != 0 {
-		entry.Subnet = gofastly.Int(subnet)
+		entry.Subnet = gofastly.ToPointer(subnet)
 	}
 
 	return entry

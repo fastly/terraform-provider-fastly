@@ -78,7 +78,7 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 			vla.format = val.(string)
 		}
 		if val, ok := data["format_version"]; ok {
-			vla.formatVersion = gofastly.Int(val.(int))
+			vla.formatVersion = gofastly.ToPointer(val.(int))
 		}
 		if val, ok := data["placement"]; ok {
 			vla.placement = val.(string)

@@ -918,7 +918,7 @@ Optional:
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `region` (String) The region that log data will be sent to. Default: `US`
 - `response_condition` (String) The name of the condition to apply.
-- `url` (String) The New Relic Trace Observer URL to stream logs to for New Relic Infinite Tracing.
+- `url` (String) The optional New Relic Trace Observer URL to stream logs to.
 
 
 <a id="nestedblock--logging_openstack"></a>

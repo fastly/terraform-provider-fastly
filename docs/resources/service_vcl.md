@@ -913,12 +913,12 @@ Required:
 
 Optional:
 
-- `format` (String) Apache style log formatting. Your log must produce valid JSON that New Relic OTLP can ingest.
+- `format` (String) Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `region` (String) The region that log data will be sent to. Default: `US`
-- `url` (String) The optional URL of a New Relic trace observer to send logs to. Must be a New Relic domain name.
 - `response_condition` (String) The name of the condition to apply.
+- `url` (String) The New Relic Trace Observer URL to stream logs to for New Relic Infinite Tracing.
 
 
 <a id="nestedblock--logging_openstack"></a>

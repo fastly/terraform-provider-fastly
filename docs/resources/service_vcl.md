@@ -278,6 +278,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `logging_loggly` (Block Set) (see [below for nested schema](#nestedblock--logging_loggly))
 - `logging_logshuttle` (Block Set) (see [below for nested schema](#nestedblock--logging_logshuttle))
 - `logging_newrelic` (Block Set) (see [below for nested schema](#nestedblock--logging_newrelic))
+- `logging_newrelicotlp` (Block Set) (see [below for nested schema](#nestedblock--logging_newrelicotlp))
 - `logging_openstack` (Block Set) (see [below for nested schema](#nestedblock--logging_openstack))
 - `logging_papertrail` (Block Set) (see [below for nested schema](#nestedblock--logging_papertrail))
 - `logging_s3` (Block Set) (see [below for nested schema](#nestedblock--logging_s3))
@@ -899,6 +900,24 @@ Optional:
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `region` (String) The region that log data will be sent to. Default: `US`
+- `response_condition` (String) The name of the condition to apply.
+
+
+<a id="nestedblock--logging_newrelicotlp"></a>
+### Nested Schema for `logging_newrelicotlp`
+
+Required:
+
+- `name` (String) The unique name of the New Relic OTLP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account
+
+Optional:
+
+- `format` (String) Apache style log formatting. Your log must produce valid JSON that New Relic OTLP can ingest.
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
+- `region` (String) The region that log data will be sent to. Default: `US`
+- `url` (String) The optional URL of a New Relic trace observer to send logs to. Must be a New Relic domain name.
 - `response_condition` (String) The name of the condition to apply.
 
 

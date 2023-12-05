@@ -323,29 +323,61 @@ func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 		// it once.
 		for _, s := range state {
 			v := s.(map[string]any)
-			if v["name"].(string) == resources.Name && v["gzip_level"].(int) == -1 {
-				resources.GzipLevel = v["gzip_level"].(int)
+			if resources.Name != nil && v["name"].(string) == *resources.Name && v["gzip_level"].(int) == -1 {
+				resources.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"name":               resources.Name,
-			"user":               resources.User,
-			"account_name":       resources.AccountName,
-			"project_id":         resources.ProjectID,
-			"bucket_name":        resources.Bucket,
-			"secret_key":         resources.SecretKey,
-			"path":               resources.Path,
-			"period":             int(resources.Period),
-			"gzip_level":         int(resources.GzipLevel),
-			"response_condition": resources.ResponseCondition,
-			"message_type":       resources.MessageType,
-			"format":             resources.Format,
-			"format_version":     resources.FormatVersion,
-			"timestamp_format":   resources.TimestampFormat,
-			"placement":          resources.Placement,
-			"compression_codec":  resources.CompressionCodec,
+		data := map[string]any{}
+
+		if resources.Name != nil {
+			data["name"] = *resources.Name
+		}
+		if resources.User != nil {
+			data["user"] = *resources.User
+		}
+		if resources.AccountName != nil {
+			data["account_name"] = *resources.AccountName
+		}
+		if resources.ProjectID != nil {
+			data["project_id"] = *resources.ProjectID
+		}
+		if resources.Bucket != nil {
+			data["bucket_name"] = *resources.Bucket
+		}
+		if resources.SecretKey != nil {
+			data["secret_key"] = *resources.SecretKey
+		}
+		if resources.Path != nil {
+			data["path"] = *resources.Path
+		}
+		if resources.Period != nil {
+			data["period"] = *resources.Period
+		}
+		if resources.GzipLevel != nil {
+			data["gzip_level"] = *resources.GzipLevel
+		}
+		if resources.ResponseCondition != nil {
+			data["response_condition"] = *resources.ResponseCondition
+		}
+		if resources.MessageType != nil {
+			data["message_type"] = *resources.MessageType
+		}
+		if resources.Format != nil {
+			data["format"] = *resources.Format
+		}
+		if resources.FormatVersion != nil {
+			data["format_version"] = *resources.FormatVersion
+		}
+		if resources.TimestampFormat != nil {
+			data["timestamp_format"] = *resources.TimestampFormat
+		}
+		if resources.Placement != nil {
+			data["placement"] = *resources.Placement
+		}
+		if resources.CompressionCodec != nil {
+			data["compression_codec"] = *resources.CompressionCodec
 		}
 
 		// prune any empty values that come from the default string value in structs

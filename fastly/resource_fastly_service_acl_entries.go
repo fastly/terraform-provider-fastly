@@ -117,7 +117,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	remoteState, err := getAllAclEntriesViaPaginator(conn, &gofastly.ListACLEntriesInput{
+	remoteState, err := getAllAclEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
@@ -172,7 +172,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 			resource := resource.(map[string]any)
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-				Operation: gofastly.DeleteBatchOperation,
+				Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
 				ID:        gofastly.ToPointer(resource["id"].(string)),
 			})
 		}
@@ -216,7 +216,7 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 		val := vRaw.(map[string]any)
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-			Operation: gofastly.DeleteBatchOperation,
+			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
 			ID:        gofastly.ToPointer(val["id"].(string)),
 		})
 	}
@@ -308,7 +308,7 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 
 func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
 	entry := &gofastly.BatchACLEntry{
-		Operation: op,
+		Operation: gofastly.ToPointer(op),
 		ID:        gofastly.ToPointer(v["id"].(string)),
 		IP:        gofastly.ToPointer(v["ip"].(string)),
 		Negated:   gofastly.ToPointer(gofastly.Compatibool(v["negated"].(bool))),
@@ -329,8 +329,8 @@ func convertSubnetToInt(s string) int {
 	return subnet
 }
 
-func getAllAclEntriesViaPaginator(conn *gofastly.Client, input *gofastly.ListACLEntriesInput) ([]*gofastly.ACLEntry, error) {
-	paginator := conn.NewListACLEntriesPaginator(input)
+func getAllAclEntriesViaPaginator(conn *gofastly.Client, input *gofastly.GetACLEntriesInput) ([]*gofastly.ACLEntry, error) {
+	paginator := conn.GetACLEntries(input)
 
 	var entries []*gofastly.ACLEntry
 	for paginator.HasNext() {

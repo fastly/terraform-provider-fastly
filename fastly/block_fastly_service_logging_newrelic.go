@@ -193,14 +193,28 @@ func deleteNewRelic(conn *gofastly.Client, i *gofastly.DeleteNewRelicInput) erro
 func flattenNewRelic(remoteState []*gofastly.NewRelic) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"token":              resource.Token,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"placement":          resource.Placement,
-			"region":             resource.Region,
-			"response_condition": resource.ResponseCondition,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Token != nil {
+			data["token"] = *resource.Token
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.Region != nil {
+			data["region"] = *resource.Region
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
 		}
 
 		// Prune any empty values that come from the default string value in structs.

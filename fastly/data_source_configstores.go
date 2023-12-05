@@ -45,7 +45,7 @@ func dataSourceFastlyConfigStoresRead(_ context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Reading Config Stores")
 
-	remoteState, err := conn.ListConfigStores()
+	remoteState, err := conn.ListConfigStores(&gofastly.ListConfigStoresInput{})
 	if err != nil {
 		return diag.Errorf("error fetching Config Stores: %s", err)
 	}

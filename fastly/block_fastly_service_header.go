@@ -230,19 +230,43 @@ func (h *HeaderServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 func flattenHeaders(remoteState []*gofastly.Header) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"action":             resource.Action,
-			"ignore_if_set":      resource.IgnoreIfSet,
-			"type":               resource.Type,
-			"destination":        resource.Destination,
-			"source":             resource.Source,
-			"regex":              resource.Regex,
-			"substitution":       resource.Substitution,
-			"priority":           int(resource.Priority),
-			"request_condition":  resource.RequestCondition,
-			"cache_condition":    resource.CacheCondition,
-			"response_condition": resource.ResponseCondition,
+		data := map[string]any{}
+
+		if resource.Action != nil {
+			data["action"] = *resource.Action
+		}
+		if resource.CacheCondition != nil {
+			data["cache_condition"] = *resource.CacheCondition
+		}
+		if resource.Destination != nil {
+			data["destination"] = *resource.Destination
+		}
+		if resource.IgnoreIfSet != nil {
+			data["ignore_if_set"] = *resource.IgnoreIfSet
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Priority != nil {
+			data["priority"] = *resource.Priority
+		}
+		if resource.Regex != nil {
+			data["regex"] = *resource.Regex
+		}
+		if resource.RequestCondition != nil {
+			data["request_condition"] = *resource.RequestCondition
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Source != nil {
+			data["source"] = *resource.Source
+		}
+		if resource.Substitution != nil {
+			data["substitution"] = *resource.Substitution
+		}
+		if resource.Type != nil {
+			data["type"] = *resource.Type
 		}
 
 		for k, v := range data {

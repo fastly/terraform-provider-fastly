@@ -207,14 +207,28 @@ func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.
 func flattenPapertrails(remoteState []*gofastly.Papertrail) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"address":            resource.Address,
-			"port":               resource.Port,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"response_condition": resource.ResponseCondition,
-			"placement":          resource.Placement,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Address != nil {
+			data["address"] = *resource.Address
+		}
+		if resource.Port != nil {
+			data["port"] = *resource.Port
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
 		}
 
 		// prune any empty values that come from the default string value in structs

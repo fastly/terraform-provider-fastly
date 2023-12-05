@@ -221,17 +221,37 @@ func deleteGooglePubSub(conn *gofastly.Client, i *gofastly.DeletePubsubInput) er
 func flattenGooglePubSub(remoteState []*gofastly.Pubsub) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"user":               resource.User,
-			"account_name":       resource.AccountName,
-			"secret_key":         resource.SecretKey,
-			"project_id":         resource.ProjectID,
-			"topic":              resource.Topic,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"placement":          resource.Placement,
-			"response_condition": resource.ResponseCondition,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.User != nil {
+			data["user"] = *resource.User
+		}
+		if resource.AccountName != nil {
+			data["account_name"] = *resource.AccountName
+		}
+		if resource.SecretKey != nil {
+			data["secret_key"] = *resource.SecretKey
+		}
+		if resource.ProjectID != nil {
+			data["project_id"] = *resource.ProjectID
+		}
+		if resource.Topic != nil {
+			data["topic"] = *resource.Topic
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
 		}
 
 		// Prune any empty values that come from the default string value in structs.

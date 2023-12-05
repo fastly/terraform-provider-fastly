@@ -189,14 +189,28 @@ func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *sch
 func flattenResponseObjects(remoteState []*gofastly.ResponseObject) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":              resource.Name,
-			"status":            resource.Status,
-			"response":          resource.Response,
-			"content":           resource.Content,
-			"content_type":      resource.ContentType,
-			"request_condition": resource.RequestCondition,
-			"cache_condition":   resource.CacheCondition,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Status != nil {
+			data["status"] = *resource.Status
+		}
+		if resource.Response != nil {
+			data["response"] = *resource.Response
+		}
+		if resource.Content != nil {
+			data["content"] = *resource.Content
+		}
+		if resource.ContentType != nil {
+			data["content_type"] = *resource.ContentType
+		}
+		if resource.RequestCondition != nil {
+			data["request_condition"] = *resource.RequestCondition
+		}
+		if resource.CacheCondition != nil {
+			data["cache_condition"] = *resource.CacheCondition
 		}
 
 		// prune any empty values that come from the default string value in structs

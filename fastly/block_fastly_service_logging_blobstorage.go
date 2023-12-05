@@ -323,29 +323,61 @@ func flattenBlobStorages(remoteState []*gofastly.BlobStorage, localState []any) 
 		// it once.
 		for _, s := range localState {
 			v := s.(map[string]any)
-			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = v["gzip_level"].(int)
+			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"account_name":       resource.AccountName,
-			"compression_codec":  resource.CompressionCodec,
-			"container":          resource.Container,
-			"file_max_bytes":     resource.FileMaxBytes,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"gzip_level":         resource.GzipLevel,
-			"message_type":       resource.MessageType,
-			"name":               resource.Name,
-			"path":               resource.Path,
-			"period":             resource.Period,
-			"placement":          resource.Placement,
-			"public_key":         resource.PublicKey,
-			"response_condition": resource.ResponseCondition,
-			"sas_token":          resource.SASToken,
-			"timestamp_format":   resource.TimestampFormat,
+		data := map[string]any{}
+
+		if resource.AccountName != nil {
+			data["account_name"] = *resource.AccountName
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
+		}
+		if resource.Container != nil {
+			data["container"] = *resource.Container
+		}
+		if resource.FileMaxBytes != nil {
+			data["file_max_bytes"] = *resource.FileMaxBytes
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.GzipLevel != nil {
+			data["gzip_level"] = *resource.GzipLevel
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.PublicKey != nil {
+			data["public_key"] = *resource.PublicKey
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.SASToken != nil {
+			data["sas_token"] = *resource.SASToken
+		}
+		if resource.TimestampFormat != nil {
+			data["timestamp_format"] = *resource.TimestampFormat
 		}
 
 		// prune any empty values that come from the default string value in structs

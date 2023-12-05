@@ -179,15 +179,23 @@ func flattenDynamicSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
 		// Skip non-dynamic snippets
-		if resource.Dynamic == 0 {
+		if resource.Dynamic != nil && *resource.Dynamic == 0 {
 			continue
 		}
 
-		data := map[string]any{
-			"snippet_id": resource.ID,
-			"name":       resource.Name,
-			"type":       resource.Type,
-			"priority":   int(resource.Priority),
+		data := map[string]any{}
+
+		if resource.ID != nil {
+			data["snippet_id"] = *resource.ID
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Type != nil {
+			data["type"] = *resource.Type
+		}
+		if resource.Priority != nil {
+			data["priority"] = *resource.Priority
 		}
 
 		// prune any empty values that come from the default string value in structs

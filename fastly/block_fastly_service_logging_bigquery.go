@@ -257,18 +257,40 @@ func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *sc
 func flattenBigQuery(remoteState []*gofastly.BigQuery) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"format":             resource.Format,
-			"email":              resource.User,
-			"secret_key":         resource.SecretKey,
-			"project_id":         resource.ProjectID,
-			"dataset":            resource.Dataset,
-			"table":              resource.Table,
-			"response_condition": resource.ResponseCondition,
-			"template":           resource.Template,
-			"account_name":       resource.AccountName,
-			"placement":          resource.Placement,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.User != nil {
+			data["email"] = *resource.User
+		}
+		if resource.SecretKey != nil {
+			data["secret_key"] = *resource.SecretKey
+		}
+		if resource.ProjectID != nil {
+			data["project_id"] = *resource.ProjectID
+		}
+		if resource.Dataset != nil {
+			data["dataset"] = *resource.Dataset
+		}
+		if resource.Table != nil {
+			data["table"] = *resource.Table
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Template != nil {
+			data["template"] = *resource.Template
+		}
+		if resource.AccountName != nil {
+			data["account_name"] = *resource.AccountName
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
 		}
 
 		// prune any empty values that come from the default string value in structs

@@ -166,9 +166,9 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 	if v, ok := modified["action"]; ok {
 		switch strings.ToLower(v.(string)) {
 		case "lookup":
-			opts.Action = gofastly.RequestSettingActionLookup
+			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionLookup)
 		case "pass":
-			opts.Action = gofastly.RequestSettingActionPass
+			opts.Action = gofastly.ToPointer(gofastly.RequestSettingActionPass)
 		}
 	}
 	if v, ok := modified["bypass_busy_wait"]; ok {
@@ -183,15 +183,15 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 	if v, ok := modified["xff"]; ok {
 		switch strings.ToLower(v.(string)) {
 		case "clear":
-			opts.XForwardedFor = gofastly.RequestSettingXFFClear
+			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFClear)
 		case "leave":
-			opts.XForwardedFor = gofastly.RequestSettingXFFLeave
+			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFLeave)
 		case "append":
-			opts.XForwardedFor = gofastly.RequestSettingXFFAppend
+			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFAppend)
 		case "append_all":
-			opts.XForwardedFor = gofastly.RequestSettingXFFAppendAll
+			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFAppendAll)
 		case "overwrite":
-			opts.XForwardedFor = gofastly.RequestSettingXFFOverwrite
+			opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFOverwrite)
 		}
 	}
 	if v, ok := modified["timer_support"]; ok {
@@ -239,19 +239,43 @@ func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *sch
 func flattenRequestSettings(remoteState []*gofastly.RequestSetting) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":              resource.Name,
-			"max_stale_age":     resource.MaxStaleAge,
-			"force_miss":        resource.ForceMiss,
-			"force_ssl":         resource.ForceSSL,
-			"action":            resource.Action,
-			"bypass_busy_wait":  resource.BypassBusyWait,
-			"hash_keys":         resource.HashKeys,
-			"xff":               resource.XForwardedFor,
-			"timer_support":     resource.TimerSupport,
-			"geo_headers":       resource.GeoHeaders,
-			"default_host":      resource.DefaultHost,
-			"request_condition": resource.RequestCondition,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.MaxStaleAge != nil {
+			data["max_stale_age"] = *resource.MaxStaleAge
+		}
+		if resource.ForceMiss != nil {
+			data["force_miss"] = *resource.ForceMiss
+		}
+		if resource.ForceSSL != nil {
+			data["force_ssl"] = *resource.ForceSSL
+		}
+		if resource.Action != nil {
+			data["action"] = *resource.Action
+		}
+		if resource.BypassBusyWait != nil {
+			data["bypass_busy_wait"] = *resource.BypassBusyWait
+		}
+		if resource.HashKeys != nil {
+			data["hash_keys"] = *resource.HashKeys
+		}
+		if resource.XForwardedFor != nil {
+			data["xff"] = *resource.XForwardedFor
+		}
+		if resource.TimerSupport != nil {
+			data["timer_support"] = *resource.TimerSupport
+		}
+		if resource.GeoHeaders != nil {
+			data["geo_headers"] = *resource.GeoHeaders
+		}
+		if resource.DefaultHost != nil {
+			data["default_host"] = *resource.DefaultHost
+		}
+		if resource.RequestCondition != nil {
+			data["request_condition"] = *resource.RequestCondition
 		}
 
 		// prune any empty values that come from the default string value in structs

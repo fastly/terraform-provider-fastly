@@ -24,7 +24,7 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 		ServiceID:       d.Id(),
 		ServiceVersion:  latestVersion,
 		DefaultHost:     gofastly.ToPointer(d.Get("default_host").(string)),
-		DefaultTTL:      uint(d.Get("default_ttl").(int)),
+		DefaultTTL:      gofastly.ToPointer(uint(d.Get("default_ttl").(int))),
 		StaleIfErrorTTL: gofastly.ToPointer(uint(d.Get("stale_if_error_ttl").(int))),
 	}
 
@@ -69,28 +69,38 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 }
 
 func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
+
 	settingsOpts := gofastly.GetSettingsInput{
 		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
+		ServiceVersion: serviceVersionNumber,
 	}
 
 	settings, err := conn.GetSettings(&settingsOpts)
 	if err != nil {
-		return fmt.Errorf("error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up Version settings for (%s), version (%v): %s", d.Id(), serviceVersionNumber, err)
 	}
 
-	d.Set("default_host", settings.DefaultHost)
-	d.Set("default_ttl", int(settings.DefaultTTL))
+	if settings.DefaultHost != nil {
+		d.Set("default_host", *settings.DefaultHost)
+	}
+	if settings.DefaultTTL != nil {
+		d.Set("default_ttl", int(*settings.DefaultTTL))
+	}
 	d.Set("http3", false)
-	d.Set("stale_if_error", bool(settings.StaleIfError))
-	d.Set("stale_if_error_ttl", int(settings.StaleIfErrorTTL))
+	if settings.StaleIfError != nil {
+		d.Set("stale_if_error", *settings.StaleIfError)
+	}
+	if settings.StaleIfErrorTTL != nil {
+		d.Set("stale_if_error_ttl", int(*settings.StaleIfErrorTTL))
+	}
 
 	// The API returns a 404 if HTTP3 is not enabled.
 	// The API client returns an error for non-2xx responses.
 	// So if there is no error, then HTTP3 is enabled.
 	if _, err = conn.GetHTTP3(&gofastly.GetHTTP3Input{
 		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
+		ServiceVersion: serviceVersionNumber,
 	}); err == nil {
 		d.Set("http3", true)
 	}

@@ -318,31 +318,67 @@ func flattenSFTP(remoteState []*gofastly.SFTP, localState []any) []map[string]an
 		// it once.
 		for _, s := range localState {
 			v := s.(map[string]any)
-			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = v["gzip_level"].(int)
+			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"name":               resource.Name,
-			"address":            resource.Address,
-			"user":               resource.User,
-			"path":               resource.Path,
-			"ssh_known_hosts":    resource.SSHKnownHosts,
-			"port":               resource.Port,
-			"password":           resource.Password,
-			"secret_key":         resource.SecretKey,
-			"public_key":         resource.PublicKey,
-			"period":             resource.Period,
-			"gzip_level":         resource.GzipLevel,
-			"timestamp_format":   resource.TimestampFormat,
-			"message_type":       resource.MessageType,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"response_condition": resource.ResponseCondition,
-			"placement":          resource.Placement,
-			"compression_codec":  resource.CompressionCodec,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Address != nil {
+			data["address"] = *resource.Address
+		}
+		if resource.User != nil {
+			data["user"] = *resource.User
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.SSHKnownHosts != nil {
+			data["ssh_known_hosts"] = *resource.SSHKnownHosts
+		}
+		if resource.Port != nil {
+			data["port"] = *resource.Port
+		}
+		if resource.Password != nil {
+			data["password"] = *resource.Password
+		}
+		if resource.SecretKey != nil {
+			data["secret_key"] = *resource.SecretKey
+		}
+		if resource.PublicKey != nil {
+			data["public_key"] = *resource.PublicKey
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
+		if resource.GzipLevel != nil {
+			data["gzip_level"] = *resource.GzipLevel
+		}
+		if resource.TimestampFormat != nil {
+			data["timestamp_format"] = *resource.TimestampFormat
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
 		}
 
 		// prune any empty values that come from the default string value in structs

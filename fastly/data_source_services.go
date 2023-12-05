@@ -7,9 +7,10 @@ import (
 	"strconv"
 
 	gofastly "github.com/fastly/go-fastly/v8/fastly"
-	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 
 func dataSourceFastlyServices() *schema.Resource {
@@ -106,7 +107,9 @@ func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, met
 func flattenServiceIDs(remoteState []*gofastly.Service) []string {
 	result := make([]string, len(remoteState))
 	for i, resource := range remoteState {
-		result[i] = resource.ID
+		if resource.ID != nil {
+			result[i] = *resource.ID
+		}
 	}
 	return result
 }
@@ -119,15 +122,30 @@ func flattenServiceDetails(remoteState []*gofastly.Service) []map[string]any {
 	}
 
 	for i, resource := range remoteState {
-		result[i] = map[string]any{
-			"id":          resource.ID,
-			"name":        resource.Name,
-			"type":        resource.Type,
-			"comment":     resource.Comment,
-			"customer_id": resource.CustomerID,
-			"created_at":  resource.CreatedAt.String(),
-			"updated_at":  resource.UpdatedAt.String(),
-			"version":     resource.ActiveVersion,
+		result[i] = map[string]any{}
+		if resource.ID != nil {
+			result[i]["id"] = *resource.ID
+		}
+		if resource.Name != nil {
+			result[i]["name"] = *resource.Name
+		}
+		if resource.Type != nil {
+			result[i]["type"] = *resource.Type
+		}
+		if resource.Comment != nil {
+			result[i]["comment"] = *resource.Comment
+		}
+		if resource.CustomerID != nil {
+			result[i]["customer_id"] = *resource.CustomerID
+		}
+		if resource.CreatedAt != nil {
+			result[i]["created_at"] = resource.CreatedAt.String()
+		}
+		if resource.UpdatedAt != nil {
+			result[i]["updated_at"] = resource.UpdatedAt.String()
+		}
+		if resource.ActiveVersion != nil {
+			result[i]["version"] = *resource.ActiveVersion
 		}
 	}
 

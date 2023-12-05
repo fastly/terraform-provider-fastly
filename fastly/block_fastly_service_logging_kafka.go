@@ -293,26 +293,64 @@ func deleteKafka(conn *gofastly.Client, i *gofastly.DeleteKafkaInput) error {
 func flattenKafka(remoteState []*gofastly.Kafka) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"topic":              resource.Topic,
-			"brokers":            resource.Brokers,
-			"compression_codec":  resource.CompressionCodec,
-			"required_acks":      resource.RequiredACKs,
-			"use_tls":            resource.UseTLS,
-			"tls_ca_cert":        resource.TLSCACert,
-			"tls_client_cert":    resource.TLSClientCert,
-			"tls_client_key":     resource.TLSClientKey,
-			"tls_hostname":       resource.TLSHostname,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"placement":          resource.Placement,
-			"response_condition": resource.ResponseCondition,
-			"parse_log_keyvals":  resource.ParseLogKeyvals,
-			"request_max_bytes":  resource.RequestMaxBytes,
-			"auth_method":        resource.AuthMethod,
-			"user":               resource.User,
-			"password":           resource.Password,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Topic != nil {
+			data["topic"] = *resource.Topic
+		}
+		if resource.Brokers != nil {
+			data["brokers"] = *resource.Brokers
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
+		}
+		if resource.RequiredACKs != nil {
+			data["required_acks"] = *resource.RequiredACKs
+		}
+		if resource.UseTLS != nil {
+			data["use_tls"] = *resource.UseTLS
+		}
+		if resource.TLSCACert != nil {
+			data["tls_ca_cert"] = *resource.TLSCACert
+		}
+		if resource.TLSClientCert != nil {
+			data["tls_client_cert"] = *resource.TLSClientCert
+		}
+		if resource.TLSClientKey != nil {
+			data["tls_client_key"] = *resource.TLSClientKey
+		}
+		if resource.TLSHostname != nil {
+			data["tls_hostname"] = *resource.TLSHostname
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.ParseLogKeyvals != nil {
+			data["parse_log_keyvals"] = *resource.ParseLogKeyvals
+		}
+		if resource.RequestMaxBytes != nil {
+			data["request_max_bytes"] = *resource.RequestMaxBytes
+		}
+		if resource.AuthMethod != nil {
+			data["auth_method"] = *resource.AuthMethod
+		}
+		if resource.User != nil {
+			data["user"] = *resource.User
+		}
+		if resource.Password != nil {
+			data["password"] = *resource.Password
 		}
 
 		// prune any empty values that come from the default string value in structs

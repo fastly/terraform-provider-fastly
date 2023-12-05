@@ -157,10 +157,16 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 func flattenDictionaries(remoteState []*gofastly.Dictionary) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"dictionary_id": resource.ID,
-			"name":          resource.Name,
-			"write_only":    resource.WriteOnly,
+		data := map[string]any{}
+
+		if resource.ID != nil {
+			data["dictionary_id"] = *resource.ID
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.WriteOnly != nil {
+			data["write_only"] = *resource.WriteOnly
 		}
 
 		// prune any empty values that come from the default string value in structs

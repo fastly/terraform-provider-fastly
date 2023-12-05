@@ -56,7 +56,10 @@ func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta any) dia
 		return diag.FromErr(err)
 	}
 
-	d.SetId(u.ID)
+	if u.ID == nil {
+		return diag.Errorf("error: user.ID is nil")
+	}
+	d.SetId(*u.ID)
 
 	return nil
 }
@@ -72,9 +75,15 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.
 		return diag.FromErr(err)
 	}
 
-	d.Set("login", u.Login)
-	d.Set("name", u.Name)
-	d.Set("role", u.Role)
+	if u.Login != nil {
+		d.Set("login", *u.Login)
+	}
+	if u.Name != nil {
+		d.Set("name", *u.Name)
+	}
+	if u.Role != nil {
+		d.Set("role", *u.Role)
+	}
 
 	return nil
 }

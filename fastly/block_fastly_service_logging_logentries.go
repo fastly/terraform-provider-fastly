@@ -220,15 +220,31 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 func flattenLogentries(remoteState []*gofastly.Logentries) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"port":               resource.Port,
-			"use_tls":            resource.UseTLS,
-			"token":              resource.Token,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"response_condition": resource.ResponseCondition,
-			"placement":          resource.Placement,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Port != nil {
+			data["port"] = *resource.Port
+		}
+		if resource.UseTLS != nil {
+			data["use_tls"] = *resource.UseTLS
+		}
+		if resource.Token != nil {
+			data["token"] = *resource.Token
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
 		}
 
 		// prune any empty values that come from the default string value in structs

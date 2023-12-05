@@ -294,29 +294,61 @@ func flattenOpenstack(remoteState []*gofastly.Openstack, localState []any) []map
 		// it once.
 		for _, s := range localState {
 			v := s.(map[string]any)
-			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = v["gzip_level"].(int)
+			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"name":               resource.Name,
-			"url":                resource.URL,
-			"user":               resource.User,
-			"bucket_name":        resource.BucketName,
-			"access_key":         resource.AccessKey,
-			"public_key":         resource.PublicKey,
-			"gzip_level":         resource.GzipLevel,
-			"message_type":       resource.MessageType,
-			"path":               resource.Path,
-			"period":             resource.Period,
-			"timestamp_format":   resource.TimestampFormat,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"placement":          resource.Placement,
-			"response_condition": resource.ResponseCondition,
-			"compression_codec":  resource.CompressionCodec,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.URL != nil {
+			data["url"] = *resource.URL
+		}
+		if resource.User != nil {
+			data["user"] = *resource.User
+		}
+		if resource.BucketName != nil {
+			data["bucket_name"] = *resource.BucketName
+		}
+		if resource.AccessKey != nil {
+			data["access_key"] = *resource.AccessKey
+		}
+		if resource.PublicKey != nil {
+			data["public_key"] = *resource.PublicKey
+		}
+		if resource.GzipLevel != nil {
+			data["gzip_level"] = *resource.GzipLevel
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
+		if resource.TimestampFormat != nil {
+			data["timestamp_format"] = *resource.TimestampFormat
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
 		}
 
 		// Prune any empty values that come from the default string value in structs.

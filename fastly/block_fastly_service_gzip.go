@@ -209,22 +209,24 @@ func (h *GzipServiceAttributeHandler) Delete(_ context.Context, d *schema.Resour
 func flattenGzips(remoteState []*gofastly.Gzip) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":            resource.Name,
-			"cache_condition": resource.CacheCondition,
-		}
+		data := map[string]any{}
 
-		if resource.Extensions != "" {
-			e := strings.Split(resource.Extensions, " ")
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.CacheCondition != nil {
+			data["cache_condition"] = *resource.CacheCondition
+		}
+		if resource.Extensions != nil {
+			e := strings.Split(*resource.Extensions, " ")
 			var et []any
 			for _, ev := range e {
 				et = append(et, ev)
 			}
 			data["extensions"] = et
 		}
-
-		if resource.ContentTypes != "" {
-			c := strings.Split(resource.ContentTypes, " ")
+		if resource.ContentTypes != nil {
+			c := strings.Split(*resource.ContentTypes, " ")
 			var ct []any
 			for _, cv := range c {
 				ct = append(ct, cv)

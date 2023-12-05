@@ -291,29 +291,61 @@ func flattenDigitalOcean(remoteState []*gofastly.DigitalOcean, localState []any)
 		// it once.
 		for _, s := range localState {
 			v := s.(map[string]any)
-			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = v["gzip_level"].(int)
+			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"name":               resource.Name,
-			"bucket_name":        resource.BucketName,
-			"domain":             resource.Domain,
-			"access_key":         resource.AccessKey,
-			"secret_key":         resource.SecretKey,
-			"public_key":         resource.PublicKey,
-			"path":               resource.Path,
-			"period":             resource.Period,
-			"timestamp_format":   resource.TimestampFormat,
-			"gzip_level":         resource.GzipLevel,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"message_type":       resource.MessageType,
-			"placement":          resource.Placement,
-			"response_condition": resource.ResponseCondition,
-			"compression_codec":  resource.CompressionCodec,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.BucketName != nil {
+			data["bucket_name"] = *resource.BucketName
+		}
+		if resource.Domain != nil {
+			data["domain"] = *resource.Domain
+		}
+		if resource.AccessKey != nil {
+			data["access_key"] = *resource.AccessKey
+		}
+		if resource.SecretKey != nil {
+			data["secret_key"] = *resource.SecretKey
+		}
+		if resource.PublicKey != nil {
+			data["public_key"] = *resource.PublicKey
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
+		if resource.TimestampFormat != nil {
+			data["timestamp_format"] = *resource.TimestampFormat
+		}
+		if resource.GzipLevel != nil {
+			data["gzip_level"] = *resource.GzipLevel
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
 		}
 
 		// Prune any empty values that come from the default string value in structs.

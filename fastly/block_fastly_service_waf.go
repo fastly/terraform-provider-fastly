@@ -103,13 +103,14 @@ func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 	localState := d.Get(h.GetKey()).([]any)
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
+		serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
 		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
 		remoteState, err := conn.ListWAFs(&gofastly.ListWAFsInput{
 			FilterService: d.Id(),
-			FilterVersion: s.ActiveVersion.Number,
+			FilterVersion: serviceVersionNumber,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAFs for (%s), version (%v): %s", d.Id(), serviceVersionNumber, err)
 		}
 
 		waf := flattenWAFs(remoteState.Items)

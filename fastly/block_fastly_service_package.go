@@ -78,7 +78,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			input.PackageContent = []byte(decoded)
 		}
 		if v := pkg["filename"].(string); v != "" {
-			input.PackagePath = v
+			input.PackagePath = gofastly.ToPointer(v)
 		}
 
 		_, err := conn.UpdatePackage(input)
@@ -103,18 +103,20 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	localState := d.Get(h.key).([]any)
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
+		serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
+
 		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
 		remoteState, err := conn.GetPackage(&gofastly.GetPackageInput{
 			ServiceID:      d.Id(),
-			ServiceVersion: s.ActiveVersion.Number,
+			ServiceVersion: serviceVersionNumber,
 		})
 		if err != nil {
 			if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
-				log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+				log.Printf("[WARN] No wasm Package found for (%s), version (%v): %v", d.Id(), serviceVersionNumber, err)
 				_ = d.Set(h.GetKey(), nil)
 				return nil
 			}
-			return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), s.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Package for (%s), version (%v): %v", d.Id(), serviceVersionNumber, err)
 		}
 
 		var (
@@ -145,8 +147,10 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 func flattenPackage(remoteState *gofastly.Package, pkgType PkgType, pkgData string) []map[string]any {
 	var result []map[string]any
 
-	data := map[string]any{
-		"source_code_hash": remoteState.Metadata.FilesHash,
+	data := map[string]any{}
+
+	if remoteState.Metadata != nil && remoteState.Metadata.FilesHash != nil {
+		data["source_code_hash"] = *remoteState.Metadata.FilesHash
 	}
 
 	switch pkgType {

@@ -71,7 +71,7 @@ func (h *blockSetAttributeHandler) Register(s *schema.Resource) error {
 }
 
 func (h *blockSetAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	return h.handler.Read(ctx, d, nil, s.ActiveVersion.Number, conn)
+	return h.handler.Read(ctx, d, nil, gofastly.ToValue(s.ActiveVersion.Number), conn)
 }
 
 func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {

@@ -263,19 +263,43 @@ func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 func flattenSplunks(remoteState []*gofastly.Splunk) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"url":                resource.URL,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"response_condition": resource.ResponseCondition,
-			"placement":          resource.Placement,
-			"token":              resource.Token,
-			"use_tls":            resource.UseTLS,
-			"tls_hostname":       resource.TLSHostname,
-			"tls_ca_cert":        resource.TLSCACert,
-			"tls_client_cert":    resource.TLSClientCert,
-			"tls_client_key":     resource.TLSClientKey,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.URL != nil {
+			data["url"] = *resource.URL
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.Token != nil {
+			data["token"] = *resource.Token
+		}
+		if resource.UseTLS != nil {
+			data["use_tls"] = *resource.UseTLS
+		}
+		if resource.TLSHostname != nil {
+			data["tls_hostname"] = *resource.TLSHostname
+		}
+		if resource.TLSCACert != nil {
+			data["tls_ca_cert"] = *resource.TLSCACert
+		}
+		if resource.TLSClientCert != nil {
+			data["tls_client_cert"] = *resource.TLSClientCert
+		}
+		if resource.TLSClientKey != nil {
+			data["tls_client_key"] = *resource.TLSClientKey
 		}
 
 		// prune any empty values that come from the default string value in structs

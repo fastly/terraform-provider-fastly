@@ -269,23 +269,55 @@ func deleteElasticsearch(conn *gofastly.Client, i *gofastly.DeleteElasticsearchI
 func flattenElasticsearch(remoteState []*gofastly.Elasticsearch) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":                resource.Name,
-			"response_condition":  resource.ResponseCondition,
-			"format":              resource.Format,
-			"index":               resource.Index,
-			"url":                 resource.URL,
-			"pipeline":            resource.Pipeline,
-			"user":                resource.User,
-			"password":            resource.Password,
-			"request_max_entries": resource.RequestMaxEntries,
-			"request_max_bytes":   resource.RequestMaxBytes,
-			"placement":           resource.Placement,
-			"tls_ca_cert":         resource.TLSCACert,
-			"tls_client_cert":     resource.TLSClientCert,
-			"tls_client_key":      resource.TLSClientKey,
-			"tls_hostname":        resource.TLSHostname,
-			"format_version":      resource.FormatVersion,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.Index != nil {
+			data["index"] = *resource.Index
+		}
+		if resource.URL != nil {
+			data["url"] = *resource.URL
+		}
+		if resource.Pipeline != nil {
+			data["pipeline"] = *resource.Pipeline
+		}
+		if resource.User != nil {
+			data["user"] = *resource.User
+		}
+		if resource.Password != nil {
+			data["password"] = *resource.Password
+		}
+		if resource.RequestMaxEntries != nil {
+			data["request_max_entries"] = *resource.RequestMaxEntries
+		}
+		if resource.RequestMaxBytes != nil {
+			data["request_max_bytes"] = *resource.RequestMaxBytes
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.TLSCACert != nil {
+			data["tls_ca_cert"] = *resource.TLSCACert
+		}
+		if resource.TLSClientCert != nil {
+			data["tls_client_cert"] = *resource.TLSClientCert
+		}
+		if resource.TLSClientKey != nil {
+			data["tls_client_key"] = *resource.TLSClientKey
+		}
+		if resource.TLSHostname != nil {
+			data["tls_hostname"] = *resource.TLSHostname
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
 		}
 
 		// Prune any empty values that come from the default string value in structs.

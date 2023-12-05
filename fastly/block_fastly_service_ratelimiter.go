@@ -234,8 +234,8 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 	}
 
 	for _, e := range erls {
-		if e.Name == resource["name"].(string) {
-			rateLimiterID = e.ID
+		if e.Name != nil && *e.Name == resource["name"].(string) {
+			rateLimiterID = gofastly.ToValue(e.ID)
 			break
 		}
 	}
@@ -272,8 +272,8 @@ func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.Resour
 	}
 
 	for _, e := range erls {
-		if e.Name == resource["name"].(string) {
-			rateLimiterID = e.ID
+		if e.Name != nil && *e.Name == resource["name"].(string) {
+			rateLimiterID = gofastly.ToValue(e.ID)
 			break
 		}
 	}
@@ -339,9 +339,9 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 		for _, v := range response {
 			m := v.(map[string]any)
 			input.Response = &gofastly.ERLResponseType{
-				ERLContent:     m["content"].(string),
-				ERLContentType: m["content_type"].(string),
-				ERLStatus:      int(m["status"].(int)),
+				ERLContent:     gofastly.ToPointer(m["content"].(string)),
+				ERLContentType: gofastly.ToPointer(m["content_type"].(string)),
+				ERLStatus:      gofastly.ToPointer(m["status"].(int)),
 			}
 		}
 	}
@@ -420,9 +420,9 @@ func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, service
 		if len(s) > 0 {
 			m := s[0].(map[string]any)
 			input.Response = &gofastly.ERLResponseType{
-				ERLContent:     m["content"].(string),
-				ERLContentType: m["content_type"].(string),
-				ERLStatus:      m["status"].(int),
+				ERLContent:     gofastly.ToPointer(m["content"].(string)),
+				ERLContentType: gofastly.ToPointer(m["content_type"].(string)),
+				ERLStatus:      gofastly.ToPointer(m["status"].(int)),
 			}
 		}
 	}
@@ -456,26 +456,59 @@ func flattenRateLimiter(remoteState []*gofastly.ERL, _ ServiceMetadata) []map[st
 	result := make([]map[string]any, 0, len(remoteState))
 
 	for _, o := range remoteState {
-		data := map[string]any{
-			"action":               string(o.Action),
-			"client_key":           strings.Join(o.ClientKey, ","),
-			"feature_revision":     o.FeatureRevision,
-			"http_methods":         strings.Join(o.HTTPMethods, ","),
-			"logger_type":          string(o.LoggerType),
-			"name":                 o.Name,
-			"penalty_box_duration": o.PenaltyBoxDuration,
-			"ratelimiter_id":       o.ID,
-			"response_object_name": o.ResponseObjectName,
-			"rps_limit":            o.RpsLimit,
-			"window_size":          int(o.WindowSize),
-		}
+		data := map[string]any{}
 
-		if o.Response != nil {
+		if o.Action != nil {
+			data["action"] = string(*o.Action)
+		}
+		if o.ClientKey != nil {
+			s := []string{}
+			for _, v := range o.ClientKey {
+				if v != nil {
+					s = append(s, *v)
+				}
+			}
+			data["client_key"] = strings.Join(s, ",")
+		}
+		if o.FeatureRevision != nil {
+			data["feature_revision"] = *o.FeatureRevision
+		}
+		if o.HTTPMethods != nil {
+			s := []string{}
+			for _, v := range o.HTTPMethods {
+				if v != nil {
+					s = append(s, *v)
+				}
+			}
+			data["http_methods"] = strings.Join(s, ",")
+		}
+		if o.LoggerType != nil {
+			data["logger_type"] = string(*o.LoggerType)
+		}
+		if o.Name != nil {
+			data["name"] = *o.Name
+		}
+		if o.PenaltyBoxDuration != nil {
+			data["penalty_box_duration"] = *o.PenaltyBoxDuration
+		}
+		if o.ID != nil {
+			data["ratelimiter_id"] = *o.ID
+		}
+		if o.ResponseObjectName != nil {
+			data["response_object_name"] = *o.ResponseObjectName
+		}
+		if o.RpsLimit != nil {
+			data["rps_limit"] = *o.RpsLimit
+		}
+		if o.WindowSize != nil {
+			data["window_size"] = int(*o.WindowSize)
+		}
+		if o.Response != nil && o.Response.ERLContent != nil && o.Response.ERLContentType != nil && o.Response.ERLStatus != nil {
 			data["response"] = []map[string]any{
 				{
-					"content":      o.Response.ERLContent,
-					"content_type": o.Response.ERLContentType,
-					"status":       o.Response.ERLStatus,
+					"content":      *o.Response.ERLContent,
+					"content_type": *o.Response.ERLContentType,
+					"status":       *o.Response.ERLStatus,
 				},
 			}
 		}

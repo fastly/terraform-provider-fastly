@@ -441,36 +441,91 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 	result := make([]map[string]any, 0, len(remoteState))
 
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"address":               resource.Address,
-			"between_bytes_timeout": int(resource.BetweenBytesTimeout),
-			"connect_timeout":       int(resource.ConnectTimeout),
-			"error_threshold":       int(resource.ErrorThreshold),
-			"first_byte_timeout":    int(resource.FirstByteTimeout),
-			"healthcheck":           resource.HealthCheck,
-			"keepalive_time":        int(resource.KeepAliveTime),
-			"max_conn":              int(resource.MaxConn),
-			"max_tls_version":       resource.MaxTLSVersion,
-			"min_tls_version":       resource.MinTLSVersion,
-			"name":                  resource.Name,
-			"override_host":         resource.OverrideHost,
-			"port":                  int(resource.Port),
-			"share_key":             resource.ShareKey,
-			"shield":                resource.Shield,
-			"ssl_ca_cert":           resource.SSLCACert,
-			"ssl_cert_hostname":     resource.SSLCertHostname,
-			"ssl_check_cert":        resource.SSLCheckCert,
-			"ssl_ciphers":           resource.SSLCiphers,
-			"ssl_client_cert":       resource.SSLClientCert,
-			"ssl_client_key":        resource.SSLClientKey,
-			"ssl_sni_hostname":      resource.SSLSNIHostname,
-			"use_ssl":               resource.UseSSL,
-			"weight":                int(resource.Weight),
+		data := map[string]any{}
+
+		if resource.Address != nil {
+			data["address"] = *resource.Address
+		}
+		if resource.BetweenBytesTimeout != nil {
+			data["between_bytes_timeout"] = *resource.BetweenBytesTimeout
+		}
+		if resource.Comment != nil {
+			data["comment"] = *resource.Comment
+		}
+		if resource.ConnectTimeout != nil {
+			data["connect_timeout"] = *resource.ConnectTimeout
+		}
+		if resource.ErrorThreshold != nil {
+			data["error_threshold"] = *resource.ErrorThreshold
+		}
+		if resource.FirstByteTimeout != nil {
+			data["first_byte_timeout"] = *resource.FirstByteTimeout
+		}
+		if resource.HealthCheck != nil {
+			data["healthcheck"] = *resource.HealthCheck
+		}
+		if resource.KeepAliveTime != nil {
+			data["keepalive_time"] = *resource.KeepAliveTime
+		}
+		if resource.MaxConn != nil {
+			data["max_conn"] = *resource.MaxConn
+		}
+		if resource.MaxTLSVersion != nil {
+			data["max_tls_version"] = *resource.MaxTLSVersion
+		}
+		if resource.MinTLSVersion != nil {
+			data["min_tls_version"] = *resource.MinTLSVersion
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.OverrideHost != nil {
+			data["override_host"] = *resource.OverrideHost
+		}
+		if resource.Port != nil {
+			data["port"] = *resource.Port
+		}
+		if resource.ShareKey != nil {
+			data["share_key"] = *resource.ShareKey
+		}
+		if resource.SSLCACert != nil {
+			data["ssl_ca_cert"] = *resource.SSLCACert
+		}
+		if resource.SSLCertHostname != nil {
+			data["ssl_cert_hostname"] = *resource.SSLCertHostname
+		}
+		if resource.SSLCheckCert != nil {
+			data["ssl_check_cert"] = *resource.SSLCheckCert
+		}
+		if resource.SSLCiphers != nil {
+			data["ssl_ciphers"] = *resource.SSLCiphers
+		}
+		if resource.SSLClientCert != nil {
+			data["ssl_client_cert"] = *resource.SSLClientCert
+		}
+		if resource.SSLClientKey != nil {
+			data["ssl_client_key"] = *resource.SSLClientKey
+		}
+		if resource.SSLSNIHostname != nil {
+			data["ssl_sni_hostname"] = *resource.SSLSNIHostname
+		}
+		if resource.Shield != nil {
+			data["shield"] = *resource.Shield
+		}
+		if resource.UseSSL != nil {
+			data["use_ssl"] = *resource.UseSSL
+		}
+		if resource.Weight != nil {
+			data["weight"] = *resource.Weight
 		}
 
 		if sa.serviceType == ServiceTypeVCL {
-			data["auto_loadbalance"] = resource.AutoLoadbalance
-			data["request_condition"] = resource.RequestCondition
+			if resource.AutoLoadbalance != nil {
+				data["auto_loadbalance"] = *resource.AutoLoadbalance
+			}
+			if resource.RequestCondition != nil {
+				data["request_condition"] = *resource.RequestCondition
+			}
 		}
 
 		result = append(result, data)

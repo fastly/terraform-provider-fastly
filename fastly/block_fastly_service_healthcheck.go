@@ -266,19 +266,43 @@ func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema
 func flattenHealthchecks(remoteState []*gofastly.HealthCheck) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":              resource.Name,
-			"headers":           resource.Headers,
-			"host":              resource.Host,
-			"path":              resource.Path,
-			"check_interval":    resource.CheckInterval,
-			"expected_response": resource.ExpectedResponse,
-			"http_version":      resource.HTTPVersion,
-			"initial":           resource.Initial,
-			"method":            resource.Method,
-			"threshold":         resource.Threshold,
-			"timeout":           resource.Timeout,
-			"window":            resource.Window,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Headers != nil {
+			data["headers"] = resource.Headers
+		}
+		if resource.Host != nil {
+			data["host"] = *resource.Host
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.CheckInterval != nil {
+			data["check_interval"] = *resource.CheckInterval
+		}
+		if resource.ExpectedResponse != nil {
+			data["expected_response"] = *resource.ExpectedResponse
+		}
+		if resource.HTTPVersion != nil {
+			data["http_version"] = *resource.HTTPVersion
+		}
+		if resource.Initial != nil {
+			data["initial"] = *resource.Initial
+		}
+		if resource.Method != nil {
+			data["method"] = *resource.Method
+		}
+		if resource.Threshold != nil {
+			data["threshold"] = *resource.Threshold
+		}
+		if resource.Timeout != nil {
+			data["timeout"] = *resource.Timeout
+		}
+		if resource.Window != nil {
+			data["window"] = *resource.Window
 		}
 
 		// prune any empty values that come from the default string value in structs

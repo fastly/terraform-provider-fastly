@@ -221,17 +221,37 @@ func deleteKinesis(conn *gofastly.Client, i *gofastly.DeleteKinesisInput) error 
 func flattenKinesis(remoteState []*gofastly.Kinesis) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"topic":              resource.StreamName,
-			"region":             resource.Region,
-			"access_key":         resource.AccessKey,
-			"secret_key":         resource.SecretKey,
-			"iam_role":           resource.IAMRole,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"placement":          resource.Placement,
-			"response_condition": resource.ResponseCondition,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.StreamName != nil {
+			data["topic"] = *resource.StreamName
+		}
+		if resource.Region != nil {
+			data["region"] = *resource.Region
+		}
+		if resource.AccessKey != nil {
+			data["access_key"] = *resource.AccessKey
+		}
+		if resource.SecretKey != nil {
+			data["secret_key"] = *resource.SecretKey
+		}
+		if resource.IAMRole != nil {
+			data["iam_role"] = *resource.IAMRole
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
 		}
 
 		// Prune any empty values that come from the default string value in structs.

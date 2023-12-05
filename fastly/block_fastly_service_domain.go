@@ -145,10 +145,14 @@ func flattenDomains(remoteState []*gofastly.Domain) []map[string]any {
 	result := make([]map[string]any, 0, len(remoteState))
 
 	for _, resource := range remoteState {
-		result = append(result, map[string]any{
-			"name":    resource.Name,
-			"comment": resource.Comment,
-		})
+		data := map[string]any{}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Comment != nil {
+			data["comment"] = *resource.Comment
+		}
+		result = append(result, data)
 	}
 
 	return result

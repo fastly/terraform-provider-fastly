@@ -193,14 +193,28 @@ func deleteScalyr(conn *gofastly.Client, i *gofastly.DeleteScalyrInput) error {
 func flattenScalyr(remoteState []*gofastly.Scalyr) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"region":             resource.Region,
-			"token":              resource.Token,
-			"response_condition": resource.ResponseCondition,
-			"format":             resource.Format,
-			"placement":          resource.Placement,
-			"format_version":     resource.FormatVersion,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Region != nil {
+			data["region"] = *resource.Region
+		}
+		if resource.Token != nil {
+			data["token"] = *resource.Token
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
 		}
 
 		// Prune any empty values that come from the default string value in structs.

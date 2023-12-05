@@ -291,25 +291,61 @@ func deleteHTTPS(conn *gofastly.Client, i *gofastly.DeleteHTTPSInput) error {
 func flattenHTTPS(remoteState []*gofastly.HTTPS) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":                resource.Name,
-			"response_condition":  resource.ResponseCondition,
-			"format":              resource.Format,
-			"url":                 resource.URL,
-			"request_max_entries": resource.RequestMaxEntries,
-			"request_max_bytes":   resource.RequestMaxBytes,
-			"content_type":        resource.ContentType,
-			"header_name":         resource.HeaderName,
-			"header_value":        resource.HeaderValue,
-			"method":              resource.Method,
-			"json_format":         resource.JSONFormat,
-			"placement":           resource.Placement,
-			"tls_ca_cert":         resource.TLSCACert,
-			"tls_client_cert":     resource.TLSClientCert,
-			"tls_client_key":      resource.TLSClientKey,
-			"tls_hostname":        resource.TLSHostname,
-			"message_type":        resource.MessageType,
-			"format_version":      resource.FormatVersion,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.URL != nil {
+			data["url"] = *resource.URL
+		}
+		if resource.RequestMaxEntries != nil {
+			data["request_max_entries"] = *resource.RequestMaxEntries
+		}
+		if resource.RequestMaxBytes != nil {
+			data["request_max_bytes"] = *resource.RequestMaxBytes
+		}
+		if resource.ContentType != nil {
+			data["content_type"] = *resource.ContentType
+		}
+		if resource.HeaderName != nil {
+			data["header_name"] = *resource.HeaderName
+		}
+		if resource.HeaderValue != nil {
+			data["header_value"] = *resource.HeaderValue
+		}
+		if resource.Method != nil {
+			data["method"] = *resource.Method
+		}
+		if resource.JSONFormat != nil {
+			data["json_format"] = *resource.JSONFormat
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.TLSCACert != nil {
+			data["tls_ca_cert"] = *resource.TLSCACert
+		}
+		if resource.TLSClientCert != nil {
+			data["tls_client_cert"] = *resource.TLSClientCert
+		}
+		if resource.TLSClientKey != nil {
+			data["tls_client_key"] = *resource.TLSClientKey
+		}
+		if resource.TLSHostname != nil {
+			data["tls_hostname"] = *resource.TLSHostname
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
 		}
 
 		// prune any empty values that come from the default string value in structs

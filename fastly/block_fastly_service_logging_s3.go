@@ -401,35 +401,79 @@ func flattenS3s(remoteState []*gofastly.S3, localState []any) []map[string]any {
 		// it once.
 		for _, s := range localState {
 			v := s.(map[string]any)
-			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = v["gzip_level"].(int)
+			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"name":                              resource.Name,
-			"bucket_name":                       resource.BucketName,
-			"s3_access_key":                     resource.AccessKey,
-			"s3_secret_key":                     resource.SecretKey,
-			"s3_iam_role":                       resource.IAMRole,
-			"path":                              resource.Path,
-			"period":                            resource.Period,
-			"domain":                            resource.Domain,
-			"file_max_bytes":                    resource.FileMaxBytes,
-			"gzip_level":                        resource.GzipLevel,
-			"format":                            resource.Format,
-			"format_version":                    resource.FormatVersion,
-			"timestamp_format":                  resource.TimestampFormat,
-			"redundancy":                        resource.Redundancy,
-			"response_condition":                resource.ResponseCondition,
-			"message_type":                      resource.MessageType,
-			"public_key":                        resource.PublicKey,
-			"placement":                         resource.Placement,
-			"server_side_encryption":            resource.ServerSideEncryption,
-			"server_side_encryption_kms_key_id": resource.ServerSideEncryptionKMSKeyID,
-			"compression_codec":                 resource.CompressionCodec,
-			"acl":                               resource.ACL,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.BucketName != nil {
+			data["bucket_name"] = *resource.BucketName
+		}
+		if resource.AccessKey != nil {
+			data["s3_access_key"] = *resource.AccessKey
+		}
+		if resource.SecretKey != nil {
+			data["s3_secret_key"] = *resource.SecretKey
+		}
+		if resource.IAMRole != nil {
+			data["s3_iam_role"] = *resource.IAMRole
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
+		if resource.Domain != nil {
+			data["domain"] = *resource.Domain
+		}
+		if resource.FileMaxBytes != nil {
+			data["file_max_bytes"] = *resource.FileMaxBytes
+		}
+		if resource.GzipLevel != nil {
+			data["gzip_level"] = *resource.GzipLevel
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.TimestampFormat != nil {
+			data["timestamp_format"] = *resource.TimestampFormat
+		}
+		if resource.Redundancy != nil {
+			data["redundancy"] = *resource.Redundancy
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.PublicKey != nil {
+			data["public_key"] = *resource.PublicKey
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ServerSideEncryption != nil {
+			data["server_side_encryption"] = *resource.ServerSideEncryption
+		}
+		if resource.ServerSideEncryptionKMSKeyID != nil {
+			data["server_side_encryption_kms_key_id"] = *resource.ServerSideEncryptionKMSKeyID
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
+		}
+		if resource.ACL != nil {
+			data["acl"] = *resource.ACL
 		}
 
 		// Prune any empty values that come from the default string value in structs.

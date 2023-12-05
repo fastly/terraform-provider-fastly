@@ -211,14 +211,28 @@ func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 func flattenSumologics(remoteState []*gofastly.Sumologic) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"url":                resource.URL,
-			"format":             resource.Format,
-			"response_condition": resource.ResponseCondition,
-			"message_type":       resource.MessageType,
-			"format_version":     int(resource.FormatVersion),
-			"placement":          resource.Placement,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.URL != nil {
+			data["url"] = *resource.URL
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
 		}
 
 		// prune any empty values that come from the default string value in structs

@@ -121,7 +121,7 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["action"]; ok {
-		opts.Action = gofastly.CacheSettingAction(v.(string))
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingAction(v.(string)))
 	}
 	if v, ok := modified["ttl"]; ok {
 		opts.TTL = gofastly.ToPointer(v.(int))
@@ -190,12 +190,22 @@ func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) 
 func flattenCacheSettings(remoteState []*gofastly.CacheSetting) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":            resource.Name,
-			"action":          resource.Action,
-			"cache_condition": resource.CacheCondition,
-			"stale_ttl":       resource.StaleTTL,
-			"ttl":             resource.TTL,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Action != nil {
+			data["action"] = *resource.Action
+		}
+		if resource.CacheCondition != nil {
+			data["cache_condition"] = *resource.CacheCondition
+		}
+		if resource.StaleTTL != nil {
+			data["stale_ttl"] = *resource.StaleTTL
+		}
+		if resource.TTL != nil {
+			data["ttl"] = *resource.TTL
 		}
 
 		// prune any empty values that come from the default string value in structs

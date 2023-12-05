@@ -144,10 +144,16 @@ func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 func flattenVCLs(remoteState []*gofastly.VCL) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":    resource.Name,
-			"content": resource.Content,
-			"main":    resource.Main,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Content != nil {
+			data["content"] = *resource.Content
+		}
+		if resource.Main != nil {
+			data["main"] = *resource.Main
 		}
 
 		// prune any empty values that come from the default string value in structs

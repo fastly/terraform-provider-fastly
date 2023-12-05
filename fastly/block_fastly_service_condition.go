@@ -193,11 +193,19 @@ func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 func flattenConditions(remoteState []*gofastly.Condition) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":      resource.Name,
-			"statement": resource.Statement,
-			"type":      resource.Type,
-			"priority":  resource.Priority,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Statement != nil {
+			data["statement"] = *resource.Statement
+		}
+		if resource.Type != nil {
+			data["type"] = *resource.Type
+		}
+		if resource.Priority != nil {
+			data["priority"] = *resource.Priority
 		}
 
 		// prune any empty values that come from the default string value in structs

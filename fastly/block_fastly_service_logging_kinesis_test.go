@@ -22,16 +22,16 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 		{
 			remote: []*gofastly.Kinesis{
 				{
-					ServiceVersion:    1,
-					Name:              "kinesis-endpoint",
-					StreamName:        "stream-name",
-					Region:            "us-east-1",
-					AccessKey:         "whywouldyoucheckthis",
-					SecretKey:         "thisisthesecretthatneedstobe40characters",
-					Format:            "%h %l %u %t \"%r\" %>s %b %T",
-					Placement:         "none",
-					ResponseCondition: "always",
-					FormatVersion:     2,
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("kinesis-endpoint"),
+					StreamName:        gofastly.ToPointer("stream-name"),
+					Region:            gofastly.ToPointer("us-east-1"),
+					AccessKey:         gofastly.ToPointer("whywouldyoucheckthis"),
+					SecretKey:         gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
+					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					FormatVersion:     gofastly.ToPointer(2),
 				},
 			},
 			local: []map[string]any{
@@ -51,15 +51,15 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 		{
 			remote: []*gofastly.Kinesis{
 				{
-					ServiceVersion:    1,
-					Name:              "kinesis-endpoint",
-					StreamName:        "stream-name",
-					Region:            "us-east-1",
-					IAMRole:           testKinesisIAMRole,
-					Format:            "%h %l %u %t \"%r\" %>s %b %T",
-					Placement:         "none",
-					ResponseCondition: "always",
-					FormatVersion:     2,
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("kinesis-endpoint"),
+					StreamName:        gofastly.ToPointer("stream-name"),
+					Region:            gofastly.ToPointer("us-east-1"),
+					IAMRole:           gofastly.ToPointer(testKinesisIAMRole),
+					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					FormatVersion:     gofastly.ToPointer(2),
 				},
 			},
 			local: []map[string]any{
@@ -91,34 +91,34 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kinesis{
-		ServiceVersion: 1,
-		Name:           "kinesis-endpoint",
-		StreamName:     "stream-name",
-		Region:         "us-east-1",
-		AccessKey:      "whywouldyoucheckthis",
-		SecretKey:      "thisisthesecretthatneedstobe40characters",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("kinesis-endpoint"),
+		StreamName:     gofastly.ToPointer("stream-name"),
+		Region:         gofastly.ToPointer("us-east-1"),
+		AccessKey:      gofastly.ToPointer("whywouldyoucheckthis"),
+		SecretKey:      gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 	}
 
 	log1AfterUpdate := gofastly.Kinesis{
-		ServiceVersion: 1,
-		Name:           "kinesis-endpoint",
-		StreamName:     "new-stream-name",
-		Region:         "us-east-1",
-		IAMRole:        testKinesisIAMRole,
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b %T",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("kinesis-endpoint"),
+		StreamName:     gofastly.ToPointer("new-stream-name"),
+		Region:         gofastly.ToPointer("us-east-1"),
+		IAMRole:        gofastly.ToPointer(testKinesisIAMRole),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
 	}
 
 	log2 := gofastly.Kinesis{
-		ServiceVersion: 1,
-		Name:           "another-kinesis-endpoint",
-		StreamName:     "another-stream-name",
-		Region:         "us-east-1",
-		IAMRole:        testKinesisIAMRole,
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("another-kinesis-endpoint"),
+		StreamName:     gofastly.ToPointer("another-stream-name"),
+		Region:         gofastly.ToPointer("us-east-1"),
+		IAMRole:        gofastly.ToPointer(testKinesisIAMRole),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -161,12 +161,12 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kinesis{
-		ServiceVersion: 1,
-		Name:           "kinesis-endpoint",
-		StreamName:     "stream-name",
-		Region:         "us-east-1",
-		AccessKey:      "whywouldyoucheckthis",
-		SecretKey:      "thisisthesecretthatneedstobe40characters",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("kinesis-endpoint"),
+		StreamName:     gofastly.ToPointer("stream-name"),
+		Region:         gofastly.ToPointer("us-east-1"),
+		AccessKey:      gofastly.ToPointer("whywouldyoucheckthis"),
+		SecretKey:      gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -195,11 +195,11 @@ func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDeta
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		ksl, err := conn.ListKinesis(&gofastly.ListKinesisInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Kinesis Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Kinesis Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(ksl) != len(ks) {
@@ -210,7 +210,7 @@ func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDeta
 
 		for _, e := range ks {
 			for _, el := range ksl {
-				if e.Name == el.Name {
+				if gofastly.ToValue(e.Name) == gofastly.ToValue(el.Name) {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
 					e.ServiceVersion = service.ActiveVersion.Number

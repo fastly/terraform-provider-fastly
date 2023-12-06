@@ -21,22 +21,22 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 		{
 			remote: []*gofastly.BlobStorage{
 				{
-					Name:              "test-blobstorage",
-					Path:              "/logs/",
-					AccountName:       "test",
-					Container:         "fastly",
-					SASToken:          "test-sas-token",
-					Period:            12,
-					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-					GzipLevel:         0,
-					PublicKey:         "test-public-key",
-					Format:            "%h %l %u %t \"%r\" %>s %b",
-					FormatVersion:     2,
-					MessageType:       "classic",
-					Placement:         "waf_debug",
-					ResponseCondition: "error_response",
-					FileMaxBytes:      1048576,
-					CompressionCodec:  "zstd",
+					Name:              gofastly.ToPointer("test-blobstorage"),
+					Path:              gofastly.ToPointer("/logs/"),
+					AccountName:       gofastly.ToPointer("test"),
+					Container:         gofastly.ToPointer("fastly"),
+					SASToken:          gofastly.ToPointer("test-sas-token"),
+					Period:            gofastly.ToPointer(12),
+					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					GzipLevel:         gofastly.ToPointer(0),
+					PublicKey:         gofastly.ToPointer("test-public-key"),
+					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+					FormatVersion:     gofastly.ToPointer(2),
+					MessageType:       gofastly.ToPointer("classic"),
+					Placement:         gofastly.ToPointer("waf_debug"),
+					ResponseCondition: gofastly.ToPointer("error_response"),
+					FileMaxBytes:      gofastly.ToPointer(1048576),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
 				},
 			},
 			local: []map[string]any{
@@ -75,57 +75,57 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	blobStorageLogOne := gofastly.BlobStorage{
-		Name:              "test-blobstorage-1",
-		Path:              "/5XX/",
-		AccountName:       "test",
-		Container:         "fastly",
-		SASToken:          "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:            12,
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		PublicKey:         pgpPublicKey(t),
-		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     1,
-		MessageType:       "blank",
-		Placement:         "waf_debug",
-		ResponseCondition: "error_response_5XX",
-		FileMaxBytes:      1048576,
-		CompressionCodec:  "zstd",
+		Name:              gofastly.ToPointer("test-blobstorage-1"),
+		Path:              gofastly.ToPointer("/5XX/"),
+		AccountName:       gofastly.ToPointer("test"),
+		Container:         gofastly.ToPointer("fastly"),
+		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
+		Period:            gofastly.ToPointer(12),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(1),
+		MessageType:       gofastly.ToPointer("blank"),
+		Placement:         gofastly.ToPointer("waf_debug"),
+		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		FileMaxBytes:      gofastly.ToPointer(1048576),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 	}
 
 	blobStorageLogOneUpdated := gofastly.BlobStorage{
-		Name:              "test-blobstorage-1",
-		Path:              "/5XX/",
-		AccountName:       "test",
-		Container:         "fastly",
-		SASToken:          "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:            12,
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		PublicKey:         pgpPublicKey(t),
-		Format:            "%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V",
-		FormatVersion:     2,
-		GzipLevel:         1,
-		MessageType:       "blank",
-		Placement:         "waf_debug",
-		ResponseCondition: "error_response_5XX",
-		FileMaxBytes:      1048576,
+		Name:              gofastly.ToPointer("test-blobstorage-1"),
+		Path:              gofastly.ToPointer("/5XX/"),
+		AccountName:       gofastly.ToPointer("test"),
+		Container:         gofastly.ToPointer("fastly"),
+		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
+		Period:            gofastly.ToPointer(12),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(1),
+		MessageType:       gofastly.ToPointer("blank"),
+		Placement:         gofastly.ToPointer("waf_debug"),
+		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		FileMaxBytes:      gofastly.ToPointer(1048576),
 	}
 
 	blobStorageLogTwo := gofastly.BlobStorage{
-		Name:              "test-blobstorage-2",
-		Path:              "/2XX/",
-		AccountName:       "test",
-		Container:         "fastly",
-		SASToken:          "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:            12,
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		PublicKey:         pgpPublicKey(t),
-		Format:            "%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V",
-		FormatVersion:     2,
-		MessageType:       "blank",
-		Placement:         "waf_debug",
-		ResponseCondition: "ok_response_2XX",
-		FileMaxBytes:      2097152,
-		CompressionCodec:  "zstd",
+		Name:              gofastly.ToPointer("test-blobstorage-2"),
+		Path:              gofastly.ToPointer("/2XX/"),
+		AccountName:       gofastly.ToPointer("test"),
+		Container:         gofastly.ToPointer("fastly"),
+		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
+		Period:            gofastly.ToPointer(12),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
+		FormatVersion:     gofastly.ToPointer(2),
+		MessageType:       gofastly.ToPointer("blank"),
+		Placement:         gofastly.ToPointer("waf_debug"),
+		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
+		FileMaxBytes:      gofastly.ToPointer(2097152),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -167,17 +167,17 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	blobStorageLogOne := gofastly.BlobStorage{
-		Name:             "test-blobstorage-1",
-		Path:             "/5XX/",
-		AccountName:      "test",
-		Container:        "fastly",
-		SASToken:         "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:           12,
-		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
-		PublicKey:        pgpPublicKey(t),
-		MessageType:      "blank",
-		FileMaxBytes:     1048576,
-		CompressionCodec: "zstd",
+		Name:             gofastly.ToPointer("test-blobstorage-1"),
+		Path:             gofastly.ToPointer("/5XX/"),
+		AccountName:      gofastly.ToPointer("test"),
+		Container:        gofastly.ToPointer("fastly"),
+		SASToken:         gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
+		Period:           gofastly.ToPointer(12),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
+		MessageType:      gofastly.ToPointer("blank"),
+		FileMaxBytes:     gofastly.ToPointer(1048576),
+		CompressionCodec: gofastly.ToPointer("zstd"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -205,15 +205,15 @@ func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	blobStorageLog := gofastly.BlobStorage{
-		Name:            "test-blobstorage",
-		AccountName:     "test",
-		Container:       "fastly",
-		SASToken:        "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D",
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		Format:          "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:   2,
-		MessageType:     "classic",
+		Name:            gofastly.ToPointer("test-blobstorage"),
+		AccountName:     gofastly.ToPointer("test"),
+		Container:       gofastly.ToPointer("fastly"),
+		SASToken:        gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
+		Period:          gofastly.ToPointer(3600),
+		TimestampFormat: gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		Format:          gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:   gofastly.ToPointer(2),
+		MessageType:     gofastly.ToPointer("classic"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -274,11 +274,11 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteBlobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Blob Storage Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Blob Storage Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(remoteBlobStorageList) != len(localBlobStorageList) {
@@ -288,7 +288,7 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 		var found int
 		for _, lbs := range localBlobStorageList {
 			for _, rbs := range remoteBlobStorageList {
-				if lbs.Name == rbs.Name {
+				if gofastly.ToValue(lbs.Name) == gofastly.ToValue(rbs.Name) {
 					// we don't know these things ahead of time, so populate them now
 					lbs.ServiceID = service.ID
 					lbs.ServiceVersion = service.ActiveVersion.Number

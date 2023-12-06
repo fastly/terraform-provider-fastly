@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -33,7 +33,7 @@ func caCert(t *testing.T) string {
 }
 
 func readTestFile(filename string, t *testing.T) string {
-	contents, err := ioutil.ReadFile(filename)
+	contents, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatalf("Cannot load key file: %s", filename)
 	}

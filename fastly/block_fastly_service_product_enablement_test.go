@@ -49,19 +49,19 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
 	// the specific backend definitions in the Terraform configuration.
 
 	b1 := gofastly.Backend{
-		Address: backendAddress,
-		Name:    backendName,
-		Port:    443,
-		Shield:  "amsterdam-nl", // required for image_optimizer
+		Address: gofastly.ToPointer(backendAddress),
+		Name:    gofastly.ToPointer(backendName),
+		Port:    gofastly.ToPointer(443),
+		Shield:  gofastly.ToPointer("amsterdam-nl"), // required for image_optimizer
 
 		// NOTE: The following are defaults applied by the API.
-		BetweenBytesTimeout: 10000,
-		ConnectTimeout:      1000,
-		FirstByteTimeout:    15000,
-		Hostname:            backendAddress,
-		MaxConn:             200,
-		SSLCheckCert:        true,
-		Weight:              100,
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -59,7 +59,7 @@ func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 		}
 
 		for _, s := range l {
-			if s.ID == rs.Primary.ID {
+			if gofastly.ToValue(s.ID) == rs.Primary.ID {
 				// service still found
 				return fmt.Errorf("tried deleting Service (%s), but was still found", rs.Primary.ID)
 			}

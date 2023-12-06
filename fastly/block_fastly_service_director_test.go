@@ -21,10 +21,10 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 		{
 			remoteDirector: []*gofastly.Director{
 				{
-					Name:    "somedirector",
-					Type:    3,
-					Quorum:  75,
-					Retries: 10,
+					Name:    gofastly.ToPointer("somedirector"),
+					Type:    gofastly.ToPointer(gofastly.DirectorTypeHash),
+					Quorum:  gofastly.ToPointer(75),
+					Retries: gofastly.ToPointer(10),
 					Backends: []string{
 						"somebackend",
 					},
@@ -43,14 +43,14 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 		{
 			remoteDirector: []*gofastly.Director{
 				{
-					Name: "somedirector",
+					Name: gofastly.ToPointer("somedirector"),
 					Backends: []string{
 						"somebackend",
 						"someotherbackend",
 					},
 				},
 				{
-					Name: "someotherdirector",
+					Name: gofastly.ToPointer("someotherdirector"),
 					Backends: []string{
 						"somebackend",
 						"someotherbackend",
@@ -111,77 +111,77 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	directorDeveloper := gofastly.Director{
-		ServiceVersion: 1,
-		Name:           "director_developer",
-		Type:           3,
-		Quorum:         75,
-		Capacity:       100,
-		Retries:        5,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("director_developer"),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
+		Quorum:         gofastly.ToPointer(75),
+		Capacity:       gofastly.ToPointer(100),
+		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"developer"},
 	}
 
 	directorApps := gofastly.Director{
-		ServiceVersion: 1,
-		Name:           "director_apps",
-		Type:           3,
-		Quorum:         75,
-		Capacity:       100,
-		Retries:        5,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("director_apps"),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
+		Quorum:         gofastly.ToPointer(75),
+		Capacity:       gofastly.ToPointer(100),
+		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"apps"},
 	}
 
 	dbDeveloper := gofastly.DirectorBackend{
-		Director: "director_developer",
-		Backend:  "developer",
+		Director: gofastly.ToPointer("director_developer"),
+		Backend:  gofastly.ToPointer("developer"),
 	}
 
 	dbApps := gofastly.DirectorBackend{
-		Director: "director_apps",
-		Backend:  "apps",
+		Director: gofastly.ToPointer("director_apps"),
+		Backend:  gofastly.ToPointer("apps"),
 	}
 
 	directorDeveloperUpdated := gofastly.Director{
-		ServiceVersion: 1,
-		Name:           "director_developer",
-		Type:           4,
-		Quorum:         30,
-		Capacity:       100,
-		Retries:        10,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("director_developer"),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeClient),
+		Quorum:         gofastly.ToPointer(30),
+		Capacity:       gofastly.ToPointer(100),
+		Retries:        gofastly.ToPointer(10),
 		Backends:       []string{"developer_updated"},
 	}
 
 	directorWWWDemo := gofastly.Director{
-		ServiceVersion: 1,
-		Name:           "director_www_demo",
-		Type:           3,
-		Quorum:         75,
-		Capacity:       100,
-		Retries:        5,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("director_www_demo"),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
+		Quorum:         gofastly.ToPointer(75),
+		Capacity:       gofastly.ToPointer(100),
+		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"demo", "www"},
 	}
 
 	dbDeveloperUpdated := gofastly.DirectorBackend{
-		Director: "director_developer",
-		Backend:  "developer_updated",
+		Director: gofastly.ToPointer("director_developer"),
+		Backend:  gofastly.ToPointer("developer_updated"),
 	}
 
 	dbWWW := gofastly.DirectorBackend{
-		Director: "director_www_demo",
-		Backend:  "www",
+		Director: gofastly.ToPointer("director_www_demo"),
+		Backend:  gofastly.ToPointer("www"),
 	}
 
 	dbDemo := gofastly.DirectorBackend{
-		Director: "director_www_demo",
-		Backend:  "demo",
+		Director: gofastly.ToPointer("director_www_demo"),
+		Backend:  gofastly.ToPointer("demo"),
 	}
 
 	directorWWWDemo2 := gofastly.Director{
-		ServiceVersion: 1,
-		Name:           "director_www_demo",
-		Type:           3,
-		Quorum:         75,
-		Capacity:       100,
-		Retries:        5,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("director_www_demo"),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
+		Quorum:         gofastly.ToPointer(75),
+		Capacity:       gofastly.ToPointer(100),
+		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"www"},
 	}
 
@@ -232,11 +232,11 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(directorList) != len(directors) {
@@ -246,7 +246,7 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 		var found int
 		for _, d := range directors {
 			for _, ld := range directorList {
-				if d.Name == ld.Name {
+				if gofastly.ToValue(d.Name) == gofastly.ToValue(ld.Name) {
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ID
 					d.ServiceVersion = service.ActiveVersion.Number
@@ -275,34 +275,36 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		conn := testAccProvider.Meta().(*APIClient).conn
 
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Directors for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		expectedDirectorBackends := make(map[string][]string)
 
 		for _, director := range directorList {
 			matchedDirector := false
+			directorName := gofastly.ToValue(director.Name)
+
 			for _, directorBackend := range directorBackends {
-				if director.Name == directorBackend.Director {
+				if directorName == gofastly.ToValue(directorBackend.Director) {
 					matchedDirector = true
-					backends := expectedDirectorBackends[director.Name]
-					expectedDirectorBackends[director.Name] = append(backends, directorBackend.Backend)
+					backends := expectedDirectorBackends[directorName]
+					expectedDirectorBackends[directorName] = append(backends, gofastly.ToValue(directorBackend.Director))
 				}
 			}
 			if !matchedDirector {
-				return fmt.Errorf("didn't find the expected director: %s", director.Name)
+				return fmt.Errorf("didn't find the expected director: %s", directorName)
 			}
 
 			for _, directorBackend := range directorBackends {
-				if director.Name == directorBackend.Director {
-					if len(director.Backends) != len(expectedDirectorBackends[director.Name]) {
-						return fmt.Errorf("didn't find the same number of director backends: %s", director.Name)
+				if directorName == gofastly.ToValue(directorBackend.Director) {
+					if len(director.Backends) != len(expectedDirectorBackends[directorName]) {
+						return fmt.Errorf("didn't find the same number of director backends: %s", directorName)
 					}
-					for _, expectedBackend := range expectedDirectorBackends[director.Name] {
+					for _, expectedBackend := range expectedDirectorBackends[directorName] {
 						matchedBackend := false
 						for _, backend := range director.Backends {
 							if backend == expectedBackend {
@@ -318,11 +320,11 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		}
 
 		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion, err)
+			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		var directorBackendList []*gofastly.DirectorBackend
@@ -330,10 +332,10 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		for _, director := range directorList {
 			for _, backend := range backendList {
 				directorBackendGet, err := conn.GetDirectorBackend(&gofastly.GetDirectorBackendInput{
-					ServiceID:      service.ID,
-					ServiceVersion: service.ActiveVersion.Number,
-					Director:       director.Name,
-					Backend:        backend.Name,
+					ServiceID:      gofastly.ToValue(service.ID),
+					ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+					Director:       gofastly.ToValue(director.Name),
+					Backend:        gofastly.ToValue(backend.Name),
 				})
 				if err == nil {
 					directorBackendList = append(directorBackendList, directorBackendGet)
@@ -348,7 +350,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		var found int
 		for _, db := range directorBackends {
 			for _, ldb := range directorBackendList {
-				if db.Director == ldb.Director && db.Backend == ldb.Backend {
+				if gofastly.ToValue(db.Director) == gofastly.ToValue(ldb.Director) && gofastly.ToValue(db.Backend) == gofastly.ToValue(ldb.Backend) {
 					// we don't know these things ahead of time, so populate them now
 					db.ServiceID = service.ID
 					db.ServiceVersion = service.ActiveVersion.Number

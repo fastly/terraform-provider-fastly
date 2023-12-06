@@ -23,16 +23,16 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 		{
 			remote: []*gofastly.Pubsub{
 				{
-					ServiceVersion:    1,
-					Name:              "googlepubsub-endpoint",
-					User:              "user",
-					SecretKey:         privateKey(t),
-					ProjectID:         "project-id",
-					Topic:             "topic",
-					ResponseCondition: "response_condition",
-					Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
-					FormatVersion:     2,
-					Placement:         "none",
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("googlepubsub-endpoint"),
+					User:              gofastly.ToPointer("user"),
+					SecretKey:         gofastly.ToPointer(privateKey(t)),
+					ProjectID:         gofastly.ToPointer("project-id"),
+					Topic:             gofastly.ToPointer("topic"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+					FormatVersion:     gofastly.ToPointer(2),
+					Placement:         gofastly.ToPointer("none"),
 				},
 			},
 			local: []map[string]any{
@@ -162,42 +162,42 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Pubsub{
-		ServiceVersion:    1,
-		Name:              "googlepubsublogger",
-		User:              "user",
-		SecretKey:         privateKey(t),
-		ProjectID:         "project-id",
-		Topic:             "topic",
-		ResponseCondition: "response_condition_test",
-		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
-		FormatVersion:     2,
-		Placement:         "none",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("googlepubsublogger"),
+		User:              gofastly.ToPointer("user"),
+		SecretKey:         gofastly.ToPointer(privateKey(t)),
+		ProjectID:         gofastly.ToPointer("project-id"),
+		Topic:             gofastly.ToPointer("topic"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		FormatVersion:     gofastly.ToPointer(2),
+		Placement:         gofastly.ToPointer("none"),
 	}
 
 	log1AfterUpdate := gofastly.Pubsub{
-		ServiceVersion:    1,
-		Name:              "googlepubsublogger",
-		User:              "newuser",
-		SecretKey:         privateKey(t),
-		ProjectID:         "new-project-id",
-		Topic:             "newtopic",
-		ResponseCondition: "response_condition_test",
-		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
-		FormatVersion:     2,
-		Placement:         "waf_debug",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("googlepubsublogger"),
+		User:              gofastly.ToPointer("newuser"),
+		SecretKey:         gofastly.ToPointer(privateKey(t)),
+		ProjectID:         gofastly.ToPointer("new-project-id"),
+		Topic:             gofastly.ToPointer("newtopic"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		FormatVersion:     gofastly.ToPointer(2),
+		Placement:         gofastly.ToPointer("waf_debug"),
 	}
 
 	log2 := gofastly.Pubsub{
-		ServiceVersion:    1,
-		Name:              "googlepubsublogger2",
-		User:              "user2",
-		SecretKey:         privateKey(t),
-		ProjectID:         "project-id",
-		Topic:             "topicb",
-		ResponseCondition: "response_condition_test",
-		Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
-		FormatVersion:     2,
-		Placement:         "none",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("googlepubsublogger2"),
+		User:              gofastly.ToPointer("user2"),
+		SecretKey:         gofastly.ToPointer(privateKey(t)),
+		ProjectID:         gofastly.ToPointer("project-id"),
+		Topic:             gofastly.ToPointer("topicb"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		FormatVersion:     gofastly.ToPointer(2),
+		Placement:         gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -240,12 +240,12 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Pubsub{
-		ServiceVersion: 1,
-		Name:           "googlepubsublogger",
-		User:           "user",
-		SecretKey:      privateKey(t),
-		ProjectID:      "project-id",
-		Topic:          "topic",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("googlepubsublogger"),
+		User:           gofastly.ToPointer("user"),
+		SecretKey:      gofastly.ToPointer(privateKey(t)),
+		ProjectID:      gofastly.ToPointer("project-id"),
+		Topic:          gofastly.ToPointer("topic"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -274,11 +274,11 @@ func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.Servic
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Google Cloud Pub/Sub Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Google Cloud Pub/Sub Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(googlepubsubList) != len(googlepubsub) {
@@ -290,7 +290,7 @@ func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.Servic
 		var found int
 		for _, s := range googlepubsub {
 			for _, sl := range googlepubsubList {
-				if s.Name == sl.Name {
+				if gofastly.ToValue(s.Name) == gofastly.ToValue(sl.Name) {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
 					s.ServiceVersion = service.ActiveVersion.Number

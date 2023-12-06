@@ -20,9 +20,9 @@ func TestResourceFastlyFlattenDictionary(t *testing.T) {
 		{
 			remote: []*gofastly.Dictionary{
 				{
-					ID:        "1234567890",
-					Name:      "dictionary-example",
-					WriteOnly: false,
+					ID:        gofastly.ToPointer("1234567890"),
+					Name:      gofastly.ToPointer("dictionary-example"),
+					WriteOnly: gofastly.ToPointer(false),
 				},
 			},
 			local: []map[string]any{
@@ -134,26 +134,27 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceDetail, dictionary *gofastly.Dictionary, name, dictName string, writeOnly bool) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		serviceName := gofastly.ToValue(service.Name)
+		if serviceName != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, serviceName)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           dictName,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", serviceName, gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
-		if dict.Name != dictName {
-			return fmt.Errorf("dictionary name mismatch, expected: %s, got: %#v", dictName, dict.Name)
+		if gofastly.ToValue(dict.Name) != dictName {
+			return fmt.Errorf("dictionary name mismatch, expected: %s, got: %#v", dictName, gofastly.ToValue(dict.Name))
 		}
 
-		if dict.WriteOnly != writeOnly {
-			return fmt.Errorf("dictionary write_only attribute mismatch, expected: %#v, got: %#v", writeOnly, dict.WriteOnly)
+		if gofastly.ToValue(dict.WriteOnly) != writeOnly {
+			return fmt.Errorf("dictionary write_only attribute mismatch, expected: %#v, got: %#v", writeOnly, gofastly.ToValue(dict.WriteOnly))
 		}
 
 		*dictionary = *dict
@@ -168,13 +169,13 @@ func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestChe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
-			ServiceID:    dictionary.ServiceID,
-			DictionaryID: dictionary.ID,
-			ItemKey:      "testKey",
-			ItemValue:    "testItem",
+			ServiceID:    gofastly.ToValue(dictionary.ServiceID),
+			DictionaryID: gofastly.ToValue(dictionary.ID),
+			ItemKey:      gofastly.ToPointer("testKey"),
+			ItemValue:    gofastly.ToPointer("testItem"),
 		})
 		if err != nil {
-			return fmt.Errorf("error adding item to dictionary (%s) on service (%s): %w", dictionary.ID, dictionary.ServiceID, err)
+			return fmt.Errorf("error adding item to dictionary (%s) on service (%s): %w", gofastly.ToValue(dictionary.ID), gofastly.ToValue(dictionary.ServiceID), err)
 		}
 
 		return nil

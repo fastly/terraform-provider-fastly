@@ -19,13 +19,13 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 		{
 			remote: []*gofastly.Papertrail{
 				{
-					ServiceVersion:    1,
-					Name:              "papertrailtesting",
-					Address:           "test1.papertrailapp.com",
-					Port:              3600,
-					Format:            "%h %l %u %t %r %>s",
-					FormatVersion:     2,
-					ResponseCondition: "test_response_condition",
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("papertrailtesting"),
+					Address:           gofastly.ToPointer("test1.papertrailapp.com"),
+					Port:              gofastly.ToPointer(3600),
+					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
+					FormatVersion:     gofastly.ToPointer(2),
+					ResponseCondition: gofastly.ToPointer("test_response_condition"),
 				},
 			},
 			local: []map[string]any{
@@ -55,22 +55,22 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		ServiceVersion:    1,
-		Name:              "papertrailtesting",
-		Address:           "test1.papertrailapp.com",
-		Port:              3600,
-		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     2,
-		ResponseCondition: "test_response_condition",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("papertrailtesting"),
+		Address:           gofastly.ToPointer("test1.papertrailapp.com"),
+		Port:              gofastly.ToPointer(3600),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		ResponseCondition: gofastly.ToPointer("test_response_condition"),
 	}
 
 	log2 := gofastly.Papertrail{
-		ServiceVersion: 1,
-		Name:           "papertrailtesting2",
-		Address:        "test2.papertrailapp.com",
-		Port:           8080,
-		Format:         `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:  2,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("papertrailtesting2"),
+		Address:        gofastly.ToPointer("test2.papertrailapp.com"),
+		Port:           gofastly.ToPointer(8080),
+		Format:         gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:  gofastly.ToPointer(2),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,10 +113,10 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		ServiceVersion: 1,
-		Name:           "papertrailtesting",
-		Address:        "test1.papertrailapp.com",
-		Port:           3600,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("papertrailtesting"),
+		Address:        gofastly.ToPointer("test1.papertrailapp.com"),
+		Port:           gofastly.ToPointer(3600),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -145,11 +145,11 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(papertrailList) != len(papertrails) {
@@ -159,7 +159,7 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 		var found int
 		for _, p := range papertrails {
 			for _, lp := range papertrailList {
-				if p.Name == lp.Name {
+				if gofastly.ToValue(p.Name) == gofastly.ToValue(lp.Name) {
 					// we don't know these things ahead of time, so populate them now
 					p.ServiceID = service.ID
 					p.ServiceVersion = service.ActiveVersion.Number

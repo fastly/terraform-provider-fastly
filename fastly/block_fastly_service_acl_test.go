@@ -20,8 +20,8 @@ func TestResourceFastlyFlattenAcl(t *testing.T) {
 		{
 			remote: []*gofastly.ACL{
 				{
-					ID:   "1234567890",
-					Name: "acl-example",
+					ID:   gofastly.ToPointer("1234567890"),
+					Name: gofastly.ToPointer("acl-example"),
 				},
 			},
 			local: []map[string]any{
@@ -114,22 +114,24 @@ func TestAccFastlyServiceVCL_acl(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, name, aclName string, acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		serviceName := gofastly.ToValue(service.Name)
+
+		if serviceName != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, serviceName)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteACL, err := conn.GetACL(&gofastly.GetACLInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           aclName,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", serviceName, gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
-		if remoteACL.Name != aclName {
-			return fmt.Errorf("acl logging endpoint name mismatch, expected: %s, got: %#v", aclName, remoteACL.Name)
+		if gofastly.ToValue(remoteACL.Name) != aclName {
+			return fmt.Errorf("acl logging endpoint name mismatch, expected: %s, got: %#v", aclName, gofastly.ToValue(remoteACL.Name))
 		}
 
 		*acl = *remoteACL
@@ -144,12 +146,12 @@ func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateACLEntry(&gofastly.CreateACLEntryInput{
-			ServiceID: acl.ServiceID,
-			ACLID:     acl.ID,
+			ServiceID: gofastly.ToValue(acl.ServiceID),
+			ACLID:     gofastly.ToValue(acl.ID),
 			IP:        gofastly.ToPointer("192.168.0.1"),
 		})
 		if err != nil {
-			return fmt.Errorf("error adding entry to ACL (%s) on service (%s): %w", acl.ID, acl.ServiceID, err)
+			return fmt.Errorf("error adding entry to ACL (%s) on service (%s): %w", gofastly.ToValue(acl.ID), gofastly.ToValue(acl.ServiceID), err)
 		}
 
 		return nil

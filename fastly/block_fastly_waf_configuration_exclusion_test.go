@@ -275,11 +275,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: service.ID,
-			FilterVersion: service.ActiveVersion.Number,
+			FilterService: gofastly.ToValue(service.ID),
+			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(wafResp.Items) != 1 {
@@ -293,7 +293,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 			Include:          []string{"waf_rules"},
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		actual := exclResp.Items

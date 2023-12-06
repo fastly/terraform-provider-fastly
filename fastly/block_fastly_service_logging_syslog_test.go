@@ -26,21 +26,21 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 		{
 			remote: []*gofastly.Syslog{
 				{
-					ServiceVersion:    1,
-					Name:              "somesyslogname",
-					Address:           "127.0.0.1",
-					IPV4:              "127.0.0.1",
-					Port:              8080,
-					Format:            `%h %l %u %t "%r" %>s %b`,
-					FormatVersion:     1,
-					ResponseCondition: "response_condition_test",
-					MessageType:       "classic",
-					Token:             "abcd1234",
-					UseTLS:            true,
-					TLSCACert:         cert,
-					TLSHostname:       "example.com",
-					TLSClientCert:     cert,
-					TLSClientKey:      key,
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("somesyslogname"),
+					Address:           gofastly.ToPointer("127.0.0.1"),
+					IPV4:              gofastly.ToPointer("127.0.0.1"),
+					Port:              gofastly.ToPointer(8080),
+					Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+					FormatVersion:     gofastly.ToPointer(1),
+					ResponseCondition: gofastly.ToPointer("response_condition_test"),
+					MessageType:       gofastly.ToPointer("classic"),
+					Token:             gofastly.ToPointer("abcd1234"),
+					UseTLS:            gofastly.ToPointer(true),
+					TLSCACert:         gofastly.ToPointer(cert),
+					TLSHostname:       gofastly.ToPointer("example.com"),
+					TLSClientCert:     gofastly.ToPointer(cert),
+					TLSClientKey:      gofastly.ToPointer(key),
 				},
 			},
 			local: []map[string]any{
@@ -77,38 +77,38 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		ServiceVersion:    1,
-		Name:              "somesyslogname",
-		Address:           "127.0.0.1",
-		IPV4:              "127.0.0.1",
-		Port:              514,
-		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     2,
-		ResponseCondition: "response_condition_test",
-		MessageType:       "classic",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("somesyslogname"),
+		Address:           gofastly.ToPointer("127.0.0.1"),
+		IPV4:              gofastly.ToPointer("127.0.0.1"),
+		Port:              gofastly.ToPointer(514),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		MessageType:       gofastly.ToPointer("classic"),
 	}
 
 	log1AfterUpdate := gofastly.Syslog{
-		ServiceVersion:    1,
-		Name:              "somesyslogname",
-		Address:           "127.0.0.1",
-		IPV4:              "127.0.0.1",
-		Port:              514,
-		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     2,
-		ResponseCondition: "response_condition_test",
-		MessageType:       "blank",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("somesyslogname"),
+		Address:           gofastly.ToPointer("127.0.0.1"),
+		IPV4:              gofastly.ToPointer("127.0.0.1"),
+		Port:              gofastly.ToPointer(514),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		MessageType:       gofastly.ToPointer("blank"),
 	}
 
 	log2 := gofastly.Syslog{
-		ServiceVersion: 1,
-		Name:           "somesyslogname2",
-		Address:        "127.0.0.2",
-		IPV4:           "127.0.0.2",
-		Port:           10514,
-		Format:         `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:  2,
-		MessageType:    "classic",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("somesyslogname2"),
+		Address:        gofastly.ToPointer("127.0.0.2"),
+		IPV4:           gofastly.ToPointer("127.0.0.2"),
+		Port:           gofastly.ToPointer(10514),
+		Format:         gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:  gofastly.ToPointer(2),
+		MessageType:    gofastly.ToPointer("classic"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,12 +151,12 @@ func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		ServiceVersion: 1,
-		Name:           "somesyslogname",
-		Address:        "127.0.0.1",
-		IPV4:           "127.0.0.1",
-		Port:           514,
-		MessageType:    "classic",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("somesyslogname"),
+		Address:        gofastly.ToPointer("127.0.0.1"),
+		IPV4:           gofastly.ToPointer("127.0.0.1"),
+		Port:           gofastly.ToPointer(514),
+		MessageType:    gofastly.ToPointer("classic"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -187,14 +187,14 @@ func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		ServiceVersion: 1,
-		Name:           "somesyslogname",
-		Address:        "127.0.0.1",
-		IPV4:           "127.0.0.1",
-		Port:           514,
-		Format:         "%a %l %u %t %m %U%q %H %>s %b %T",
-		FormatVersion:  2,
-		MessageType:    "classic",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("somesyslogname"),
+		Address:        gofastly.ToPointer("127.0.0.1"),
+		IPV4:           gofastly.ToPointer("127.0.0.1"),
+		Port:           gofastly.ToPointer(514),
+		Format:         gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b %T"),
+		FormatVersion:  gofastly.ToPointer(2),
+		MessageType:    gofastly.ToPointer("classic"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -235,19 +235,19 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 	defer resetEnv()
 
 	log1 := gofastly.Syslog{
-		ServiceVersion: 1,
-		Name:           "somesyslogname",
-		Address:        "127.0.0.1",
-		IPV4:           "127.0.0.1",
-		Port:           514,
-		Format:         `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:  2,
-		MessageType:    "classic",
-		UseTLS:         true,
-		TLSCACert:      cert,
-		TLSHostname:    "example.com",
-		TLSClientCert:  cert,
-		TLSClientKey:   key,
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("somesyslogname"),
+		Address:        gofastly.ToPointer("127.0.0.1"),
+		IPV4:           gofastly.ToPointer("127.0.0.1"),
+		Port:           gofastly.ToPointer(514),
+		Format:         gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:  gofastly.ToPointer(2),
+		MessageType:    gofastly.ToPointer("classic"),
+		UseTLS:         gofastly.ToPointer(true),
+		TLSCACert:      gofastly.ToPointer(cert),
+		TLSHostname:    gofastly.ToPointer("example.com"),
+		TLSClientCert:  gofastly.ToPointer(cert),
+		TLSClientKey:   gofastly.ToPointer(key),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -274,11 +274,11 @@ func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetai
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		syslogList, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Syslog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Syslog Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(syslogList) != len(syslogs) {
@@ -290,7 +290,7 @@ func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetai
 		var found int
 		for _, s := range syslogs {
 			for _, ls := range syslogList {
-				if s.Name == ls.Name {
+				if gofastly.ToValue(s.Name) == gofastly.ToValue(ls.Name) {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
 					s.ServiceVersion = service.ActiveVersion.Number

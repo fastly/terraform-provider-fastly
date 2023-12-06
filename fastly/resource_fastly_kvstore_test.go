@@ -58,8 +58,8 @@ func TestAccFastlyKVStore_validate(t *testing.T) {
 
 func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, kvStore *gofastly.KVStore, serviceName, kvStoreName, linkName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != serviceName {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
+		if gofastly.ToValue(service.Name) != serviceName {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -82,8 +82,8 @@ func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, kvSto
 		}
 
 		links, err := conn.ListResources(&gofastly.ListResourcesInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.Version.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
 		if err != nil {
 			return fmt.Errorf("error listing all resource links: %s", err)
@@ -91,7 +91,7 @@ func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, kvSto
 
 		found = false
 		for _, link := range links {
-			if link.Name == linkName {
+			if gofastly.ToValue(link.Name) == linkName {
 				found = true
 			}
 		}

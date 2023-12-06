@@ -129,14 +129,14 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		}
 
 		l, err := conn.ListCustomerUsers(&gofastly.ListCustomerUsersInput{
-			CustomerID: u.CustomerID,
+			CustomerID: gofastly.ToValue(u.CustomerID),
 		})
 		if err != nil {
 			return fmt.Errorf("error listing users when deleting Fastly User (%s): %s", rs.Primary.ID, err)
 		}
 
 		for _, u := range l {
-			if u.ID == rs.Primary.ID {
+			if gofastly.ToValue(u.ID) == rs.Primary.ID {
 				// user still found
 				return fmt.Errorf("tried deleting User (%s), but was still found", rs.Primary.ID)
 			}

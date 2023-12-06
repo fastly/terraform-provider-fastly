@@ -58,13 +58,13 @@ func TestAccFastlyConfigStore_validate(t *testing.T) {
 
 func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, configStore *gofastly.ConfigStore, serviceName, configStoreName, linkName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != serviceName {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
+		if gofastly.ToValue(service.Name) != serviceName {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		stores, err := conn.ListConfigStores()
+		stores, err := conn.ListConfigStores(&gofastly.ListConfigStoresInput{})
 		if err != nil {
 			return fmt.Errorf("error listing all Config Stores: %s", err)
 		}
@@ -82,8 +82,8 @@ func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, c
 		}
 
 		links, err := conn.ListResources(&gofastly.ListResourcesInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.Version.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
 		if err != nil {
 			return fmt.Errorf("error listing all resource links: %s", err)
@@ -91,7 +91,7 @@ func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, c
 
 		found = false
 		for _, link := range links {
-			if link.Name == linkName {
+			if gofastly.ToValue(link.Name) == linkName {
 				found = true
 			}
 		}

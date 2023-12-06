@@ -30,25 +30,25 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 		{
 			remote: []*gofastly.S3{
 				{
-					Name:                         "s3-endpoint",
-					BucketName:                   "bucket",
-					Domain:                       "domain",
-					AccessKey:                    testAwsPrimaryAccessKey,
-					SecretKey:                    testAwsPrimarySecretKey,
-					Path:                         "/",
-					Period:                       3600,
-					GzipLevel:                    0, // API sets this as default if not passed in API request.
-					Format:                       "%h %l %u %t %r %>s",
-					FormatVersion:                2,
-					ResponseCondition:            "response_condition_test",
-					MessageType:                  "classic",
-					TimestampFormat:              "%Y-%m-%dT%H:%M:%S.000",
-					Placement:                    "none",
-					PublicKey:                    pgpPublicKey(t),
-					Redundancy:                   "reduced_redundancy",
-					ServerSideEncryptionKMSKeyID: "kmskey",
-					ServerSideEncryption:         gofastly.S3ServerSideEncryptionAES,
-					CompressionCodec:             "zstd",
+					Name:                         gofastly.ToPointer("s3-endpoint"),
+					BucketName:                   gofastly.ToPointer("bucket"),
+					Domain:                       gofastly.ToPointer("domain"),
+					AccessKey:                    gofastly.ToPointer(testAwsPrimaryAccessKey),
+					SecretKey:                    gofastly.ToPointer(testAwsPrimarySecretKey),
+					Path:                         gofastly.ToPointer("/"),
+					Period:                       gofastly.ToPointer(3600),
+					GzipLevel:                    gofastly.ToPointer(0), // API sets this as default if not passed in API request.
+					Format:                       gofastly.ToPointer("%h %l %u %t %r %>s"),
+					FormatVersion:                gofastly.ToPointer(2),
+					ResponseCondition:            gofastly.ToPointer("response_condition_test"),
+					MessageType:                  gofastly.ToPointer("classic"),
+					TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					Placement:                    gofastly.ToPointer("none"),
+					PublicKey:                    gofastly.ToPointer(pgpPublicKey(t)),
+					Redundancy:                   gofastly.ToPointer(gofastly.S3RedundancyReduced),
+					ServerSideEncryptionKMSKeyID: gofastly.ToPointer("kmskey"),
+					ServerSideEncryption:         gofastly.ToPointer(gofastly.S3ServerSideEncryptionAES),
+					CompressionCodec:             gofastly.ToPointer("zstd"),
 				},
 			},
 			local: []map[string]any{
@@ -81,25 +81,25 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 		{
 			remote: []*gofastly.S3{
 				{
-					Name:                         "s3-endpoint",
-					BucketName:                   "bucket",
-					Domain:                       "domain",
-					IAMRole:                      testS3IAMRole,
-					Path:                         "/",
-					Period:                       3600,
-					GzipLevel:                    5,
-					Format:                       "%h %l %u %t %r %>s",
-					FormatVersion:                2,
-					ResponseCondition:            "response_condition_test",
-					MessageType:                  "classic",
-					TimestampFormat:              "%Y-%m-%dT%H:%M:%S.000",
-					Placement:                    "none",
-					PublicKey:                    pgpPublicKey(t),
-					Redundancy:                   "reduced_redundancy",
-					ServerSideEncryptionKMSKeyID: "kmskey",
-					ServerSideEncryption:         gofastly.S3ServerSideEncryptionAES,
-					ACL:                          gofastly.S3AccessControlListPrivate,
-					FileMaxBytes:                 12345,
+					Name:                         gofastly.ToPointer("s3-endpoint"),
+					BucketName:                   gofastly.ToPointer("bucket"),
+					Domain:                       gofastly.ToPointer("domain"),
+					IAMRole:                      gofastly.ToPointer(testS3IAMRole),
+					Path:                         gofastly.ToPointer("/"),
+					Period:                       gofastly.ToPointer(3600),
+					GzipLevel:                    gofastly.ToPointer(5),
+					Format:                       gofastly.ToPointer("%h %l %u %t %r %>s"),
+					FormatVersion:                gofastly.ToPointer(2),
+					ResponseCondition:            gofastly.ToPointer("response_condition_test"),
+					MessageType:                  gofastly.ToPointer("classic"),
+					TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					Placement:                    gofastly.ToPointer("none"),
+					PublicKey:                    gofastly.ToPointer(pgpPublicKey(t)),
+					Redundancy:                   gofastly.ToPointer(gofastly.S3RedundancyReduced),
+					ServerSideEncryptionKMSKeyID: gofastly.ToPointer("kmskey"),
+					ServerSideEncryption:         gofastly.ToPointer(gofastly.S3ServerSideEncryptionAES),
+					ACL:                          gofastly.ToPointer(gofastly.S3AccessControlListPrivate),
+					FileMaxBytes:                 gofastly.ToPointer(12345),
 				},
 			},
 			local: []map[string]any{
@@ -162,53 +162,53 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		ServiceVersion:    1,
-		Name:              "somebucketlog",
-		BucketName:        "fastlytestlogging",
-		Domain:            "s3-us-west-2.amazonaws.com",
-		AccessKey:         testAwsPrimaryAccessKey,
-		SecretKey:         testAwsPrimarySecretKey,
-		Period:            3600,
-		PublicKey:         pgpPublicKey(t),
-		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     2,
-		MessageType:       "classic",
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		ResponseCondition: "response_condition_test",
-		CompressionCodec:  "zstd",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("somebucketlog"),
+		BucketName:        gofastly.ToPointer("fastlytestlogging"),
+		Domain:            gofastly.ToPointer("s3-us-west-2.amazonaws.com"),
+		AccessKey:         gofastly.ToPointer(testAwsPrimaryAccessKey),
+		SecretKey:         gofastly.ToPointer(testAwsPrimarySecretKey),
+		Period:            gofastly.ToPointer(3600),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		MessageType:       gofastly.ToPointer("classic"),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 	}
 
 	log1AfterUpdate := gofastly.S3{
-		ServiceVersion:    1,
-		Name:              "somebucketlog",
-		BucketName:        "fastlytestlogging",
-		Domain:            "s3-us-west-2.amazonaws.com",
-		IAMRole:           testS3IAMRole,
-		Period:            3600,
-		PublicKey:         pgpPublicKey(t),
-		GzipLevel:         3,
-		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     2,
-		MessageType:       "blank",
-		Redundancy:        "reduced_redundancy",
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		ResponseCondition: "response_condition_test",
-		ACL:               gofastly.S3AccessControlListAWSExecRead,
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("somebucketlog"),
+		BucketName:        gofastly.ToPointer("fastlytestlogging"),
+		Domain:            gofastly.ToPointer("s3-us-west-2.amazonaws.com"),
+		IAMRole:           gofastly.ToPointer(testS3IAMRole),
+		Period:            gofastly.ToPointer(3600),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		GzipLevel:         gofastly.ToPointer(3),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		MessageType:       gofastly.ToPointer("blank"),
+		Redundancy:        gofastly.ToPointer(gofastly.S3RedundancyReduced),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ACL:               gofastly.ToPointer(gofastly.S3AccessControlListAWSExecRead),
 	}
 
 	log2 := gofastly.S3{
-		ServiceVersion:   1,
-		Name:             "someotherbucketlog",
-		BucketName:       "fastlytestlogging2",
-		Domain:           "s3-us-west-2.amazonaws.com",
-		IAMRole:          testS3IAMRole,
-		GzipLevel:        0,
-		Period:           60,
-		Format:           `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:    2,
-		MessageType:      "classic",
-		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
-		CompressionCodec: "zstd",
+		ServiceVersion:   gofastly.ToPointer(1),
+		Name:             gofastly.ToPointer("someotherbucketlog"),
+		BucketName:       gofastly.ToPointer("fastlytestlogging2"),
+		Domain:           gofastly.ToPointer("s3-us-west-2.amazonaws.com"),
+		IAMRole:          gofastly.ToPointer(testS3IAMRole),
+		GzipLevel:        gofastly.ToPointer(0),
+		Period:           gofastly.ToPointer(60),
+		Format:           gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:    gofastly.ToPointer(2),
+		MessageType:      gofastly.ToPointer("classic"),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		CompressionCodec: gofastly.ToPointer("zstd"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -251,19 +251,19 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		ServiceVersion:   1,
-		Name:             "somebucketlog",
-		BucketName:       "fastlytestlogging",
-		Domain:           "s3-us-west-2.amazonaws.com",
-		AccessKey:        testAwsPrimaryAccessKey,
-		SecretKey:        testAwsPrimarySecretKey,
-		Period:           3600,
-		PublicKey:        pgpPublicKey(t),
-		GzipLevel:        0,
-		MessageType:      "classic",
-		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
-		CompressionCodec: "zstd",
-		FileMaxBytes:     1048576,
+		ServiceVersion:   gofastly.ToPointer(1),
+		Name:             gofastly.ToPointer("somebucketlog"),
+		BucketName:       gofastly.ToPointer("fastlytestlogging"),
+		Domain:           gofastly.ToPointer("s3-us-west-2.amazonaws.com"),
+		AccessKey:        gofastly.ToPointer(testAwsPrimaryAccessKey),
+		SecretKey:        gofastly.ToPointer(testAwsPrimarySecretKey),
+		Period:           gofastly.ToPointer(3600),
+		PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		CompressionCodec: gofastly.ToPointer("zstd"),
+		FileMaxBytes:     gofastly.ToPointer(1048576),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -292,20 +292,20 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		ServiceVersion:    1,
-		Name:              "somebucketlog",
-		BucketName:        "fastlytestlogging",
-		Domain:            "s3.amazonaws.com",
-		AccessKey:         testAwsPrimaryAccessKey,
-		SecretKey:         testAwsPrimarySecretKey,
-		Period:            3600,
-		GzipLevel:         0,
-		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     2,
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		MessageType:       "classic",
-		ResponseCondition: "response_condition_test",
-		FileMaxBytes:      1048576,
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("somebucketlog"),
+		BucketName:        gofastly.ToPointer("fastlytestlogging"),
+		Domain:            gofastly.ToPointer("s3.amazonaws.com"),
+		AccessKey:         gofastly.ToPointer(testAwsPrimaryAccessKey),
+		SecretKey:         gofastly.ToPointer(testAwsPrimarySecretKey),
+		Period:            gofastly.ToPointer(3600),
+		GzipLevel:         gofastly.ToPointer(0),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		MessageType:       gofastly.ToPointer("classic"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		FileMaxBytes:      gofastly.ToPointer(1048576),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -336,18 +336,18 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.S3{
-		ServiceVersion:  1,
-		Name:            "somebucketlog",
-		BucketName:      "fastlytestlogging",
-		Domain:          "s3-us-west-2.amazonaws.com",
-		AccessKey:       testAwsPrimaryAccessKey,
-		SecretKey:       testAwsPrimarySecretKey,
-		Period:          3600,
-		GzipLevel:       0,
-		Format:          "%a %l %u %t %m %U%q %H %>s %b %T",
-		FormatVersion:   2,
-		MessageType:     "classic",
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		ServiceVersion:  gofastly.ToPointer(1),
+		Name:            gofastly.ToPointer("somebucketlog"),
+		BucketName:      gofastly.ToPointer("fastlytestlogging"),
+		Domain:          gofastly.ToPointer("s3-us-west-2.amazonaws.com"),
+		AccessKey:       gofastly.ToPointer(testAwsPrimaryAccessKey),
+		SecretKey:       gofastly.ToPointer(testAwsPrimarySecretKey),
+		Period:          gofastly.ToPointer(3600),
+		GzipLevel:       gofastly.ToPointer(0),
+		Format:          gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b %T"),
+		FormatVersion:   gofastly.ToPointer(2),
+		MessageType:     gofastly.ToPointer("classic"),
+		TimestampFormat: gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -419,11 +419,11 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(s3List) != len(s3s) {
@@ -433,7 +433,7 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 		var found int
 		for _, s := range s3s {
 			for _, ls := range s3List {
-				if s.Name == ls.Name {
+				if gofastly.ToValue(s.Name) == gofastly.ToValue(ls.Name) {
 					// we don't know these things ahead of time, so populate them now
 					s.ServiceID = service.ID
 					s.ServiceVersion = service.ActiveVersion.Number

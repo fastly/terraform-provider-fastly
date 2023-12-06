@@ -19,12 +19,12 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 		{
 			remote: []*gofastly.Sumologic{
 				{
-					Name:              "sumo collector",
-					URL:               "https://collectors.sumologic.com/receiver/1",
-					Format:            "log format",
-					FormatVersion:     2,
-					MessageType:       "classic",
-					ResponseCondition: "condition 1",
+					Name:              gofastly.ToPointer("sumo collector"),
+					URL:               gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+					Format:            gofastly.ToPointer("log format"),
+					FormatVersion:     gofastly.ToPointer(2),
+					MessageType:       gofastly.ToPointer("classic"),
+					ResponseCondition: gofastly.ToPointer("condition 1"),
 				},
 			},
 			local: []map[string]any{
@@ -55,17 +55,17 @@ func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	s := gofastly.Sumologic{
-		Name:          "sumologger",
-		URL:           "https://collectors.sumologic.com/receiver/1",
-		FormatVersion: 2,
-		Format:        "my format",
+		Name:          gofastly.ToPointer("sumologger"),
+		URL:           gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+		FormatVersion: gofastly.ToPointer(2),
+		Format:        gofastly.ToPointer("my format"),
 	}
 
 	sn := gofastly.Sumologic{
-		Name:          "sumologger",
-		URL:           "https://collectors.sumologic.com/receiver/1",
-		FormatVersion: 2,
-		Format:        "my format new",
+		Name:          gofastly.ToPointer("sumologger"),
+		URL:           gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+		FormatVersion: gofastly.ToPointer(2),
+		Format:        gofastly.ToPointer("my format new"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,8 +108,8 @@ func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	s := gofastly.Sumologic{
-		Name: "sumologger",
-		URL:  "https://collectors.sumologic.com/receiver/1",
+		Name: gofastly.ToPointer("sumologger"),
+		URL:  gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -136,29 +136,29 @@ func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLAttributesSumologic(service *gofastly.ServiceDetail, name string, sumologic gofastly.Sumologic, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Sumologics for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Sumologics for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(sumologicList) != 1 {
 			return fmt.Errorf("sumologic missing, expected: 1, got: %d", len(sumologicList))
 		}
 
-		if sumologicList[0].Name != sumologic.Name {
-			return fmt.Errorf("sumologic name mismatch, expected: %s, got: %#v", sumologic.Name, sumologicList[0].Name)
+		if gofastly.ToValue(sumologicList[0].Name) != gofastly.ToValue(sumologic.Name) {
+			return fmt.Errorf("sumologic name mismatch, expected: %s, got: %#v", gofastly.ToValue(sumologic.Name), gofastly.ToValue(sumologicList[0].Name))
 		}
 
-		if serviceType == ServiceTypeVCL && sumologicList[0].Format != sumologic.Format {
-			return fmt.Errorf("sumologic format mismatch, expected: %s, got: %#v", sumologic.Format, sumologicList[0].Format)
+		if serviceType == ServiceTypeVCL && gofastly.ToValue(sumologicList[0].Format) != gofastly.ToValue(sumologic.Format) {
+			return fmt.Errorf("sumologic format mismatch, expected: %s, got: %#v", gofastly.ToValue(sumologic.Format), gofastly.ToValue(sumologicList[0].Format))
 		}
 
 		return nil
@@ -195,7 +195,7 @@ resource "fastly_service_compute" "foo" {
   }
 
   force_destroy = true
-}`, name, domainName, backendName, sumologic.Name, sumologic.URL)
+}`, name, domainName, backendName, gofastly.ToValue(sumologic.Name), gofastly.ToValue(sumologic.URL))
 }
 
 func testAccServiceVCLConfigSumologic(name, domainName, backendName string, sumologic gofastly.Sumologic) string {
@@ -221,5 +221,5 @@ resource "fastly_service_vcl" "foo" {
   }
 
   force_destroy = true
-}`, name, domainName, backendName, sumologic.Name, sumologic.URL, sumologic.FormatVersion, sumologic.Format)
+}`, name, domainName, backendName, gofastly.ToValue(sumologic.Name), gofastly.ToValue(sumologic.URL), gofastly.ToValue(sumologic.FormatVersion), gofastly.ToValue(sumologic.Format))
 }

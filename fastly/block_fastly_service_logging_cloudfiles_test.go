@@ -20,23 +20,23 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 		{
 			remote: []*gofastly.Cloudfiles{
 				{
-					ServiceVersion:    1,
-					Name:              "cloudfiles-endpoint",
-					BucketName:        "bucket",
-					User:              "user",
-					AccessKey:         "secret",
-					PublicKey:         pgpPublicKey(t),
-					Format:            "%h %l %u %t \"%r\" %>s %b",
-					FormatVersion:     2,
-					GzipLevel:         0,
-					MessageType:       "classic",
-					Path:              "/",
-					Region:            "ORD",
-					Period:            3600,
-					Placement:         "none",
-					ResponseCondition: "response_condition",
-					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-					CompressionCodec:  "zstd",
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("cloudfiles-endpoint"),
+					BucketName:        gofastly.ToPointer("bucket"),
+					User:              gofastly.ToPointer("user"),
+					AccessKey:         gofastly.ToPointer("secret"),
+					PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+					FormatVersion:     gofastly.ToPointer(2),
+					GzipLevel:         gofastly.ToPointer(0),
+					MessageType:       gofastly.ToPointer("classic"),
+					Path:              gofastly.ToPointer("/"),
+					Region:            gofastly.ToPointer("ORD"),
+					Period:            gofastly.ToPointer(3600),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
 				},
 			},
 			local: []map[string]any{
@@ -76,63 +76,63 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Cloudfiles{
-		ServiceVersion:    1,
-		Name:              "cloudfiles-endpoint",
-		BucketName:        "bucket",
-		User:              "user",
-		AccessKey:         "secret",
-		PublicKey:         pgpPublicKey(t),
-		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     2,
-		GzipLevel:         0,
-		MessageType:       "classic",
-		Path:              "/",
-		Region:            "ORD",
-		Period:            3600,
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		CompressionCodec:  "zstd",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("cloudfiles-endpoint"),
+		BucketName:        gofastly.ToPointer("bucket"),
+		User:              gofastly.ToPointer("user"),
+		AccessKey:         gofastly.ToPointer("secret"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("classic"),
+		Path:              gofastly.ToPointer("/"),
+		Region:            gofastly.ToPointer("ORD"),
+		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 	}
 
 	log1AfterUpdate := gofastly.Cloudfiles{
-		ServiceVersion:    1,
-		Name:              "cloudfiles-endpoint",
-		BucketName:        "bucketupdate",
-		User:              "userupdate",
-		AccessKey:         "secretupdate",
-		PublicKey:         pgpPublicKey(t),
-		Format:            "%h %l %u %t \"%r\" %>s %b %T",
-		FormatVersion:     2,
-		GzipLevel:         1,
-		MessageType:       "blank",
-		Path:              "new/",
-		Region:            "LON",
-		Period:            3601,
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		CompressionCodec:  "",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("cloudfiles-endpoint"),
+		BucketName:        gofastly.ToPointer("bucketupdate"),
+		User:              gofastly.ToPointer("userupdate"),
+		AccessKey:         gofastly.ToPointer("secretupdate"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(1),
+		MessageType:       gofastly.ToPointer("blank"),
+		Path:              gofastly.ToPointer("new/"),
+		Region:            gofastly.ToPointer("LON"),
+		Period:            gofastly.ToPointer(3601),
+		Placement:         gofastly.ToPointer("none"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		CompressionCodec:  gofastly.ToPointer(""),
 	}
 
 	log2 := gofastly.Cloudfiles{
-		ServiceVersion:    1,
-		Name:              "another-cloudfiles-endpoint",
-		BucketName:        "bucket2",
-		User:              "user2",
-		AccessKey:         "secret2",
-		PublicKey:         pgpPublicKey(t),
-		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     2,
-		GzipLevel:         0,
-		MessageType:       "classic",
-		Path:              "two/",
-		Region:            "SYD",
-		Period:            3600,
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		CompressionCodec:  "zstd",
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("another-cloudfiles-endpoint"),
+		BucketName:        gofastly.ToPointer("bucket2"),
+		User:              gofastly.ToPointer("user2"),
+		AccessKey:         gofastly.ToPointer("secret2"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("classic"),
+		Path:              gofastly.ToPointer("two/"),
+		Region:            gofastly.ToPointer("SYD"),
+		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -175,19 +175,19 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1Compute := gofastly.Cloudfiles{
-		ServiceVersion:   1,
-		Name:             "cloudfiles-endpoint",
-		BucketName:       "bucket",
-		User:             "user",
-		AccessKey:        "secret",
-		PublicKey:        pgpPublicKey(t),
-		GzipLevel:        0,
-		MessageType:      "classic",
-		Path:             "/",
-		Region:           "ORD",
-		Period:           3600,
-		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
-		CompressionCodec: "zstd",
+		ServiceVersion:   gofastly.ToPointer(1),
+		Name:             gofastly.ToPointer("cloudfiles-endpoint"),
+		BucketName:       gofastly.ToPointer("bucket"),
+		User:             gofastly.ToPointer("user"),
+		AccessKey:        gofastly.ToPointer("secret"),
+		PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Path:             gofastly.ToPointer("/"),
+		Region:           gofastly.ToPointer("ORD"),
+		Period:           gofastly.ToPointer(3600),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		CompressionCodec: gofastly.ToPointer("zstd"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -216,11 +216,11 @@ func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceD
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Cloud Files Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Cloud Files Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(cloudfilesList) != len(cloudfiles) {
@@ -231,7 +231,7 @@ func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceD
 
 		for _, e := range cloudfiles {
 			for _, el := range cloudfilesList {
-				if e.Name == el.Name {
+				if gofastly.ToValue(e.Name) == gofastly.ToValue(el.Name) {
 					// we don't know these things ahead of time, so populate them now
 					e.ServiceID = service.ID
 					e.ServiceVersion = service.ActiveVersion.Number

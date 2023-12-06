@@ -23,32 +23,32 @@ func TestResourceFastlyFlattenBackend(t *testing.T) {
 			},
 			remote: []*gofastly.Backend{
 				{
-					Name:                "test.notexample.com",
-					Address:             "www.notexample.com",
-					OverrideHost:        "origin.example.com",
-					Port:                80,
-					AutoLoadbalance:     false,
-					BetweenBytesTimeout: 10000,
-					ConnectTimeout:      1000,
-					ErrorThreshold:      0,
-					FirstByteTimeout:    15000,
-					KeepAliveTime:       1500,
-					MaxConn:             200,
-					RequestCondition:    "",
-					HealthCheck:         "",
-					UseSSL:              false,
-					ShareKey:            "sharedkey",
-					SSLCheckCert:        true,
-					SSLCACert:           "",
-					SSLCertHostname:     "",
-					SSLSNIHostname:      "",
-					SSLClientKey:        "",
-					SSLClientCert:       "",
-					MaxTLSVersion:       "",
-					MinTLSVersion:       "",
-					SSLCiphers:          "foo:bar:baz",
-					Shield:              "lga-ny-us",
-					Weight:              100,
+					Name:                gofastly.ToPointer("test.notexample.com"),
+					Address:             gofastly.ToPointer("www.notexample.com"),
+					OverrideHost:        gofastly.ToPointer("origin.example.com"),
+					Port:                gofastly.ToPointer(80),
+					AutoLoadbalance:     gofastly.ToPointer(false),
+					BetweenBytesTimeout: gofastly.ToPointer(10000),
+					ConnectTimeout:      gofastly.ToPointer(1000),
+					ErrorThreshold:      gofastly.ToPointer(0),
+					FirstByteTimeout:    gofastly.ToPointer(15000),
+					KeepAliveTime:       gofastly.ToPointer(1500),
+					MaxConn:             gofastly.ToPointer(200),
+					RequestCondition:    gofastly.ToPointer(""),
+					HealthCheck:         gofastly.ToPointer(""),
+					UseSSL:              gofastly.ToPointer(false),
+					ShareKey:            gofastly.ToPointer("sharedkey"),
+					SSLCheckCert:        gofastly.ToPointer(true),
+					SSLCACert:           gofastly.ToPointer(""),
+					SSLCertHostname:     gofastly.ToPointer(""),
+					SSLSNIHostname:      gofastly.ToPointer(""),
+					SSLClientKey:        gofastly.ToPointer(""),
+					SSLClientCert:       gofastly.ToPointer(""),
+					MaxTLSVersion:       gofastly.ToPointer(""),
+					MinTLSVersion:       gofastly.ToPointer(""),
+					SSLCiphers:          gofastly.ToPointer("foo:bar:baz"),
+					Shield:              gofastly.ToPointer("lga-ny-us"),
+					Weight:              gofastly.ToPointer(100),
 				},
 			},
 			local: []map[string]any{
@@ -104,30 +104,30 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 			},
 			remote: []*gofastly.Backend{
 				{
-					Name:                "test.notexample.com",
-					Address:             "www.notexample.com",
-					OverrideHost:        "origin.example.com",
-					Port:                80,
-					BetweenBytesTimeout: 10000,
-					ConnectTimeout:      1000,
-					ErrorThreshold:      0,
-					FirstByteTimeout:    15000,
-					KeepAliveTime:       1500,
-					MaxConn:             200,
-					HealthCheck:         "",
-					UseSSL:              false,
-					SSLCheckCert:        true,
-					SSLHostname:         "",
-					SSLCACert:           "",
-					SSLCertHostname:     "",
-					SSLSNIHostname:      "",
-					SSLClientKey:        "",
-					SSLClientCert:       "",
-					MaxTLSVersion:       "",
-					MinTLSVersion:       "",
-					SSLCiphers:          "foo:bar:baz",
-					Shield:              "lga-ny-us",
-					Weight:              100,
+					Name:                gofastly.ToPointer("test.notexample.com"),
+					Address:             gofastly.ToPointer("www.notexample.com"),
+					OverrideHost:        gofastly.ToPointer("origin.example.com"),
+					Port:                gofastly.ToPointer(80),
+					BetweenBytesTimeout: gofastly.ToPointer(10000),
+					ConnectTimeout:      gofastly.ToPointer(1000),
+					ErrorThreshold:      gofastly.ToPointer(0),
+					FirstByteTimeout:    gofastly.ToPointer(15000),
+					KeepAliveTime:       gofastly.ToPointer(1500),
+					MaxConn:             gofastly.ToPointer(200),
+					HealthCheck:         gofastly.ToPointer(""),
+					UseSSL:              gofastly.ToPointer(false),
+					SSLCheckCert:        gofastly.ToPointer(true),
+					SSLHostname:         gofastly.ToPointer(""),
+					SSLCACert:           gofastly.ToPointer(""),
+					SSLCertHostname:     gofastly.ToPointer(""),
+					SSLSNIHostname:      gofastly.ToPointer(""),
+					SSLClientKey:        gofastly.ToPointer(""),
+					SSLClientCert:       gofastly.ToPointer(""),
+					MaxTLSVersion:       gofastly.ToPointer(""),
+					MinTLSVersion:       gofastly.ToPointer(""),
+					SSLCiphers:          gofastly.ToPointer("foo:bar:baz"),
+					Shield:              gofastly.ToPointer("lga-ny-us"),
+					Weight:              gofastly.ToPointer(100),
 				},
 			},
 			local: []map[string]any{
@@ -181,69 +181,69 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 	// the specific backend definitions in the Terraform configuration.
 
 	b1 := gofastly.Backend{
-		Address:  backendAddress,
-		Name:     backendName,
-		Port:     443,
-		ShareKey: "sharedkey",
+		Address:  gofastly.ToPointer(backendAddress),
+		Name:     gofastly.ToPointer(backendName),
+		Port:     gofastly.ToPointer(443),
+		ShareKey: gofastly.ToPointer("sharedkey"),
 
 		// NOTE: The following are defaults applied by the API.
-		BetweenBytesTimeout: 10000,
-		ConnectTimeout:      1000,
-		FirstByteTimeout:    15000,
-		Hostname:            backendAddress,
-		MaxConn:             200,
-		SSLCheckCert:        true,
-		Weight:              100,
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
 	}
 	// This validates the ShareKey is unset.
 	b1_updated := gofastly.Backend{
-		Address: backendAddress,
-		Name:    backendName,
-		Port:    443,
+		Address: gofastly.ToPointer(backendAddress),
+		Name:    gofastly.ToPointer(backendName),
+		Port:    gofastly.ToPointer(443),
 
 		// NOTE: The following are defaults applied by the API.
-		BetweenBytesTimeout: 10000,
-		ConnectTimeout:      1000,
-		FirstByteTimeout:    15000,
-		Hostname:            backendAddress,
-		MaxConn:             200,
-		SSLCheckCert:        true,
-		Weight:              100,
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
 	}
 	b2 := gofastly.Backend{
-		Address: backendAddress,
-		Name:    backendName + " new",
-		Port:    443,
+		Address: gofastly.ToPointer(backendAddress),
+		Name:    gofastly.ToPointer(backendName + " new"),
+		Port:    gofastly.ToPointer(443),
 
 		// NOTE: The following are defaults applied by the API.
-		BetweenBytesTimeout: 10000,
-		ConnectTimeout:      1000,
-		FirstByteTimeout:    15000,
-		Hostname:            backendAddress,
-		MaxConn:             200,
-		SSLCheckCert:        true,
-		Weight:              100,
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
 	}
 	b3 := gofastly.Backend{
-		Address: backendAddress,
-		Name:    backendName + " new with use ssl",
+		Address: gofastly.ToPointer(backendAddress),
+		Name:    gofastly.ToPointer(backendName + " new with use ssl"),
 		// NOTE: We don't set the port attribute in the Terraform configuration, and
 		// so the Terraform provider defaults to setting that to port 80. This test
 		// validates that the Fastly API currently accepts port 80 (although the
 		// setting of use_ssl would otherwise cause you to expect some kind of API
 		// validation to prevent port 80 from being used).
-		Port:            80,
-		SSLCertHostname: "httpbin.org",
-		UseSSL:          true,
+		Port:            gofastly.ToPointer(80),
+		SSLCertHostname: gofastly.ToPointer("httpbin.org"),
+		UseSSL:          gofastly.ToPointer(true),
 
 		// NOTE: The following are defaults applied by the API.
-		BetweenBytesTimeout: 10000,
-		ConnectTimeout:      1000,
-		FirstByteTimeout:    15000,
-		Hostname:            backendAddress,
-		MaxConn:             200,
-		SSLCheckCert:        true,
-		Weight:              100,
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -337,11 +337,11 @@ func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDeta
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		have, err := conn.ListBackends(&gofastly.ListBackendsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(have) != len(want) {
@@ -351,7 +351,7 @@ func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDeta
 		var found int
 		for _, w := range want {
 			for _, h := range have {
-				if w.Name == h.Name {
+				if gofastly.ToValue(w.Name) == gofastly.ToValue(h.Name) {
 					// we don't know these things ahead of time, so populate them now
 					w.ServiceID = service.ID
 					w.ServiceVersion = service.ActiveVersion.Number

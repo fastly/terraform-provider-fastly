@@ -20,11 +20,11 @@ func TestResourceFastlyFlattenNewRelic(t *testing.T) {
 		{
 			remote: []*gofastly.NewRelic{
 				{
-					ServiceVersion: 1,
-					Name:           "newrelic-endpoint",
-					Token:          "token",
-					Region:         "US",
-					FormatVersion:  2,
+					ServiceVersion: gofastly.ToPointer(1),
+					Name:           gofastly.ToPointer("newrelic-endpoint"),
+					Token:          gofastly.ToPointer("token"),
+					Region:         gofastly.ToPointer("US"),
+					FormatVersion:  gofastly.ToPointer(2),
 				},
 			},
 			local: []map[string]any{
@@ -68,30 +68,30 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		ServiceVersion: 1,
-		Name:           "newrelic-endpoint",
-		Token:          "token",
-		Region:         "US",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("newrelic-endpoint"),
+		Token:          gofastly.ToPointer("token"),
+		Region:         gofastly.ToPointer("US"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 	}
 
 	log1AfterUpdate := gofastly.NewRelic{
-		ServiceVersion: 1,
-		Name:           "newrelic-endpoint",
-		Token:          "t0k3n",
-		Region:         "EU",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b %T",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("newrelic-endpoint"),
+		Token:          gofastly.ToPointer("t0k3n"),
+		Region:         gofastly.ToPointer("EU"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
 	}
 
 	log2 := gofastly.NewRelic{
-		ServiceVersion: 1,
-		Name:           "another-newrelic-endpoint",
-		Token:          "another-token",
-		Region:         "US",
-		FormatVersion:  2,
-		Format:         appendNewLine(newrelicDefaultFormat),
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("another-newrelic-endpoint"),
+		Token:          gofastly.ToPointer("another-token"),
+		Region:         gofastly.ToPointer("US"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer(appendNewLine(newrelicDefaultFormat)),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,12 +135,12 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		ServiceVersion: 1,
-		Name:           "newrelic-endpoint",
-		Token:          "token",
-		Region:         "US",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("newrelic-endpoint"),
+		Token:          gofastly.ToPointer("token"),
+		Region:         gofastly.ToPointer("US"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,11 +169,11 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up NewRelic Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up NewRelic Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(newrelicList) != len(newrelic) {
@@ -185,7 +185,7 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 		var found int
 		for _, d := range newrelic {
 			for _, dl := range newrelicList {
-				if d.Name == dl.Name {
+				if gofastly.ToValue(d.Name) == gofastly.ToValue(dl.Name) {
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ID
 					d.ServiceVersion = service.ActiveVersion.Number

@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	fst "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v8/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,29 +14,29 @@ import (
 
 func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 	cases := []struct {
-		remote []*fst.Elasticsearch
+		remote []*gofastly.Elasticsearch
 		local  []map[string]any
 	}{
 		{
-			remote: []*fst.Elasticsearch{
+			remote: []*gofastly.Elasticsearch{
 				{
-					ServiceVersion:    1,
-					Name:              "elasticsearch-endpoint",
-					Index:             "index",
-					URL:               "https://logs.example.com",
-					Pipeline:          "my-pipeline-id",
-					RequestMaxEntries: 10,
-					RequestMaxBytes:   10,
-					User:              "user",
-					Password:          "password",
-					TLSCACert:         caCert(t),
-					TLSClientCert:     certificate(t),
-					TLSClientKey:      privateKey(t),
-					TLSHostname:       "example.com",
-					ResponseCondition: "response_condition",
-					Format:            `%a %l %u %t %m %U%q %H %>s %b %T`,
-					FormatVersion:     2,
-					Placement:         "none",
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("elasticsearch-endpoint"),
+					Index:             gofastly.ToPointer("index"),
+					URL:               gofastly.ToPointer("https://logs.example.com"),
+					Pipeline:          gofastly.ToPointer("my-pipeline-id"),
+					RequestMaxEntries: gofastly.ToPointer(10),
+					RequestMaxBytes:   gofastly.ToPointer(10),
+					User:              gofastly.ToPointer("user"),
+					Password:          gofastly.ToPointer("password"),
+					TLSCACert:         gofastly.ToPointer(caCert(t)),
+					TLSClientCert:     gofastly.ToPointer(certificate(t)),
+					TLSClientKey:      gofastly.ToPointer(privateKey(t)),
+					TLSHostname:       gofastly.ToPointer("example.com"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+					FormatVersion:     gofastly.ToPointer(2),
+					Placement:         gofastly.ToPointer("none"),
 				},
 			},
 			local: []map[string]any{
@@ -71,68 +71,68 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 }
 
 func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
-	var service fst.ServiceDetail
+	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1 := fst.Elasticsearch{
-		ServiceVersion:    1,
-		Name:              "elasticsearch-endpoint",
-		Index:             "#{%F}",
-		URL:               "https://es.example.com",
-		RequestMaxBytes:   0,
-		RequestMaxEntries: 0,
-		FormatVersion:     2,
-		Format:            "%h %l %u %t \"%r\" %>s %b",
-		User:              "user",
-		Password:          "password",
-		Pipeline:          "my-pipeline",
-		TLSCACert:         caCert(t),
-		TLSClientCert:     certificate(t),
-		TLSClientKey:      privateKey(t),
-		TLSHostname:       "example.com",
-		ResponseCondition: "response_condition_test",
-		Placement:         "none",
+	log1 := gofastly.Elasticsearch{
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("elasticsearch-endpoint"),
+		Index:             gofastly.ToPointer("#{%F}"),
+		URL:               gofastly.ToPointer("https://es.example.com"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		FormatVersion:     gofastly.ToPointer(2),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		User:              gofastly.ToPointer("user"),
+		Password:          gofastly.ToPointer("password"),
+		Pipeline:          gofastly.ToPointer("my-pipeline"),
+		TLSCACert:         gofastly.ToPointer(caCert(t)),
+		TLSClientCert:     gofastly.ToPointer(certificate(t)),
+		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
+		TLSHostname:       gofastly.ToPointer("example.com"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		Placement:         gofastly.ToPointer("none"),
 	}
 
-	log1AfterUpdate := fst.Elasticsearch{
-		ServiceVersion:    1,
-		Name:              "elasticsearch-endpoint",
-		Index:             "#{%F}",
-		URL:               "https://es.example.com",
-		RequestMaxBytes:   0,
-		RequestMaxEntries: 0,
-		FormatVersion:     2,
-		Format:            "%h %l %u %t \"%r\" %>s %b %T",
-		User:              "newuser",
-		Password:          "newpassword",
-		Pipeline:          "my-new-pipeline",
-		TLSCACert:         caCert(t),
-		TLSClientCert:     certificate(t),
-		TLSClientKey:      privateKey(t),
-		TLSHostname:       "example.com",
-		ResponseCondition: "response_condition_test",
-		Placement:         "none",
+	log1AfterUpdate := gofastly.Elasticsearch{
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("elasticsearch-endpoint"),
+		Index:             gofastly.ToPointer("#{%F}"),
+		URL:               gofastly.ToPointer("https://es.example.com"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		FormatVersion:     gofastly.ToPointer(2),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		User:              gofastly.ToPointer("newuser"),
+		Password:          gofastly.ToPointer("newpassword"),
+		Pipeline:          gofastly.ToPointer("my-new-pipeline"),
+		TLSCACert:         gofastly.ToPointer(caCert(t)),
+		TLSClientCert:     gofastly.ToPointer(certificate(t)),
+		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
+		TLSHostname:       gofastly.ToPointer("example.com"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		Placement:         gofastly.ToPointer("none"),
 	}
 
-	log2 := fst.Elasticsearch{
-		ServiceVersion:    1,
-		Name:              "another-elasticsearch-endpoint",
-		Index:             "#{%F}",
-		URL:               "https://es2.example.com",
-		RequestMaxBytes:   1000,
-		RequestMaxEntries: 0,
-		FormatVersion:     2,
-		Format:            "%h %l %u %t \"%r\" %>s %b",
-		User:              "username",
-		Password:          "secret-password",
-		Pipeline:          "my-new-pipeline",
-		TLSCACert:         caCert(t),
-		TLSClientCert:     certificate(t),
-		TLSClientKey:      privateKey(t),
-		TLSHostname:       "example.com",
-		ResponseCondition: "response_condition_test",
-		Placement:         "none",
+	log2 := gofastly.Elasticsearch{
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("another-elasticsearch-endpoint"),
+		Index:             gofastly.ToPointer("#{%F}"),
+		URL:               gofastly.ToPointer("https://es2.example.com"),
+		RequestMaxBytes:   gofastly.ToPointer(1000),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		FormatVersion:     gofastly.ToPointer(2),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		User:              gofastly.ToPointer("username"),
+		Password:          gofastly.ToPointer("secret-password"),
+		Pipeline:          gofastly.ToPointer("my-new-pipeline"),
+		TLSCACert:         gofastly.ToPointer(caCert(t)),
+		TLSClientCert:     gofastly.ToPointer(certificate(t)),
+		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
+		TLSHostname:       gofastly.ToPointer("example.com"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		Placement:         gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -146,7 +146,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 				Config: testAccServiceVCLElasticsearchConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*gofastly.Elasticsearch{&log1}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -158,7 +158,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 				Config: testAccServiceVCLElasticsearchConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1AfterUpdate, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*gofastly.Elasticsearch{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr(
 						"fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -170,24 +170,24 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 }
 
 func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
-	var service fst.ServiceDetail
+	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
-	log1 := fst.Elasticsearch{
-		ServiceVersion:    1,
-		Name:              "elasticsearch-endpoint",
-		Index:             "#{%F}",
-		URL:               "https://es.example.com",
-		RequestMaxBytes:   0,
-		RequestMaxEntries: 0,
-		User:              "user",
-		Password:          "password",
-		Pipeline:          "my-pipeline",
-		TLSCACert:         caCert(t),
-		TLSClientCert:     certificate(t),
-		TLSClientKey:      privateKey(t),
-		TLSHostname:       "example.com",
+	log1 := gofastly.Elasticsearch{
+		ServiceVersion:    gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("elasticsearch-endpoint"),
+		Index:             gofastly.ToPointer("#{%F}"),
+		URL:               gofastly.ToPointer("https://es.example.com"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		User:              gofastly.ToPointer("user"),
+		Password:          gofastly.ToPointer("password"),
+		Pipeline:          gofastly.ToPointer("my-pipeline"),
+		TLSCACert:         gofastly.ToPointer(caCert(t)),
+		TLSClientCert:     gofastly.ToPointer(certificate(t)),
+		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
+		TLSHostname:       gofastly.ToPointer("example.com"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -201,7 +201,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 				Config: testAccServiceVCLElasticsearchComputeConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*fst.Elasticsearch{&log1}, ServiceTypeCompute),
+					testAccCheckFastlyServiceVCLElasticsearchAttributes(&service, []*gofastly.Elasticsearch{&log1}, ServiceTypeCompute),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr(
@@ -212,15 +212,15 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDetail, elasticsearch []*fst.Elasticsearch, serviceType string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *gofastly.ServiceDetail, elasticsearch []*gofastly.Elasticsearch, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		elasticsearchList, err := conn.ListElasticsearch(&fst.ListElasticsearchInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+		elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Elasticsearch Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Elasticsearch Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(elasticsearchList) != len(elasticsearch) {
@@ -232,7 +232,7 @@ func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *fst.ServiceDet
 		var found int
 		for _, e := range elasticsearch {
 			for _, el := range elasticsearchList {
-				if e.Name == el.Name {
+				if gofastly.ToValue(e.Name) == gofastly.ToValue(el.Name) {
 					// We don't know these things ahead of time, so populate them now.
 					e.ServiceID = service.ID
 					e.ServiceVersion = service.ActiveVersion.Number

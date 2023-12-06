@@ -130,7 +130,7 @@ func testAccCheckFastlyServiceConfigStoreEntriesRemoteState(storeName string, wa
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		stores, err := conn.ListConfigStores()
+		stores, err := conn.ListConfigStores(&gofastly.ListConfigStoresInput{})
 		if err != nil {
 			return fmt.Errorf("failed to get list of Config Stores")
 		}

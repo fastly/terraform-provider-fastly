@@ -19,10 +19,10 @@ func TestResourceFastlyFlattenConditions(t *testing.T) {
 		{
 			remote: []*gofastly.Condition{
 				{
-					Name:      "some amz condition",
-					Priority:  10,
-					Type:      "REQUEST",
-					Statement: `req.url ~ "^/yolo/"`,
+					Name:      gofastly.ToPointer("some amz condition"),
+					Priority:  gofastly.ToPointer(10),
+					Type:      gofastly.ToPointer("REQUEST"),
+					Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
 				},
 			},
 			local: []map[string]any{
@@ -50,17 +50,17 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	con1 := gofastly.Condition{
-		Name:      "some test condition",
-		Priority:  10,
-		Type:      "REQUEST",
-		Statement: `req.url ~ "^/yolo/"`,
+		Name:      gofastly.ToPointer("some test condition"),
+		Priority:  gofastly.ToPointer(10),
+		Type:      gofastly.ToPointer("REQUEST"),
+		Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
 	}
 
 	con2 := gofastly.Condition{
-		Name:      "some test condition",
-		Priority:  10,
-		Type:      "CACHE",
-		Statement: `req.url ~ "^/yolo/"`,
+		Name:      gofastly.ToPointer("some test condition"),
+		Priority:  gofastly.ToPointer(10),
+		Type:      gofastly.ToPointer("CACHE"),
+		Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,17 +94,20 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.ServiceDetail, name string, conditions []*gofastly.Condition) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		serviceName := gofastly.ToValue(service.Name)
+		serviceVersionNumber := gofastly.ToValue(service.ActiveVersion.Number)
+
+		if serviceName != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, serviceName)
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: serviceVersionNumber,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Conditions for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Conditions for (%s), version (%v): %s", serviceName, serviceVersionNumber, err)
 		}
 
 		if len(conditionList) != len(conditions) {
@@ -114,7 +117,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 		var found int
 		for _, c := range conditions {
 			for _, lc := range conditionList {
-				if c.Name == lc.Name {
+				if gofastly.ToValue(c.Name) == gofastly.ToValue(lc.Name) {
 					// we don't know these things ahead of time, so populate them now
 					c.ServiceID = service.ID
 					c.ServiceVersion = service.ActiveVersion.Number

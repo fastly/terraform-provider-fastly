@@ -19,12 +19,12 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 		{
 			remote: []*gofastly.RequestSetting{
 				{
-					Name:             "alt_backend",
-					RequestCondition: "serve_alt_backend",
-					DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-					XForwardedFor:    gofastly.RequestSettingXFFAppend,
-					MaxStaleAge:      90,
-					Action:           gofastly.RequestSettingActionPass,
+					Name:             gofastly.ToPointer("alt_backend"),
+					RequestCondition: gofastly.ToPointer("serve_alt_backend"),
+					DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+					XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+					MaxStaleAge:      gofastly.ToPointer(90),
+					Action:           gofastly.ToPointer(gofastly.RequestSettingActionPass),
 				},
 			},
 			local: []map[string]any{
@@ -59,18 +59,18 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	rq1 := gofastly.RequestSetting{
-		Name:             "alt_backend",
-		RequestCondition: "serve_alt_backend",
-		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-		XForwardedFor:    "append",
-		MaxStaleAge:      90,
+		Name:             gofastly.ToPointer("alt_backend"),
+		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
+		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+		MaxStaleAge:      gofastly.ToPointer(90),
 	}
 	rq2 := gofastly.RequestSetting{
-		Name:             "alt_backend",
-		RequestCondition: "serve_alt_backend",
-		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-		XForwardedFor:    "append",
-		MaxStaleAge:      900,
+		Name:             gofastly.ToPointer("alt_backend"),
+		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
+		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+		MaxStaleAge:      gofastly.ToPointer(900),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,11 +114,11 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		rqList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Request Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Request Setting for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(rqList) != len(rqs) {
@@ -128,7 +128,7 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 		var found int
 		for _, r := range rqs {
 			for _, lr := range rqList {
-				if r.Name == lr.Name {
+				if gofastly.ToValue(r.Name) == gofastly.ToValue(lr.Name) {
 					// we don't know these things ahead of time, so populate them now
 					r.ServiceID = service.ID
 					r.ServiceVersion = service.ActiveVersion.Number

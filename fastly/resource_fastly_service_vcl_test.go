@@ -141,16 +141,16 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 	activateNewVersion := func(*terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		version, err := conn.CloneVersion(&gofastly.CloneVersionInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
 			return err
 		}
 
 		err = conn.DeleteBackend(&gofastly.DeleteBackendInput{
-			ServiceID:      service.ID,
-			ServiceVersion: version.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(version.Number),
 			Name:           "tf-test-backend",
 		})
 		if err != nil {
@@ -158,8 +158,8 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 		}
 
 		_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-			ServiceID:      service.ID,
-			ServiceVersion: version.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(version.Number),
 		})
 		return err
 	}
@@ -347,7 +347,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				// These attributes are not stored on the Fastly API and must be ignored.
 				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "imported"},
 				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
-					return fmt.Sprintf("%s@2", service.ID), nil
+					return fmt.Sprintf("%s@2", gofastly.ToValue(service.ID)), nil
 				},
 			},
 		},
@@ -367,8 +367,8 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		// deactivate active version to destroy
 		_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
 			return err
@@ -376,7 +376,7 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 
 		// delete service
 		return conn.DeleteService(&gofastly.DeleteServiceInput{
-			ID: service.ID,
+			ID: gofastly.ToValue(service.ID),
 		})
 	}
 
@@ -426,23 +426,23 @@ func testAccCheckServiceExists(n string, service *gofastly.ServiceDetail) resour
 
 func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, name string, domains []string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Domains for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Domains for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		expected := len(domains)
 		for _, d := range domainList {
 			for _, e := range domains {
-				if d.Name == e {
+				if gofastly.ToValue(d.Name) == e {
 					expected--
 				}
 			}
@@ -458,23 +458,23 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 
 func testAccCheckFastlyServiceVCLAttributesBackends(service *gofastly.ServiceDetail, name string, backends []string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Backends for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		expected := len(backendList)
 		for _, b := range backendList {
 			for _, e := range backends {
-				if b.Address == e {
+				if gofastly.ToValue(b.Address) == e {
 					expected--
 				}
 			}
@@ -665,7 +665,7 @@ func testAccCheckServiceVCLDestroy(s *terraform.State) error {
 		}
 
 		for _, s := range l {
-			if s.ID == rs.Primary.ID {
+			if gofastly.ToValue(s.ID) == rs.Primary.ID {
 				// service still found
 				return fmt.Errorf("tried deleting Service (%s), but was still found", rs.Primary.ID)
 			}
@@ -999,18 +999,18 @@ func testSweepServices(region string) error {
 	}
 
 	for _, service := range services {
-		if strings.HasPrefix(service.Name, testResourcePrefix) {
+		if strings.HasPrefix(gofastly.ToValue(service.Name), testResourcePrefix) {
 			s, err := client.GetServiceDetails(&gofastly.GetServiceInput{
-				ID: service.ID,
+				ID: gofastly.ToValue(service.ID),
 			})
 			if err != nil {
 				return err
 			}
 
-			if s.ActiveVersion.Number != 0 {
+			if gofastly.ToValue(s.ActiveVersion.Number) != 0 {
 				_, err := client.DeactivateVersion(&gofastly.DeactivateVersionInput{
-					ServiceID:      service.ID,
-					ServiceVersion: s.ActiveVersion.Number,
+					ServiceID:      gofastly.ToValue(service.ID),
+					ServiceVersion: gofastly.ToValue(s.ActiveVersion.Number),
 				})
 				if err != nil {
 					return err
@@ -1018,7 +1018,7 @@ func testSweepServices(region string) error {
 			}
 
 			err = client.DeleteService(&gofastly.DeleteServiceInput{
-				ID: service.ID,
+				ID: gofastly.ToValue(service.ID),
 			})
 			if err != nil {
 				return err

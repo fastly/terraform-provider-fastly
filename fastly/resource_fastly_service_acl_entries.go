@@ -236,15 +236,20 @@ func flattenACLEntries(remoteState []*gofastly.ACLEntry) []map[string]any {
 	var result []map[string]any
 
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"id":      resource.ID,
-			"ip":      resource.IP,
-			"negated": resource.Negated,
-			"comment": resource.Comment,
-		}
+		data := map[string]any{}
 
-		// NOTE: Fastly API may return "null" or int value
-		// we only want to set the value if subnet is not null
+		if resource.ID != nil {
+			data["id"] = *resource.ID
+		}
+		if resource.IP != nil {
+			data["ip"] = *resource.IP
+		}
+		if resource.Negated != nil {
+			data["negated"] = *resource.Negated
+		}
+		if resource.Comment != nil {
+			data["comment"] = *resource.Comment
+		}
 		if resource.Subnet != nil {
 			data["subnet"] = strconv.Itoa(*resource.Subnet)
 		}

@@ -21,20 +21,20 @@ func TestResourceFastlyFlattenAclEntries(t *testing.T) {
 		{
 			remote: []*gofastly.ACLEntry{
 				{
-					ServiceID: "service-id",
-					ACLID:     "1234567890",
-					IP:        "127.0.0.1",
+					ServiceID: gofastly.ToPointer("service-id"),
+					ACLID:     gofastly.ToPointer("1234567890"),
+					IP:        gofastly.ToPointer("127.0.0.1"),
 					Subnet:    gofastly.ToPointer(24),
-					Negated:   false,
-					Comment:   "ACL Entry 1",
+					Negated:   gofastly.ToPointer(false),
+					Comment:   gofastly.ToPointer("ACL Entry 1"),
 				},
 				{
-					ServiceID: "service-id",
-					ACLID:     "0987654321",
-					IP:        "192.168.0.1",
+					ServiceID: gofastly.ToPointer("service-id"),
+					ACLID:     gofastly.ToPointer("0987654321"),
+					IP:        gofastly.ToPointer("192.168.0.1"),
 					Subnet:    gofastly.ToPointer(16),
-					Negated:   true,
-					Comment:   "ACL Entry 2",
+					Negated:   gofastly.ToPointer(true),
+					Comment:   gofastly.ToPointer("ACL Entry 2"),
 				},
 			},
 			local: []map[string]any{
@@ -417,26 +417,26 @@ func TestAccFastlyServiceAclEntries_manage_entries_false(t *testing.T) {
 
 func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDetail, serviceName, aclName string, expectedEntries []map[string]any) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != serviceName {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
+		if gofastly.ToValue(service.Name) != serviceName {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		acl, err := conn.GetACL(&gofastly.GetACLInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           aclName,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
-		aclEntries, err := getAllAclEntriesViaPaginator(conn, &gofastly.ListACLEntriesInput{
-			ServiceID: service.ID,
-			ACLID:     acl.ID,
+		aclEntries, err := getAllAclEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
+			ServiceID: gofastly.ToValue(service.ID),
+			ACLID:     gofastly.ToValue(acl.ID),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", service.Name, acl.ID, err)
+			return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(acl.ID), err)
 		}
 
 		flatACLEntries := flattenACLEntries(aclEntries)

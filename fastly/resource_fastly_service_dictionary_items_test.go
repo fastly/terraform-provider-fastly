@@ -20,16 +20,16 @@ func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
 		{
 			remote: []*gofastly.DictionaryItem{
 				{
-					ServiceID:    "service-id",
-					DictionaryID: "1234567890",
-					ItemKey:      "key-1",
-					ItemValue:    "value-1",
+					ServiceID:    gofastly.ToPointer("service-id"),
+					DictionaryID: gofastly.ToPointer("1234567890"),
+					ItemKey:      gofastly.ToPointer("key-1"),
+					ItemValue:    gofastly.ToPointer("value-1"),
 				},
 				{
-					ServiceID:    "service-id",
-					DictionaryID: "1234567890",
-					ItemKey:      "key-2",
-					ItemValue:    "value-2",
+					ServiceID:    gofastly.ToPointer("service-id"),
+					DictionaryID: gofastly.ToPointer("1234567890"),
+					ItemKey:      gofastly.ToPointer("key-2"),
+					ItemValue:    gofastly.ToPointer("value-2"),
 				},
 			},
 			local: map[string]string{
@@ -369,26 +369,26 @@ func testAccCheckFastlyServiceDictionaryItemsDoesNotExists(n string) resource.Te
 
 func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.ServiceDetail, name, dictName string, expectedItems map[string]string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.Version.Number,
+			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceVersion: gofastly.ToValue(service.Version.Number),
 			Name:           dictName,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		dictItems, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
-			ServiceID:    service.ID,
-			DictionaryID: dict.ID,
+			ServiceID:    gofastly.ToValue(service.ID),
+			DictionaryID: gofastly.ToValue(dict.ID),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Dictionary Items records for (%s), dictionary (%s): %s", service.Name, dict.ID, err)
+			return fmt.Errorf("error looking up Dictionary Items records for (%s), dictionary (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dict.ID), err)
 		}
 
 		dictItemsMap := flattenDictionaryItems(dictItems)
@@ -406,19 +406,19 @@ func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 
 	dict, err := getDictionaryByName(service, dictName)
 	if err != nil {
-		t.Fatalf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		t.Fatalf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 	}
 
 	_, err = conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
-		ServiceID:    service.ID,
-		DictionaryID: dict.ID,
+		ServiceID:    gofastly.ToValue(service.ID),
+		DictionaryID: gofastly.ToValue(dict.ID),
 
-		ItemKey:   expectedKey,
-		ItemValue: expectedValue,
+		ItemKey:   gofastly.ToPointer(expectedKey),
+		ItemValue: gofastly.ToPointer(expectedValue),
 	})
 
 	if err != nil {
-		t.Fatalf("[ERR] Error Creating Dictionary item for (%s), dictionary (%s): %s", service.Name, dict.Name, err)
+		t.Fatalf("[ERR] Error Creating Dictionary item for (%s), dictionary (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dict.Name), err)
 	}
 }
 
@@ -426,8 +426,8 @@ func getDictionaryByName(service *gofastly.ServiceDetail, dictName string) (*gof
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-		ServiceID:      service.ID,
-		ServiceVersion: service.ActiveVersion.Number,
+		ServiceID:      gofastly.ToValue(service.ID),
+		ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		Name:           dictName,
 	})
 	return dict, err

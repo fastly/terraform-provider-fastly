@@ -68,30 +68,33 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("newrelic-endpoint"),
-		Token:          gofastly.ToPointer("token"),
-		Region:         gofastly.ToPointer("US"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("newrelic-endpoint"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("token"),
 	}
 
 	log1AfterUpdate := gofastly.NewRelic{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("newrelic-endpoint"),
-		Token:          gofastly.ToPointer("t0k3n"),
-		Region:         gofastly.ToPointer("EU"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("newrelic-endpoint"),
+		Region:            gofastly.ToPointer("EU"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("t0k3n"),
 	}
 
 	log2 := gofastly.NewRelic{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("another-newrelic-endpoint"),
-		Token:          gofastly.ToPointer("another-token"),
-		Region:         gofastly.ToPointer("US"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer(appendNewLine(newrelicDefaultFormat)),
+		Format:            gofastly.ToPointer(appendNewLine(newrelicDefaultFormat)),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("another-newrelic-endpoint"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("another-token"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,10 +109,8 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLNewRelicAttributes(&service, []*gofastly.NewRelic{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_newrelic.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_newrelic.#", "1"),
 				),
 			},
 
@@ -118,10 +119,8 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLNewRelicAttributes(&service, []*gofastly.NewRelic{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_newrelic.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_newrelic.#", "2"),
 				),
 				PreventDiskCleanup: true,
 			},
@@ -135,12 +134,12 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelic{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("newrelic-endpoint"),
-		Token:          gofastly.ToPointer("token"),
-		Region:         gofastly.ToPointer("US"),
-		FormatVersion:  gofastly.ToPointer(2),
 		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Name:           gofastly.ToPointer("newrelic-endpoint"),
+		Region:         gofastly.ToPointer("US"),
+		ServiceVersion: gofastly.ToPointer(1),
+		Token:          gofastly.ToPointer("token"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -155,10 +154,8 @@ func TestAccFastlyServiceVCL_logging_newrelic_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLNewRelicAttributes(&service, []*gofastly.NewRelic{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_newrelic.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_newrelic.#", "1"),
 				),
 			},
 		},

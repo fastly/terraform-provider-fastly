@@ -56,6 +56,7 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 		Action:         gofastly.ToPointer(gofastly.CacheSettingActionPass),
 		StaleTTL:       gofastly.ToPointer(3600),
 		CacheCondition: gofastly.ToPointer("serve_alt_backend"),
+		TTL:            gofastly.ToPointer(0), // The default value for the attribute type is sent to API.
 	}
 
 	cq2 := gofastly.CacheSetting{
@@ -78,12 +79,9 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLCacheSettingsAttributes(&service, []*gofastly.CacheSetting{&cq1}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "cache_setting.#", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "condition.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "cache_setting.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "1"),
 				),
 			},
 
@@ -92,10 +90,8 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLCacheSettingsAttributes(&service, []*gofastly.CacheSetting{&cq1, &cq2}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "cache_setting.#", "2"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "condition.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "cache_setting.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "2"),
 				),
 			},
 		},

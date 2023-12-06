@@ -61,24 +61,29 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
+	// The `id` field in the API response is a non-deterministic UUID and so in
+	// `testAccCheckFastlyServiceVCLDynamicSnippetAttributes()` we have to set
+	// it to a pointer to an empty string (hence that's what we also set below).
 	s1 := gofastly.Snippet{
-		Name:     gofastly.ToPointer("recv_test"),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
-		Priority: gofastly.ToPointer(int(110)),
 		Dynamic:  gofastly.ToPointer(1),
+		ID:       gofastly.ToPointer(""),
+		Name:     gofastly.ToPointer("recv_test"),
+		Priority: gofastly.ToPointer(int(110)),
+		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
-
 	updatedS1 := gofastly.Snippet{
-		Name:     gofastly.ToPointer("recv_test"),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
-		Priority: gofastly.ToPointer(int(110)),
 		Dynamic:  gofastly.ToPointer(1),
+		ID:       gofastly.ToPointer(""),
+		Name:     gofastly.ToPointer("recv_test"),
+		Priority: gofastly.ToPointer(int(110)),
+		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
 	updatedS2 := gofastly.Snippet{
-		Name:     gofastly.ToPointer("fetch_test"),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeFetch),
-		Priority: gofastly.ToPointer(50),
 		Dynamic:  gofastly.ToPointer(1),
+		ID:       gofastly.ToPointer(""),
+		Name:     gofastly.ToPointer("fetch_test"),
+		Priority: gofastly.ToPointer(50),
+		Type:     gofastly.ToPointer(gofastly.SnippetTypeFetch),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

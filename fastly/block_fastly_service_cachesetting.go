@@ -70,17 +70,30 @@ func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := buildCacheSetting(resource)
-	if err != nil {
-		log.Printf("[DEBUG] Error building Cache Setting: %s", err)
-		return err
+	opts := &gofastly.CreateCacheSettingInput{
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		StaleTTL:       gofastly.ToPointer(resource["stale_ttl"].(int)),
+		CacheCondition: gofastly.ToPointer(resource["cache_condition"].(string)),
+	}
+
+	if v, ok := resource["ttl"]; ok {
+		opts.TTL = gofastly.ToPointer(v.(int))
+	}
+
+	act := strings.ToLower(resource["action"].(string))
+	switch act {
+	case "cache":
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionCache)
+	case "pass":
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionPass)
+	case "restart":
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionRestart)
 	}
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly Cache Settings Addition opts: %#v", opts)
-	_, err = conn.CreateCacheSetting(opts)
-	if err != nil {
+	if _, err := conn.CreateCacheSetting(opts); err != nil {
 		return err
 	}
 	return nil
@@ -159,31 +172,6 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 		return err
 	}
 	return nil
-}
-
-func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) {
-	resource := cacheMap.(map[string]any)
-	opts := gofastly.CreateCacheSettingInput{
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		StaleTTL:       gofastly.ToPointer(resource["stale_ttl"].(int)),
-		CacheCondition: gofastly.ToPointer(resource["cache_condition"].(string)),
-	}
-
-	if v, ok := resource["ttl"]; ok {
-		opts.TTL = gofastly.ToPointer(v.(int))
-	}
-
-	act := strings.ToLower(resource["action"].(string))
-	switch act {
-	case "cache":
-		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionCache)
-	case "pass":
-		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionPass)
-	case "restart":
-		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionRestart)
-	}
-
-	return &opts, nil
 }
 
 // flattenCacheSettings models data into format suitable for saving to Terraform state.

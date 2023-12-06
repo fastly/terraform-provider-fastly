@@ -91,34 +91,42 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kinesis{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("kinesis-endpoint"),
-		StreamName:     gofastly.ToPointer("stream-name"),
-		Region:         gofastly.ToPointer("us-east-1"),
-		AccessKey:      gofastly.ToPointer("whywouldyoucheckthis"),
-		SecretKey:      gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		AccessKey:         gofastly.ToPointer("whywouldyoucheckthis"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		IAMRole:           gofastly.ToPointer(""),
+		Name:              gofastly.ToPointer("kinesis-endpoint"),
+		Region:            gofastly.ToPointer("us-east-1"),
+		ResponseCondition: gofastly.ToPointer(""),
+		SecretKey:         gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		StreamName:        gofastly.ToPointer("stream-name"),
 	}
 
 	log1AfterUpdate := gofastly.Kinesis{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("kinesis-endpoint"),
-		StreamName:     gofastly.ToPointer("new-stream-name"),
-		Region:         gofastly.ToPointer("us-east-1"),
-		IAMRole:        gofastly.ToPointer(testKinesisIAMRole),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		AccessKey:         gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		IAMRole:           gofastly.ToPointer(testKinesisIAMRole),
+		Name:              gofastly.ToPointer("kinesis-endpoint"),
+		Region:            gofastly.ToPointer("us-east-1"),
+		ResponseCondition: gofastly.ToPointer(""),
+		SecretKey:         gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		StreamName:        gofastly.ToPointer("new-stream-name"),
 	}
 
 	log2 := gofastly.Kinesis{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("another-kinesis-endpoint"),
-		StreamName:     gofastly.ToPointer("another-stream-name"),
-		Region:         gofastly.ToPointer("us-east-1"),
-		IAMRole:        gofastly.ToPointer(testKinesisIAMRole),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		AccessKey:         gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		IAMRole:           gofastly.ToPointer(testKinesisIAMRole),
+		Name:              gofastly.ToPointer("another-kinesis-endpoint"),
+		Region:            gofastly.ToPointer("us-east-1"),
+		ResponseCondition: gofastly.ToPointer(""),
+		SecretKey:         gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		StreamName:        gofastly.ToPointer("another-stream-name"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,10 +141,8 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLKinesisAttributes(&service, []*gofastly.Kinesis{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_kinesis.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kinesis.#", "1"),
 				),
 			},
 
@@ -145,10 +151,8 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLKinesisAttributes(&service, []*gofastly.Kinesis{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_kinesis.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_kinesis.#", "2"),
 				),
 			},
 		},
@@ -161,12 +165,13 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kinesis{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("kinesis-endpoint"),
-		StreamName:     gofastly.ToPointer("stream-name"),
-		Region:         gofastly.ToPointer("us-east-1"),
 		AccessKey:      gofastly.ToPointer("whywouldyoucheckthis"),
+		IAMRole:        gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("kinesis-endpoint"),
+		Region:         gofastly.ToPointer("us-east-1"),
 		SecretKey:      gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
+		ServiceVersion: gofastly.ToPointer(1),
+		StreamName:     gofastly.ToPointer("stream-name"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -181,10 +186,8 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLKinesisAttributes(&service, []*gofastly.Kinesis{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_kinesis.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_kinesis.#", "1"),
 				),
 			},
 		},

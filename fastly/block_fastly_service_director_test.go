@@ -111,23 +111,27 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	directorDeveloper := gofastly.Director{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("director_developer"),
-		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
-		Quorum:         gofastly.ToPointer(75),
-		Capacity:       gofastly.ToPointer(100),
-		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"developer"},
+		Capacity:       gofastly.ToPointer(100),
+		Comment:        gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("director_developer"),
+		Quorum:         gofastly.ToPointer(75),
+		Retries:        gofastly.ToPointer(5),
+		ServiceVersion: gofastly.ToPointer(1),
+		Shield:         gofastly.ToPointer(""),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
 	}
 
 	directorApps := gofastly.Director{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("director_apps"),
-		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
-		Quorum:         gofastly.ToPointer(75),
-		Capacity:       gofastly.ToPointer(100),
-		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"apps"},
+		Capacity:       gofastly.ToPointer(100),
+		Comment:        gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("director_apps"),
+		Quorum:         gofastly.ToPointer(75),
+		Retries:        gofastly.ToPointer(5),
+		ServiceVersion: gofastly.ToPointer(1),
+		Shield:         gofastly.ToPointer(""),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
 	}
 
 	dbDeveloper := gofastly.DirectorBackend{
@@ -141,23 +145,27 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 	}
 
 	directorDeveloperUpdated := gofastly.Director{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("director_developer"),
-		Type:           gofastly.ToPointer(gofastly.DirectorTypeClient),
-		Quorum:         gofastly.ToPointer(30),
-		Capacity:       gofastly.ToPointer(100),
-		Retries:        gofastly.ToPointer(10),
 		Backends:       []string{"developer_updated"},
+		Capacity:       gofastly.ToPointer(100),
+		Comment:        gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("director_developer"),
+		Quorum:         gofastly.ToPointer(30),
+		Retries:        gofastly.ToPointer(10),
+		ServiceVersion: gofastly.ToPointer(1),
+		Shield:         gofastly.ToPointer(""),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeClient),
 	}
 
 	directorWWWDemo := gofastly.Director{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("director_www_demo"),
-		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
-		Quorum:         gofastly.ToPointer(75),
-		Capacity:       gofastly.ToPointer(100),
-		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"demo", "www"},
+		Capacity:       gofastly.ToPointer(100),
+		Comment:        gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("director_www_demo"),
+		Quorum:         gofastly.ToPointer(75),
+		Retries:        gofastly.ToPointer(5),
+		ServiceVersion: gofastly.ToPointer(1),
+		Shield:         gofastly.ToPointer(""),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
 	}
 
 	dbDeveloperUpdated := gofastly.DirectorBackend{
@@ -176,13 +184,15 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 	}
 
 	directorWWWDemo2 := gofastly.Director{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("director_www_demo"),
-		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
-		Quorum:         gofastly.ToPointer(75),
-		Capacity:       gofastly.ToPointer(100),
-		Retries:        gofastly.ToPointer(5),
 		Backends:       []string{"www"},
+		Capacity:       gofastly.ToPointer(100),
+		Comment:        gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("director_www_demo"),
+		Quorum:         gofastly.ToPointer(75),
+		Retries:        gofastly.ToPointer(5),
+		ServiceVersion: gofastly.ToPointer(1),
+		Shield:         gofastly.ToPointer(""),
+		Type:           gofastly.ToPointer(gofastly.DirectorTypeHash),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -291,8 +301,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 			for _, directorBackend := range directorBackends {
 				if directorName == gofastly.ToValue(directorBackend.Director) {
 					matchedDirector = true
-					backends := expectedDirectorBackends[directorName]
-					expectedDirectorBackends[directorName] = append(backends, gofastly.ToValue(directorBackend.Director))
+					expectedDirectorBackends[directorName] = append(expectedDirectorBackends[directorName], gofastly.ToValue(directorBackend.Backend))
 				}
 			}
 			if !matchedDirector {

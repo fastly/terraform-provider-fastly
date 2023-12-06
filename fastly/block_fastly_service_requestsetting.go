@@ -294,15 +294,15 @@ func flattenRequestSettings(remoteState []*gofastly.RequestSetting) []map[string
 func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingInput, error) {
 	resource := requestSettingMap.(map[string]any)
 	opts := gofastly.CreateRequestSettingInput{
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		MaxStaleAge:    gofastly.ToPointer(resource["max_stale_age"].(int)),
+		BypassBusyWait: gofastly.ToPointer(gofastly.Compatibool(resource["bypass_busy_wait"].(bool))),
+		DefaultHost:    gofastly.ToPointer(resource["default_host"].(string)),
 		ForceMiss:      gofastly.ToPointer(gofastly.Compatibool(resource["force_miss"].(bool))),
 		ForceSSL:       gofastly.ToPointer(gofastly.Compatibool(resource["force_ssl"].(bool))),
-		BypassBusyWait: gofastly.ToPointer(gofastly.Compatibool(resource["bypass_busy_wait"].(bool))),
-		HashKeys:       gofastly.ToPointer(resource["hash_keys"].(string)),
-		TimerSupport:   gofastly.ToPointer(gofastly.Compatibool(resource["timer_support"].(bool))),
 		GeoHeaders:     gofastly.ToPointer(gofastly.Compatibool(resource["geo_headers"].(bool))),
-		DefaultHost:    gofastly.ToPointer(resource["default_host"].(string)),
+		HashKeys:       gofastly.ToPointer(resource["hash_keys"].(string)),
+		MaxStaleAge:    gofastly.ToPointer(resource["max_stale_age"].(int)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		TimerSupport:   gofastly.ToPointer(gofastly.Compatibool(resource["timer_support"].(bool))),
 	}
 
 	if v := resource["request_condition"].(string); v != "" {

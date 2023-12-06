@@ -58,32 +58,34 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("heroku-endpoint"),
-		URL:            gofastly.ToPointer("https://example.com"),
-		Token:          gofastly.ToPointer("s3cr3t"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("heroku-endpoint"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("s3cr3t"),
+		URL:               gofastly.ToPointer("https://example.com"),
 	}
 
 	log1AfterUpdate := gofastly.Heroku{
-		ServiceVersion:    gofastly.ToPointer(1),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("heroku-endpoint"),
-		URL:               gofastly.ToPointer("https://example.com"),
 		Placement:         gofastly.ToPointer("none"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("secret"),
-		FormatVersion:     gofastly.ToPointer(2),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		URL:               gofastly.ToPointer("https://example.com"),
 	}
 
 	log2 := gofastly.Heroku{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("another-heroku-endpoint"),
-		URL:            gofastly.ToPointer("https://new.example.com"),
-		Token:          gofastly.ToPointer("another-token"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("another-heroku-endpoint"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("another-token"),
+		URL:               gofastly.ToPointer("https://new.example.com"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,10 +100,8 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_heroku.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_heroku.#", "1"),
 				),
 			},
 
@@ -110,10 +110,8 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_heroku.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_heroku.#", "2"),
 				),
 			},
 		},
@@ -126,10 +124,10 @@ func TestAccFastlyServiceVCL_logging_heroku_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		ServiceVersion: gofastly.ToPointer(1),
 		Name:           gofastly.ToPointer("heroku-endpoint"),
-		URL:            gofastly.ToPointer("https://example.com"),
+		ServiceVersion: gofastly.ToPointer(1),
 		Token:          gofastly.ToPointer("s3cr3t"),
+		URL:            gofastly.ToPointer("https://example.com"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -144,10 +142,8 @@ func TestAccFastlyServiceVCL_logging_heroku_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLHerokuAttributes(&service, []*gofastly.Heroku{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_heroku.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_heroku.#", "1"),
 				),
 			},
 		},

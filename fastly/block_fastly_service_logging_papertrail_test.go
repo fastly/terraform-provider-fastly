@@ -55,22 +55,23 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("papertrailtesting"),
 		Address:           gofastly.ToPointer("test1.papertrailapp.com"),
-		Port:              gofastly.ToPointer(3600),
 		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
 		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("papertrailtesting"),
+		Port:              gofastly.ToPointer(3600),
 		ResponseCondition: gofastly.ToPointer("test_response_condition"),
+		ServiceVersion:    gofastly.ToPointer(1),
 	}
 
 	log2 := gofastly.Papertrail{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("papertrailtesting2"),
-		Address:        gofastly.ToPointer("test2.papertrailapp.com"),
-		Port:           gofastly.ToPointer(8080),
-		Format:         gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
-		FormatVersion:  gofastly.ToPointer(2),
+		Address:           gofastly.ToPointer("test2.papertrailapp.com"),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("papertrailtesting2"),
+		Port:              gofastly.ToPointer(8080),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -85,10 +86,8 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_papertrail.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_papertrail.#", "1"),
 				),
 			},
 
@@ -97,10 +96,8 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_papertrail.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_papertrail.#", "2"),
 				),
 			},
 		},
@@ -113,10 +110,10 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("papertrailtesting"),
 		Address:        gofastly.ToPointer("test1.papertrailapp.com"),
+		Name:           gofastly.ToPointer("papertrailtesting"),
 		Port:           gofastly.ToPointer(3600),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,10 +128,8 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_papertrail.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_papertrail.#", "1"),
 				),
 			},
 		},

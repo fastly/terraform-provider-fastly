@@ -62,24 +62,46 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
+	// We don't set all the available attributes in our TF config.
+	// Those not set will have the default value for their type sent to the API.
+	// The API will consequently respond with those default values.
+	// Hence we have to set those defaults below.
+	//
+	// In the case of the snippet resource, we actually hardcode the `dynamic` API
+	// field to be zero and so now the API responses in go-fastly are now pointers
+	// it means we explicitly need to set the zero value below.
+	//
+	// But also, the `id` field in the API response is a non-deterministic UUID
+	// and so in `testAccCheckFastlyServiceVCLSnippetAttributes()` we have to set
+	// it to a pointer to an empty string (hence that's what we also set below).
+	//
+	// Interestingly, although the snippet has a unique ID, we don't use it
+	// because the API for updating a 'versioned' snippet requires the snippet
+	// name instead of the ID. The ID is only used when updating a 'dynamic'
+	// snippet.
 	s1 := gofastly.Snippet{
-		Name:     gofastly.ToPointer("recv_test"),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
-		Priority: gofastly.ToPointer(110),
 		Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
-	}
-
-	updatedS1 := gofastly.Snippet{
+		Dynamic:  gofastly.ToPointer(0),
+		ID:       gofastly.ToPointer(""),
 		Name:     gofastly.ToPointer("recv_test"),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
 		Priority: gofastly.ToPointer(110),
+		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
+	}
+	updatedS1 := gofastly.Snippet{
 		Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.different-header = \"true\";\n}"),
+		Dynamic:  gofastly.ToPointer(0),
+		ID:       gofastly.ToPointer(""),
+		Name:     gofastly.ToPointer("recv_test"),
+		Priority: gofastly.ToPointer(110),
+		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
 	updatedS2 := gofastly.Snippet{
-		Name:     gofastly.ToPointer("fetch_test"),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeFetch),
-		Priority: gofastly.ToPointer(50),
 		Content:  gofastly.ToPointer("restart;\n"),
+		Dynamic:  gofastly.ToPointer(0),
+		ID:       gofastly.ToPointer(""),
+		Name:     gofastly.ToPointer("fetch_test"),
+		Priority: gofastly.ToPointer(50),
+		Type:     gofastly.ToPointer(gofastly.SnippetTypeFetch),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

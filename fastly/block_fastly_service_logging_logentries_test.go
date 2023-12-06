@@ -20,24 +20,25 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 		{
 			remote: []*gofastly.Logentries{
 				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("somelogentriesname"),
-					Port:              gofastly.ToPointer(8080),
-					Token:             gofastly.ToPointer("mytoken"),
 					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
 					FormatVersion:     gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("somelogentriesname"),
+					Placement:         gofastly.ToPointer("placement"),
+					Port:              gofastly.ToPointer(8080),
 					ResponseCondition: gofastly.ToPointer("response_condition_test"),
+					ServiceVersion:    gofastly.ToPointer(1), // expect this not to be persisted to tf state as it's tracked by the parent 'service' resource
+					Token:             gofastly.ToPointer("mytoken"),
 				},
 			},
 			local: []map[string]any{
 				{
-					"name":               "somelogentriesname",
-					"port":               8080,
-					"token":              "mytoken",
 					"format":             "%h %l %u %t %r %>s",
 					"format_version":     1,
+					"name":               "somelogentriesname",
+					"placement":          "placement",
+					"port":               8080,
 					"response_condition": "response_condition_test",
-					"use_tls":            false,
+					"token":              "mytoken",
 				},
 			},
 		},

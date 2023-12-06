@@ -68,16 +68,17 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.HealthCheck{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("example-healthcheck1"),
-		Headers:          []string{"Foo: Bar", "Baz: Qux"},
-		Host:             gofastly.ToPointer("example1.com"),
-		Path:             gofastly.ToPointer("/test1.txt"),
 		CheckInterval:    gofastly.ToPointer(4000),
+		Comment:          gofastly.ToPointer(""),
 		ExpectedResponse: gofastly.ToPointer(200),
 		HTTPVersion:      gofastly.ToPointer("1.1"),
+		Headers:          []string{"Foo: Bar", "Baz: Qux"},
+		Host:             gofastly.ToPointer("example1.com"),
 		Initial:          gofastly.ToPointer(2),
 		Method:           gofastly.ToPointer("HEAD"),
+		Name:             gofastly.ToPointer("example-healthcheck1"),
+		Path:             gofastly.ToPointer("/test1.txt"),
+		ServiceVersion:   gofastly.ToPointer(1),
 		Threshold:        gofastly.ToPointer(3),
 		Timeout:          gofastly.ToPointer(5000),
 		Window:           gofastly.ToPointer(5),
@@ -85,6 +86,7 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 
 	log2 := gofastly.HealthCheck{
 		CheckInterval:    gofastly.ToPointer(4500),
+		Comment:          gofastly.ToPointer(""),
 		ExpectedResponse: gofastly.ToPointer(404),
 		HTTPVersion:      gofastly.ToPointer("1.0"),
 		Headers:          []string{"Beep: Boop"},

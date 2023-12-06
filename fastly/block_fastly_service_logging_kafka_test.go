@@ -190,17 +190,22 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kafka{
-		ServiceVersion:   gofastly.ToPointer(1),
-		Name:             gofastly.ToPointer("kafkalogger"),
-		Topic:            gofastly.ToPointer("topic"),
+		AuthMethod:       gofastly.ToPointer(""),
 		Brokers:          gofastly.ToPointer("127.0.0.1,127.0.0.2"),
 		CompressionCodec: gofastly.ToPointer("snappy"),
+		Name:             gofastly.ToPointer("kafkalogger"),
+		ParseLogKeyvals:  gofastly.ToPointer(false),
+		Password:         gofastly.ToPointer(""),
+		RequestMaxBytes:  gofastly.ToPointer(0),
 		RequiredACKs:     gofastly.ToPointer("-1"),
-		UseTLS:           gofastly.ToPointer(true),
+		ServiceVersion:   gofastly.ToPointer(1),
 		TLSCACert:        gofastly.ToPointer(caCert(t)),
 		TLSClientCert:    gofastly.ToPointer(certificate(t)),
 		TLSClientKey:     gofastly.ToPointer(privateKey(t)),
 		TLSHostname:      gofastly.ToPointer("example.com"),
+		Topic:            gofastly.ToPointer("topic"),
+		UseTLS:           gofastly.ToPointer(true),
+		User:             gofastly.ToPointer(""),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -215,10 +220,8 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLKafkaAttributes(&service, []*gofastly.Kafka{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_kafka.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_kafka.#", "1"),
 				),
 			},
 		},

@@ -58,32 +58,34 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("logshuttle-endpoint"),
-		Token:          gofastly.ToPointer("s3cr3t"),
-		URL:            gofastly.ToPointer("https://example.com"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("logshuttle-endpoint"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("s3cr3t"),
+		URL:               gofastly.ToPointer("https://example.com"),
 	}
 
 	log1AfterUpdate := gofastly.Logshuttle{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("logshuttle-endpoint"),
-		Token:          gofastly.ToPointer("secret"),
-		URL:            gofastly.ToPointer("https://new.example.com"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("logshuttle-endpoint"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("secret"),
+		URL:               gofastly.ToPointer("https://new.example.com"),
 	}
 
 	log2 := gofastly.Logshuttle{
-		ServiceVersion:    gofastly.ToPointer(1),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("another-logshuttle-endpoint"),
-		Token:             gofastly.ToPointer("another-token"),
-		URL:               gofastly.ToPointer("https://another.example.com"),
 		Placement:         gofastly.ToPointer("none"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		FormatVersion:     gofastly.ToPointer(2),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("another-token"),
+		URL:               gofastly.ToPointer("https://another.example.com"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -122,8 +124,8 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		ServiceVersion: gofastly.ToPointer(1),
 		Name:           gofastly.ToPointer("logshuttle-endpoint"),
+		ServiceVersion: gofastly.ToPointer(1),
 		Token:          gofastly.ToPointer("s3cr3t"),
 		URL:            gofastly.ToPointer("https://example.com"),
 	}
@@ -140,10 +142,8 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLLogshuttleAttributes(&service, []*gofastly.Logshuttle{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_logshuttle.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_logshuttle.#", "1"),
 				),
 			},
 		},

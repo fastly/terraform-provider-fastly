@@ -155,7 +155,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					"ssl_ciphers":           "foo:bar:baz",
 					"shield":                "lga-ny-us",
 					"weight":                100,
-					"share_key":             "",
 				},
 			},
 		},
@@ -187,13 +186,20 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		ShareKey: gofastly.ToPointer("sharedkey"),
 
 		// NOTE: The following are defaults applied by the API.
+		AutoLoadbalance:     gofastly.ToPointer(false),
 		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
 		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
 		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		RequestCondition:    gofastly.ToPointer(""),
+		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
 	}
 	// This validates the ShareKey is unset.
 	b1_updated := gofastly.Backend{
@@ -202,13 +208,20 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		Port:    gofastly.ToPointer(443),
 
 		// NOTE: The following are defaults applied by the API.
+		AutoLoadbalance:     gofastly.ToPointer(false),
 		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
 		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
 		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		RequestCondition:    gofastly.ToPointer(""),
+		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
 	}
 	b2 := gofastly.Backend{
 		Address: gofastly.ToPointer(backendAddress),
@@ -216,13 +229,20 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		Port:    gofastly.ToPointer(443),
 
 		// NOTE: The following are defaults applied by the API.
+		AutoLoadbalance:     gofastly.ToPointer(false),
 		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
 		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
 		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		RequestCondition:    gofastly.ToPointer(""),
+		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
 	}
 	b3 := gofastly.Backend{
 		Address: gofastly.ToPointer(backendAddress),
@@ -237,11 +257,17 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		UseSSL:          gofastly.ToPointer(true),
 
 		// NOTE: The following are defaults applied by the API.
+		AutoLoadbalance:     gofastly.ToPointer(false),
 		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
 		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
 		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		RequestCondition:    gofastly.ToPointer(""),
+		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),
 	}

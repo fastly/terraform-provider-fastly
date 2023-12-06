@@ -88,10 +88,16 @@ func flattenDataSourceDictionaries(remoteState []*gofastly.Dictionary) []map[str
 	}
 
 	for i, resource := range remoteState {
-		result[i] = map[string]any{
-			"id":         resource.ID,
-			"name":       resource.Name,
-			"write_only": resource.WriteOnly,
+		result[i] = map[string]any{}
+
+		if resource.ID != nil {
+			result[i]["id"] = *resource.ID
+		}
+		if resource.Name != nil {
+			result[i]["name"] = *resource.Name
+		}
+		if resource.WriteOnly != nil {
+			result[i]["write_only"] = *resource.WriteOnly
 		}
 	}
 

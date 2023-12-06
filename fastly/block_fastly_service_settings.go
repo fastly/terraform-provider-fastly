@@ -69,6 +69,9 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 }
 
 func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	if s.ActiveVersion == nil {
+		return fmt.Errorf("error: no service ActiveVersion object")
+	}
 	serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
 
 	settingsOpts := gofastly.GetSettingsInput{
@@ -82,14 +85,14 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	}
 
 	if settings.DefaultHost != nil {
-		d.Set("default_host", *settings.DefaultHost)
+		d.Set("default_host", settings.DefaultHost)
 	}
 	if settings.DefaultTTL != nil {
 		d.Set("default_ttl", int(*settings.DefaultTTL))
 	}
 	d.Set("http3", false)
 	if settings.StaleIfError != nil {
-		d.Set("stale_if_error", *settings.StaleIfError)
+		d.Set("stale_if_error", settings.StaleIfError)
 	}
 	if settings.StaleIfErrorTTL != nil {
 		d.Set("stale_if_error_ttl", int(*settings.StaleIfErrorTTL))

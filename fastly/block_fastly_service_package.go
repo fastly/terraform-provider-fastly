@@ -103,6 +103,9 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 	localState := d.Get(h.key).([]any)
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
+		if s.ActiveVersion == nil {
+			return fmt.Errorf("error: no service ActiveVersion object")
+		}
 		serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
 
 		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())

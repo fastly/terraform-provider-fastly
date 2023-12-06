@@ -449,9 +449,6 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 		if resource.BetweenBytesTimeout != nil {
 			data["between_bytes_timeout"] = *resource.BetweenBytesTimeout
 		}
-		if resource.Comment != nil {
-			data["comment"] = *resource.Comment
-		}
 		if resource.ConnectTimeout != nil {
 			data["connect_timeout"] = *resource.ConnectTimeout
 		}

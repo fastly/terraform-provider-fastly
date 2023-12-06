@@ -72,30 +72,35 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Gzip{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("gzip file types"),
-		Extensions:     gofastly.ToPointer("css js"),
 		CacheCondition: gofastly.ToPointer("testing_condition"),
+		ContentTypes:   gofastly.ToPointer(""),
+		Extensions:     gofastly.ToPointer("css js"),
+		Name:           gofastly.ToPointer("gzip file types"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	log2 := gofastly.Gzip{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("gzip extensions"),
+		CacheCondition: gofastly.ToPointer(""),
 		ContentTypes:   gofastly.ToPointer("text/css text/html"),
+		Extensions:     gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("gzip extensions"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	log3 := gofastly.Gzip{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("all"),
-		Extensions:     gofastly.ToPointer("css js html"),
+		CacheCondition: gofastly.ToPointer(""),
 		ContentTypes:   gofastly.ToPointer("text/javascript application/x-javascript application/javascript text/css text/html"),
+		Extensions:     gofastly.ToPointer("css js html"),
+		Name:           gofastly.ToPointer("all"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	log4 := gofastly.Gzip{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("all"),
-		Extensions:     gofastly.ToPointer("css"),
+		CacheCondition: gofastly.ToPointer(""),
 		ContentTypes:   gofastly.ToPointer("application/x-javascript text/javascript"),
+		Extensions:     gofastly.ToPointer("css"),
+		Name:           gofastly.ToPointer("all"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,10 +115,8 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log1, &log2}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "gzip.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "gzip.#", "2"),
 				),
 			},
 
@@ -122,10 +125,8 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log3}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "gzip.#", "1"),
 				),
 			},
 
@@ -134,10 +135,8 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log4}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "gzip.#", "1"),
 				),
 			},
 		},

@@ -58,35 +58,36 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("scalyrlogger"),
-		Token:             gofastly.ToPointer("tkn"),
-		Placement:         gofastly.ToPointer("none"),
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Region:            gofastly.ToPointer("US"),
 		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("scalyrlogger"),
+		Placement:         gofastly.ToPointer("none"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("tkn"),
 	}
 
 	log1AfterUpdate := gofastly.Scalyr{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("scalyrlogger"),
-		Region:            gofastly.ToPointer("EU"),
-		Token:             gofastly.ToPointer("newtkn"),
-		Placement:         gofastly.ToPointer("waf_debug"),
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
-		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("scalyrlogger"),
+		Placement:         gofastly.ToPointer("waf_debug"),
+		Region:            gofastly.ToPointer("EU"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("newtkn"),
 	}
 
 	log2 := gofastly.Scalyr{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("another-scalyrlogger"),
-		Token:          gofastly.ToPointer("tknb"),
-		Placement:      gofastly.ToPointer("none"),
-		Format:         gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
-		Region:         gofastly.ToPointer("US"),
-		FormatVersion:  gofastly.ToPointer(2),
+		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("another-scalyrlogger"),
+		Placement:         gofastly.ToPointer("none"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("tknb"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -101,10 +102,8 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_scalyr.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_scalyr.#", "1"),
 				),
 			},
 
@@ -113,10 +112,8 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_scalyr.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_scalyr.#", "2"),
 				),
 			},
 		},
@@ -129,10 +126,10 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		ServiceVersion: gofastly.ToPointer(1),
 		Name:           gofastly.ToPointer("scalyrlogger"),
-		Token:          gofastly.ToPointer("tkn"),
 		Region:         gofastly.ToPointer("US"),
+		ServiceVersion: gofastly.ToPointer(1),
+		Token:          gofastly.ToPointer("tkn"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,10 +144,8 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLScalyrAttributes(&service, []*gofastly.Scalyr{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_scalyr.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_scalyr.#", "1"),
 				),
 			},
 		},

@@ -50,17 +50,19 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	con1 := gofastly.Condition{
+		Comment:   gofastly.ToPointer(""),
 		Name:      gofastly.ToPointer("some test condition"),
 		Priority:  gofastly.ToPointer(10),
-		Type:      gofastly.ToPointer("REQUEST"),
 		Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
+		Type:      gofastly.ToPointer("REQUEST"),
 	}
 
 	con2 := gofastly.Condition{
+		Comment:   gofastly.ToPointer(""),
 		Name:      gofastly.ToPointer("some test condition"),
 		Priority:  gofastly.ToPointer(10),
-		Type:      gofastly.ToPointer("CACHE"),
 		Statement: gofastly.ToPointer(`req.url ~ "^/yolo/"`),
+		Type:      gofastly.ToPointer("CACHE"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,10 +77,8 @@ func TestAccFastlyServiceVCL_conditional_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLConditionalAttributes(&service, name, []*gofastly.Condition{&con1}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "condition.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "1"),
 				),
 			},
 			{

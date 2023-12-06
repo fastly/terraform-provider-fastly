@@ -23,46 +23,38 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 		remote []*gofastly.Splunk
 		local  []map[string]any
 	}{
+		// The same certificate is used here for TLSCACert and TLSClientCert,
+		// but this is strictly for testing. In practice the same value should
+		// not be used for these two fields.
 		{
 			remote: []*gofastly.Splunk{
 				{
-					Name:              gofastly.ToPointer("test-splunk"),
-					URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 					FormatVersion:     gofastly.ToPointer(1),
-					ResponseCondition: gofastly.ToPointer("error_response"),
+					Name:              gofastly.ToPointer("test-splunk"),
 					Placement:         gofastly.ToPointer("waf_debug"),
+					ResponseCondition: gofastly.ToPointer("error_response"),
+					TLSCACert:         gofastly.ToPointer(cert),
+					TLSClientCert:     gofastly.ToPointer(cert),
+					TLSClientKey:      gofastly.ToPointer(key),
+					TLSHostname:       gofastly.ToPointer("example.com"),
 					Token:             gofastly.ToPointer("test-token"),
-					// The same certificate is used here for
-					// TLSCACert and TLSClientCert, but this
-					// is strictly for testing. In practice
-					// the same value should not be used for
-					// these two fields.
-					TLSCACert:     gofastly.ToPointer(cert),
-					TLSHostname:   gofastly.ToPointer("example.com"),
-					TLSClientCert: gofastly.ToPointer(cert),
-					TLSClientKey:  gofastly.ToPointer(key),
+					URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 				},
 			},
 			local: []map[string]any{
 				{
-					"name":               "test-splunk",
-					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"format_version":     1,
-					"response_condition": "error_response",
+					"name":               "test-splunk",
 					"placement":          "waf_debug",
-					"token":              "test-token",
+					"response_condition": "error_response",
+					"tls_ca_cert":        cert,
+					"tls_client_cert":    cert,
+					"tls_client_key":     key,
 					"tls_hostname":       "example.com",
-					// The same certificate is used here for
-					// TLSCACert and TLSClientCert, but this
-					// is strictly for testing. In practice
-					// the same value should not be used for
-					// these two fields.
-					"tls_ca_cert":     cert,
-					"tls_client_cert": cert,
-					"tls_client_key":  key,
-					"use_tls":         false,
+					"token":              "test-token",
+					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
 				},
 			},
 		},
@@ -81,35 +73,44 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	splunkLogOne := gofastly.Splunk{
-		Name:              gofastly.ToPointer("test-splunk-1"),
-		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token:             gofastly.ToPointer("test-token"),
 		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 		FormatVersion:     gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("test-splunk-1"),
 		Placement:         gofastly.ToPointer("waf_debug"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		TLSHostname:       gofastly.ToPointer(""),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 		UseTLS:            gofastly.ToPointer(true),
 	}
 
 	splunkLogOneUpdated := gofastly.Splunk{
-		Name:              gofastly.ToPointer("test-splunk-1"),
-		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token:             gofastly.ToPointer("test-token"),
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("test-splunk-1"),
 		Placement:         gofastly.ToPointer("waf_debug"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		TLSHostname:       gofastly.ToPointer(""),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 		UseTLS:            gofastly.ToPointer(false),
 	}
 
 	splunkLogTwo := gofastly.Splunk{
-		Name:              gofastly.ToPointer("test-splunk-2"),
-		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token:             gofastly.ToPointer("test-token"),
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("test-splunk-2"),
 		Placement:         gofastly.ToPointer("waf_debug"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
+		TLSHostname:       gofastly.ToPointer(""),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 		UseTLS:            gofastly.ToPointer(false),
 	}
 
@@ -148,9 +149,13 @@ func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	splunkLogOne := gofastly.Splunk{
-		Name:  gofastly.ToPointer("test-splunk-1"),
-		URL:   gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token: gofastly.ToPointer("test-token"),
+		Name:              gofastly.ToPointer("test-splunk-1"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		TLSHostname:       gofastly.ToPointer(""),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
+		UseTLS:            gofastly.ToPointer(false),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -165,10 +170,8 @@ func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_splunk.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_splunk.#", "1"),
 				),
 			},
 		},
@@ -180,11 +183,16 @@ func TestAccFastlyServiceVCL_splunk_default(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	splunkLog := gofastly.Splunk{
-		Name:          gofastly.ToPointer("test-splunk"),
-		URL:           gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token:         gofastly.ToPointer("test-token"),
-		Format:        gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
-		FormatVersion: gofastly.ToPointer(2),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("test-splunk"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		TLSHostname:       gofastly.ToPointer(""),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
+		UseTLS:            gofastly.ToPointer(false),
+		ResponseCondition: gofastly.ToPointer(""),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -216,61 +224,59 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 		t.Errorf("failed to generate key and cert: %s", err)
 	}
 
+	// The same certificate is used here for TLSCACert and TLSClientCert, but this
+	// is strictly for testing. In practice the same value should not be used for
+	// these two fields.
+
 	splunkLogOne := gofastly.Splunk{
-		Name:              gofastly.ToPointer("test-splunk-1"),
-		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token:             gofastly.ToPointer("test-token"),
 		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 		FormatVersion:     gofastly.ToPointer(1),
+		Name:              gofastly.ToPointer("test-splunk-1"),
 		Placement:         gofastly.ToPointer("waf_debug"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		TLSCACert:         gofastly.ToPointer(cert),
+		TLSClientCert:     gofastly.ToPointer(cert),
+		TLSClientKey:      gofastly.ToPointer(key),
 		TLSHostname:       gofastly.ToPointer("example.com"),
-		// The same certificate is used here for
-		// TLSCACert and TLSClientCert, but this
-		// is strictly for testing. In practice
-		// the same value should not be used for
-		// these two fields.
-		TLSCACert:     gofastly.ToPointer(cert),
-		TLSClientCert: gofastly.ToPointer(cert),
-		TLSClientKey:  gofastly.ToPointer(key),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
+		UseTLS:            gofastly.ToPointer(false),
 	}
 
 	splunkLogOneUpdated := gofastly.Splunk{
-		Name:              gofastly.ToPointer("test-splunk-1"),
-		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token:             gofastly.ToPointer("test-token"),
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("test-splunk-1"),
 		Placement:         gofastly.ToPointer("waf_debug"),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		TLSCACert:         gofastly.ToPointer(cert),
+		TLSClientCert:     gofastly.ToPointer(cert),
+		TLSClientKey:      gofastly.ToPointer(key),
 		TLSHostname:       gofastly.ToPointer("example.com"),
-		// The same certificate is used here for
-		// TLSCACert and TLSClientCert, but this
-		// is strictly for testing. In practice
-		// the same value should not be used for
-		// these two fields.
-		TLSCACert:     gofastly.ToPointer(cert),
-		TLSClientCert: gofastly.ToPointer(cert),
-		TLSClientKey:  gofastly.ToPointer(key),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
+		UseTLS:            gofastly.ToPointer(false),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
 	}
 
 	splunkLogTwo := gofastly.Splunk{
-		Name:              gofastly.ToPointer("test-splunk-2"),
-		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-		Token:             gofastly.ToPointer("test-token"),
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("test-splunk-2"),
 		Placement:         gofastly.ToPointer("waf_debug"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
+		TLSCACert:         gofastly.ToPointer(cert),
+		TLSClientCert:     gofastly.ToPointer(cert),
+		TLSClientKey:      gofastly.ToPointer(key),
 		TLSHostname:       gofastly.ToPointer("example.com"),
-		// The same certificate is used here for
-		// TLSCACert and TLSClientCert, but this
-		// is strictly for testing. In practice
-		// the same value should not be used for
-		// these two fields.
-		TLSCACert:     gofastly.ToPointer(cert),
-		TLSClientCert: gofastly.ToPointer(cert),
-		TLSClientKey:  gofastly.ToPointer(key),
+		Token:             gofastly.ToPointer("test-token"),
+		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
+		UseTLS:            gofastly.ToPointer(false),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -285,10 +291,8 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOne}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_splunk.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "1"),
 				),
 			},
 
@@ -297,10 +301,8 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSplunkAttributes(&service, []*gofastly.Splunk{&splunkLogOneUpdated, &splunkLogTwo}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", serviceName),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_splunk.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_splunk.#", "2"),
 				),
 			},
 		},

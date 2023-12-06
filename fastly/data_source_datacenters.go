@@ -7,9 +7,10 @@ import (
 	"strconv"
 
 	gofastly "github.com/fastly/go-fastly/v8/fastly"
-	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 
 func dataSourceFastlyDatacenters() *schema.Resource {
@@ -79,11 +80,19 @@ func flattenDatacenters(remoteState []gofastly.Datacenter) []map[string]any {
 	}
 
 	for i, resource := range remoteState {
-		data := map[string]any{
-			"code":   resource.Code,
-			"name":   resource.Name,
-			"group":  resource.Group,
-			"shield": resource.Shield,
+		data := map[string]any{}
+
+		if resource.Code != nil {
+			data["code"] = *resource.Code
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Group != nil {
+			data["group"] = *resource.Group
+		}
+		if resource.Shield != nil {
+			data["shield"] = *resource.Shield
 		}
 
 		// Prune any empty values that come from the default string value in structs.

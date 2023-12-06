@@ -28,8 +28,6 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "comment", "Managed by Terraform"),
-					resource.TestCheckResourceAttr("fastly_service_compute.foo", "version_comment", ""),
-					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "0"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "backend.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),

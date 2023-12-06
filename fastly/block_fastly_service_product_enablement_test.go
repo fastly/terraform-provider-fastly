@@ -55,13 +55,19 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
 		Shield:  gofastly.ToPointer("amsterdam-nl"), // required for image_optimizer
 
 		// NOTE: The following are defaults applied by the API.
+		AutoLoadbalance:     gofastly.ToPointer(false),
 		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
 		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
 		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		RequestCondition:    gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

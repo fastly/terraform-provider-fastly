@@ -1007,13 +1007,15 @@ func testSweepServices(region string) error {
 				return err
 			}
 
-			if gofastly.ToValue(s.ActiveVersion.Number) != 0 {
-				_, err := client.DeactivateVersion(&gofastly.DeactivateVersionInput{
-					ServiceID:      gofastly.ToValue(service.ID),
-					ServiceVersion: gofastly.ToValue(s.ActiveVersion.Number),
-				})
-				if err != nil {
-					return err
+			if s.ActiveVersion != nil {
+				if gofastly.ToValue(s.ActiveVersion.Number) != 0 {
+					_, err := client.DeactivateVersion(&gofastly.DeactivateVersionInput{
+						ServiceID:      gofastly.ToValue(service.ID),
+						ServiceVersion: gofastly.ToValue(s.ActiveVersion.Number),
+					})
+					if err != nil {
+						return err
+					}
 				}
 			}
 

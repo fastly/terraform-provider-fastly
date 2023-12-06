@@ -502,19 +502,24 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	}
 
 	if s.Name != nil {
-		err = d.Set("name", *s.Name)
+		err = d.Set("name", s.Name)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	}
 	if s.Comment != nil {
-		err = d.Set("comment", *s.Comment)
+		err = d.Set("comment", s.Comment)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	}
-	if s.ActiveVersion != nil && s.ActiveVersion.Comment != nil {
-		err = d.Set("version_comment", *s.ActiveVersion.Comment)
+
+	if s.ActiveVersion == nil {
+		s.ActiveVersion = &gofastly.Version{}
+	}
+
+	if s.ActiveVersion.Comment != nil {
+		err = d.Set("version_comment", s.ActiveVersion.Comment)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -541,14 +546,14 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// NOTE: We only force a refresh if `activate = true` in config.
 	// This is because if the user has set it to false, then the expectation is
 	// for the version to drift and so there will be no active version to use.
-	if s.ActiveVersion != nil && s.ActiveVersion.Number != nil {
+	if s.ActiveVersion.Number != nil {
 		if activeVersionFromPriorState != *s.ActiveVersion.Number && activate {
 			err = d.Set("force_refresh", true)
 			if err != nil {
 				return diag.FromErr(err)
 			}
 		}
-		err = d.Set("active_version", *s.ActiveVersion.Number)
+		err = d.Set("active_version", s.ActiveVersion.Number)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -576,12 +581,12 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// prevents us from getting into the state where the attribute has never
 	// been set and gets passed into CloneVersion in the Update function and
 	// fails.
-	clonedVersionNotSet := d.Get("cloned_version") == 0
+	clonedVersionNotSet := d.Get("cloned_version").(int) == 0
 	if clonedVersionNotSet {
-		if *s.ActiveVersion.Number == 0 && s.Version != nil && s.Version.Number != nil {
-			*s.ActiveVersion.Number = *s.Version.Number
+		if s.ActiveVersion.Number == nil && s.Version != nil && s.Version.Number != nil {
+			s.ActiveVersion.Number = s.Version.Number
 		}
-		err = d.Set("cloned_version", *s.ActiveVersion.Number)
+		err = d.Set("cloned_version", s.ActiveVersion.Number)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -593,16 +598,18 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	if !d.Get("activate").(bool) {
 		s.ActiveVersion.Number = gofastly.ToPointer(d.Get("cloned_version").(int))
 	} else {
-		err := d.Set("cloned_version", *s.ActiveVersion.Number)
-		if err != nil {
-			return diag.FromErr(err)
+		if s.ActiveVersion.Number != nil {
+			err := d.Set("cloned_version", s.ActiveVersion.Number)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll
 	// have an empty ActiveService version (no version is active, so we can't
 	// query for information on it).
-	if *s.ActiveVersion.Number != 0 {
+	if s.ActiveVersion.Number != nil && *s.ActiveVersion.Number != 0 {
 		// This delegates read to all the attribute handlers which can then manage reading state for
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
@@ -611,10 +618,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 				if errors.Is(err, context.Canceled) {
 					return nil
 				}
-
 				return diag.FromErr(err)
 			}
-
 			if err := a.Read(ctx, d, s, conn); err != nil {
 				return diag.FromErr(err)
 			}

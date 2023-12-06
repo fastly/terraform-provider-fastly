@@ -76,13 +76,13 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.
 	}
 
 	if u.Login != nil {
-		d.Set("login", *u.Login)
+		d.Set("login", u.Login)
 	}
 	if u.Name != nil {
-		d.Set("name", *u.Name)
+		d.Set("name", u.Name)
 	}
 	if u.Role != nil {
-		d.Set("role", *u.Role)
+		d.Set("role", u.Role)
 	}
 
 	return nil

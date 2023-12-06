@@ -34,8 +34,7 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 			},
 			local: []map[string]any{
 				{
-					"name":    "test.notexample.com",
-					"comment": "",
+					"name": "test.notexample.com",
 				},
 			},
 		},

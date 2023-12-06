@@ -103,6 +103,9 @@ func (h *WAFServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 	localState := d.Get(h.GetKey()).([]any)
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
+		if s.ActiveVersion == nil {
+			return fmt.Errorf("error: no service ActiveVersion object")
+		}
 		serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
 		log.Printf("[DEBUG] Refreshing WAFs for (%s)", d.Id())
 		remoteState, err := conn.ListWAFs(&gofastly.ListWAFsInput{

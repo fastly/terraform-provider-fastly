@@ -134,30 +134,33 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("datadog-endpoint"),
-		Token:          gofastly.ToPointer("token"),
-		Region:         gofastly.ToPointer("US"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("datadog-endpoint"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("token"),
 	}
 
 	log1AfterUpdate := gofastly.Datadog{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("datadog-endpoint"),
-		Token:          gofastly.ToPointer("t0k3n"),
-		Region:         gofastly.ToPointer("EU"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("datadog-endpoint"),
+		Region:            gofastly.ToPointer("EU"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("t0k3n"),
 	}
 
 	log2 := gofastly.Datadog{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("another-datadog-endpoint"),
-		Token:          gofastly.ToPointer("another-token"),
-		Region:         gofastly.ToPointer("US"),
-		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer(datadogDefaultFormat + "\n"),
+		Format:            gofastly.ToPointer(datadogDefaultFormat + "\n"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("another-datadog-endpoint"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("another-token"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -76,63 +76,62 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Cloudfiles{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("cloudfiles-endpoint"),
-		BucketName:        gofastly.ToPointer("bucket"),
-		User:              gofastly.ToPointer("user"),
 		AccessKey:         gofastly.ToPointer("secret"),
-		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		BucketName:        gofastly.ToPointer("bucket"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("cloudfiles-endpoint"),
 		Path:              gofastly.ToPointer("/"),
-		Region:            gofastly.ToPointer("ORD"),
 		Period:            gofastly.ToPointer(3600),
 		Placement:         gofastly.ToPointer("none"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Region:            gofastly.ToPointer("ORD"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		CompressionCodec:  gofastly.ToPointer("zstd"),
+		User:              gofastly.ToPointer("user"),
 	}
 
 	log1AfterUpdate := gofastly.Cloudfiles{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("cloudfiles-endpoint"),
-		BucketName:        gofastly.ToPointer("bucketupdate"),
-		User:              gofastly.ToPointer("userupdate"),
 		AccessKey:         gofastly.ToPointer("secretupdate"),
-		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		BucketName:        gofastly.ToPointer("bucketupdate"),
 		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(1),
 		MessageType:       gofastly.ToPointer("blank"),
+		Name:              gofastly.ToPointer("cloudfiles-endpoint"),
 		Path:              gofastly.ToPointer("new/"),
-		Region:            gofastly.ToPointer("LON"),
 		Period:            gofastly.ToPointer(3601),
 		Placement:         gofastly.ToPointer("none"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Region:            gofastly.ToPointer("LON"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		CompressionCodec:  gofastly.ToPointer(""),
+		User:              gofastly.ToPointer("userupdate"),
 	}
 
 	log2 := gofastly.Cloudfiles{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("another-cloudfiles-endpoint"),
-		BucketName:        gofastly.ToPointer("bucket2"),
-		User:              gofastly.ToPointer("user2"),
 		AccessKey:         gofastly.ToPointer("secret2"),
-		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		BucketName:        gofastly.ToPointer("bucket2"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("another-cloudfiles-endpoint"),
 		Path:              gofastly.ToPointer("two/"),
-		Region:            gofastly.ToPointer("SYD"),
 		Period:            gofastly.ToPointer(3600),
 		Placement:         gofastly.ToPointer("none"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		Region:            gofastly.ToPointer("SYD"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		CompressionCodec:  gofastly.ToPointer("zstd"),
+		User:              gofastly.ToPointer("user2"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,10 +146,8 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.none", &service),
 					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.none", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.none", "logging_cloudfiles.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.none", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.none", "logging_cloudfiles.#", "1"),
 				),
 			},
 
@@ -159,10 +156,8 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.none", &service),
 					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.none", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.none", "logging_cloudfiles.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.none", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.none", "logging_cloudfiles.#", "2"),
 				),
 			},
 		},
@@ -325,21 +320,21 @@ resource "fastly_service_vcl" "none" {
   }
 
   logging_cloudfiles {
-    name = "cloudfiles-endpoint"
-    bucket_name = "bucket"
-    user = "user"
     access_key = "secret"
-    public_key = file("test_fixtures/fastly_test_publickey")
+    bucket_name = "bucket"
+    compression_codec = "zstd"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format_version = 2
     message_type = "classic"
+    name = "cloudfiles-endpoint"
     path = "/"
-    region = "ORD"
     period = 3600
     placement = "none"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    region = "ORD"
     response_condition = "response_condition_test"
-    format_version = 2
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    compression_codec = "zstd"
+    user = "user"
   }
 
   force_destroy = true
@@ -370,39 +365,39 @@ resource "fastly_service_vcl" "none" {
   }
 
   logging_cloudfiles {
-    name = "cloudfiles-endpoint"
-    bucket_name = "bucketupdate"
-    user = "userupdate"
     access_key = "secretupdate"
-    public_key = file("test_fixtures/fastly_test_publickey")
+    bucket_name = "bucketupdate"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format_version = 2
+    gzip_level = 1
     message_type = "blank"
+    name = "cloudfiles-endpoint"
     path = "new/"
-    region = "LON"
     period = 3601
     placement = "none"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    region = "LON"
     response_condition = "response_condition_test"
-    gzip_level = 1
-    format_version = 2
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    user = "userupdate"
   }
 
   logging_cloudfiles {
-    name = "another-cloudfiles-endpoint"
-    bucket_name = "bucket2"
-    user = "user2"
     access_key = "secret2"
-    public_key = file("test_fixtures/fastly_test_publickey")
+    bucket_name = "bucket2"
+    compression_codec = "zstd"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format_version = 2
     message_type = "classic"
+    name = "another-cloudfiles-endpoint"
     path = "two/"
-    region = "SYD"
     period = 3600
     placement = "none"
+    public_key = file("test_fixtures/fastly_test_publickey")
+    region = "SYD"
     response_condition = "response_condition_test"
-    format_version = 2
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    compression_codec = "zstd"
+    user = "user2"
   }
 
   force_destroy = true

@@ -107,10 +107,8 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(&service, []*gofastly.NewRelicOTLP{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_newrelicotlp.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_newrelicotlp.#", "1"),
 				),
 			},
 
@@ -119,10 +117,8 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(&service, []*gofastly.NewRelicOTLP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_newrelicotlp.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_newrelicotlp.#", "2"),
 				),
 				PreventDiskCleanup: true,
 			},
@@ -158,14 +154,6 @@ func testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(service *gofastly.Servic
 					// these ahead of time
 					dl.CreatedAt = nil
 					dl.UpdatedAt = nil
-
-					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
-					if serviceType == ServiceTypeCompute {
-						dl.FormatVersion = d.FormatVersion
-						dl.Format = d.Format
-						dl.ResponseCondition = d.ResponseCondition
-						dl.Placement = d.Placement
-					}
 
 					if diff := cmp.Diff(d, dl); diff != "" {
 						return fmt.Errorf("bad match NewRelic OTLP logging match: %s", diff)

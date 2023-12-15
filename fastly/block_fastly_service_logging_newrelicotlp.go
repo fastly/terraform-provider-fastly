@@ -32,10 +32,28 @@ func (h *NewRelicOTLPServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
+		"format": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic OTLP can ingest.",
+		},
+		"format_version": {
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			Description:      "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
+			ValidateDiagFunc: validateLoggingFormatVersion(),
+		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the New Relic OTLP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"placement": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		},
 		"region": {
 			Type:        schema.TypeString,
@@ -43,43 +61,22 @@ func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "US",
 			Description: "The region that log data will be sent to. Default: `US`",
 		},
+		"response_condition": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the condition to apply.",
+		},
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "The Insert API key from the Account page of your New Relic account",
 		},
-	}
-
-	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		blockAttributes["format"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic OTLP can ingest.",
-		}
-		blockAttributes["format_version"] = &schema.Schema{
-			Type:             schema.TypeInt,
-			Optional:         true,
-			Default:          2,
-			Description:      "The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).",
-			ValidateDiagFunc: validateLoggingFormatVersion(),
-		}
-		blockAttributes["placement"] = &schema.Schema{
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "Where in the generated VCL the logging call should be placed.",
-			ValidateDiagFunc: validateLoggingPlacement(),
-		}
-		blockAttributes["response_condition"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The name of the condition to apply.",
-		}
-		blockAttributes["url"] = &schema.Schema{
+		"url": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The optional New Relic Trace Observer URL to stream logs to for Infinite Tracing.",
-		}
+		},
 	}
 
 	return &schema.Schema{
@@ -97,7 +94,8 @@ func (h *NewRelicOTLPServiceAttributeHandler) Create(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly New Relic OTLP logging addition opts: %#v", opts)
 
-	return createNewRelicOTLP(conn, opts)
+	_, err := conn.CreateNewRelicOTLP(opts)
+	return err
 }
 
 // Read refreshes the resource.
@@ -115,10 +113,6 @@ func (h *NewRelicOTLPServiceAttributeHandler) Read(_ context.Context, d *schema.
 		}
 
 		dll := flattenNewRelicOTLP(remoteState)
-
-		for _, element := range dll {
-			h.pruneVCLLoggingAttributes(element)
-		}
 
 		if err := d.Set(h.GetKey(), dll); err != nil {
 			log.Printf("[WARN] Error setting New Relic OTLP logging endpoints for (%s): %s", d.Id(), err)
@@ -170,20 +164,15 @@ func (h *NewRelicOTLPServiceAttributeHandler) Update(_ context.Context, d *schem
 
 // Delete deletes the resource.
 func (h *NewRelicOTLPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts := h.buildDelete(resource, d.Id(), serviceVersion)
+	opts := &gofastly.DeleteNewRelicOTLPInput{
+		ServiceID:      d.Id(),
+		ServiceVersion: serviceVersion,
+		Name:           resource["name"].(string),
+	}
 
 	log.Printf("[DEBUG] Fastly New Relic OTLP logging endpoint removal opts: %#v", opts)
 
-	return deleteNewRelicOTLP(conn, opts)
-}
-
-func createNewRelicOTLP(conn *gofastly.Client, i *gofastly.CreateNewRelicOTLPInput) error {
-	_, err := conn.CreateNewRelicOTLP(i)
-	return err
-}
-
-func deleteNewRelicOTLP(conn *gofastly.Client, i *gofastly.DeleteNewRelicOTLPInput) error {
-	err := conn.DeleteNewRelicOTLP(i)
+	err := conn.DeleteNewRelicOTLP(opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {
@@ -251,14 +240,4 @@ func (h *NewRelicOTLPServiceAttributeHandler) buildCreate(newrelicotlpMap any, s
 	}
 
 	return opts
-}
-
-func (h *NewRelicOTLPServiceAttributeHandler) buildDelete(newrelicotlpMap any, serviceID string, serviceVersion int) *gofastly.DeleteNewRelicOTLPInput {
-	resource := newrelicotlpMap.(map[string]any)
-
-	return &gofastly.DeleteNewRelicOTLPInput{
-		ServiceID:      serviceID,
-		ServiceVersion: serviceVersion,
-		Name:           resource["name"].(string),
-	}
 }

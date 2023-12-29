@@ -107,17 +107,19 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 	log.Printf("[DEBUG] REFRESH: TLS Mutual Authentication input: %#v", input)
 
 	tma, err := conn.GetTLSMutualAuthentication(input)
-        if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
-                id := d.Id()
-                d.SetId("")
-                return diag.Diagnostics{
-                        diag.Diagnostic{
-                                Severity:      diag.Warning,
-                                Summary:       fmt.Sprintf("TLS Mutual Authentication (%s) not found - removing from state", id),
-                                AttributePath: cty.Path{cty.GetAttrStep{Name: id}},
-                        },
-                }
-        } else if err != nil {
+
+	if err != nil {
+        	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+        	        id := d.Id()
+        	        d.SetId("")
+        	        return diag.Diagnostics{
+        	                diag.Diagnostic{
+        	                        Severity:      diag.Warning,
+        	                        Summary:       fmt.Sprintf("TLS Mutual Authentication (%s) not found - removing from state", id),
+        	                        AttributePath: cty.Path{cty.GetAttrStep{Name: id}},
+        	                },
+        	        }
+        	}
 		return diag.FromErr(err)
 	}
 

@@ -62,8 +62,8 @@ jobs:
     - name: Check diff
       run: |
         git diff --exit-code --ignore-all-space ./docs/
-  validate-interface:
-    if: "!contains(github.event.pull_request.labels.*.name, 'breaking-change')"
+  validate-interface-trusted:
+    if: "!contains(github.event.pull_request.labels.*.name, 'breaking-change') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository"
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code

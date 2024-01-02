@@ -99,9 +99,6 @@ jobs:
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
   # This will run the build not as the forked owner but as your own token user.
   validate-interface-fork:
-    permissions:
-      pull-requests: write
-      checks: write
     if: |
       !contains(github.event.pull_request.labels.*.name, 'breaking-change') &&
       github.event_name == 'repository_dispatch' &&

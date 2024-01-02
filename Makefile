@@ -83,6 +83,9 @@ errcheck:
 goreleaser-bin:
 	go install github.com/goreleaser/goreleaser@v1.18.2
 
+nilaway:
+	@nilaway ./...
+
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip-validate will skip the checks
 # --clean will save you deleting the dist dir

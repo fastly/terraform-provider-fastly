@@ -41,6 +41,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingGooglePubSub(vclAttributes),
 		NewServiceLoggingScalyr(vclAttributes),
 		NewServiceLoggingNewRelic(vclAttributes),
+		NewServiceLoggingNewRelicOTLP(vclAttributes),
 		NewServiceLoggingKafka(vclAttributes),
 		NewServiceLoggingHeroku(vclAttributes),
 		NewServiceLoggingHoneycomb(vclAttributes),

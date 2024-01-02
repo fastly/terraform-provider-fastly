@@ -1,6 +1,7 @@
 // Package main is the entry point for the Fastly Terraform provider.
 package main
 
+// Something changed
 import (
 	"flag"
 	"log"

@@ -166,6 +166,10 @@ jobs:
 
             const check = checks.check_runs.filter(c => c.name === process.env.job);
 
+            if (check[0] == undefined) {
+              return;
+            }
+
             const { data: result } = await github.rest.checks.update({
               ...context.repo,
               check_run_id: check[0].id,

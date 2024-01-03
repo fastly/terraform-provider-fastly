@@ -10,7 +10,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: 1.19.x
     - name: Restore cache
@@ -36,7 +36,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
     - name: Restore cache
@@ -56,7 +56,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: 1.19.x
     - name: Generate Docs
@@ -76,7 +76,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: 1.19.x
     - name: Restore cache
@@ -126,7 +126,7 @@ jobs:
         with:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: 1.19.x
       - name: Restore cache
@@ -181,7 +181,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: 1.19.x
       - name: Restore cache

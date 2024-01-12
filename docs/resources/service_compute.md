@@ -650,7 +650,7 @@ Optional:
 
 Optional:
 
-- `content` (String) The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified
+- `content` (String, Sensitive) The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified
 - `filename` (String) The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified
 - `source_code_hash` (String) Used to trigger updates. Must be set to a SHA512 hash of all files (in sorted order) within the package. The usual way to set this is using the fastly_package_hash data source.
 

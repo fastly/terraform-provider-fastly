@@ -14,7 +14,7 @@ jobs:
       with:
         go-version: 1.19.x
     - name: Restore cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
@@ -40,7 +40,7 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     - name: Restore cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
@@ -80,7 +80,7 @@ jobs:
       with:
         go-version: 1.19.x
     - name: Restore cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
@@ -130,7 +130,7 @@ jobs:
         with:
           go-version: 1.19.x
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
@@ -189,7 +189,7 @@ jobs:
         with:
           go-version: 1.19.x
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}

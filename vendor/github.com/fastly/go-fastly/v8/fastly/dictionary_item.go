@@ -3,40 +3,55 @@ package fastly
 import (
 	"fmt"
 	"net/url"
-	"sort"
-	"strconv"
 	"time"
-
-	"github.com/peterhellberg/link"
 )
+
+const dictionaryItemsPath = "/service/%s/dictionary/%s/items"
 
 // DictionaryItem represents a dictionary item response from the Fastly API.
 type DictionaryItem struct {
 	CreatedAt    *time.Time `mapstructure:"created_at"`
 	DeletedAt    *time.Time `mapstructure:"deleted_at"`
-	DictionaryID string     `mapstructure:"dictionary_id"`
-	ItemKey      string     `mapstructure:"item_key"`
-	ItemValue    string     `mapstructure:"item_value"`
-	ServiceID    string     `mapstructure:"service_id"`
+	DictionaryID *string    `mapstructure:"dictionary_id"`
+	ItemKey      *string    `mapstructure:"item_key"`
+	ItemValue    *string    `mapstructure:"item_value"`
+	ServiceID    *string    `mapstructure:"service_id"`
 	UpdatedAt    *time.Time `mapstructure:"updated_at"`
 }
 
-// dictionaryItemsByKey is a sortable list of dictionary items.
-type dictionaryItemsByKey []*DictionaryItem
-
-// Len implement the sortable interface.
-func (s dictionaryItemsByKey) Len() int {
-	return len(s)
+// GetDictionaryItemsInput is used as input to the GetDictionaryItems function.
+type GetDictionaryItemsInput struct {
+	// DictionaryID is the ID of the dictionary to retrieve items for (required).
+	DictionaryID string
+	// Direction is the direction in which to sort results.
+	Direction *string
+	// Page is the current page.
+	Page *int
+	// PerPage is the number of records per page.
+	PerPage *int
+	// ServiceID is the ID of the service (required).
+	ServiceID string
+	// Sort is the field on which to sort.
+	Sort *string
 }
 
-// Swap implement the sortable interface.
-func (s dictionaryItemsByKey) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-// Less implement the sortable interface.
-func (s dictionaryItemsByKey) Less(i, j int) bool {
-	return s[i].ItemKey < s[j].ItemKey
+// GetDictionaryItems returns a ListPaginator for paginating through the resources.
+func (c *Client) GetDictionaryItems(i *GetDictionaryItemsInput) *ListPaginator[DictionaryItem] {
+	input := ListOpts{}
+	if i.Direction != nil {
+		input.Direction = *i.Direction
+	}
+	if i.Sort != nil {
+		input.Sort = *i.Sort
+	}
+	if i.Page != nil {
+		input.Page = *i.Page
+	}
+	if i.PerPage != nil {
+		input.PerPage = *i.PerPage
+	}
+	path := fmt.Sprintf(dictionaryItemsPath, i.ServiceID, i.DictionaryID)
+	return NewPaginator[DictionaryItem](c, input, path)
 }
 
 // ListDictionaryItemsInput is used as input to the ListDictionaryItems function.
@@ -44,18 +59,15 @@ type ListDictionaryItemsInput struct {
 	// DictionaryID is the ID of the dictionary to retrieve items for (required).
 	DictionaryID string
 	// Direction is the direction in which to sort results.
-	Direction string
-	// Page is the current page.
-	Page int
-	// PerPage is the number of records per page.
-	PerPage int
+	Direction *string
 	// ServiceID is the ID of the service (required).
 	ServiceID string
 	// Sort is the field on which to sort.
-	Sort string
+	Sort *string
 }
 
-// ListDictionaryItems retrieves all resources.
+// ListDictionaryItems retrieves all resources. Not suitable for large
+// collections.
 func (c *Client) ListDictionaryItems(i *ListDictionaryItemsInput) ([]*DictionaryItem, error) {
 	if i.DictionaryID == "" {
 		return nil, ErrMissingDictionaryID
@@ -63,143 +75,29 @@ func (c *Client) ListDictionaryItems(i *ListDictionaryItemsInput) ([]*Dictionary
 	if i.ServiceID == "" {
 		return nil, ErrMissingServiceID
 	}
-
-	path := fmt.Sprintf("/service/%s/dictionary/%s/items", i.ServiceID, i.DictionaryID)
-	resp, err := c.Get(path, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var bs []*DictionaryItem
-	if err := decodeBodyMap(resp.Body, &bs); err != nil {
-		return nil, err
-	}
-	sort.Stable(dictionaryItemsByKey(bs))
-	return bs, nil
-}
-
-// ListDictionaryItemsPaginator implements the PaginatorDictionaryItems interface.
-type ListDictionaryItemsPaginator struct {
-	CurrentPage int
-	LastPage    int
-	NextPage    int
-
-	// Private
-	client   *Client
-	consumed bool
-	options  *ListDictionaryItemsInput
-}
-
-// HasNext returns a boolean indicating whether more pages are available
-func (p *ListDictionaryItemsPaginator) HasNext() bool {
-	return !p.consumed || p.Remaining() != 0
-}
-
-// Remaining returns the remaining page count
-func (p *ListDictionaryItemsPaginator) Remaining() int {
-	if p.LastPage == 0 {
-		return 0
-	}
-	return p.LastPage - p.CurrentPage
-}
-
-// GetNext retrieves data in the next page
-func (p *ListDictionaryItemsPaginator) GetNext() ([]*DictionaryItem, error) {
-	return p.client.listDictionaryItemsWithPage(p.options, p)
-}
-
-// NewListDictionaryItemsPaginator returns a new paginator
-func (c *Client) NewListDictionaryItemsPaginator(i *ListDictionaryItemsInput) PaginatorDictionaryItems {
-	return &ListDictionaryItemsPaginator{
-		client:  c,
-		options: i,
-	}
-}
-
-// listDictionaryItemsWithPage returns a list of items for a dictionary of a given page
-func (c *Client) listDictionaryItemsWithPage(i *ListDictionaryItemsInput, p *ListDictionaryItemsPaginator) ([]*DictionaryItem, error) {
-	if i.ServiceID == "" {
-		return nil, ErrMissingServiceID
-	}
-
-	if i.DictionaryID == "" {
-		return nil, ErrMissingDictionaryID
-	}
-
-	var perPage int
-	const maxPerPage = 100
-	if i.PerPage <= 0 {
-		perPage = maxPerPage
-	} else {
-		perPage = i.PerPage
-	}
-
-	// page is not specified, fetch from the beginning
-	if i.Page <= 0 && p.CurrentPage == 0 {
-		p.CurrentPage = 1
-	} else {
-		// page is specified, fetch from a given page
-		if !p.consumed {
-			p.CurrentPage = i.Page
-		} else {
-			p.CurrentPage = p.CurrentPage + 1
+	p := c.GetDictionaryItems(&GetDictionaryItemsInput{
+		DictionaryID: i.DictionaryID,
+		Direction:    i.Direction,
+		ServiceID:    i.ServiceID,
+		Sort:         i.Sort,
+	})
+	var results []*DictionaryItem
+	for p.HasNext() {
+		data, err := p.GetNext()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get next page (remaining: %d): %s", p.Remaining(), err)
 		}
+		results = append(results, data...)
 	}
-
-	path := fmt.Sprintf("/service/%s/dictionary/%s/items", i.ServiceID, i.DictionaryID)
-	requestOptions := &RequestOptions{
-		Params: map[string]string{
-			"per_page": strconv.Itoa(perPage),
-			"page":     strconv.Itoa(p.CurrentPage),
-		},
-	}
-
-	if i.Direction != "" {
-		requestOptions.Params["direction"] = i.Direction
-	}
-	if i.Sort != "" {
-		requestOptions.Params["sort"] = i.Sort
-	}
-
-	resp, err := c.Get(path, requestOptions)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	for _, l := range link.ParseResponse(resp) {
-		// indicates the Link response header contained the next page instruction
-		if l.Rel == "next" {
-			u, _ := url.Parse(l.URI)
-			query := u.Query()
-			p.NextPage, _ = strconv.Atoi(query["page"][0])
-		}
-		// indicates the Link response header contained the last page instruction
-		if l.Rel == "last" {
-			u, _ := url.Parse(l.URI)
-			query := u.Query()
-			p.LastPage, _ = strconv.Atoi(query["page"][0])
-		}
-	}
-
-	p.consumed = true
-
-	var bs []*DictionaryItem
-	if err := decodeBodyMap(resp.Body, &bs); err != nil {
-		return nil, err
-	}
-	sort.Stable(dictionaryItemsByKey(bs))
-
-	return bs, nil
+	return results, nil
 }
 
 // CreateDictionaryItemInput is used as input to the CreateDictionaryItem function.
 type CreateDictionaryItemInput struct {
 	// ItemKey is the dictionary item key, maximum 256 characters.
-	ItemKey string `url:"item_key,omitempty"`
+	ItemKey *string `url:"item_key,omitempty"`
 	// ItemValue is the dictionary item value, maximum 8000 characters.
-	ItemValue string `url:"item_value,omitempty"`
+	ItemValue *string `url:"item_value,omitempty"`
 	// ServiceID is the ID of the service (required).
 	ServiceID string `url:"-"`
 	// DictionaryID is the ID of the dictionary to retrieve items for (required).
@@ -233,11 +131,15 @@ func (c *Client) CreateDictionaryItem(i *CreateDictionaryItemInput) (*Dictionary
 func (c *Client) CreateDictionaryItems(i []CreateDictionaryItemInput) ([]DictionaryItem, error) {
 	var b []DictionaryItem
 	for _, cdii := range i {
-		di, err := c.CreateDictionaryItem(&cdii)
+		cdii := cdii // it's unlikely the underlying value will have changed but we avoid a gosec warning this way (ref: https://bit.ly/go-range-bug)
+		ptr, err := c.CreateDictionaryItem(&cdii)
 		if err != nil {
 			return nil, err
 		}
-		b = append(b, *di)
+		if ptr == nil {
+			return nil, fmt.Errorf("error: unexpected nil pointer")
+		}
+		b = append(b, *ptr)
 	}
 	return b, nil
 }
@@ -330,11 +232,11 @@ type BatchModifyDictionaryItemsInput struct {
 // BatchDictionaryItem represents a dictionary item.
 type BatchDictionaryItem struct {
 	// ItemKey is an item key (maximum 256 characters).
-	ItemKey string `json:"item_key"`
+	ItemKey *string `json:"item_key"`
 	// ItemValue is an item value (maximum 8000 characters).
-	ItemValue string `json:"item_value"`
+	ItemValue *string `json:"item_value"`
 	// Operation is a batching operation variant.
-	Operation BatchOperation `json:"op"`
+	Operation *BatchOperation `json:"op"`
 }
 
 // BatchModifyDictionaryItems bulk updates dictionary items.
@@ -349,7 +251,7 @@ func (c *Client) BatchModifyDictionaryItems(i *BatchModifyDictionaryItemsInput) 
 		return ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s/dictionary/%s/items", i.ServiceID, i.DictionaryID)
+	path := fmt.Sprintf(dictionaryItemsPath, i.ServiceID, i.DictionaryID)
 	resp, err := c.PatchJSON(path, i, nil)
 	if err != nil {
 		return err

@@ -15,8 +15,8 @@ import (
 // KVStore represents an KV Store response from the Fastly API.
 type KVStore struct {
 	CreatedAt *time.Time `mapstructure:"created_at"`
-	ID        string     `mapstructure:"id"`
 	Name      string     `mapstructure:"name"`
+	StoreID   string     `mapstructure:"id"`
 	UpdatedAt *time.Time `mapstructure:"updated_at"`
 }
 
@@ -37,6 +37,7 @@ func (c *Client) CreateKVStore(i *CreateKVStoreInput) (*KVStore, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var store *KVStore
 	if err := decodeBodyMap(resp.Body, &store); err != nil {
@@ -94,6 +95,7 @@ func (c *Client) ListKVStores(i *ListKVStoresInput) (*ListKVStoresResponse, erro
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var output *ListKVStoresResponse
 	if err := decodeBodyMap(resp.Body, &output); err != nil {
@@ -157,21 +159,22 @@ func (l *ListKVStoresPaginator) Err() error {
 
 // GetKVStoreInput is the input to the GetKVStore function.
 type GetKVStoreInput struct {
-	// ID is the ID of the store to fetch (required).
-	ID string
+	// StoreID is the StoreID of the store to fetch (required).
+	StoreID string
 }
 
 // GetKVStore retrieves the specified resource.
 func (c *Client) GetKVStore(i *GetKVStoreInput) (*KVStore, error) {
-	if i.ID == "" {
-		return nil, ErrMissingID
+	if i.StoreID == "" {
+		return nil, ErrMissingStoreID
 	}
 
-	path := "/resources/stores/kv/" + i.ID
+	path := "/resources/stores/kv/" + i.StoreID
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var output *KVStore
 	if err := decodeBodyMap(resp.Body, &output); err != nil {
@@ -182,21 +185,22 @@ func (c *Client) GetKVStore(i *GetKVStoreInput) (*KVStore, error) {
 
 // DeleteKVStoreInput is the input to the DeleteKVStore function.
 type DeleteKVStoreInput struct {
-	// ID is the ID of the kv store to delete (required).
-	ID string
+	// StoreID is the StoreID of the kv store to delete (required).
+	StoreID string
 }
 
 // DeleteKVStore deletes the specified resource.
 func (c *Client) DeleteKVStore(i *DeleteKVStoreInput) error {
-	if i.ID == "" {
-		return ErrMissingID
+	if i.StoreID == "" {
+		return ErrMissingStoreID
 	}
 
-	path := "/resources/stores/kv/" + i.ID
+	path := "/resources/stores/kv/" + i.StoreID
 	resp, err := c.Delete(path, nil)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
 		return NewHTTPError(resp)
@@ -230,8 +234,8 @@ type ListKVStoreKeysInput struct {
 	Consistency Consistency
 	// Cursor is used for paginating through results.
 	Cursor string
-	// ID is the ID of the kv store to list keys for (required).
-	ID string
+	// StoreID is the StoreID of the kv store to list keys for (required).
+	StoreID string
 	// Limit is the maximum number of items included the response.
 	Limit int
 }
@@ -265,11 +269,11 @@ type ListKVStoreKeysResponse struct {
 
 // ListKVStoreKeys retrieves all resources.
 func (c *Client) ListKVStoreKeys(i *ListKVStoreKeysInput) (*ListKVStoreKeysResponse, error) {
-	if i.ID == "" {
-		return nil, ErrMissingID
+	if i.StoreID == "" {
+		return nil, ErrMissingStoreID
 	}
 
-	path := "/resources/stores/kv/" + i.ID + "/keys"
+	path := "/resources/stores/kv/" + i.StoreID + "/keys"
 	ro := new(RequestOptions)
 	ro.Params = i.formatFilters()
 
@@ -277,6 +281,7 @@ func (c *Client) ListKVStoreKeys(i *ListKVStoreKeysInput) (*ListKVStoreKeysRespo
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	var output *ListKVStoreKeysResponse
 	if err := decodeBodyMap(resp.Body, &output); err != nil {
@@ -340,26 +345,27 @@ func (l *ListKVStoreKeysPaginator) Keys() []string {
 
 // GetKVStoreKeyInput is the input to the GetKVStoreKey function.
 type GetKVStoreKeyInput struct {
-	// ID is the ID of the kv store (required).
-	ID string
+	// StoreID is the StoreID of the kv store (required).
+	StoreID string
 	// Key is the key to fetch (required).
 	Key string
 }
 
 // GetKVStoreKey retrieves the specified resource.
 func (c *Client) GetKVStoreKey(i *GetKVStoreKeyInput) (string, error) {
-	if i.ID == "" {
-		return "", ErrMissingID
+	if i.StoreID == "" {
+		return "", ErrMissingStoreID
 	}
 	if i.Key == "" {
 		return "", ErrMissingKey
 	}
 
-	path := "/resources/stores/kv/" + i.ID + "/keys/" + i.Key
+	path := "/resources/stores/kv/" + i.StoreID + "/keys/" + i.Key
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	output, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -407,8 +413,8 @@ type InsertKVStoreKeyInput struct {
 	// This is for users who are passing very large files.
 	// Otherwise use the 'Value' field instead.
 	Body LengthReader
-	// ID is the ID of the kv store (required).
-	ID string
+	// StoreID is the StoreID of the kv store (required).
+	StoreID string
 	// Key is the key to add (required).
 	Key string
 	// Value is the value to insert (ignored if Body is set).
@@ -417,8 +423,8 @@ type InsertKVStoreKeyInput struct {
 
 // InsertKVStoreKey inserts a key/value pair into an kv store.
 func (c *Client) InsertKVStoreKey(i *InsertKVStoreKeyInput) error {
-	if i.ID == "" {
-		return ErrMissingID
+	if i.StoreID == "" {
+		return ErrMissingStoreID
 	}
 	if i.Key == "" {
 		return ErrMissingKey
@@ -436,11 +442,12 @@ func (c *Client) InsertKVStoreKey(i *InsertKVStoreKeyInput) error {
 		ro.BodyLength = int64(len(i.Value))
 	}
 
-	path := "/resources/stores/kv/" + i.ID + "/keys/" + i.Key
+	path := "/resources/stores/kv/" + i.StoreID + "/keys/" + i.Key
 	resp, err := c.Put(path, &ro)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	_, err = checkResp(resp, err)
 	return err
@@ -448,16 +455,16 @@ func (c *Client) InsertKVStoreKey(i *InsertKVStoreKeyInput) error {
 
 // DeleteKVStoreKeyInput is the input to the DeleteKVStoreKey function.
 type DeleteKVStoreKeyInput struct {
-	// ID is the ID of the kv store (required).
-	ID string
+	// StoreID is the StoreID of the kv store (required).
+	StoreID string
 	// Key is the key to delete (required).
 	Key string
 }
 
 // DeleteKVStoreKey deletes the specified resource.
 func (c *Client) DeleteKVStoreKey(i *DeleteKVStoreKeyInput) error {
-	if i.ID == "" {
-		return ErrMissingID
+	if i.StoreID == "" {
+		return ErrMissingStoreID
 	}
 	if i.Key == "" {
 		return ErrMissingKey
@@ -467,11 +474,12 @@ func (c *Client) DeleteKVStoreKey(i *DeleteKVStoreKeyInput) error {
 		Parallel: true, // This will allow the Fastly CLI to make bulk deletes.
 	}
 
-	path := "/resources/stores/kv/" + i.ID + "/keys/" + i.Key
+	path := "/resources/stores/kv/" + i.StoreID + "/keys/" + i.Key
 	resp, err := c.Delete(path, &ro)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
 		return NewHTTPError(resp)
@@ -482,8 +490,8 @@ func (c *Client) DeleteKVStoreKey(i *DeleteKVStoreKeyInput) error {
 
 // BatchModifyKVStoreKeyInput is the input to the BatchModifyKVStoreKey function.
 type BatchModifyKVStoreKeyInput struct {
-	// ID is the ID of the kv store (required).
-	ID string
+	// StoreID is the StoreID of the kv store (required).
+	StoreID string
 	// Body is the HTTP request body containing a collection of JSON objects
 	// separated by a new line. {"key": "example","value": "<base64-encoded>"}
 	// (required).
@@ -493,11 +501,11 @@ type BatchModifyKVStoreKeyInput struct {
 // BatchModifyKVStoreKey streams key/value JSON objects into an kv store.
 // NOTE: We wrap the io.Reader with *bufio.Reader to handle large streams.
 func (c *Client) BatchModifyKVStoreKey(i *BatchModifyKVStoreKeyInput) error {
-	if i.ID == "" {
-		return ErrMissingID
+	if i.StoreID == "" {
+		return ErrMissingStoreID
 	}
 
-	path := "/resources/stores/kv/" + i.ID + "/batch"
+	path := "/resources/stores/kv/" + i.StoreID + "/batch"
 	resp, err := c.Put(path, &RequestOptions{
 		Body: bufio.NewReader(i.Body),
 		Headers: map[string]string{
@@ -507,6 +515,7 @@ func (c *Client) BatchModifyKVStoreKey(i *BatchModifyKVStoreKeyInput) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	_, err = checkResp(resp, err)
 	return err

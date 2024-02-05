@@ -104,7 +104,7 @@ type ListWAFVersionsInput struct {
 
 func (i *ListWAFVersionsInput) formatFilters() map[string]string {
 	result := map[string]string{}
-	pairings := map[string]interface{}{
+	pairings := map[string]any{
 		"page[size]":   i.PageSize,
 		"page[number]": i.PageNumber,
 		"include":      i.Include,
@@ -114,11 +114,13 @@ func (i *ListWAFVersionsInput) formatFilters() map[string]string {
 		switch t := reflect.TypeOf(value).String(); t {
 		case "string":
 			if value != "" {
-				result[key] = value.(string)
+				v, _ := value.(string) // type assert to avoid runtime panic (v will have zero value for its type)
+				result[key] = v
 			}
 		case "int":
 			if value != 0 {
-				result[key] = strconv.Itoa(value.(int))
+				v, _ := value.(int) // type assert to avoid runtime panic (v will have zero value for its type)
+				result[key] = strconv.Itoa(v)
 			}
 		}
 	}
@@ -184,7 +186,7 @@ func (c *Client) ListAllWAFVersions(i *ListAllWAFVersionsInput) (*WAFVersionResp
 	currentPage := 1
 	result := &WAFVersionResponse{Items: []*WAFVersion{}}
 	for {
-		r, err := c.ListWAFVersions(&ListWAFVersionsInput{
+		ptr, err := c.ListWAFVersions(&ListWAFVersionsInput{
 			WAFID:      i.WAFID,
 			Include:    i.Include,
 			PageNumber: currentPage,
@@ -193,11 +195,14 @@ func (c *Client) ListAllWAFVersions(i *ListAllWAFVersionsInput) (*WAFVersionResp
 		if err != nil {
 			return nil, err
 		}
+		if ptr == nil {
+			return nil, fmt.Errorf("error: unexpected nil pointer")
+		}
 
 		currentPage++
-		result.Items = append(result.Items, r.Items...)
+		result.Items = append(result.Items, ptr.Items...)
 
-		if r.Info.Links.Next == "" || len(r.Items) == 0 {
+		if ptr.Info.Links.Next == "" || len(ptr.Items) == 0 {
 			return result, nil
 		}
 	}
@@ -306,7 +311,7 @@ type UpdateWAFVersionInput struct {
 
 // HasChanges checks that UpdateWAFVersionInput has changed in terms of configuration, which means - if it has configuration fields populated.
 // if UpdateWAFVersionInput is updated to have a slice this method will not longer work as it is.
-// if a slice is introduced the "!=" must be replaced with !DeepEquals
+// if a slice is introduced the "!=" must be replaced with !DeepEquals.
 func (i UpdateWAFVersionInput) HasChanges() bool {
 	return i != UpdateWAFVersionInput{
 		WAFID:            i.WAFID,

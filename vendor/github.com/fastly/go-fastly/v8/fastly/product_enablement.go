@@ -6,13 +6,13 @@ import (
 
 // ProductEnablement represents a response from the Fastly API.
 type ProductEnablement struct {
-	Product ProductEnablementNested `mapstructure:"product"`
-	Service ProductEnablementNested `mapstructure:"service"`
+	Product *ProductEnablementNested `mapstructure:"product"`
+	Service *ProductEnablementNested `mapstructure:"service"`
 }
 
 type ProductEnablementNested struct {
-	ID     string `mapstructure:"id,omitempty"`
-	Object string `mapstructure:"object,omitempty"`
+	Object    *string `mapstructure:"object,omitempty"`
+	ProductID *string `mapstructure:"id,omitempty"`
 }
 
 // Product is a base for the different product variants.
@@ -32,6 +32,8 @@ func (p Product) String() string {
 		return "origin_inspector"
 	case ProductWebSockets:
 		return "websockets"
+	case ProductUndefined:
+		return "unknown"
 	}
 	return "unknown"
 }

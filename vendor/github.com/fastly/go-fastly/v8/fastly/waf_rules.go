@@ -63,7 +63,7 @@ type ListWAFRulesInput struct {
 
 func (i *ListWAFRulesInput) formatFilters() map[string]string {
 	result := map[string]string{}
-	pairings := map[string]interface{}{
+	pairings := map[string]any{
 		"filter[waf_tags][name][in]":  i.FilterTagNames,
 		"filter[publisher][in]":       i.FilterPublishers,
 		"filter[modsec_rule_id][in]":  i.FilterModSecIDs,
@@ -77,20 +77,24 @@ func (i *ListWAFRulesInput) formatFilters() map[string]string {
 		switch t := reflect.TypeOf(value).String(); t {
 		case "string":
 			if value != "" {
-				result[key] = value.(string)
+				v, _ := value.(string) // type assert to avoid runtime panic (v will have zero value for its type)
+				result[key] = v
 			}
 		case "int":
 			if value != 0 {
-				result[key] = strconv.Itoa(value.(int))
+				v, _ := value.(int) // type assert to avoid runtime panic (v will have zero value for its type)
+				result[key] = strconv.Itoa(v)
 			}
 		case "[]string":
-			if len(value.([]string)) > 0 {
-				result[key] = strings.Join(value.([]string), ",")
+			v, _ := value.([]string) // type assert to avoid runtime panic (v will have zero value for its type)
+			if len(v) > 0 {
+				result[key] = strings.Join(v, ",")
 			}
 		case "[]int":
-			if len(value.([]int)) > 0 {
-				stringSlice := make([]string, len(value.([]int)))
-				for i, id := range value.([]int) {
+			v, _ := value.([]int) // type assert to avoid runtime panic (v will have zero value for its type)
+			if len(v) > 0 {
+				stringSlice := make([]string, len(v))
+				for i, id := range v {
 					stringSlice[i] = strconv.Itoa(id)
 				}
 				result[key] = strings.Join(stringSlice, ",")
@@ -156,7 +160,7 @@ func (c *Client) ListAllWAFRules(i *ListAllWAFRulesInput) (*WAFRuleResponse, err
 	currentPage := 1
 	result := &WAFRuleResponse{Items: []*WAFRule{}}
 	for {
-		r, err := c.ListWAFRules(&ListWAFRulesInput{
+		ptr, err := c.ListWAFRules(&ListWAFRulesInput{
 			FilterTagNames:   i.FilterTagNames,
 			FilterPublishers: i.FilterPublishers,
 			FilterModSecIDs:  i.FilterModSecIDs,
@@ -168,11 +172,14 @@ func (c *Client) ListAllWAFRules(i *ListAllWAFRulesInput) (*WAFRuleResponse, err
 		if err != nil {
 			return nil, err
 		}
+		if ptr == nil {
+			return nil, fmt.Errorf("error: unexpected nil pointer")
+		}
 
 		currentPage++
-		result.Items = append(result.Items, r.Items...)
+		result.Items = append(result.Items, ptr.Items...)
 
-		if r.Info.Links.Next == "" || len(r.Items) == 0 {
+		if ptr.Info.Links.Next == "" || len(ptr.Items) == 0 {
 			return result, nil
 		}
 	}

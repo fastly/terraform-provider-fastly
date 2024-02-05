@@ -55,7 +55,7 @@ type ListWAFActiveRulesInput struct {
 
 func (i *ListWAFActiveRulesInput) formatFilters() map[string]string {
 	result := map[string]string{}
-	pairings := map[string]interface{}{
+	pairings := map[string]any{
 		"filter[status]":                            i.FilterStatus,
 		"filter[waf_rule_revision][message]":        i.FilterMessage,
 		"filter[waf_rule_revision][modsec_rule_id]": i.FilterModSedID,
@@ -154,7 +154,7 @@ func (c *Client) ListAllWAFActiveRules(i *ListAllWAFActiveRulesInput) (*WAFActiv
 	currentPage := 1
 	result := &WAFActiveRuleResponse{Items: []*WAFActiveRule{}}
 	for {
-		r, err := c.ListWAFActiveRules(&ListWAFActiveRulesInput{
+		ptr, err := c.ListWAFActiveRules(&ListWAFActiveRulesInput{
 			WAFID:            i.WAFID,
 			WAFVersionNumber: i.WAFVersionNumber,
 			PageNumber:       currentPage,
@@ -167,11 +167,14 @@ func (c *Client) ListAllWAFActiveRules(i *ListAllWAFActiveRulesInput) (*WAFActiv
 		if err != nil {
 			return nil, err
 		}
+		if ptr == nil {
+			return nil, fmt.Errorf("error: unexpected nil pointer")
+		}
 
 		currentPage++
-		result.Items = append(result.Items, r.Items...)
+		result.Items = append(result.Items, ptr.Items...)
 
-		if r.Info.Links.Next == "" || len(r.Items) == 0 {
+		if ptr.Info.Links.Next == "" || len(ptr.Items) == 0 {
 			return result, nil
 		}
 	}
@@ -260,6 +263,8 @@ func (c *Client) BatchModificationWAFActiveRules(i *BatchModificationWAFActiveRu
 			WAFVersionNumber: i.WAFVersionNumber,
 			Rules:            i.Rules,
 		})
+	case CreateBatchOperation, UpdateBatchOperation:
+		fallthrough
 	default:
 		return nil, fmt.Errorf("operation %s not supported", i.OP)
 	}

@@ -13,6 +13,7 @@ import (
 )
 
 func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
+	var format, placement, responseCondition, loggingURL *string
 	cases := []struct {
 		remote []*gofastly.NewRelicOTLP
 		local  []map[string]any
@@ -29,10 +30,14 @@ func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
 			},
 			local: []map[string]any{
 				{
-					"name":           "newrelicotlp-endpoint",
-					"token":          "token",
-					"region":         "US",
-					"format_version": 2,
+					"format":             format, // implies nil
+					"format_version":     gofastly.ToPointer(2),
+					"name":               gofastly.ToPointer("newrelicotlp-endpoint"),
+					"placement":          placement, // implies nil
+					"region":             gofastly.ToPointer("US"),
+					"response_condition": responseCondition, // implies nil
+					"token":              gofastly.ToPointer("token"),
+					"url":                loggingURL, // implies nil
 				},
 			},
 		},
@@ -74,6 +79,9 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		Region:         gofastly.ToPointer("US"),
 		FormatVersion:  gofastly.ToPointer(2),
 		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
+		ResponseCondition: gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer(""),
 	}
 
 	log1AfterUpdate := gofastly.NewRelicOTLP{
@@ -83,6 +91,9 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		Region:         gofastly.ToPointer("EU"),
 		FormatVersion:  gofastly.ToPointer(2),
 		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
+		ResponseCondition: gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer(""),
 	}
 
 	log2 := gofastly.NewRelicOTLP{
@@ -93,6 +104,8 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		URL:            gofastly.ToPointer("https://example.nr-data.net"),
 		FormatVersion:  gofastly.ToPointer(2),
 		Format:         gofastly.ToPointer(appendNewLine(newrelicotlpDefaultFormat)),
+		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
+		ResponseCondition: gofastly.ToPointer(""),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -146,7 +159,7 @@ func testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(service *gofastly.Servic
 		var found int
 		for _, d := range newrelicotlp {
 			for _, dl := range newrelicotlpList {
-				if d.Name == dl.Name {
+				if gofastly.ToValue(d.Name) == gofastly.ToValue(dl.Name) {
 					// we don't know these things ahead of time, so populate them now
 					d.ServiceID = service.ServiceID
 					d.ServiceVersion = service.ActiveVersion.Number

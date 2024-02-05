@@ -151,8 +151,8 @@ func flattenResourceLinks(remoteState []*gofastly.Resource) []map[string]any {
 	for _, resource := range remoteState {
 		data := map[string]any{}
 
-		if resource.ResourceID != nil {
-			data["link_id"] = *resource.ResourceID
+		if resource.LinkID != nil {
+			data["link_id"] = *resource.LinkID
 		}
 		if resource.Name != nil {
 			data["name"] = *resource.Name

@@ -191,13 +191,13 @@ func flattenNewRelicOTLP(remoteState []*gofastly.NewRelicOTLP) []map[string]any 
 	var result []map[string]any
 	for _, resource := range remoteState {
 		data := map[string]any{
-			"name":               resource.Name,
-			"token":              resource.Token,
 			"format":             resource.Format,
 			"format_version":     resource.FormatVersion,
+			"name":               resource.Name,
 			"placement":          resource.Placement,
 			"region":             resource.Region,
 			"response_condition": resource.ResponseCondition,
+			"token":              resource.Token,
 			"url":                resource.URL,
 		}
 

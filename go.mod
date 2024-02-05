@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/bflad/tfproviderlint v0.29.0
-	github.com/fastly/go-fastly/v8 v8.6.4
+	github.com/fastly/go-fastly/v9 v9.0.0
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
@@ -12,8 +12,6 @@ require (
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/net v0.19.0
 )
-
-replace github.com/fastly/go-fastly/v8 v8.6.4 => ../go-fastly/
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect

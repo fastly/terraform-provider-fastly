@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 )
 
 func TestResourceFastlyFlattenDomains(t *testing.T) {

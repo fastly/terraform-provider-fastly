@@ -3,7 +3,7 @@ package fastly
 import (
 	"context"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

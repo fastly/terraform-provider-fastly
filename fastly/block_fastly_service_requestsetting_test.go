@@ -141,7 +141,7 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		rqList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -157,7 +157,7 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 			for _, lr := range rqList {
 				if gofastly.ToValue(r.Name) == gofastly.ToValue(lr.Name) {
 					// we don't know these things ahead of time, so populate them now
-					r.ServiceID = service.ID
+					r.ServiceID = service.ServiceID
 					r.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

@@ -142,7 +142,7 @@ func testAccCheckFastlyServiceVCLAttributesSumologic(service *gofastly.ServiceDe
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		sumologicList, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {

@@ -141,7 +141,7 @@ func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetai
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		logglyList, err := conn.ListLoggly(&gofastly.ListLogglyInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -159,7 +159,7 @@ func testAccCheckFastlyServiceVCLLogglyAttributes(service *gofastly.ServiceDetai
 			for _, el := range logglyList {
 				if gofastly.ToValue(e.Name) == gofastly.ToValue(el.Name) {
 					// we don't know these things ahead of time, so populate them now
-					e.ServiceID = service.ID
+					e.ServiceID = service.ServiceID
 					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

@@ -142,7 +142,7 @@ func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, n
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		bqList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {

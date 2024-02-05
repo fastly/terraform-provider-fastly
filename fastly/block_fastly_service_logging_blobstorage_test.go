@@ -278,7 +278,7 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteBlobStorageList, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -294,7 +294,7 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 			for _, rbs := range remoteBlobStorageList {
 				if gofastly.ToValue(lbs.Name) == gofastly.ToValue(rbs.Name) {
 					// we don't know these things ahead of time, so populate them now
-					lbs.ServiceID = service.ID
+					lbs.ServiceID = service.ServiceID
 					lbs.ServiceVersion = service.ActiveVersion.Number
 
 					// Ignore VCL attributes for Compute and set to whatever is returned from the API.

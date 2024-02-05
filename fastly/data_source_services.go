@@ -107,8 +107,8 @@ func dataSourceFastlyServicesRead(_ context.Context, d *schema.ResourceData, met
 func flattenServiceIDs(remoteState []*gofastly.Service) []string {
 	result := make([]string, len(remoteState))
 	for i, resource := range remoteState {
-		if resource.ID != nil {
-			result[i] = *resource.ID
+		if resource.ServiceID != nil {
+			result[i] = *resource.ServiceID
 		}
 	}
 	return result
@@ -123,8 +123,8 @@ func flattenServiceDetails(remoteState []*gofastly.Service) []map[string]any {
 
 	for i, resource := range remoteState {
 		result[i] = map[string]any{}
-		if resource.ID != nil {
-			result[i]["id"] = *resource.ID
+		if resource.ServiceID != nil {
+			result[i]["id"] = *resource.ServiceID
 		}
 		if resource.Name != nil {
 			result[i]["name"] = *resource.Name

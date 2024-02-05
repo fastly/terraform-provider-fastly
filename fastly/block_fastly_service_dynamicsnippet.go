@@ -185,8 +185,8 @@ func flattenDynamicSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 
 		data := map[string]any{}
 
-		if resource.ID != nil {
-			data["snippet_id"] = *resource.ID
+		if resource.SnippetID != nil {
+			data["snippet_id"] = *resource.SnippetID
 		}
 		if resource.Name != nil {
 			data["name"] = *resource.Name

@@ -36,7 +36,7 @@ func TestResourceFastlyFlattenRateLimiter(t *testing.T) {
 						gofastly.ToPointer("PATCH"),
 						gofastly.ToPointer("DELETE"),
 					},
-					ID:                 gofastly.ToPointer("123abc"),
+					RateLimiterID:      gofastly.ToPointer("123abc"),
 					LoggerType:         gofastly.ToPointer(gofastly.ERLLogBigQuery),
 					Name:               gofastly.ToPointer("example"),
 					PenaltyBoxDuration: gofastly.ToPointer(123),
@@ -337,7 +337,7 @@ func testAccCheckFastlyServiceVCLRateLimiterAttributes(service *gofastly.Service
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		have, err := conn.ListERLs(&gofastly.ListERLsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -353,8 +353,8 @@ func testAccCheckFastlyServiceVCLRateLimiterAttributes(service *gofastly.Service
 			for _, h := range have {
 				if gofastly.ToValue(w.Name) == gofastly.ToValue(h.Name) {
 					// we don't know these things ahead of time, so populate them now
-					w.ID = h.ID
-					w.ServiceID = service.ID
+					w.RateLimiterID = h.RateLimiterID
+					w.ServiceID = service.ServiceID
 					w.Version = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

@@ -173,7 +173,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 				Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-				ID:        gofastly.ToPointer(resource["id"].(string)),
+				EntryID:   gofastly.ToPointer(resource["id"].(string)),
 			})
 		}
 
@@ -217,7 +217,7 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
 			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
-			ID:        gofastly.ToPointer(val["id"].(string)),
+			EntryID:   gofastly.ToPointer(val["id"].(string)),
 		})
 	}
 
@@ -238,8 +238,8 @@ func flattenACLEntries(remoteState []*gofastly.ACLEntry) []map[string]any {
 	for _, resource := range remoteState {
 		data := map[string]any{}
 
-		if resource.ID != nil {
-			data["id"] = *resource.ID
+		if resource.EntryID != nil {
+			data["id"] = *resource.EntryID
 		}
 		if resource.IP != nil {
 			data["ip"] = *resource.IP
@@ -314,7 +314,7 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
 	entry := &gofastly.BatchACLEntry{
 		Operation: gofastly.ToPointer(op),
-		ID:        gofastly.ToPointer(v["id"].(string)),
+		EntryID:   gofastly.ToPointer(v["id"].(string)),
 		IP:        gofastly.ToPointer(v["ip"].(string)),
 		Negated:   gofastly.ToPointer(gofastly.Compatibool(v["negated"].(bool))),
 		Comment:   gofastly.ToPointer(v["comment"].(string)),

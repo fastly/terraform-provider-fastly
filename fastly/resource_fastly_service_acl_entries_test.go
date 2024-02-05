@@ -423,7 +423,7 @@ func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDet
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		acl, err := conn.GetACL(&gofastly.GetACLInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           aclName,
 		})
@@ -432,11 +432,11 @@ func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDet
 		}
 
 		aclEntries, err := getAllAclEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
-			ServiceID: gofastly.ToValue(service.ID),
-			ACLID:     gofastly.ToValue(acl.ID),
+			ServiceID: gofastly.ToValue(service.ServiceID),
+			ACLID:     gofastly.ToValue(acl.ACLID),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(acl.ID), err)
+			return fmt.Errorf("error looking up ACL entry records for (%s), ACL (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(acl.ACLID), err)
 		}
 
 		flatACLEntries := flattenACLEntries(aclEntries)

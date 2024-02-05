@@ -20,11 +20,11 @@ func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
 		{
 			remote: []*gofastly.NewRelicOTLP{
 				{
-					ServiceVersion: 1,
-					Name:           "newrelicotlp-endpoint",
-					Token:          "token",
-					Region:         "US",
-					FormatVersion:  2,
+					ServiceVersion: gofastly.ToPointer(1),
+					Name:           gofastly.ToPointer("newrelicotlp-endpoint"),
+					Token:          gofastly.ToPointer("token"),
+					Region:         gofastly.ToPointer("US"),
+					FormatVersion:  gofastly.ToPointer(2),
 				},
 			},
 			local: []map[string]any{
@@ -68,31 +68,31 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.NewRelicOTLP{
-		ServiceVersion: 1,
-		Name:           "newrelicotlp-endpoint",
-		Token:          "token",
-		Region:         "US",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("newrelicotlp-endpoint"),
+		Token:          gofastly.ToPointer("token"),
+		Region:         gofastly.ToPointer("US"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 	}
 
 	log1AfterUpdate := gofastly.NewRelicOTLP{
-		ServiceVersion: 1,
-		Name:           "newrelicotlp-endpoint",
-		Token:          "t0k3n",
-		Region:         "EU",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b %T",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("newrelicotlp-endpoint"),
+		Token:          gofastly.ToPointer("t0k3n"),
+		Region:         gofastly.ToPointer("EU"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
 	}
 
 	log2 := gofastly.NewRelicOTLP{
-		ServiceVersion: 1,
-		Name:           "another-newrelicotlp-endpoint",
-		Token:          "another-token",
-		Region:         "US",
-		URL:            "https://example.nr-data.net",
-		FormatVersion:  2,
-		Format:         appendNewLine(newrelicotlpDefaultFormat),
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("another-newrelicotlp-endpoint"),
+		Token:          gofastly.ToPointer("another-token"),
+		Region:         gofastly.ToPointer("US"),
+		URL:            gofastly.ToPointer("https://example.nr-data.net"),
+		FormatVersion:  gofastly.ToPointer(2),
+		Format:         gofastly.ToPointer(appendNewLine(newrelicotlpDefaultFormat)),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,11 +130,11 @@ func testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(service *gofastly.Servic
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		newrelicotlpList, err := conn.ListNewRelicOTLP(&gofastly.ListNewRelicOTLPInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up NewRelic OTLP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up NewRelic OTLP Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(newrelicotlpList) != len(newrelicotlp) {
@@ -148,7 +148,7 @@ func testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(service *gofastly.Servic
 			for _, dl := range newrelicotlpList {
 				if d.Name == dl.Name {
 					// we don't know these things ahead of time, so populate them now
-					d.ServiceID = service.ID
+					d.ServiceID = service.ServiceID
 					d.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

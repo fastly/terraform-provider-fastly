@@ -88,7 +88,7 @@ func testAccCheckFastlySecretStoreRemoteState(service *gofastly.ServiceDetail, s
 		}
 
 		links, err := conn.ListResources(&gofastly.ListResourcesInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
 		if err != nil {

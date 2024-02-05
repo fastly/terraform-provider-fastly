@@ -177,7 +177,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		snippet, err := conn.GetSnippet(&gofastly.GetSnippetInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           dynamicSnippetName,
 		})
@@ -186,11 +186,11 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 		}
 
 		dynamicSnippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
-			ServiceID: gofastly.ToValue(service.ID),
-			ID:        gofastly.ToValue(snippet.ID),
+			ServiceID: gofastly.ToValue(service.ServiceID),
+			SnippetID: gofastly.ToValue(snippet.SnippetID),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Dynamic snippet content for (%s), snippet (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(snippet.ID), err)
+			return fmt.Errorf("error looking up Dynamic snippet content for (%s), snippet (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(snippet.SnippetID), err)
 		}
 
 		if gofastly.ToValue(dynamicSnippet.Content) != expectedContent {
@@ -209,7 +209,7 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(servic
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		snippets, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -230,7 +230,7 @@ func createDynamicSnippetThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
-		ServiceID:      gofastly.ToValue(service.ID),
+		ServiceID:      gofastly.ToValue(service.ServiceID),
 		ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 	})
 	if err != nil {
@@ -238,7 +238,7 @@ func createDynamicSnippetThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 	}
 
 	dynamicSnippet, err := conn.CreateSnippet(&gofastly.CreateSnippetInput{
-		ServiceID:      gofastly.ToValue(service.ID),
+		ServiceID:      gofastly.ToValue(service.ServiceID),
 		ServiceVersion: gofastly.ToValue(newVersion.Number),
 		Name:           gofastly.ToPointer(dynamicSnippetName),
 		Type:           gofastly.ToPointer(snippetType),
@@ -250,29 +250,27 @@ func createDynamicSnippetThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 	}
 
 	_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-		ServiceID:      gofastly.ToValue(service.ID),
+		ServiceID:      gofastly.ToValue(service.ServiceID),
 		ServiceVersion: gofastly.ToValue(newVersion.Number),
 	})
-
 	if err != nil {
 		t.Fatalf("[ERR] Error activating service version (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(newVersion.Number), err)
 	}
 
 	_, err = conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
-		ServiceID: gofastly.ToValue(service.ID),
-		ID:        gofastly.ToValue(dynamicSnippet.ID),
+		ServiceID: gofastly.ToValue(service.ServiceID),
+		SnippetID: gofastly.ToValue(dynamicSnippet.SnippetID),
 		Content:   gofastly.ToPointer(content),
 	})
-
 	if err != nil {
-		t.Fatalf("[ERR] Error update content for Dynamic snippet records for (%s), snippet id (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dynamicSnippet.ID), err)
+		t.Fatalf("[ERR] Error update content for Dynamic snippet records for (%s), snippet id (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dynamicSnippet.SnippetID), err)
 	}
 
 	latest, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-		ID: gofastly.ToValue(service.ID),
+		ServiceID: gofastly.ToValue(service.ServiceID),
 	})
 	if err != nil {
-		t.Fatalf("[ERR] Error retrieving service details for (%s): %s", gofastly.ToValue(service.ID), err)
+		t.Fatalf("[ERR] Error retrieving service details for (%s): %s", gofastly.ToValue(service.ServiceID), err)
 	}
 
 	*service = *latest

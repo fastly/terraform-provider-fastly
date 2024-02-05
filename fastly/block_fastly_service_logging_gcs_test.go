@@ -168,7 +168,7 @@ func testAccCheckFastlyServiceVCLAttributesGCS(service *gofastly.ServiceDetail, 
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		gcsList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {

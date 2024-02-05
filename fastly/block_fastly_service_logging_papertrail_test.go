@@ -140,7 +140,7 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -156,7 +156,7 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 			for _, lp := range papertrailList {
 				if gofastly.ToValue(p.Name) == gofastly.ToValue(lp.Name) {
 					// we don't know these things ahead of time, so populate them now
-					p.ServiceID = service.ID
+					p.ServiceID = service.ServiceID
 					p.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

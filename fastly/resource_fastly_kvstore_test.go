@@ -82,7 +82,7 @@ func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, kvSto
 		}
 
 		links, err := conn.ListResources(&gofastly.ListResourcesInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
 		if err != nil {
@@ -200,12 +200,12 @@ func testAccAddKVStoreItems(kvStore *gofastly.KVStore) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		err := conn.InsertKVStoreKey(&gofastly.InsertKVStoreKeyInput{
-			ID:    kvStore.ID,
-			Key:   "test_key",
-			Value: "test_value",
+			StoreID: kvStore.StoreID,
+			Key:     "test_key",
+			Value:   "test_value",
 		})
 		if err != nil {
-			return fmt.Errorf("error adding item to KV Store '%s': %w", kvStore.ID, err)
+			return fmt.Errorf("error adding item to KV Store '%s': %w", kvStore.StoreID, err)
 		}
 		return nil
 	}

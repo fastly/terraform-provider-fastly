@@ -104,7 +104,7 @@ func (h *ResourceLinkServiceAttributeHandler) Read(_ context.Context, d *schema.
 // Update updates the resource.
 func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.UpdateResourceInput{
-		ID:             resource["link_id"].(string),
+		ResourceID:     resource["link_id"].(string),
 		Name:           gofastly.ToPointer(resource["name"].(string)),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -123,7 +123,7 @@ func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schem
 // Delete deletes the resource.
 func (h *ResourceLinkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.DeleteResourceInput{
-		ID:             resource["link_id"].(string),
+		ResourceID:     resource["link_id"].(string),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	}
@@ -151,8 +151,8 @@ func flattenResourceLinks(remoteState []*gofastly.Resource) []map[string]any {
 	for _, resource := range remoteState {
 		data := map[string]any{}
 
-		if resource.ID != nil {
-			data["link_id"] = *resource.ID
+		if resource.ResourceID != nil {
+			data["link_id"] = *resource.ResourceID
 		}
 		if resource.Name != nil {
 			data["name"] = *resource.Name

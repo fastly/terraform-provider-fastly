@@ -186,7 +186,7 @@ func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -203,7 +203,7 @@ func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDe
 			for _, el := range honeycombList {
 				if gofastly.ToValue(e.Name) == gofastly.ToValue(el.Name) {
 					// we don't know these things ahead of time, so populate them now
-					e.ServiceID = service.ID
+					e.ServiceID = service.ServiceID
 					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

@@ -90,7 +90,7 @@ func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, 
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {

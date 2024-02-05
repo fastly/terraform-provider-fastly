@@ -189,7 +189,7 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: gofastly.ToValue(service.ID),
+			FilterService: gofastly.ToValue(service.ServiceID),
 			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -197,7 +197,7 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 		}
 
 		if len(resp.Items) > 0 {
-			return fmt.Errorf("error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, gofastly.ToValue(service.ID), gofastly.ToValue(service.ActiveVersion.Number), err)
+			return fmt.Errorf("error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, gofastly.ToValue(service.ServiceID), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 		return nil
 	}
@@ -207,7 +207,7 @@ func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, 
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: gofastly.ToValue(service.ID),
+			FilterService: gofastly.ToValue(service.ServiceID),
 			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {

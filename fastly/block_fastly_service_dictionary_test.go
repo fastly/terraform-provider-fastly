@@ -20,9 +20,9 @@ func TestResourceFastlyFlattenDictionary(t *testing.T) {
 		{
 			remote: []*gofastly.Dictionary{
 				{
-					ID:        gofastly.ToPointer("1234567890"),
-					Name:      gofastly.ToPointer("dictionary-example"),
-					WriteOnly: gofastly.ToPointer(false),
+					DictionaryID: gofastly.ToPointer("1234567890"),
+					Name:         gofastly.ToPointer("dictionary-example"),
+					WriteOnly:    gofastly.ToPointer(false),
 				},
 			},
 			local: []map[string]any{
@@ -141,7 +141,7 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           dictName,
 		})
@@ -170,12 +170,12 @@ func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestChe
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
 			ServiceID:    gofastly.ToValue(dictionary.ServiceID),
-			DictionaryID: gofastly.ToValue(dictionary.ID),
+			DictionaryID: gofastly.ToValue(dictionary.DictionaryID),
 			ItemKey:      gofastly.ToPointer("testKey"),
 			ItemValue:    gofastly.ToPointer("testItem"),
 		})
 		if err != nil {
-			return fmt.Errorf("error adding item to dictionary (%s) on service (%s): %w", gofastly.ToValue(dictionary.ID), gofastly.ToValue(dictionary.ServiceID), err)
+			return fmt.Errorf("error adding item to dictionary (%s) on service (%s): %w", gofastly.ToValue(dictionary.DictionaryID), gofastly.ToValue(dictionary.ServiceID), err)
 		}
 
 		return nil

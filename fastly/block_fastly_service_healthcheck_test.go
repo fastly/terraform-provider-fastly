@@ -135,7 +135,7 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -157,9 +157,9 @@ func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.Service
 					sort.Strings(h.Headers)
 
 					// we don't know these things ahead of time, so populate them now
-					h.ServiceID = service.ID
+					h.ServiceID = service.ServiceID
 					h.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lh.CreatedAt = nil
 					lh.UpdatedAt = nil

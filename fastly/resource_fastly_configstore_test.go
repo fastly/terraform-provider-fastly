@@ -82,7 +82,7 @@ func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, c
 		}
 
 		links, err := conn.ListResources(&gofastly.ListResourcesInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
 		if err != nil {
@@ -200,12 +200,12 @@ func testAccAddConfigStoreItems(configStore *gofastly.ConfigStore) resource.Test
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateConfigStoreItem(&gofastly.CreateConfigStoreItemInput{
-			StoreID: configStore.ID,
+			StoreID: configStore.StoreID,
 			Key:     "test_key",
 			Value:   "test_value",
 		})
 		if err != nil {
-			return fmt.Errorf("error adding item to Config Store '%s': %w", configStore.ID, err)
+			return fmt.Errorf("error adding item to Config Store '%s': %w", configStore.StoreID, err)
 		}
 		return nil
 	}

@@ -184,7 +184,7 @@ func testAccCheckFastlyServiceComputePackageAttributes(service *gofastly.Service
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		got, err := conn.GetPackage(&gofastly.GetPackageInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {

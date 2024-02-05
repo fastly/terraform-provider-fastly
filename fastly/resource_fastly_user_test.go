@@ -104,7 +104,7 @@ func testAccCheckUserExists(n string, user *gofastly.User) resource.TestCheckFun
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		latest, err := conn.GetUser(&gofastly.GetUserInput{
-			ID: rs.Primary.ID,
+			UserID: rs.Primary.ID,
 		})
 		if err != nil {
 			return err
@@ -136,7 +136,7 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		}
 
 		for _, u := range l {
-			if gofastly.ToValue(u.ID) == rs.Primary.ID {
+			if gofastly.ToValue(u.UserID) == rs.Primary.ID {
 				// user still found
 				return fmt.Errorf("tried deleting User (%s), but was still found", rs.Primary.ID)
 			}

@@ -357,7 +357,7 @@ func testAccCheckFastlyServiceVCLSplunkAttributes(service *gofastly.ServiceDetai
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteSplunkList, err := conn.ListSplunks(&gofastly.ListSplunksInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -373,7 +373,7 @@ func testAccCheckFastlyServiceVCLSplunkAttributes(service *gofastly.ServiceDetai
 			for _, rs := range remoteSplunkList {
 				if gofastly.ToValue(ls.Name) == gofastly.ToValue(rs.Name) {
 					// we don't know these things ahead of time, so populate them now
-					ls.ServiceID = service.ID
+					ls.ServiceID = service.ServiceID
 					ls.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

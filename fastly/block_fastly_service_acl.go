@@ -157,8 +157,8 @@ func flattenACLs(remoteState []*gofastly.ACL) []map[string]any {
 	for _, resource := range remoteState {
 		data := map[string]any{}
 
-		if resource.ID != nil {
-			data["acl_id"] = *resource.ID
+		if resource.ACLID != nil {
+			data["acl_id"] = *resource.ACLID
 		}
 		if resource.Name != nil {
 			data["name"] = *resource.Name

@@ -147,7 +147,7 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -163,9 +163,9 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 			for _, lg := range gzipsList {
 				if gofastly.ToValue(g.Name) == gofastly.ToValue(lg.Name) {
 					// we don't know these things ahead of time, so populate them now
-					g.ServiceID = service.ID
+					g.ServiceID = service.ServiceID
 					g.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lg.CreatedAt = nil
 					lg.UpdatedAt = nil

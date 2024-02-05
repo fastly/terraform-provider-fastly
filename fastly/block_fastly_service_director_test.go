@@ -72,7 +72,7 @@ func TestResourceFastlyFlattenDirectors(t *testing.T) {
 
 	for _, c := range cases {
 		out := flattenDirectors(c.remoteDirector)
-		// loop, because deepequal wont work with our sets
+		// loop, because deepequal won't work with our sets
 		expectedCount := len(c.local)
 		var found int
 		for _, o := range out {
@@ -242,7 +242,7 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -258,7 +258,7 @@ func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDe
 			for _, ld := range directorList {
 				if gofastly.ToValue(d.Name) == gofastly.ToValue(ld.Name) {
 					// we don't know these things ahead of time, so populate them now
-					d.ServiceID = service.ID
+					d.ServiceID = service.ServiceID
 					d.ServiceVersion = service.ActiveVersion.Number
 					ld.CreatedAt = nil
 					ld.UpdatedAt = nil
@@ -285,7 +285,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		conn := testAccProvider.Meta().(*APIClient).conn
 
 		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -329,7 +329,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		}
 
 		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -341,7 +341,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 		for _, director := range directorList {
 			for _, backend := range backendList {
 				directorBackendGet, err := conn.GetDirectorBackend(&gofastly.GetDirectorBackendInput{
-					ServiceID:      gofastly.ToValue(service.ID),
+					ServiceID:      gofastly.ToValue(service.ServiceID),
 					ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 					Director:       gofastly.ToValue(director.Name),
 					Backend:        gofastly.ToValue(backend.Name),
@@ -361,7 +361,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 			for _, ldb := range directorBackendList {
 				if gofastly.ToValue(db.Director) == gofastly.ToValue(ldb.Director) && gofastly.ToValue(db.Backend) == gofastly.ToValue(ldb.Backend) {
 					// we don't know these things ahead of time, so populate them now
-					db.ServiceID = service.ID
+					db.ServiceID = service.ServiceID
 					db.ServiceVersion = service.ActiveVersion.Number
 					ldb.CreatedAt = nil
 					ldb.UpdatedAt = nil

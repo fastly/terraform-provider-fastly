@@ -71,7 +71,7 @@ func flattenDataSourceConfigStores(remoteState []*gofastly.ConfigStore) []map[st
 
 	for i, resource := range remoteState {
 		result[i] = map[string]any{
-			"id":   resource.ID,
+			"id":   resource.StoreID,
 			"name": resource.Name,
 		}
 	}

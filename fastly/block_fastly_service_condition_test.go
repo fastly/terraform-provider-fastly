@@ -103,7 +103,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: serviceVersionNumber,
 		})
 		if err != nil {
@@ -111,7 +111,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 		}
 
 		if len(conditionList) != len(conditions) {
-			return fmt.Errorf("error: mis match count of conditions, expected (%d), got (%d)", len(conditions), len(conditionList))
+			return fmt.Errorf("error: mismatch count of conditions, expected (%d), got (%d)", len(conditions), len(conditionList))
 		}
 
 		var found int
@@ -119,9 +119,9 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 			for _, lc := range conditionList {
 				if gofastly.ToValue(c.Name) == gofastly.ToValue(lc.Name) {
 					// we don't know these things ahead of time, so populate them now
-					c.ServiceID = service.ID
+					c.ServiceID = service.ServiceID
 					c.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lc.CreatedAt = nil
 					lc.UpdatedAt = nil

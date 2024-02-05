@@ -56,10 +56,10 @@ func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta any) dia
 		return diag.FromErr(err)
 	}
 
-	if u.ID == nil {
+	if u.UserID == nil {
 		return diag.Errorf("error: user.ID is nil")
 	}
-	d.SetId(*u.ID)
+	d.SetId(*u.UserID)
 
 	return nil
 }
@@ -69,7 +69,7 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.
 	conn := meta.(*APIClient).conn
 
 	u, err := conn.GetUser(&gofastly.GetUserInput{
-		ID: d.Id(),
+		UserID: d.Id(),
 	})
 	if err != nil {
 		return diag.FromErr(err)
@@ -94,9 +94,9 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	// Update Name and/or Role.
 	if d.HasChanges("name", "role") {
 		_, err := conn.UpdateUser(&gofastly.UpdateUserInput{
-			ID:   d.Id(),
-			Name: gofastly.ToPointer(d.Get("name").(string)),
-			Role: gofastly.ToPointer(d.Get("role").(string)),
+			UserID: d.Id(),
+			Name:   gofastly.ToPointer(d.Get("name").(string)),
+			Role:   gofastly.ToPointer(d.Get("role").(string)),
 		})
 		if err != nil {
 			return diag.FromErr(err)
@@ -110,7 +110,7 @@ func resourceUserDelete(_ context.Context, d *schema.ResourceData, meta any) dia
 	conn := meta.(*APIClient).conn
 
 	err := conn.DeleteUser(&gofastly.DeleteUserInput{
-		ID: d.Id(),
+		UserID: d.Id(),
 	})
 	if err != nil {
 		return diag.FromErr(err)

@@ -20,8 +20,8 @@ func TestResourceFastlyFlattenAcl(t *testing.T) {
 		{
 			remote: []*gofastly.ACL{
 				{
-					ID:   gofastly.ToPointer("1234567890"),
-					Name: gofastly.ToPointer("acl-example"),
+					ACLID: gofastly.ToPointer("1234567890"),
+					Name:  gofastly.ToPointer("acl-example"),
 				},
 			},
 			local: []map[string]any{
@@ -122,7 +122,7 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		remoteACL, err := conn.GetACL(&gofastly.GetACLInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           aclName,
 		})
@@ -147,11 +147,11 @@ func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateACLEntry(&gofastly.CreateACLEntryInput{
 			ServiceID: gofastly.ToValue(acl.ServiceID),
-			ACLID:     gofastly.ToValue(acl.ID),
+			ACLID:     gofastly.ToValue(acl.ACLID),
 			IP:        gofastly.ToPointer("192.168.0.1"),
 		})
 		if err != nil {
-			return fmt.Errorf("error adding entry to ACL (%s) on service (%s): %w", gofastly.ToValue(acl.ID), gofastly.ToValue(acl.ServiceID), err)
+			return fmt.Errorf("error adding entry to ACL (%s) on service (%s): %w", gofastly.ToValue(acl.ACLID), gofastly.ToValue(acl.ServiceID), err)
 		}
 
 		return nil

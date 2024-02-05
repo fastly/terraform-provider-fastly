@@ -89,7 +89,7 @@ func flattenDataSourceKVStores(remoteState []gofastly.KVStore) []map[string]any 
 
 	for i, resource := range remoteState {
 		result[i] = map[string]any{
-			"id":   resource.ID,
+			"id":   resource.StoreID,
 			"name": resource.Name,
 		}
 	}

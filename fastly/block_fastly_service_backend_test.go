@@ -117,7 +117,6 @@ func TestResourceFastlyFlattenBackendCompute(t *testing.T) {
 					HealthCheck:         gofastly.ToPointer(""),
 					UseSSL:              gofastly.ToPointer(false),
 					SSLCheckCert:        gofastly.ToPointer(true),
-					SSLHostname:         gofastly.ToPointer(""),
 					SSLCACert:           gofastly.ToPointer(""),
 					SSLCertHostname:     gofastly.ToPointer(""),
 					SSLSNIHostname:      gofastly.ToPointer(""),
@@ -363,7 +362,7 @@ func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDeta
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		have, err := conn.ListBackends(&gofastly.ListBackendsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -379,7 +378,7 @@ func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDeta
 			for _, h := range have {
 				if gofastly.ToValue(w.Name) == gofastly.ToValue(h.Name) {
 					// we don't know these things ahead of time, so populate them now
-					w.ServiceID = service.ID
+					w.ServiceID = service.ServiceID
 					w.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

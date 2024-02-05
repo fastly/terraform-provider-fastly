@@ -166,7 +166,7 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		newrelicList, err := conn.ListNewRelic(&gofastly.ListNewRelicInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -184,7 +184,7 @@ func testAccCheckFastlyServiceVCLNewRelicAttributes(service *gofastly.ServiceDet
 			for _, dl := range newrelicList {
 				if gofastly.ToValue(d.Name) == gofastly.ToValue(dl.Name) {
 					// we don't know these things ahead of time, so populate them now
-					d.ServiceID = service.ID
+					d.ServiceID = service.ServiceID
 					d.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

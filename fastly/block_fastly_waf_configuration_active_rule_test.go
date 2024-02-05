@@ -128,7 +128,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckRules(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: gofastly.ToValue(service.ID),
+			FilterService: gofastly.ToValue(service.ServiceID),
 			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {

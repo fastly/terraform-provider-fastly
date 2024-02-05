@@ -149,7 +149,7 @@ func testAccCheckFastlyServiceConfigStoreEntriesRemoteState(storeName string, wa
 		}
 
 		entries, err := conn.ListConfigStoreItems(&gofastly.ListConfigStoreItemsInput{
-			StoreID: found.ID,
+			StoreID: found.StoreID,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to get Config Store entries")

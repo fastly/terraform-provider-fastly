@@ -274,10 +274,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	if service.ID == nil {
-		return diag.Errorf("error: service.ID is nil")
+	if service.ServiceID == nil {
+		return diag.Errorf("error: service.ServiceID is nil")
 	}
-	d.SetId(*service.ID)
+	d.SetId(*service.ServiceID)
 
 	// If the service was just created, there is an empty Version 1 available
 	// that is unlocked and can be updated.
@@ -475,7 +475,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	var diags diag.Diagnostics
 
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-		ID: d.Id(),
+		ServiceID: d.Id(),
 	})
 	if err != nil {
 		// Check if not found, if so, clear ID field and exit early.
@@ -654,7 +654,7 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, 
 	// the DELETE call.
 	if d.Get("force_destroy").(bool) || d.Get("reuse").(bool) {
 		s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-			ID: d.Id(),
+			ServiceID: d.Id(),
 		})
 		if err != nil {
 			return diag.FromErr(err)
@@ -673,7 +673,7 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, 
 
 	if !d.Get("reuse").(bool) {
 		err := conn.DeleteService(&gofastly.DeleteServiceInput{
-			ID: d.Id(),
+			ServiceID: d.Id(),
 		})
 		if err != nil {
 			return diag.FromErr(err)

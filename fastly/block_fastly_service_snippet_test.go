@@ -80,28 +80,28 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 	// name instead of the ID. The ID is only used when updating a 'dynamic'
 	// snippet.
 	s1 := gofastly.Snippet{
-		Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
-		Dynamic:  gofastly.ToPointer(0),
-		ID:       gofastly.ToPointer(""),
-		Name:     gofastly.ToPointer("recv_test"),
-		Priority: gofastly.ToPointer(110),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
+		Content:   gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
+		Dynamic:   gofastly.ToPointer(0),
+		SnippetID: gofastly.ToPointer(""),
+		Name:      gofastly.ToPointer("recv_test"),
+		Priority:  gofastly.ToPointer(110),
+		Type:      gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
 	updatedS1 := gofastly.Snippet{
-		Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.different-header = \"true\";\n}"),
-		Dynamic:  gofastly.ToPointer(0),
-		ID:       gofastly.ToPointer(""),
-		Name:     gofastly.ToPointer("recv_test"),
-		Priority: gofastly.ToPointer(110),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
+		Content:   gofastly.ToPointer("if ( req.url ) {\n set req.http.different-header = \"true\";\n}"),
+		Dynamic:   gofastly.ToPointer(0),
+		SnippetID: gofastly.ToPointer(""),
+		Name:      gofastly.ToPointer("recv_test"),
+		Priority:  gofastly.ToPointer(110),
+		Type:      gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
 	updatedS2 := gofastly.Snippet{
-		Content:  gofastly.ToPointer("restart;\n"),
-		Dynamic:  gofastly.ToPointer(0),
-		ID:       gofastly.ToPointer(""),
-		Name:     gofastly.ToPointer("fetch_test"),
-		Priority: gofastly.ToPointer(50),
-		Type:     gofastly.ToPointer(gofastly.SnippetTypeFetch),
+		Content:   gofastly.ToPointer("restart;\n"),
+		Dynamic:   gofastly.ToPointer(0),
+		SnippetID: gofastly.ToPointer(""),
+		Name:      gofastly.ToPointer("fetch_test"),
+		Priority:  gofastly.ToPointer(50),
+		Type:      gofastly.ToPointer(gofastly.SnippetTypeFetch),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -157,7 +157,7 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -172,11 +172,11 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 		for _, expected := range snippets {
 			for _, lr := range sList {
 				if gofastly.ToValue(expected.Name) == gofastly.ToValue(lr.Name) {
-					expected.ServiceID = service.ID
+					expected.ServiceID = service.ServiceID
 					expected.ServiceVersion = service.ActiveVersion.Number
 
 					// We don't know these things ahead of time, so ignore them
-					lr.ID = gofastly.ToPointer("")
+					lr.SnippetID = gofastly.ToPointer("")
 					lr.CreatedAt = nil
 					lr.UpdatedAt = nil
 

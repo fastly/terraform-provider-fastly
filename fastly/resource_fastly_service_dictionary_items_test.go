@@ -375,7 +375,7 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 			Name:           dictName,
 		})
@@ -384,11 +384,11 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 		}
 
 		dictItems, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
-			ServiceID:    gofastly.ToValue(service.ID),
-			DictionaryID: gofastly.ToValue(dict.ID),
+			ServiceID:    gofastly.ToValue(service.ServiceID),
+			DictionaryID: gofastly.ToValue(dict.DictionaryID),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Dictionary Items records for (%s), dictionary (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dict.ID), err)
+			return fmt.Errorf("error looking up Dictionary Items records for (%s), dictionary (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dict.DictionaryID), err)
 		}
 
 		dictItemsMap := flattenDictionaryItems(dictItems)
@@ -410,13 +410,12 @@ func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 	}
 
 	_, err = conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
-		ServiceID:    gofastly.ToValue(service.ID),
-		DictionaryID: gofastly.ToValue(dict.ID),
+		ServiceID:    gofastly.ToValue(service.ServiceID),
+		DictionaryID: gofastly.ToValue(dict.DictionaryID),
 
 		ItemKey:   gofastly.ToPointer(expectedKey),
 		ItemValue: gofastly.ToPointer(expectedValue),
 	})
-
 	if err != nil {
 		t.Fatalf("[ERR] Error Creating Dictionary item for (%s), dictionary (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dict.Name), err)
 	}
@@ -426,7 +425,7 @@ func getDictionaryByName(service *gofastly.ServiceDetail, dictName string) (*gof
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
-		ServiceID:      gofastly.ToValue(service.ID),
+		ServiceID:      gofastly.ToValue(service.ServiceID),
 		ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		Name:           dictName,
 	})

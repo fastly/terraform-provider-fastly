@@ -449,7 +449,7 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -465,7 +465,7 @@ func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDe
 			for _, ls := range s3List {
 				if gofastly.ToValue(s.Name) == gofastly.ToValue(ls.Name) {
 					// we don't know these things ahead of time, so populate them now
-					s.ServiceID = service.ID
+					s.ServiceID = service.ServiceID
 					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

@@ -102,7 +102,7 @@ func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.Servi
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		cList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -118,9 +118,9 @@ func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.Servi
 			for _, lc := range cList {
 				if gofastly.ToValue(c.Name) == gofastly.ToValue(lc.Name) {
 					// we don't know these things ahead of time, so populate them now
-					c.ServiceID = service.ID
+					c.ServiceID = service.ServiceID
 					c.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lc.CreatedAt = nil
 					lc.UpdatedAt = nil

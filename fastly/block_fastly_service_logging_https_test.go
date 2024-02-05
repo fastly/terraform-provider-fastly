@@ -185,7 +185,7 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
-			ServiceID:      gofastly.ToValue(service.ID),
+			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
@@ -203,7 +203,7 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 			for _, hl := range httpsList {
 				if gofastly.ToValue(h.Name) == gofastly.ToValue(hl.Name) {
 					// we don't know these things ahead of time, so populate them now
-					h.ServiceID = service.ID
+					h.ServiceID = service.ServiceID
 					h.ServiceVersion = service.ActiveVersion.Number
 
 					// Ignore VCL attributes for Compute and set to whatever is returned from the API.

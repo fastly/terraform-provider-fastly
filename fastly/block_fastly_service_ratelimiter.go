@@ -235,7 +235,7 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 
 	for _, e := range erls {
 		if e.Name != nil && *e.Name == resource["name"].(string) {
-			rateLimiterID = gofastly.ToValue(e.ID)
+			rateLimiterID = gofastly.ToValue(e.RateLimiterID)
 			break
 		}
 	}
@@ -273,7 +273,7 @@ func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.Resour
 
 	for _, e := range erls {
 		if e.Name != nil && *e.Name == resource["name"].(string) {
-			rateLimiterID = gofastly.ToValue(e.ID)
+			rateLimiterID = gofastly.ToValue(e.RateLimiterID)
 			break
 		}
 	}
@@ -491,8 +491,8 @@ func flattenRateLimiter(remoteState []*gofastly.ERL, _ ServiceMetadata) []map[st
 		if o.PenaltyBoxDuration != nil {
 			data["penalty_box_duration"] = *o.PenaltyBoxDuration
 		}
-		if o.ID != nil {
-			data["ratelimiter_id"] = *o.ID
+		if o.RateLimiterID != nil {
+			data["ratelimiter_id"] = *o.RateLimiterID
 		}
 		if o.ResponseObjectName != nil {
 			data["response_object_name"] = *o.ResponseObjectName

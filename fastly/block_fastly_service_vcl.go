@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -63,9 +63,9 @@ func (h *VCLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	opts := gofastly.CreateVCLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Content:        gofastly.String(resource["content"].(string)),
-		Main:           gofastly.Bool(resource["main"].(bool)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Content:        gofastly.ToPointer(resource["content"].(string)),
+		Main:           gofastly.ToPointer(resource["main"].(bool)),
 	}
 
 	log.Printf("[DEBUG] Fastly VCL Addition opts: %#v", opts)
@@ -109,7 +109,7 @@ func (h *VCLServiceAttributeHandler) Update(_ context.Context, d *schema.Resourc
 	}
 
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.String(v.(string))
+		opts.Content = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update VCL Opts: %#v", opts)
@@ -144,10 +144,16 @@ func (h *VCLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 func flattenVCLs(remoteState []*gofastly.VCL) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":    resource.Name,
-			"content": resource.Content,
-			"main":    resource.Main,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Content != nil {
+			data["content"] = *resource.Content
+		}
+		if resource.Main != nil {
+			data["main"] = *resource.Main
 		}
 
 		// prune any empty values that come from the default string value in structs

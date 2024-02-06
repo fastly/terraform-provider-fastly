@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -51,14 +51,14 @@ func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 		{
 			remote: []*gofastly.Honeycomb{
 				{
-					ServiceVersion:    1,
-					Name:              "honeycomb-endpoint",
-					Token:             "token",
-					Dataset:           "dataset",
-					Placement:         "none",
-					ResponseCondition: "always",
-					Format:            honeycombDefaultFormat,
-					FormatVersion:     2,
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("honeycomb-endpoint"),
+					Token:             gofastly.ToPointer("token"),
+					Dataset:           gofastly.ToPointer("dataset"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					Format:            gofastly.ToPointer(honeycombDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
 				},
 			},
 			local: []map[string]any{
@@ -89,34 +89,35 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		ServiceVersion: 1,
-		Name:           "honeycomb-endpoint",
-		Token:          "s3cr3t",
-		Dataset:        "dataset",
-		FormatVersion:  2,
-		Format:         appendNewLine(honeycombDefaultFormat),
+		Dataset:           gofastly.ToPointer("dataset"),
+		Format:            gofastly.ToPointer(appendNewLine(honeycombDefaultFormat)),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("honeycomb-endpoint"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("s3cr3t"),
 	}
 
 	log1AfterUpdate := gofastly.Honeycomb{
-		ServiceVersion:    1,
-		Name:              "honeycomb-endpoint",
-		Dataset:           "new-dataset",
-		Token:             "secret",
-		FormatVersion:     2,
-		Format:            appendNewLine(honeycombDefaultFormat),
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
+		Dataset:           gofastly.ToPointer("new-dataset"),
+		Format:            gofastly.ToPointer(appendNewLine(honeycombDefaultFormat)),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("honeycomb-endpoint"),
+		Placement:         gofastly.ToPointer("none"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("secret"),
 	}
 
 	log2 := gofastly.Honeycomb{
-		ServiceVersion:    1,
-		Name:              "another-honeycomb-endpoint",
-		Token:             "another-token",
-		Dataset:           "another-dataset",
-		FormatVersion:     2,
-		Format:            appendNewLine(honeycombDefaultFormat),
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
+		Dataset:           gofastly.ToPointer("another-dataset"),
+		Format:            gofastly.ToPointer(appendNewLine(honeycombDefaultFormat)),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("another-honeycomb-endpoint"),
+		Placement:         gofastly.ToPointer("none"),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("another-token"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,10 +132,8 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHoneycombAttributes(&service, []*gofastly.Honeycomb{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_honeycomb.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_honeycomb.#", "1"),
 				),
 			},
 
@@ -143,10 +142,8 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHoneycombAttributes(&service, []*gofastly.Honeycomb{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_honeycomb.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_honeycomb.#", "2"),
 				),
 			},
 		},
@@ -159,10 +156,10 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		ServiceVersion: 1,
-		Name:           "honeycomb-endpoint",
-		Token:          "s3cr3t",
-		Dataset:        "dataset",
+		Dataset:        gofastly.ToPointer("dataset"),
+		Name:           gofastly.ToPointer("honeycomb-endpoint"),
+		ServiceVersion: gofastly.ToPointer(1),
+		Token:          gofastly.ToPointer("s3cr3t"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -177,10 +174,8 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLHoneycombAttributes(&service, []*gofastly.Honeycomb{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_honeycomb.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_honeycomb.#", "1"),
 				),
 			},
 		},
@@ -191,11 +186,11 @@ func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		honeycombList, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Honeycomb Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Honeycomb Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(honeycombList) != len(honeycomb) {
@@ -206,9 +201,9 @@ func testAccCheckFastlyServiceVCLHoneycombAttributes(service *gofastly.ServiceDe
 
 		for _, e := range honeycomb {
 			for _, el := range honeycombList {
-				if e.Name == el.Name {
+				if gofastly.ToValue(e.Name) == gofastly.ToValue(el.Name) {
 					// we don't know these things ahead of time, so populate them now
-					e.ServiceID = service.ID
+					e.ServiceID = service.ServiceID
 					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

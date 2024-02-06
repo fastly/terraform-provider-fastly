@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,30 +24,30 @@ func TestResourceFastlyFlattenRateLimiter(t *testing.T) {
 			},
 			remote: []*gofastly.ERL{
 				{
-					Action: gofastly.ERLActionResponse,
-					ClientKey: []string{
-						"req.http.Fastly-Client-IP",
-						"req.http.User-Agent",
+					Action: gofastly.ToPointer(gofastly.ERLActionResponse),
+					ClientKey: []*string{
+						gofastly.ToPointer("req.http.Fastly-Client-IP"),
+						gofastly.ToPointer("req.http.User-Agent"),
 					},
-					FeatureRevision: 1,
-					HTTPMethods: []string{
-						"POST",
-						"PUT",
-						"PATCH",
-						"DELETE",
+					FeatureRevision: gofastly.ToPointer(1),
+					HTTPMethods: []*string{
+						gofastly.ToPointer("POST"),
+						gofastly.ToPointer("PUT"),
+						gofastly.ToPointer("PATCH"),
+						gofastly.ToPointer("DELETE"),
 					},
-					ID:                 "123abc",
-					LoggerType:         gofastly.ERLLogBigQuery,
-					Name:               "example",
-					PenaltyBoxDuration: 123,
+					RateLimiterID:      gofastly.ToPointer("123abc"),
+					LoggerType:         gofastly.ToPointer(gofastly.ERLLogBigQuery),
+					Name:               gofastly.ToPointer("example"),
+					PenaltyBoxDuration: gofastly.ToPointer(123),
 					Response: &gofastly.ERLResponse{
-						ERLContent:     "example",
-						ERLContentType: "plain/text",
-						ERLStatus:      429,
+						ERLContent:     gofastly.ToPointer("example"),
+						ERLContentType: gofastly.ToPointer("plain/text"),
+						ERLStatus:      gofastly.ToPointer(429),
 					},
-					ResponseObjectName: "example",
-					RpsLimit:           123,
-					WindowSize:         gofastly.ERLSize1,
+					ResponseObjectName: gofastly.ToPointer("example"),
+					RpsLimit:           gofastly.ToPointer(123),
+					WindowSize:         gofastly.ToPointer(gofastly.ERLSize1),
 				},
 			},
 			local: []map[string]any{
@@ -94,51 +94,51 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 	// correlate to the specific Rate Limiter definitions in the Terraform config.
 
 	erl1 := gofastly.ERL{
-		Action: gofastly.ERLActionResponse,
-		ClientKey: []string{
-			"req.http.Fastly-Client-IP",
-			"req.http.User-Agent",
+		Action: gofastly.ToPointer(gofastly.ERLActionResponse),
+		ClientKey: []*string{
+			gofastly.ToPointer("req.http.Fastly-Client-IP"),
+			gofastly.ToPointer("req.http.User-Agent"),
 		},
-		FeatureRevision: 1,
-		HTTPMethods: []string{
-			"POST",
-			"PUT",
-			"PATCH",
-			"DELETE",
+		FeatureRevision: gofastly.ToPointer(1),
+		HTTPMethods: []*string{
+			gofastly.ToPointer("POST"),
+			gofastly.ToPointer("PUT"),
+			gofastly.ToPointer("PATCH"),
+			gofastly.ToPointer("DELETE"),
 		},
-		Name:               rateLimiterName,
-		PenaltyBoxDuration: 30,
+		Name:               gofastly.ToPointer(rateLimiterName),
+		PenaltyBoxDuration: gofastly.ToPointer(30),
 		Response: &gofastly.ERLResponse{
-			ERLContent:     "example",
-			ERLContentType: "plain/text",
-			ERLStatus:      429,
+			ERLContent:     gofastly.ToPointer("example"),
+			ERLContentType: gofastly.ToPointer("plain/text"),
+			ERLStatus:      gofastly.ToPointer(429),
 		},
-		RpsLimit:   100,
-		WindowSize: gofastly.ERLSize60,
+		RpsLimit:   gofastly.ToPointer(100),
+		WindowSize: gofastly.ToPointer(gofastly.ERLSize60),
 	}
 
 	erl2 := gofastly.ERL{
-		Action: gofastly.ERLActionResponse,
-		ClientKey: []string{
-			"req.http.Fastly-Client-IP",
-			"req.http.User-Agent",
+		Action: gofastly.ToPointer(gofastly.ERLActionResponse),
+		ClientKey: []*string{
+			gofastly.ToPointer("req.http.Fastly-Client-IP"),
+			gofastly.ToPointer("req.http.User-Agent"),
 		},
-		FeatureRevision: 1,
-		HTTPMethods: []string{
-			"POST",
-			"PUT",
-			"PATCH",
-			"DELETE",
+		FeatureRevision: gofastly.ToPointer(1),
+		HTTPMethods: []*string{
+			gofastly.ToPointer("POST"),
+			gofastly.ToPointer("PUT"),
+			gofastly.ToPointer("PATCH"),
+			gofastly.ToPointer("DELETE"),
 		},
-		Name:               rateLimiterName + "-2",
-		PenaltyBoxDuration: 30,
+		Name:               gofastly.ToPointer(rateLimiterName + "-2"),
+		PenaltyBoxDuration: gofastly.ToPointer(30),
 		Response: &gofastly.ERLResponse{
-			ERLContent:     "example",
-			ERLContentType: "plain/text",
-			ERLStatus:      429,
+			ERLContent:     gofastly.ToPointer("example"),
+			ERLContentType: gofastly.ToPointer("plain/text"),
+			ERLStatus:      gofastly.ToPointer(429),
 		},
-		RpsLimit:   100,
-		WindowSize: gofastly.ERLSize60,
+		RpsLimit:   gofastly.ToPointer(100),
+		WindowSize: gofastly.ToPointer(gofastly.ERLSize60),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -337,11 +337,11 @@ func testAccCheckFastlyServiceVCLRateLimiterAttributes(service *gofastly.Service
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		have, err := conn.ListERLs(&gofastly.ListERLsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Rate Limiters for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Rate Limiters for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(have) != len(want) {
@@ -351,10 +351,10 @@ func testAccCheckFastlyServiceVCLRateLimiterAttributes(service *gofastly.Service
 		var found int
 		for _, w := range want {
 			for _, h := range have {
-				if w.Name == h.Name {
+				if gofastly.ToValue(w.Name) == gofastly.ToValue(h.Name) {
 					// we don't know these things ahead of time, so populate them now
-					w.ID = h.ID
-					w.ServiceID = service.ID
+					w.RateLimiterID = h.RateLimiterID
+					w.ServiceID = service.ServiceID
 					w.Version = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

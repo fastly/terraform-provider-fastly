@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -64,9 +64,9 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 
 	for key, val := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-			Operation: gofastly.CreateBatchOperation,
-			ItemKey:   key,
-			ItemValue: val.(string),
+			Operation: gofastly.ToPointer(gofastly.CreateBatchOperation),
+			ItemKey:   gofastly.ToPointer(key),
+			ItemValue: gofastly.ToPointer(val.(string)),
 		})
 	}
 
@@ -98,8 +98,8 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		for key := range os {
 			if _, ok := ns[key]; !ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.DeleteBatchOperation,
-					ItemKey:   key,
+					Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
+					ItemKey:   gofastly.ToPointer(key),
 				})
 			}
 		}
@@ -108,18 +108,18 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 			// Handle replaces
 			if _, ok := os[key]; ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.UpdateBatchOperation,
-					ItemKey:   key,
-					ItemValue: val.(string),
+					Operation: gofastly.ToPointer(gofastly.UpdateBatchOperation),
+					ItemKey:   gofastly.ToPointer(key),
+					ItemValue: gofastly.ToPointer(val.(string)),
 				})
 			}
 
 			// Handle additions
 			if _, ok := os[key]; !ok {
 				batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-					Operation: gofastly.CreateBatchOperation,
-					ItemKey:   key,
-					ItemValue: val.(string),
+					Operation: gofastly.ToPointer(gofastly.CreateBatchOperation),
+					ItemKey:   gofastly.ToPointer(key),
+					ItemValue: gofastly.ToPointer(val.(string)),
 				})
 			}
 		}
@@ -165,8 +165,8 @@ func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceD
 
 	for key := range items {
 		batchDictionaryItems = append(batchDictionaryItems, &gofastly.BatchDictionaryItem{
-			Operation: gofastly.DeleteBatchOperation,
-			ItemKey:   key,
+			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
+			ItemKey:   gofastly.ToPointer(key),
 		})
 	}
 
@@ -207,7 +207,9 @@ func resourceServiceDictionaryItemsImport(_ context.Context, d *schema.ResourceD
 func flattenDictionaryItems(remoteState []*gofastly.DictionaryItem) map[string]string {
 	result := make(map[string]string)
 	for _, currentDictItem := range remoteState {
-		result[currentDictItem.ItemKey] = currentDictItem.ItemValue
+		if currentDictItem.ItemKey != nil && currentDictItem.ItemValue != nil {
+			result[*currentDictItem.ItemKey] = *currentDictItem.ItemValue
+		}
 	}
 	return result
 }

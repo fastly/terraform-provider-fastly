@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -51,7 +51,7 @@ func resourceFastlyConfigStoreCreate(_ context.Context, d *schema.ResourceData, 
 	}
 
 	// NOTE: `id` is exposed as a read-only attribute.
-	d.SetId(store.ID)
+	d.SetId(store.StoreID)
 
 	return nil
 }
@@ -60,7 +60,7 @@ func resourceFastlyConfigStoreRead(_ context.Context, d *schema.ResourceData, me
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.GetConfigStoreInput{
-		ID: d.Id(),
+		StoreID: d.Id(),
 	}
 
 	log.Printf("[DEBUG] REFRESH: Config Store input: %#v", input)
@@ -122,7 +122,7 @@ func resourceFastlyConfigStoreDelete(_ context.Context, d *schema.ResourceData, 
 	}
 
 	input := gofastly.DeleteConfigStoreInput{
-		ID: d.Id(),
+		StoreID: d.Id(),
 	}
 
 	log.Printf("[DEBUG] DELETE: Config Store input: %#v", input)

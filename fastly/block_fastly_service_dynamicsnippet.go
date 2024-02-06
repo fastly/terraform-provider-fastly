@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -122,13 +122,13 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.Int(v.(int))
+		opts.Priority = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.String(v.(string))
+		opts.Content = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["type"]; ok {
-		opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(v.(string)))
+		opts.Type = gofastly.ToPointer(gofastly.SnippetType(v.(string)))
 	}
 
 	log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
@@ -162,14 +162,14 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *sch
 func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, error) {
 	resource := dynamicSnippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Content:  gofastly.String(resource["content"].(string)),
-		Dynamic:  gofastly.Int(1),
-		Name:     gofastly.String(resource["name"].(string)),
-		Priority: gofastly.Int(resource["priority"].(int)),
+		Content:  gofastly.ToPointer(resource["content"].(string)),
+		Dynamic:  gofastly.ToPointer(1),
+		Name:     gofastly.ToPointer(resource["name"].(string)),
+		Priority: gofastly.ToPointer(resource["priority"].(int)),
 	}
 
 	snippetType := strings.ToLower(resource["type"].(string))
-	opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
+	opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
 
 	return &opts, nil
 }
@@ -179,15 +179,23 @@ func flattenDynamicSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
 		// Skip non-dynamic snippets
-		if resource.Dynamic == 0 {
+		if resource.Dynamic != nil && *resource.Dynamic == 0 {
 			continue
 		}
 
-		data := map[string]any{
-			"snippet_id": resource.ID,
-			"name":       resource.Name,
-			"type":       resource.Type,
-			"priority":   int(resource.Priority),
+		data := map[string]any{}
+
+		if resource.SnippetID != nil {
+			data["snippet_id"] = *resource.SnippetID
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Type != nil {
+			data["type"] = *resource.Type
+		}
+		if resource.Priority != nil {
+			data["priority"] = *resource.Priority
 		}
 
 		// prune any empty values that come from the default string value in structs

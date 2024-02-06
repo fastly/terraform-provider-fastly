@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,14 +20,14 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 		{
 			remote: []*gofastly.HTTPS{
 				{
-					ServiceVersion:    1,
-					Name:              "https-endpoint",
-					URL:               "https://example.com/logs",
-					RequestMaxEntries: 10,
-					RequestMaxBytes:   10,
-					ContentType:       "application/json",
-					MessageType:       "blank",
-					FormatVersion:     2,
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("https-endpoint"),
+					URL:               gofastly.ToPointer("https://example.com/logs"),
+					RequestMaxEntries: gofastly.ToPointer(10),
+					RequestMaxBytes:   gofastly.ToPointer(10),
+					ContentType:       gofastly.ToPointer("application/json"),
+					MessageType:       gofastly.ToPointer("blank"),
+					FormatVersion:     gofastly.ToPointer(2),
 				},
 			},
 			local: []map[string]any{
@@ -58,45 +58,57 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.HTTPS{
-		ServiceVersion: 1,
-		Name:           "httpslogger",
-		URL:            "https://example.com/logs/1",
-		Method:         "PUT",
-
-		Format:            "%a %l %u %t %m %U%q %H %>s %b %T",
-		RequestMaxEntries: 0,
-		RequestMaxBytes:   0,
-		MessageType:       "blank",
-		FormatVersion:     2,
-		JSONFormat:        "0",
+		ContentType:       gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		HeaderName:        gofastly.ToPointer(""),
+		HeaderValue:       gofastly.ToPointer(""),
+		JSONFormat:        gofastly.ToPointer("0"),
+		MessageType:       gofastly.ToPointer("blank"),
+		Method:            gofastly.ToPointer("PUT"),
+		Name:              gofastly.ToPointer("httpslogger"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TLSHostname:       gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer("https://example.com/logs/1"),
 	}
 
 	log1AfterUpdate := gofastly.HTTPS{
-		ServiceVersion: 1,
-		Name:           "httpslogger",
-		URL:            "https://example.com/logs/1",
-		Method:         "POST",
-
-		Format:            "%a %l %u %t %m %U%q %H %>s %b",
-		RequestMaxEntries: 0,
-		RequestMaxBytes:   0,
-		MessageType:       "blank",
-		FormatVersion:     2,
-		JSONFormat:        "0",
+		ContentType:       gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		HeaderName:        gofastly.ToPointer(""),
+		HeaderValue:       gofastly.ToPointer(""),
+		JSONFormat:        gofastly.ToPointer("0"),
+		MessageType:       gofastly.ToPointer("blank"),
+		Method:            gofastly.ToPointer("POST"),
+		Name:              gofastly.ToPointer("httpslogger"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TLSHostname:       gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer("https://example.com/logs/1"),
 	}
 
 	log2 := gofastly.HTTPS{
-		ServiceVersion: 1,
-		Name:           "httpslogger2",
-		URL:            "https://example.com/logs/2",
-		Method:         "POST",
-
-		Format:            "%a %l %u %t %m %U%q %H %>s %b %T",
-		RequestMaxEntries: 0,
-		RequestMaxBytes:   1000,
-		MessageType:       "blank",
-		FormatVersion:     2,
-		JSONFormat:        "0",
+		ContentType:       gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		HeaderName:        gofastly.ToPointer(""),
+		HeaderValue:       gofastly.ToPointer(""),
+		JSONFormat:        gofastly.ToPointer("0"),
+		MessageType:       gofastly.ToPointer("blank"),
+		Method:            gofastly.ToPointer("POST"),
+		Name:              gofastly.ToPointer("httpslogger2"),
+		RequestMaxBytes:   gofastly.ToPointer(1000),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TLSHostname:       gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer("https://example.com/logs/2"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -111,10 +123,8 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_https.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_https.#", "1"),
 				),
 			},
 
@@ -123,10 +133,8 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_https.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_https.#", "2"),
 				),
 			},
 		},
@@ -139,14 +147,18 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	https := gofastly.HTTPS{
-		ServiceVersion:    1,
-		Name:              "httpslogger",
-		URL:               "https://example.com/logs/1",
-		Method:            "PUT",
-		RequestMaxEntries: 0,
-		RequestMaxBytes:   0,
-		MessageType:       "blank",
-		JSONFormat:        "0",
+		ContentType:       gofastly.ToPointer(""),
+		HeaderName:        gofastly.ToPointer(""),
+		HeaderValue:       gofastly.ToPointer(""),
+		JSONFormat:        gofastly.ToPointer("0"),
+		MessageType:       gofastly.ToPointer("blank"),
+		Method:            gofastly.ToPointer("PUT"),
+		Name:              gofastly.ToPointer("httpslogger"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TLSHostname:       gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer("https://example.com/logs/1"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -161,10 +173,8 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&https}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_https.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_https.#", "1"),
 				),
 			},
 		},
@@ -175,11 +185,11 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		httpsList, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up HTTPS Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up HTTPS Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(httpsList) != len(https) {
@@ -191,9 +201,9 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 		var found int
 		for _, h := range https {
 			for _, hl := range httpsList {
-				if h.Name == hl.Name {
+				if gofastly.ToValue(h.Name) == gofastly.ToValue(hl.Name) {
 					// we don't know these things ahead of time, so populate them now
-					h.ServiceID = service.ID
+					h.ServiceID = service.ServiceID
 					h.ServiceVersion = service.ActiveVersion.Number
 
 					// Ignore VCL attributes for Compute and set to whatever is returned from the API.

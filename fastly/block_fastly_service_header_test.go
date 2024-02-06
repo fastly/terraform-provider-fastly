@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,18 +19,18 @@ func TestResourceFastlyFlattenHeaders(t *testing.T) {
 		{
 			remote: []*gofastly.Header{
 				{
-					Name:              "myheader",
-					Action:            "delete",
-					IgnoreIfSet:       true,
-					Type:              "cache",
-					Destination:       "http.aws-id",
-					Source:            "",
-					Regex:             "",
-					Substitution:      "",
-					Priority:          100,
-					RequestCondition:  "",
-					CacheCondition:    "",
-					ResponseCondition: "",
+					Name:              gofastly.ToPointer("myheader"),
+					Action:            gofastly.ToPointer(gofastly.HeaderActionDelete),
+					IgnoreIfSet:       gofastly.ToPointer(true),
+					Type:              gofastly.ToPointer(gofastly.HeaderTypeCache),
+					Destination:       gofastly.ToPointer("http.aws-id"),
+					Source:            gofastly.ToPointer(""),
+					Regex:             gofastly.ToPointer(""),
+					Substitution:      gofastly.ToPointer(""),
+					Priority:          gofastly.ToPointer(100),
+					RequestCondition:  gofastly.ToPointer(""),
+					CacheCondition:    gofastly.ToPointer(""),
+					ResponseCondition: gofastly.ToPointer(""),
 				},
 			},
 			local: []map[string]any{
@@ -61,18 +61,18 @@ func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 	}{
 		{
 			remote: &gofastly.CreateHeaderInput{
-				Action:            gofastly.HeaderActionPtr(gofastly.HeaderActionDelete),
-				CacheCondition:    gofastly.String("test"),
-				Destination:       gofastly.String("http.aws-id"),
-				IgnoreIfSet:       gofastly.CBool(true),
-				Name:              gofastly.String("someheadder"),
-				Priority:          gofastly.Int(100),
-				Regex:             gofastly.String("test"),
-				RequestCondition:  gofastly.String("test"),
-				ResponseCondition: gofastly.String("test"),
-				Source:            gofastly.String("test"),
-				Substitution:      gofastly.String("test"),
-				Type:              gofastly.HeaderTypePtr(gofastly.HeaderTypeCache),
+				Action:            gofastly.ToPointer(gofastly.HeaderActionDelete),
+				CacheCondition:    gofastly.ToPointer("test"),
+				Destination:       gofastly.ToPointer("http.aws-id"),
+				IgnoreIfSet:       gofastly.ToPointer(gofastly.Compatibool(true)),
+				Name:              gofastly.ToPointer("someheadder"),
+				Priority:          gofastly.ToPointer(100),
+				Regex:             gofastly.ToPointer("test"),
+				RequestCondition:  gofastly.ToPointer("test"),
+				ResponseCondition: gofastly.ToPointer("test"),
+				Source:            gofastly.ToPointer("test"),
+				Substitution:      gofastly.ToPointer("test"),
+				Type:              gofastly.ToPointer(gofastly.HeaderTypeCache),
 			},
 			local: map[string]any{
 				"action":             "delete",
@@ -91,18 +91,18 @@ func TestFastlyServiceVCL_BuildHeaders(t *testing.T) {
 		},
 		{
 			remote: &gofastly.CreateHeaderInput{
-				Action:            gofastly.HeaderActionPtr(gofastly.HeaderActionSet),
-				CacheCondition:    gofastly.String(""),
-				Destination:       gofastly.String("http.aws-id"),
-				IgnoreIfSet:       gofastly.CBool(false),
-				Name:              gofastly.String("someheadder"),
-				Priority:          gofastly.Int(100),
-				Regex:             gofastly.String(""),
-				RequestCondition:  gofastly.String(""),
-				ResponseCondition: gofastly.String(""),
-				Source:            gofastly.String("http.server-name"),
-				Substitution:      gofastly.String(""),
-				Type:              gofastly.HeaderTypePtr(gofastly.HeaderTypeCache),
+				Action:            gofastly.ToPointer(gofastly.HeaderActionSet),
+				CacheCondition:    gofastly.ToPointer(""),
+				Destination:       gofastly.ToPointer("http.aws-id"),
+				IgnoreIfSet:       gofastly.ToPointer(gofastly.Compatibool(false)),
+				Name:              gofastly.ToPointer("someheadder"),
+				Priority:          gofastly.ToPointer(100),
+				Regex:             gofastly.ToPointer(""),
+				RequestCondition:  gofastly.ToPointer(""),
+				ResponseCondition: gofastly.ToPointer(""),
+				Source:            gofastly.ToPointer("http.server-name"),
+				Substitution:      gofastly.ToPointer(""),
+				Type:              gofastly.ToPointer(gofastly.HeaderTypeCache),
 			},
 			local: map[string]any{
 				"action":             "set",
@@ -135,44 +135,67 @@ func TestAccFastlyServiceVCL_headers_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Header{
-		ServiceVersion: 1,
-		Name:           "remove x-amz-request-id",
-		Destination:    "http.x-amz-request-id",
-		Type:           "cache",
-		Action:         "delete",
-		Priority:       100,
+		Action:            gofastly.ToPointer(gofastly.HeaderActionDelete),
+		CacheCondition:    gofastly.ToPointer(""),
+		Destination:       gofastly.ToPointer("http.x-amz-request-id"),
+		IgnoreIfSet:       gofastly.ToPointer(false),
+		Name:              gofastly.ToPointer("remove x-amz-request-id"),
+		Priority:          gofastly.ToPointer(100),
+		Regex:             gofastly.ToPointer(""),
+		RequestCondition:  gofastly.ToPointer(""),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Source:            gofastly.ToPointer(""),
+		Substitution:      gofastly.ToPointer(""),
+		Type:              gofastly.ToPointer(gofastly.HeaderTypeCache),
 	}
 
 	log2 := gofastly.Header{
-		ServiceVersion: 1,
-		Name:           "remove s3 server",
-		Destination:    "http.Server",
-		Type:           "cache",
-		Action:         "delete",
-		IgnoreIfSet:    true,
-		Priority:       100,
+		Action:            gofastly.ToPointer(gofastly.HeaderActionDelete),
+		CacheCondition:    gofastly.ToPointer(""),
+		Destination:       gofastly.ToPointer("http.Server"),
+		IgnoreIfSet:       gofastly.ToPointer(true),
+		Name:              gofastly.ToPointer("remove s3 server"),
+		Priority:          gofastly.ToPointer(100),
+		Regex:             gofastly.ToPointer(""),
+		RequestCondition:  gofastly.ToPointer(""),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Source:            gofastly.ToPointer(""),
+		Substitution:      gofastly.ToPointer(""),
+		Type:              gofastly.ToPointer(gofastly.HeaderTypeCache),
 	}
 
 	log3 := gofastly.Header{
-		ServiceVersion: 1,
-		Name:           "DESTROY S3",
-		Destination:    "http.Server",
-		Type:           "cache",
-		Action:         "delete",
-		Priority:       100,
+		Action:            gofastly.ToPointer(gofastly.HeaderActionDelete),
+		CacheCondition:    gofastly.ToPointer(""),
+		Destination:       gofastly.ToPointer("http.Server"),
+		IgnoreIfSet:       gofastly.ToPointer(false),
+		Name:              gofastly.ToPointer("DESTROY S3"),
+		Priority:          gofastly.ToPointer(100),
+		Regex:             gofastly.ToPointer(""),
+		RequestCondition:  gofastly.ToPointer(""),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Source:            gofastly.ToPointer(""),
+		Substitution:      gofastly.ToPointer(""),
+		Type:              gofastly.ToPointer(gofastly.HeaderTypeCache),
 	}
 
 	log4 := gofastly.Header{
-		ServiceVersion:    1,
-		Name:              "Add server name",
-		Destination:       "http.server-name",
-		Type:              "request",
-		Action:            "set",
-		Source:            "server.identity",
-		Priority:          100,
-		RequestCondition:  "test_req_condition",
-		CacheCondition:    "test_cache_condition",
-		ResponseCondition: "test_res_condition",
+		Action:            gofastly.ToPointer(gofastly.HeaderActionSet),
+		CacheCondition:    gofastly.ToPointer("test_cache_condition"),
+		Destination:       gofastly.ToPointer("http.server-name"),
+		IgnoreIfSet:       gofastly.ToPointer(false),
+		Name:              gofastly.ToPointer("Add server name"),
+		Priority:          gofastly.ToPointer(100),
+		Regex:             gofastly.ToPointer(""),
+		RequestCondition:  gofastly.ToPointer("test_req_condition"),
+		ResponseCondition: gofastly.ToPointer("test_res_condition"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Source:            gofastly.ToPointer("server.identity"),
+		Substitution:      gofastly.ToPointer(""),
+		Type:              gofastly.ToPointer(gofastly.HeaderTypeRequest),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -213,11 +236,11 @@ func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetai
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		headersList, err := conn.ListHeaders(&gofastly.ListHeadersInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Headers for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(headersList) != len(headers) {
@@ -227,11 +250,11 @@ func testAccCheckFastlyServiceVCLHeaderAttributes(service *gofastly.ServiceDetai
 		var found int
 		for _, h := range headers {
 			for _, lh := range headersList {
-				if h.Name == lh.Name {
+				if gofastly.ToValue(h.Name) == gofastly.ToValue(lh.Name) {
 					// we don't know these things ahead of time, so populate them now
-					h.ServiceID = service.ID
+					h.ServiceID = service.ServiceID
 					h.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lh.CreatedAt = nil
 					lh.UpdatedAt = nil

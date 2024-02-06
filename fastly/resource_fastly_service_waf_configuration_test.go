@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -221,9 +221,9 @@ func TestAccFastlyServiceWAFVersionV1_Config(t *testing.T) {
 
 	exclusions := []gofastly.WAFRuleExclusion{
 		{
-			Name:          gofastly.String("index page"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     gofastly.String("req.url.basename == \"index.html\""),
+			Name:          gofastly.ToPointer("index page"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2029718,
@@ -234,9 +234,9 @@ func TestAccFastlyServiceWAFVersionV1_Config(t *testing.T) {
 			},
 		},
 		{
-			Name:          gofastly.String("index php"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     gofastly.String("req.url.basename == \"index.php\""),
+			Name:          gofastly.ToPointer("index php"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,
@@ -244,9 +244,9 @@ func TestAccFastlyServiceWAFVersionV1_Config(t *testing.T) {
 			},
 		},
 		{
-			Name:          gofastly.String("index asp"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
-			Condition:     gofastly.String("req.url.basename == \"index.asp\""),
+			Name:          gofastly.ToPointer("index asp"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeWAF),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.asp\""),
 		},
 	}
 
@@ -291,11 +291,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 		delete(local, "activate")
 		conn := testAccProvider.Meta().(*APIClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: service.ID,
-			FilterVersion: service.ActiveVersion.Number,
+			FilterService: gofastly.ToValue(service.ServiceID),
+			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(wafResp.Items) != 1 {
@@ -307,7 +307,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckAttributes(service *gofastly.Serv
 			WAFID: waf.ID,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF version records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF version records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(verResp.Items) < 1 {
@@ -331,11 +331,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: service.ID,
-			FilterVersion: service.ActiveVersion.Number,
+			FilterService: gofastly.ToValue(service.ServiceID),
+			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(wafResp.Items) != 1 {
@@ -347,7 +347,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckEmpty(service *gofastly.ServiceDe
 			WAFID: waf.ID,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF version records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF version records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(verResp.Items) < 1 {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -280,64 +280,64 @@ func (h *BackendServiceAttributeHandler) createDeleteBackendInput(service string
 
 func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string, latestVersion int, resource map[string]any) gofastly.CreateBackendInput {
 	opts := gofastly.CreateBackendInput{
-		Address:             gofastly.String(resource["address"].(string)),
-		BetweenBytesTimeout: gofastly.Int(resource["between_bytes_timeout"].(int)),
-		ConnectTimeout:      gofastly.Int(resource["connect_timeout"].(int)),
-		ErrorThreshold:      gofastly.Int(resource["error_threshold"].(int)),
-		FirstByteTimeout:    gofastly.Int(resource["first_byte_timeout"].(int)),
-		HealthCheck:         gofastly.String(resource["healthcheck"].(string)),
-		MaxConn:             gofastly.Int(resource["max_conn"].(int)),
-		Name:                gofastly.String(resource["name"].(string)),
-		Port:                gofastly.Int(resource["port"].(int)),
-		SSLCheckCert:        gofastly.CBool(resource["ssl_check_cert"].(bool)),
+		Address:             gofastly.ToPointer(resource["address"].(string)),
+		BetweenBytesTimeout: gofastly.ToPointer(resource["between_bytes_timeout"].(int)),
+		ConnectTimeout:      gofastly.ToPointer(resource["connect_timeout"].(int)),
+		ErrorThreshold:      gofastly.ToPointer(resource["error_threshold"].(int)),
+		FirstByteTimeout:    gofastly.ToPointer(resource["first_byte_timeout"].(int)),
+		HealthCheck:         gofastly.ToPointer(resource["healthcheck"].(string)),
+		MaxConn:             gofastly.ToPointer(resource["max_conn"].(int)),
+		Name:                gofastly.ToPointer(resource["name"].(string)),
+		Port:                gofastly.ToPointer(resource["port"].(int)),
+		SSLCheckCert:        gofastly.ToPointer(gofastly.Compatibool(resource["ssl_check_cert"].(bool))),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
-		Shield:              gofastly.String(resource["shield"].(string)),
-		UseSSL:              gofastly.CBool(resource["use_ssl"].(bool)),
-		Weight:              gofastly.Int(resource["weight"].(int)),
+		Shield:              gofastly.ToPointer(resource["shield"].(string)),
+		UseSSL:              gofastly.ToPointer(gofastly.Compatibool(resource["use_ssl"].(bool))),
+		Weight:              gofastly.ToPointer(resource["weight"].(int)),
 	}
 
 	if resource["keepalive_time"].(int) > 0 {
-		opts.KeepAliveTime = gofastly.Int(resource["keepalive_time"].(int))
+		opts.KeepAliveTime = gofastly.ToPointer(resource["keepalive_time"].(int))
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if resource["min_tls_version"].(string) != "" {
-		opts.MinTLSVersion = gofastly.String(resource["min_tls_version"].(string))
+		opts.MinTLSVersion = gofastly.ToPointer(resource["min_tls_version"].(string))
 	}
 	if resource["max_tls_version"].(string) != "" {
-		opts.MaxTLSVersion = gofastly.String(resource["max_tls_version"].(string))
+		opts.MaxTLSVersion = gofastly.ToPointer(resource["max_tls_version"].(string))
 	}
 	if resource["override_host"].(string) != "" {
-		opts.OverrideHost = gofastly.String(resource["override_host"].(string))
+		opts.OverrideHost = gofastly.ToPointer(resource["override_host"].(string))
 	}
 	if resource["share_key"].(string) != "" {
-		opts.ShareKey = gofastly.String(resource["share_key"].(string))
+		opts.ShareKey = gofastly.ToPointer(resource["share_key"].(string))
 	}
 	if resource["ssl_ca_cert"].(string) != "" {
-		opts.SSLCACert = gofastly.String(resource["ssl_ca_cert"].(string))
+		opts.SSLCACert = gofastly.ToPointer(resource["ssl_ca_cert"].(string))
 	}
 	if resource["ssl_cert_hostname"].(string) != "" {
-		opts.SSLCertHostname = gofastly.String(resource["ssl_cert_hostname"].(string))
+		opts.SSLCertHostname = gofastly.ToPointer(resource["ssl_cert_hostname"].(string))
 	}
 	if resource["ssl_ciphers"].(string) != "" {
-		opts.SSLCiphers = gofastly.String(resource["ssl_ciphers"].(string))
+		opts.SSLCiphers = gofastly.ToPointer(resource["ssl_ciphers"].(string))
 	}
 	if resource["ssl_client_cert"].(string) != "" {
-		opts.SSLClientCert = gofastly.String(resource["ssl_client_cert"].(string))
+		opts.SSLClientCert = gofastly.ToPointer(resource["ssl_client_cert"].(string))
 	}
 	if resource["ssl_client_key"].(string) != "" {
-		opts.SSLClientKey = gofastly.String(resource["ssl_client_key"].(string))
+		opts.SSLClientKey = gofastly.ToPointer(resource["ssl_client_key"].(string))
 	}
 	if resource["ssl_sni_hostname"].(string) != "" {
-		opts.SSLSNIHostname = gofastly.String(resource["ssl_sni_hostname"].(string))
+		opts.SSLSNIHostname = gofastly.ToPointer(resource["ssl_sni_hostname"].(string))
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		opts.AutoLoadbalance = gofastly.CBool(resource["auto_loadbalance"].(bool))
-		opts.RequestCondition = gofastly.String(resource["request_condition"].(string))
+		opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(resource["auto_loadbalance"].(bool)))
+		opts.RequestCondition = gofastly.ToPointer(resource["request_condition"].(string))
 	}
 	return opts
 }
@@ -352,85 +352,85 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
-		opts.Address = gofastly.String(v.(string))
+		opts.Address = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Int(v.(int))
+		opts.Port = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["override_host"]; ok {
-		opts.OverrideHost = gofastly.String(v.(string))
+		opts.OverrideHost = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["connect_timeout"]; ok {
-		opts.ConnectTimeout = gofastly.Int(v.(int))
+		opts.ConnectTimeout = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["keepalive_time"]; ok {
-		opts.KeepAliveTime = gofastly.Int(v.(int))
+		opts.KeepAliveTime = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["max_conn"]; ok {
-		opts.MaxConn = gofastly.Int(v.(int))
+		opts.MaxConn = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["error_threshold"]; ok {
-		opts.ErrorThreshold = gofastly.Int(v.(int))
+		opts.ErrorThreshold = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["first_byte_timeout"]; ok {
-		opts.FirstByteTimeout = gofastly.Int(v.(int))
+		opts.FirstByteTimeout = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["between_bytes_timeout"]; ok {
-		opts.BetweenBytesTimeout = gofastly.Int(v.(int))
+		opts.BetweenBytesTimeout = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["auto_loadbalance"]; ok {
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			opts.AutoLoadbalance = gofastly.CBool(v.(bool))
+			opts.AutoLoadbalance = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 		}
 	}
 	if v, ok := modified["weight"]; ok {
-		opts.Weight = gofastly.Int(v.(int))
+		opts.Weight = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["request_condition"]; ok {
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			opts.RequestCondition = gofastly.String(v.(string))
+			opts.RequestCondition = gofastly.ToPointer(v.(string))
 		}
 	}
 	if v, ok := modified["healthcheck"]; ok {
-		opts.HealthCheck = gofastly.String(v.(string))
+		opts.HealthCheck = gofastly.ToPointer(v.(string))
 	}
 	// NOTE: An empty string value will be coerced by Northstar into a null.
 	// This will allow the share_key to be unset.
 	if v, ok := modified["share_key"]; ok {
-		opts.ShareKey = gofastly.String(v.(string))
+		opts.ShareKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["shield"]; ok {
-		opts.Shield = gofastly.String(v.(string))
+		opts.Shield = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["use_ssl"]; ok {
-		opts.UseSSL = gofastly.CBool(v.(bool))
+		opts.UseSSL = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["ssl_check_cert"]; ok {
-		opts.SSLCheckCert = gofastly.CBool(v.(bool))
+		opts.SSLCheckCert = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["ssl_ca_cert"]; ok {
-		opts.SSLCACert = gofastly.String(v.(string))
+		opts.SSLCACert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["ssl_client_cert"]; ok {
-		opts.SSLClientCert = gofastly.String(v.(string))
+		opts.SSLClientCert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["ssl_client_key"]; ok {
-		opts.SSLClientKey = gofastly.String(v.(string))
+		opts.SSLClientKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["ssl_cert_hostname"]; ok {
-		opts.SSLCertHostname = gofastly.String(v.(string))
+		opts.SSLCertHostname = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["ssl_sni_hostname"]; ok {
-		opts.SSLSNIHostname = gofastly.String(v.(string))
+		opts.SSLSNIHostname = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["min_tls_version"]; ok {
-		opts.MinTLSVersion = gofastly.String(v.(string))
+		opts.MinTLSVersion = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["max_tls_version"]; ok {
-		opts.MaxTLSVersion = gofastly.String(v.(string))
+		opts.MaxTLSVersion = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["ssl_ciphers"]; ok {
-		opts.SSLCiphers = gofastly.String(v.(string))
+		opts.SSLCiphers = gofastly.ToPointer(v.(string))
 	}
 
 	return opts
@@ -441,36 +441,88 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 	result := make([]map[string]any, 0, len(remoteState))
 
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"address":               resource.Address,
-			"between_bytes_timeout": int(resource.BetweenBytesTimeout),
-			"connect_timeout":       int(resource.ConnectTimeout),
-			"error_threshold":       int(resource.ErrorThreshold),
-			"first_byte_timeout":    int(resource.FirstByteTimeout),
-			"healthcheck":           resource.HealthCheck,
-			"keepalive_time":        int(resource.KeepAliveTime),
-			"max_conn":              int(resource.MaxConn),
-			"max_tls_version":       resource.MaxTLSVersion,
-			"min_tls_version":       resource.MinTLSVersion,
-			"name":                  resource.Name,
-			"override_host":         resource.OverrideHost,
-			"port":                  int(resource.Port),
-			"share_key":             resource.ShareKey,
-			"shield":                resource.Shield,
-			"ssl_ca_cert":           resource.SSLCACert,
-			"ssl_cert_hostname":     resource.SSLCertHostname,
-			"ssl_check_cert":        resource.SSLCheckCert,
-			"ssl_ciphers":           resource.SSLCiphers,
-			"ssl_client_cert":       resource.SSLClientCert,
-			"ssl_client_key":        resource.SSLClientKey,
-			"ssl_sni_hostname":      resource.SSLSNIHostname,
-			"use_ssl":               resource.UseSSL,
-			"weight":                int(resource.Weight),
+		data := map[string]any{}
+
+		if resource.Address != nil {
+			data["address"] = *resource.Address
+		}
+		if resource.BetweenBytesTimeout != nil {
+			data["between_bytes_timeout"] = *resource.BetweenBytesTimeout
+		}
+		if resource.ConnectTimeout != nil {
+			data["connect_timeout"] = *resource.ConnectTimeout
+		}
+		if resource.ErrorThreshold != nil {
+			data["error_threshold"] = *resource.ErrorThreshold
+		}
+		if resource.FirstByteTimeout != nil {
+			data["first_byte_timeout"] = *resource.FirstByteTimeout
+		}
+		if resource.HealthCheck != nil {
+			data["healthcheck"] = *resource.HealthCheck
+		}
+		if resource.KeepAliveTime != nil {
+			data["keepalive_time"] = *resource.KeepAliveTime
+		}
+		if resource.MaxConn != nil {
+			data["max_conn"] = *resource.MaxConn
+		}
+		if resource.MaxTLSVersion != nil {
+			data["max_tls_version"] = *resource.MaxTLSVersion
+		}
+		if resource.MinTLSVersion != nil {
+			data["min_tls_version"] = *resource.MinTLSVersion
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.OverrideHost != nil {
+			data["override_host"] = *resource.OverrideHost
+		}
+		if resource.Port != nil {
+			data["port"] = *resource.Port
+		}
+		if resource.ShareKey != nil {
+			data["share_key"] = *resource.ShareKey
+		}
+		if resource.SSLCACert != nil {
+			data["ssl_ca_cert"] = *resource.SSLCACert
+		}
+		if resource.SSLCertHostname != nil {
+			data["ssl_cert_hostname"] = *resource.SSLCertHostname
+		}
+		if resource.SSLCheckCert != nil {
+			data["ssl_check_cert"] = *resource.SSLCheckCert
+		}
+		if resource.SSLCiphers != nil {
+			data["ssl_ciphers"] = *resource.SSLCiphers
+		}
+		if resource.SSLClientCert != nil {
+			data["ssl_client_cert"] = *resource.SSLClientCert
+		}
+		if resource.SSLClientKey != nil {
+			data["ssl_client_key"] = *resource.SSLClientKey
+		}
+		if resource.SSLSNIHostname != nil {
+			data["ssl_sni_hostname"] = *resource.SSLSNIHostname
+		}
+		if resource.Shield != nil {
+			data["shield"] = *resource.Shield
+		}
+		if resource.UseSSL != nil {
+			data["use_ssl"] = *resource.UseSSL
+		}
+		if resource.Weight != nil {
+			data["weight"] = *resource.Weight
 		}
 
 		if sa.serviceType == ServiceTypeVCL {
-			data["auto_loadbalance"] = resource.AutoLoadbalance
-			data["request_condition"] = resource.RequestCondition
+			if resource.AutoLoadbalance != nil {
+				data["auto_loadbalance"] = *resource.AutoLoadbalance
+			}
+			if resource.RequestCondition != nil {
+				data["request_condition"] = *resource.RequestCondition
+			}
 		}
 
 		result = append(result, data)

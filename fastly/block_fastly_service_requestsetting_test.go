@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,27 +19,27 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 		{
 			remote: []*gofastly.RequestSetting{
 				{
-					Name:             "alt_backend",
-					RequestCondition: "serve_alt_backend",
-					DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-					XForwardedFor:    gofastly.RequestSettingXFFAppend,
-					MaxStaleAge:      90,
-					Action:           gofastly.RequestSettingActionPass,
+					Action:           gofastly.ToPointer(gofastly.RequestSettingActionPass),
+					DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+					MaxStaleAge:      gofastly.ToPointer(90),
+					Name:             gofastly.ToPointer("alt_backend"),
+					RequestCondition: gofastly.ToPointer("serve_alt_backend"),
+					XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
 				},
 			},
 			local: []map[string]any{
 				{
+					"action": gofastly.RequestSettingActionPass,
+					// "bypass_busy_wait":  false,
+					"default_host": "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
+					// "force_miss":        false,
+					// "force_ssl":         false,
+					// "geo_headers":       false,
+					"max_stale_age":     90,
 					"name":              "alt_backend",
 					"request_condition": "serve_alt_backend",
-					"default_host":      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-					"xff":               gofastly.RequestSettingXFFAppend,
-					"max_stale_age":     90,
-					"action":            gofastly.RequestSettingActionPass,
-					"bypass_busy_wait":  false,
-					"force_miss":        false,
-					"force_ssl":         false,
-					"geo_headers":       false,
-					"timer_support":     false,
+					// "timer_support":     false,
+					"xff": gofastly.RequestSettingXFFAppend,
 				},
 			},
 		},
@@ -59,18 +59,45 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	rq1 := gofastly.RequestSetting{
-		Name:             "alt_backend",
-		RequestCondition: "serve_alt_backend",
-		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-		XForwardedFor:    "append",
-		MaxStaleAge:      90,
+		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		MaxStaleAge:      gofastly.ToPointer(90),
+		Name:             gofastly.ToPointer("alt_backend"),
+		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
+		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+
+		// We only set a few attributes in our TF config (see above).
+		// For all the other attributes (with the exception of `action` and `xff`,
+		// which are only sent to the API if they have a non-zero string value)
+		// the default value for their types are still sent to the API
+		// and so the API responds with those default values. Hence we have to set
+		// those defaults below...
+		BypassBusyWait: gofastly.ToPointer(false),
+		ForceMiss:      gofastly.ToPointer(false),
+		ForceSSL:       gofastly.ToPointer(false),
+		GeoHeaders:     gofastly.ToPointer(false),
+		HashKeys:       gofastly.ToPointer(""),
+		TimerSupport:   gofastly.ToPointer(false),
 	}
+
 	rq2 := gofastly.RequestSetting{
-		Name:             "alt_backend",
-		RequestCondition: "serve_alt_backend",
-		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-		XForwardedFor:    "append",
-		MaxStaleAge:      900,
+		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		MaxStaleAge:      gofastly.ToPointer(900),
+		Name:             gofastly.ToPointer("alt_backend"),
+		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
+		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+
+		// We only set a few attributes in our TF config (see above).
+		// For all the other attributes (with the exception of `action` and `xff`,
+		// which are only sent to the API if they have a non-zero string value)
+		// the default value for their types are still sent to the API
+		// and so the API responds with those default values. Hence we have to set
+		// those defaults below...
+		BypassBusyWait: gofastly.ToPointer(false),
+		ForceMiss:      gofastly.ToPointer(false),
+		ForceSSL:       gofastly.ToPointer(false),
+		GeoHeaders:     gofastly.ToPointer(false),
+		HashKeys:       gofastly.ToPointer(""),
+		TimerSupport:   gofastly.ToPointer(false),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,11 +141,11 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		rqList, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Request Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Request Setting for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(rqList) != len(rqs) {
@@ -128,9 +155,9 @@ func testAccCheckFastlyServiceVCLRequestSettingsAttributes(service *gofastly.Ser
 		var found int
 		for _, r := range rqs {
 			for _, lr := range rqList {
-				if r.Name == lr.Name {
+				if gofastly.ToValue(r.Name) == gofastly.ToValue(lr.Name) {
 					// we don't know these things ahead of time, so populate them now
-					r.ServiceID = service.ID
+					r.ServiceID = service.ServiceID
 					r.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

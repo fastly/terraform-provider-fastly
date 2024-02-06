@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 )
 
 func TestResourceFastlyFlattenDomains(t *testing.T) {
@@ -15,8 +15,8 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 		{
 			remote: []*gofastly.Domain{
 				{
-					Name:    "test.notexample.com",
-					Comment: "not comment",
+					Name:    gofastly.ToPointer("test.notexample.com"),
+					Comment: gofastly.ToPointer("not comment"),
 				},
 			},
 			local: []map[string]any{
@@ -29,13 +29,12 @@ func TestResourceFastlyFlattenDomains(t *testing.T) {
 		{
 			remote: []*gofastly.Domain{
 				{
-					Name: "test.notexample.com",
+					Name: gofastly.ToPointer("test.notexample.com"),
 				},
 			},
 			local: []map[string]any{
 				{
-					"name":    "test.notexample.com",
-					"comment": "",
+					"name": "test.notexample.com",
 				},
 			},
 		},

@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -90,22 +90,22 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 	opts := gofastly.CreateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Comment:        gofastly.String(resource["comment"].(string)),
-		Shield:         gofastly.String(resource["shield"].(string)),
-		Quorum:         gofastly.Int(resource["quorum"].(int)),
-		Retries:        gofastly.Int(resource["retries"].(int)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Comment:        gofastly.ToPointer(resource["comment"].(string)),
+		Shield:         gofastly.ToPointer(resource["shield"].(string)),
+		Quorum:         gofastly.ToPointer(resource["quorum"].(int)),
+		Retries:        gofastly.ToPointer(resource["retries"].(int)),
 	}
 
 	switch resource["type"].(int) {
 	case 1:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRandom)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeRandom)
 	case 2:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeRoundRobin)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeRoundRobin)
 	case 3:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeHash)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeHash)
 	case 4:
-		opts.Type = gofastly.DirectorTypePtr(gofastly.DirectorTypeClient)
+		opts.Type = gofastly.ToPointer(gofastly.DirectorTypeClient)
 	}
 
 	log.Printf("[DEBUG] Director Create opts: %#v", opts)
@@ -171,28 +171,28 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["comment"]; ok {
-		opts.Comment = gofastly.String(v.(string))
+		opts.Comment = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["shield"]; ok {
-		opts.Shield = gofastly.String(v.(string))
+		opts.Shield = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["quorum"]; ok {
-		opts.Quorum = gofastly.Int(v.(int))
+		opts.Quorum = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["type"]; ok {
 		switch v.(int) {
 		case 1:
-			opts.Type = gofastly.DirectorTypeRandom
+			opts.Type = gofastly.ToPointer(gofastly.DirectorTypeRandom)
 		case 2:
-			opts.Type = gofastly.DirectorTypeRoundRobin
+			opts.Type = gofastly.ToPointer(gofastly.DirectorTypeRoundRobin)
 		case 3:
-			opts.Type = gofastly.DirectorTypeHash
+			opts.Type = gofastly.ToPointer(gofastly.DirectorTypeHash)
 		case 4:
-			opts.Type = gofastly.DirectorTypeClient
+			opts.Type = gofastly.ToPointer(gofastly.DirectorTypeClient)
 		}
 	}
 	if v, ok := modified["retries"]; ok {
-		opts.Retries = gofastly.Int(v.(int))
+		opts.Retries = gofastly.ToPointer(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update Director Opts: %#v", opts)
@@ -266,13 +266,25 @@ func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.Re
 func flattenDirectors(remoteState []*gofastly.Director) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":    resource.Name,
-			"comment": resource.Comment,
-			"shield":  resource.Shield,
-			"type":    resource.Type,
-			"quorum":  int(resource.Quorum),
-			"retries": int(resource.Retries),
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Comment != nil {
+			data["comment"] = *resource.Comment
+		}
+		if resource.Shield != nil {
+			data["shield"] = *resource.Shield
+		}
+		if resource.Type != nil {
+			data["type"] = *resource.Type
+		}
+		if resource.Quorum != nil {
+			data["quorum"] = *resource.Quorum
+		}
+		if resource.Retries != nil {
+			data["retries"] = *resource.Retries
 		}
 
 		// NOTE: schema.NewSet expects slice of empty interface so we have to build

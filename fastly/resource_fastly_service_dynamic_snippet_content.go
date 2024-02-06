@@ -6,9 +6,8 @@ import (
 	"log"
 	"strings"
 
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -59,8 +58,8 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 
 	_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 		ServiceID: serviceID,
-		ID:        snippetID,
-		Content:   gofastly.String(content),
+		SnippetID: snippetID,
+		Content:   gofastly.ToPointer(content),
 	})
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
@@ -86,8 +85,8 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 
 		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
 			ServiceID: serviceID,
-			ID:        snippetID,
-			Content:   gofastly.String(content),
+			SnippetID: snippetID,
+			Content:   gofastly.ToPointer(content),
 		})
 		if err != nil {
 			return diag.Errorf("error updating dynamic snippet: service %s, snippet %s, %#v", serviceID, snippetID, err)
@@ -107,7 +106,7 @@ func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData
 
 	dynamicSnippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
 		ServiceID: serviceID,
-		ID:        snippetID,
+		SnippetID: snippetID,
 	})
 	if err != nil {
 		return diag.FromErr(err)

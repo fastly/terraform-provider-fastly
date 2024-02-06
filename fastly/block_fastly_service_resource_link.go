@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -61,8 +61,8 @@ func (h *ResourceLinkServiceAttributeHandler) Create(_ context.Context, d *schem
 	input := &gofastly.CreateResourceInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		ResourceID:     gofastly.String(resource["resource_id"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		ResourceID:     gofastly.ToPointer(resource["resource_id"].(string)),
 	}
 
 	log.Printf("[DEBUG] CREATE: Resource Links input: %#v", input)
@@ -104,8 +104,8 @@ func (h *ResourceLinkServiceAttributeHandler) Read(_ context.Context, d *schema.
 // Update updates the resource.
 func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.UpdateResourceInput{
-		ID:             resource["link_id"].(string),
-		Name:           gofastly.String(resource["name"].(string)),
+		ResourceID:     resource["link_id"].(string),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	}
@@ -123,7 +123,7 @@ func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schem
 // Delete deletes the resource.
 func (h *ResourceLinkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.DeleteResourceInput{
-		ID:             resource["link_id"].(string),
+		ResourceID:     resource["link_id"].(string),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	}
@@ -149,10 +149,16 @@ func flattenResourceLinks(remoteState []*gofastly.Resource) []map[string]any {
 	result := make([]map[string]any, 0, len(remoteState))
 
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"link_id":     resource.ID,
-			"name":        resource.Name,
-			"resource_id": resource.ResourceID,
+		data := map[string]any{}
+
+		if resource.LinkID != nil {
+			data["link_id"] = *resource.LinkID
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.ResourceID != nil {
+			data["resource_id"] = *resource.ResourceID
 		}
 
 		result = append(result, data)

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -136,29 +136,29 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName, email string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		bqList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up BigQuery records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up BigQuery records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(bqList) != 1 {
 			return fmt.Errorf("bigQuery logging endpoint missing, expected: 1, got: %d", len(bqList))
 		}
 
-		if bqList[0].Name != bqName {
-			return fmt.Errorf("bigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, bqList[0].Name)
+		if gofastly.ToValue(bqList[0].Name) != bqName {
+			return fmt.Errorf("bigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, gofastly.ToValue(bqList[0].Name))
 		}
 
-		if bqList[0].User != email {
-			return fmt.Errorf("bigQuery logging endpoint user/email mismatch, expected: %s, got: %#v", email, bqList[0].User)
+		if gofastly.ToValue(bqList[0].User) != email {
+			return fmt.Errorf("bigQuery logging endpoint user/email mismatch, expected: %s, got: %#v", email, gofastly.ToValue(bqList[0].User))
 		}
 
 		return nil
@@ -284,12 +284,12 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 		{
 			remote: []*gofastly.BigQuery{
 				{
-					Name:      "bigquery-example",
-					User:      "email@example.com",
-					ProjectID: "example-gcp-project",
-					Dataset:   "example_bq_dataset",
-					Table:     "example_bq_table",
-					SecretKey: secretKey,
+					Name:      gofastly.ToPointer("bigquery-example"),
+					User:      gofastly.ToPointer("email@example.com"),
+					ProjectID: gofastly.ToPointer("example-gcp-project"),
+					Dataset:   gofastly.ToPointer("example_bq_dataset"),
+					Table:     gofastly.ToPointer("example_bq_table"),
+					SecretKey: gofastly.ToPointer(secretKey),
 				},
 			},
 			local: []map[string]any{
@@ -306,15 +306,15 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 		{
 			remote: []*gofastly.BigQuery{
 				{
-					Name:              "bigquery-example",
-					User:              "email@example.com",
-					ProjectID:         "example-gcp-project",
-					Dataset:           "example_bq_dataset",
-					Table:             "example_bq_table",
-					Format:            "%h %l %u %t \"%r\" %>s %b",
-					Placement:         "waf_debug",
-					ResponseCondition: "error_response",
-					SecretKey:         secretKey,
+					Name:              gofastly.ToPointer("bigquery-example"),
+					User:              gofastly.ToPointer("email@example.com"),
+					ProjectID:         gofastly.ToPointer("example-gcp-project"),
+					Dataset:           gofastly.ToPointer("example_bq_dataset"),
+					Table:             gofastly.ToPointer("example_bq_table"),
+					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+					Placement:         gofastly.ToPointer("waf_debug"),
+					ResponseCondition: gofastly.ToPointer("error_response"),
+					SecretKey:         gofastly.ToPointer(secretKey),
 				},
 			},
 			local: []map[string]any{

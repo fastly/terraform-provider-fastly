@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -50,8 +50,8 @@ func TestAccFastlySecretStore_validate(t *testing.T) {
 
 func testAccCheckFastlySecretStoreRemoteState(service *gofastly.ServiceDetail, serviceName, storeName, linkName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != serviceName {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
+		if gofastly.ToValue(service.Name) != serviceName {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -88,8 +88,8 @@ func testAccCheckFastlySecretStoreRemoteState(service *gofastly.ServiceDetail, s
 		}
 
 		links, err := conn.ListResources(&gofastly.ListResourcesInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.Version.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
 		if err != nil {
 			return fmt.Errorf("error listing all resource links: %s", err)
@@ -97,7 +97,7 @@ func testAccCheckFastlySecretStoreRemoteState(service *gofastly.ServiceDetail, s
 
 		found = false
 		for _, link := range links {
-			if link.Name == linkName {
+			if gofastly.ToValue(link.Name) == linkName {
 				found = true
 				break
 			}

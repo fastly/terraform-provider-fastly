@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -28,8 +28,6 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "comment", "Managed by Terraform"),
-					resource.TestCheckResourceAttr("fastly_service_compute.foo", "version_comment", ""),
-					resource.TestCheckResourceAttr("fastly_service_compute.foo", "active_version", "0"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "backend.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
@@ -59,7 +57,7 @@ func testAccCheckServiceComputeDestroy(s *terraform.State) error {
 		}
 
 		for _, s := range l {
-			if s.ID == rs.Primary.ID {
+			if gofastly.ToValue(s.ServiceID) == rs.Primary.ID {
 				// service still found
 				return fmt.Errorf("tried deleting Service (%s), but was still found", rs.Primary.ID)
 			}

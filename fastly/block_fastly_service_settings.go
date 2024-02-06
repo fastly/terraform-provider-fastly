@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -23,17 +23,17 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 	opts := gofastly.UpdateSettingsInput{
 		ServiceID:       d.Id(),
 		ServiceVersion:  latestVersion,
-		DefaultHost:     gofastly.String(d.Get("default_host").(string)),
-		DefaultTTL:      uint(d.Get("default_ttl").(int)),
-		StaleIfErrorTTL: gofastly.Uint(uint(d.Get("stale_if_error_ttl").(int))),
+		DefaultHost:     gofastly.ToPointer(d.Get("default_host").(string)),
+		DefaultTTL:      gofastly.ToPointer(uint(d.Get("default_ttl").(int))),
+		StaleIfErrorTTL: gofastly.ToPointer(uint(d.Get("stale_if_error_ttl").(int))),
 	}
 
 	if attr, ok := d.GetOk("default_host"); ok {
-		opts.DefaultHost = gofastly.String(attr.(string))
+		opts.DefaultHost = gofastly.ToPointer(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("stale_if_error"); ok {
-		opts.StaleIfError = gofastly.Bool(attr.(bool))
+		opts.StaleIfError = gofastly.ToPointer(attr.(bool))
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
@@ -52,7 +52,7 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 				ServiceVersion: latestVersion,
 			}); err != nil {
 				_, err = conn.EnableHTTP3(&gofastly.EnableHTTP3Input{
-					FeatureRevision: gofastly.Int(1),
+					FeatureRevision: gofastly.ToPointer(1),
 					ServiceID:       d.Id(),
 					ServiceVersion:  latestVersion,
 				})
@@ -69,28 +69,41 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 }
 
 func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+	if s.ActiveVersion == nil {
+		return fmt.Errorf("error: no service ActiveVersion object")
+	}
+	serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
+
 	settingsOpts := gofastly.GetSettingsInput{
 		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
+		ServiceVersion: serviceVersionNumber,
 	}
 
 	settings, err := conn.GetSettings(&settingsOpts)
 	if err != nil {
-		return fmt.Errorf("error looking up Version settings for (%s), version (%v): %s", d.Id(), s.ActiveVersion.Number, err)
+		return fmt.Errorf("error looking up Version settings for (%s), version (%v): %s", d.Id(), serviceVersionNumber, err)
 	}
 
-	d.Set("default_host", settings.DefaultHost)
-	d.Set("default_ttl", int(settings.DefaultTTL))
+	if settings.DefaultHost != nil {
+		d.Set("default_host", settings.DefaultHost)
+	}
+	if settings.DefaultTTL != nil {
+		d.Set("default_ttl", int(*settings.DefaultTTL))
+	}
 	d.Set("http3", false)
-	d.Set("stale_if_error", bool(settings.StaleIfError))
-	d.Set("stale_if_error_ttl", int(settings.StaleIfErrorTTL))
+	if settings.StaleIfError != nil {
+		d.Set("stale_if_error", settings.StaleIfError)
+	}
+	if settings.StaleIfErrorTTL != nil {
+		d.Set("stale_if_error_ttl", int(*settings.StaleIfErrorTTL))
+	}
 
 	// The API returns a 404 if HTTP3 is not enabled.
 	// The API client returns an error for non-2xx responses.
 	// So if there is no error, then HTTP3 is enabled.
 	if _, err = conn.GetHTTP3(&gofastly.GetHTTP3Input{
 		ServiceID:      d.Id(),
-		ServiceVersion: s.ActiveVersion.Number,
+		ServiceVersion: serviceVersionNumber,
 	}); err == nil {
 		d.Set("http3", true)
 	}

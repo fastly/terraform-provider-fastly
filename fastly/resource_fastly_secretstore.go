@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -43,7 +43,7 @@ func resourceFastlySecretStoreCreate(_ context.Context, d *schema.ResourceData, 
 	}
 
 	// NOTE: `id` is exposed as a read-only attribute.
-	d.SetId(store.ID)
+	d.SetId(store.StoreID)
 
 	return nil
 }
@@ -52,7 +52,7 @@ func resourceFastlySecretStoreRead(_ context.Context, d *schema.ResourceData, me
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.GetSecretStoreInput{
-		ID: d.Id(),
+		StoreID: d.Id(),
 	}
 
 	log.Printf("[DEBUG] REFRESH: Secret Store input: %#v", input)
@@ -76,7 +76,7 @@ func resourceFastlySecretStoreDelete(_ context.Context, d *schema.ResourceData, 
 	conn := meta.(*APIClient).conn
 
 	input := gofastly.DeleteSecretStoreInput{
-		ID: d.Id(),
+		StoreID: d.Id(),
 	}
 
 	log.Printf("[DEBUG] DELETE: Secret Store input: %#v", input)

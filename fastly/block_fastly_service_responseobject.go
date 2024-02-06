@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -87,13 +87,13 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 	opts := gofastly.CreateResponseObjectInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
-		Name:             gofastly.String(resource["name"].(string)),
-		Status:           gofastly.Int(resource["status"].(int)),
-		Response:         gofastly.String(resource["response"].(string)),
-		Content:          gofastly.String(resource["content"].(string)),
-		ContentType:      gofastly.String(resource["content_type"].(string)),
-		RequestCondition: gofastly.String(resource["request_condition"].(string)),
-		CacheCondition:   gofastly.String(resource["cache_condition"].(string)),
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Status:           gofastly.ToPointer(resource["status"].(int)),
+		Response:         gofastly.ToPointer(resource["response"].(string)),
+		Content:          gofastly.ToPointer(resource["content"].(string)),
+		ContentType:      gofastly.ToPointer(resource["content_type"].(string)),
+		RequestCondition: gofastly.ToPointer(resource["request_condition"].(string)),
+		CacheCondition:   gofastly.ToPointer(resource["cache_condition"].(string)),
 	}
 
 	log.Printf("[DEBUG] Create Response Object Opts: %#v", opts)
@@ -139,22 +139,22 @@ func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *sch
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["status"]; ok {
-		opts.Status = gofastly.Int(v.(int))
+		opts.Status = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["response"]; ok {
-		opts.Response = gofastly.String(v.(string))
+		opts.Response = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.String(v.(string))
+		opts.Content = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["content_type"]; ok {
-		opts.ContentType = gofastly.String(v.(string))
+		opts.ContentType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["request_condition"]; ok {
-		opts.RequestCondition = gofastly.String(v.(string))
+		opts.RequestCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.String(v.(string))
+		opts.CacheCondition = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Response Object Opts: %#v", opts)
@@ -189,14 +189,28 @@ func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *sch
 func flattenResponseObjects(remoteState []*gofastly.ResponseObject) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":              resource.Name,
-			"status":            resource.Status,
-			"response":          resource.Response,
-			"content":           resource.Content,
-			"content_type":      resource.ContentType,
-			"request_condition": resource.RequestCondition,
-			"cache_condition":   resource.CacheCondition,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Status != nil {
+			data["status"] = *resource.Status
+		}
+		if resource.Response != nil {
+			data["response"] = *resource.Response
+		}
+		if resource.Content != nil {
+			data["content"] = *resource.Content
+		}
+		if resource.ContentType != nil {
+			data["content_type"] = *resource.ContentType
+		}
+		if resource.RequestCondition != nil {
+			data["request_condition"] = *resource.RequestCondition
+		}
+		if resource.CacheCondition != nil {
+			data["cache_condition"] = *resource.CacheCondition
 		}
 
 		// prune any empty values that come from the default string value in structs

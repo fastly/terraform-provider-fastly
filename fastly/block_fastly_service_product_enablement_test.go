@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -49,19 +49,25 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
 	// the specific backend definitions in the Terraform configuration.
 
 	b1 := gofastly.Backend{
-		Address: backendAddress,
-		Name:    backendName,
-		Port:    443,
-		Shield:  "amsterdam-nl", // required for image_optimizer
+		Address: gofastly.ToPointer(backendAddress),
+		Name:    gofastly.ToPointer(backendName),
+		Port:    gofastly.ToPointer(443),
+		Shield:  gofastly.ToPointer("amsterdam-nl"), // required for image_optimizer
 
 		// NOTE: The following are defaults applied by the API.
-		BetweenBytesTimeout: 10000,
-		ConnectTimeout:      1000,
-		FirstByteTimeout:    15000,
-		Hostname:            backendAddress,
-		MaxConn:             200,
-		SSLCheckCert:        true,
-		Weight:              100,
+		AutoLoadbalance:     gofastly.ToPointer(false),
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		RequestCondition:    gofastly.ToPointer(""),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

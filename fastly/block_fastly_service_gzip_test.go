@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,8 +19,8 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 		{
 			remote: []*gofastly.Gzip{
 				{
-					Name:       "somegzip",
-					Extensions: "css",
+					Name:       gofastly.ToPointer("somegzip"),
+					Extensions: gofastly.ToPointer("css"),
 				},
 			},
 			local: []map[string]any{
@@ -33,14 +33,14 @@ func TestResourceFastlyFlattenGzips(t *testing.T) {
 		{
 			remote: []*gofastly.Gzip{
 				{
-					Name:         "somegzip",
-					Extensions:   "css json js",
-					ContentTypes: "text/html",
+					Name:         gofastly.ToPointer("somegzip"),
+					Extensions:   gofastly.ToPointer("css json js"),
+					ContentTypes: gofastly.ToPointer("text/html"),
 				},
 				{
-					Name:         "someothergzip",
-					Extensions:   "css js",
-					ContentTypes: "text/html text/xml",
+					Name:         gofastly.ToPointer("someothergzip"),
+					Extensions:   gofastly.ToPointer("css js"),
+					ContentTypes: gofastly.ToPointer("text/html text/xml"),
 				},
 			},
 			local: []map[string]any{
@@ -72,30 +72,35 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Gzip{
-		ServiceVersion: 1,
-		Name:           "gzip file types",
-		Extensions:     "css js",
-		CacheCondition: "testing_condition",
+		CacheCondition: gofastly.ToPointer("testing_condition"),
+		ContentTypes:   gofastly.ToPointer(""),
+		Extensions:     gofastly.ToPointer("css js"),
+		Name:           gofastly.ToPointer("gzip file types"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	log2 := gofastly.Gzip{
-		ServiceVersion: 1,
-		Name:           "gzip extensions",
-		ContentTypes:   "text/css text/html",
+		CacheCondition: gofastly.ToPointer(""),
+		ContentTypes:   gofastly.ToPointer("text/css text/html"),
+		Extensions:     gofastly.ToPointer(""),
+		Name:           gofastly.ToPointer("gzip extensions"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	log3 := gofastly.Gzip{
-		ServiceVersion: 1,
-		Name:           "all",
-		Extensions:     "css js html",
-		ContentTypes:   "text/javascript application/x-javascript application/javascript text/css text/html",
+		CacheCondition: gofastly.ToPointer(""),
+		ContentTypes:   gofastly.ToPointer("text/javascript application/x-javascript application/javascript text/css text/html"),
+		Extensions:     gofastly.ToPointer("css js html"),
+		Name:           gofastly.ToPointer("all"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	log4 := gofastly.Gzip{
-		ServiceVersion: 1,
-		Name:           "all",
-		Extensions:     "css",
-		ContentTypes:   "application/x-javascript text/javascript",
+		CacheCondition: gofastly.ToPointer(""),
+		ContentTypes:   gofastly.ToPointer("application/x-javascript text/javascript"),
+		Extensions:     gofastly.ToPointer("css"),
+		Name:           gofastly.ToPointer("all"),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,10 +115,8 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log1, &log2}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "gzip.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "gzip.#", "2"),
 				),
 			},
 
@@ -122,10 +125,8 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log3}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "gzip.#", "1"),
 				),
 			},
 
@@ -134,10 +135,8 @@ func TestAccFastlyServiceVCL_gzips_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLGzipsAttributes(&service, []*gofastly.Gzip{&log4}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "gzip.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "gzip.#", "1"),
 				),
 			},
 		},
@@ -148,11 +147,11 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		gzipsList, err := conn.ListGzips(&gofastly.ListGzipsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Gzips for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(gzipsList) != len(gzips) {
@@ -162,21 +161,21 @@ func testAccCheckFastlyServiceVCLGzipsAttributes(service *gofastly.ServiceDetail
 		var found int
 		for _, g := range gzips {
 			for _, lg := range gzipsList {
-				if g.Name == lg.Name {
+				if gofastly.ToValue(g.Name) == gofastly.ToValue(lg.Name) {
 					// we don't know these things ahead of time, so populate them now
-					g.ServiceID = service.ID
+					g.ServiceID = service.ServiceID
 					g.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lg.CreatedAt = nil
 					lg.UpdatedAt = nil
 					// If empty value is sent, default value is assigned automatically by the API
 					// and so we ignore these fields in response
-					if g.Extensions == "" {
-						lg.Extensions = ""
+					if gofastly.ToValue(g.Extensions) == "" {
+						lg.Extensions = gofastly.ToPointer("")
 					}
-					if g.ContentTypes == "" {
-						lg.ContentTypes = ""
+					if gofastly.ToValue(g.ContentTypes) == "" {
+						lg.ContentTypes = gofastly.ToPointer("")
 					}
 					if !reflect.DeepEqual(g, lg) {
 						return fmt.Errorf("bad match Gzip match, expected (%#v), got (%#v)", g, lg)

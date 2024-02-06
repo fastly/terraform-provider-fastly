@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,11 +19,11 @@ func TestResourceFastlyFlattenCacheSettings(t *testing.T) {
 		{
 			remote: []*gofastly.CacheSetting{
 				{
-					Name:           "alt_backend",
-					Action:         gofastly.CacheSettingActionPass,
-					StaleTTL:       3600,
-					CacheCondition: "serve_alt_backend",
-					TTL:            300,
+					Name:           gofastly.ToPointer("alt_backend"),
+					Action:         gofastly.ToPointer(gofastly.CacheSettingActionPass),
+					StaleTTL:       gofastly.ToPointer(3600),
+					CacheCondition: gofastly.ToPointer("serve_alt_backend"),
+					TTL:            gofastly.ToPointer(300),
 				},
 			},
 			local: []map[string]any{
@@ -52,18 +52,19 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	cq1 := gofastly.CacheSetting{
-		Name:           "alt_backend",
-		Action:         "pass",
-		StaleTTL:       3600,
-		CacheCondition: "serve_alt_backend",
+		Name:           gofastly.ToPointer("alt_backend"),
+		Action:         gofastly.ToPointer(gofastly.CacheSettingActionPass),
+		StaleTTL:       gofastly.ToPointer(3600),
+		CacheCondition: gofastly.ToPointer("serve_alt_backend"),
+		TTL:            gofastly.ToPointer(0), // The default value for the attribute type is sent to API.
 	}
 
 	cq2 := gofastly.CacheSetting{
-		Name:           "cache_backend",
-		Action:         "restart",
-		StaleTTL:       1600,
-		CacheCondition: "cache_alt_backend",
-		TTL:            300,
+		Name:           gofastly.ToPointer("cache_backend"),
+		Action:         gofastly.ToPointer(gofastly.CacheSettingActionRestart),
+		StaleTTL:       gofastly.ToPointer(1600),
+		CacheCondition: gofastly.ToPointer("cache_alt_backend"),
+		TTL:            gofastly.ToPointer(300),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,12 +79,9 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLCacheSettingsAttributes(&service, []*gofastly.CacheSetting{&cq1}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "cache_setting.#", "1"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "condition.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "cache_setting.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "1"),
 				),
 			},
 
@@ -92,10 +90,8 @@ func TestAccFastlyServiceVCLCacheSetting_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLCacheSettingsAttributes(&service, []*gofastly.CacheSetting{&cq1, &cq2}),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "cache_setting.#", "2"),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "condition.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "cache_setting.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "condition.#", "2"),
 				),
 			},
 		},
@@ -106,11 +102,11 @@ func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.Servi
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		cList, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Cache Setting for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Cache Setting for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(cList) != len(cs) {
@@ -120,11 +116,11 @@ func testAccCheckFastlyServiceVCLCacheSettingsAttributes(service *gofastly.Servi
 		var found int
 		for _, c := range cs {
 			for _, lc := range cList {
-				if c.Name == lc.Name {
+				if gofastly.ToValue(c.Name) == gofastly.ToValue(lc.Name) {
 					// we don't know these things ahead of time, so populate them now
-					c.ServiceID = service.ID
+					c.ServiceID = service.ServiceID
 					c.ServiceVersion = service.ActiveVersion.Number
-					// We don't track these, so clear them out because we also wont know
+					// We don't track these, so clear them out because we also won't know
 					// these ahead of time
 					lc.CreatedAt = nil
 					lc.UpdatedAt = nil

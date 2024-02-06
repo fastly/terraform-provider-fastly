@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -59,7 +59,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	opts := gofastly.CreateACLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: latestVersion,
-		Name:           gofastly.String(resource["name"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
 	}
 
 	log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
@@ -73,7 +73,11 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 
 // Read refreshes the resource.
 func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, latestVersion int, conn *gofastly.Client) error {
-	localState := d.Get(h.Key()).(*schema.Set).List()
+	v, ok := d.Get(h.Key()).(*schema.Set)
+	if !ok {
+		return fmt.Errorf("failed to convert ACL state structure to *schema.Set")
+	}
+	localState := v.List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
@@ -85,21 +89,23 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 			return fmt.Errorf("error looking up ACLs for (%s), version (%v): %s", d.Id(), latestVersion, err)
 		}
 
-		al := flattenACLs(remoteState)
+		ms := flattenACLs(remoteState)
 
 		// Match up force_destroy on each ACL from schema.ResourceData to avoid d.Set overwriting it with null
-		stateACLs := d.Get(h.Key()).(*schema.Set).List()
-		for _, acl := range al {
-			for _, sa := range stateACLs {
-				stateACL := sa.(map[string]any)
-				if acl["name"] == stateACL["name"] {
-					acl["force_destroy"] = stateACL["force_destroy"]
+		for _, m := range ms {
+			for _, i := range localState {
+				lm, ok := i.(map[string]any)
+				if !ok {
+					return fmt.Errorf("failed to convert ACL state structure to map[string]any")
+				}
+				if m["name"] == lm["name"] {
+					m["force_destroy"] = lm["force_destroy"]
 					break
 				}
 			}
 		}
 
-		if err := d.Set(h.Key(), al); err != nil {
+		if err := d.Set(h.Key(), ms); err != nil {
 			log.Printf("[WARN] Error setting ACLs for (%s): %s", d.Id(), err)
 		}
 	}
@@ -149,9 +155,13 @@ func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 func flattenACLs(remoteState []*gofastly.ACL) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"acl_id": resource.ID,
-			"name":   resource.Name,
+		data := map[string]any{}
+
+		if resource.ACLID != nil {
+			data["acl_id"] = *resource.ACLID
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
 		}
 
 		// prune any empty values that come from the default string value in structs

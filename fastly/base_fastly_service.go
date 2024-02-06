@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -266,15 +266,18 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	conn := meta.(*APIClient).conn
 	service, err := conn.CreateService(&gofastly.CreateServiceInput{
-		Name:    gofastly.String(d.Get("name").(string)),
-		Comment: gofastly.String(d.Get("comment").(string)),
-		Type:    gofastly.String(serviceDef.GetType()),
+		Name:    gofastly.ToPointer(d.Get("name").(string)),
+		Comment: gofastly.ToPointer(d.Get("comment").(string)),
+		Type:    gofastly.ToPointer(serviceDef.GetType()),
 	})
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(service.ID)
+	if service.ServiceID == nil {
+		return diag.Errorf("error: service.ServiceID is nil")
+	}
+	d.SetId(*service.ServiceID)
 
 	// If the service was just created, there is an empty Version 1 available
 	// that is unlocked and can be updated.
@@ -299,8 +302,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	if d.HasChanges("name", "comment") && shouldActivate {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
-			Name:      gofastly.String(d.Get("name").(string)),
-			Comment:   gofastly.String(d.Get("comment").(string)),
+			Name:      gofastly.ToPointer(d.Get("name").(string)),
+			Comment:   gofastly.ToPointer(d.Get("comment").(string)),
 		})
 		if err != nil {
 			return diag.FromErr(err)
@@ -325,7 +328,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		opts := gofastly.UpdateVersionInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: d.Get("cloned_version").(int),
-			Comment:        gofastly.String(d.Get("version_comment").(string)),
+			Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
 		}
 
 		log.Printf("[DEBUG] Update Version opts: %#v", opts)
@@ -356,8 +359,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				return diag.FromErr(err)
 			}
 
-			// The new version number is named "Number", but it's actually a string.
-			latestVersion = newVersion.Number
+			// The new version number is named "Number".
+			if newVersion.Number == nil {
+				return diag.Errorf("error: cloned service version number is nil")
+			}
+			latestVersion = *newVersion.Number
 
 			// New versions are not immediately found in the API, or are not
 			// immediately mutable, so we need to sleep a few and let Fastly ready
@@ -373,7 +379,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				opts := gofastly.UpdateVersionInput{
 					ServiceID:      d.Id(),
 					ServiceVersion: latestVersion,
-					Comment:        gofastly.String(d.Get("version_comment").(string)),
+					Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
 				}
 
 				log.Printf("[DEBUG] Update Version opts: %#v", opts)
@@ -469,7 +475,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	var diags diag.Diagnostics
 
 	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-		ID: d.Id(),
+		ServiceID: d.Id(),
 	})
 	if err != nil {
 		// Check if not found, if so, clear ID field and exit early.
@@ -488,21 +494,35 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	}
 
 	// Check for service type mismatch (i.e. when importing)
-	if s.Type != serviceDef.GetType() {
-		return diag.Errorf("service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), s.Type)
+	if s.Type == nil {
+		return diag.Errorf("error: service type is nil")
+	}
+	if *s.Type != serviceDef.GetType() {
+		return diag.Errorf("service type mismatch in READ, expected: %s, got: %s", serviceDef.GetType(), *s.Type)
 	}
 
-	err = d.Set("name", s.Name)
-	if err != nil {
-		return diag.FromErr(err)
+	if s.Name != nil {
+		err = d.Set("name", s.Name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("comment", s.Comment)
-	if err != nil {
-		return diag.FromErr(err)
+	if s.Comment != nil {
+		err = d.Set("comment", s.Comment)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("version_comment", s.ActiveVersion.Comment)
-	if err != nil {
-		return diag.FromErr(err)
+
+	if s.ActiveVersion == nil {
+		s.ActiveVersion = &gofastly.Version{}
+	}
+
+	if s.ActiveVersion.Comment != nil {
+		err = d.Set("version_comment", s.ActiveVersion.Comment)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	var activeVersionFromPriorState int
@@ -526,16 +546,17 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// NOTE: We only force a refresh if `activate = true` in config.
 	// This is because if the user has set it to false, then the expectation is
 	// for the version to drift and so there will be no active version to use.
-	if activeVersionFromPriorState != s.ActiveVersion.Number && activate {
-		err = d.Set("force_refresh", true)
+	if s.ActiveVersion.Number != nil {
+		if activeVersionFromPriorState != *s.ActiveVersion.Number && activate {
+			err = d.Set("force_refresh", true)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		err = d.Set("active_version", s.ActiveVersion.Number)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-	}
-
-	err = d.Set("active_version", s.ActiveVersion.Number)
-	if err != nil {
-		return diag.FromErr(err)
 	}
 
 	// NOTE: service "name" and "comment" are versionless (mutable).
@@ -560,12 +581,11 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// prevents us from getting into the state where the attribute has never
 	// been set and gets passed into CloneVersion in the Update function and
 	// fails.
-	clonedVersionNotSet := d.Get("cloned_version") == 0
+	clonedVersionNotSet := d.Get("cloned_version").(int) == 0
 	if clonedVersionNotSet {
-		if s.ActiveVersion.Number == 0 {
+		if s.ActiveVersion.Number == nil && s.Version != nil && s.Version.Number != nil {
 			s.ActiveVersion.Number = s.Version.Number
 		}
-
 		err = d.Set("cloned_version", s.ActiveVersion.Number)
 		if err != nil {
 			return diag.FromErr(err)
@@ -576,18 +596,20 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// the active version.
 	// Otherwise, cloned_version should track the active version
 	if !d.Get("activate").(bool) {
-		s.ActiveVersion.Number = d.Get("cloned_version").(int)
+		s.ActiveVersion.Number = gofastly.ToPointer(d.Get("cloned_version").(int))
 	} else {
-		err := d.Set("cloned_version", s.ActiveVersion.Number)
-		if err != nil {
-			return diag.FromErr(err)
+		if s.ActiveVersion.Number != nil {
+			err := d.Set("cloned_version", s.ActiveVersion.Number)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
 	// If CreateService succeeds, but initial updates to the Service fail, we'll
 	// have an empty ActiveService version (no version is active, so we can't
 	// query for information on it).
-	if s.ActiveVersion.Number != 0 {
+	if s.ActiveVersion.Number != nil && *s.ActiveVersion.Number != 0 {
 		// This delegates read to all the attribute handlers which can then manage reading state for
 		// their own attributes.
 		for _, a := range serviceDef.GetAttributeHandler() {
@@ -596,10 +618,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 				if errors.Is(err, context.Canceled) {
 					return nil
 				}
-
 				return diag.FromErr(err)
 			}
-
 			if err := a.Read(ctx, d, s, conn); err != nil {
 				return diag.FromErr(err)
 			}
@@ -634,16 +654,16 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, 
 	// the DELETE call.
 	if d.Get("force_destroy").(bool) || d.Get("reuse").(bool) {
 		s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-			ID: d.Id(),
+			ServiceID: d.Id(),
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		if s.ActiveVersion.Number != 0 {
+		if s.ActiveVersion != nil && s.ActiveVersion.Number != nil && *s.ActiveVersion.Number != 0 {
 			_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
 				ServiceID:      d.Id(),
-				ServiceVersion: s.ActiveVersion.Number,
+				ServiceVersion: *s.ActiveVersion.Number,
 			})
 			if err != nil {
 				return diag.FromErr(err)
@@ -653,7 +673,7 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, 
 
 	if !d.Get("reuse").(bool) {
 		err := conn.DeleteService(&gofastly.DeleteServiceInput{
-			ID: d.Id(),
+			ServiceID: d.Id(),
 		})
 		if err != nil {
 			return diag.FromErr(err)

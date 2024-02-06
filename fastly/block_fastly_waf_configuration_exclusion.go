@@ -5,7 +5,7 @@ import (
 	"log"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -171,9 +171,9 @@ func createWAFRuleExclusion(add []any, meta any, wafID string, wafVersionNumber 
 			WAFID:            wafID,
 			WAFVersionNumber: wafVersionNumber,
 			WAFRuleExclusion: &gofastly.WAFRuleExclusion{
-				Name:          gofastly.String(a["name"].(string)),
-				ExclusionType: gofastly.String(a["exclusion_type"].(string)),
-				Condition:     gofastly.String(a["condition"].(string)),
+				Name:          gofastly.ToPointer(a["name"].(string)),
+				ExclusionType: gofastly.ToPointer(a["exclusion_type"].(string)),
+				Condition:     gofastly.ToPointer(a["condition"].(string)),
 				Rules:         rules,
 			},
 		})

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -58,13 +58,13 @@ func TestAccFastlyConfigStore_validate(t *testing.T) {
 
 func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, configStore *gofastly.ConfigStore, serviceName, configStoreName, linkName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != serviceName {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, service.Name)
+		if gofastly.ToValue(service.Name) != serviceName {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", serviceName, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		stores, err := conn.ListConfigStores()
+		stores, err := conn.ListConfigStores(&gofastly.ListConfigStoresInput{})
 		if err != nil {
 			return fmt.Errorf("error listing all Config Stores: %s", err)
 		}
@@ -82,8 +82,8 @@ func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, c
 		}
 
 		links, err := conn.ListResources(&gofastly.ListResourcesInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.Version.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
 		if err != nil {
 			return fmt.Errorf("error listing all resource links: %s", err)
@@ -91,7 +91,7 @@ func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, c
 
 		found = false
 		for _, link := range links {
-			if link.Name == linkName {
+			if gofastly.ToValue(link.Name) == linkName {
 				found = true
 			}
 		}
@@ -200,12 +200,12 @@ func testAccAddConfigStoreItems(configStore *gofastly.ConfigStore) resource.Test
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		_, err := conn.CreateConfigStoreItem(&gofastly.CreateConfigStoreItemInput{
-			StoreID: configStore.ID,
+			StoreID: configStore.StoreID,
 			Key:     "test_key",
 			Value:   "test_value",
 		})
 		if err != nil {
-			return fmt.Errorf("error adding item to Config Store '%s': %w", configStore.ID, err)
+			return fmt.Errorf("error adding item to Config Store '%s': %w", configStore.StoreID, err)
 		}
 		return nil
 	}

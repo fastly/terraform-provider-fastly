@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,9 +19,9 @@ func TestResourceFastlyFlattenVCLs(t *testing.T) {
 		{
 			remote: []*gofastly.VCL{
 				{
-					Name:    "myVCL",
-					Content: "<<EOF somecontent EOF",
-					Main:    true,
+					Name:    gofastly.ToPointer("myVCL"),
+					Content: gofastly.ToPointer("<<EOF somecontent EOF"),
+					Main:    gofastly.ToPointer(true),
 				},
 			},
 			local: []map[string]any{
@@ -84,17 +84,17 @@ func TestAccFastlyServiceVCL_VCL_basic(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, name string, vclCount int) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up VCL for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up VCL for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(vclList) != vclCount {

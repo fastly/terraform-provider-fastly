@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -21,25 +21,25 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 		{
 			remote: []*gofastly.SFTP{
 				{
-					ServiceVersion:    1,
-					Name:              "sftp-endpoint",
-					Address:           "sftp.example.com",
-					User:              "user",
-					Path:              "/",
-					PublicKey:         pgpPublicKey(t),
-					SecretKey:         privateKey(t),
-					SSHKnownHosts:     "sftp.example.com",
-					Format:            "%h %l %u %t \"%r\" %>s %b",
-					Password:          "password",
-					MessageType:       "classic",
-					FormatVersion:     2,
-					Period:            3600,
-					Port:              22,
-					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-					ResponseCondition: "response_condition",
-					Placement:         "none",
-					GzipLevel:         0,
-					CompressionCodec:  "zstd",
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("sftp-endpoint"),
+					Address:           gofastly.ToPointer("sftp.example.com"),
+					User:              gofastly.ToPointer("user"),
+					Path:              gofastly.ToPointer("/"),
+					PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+					SecretKey:         gofastly.ToPointer(privateKey(t)),
+					SSHKnownHosts:     gofastly.ToPointer("sftp.example.com"),
+					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+					Password:          gofastly.ToPointer("password"),
+					MessageType:       gofastly.ToPointer("classic"),
+					FormatVersion:     gofastly.ToPointer(2),
+					Period:            gofastly.ToPointer(3600),
+					Port:              gofastly.ToPointer(22),
+					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					Placement:         gofastly.ToPointer("none"),
+					GzipLevel:         gofastly.ToPointer(0),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
 				},
 			},
 			local: []map[string]any{
@@ -81,73 +81,68 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.SFTP{
-		ServiceVersion: 1,
-
-		// Configured
-		Name:              "sftp-endpoint",
-		Address:           "sftp.example.com",
-		User:              "username",
-		Password:          "password",
-		PublicKey:         pgpPublicKey(t),
-		Path:              "/",
-		SSHKnownHosts:     "sftp.example.com",
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
-		CompressionCodec:  "zstd",
-
-		// Defaults
-		Port:            22,
-		Period:          3600,
-		MessageType:     "classic",
-		GzipLevel:       0,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		FormatVersion:   2,
-		Format:          "%h %l %u %t \"%r\" %>s %b",
+		Address:           gofastly.ToPointer("sftp.example.com"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("sftp-endpoint"),
+		Password:          gofastly.ToPointer("password"),
+		Path:              gofastly.ToPointer("/"),
+		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
+		Port:              gofastly.ToPointer(22),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		SSHKnownHosts:     gofastly.ToPointer("sftp.example.com"),
+		SecretKey:         gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:              gofastly.ToPointer("username"),
 	}
 
 	log1AfterUpdate := gofastly.SFTP{
-		ServiceVersion:    1,
-		Name:              "sftp-endpoint",
-		Address:           "sftp.example.com",
-		User:              "user",
-		PublicKey:         pgpPublicKey(t),
-		SecretKey:         privateKey(t),
-		Path:              "/logs/",
-		SSHKnownHosts:     "sftp.example.com",
-		MessageType:       "blank",
-		Port:              2600,
-		Format:            "%h %l %u %t \"%r\" %>s %b %T",
-		Placement:         "waf_debug",
-		ResponseCondition: "response_condition_test",
-		GzipLevel:         3,
-
-		// Defaults
-		Period:          3600,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		FormatVersion:   2,
+		Address:           gofastly.ToPointer("sftp.example.com"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(3),
+		MessageType:       gofastly.ToPointer("blank"),
+		Name:              gofastly.ToPointer("sftp-endpoint"),
+		Password:          gofastly.ToPointer(""),
+		Path:              gofastly.ToPointer("/logs/"),
+		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("waf_debug"),
+		Port:              gofastly.ToPointer(2600),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		SSHKnownHosts:     gofastly.ToPointer("sftp.example.com"),
+		SecretKey:         gofastly.ToPointer(privateKey(t)),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:              gofastly.ToPointer("user"),
 	}
 
 	log2 := gofastly.SFTP{
-		ServiceVersion:    1,
-		Name:              "another-sftp-endpoint",
-		Address:           "sftp2.example.com",
-		User:              "user",
-		Path:              "/dir/",
-		PublicKey:         pgpPublicKey(t),
-		SecretKey:         privateKey(t),
-		SSHKnownHosts:     "sftp2.example.com",
-		ResponseCondition: "response_condition_test",
-		MessageType:       "loggly",
-		Placement:         "none",
-		CompressionCodec:  "zstd",
-
-		// Defaults
-		Port:            22,
-		Period:          3600,
-		GzipLevel:       0,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
-		FormatVersion:   2,
-		Format:          "%h %l %u %t \"%r\" %>s %b",
+		Address:           gofastly.ToPointer("sftp2.example.com"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("loggly"),
+		Name:              gofastly.ToPointer("another-sftp-endpoint"),
+		Password:          gofastly.ToPointer(""),
+		Path:              gofastly.ToPointer("/dir/"),
+		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
+		Port:              gofastly.ToPointer(22),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		SSHKnownHosts:     gofastly.ToPointer("sftp2.example.com"),
+		SecretKey:         gofastly.ToPointer(privateKey(t)),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:              gofastly.ToPointer("user"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,10 +157,8 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_sftp.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_sftp.#", "1"),
 				),
 			},
 
@@ -174,10 +167,8 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_sftp.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_sftp.#", "2"),
 				),
 			},
 		},
@@ -190,24 +181,21 @@ func TestAccFastlyServiceVCL_logging_sftp_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.SFTP{
-		ServiceVersion: 1,
-
-		// Configured
-		Name:             "sftp-endpoint",
-		Address:          "sftp.example.com",
-		User:             "username",
-		Password:         "password",
-		PublicKey:        pgpPublicKey(t),
-		Path:             "/",
-		SSHKnownHosts:    "sftp.example.com",
-		CompressionCodec: "zstd",
-
-		// Defaults
-		Port:            22,
-		Period:          3600,
-		MessageType:     "classic",
-		GzipLevel:       0,
-		TimestampFormat: "%Y-%m-%dT%H:%M:%S.000",
+		Address:          gofastly.ToPointer("sftp.example.com"),
+		CompressionCodec: gofastly.ToPointer("zstd"),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("sftp-endpoint"),
+		Password:         gofastly.ToPointer("password"),
+		Path:             gofastly.ToPointer("/"),
+		Period:           gofastly.ToPointer(3600),
+		Port:             gofastly.ToPointer(22),
+		PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
+		SSHKnownHosts:    gofastly.ToPointer("sftp.example.com"),
+		SecretKey:        gofastly.ToPointer(""),
+		ServiceVersion:   gofastly.ToPointer(1),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:             gofastly.ToPointer("username"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -253,11 +241,11 @@ func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail,
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		sftpList, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up SFTP Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up SFTP Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(sftpList) != len(sftps) {
@@ -269,9 +257,9 @@ func testAccCheckFastlyServiceVCLSFTPAttributes(service *gofastly.ServiceDetail,
 		var found int
 		for _, s := range sftps {
 			for _, sl := range sftpList {
-				if s.Name == sl.Name {
+				if gofastly.ToValue(s.Name) == gofastly.ToValue(sl.Name) {
 					// we don't know these things ahead of time, so populate them now
-					s.ServiceID = service.ID
+					s.ServiceID = service.ServiceID
 					s.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

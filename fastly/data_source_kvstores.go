@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -89,7 +89,7 @@ func flattenDataSourceKVStores(remoteState []gofastly.KVStore) []map[string]any 
 
 	for i, resource := range remoteState {
 		result[i] = map[string]any{
-			"id":   resource.ID,
+			"id":   resource.StoreID,
 			"name": resource.Name,
 		}
 	}

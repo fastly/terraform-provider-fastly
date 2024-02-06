@@ -7,9 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -118,7 +117,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	remoteState, err := getAllAclEntriesViaPaginator(conn, &gofastly.ListACLEntriesInput{
+	remoteState, err := getAllAclEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
@@ -173,8 +172,8 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 			resource := resource.(map[string]any)
 
 			batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-				Operation: gofastly.DeleteBatchOperation,
-				ID:        gofastly.String(resource["id"].(string)),
+				Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
+				EntryID:   gofastly.ToPointer(resource["id"].(string)),
 			})
 		}
 
@@ -217,8 +216,8 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 		val := vRaw.(map[string]any)
 
 		batchACLEntries = append(batchACLEntries, &gofastly.BatchACLEntry{
-			Operation: gofastly.DeleteBatchOperation,
-			ID:        gofastly.String(val["id"].(string)),
+			Operation: gofastly.ToPointer(gofastly.DeleteBatchOperation),
+			EntryID:   gofastly.ToPointer(val["id"].(string)),
 		})
 	}
 
@@ -237,15 +236,20 @@ func flattenACLEntries(remoteState []*gofastly.ACLEntry) []map[string]any {
 	var result []map[string]any
 
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"id":      resource.ID,
-			"ip":      resource.IP,
-			"negated": resource.Negated,
-			"comment": resource.Comment,
-		}
+		data := map[string]any{}
 
-		// NOTE: Fastly API may return "null" or int value
-		// we only want to set the value if subnet is not null
+		if resource.EntryID != nil {
+			data["id"] = *resource.EntryID
+		}
+		if resource.IP != nil {
+			data["ip"] = *resource.IP
+		}
+		if resource.Negated != nil {
+			data["negated"] = *resource.Negated
+		}
+		if resource.Comment != nil {
+			data["comment"] = *resource.Comment
+		}
 		if resource.Subnet != nil {
 			data["subnet"] = strconv.Itoa(*resource.Subnet)
 		}
@@ -309,17 +313,17 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 
 func buildBatchACLEntry(v map[string]any, op gofastly.BatchOperation) *gofastly.BatchACLEntry {
 	entry := &gofastly.BatchACLEntry{
-		Operation: op,
-		ID:        gofastly.String(v["id"].(string)),
-		IP:        gofastly.String(v["ip"].(string)),
-		Negated:   gofastly.CBool(v["negated"].(bool)),
-		Comment:   gofastly.String(v["comment"].(string)),
+		Operation: gofastly.ToPointer(op),
+		EntryID:   gofastly.ToPointer(v["id"].(string)),
+		IP:        gofastly.ToPointer(v["ip"].(string)),
+		Negated:   gofastly.ToPointer(gofastly.Compatibool(v["negated"].(bool))),
+		Comment:   gofastly.ToPointer(v["comment"].(string)),
 	}
 
 	subnet := convertSubnetToInt(v["subnet"].(string))
 	// only set zero subnet if the attribute is explicitly set
 	if v["subnet"].(string) == "0" || subnet != 0 {
-		entry.Subnet = gofastly.Int(subnet)
+		entry.Subnet = gofastly.ToPointer(subnet)
 	}
 
 	return entry
@@ -330,8 +334,8 @@ func convertSubnetToInt(s string) int {
 	return subnet
 }
 
-func getAllAclEntriesViaPaginator(conn *gofastly.Client, input *gofastly.ListACLEntriesInput) ([]*gofastly.ACLEntry, error) {
-	paginator := conn.NewListACLEntriesPaginator(input)
+func getAllAclEntriesViaPaginator(conn *gofastly.Client, input *gofastly.GetACLEntriesInput) ([]*gofastly.ACLEntry, error) {
+	paginator := conn.GetACLEntries(input)
 
 	var entries []*gofastly.ACLEntry
 	for paginator.HasNext() {

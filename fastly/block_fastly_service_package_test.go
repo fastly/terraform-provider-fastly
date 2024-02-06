@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,24 +20,24 @@ func TestAccFastlyServiceCompute_package_basic(t *testing.T) {
 	domain02 := fmt.Sprintf("fastly-test.%s.com", name02)
 
 	want := gofastly.Package{
-		Metadata: gofastly.PackageMetadata{
-			Name:        "wasm-test",
-			Description: "Test Package",
+		Metadata: &gofastly.PackageMetadata{
+			Name:        gofastly.ToPointer("wasm-test"),
+			Description: gofastly.ToPointer("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    "rust",
-			Size:        2015936,
-			FilesHash:   "a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d",
+			Language:    gofastly.ToPointer("rust"),
+			Size:        gofastly.ToPointer(int64(2015936)),
+			FilesHash:   gofastly.ToPointer("a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d"),
 		},
 	}
 
 	want2 := gofastly.Package{
-		Metadata: gofastly.PackageMetadata{
-			Name:        "edge-compute-test",
-			Description: "Test Package",
+		Metadata: &gofastly.PackageMetadata{
+			Name:        gofastly.ToPointer("edge-compute-test"),
+			Description: gofastly.ToPointer("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    "rust",
-			Size:        2158517,
-			FilesHash:   "d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7",
+			Language:    gofastly.ToPointer("rust"),
+			Size:        gofastly.ToPointer(int64(2158517)),
+			FilesHash:   gofastly.ToPointer("d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7"),
 		},
 	}
 
@@ -95,24 +95,24 @@ func TestAccFastlyServiceCompute_package_content(t *testing.T) {
 	domain02 := fmt.Sprintf("fastly-test.%s.com", name02)
 
 	want := gofastly.Package{
-		Metadata: gofastly.PackageMetadata{
-			Name:        "wasm-test",
-			Description: "Test Package",
+		Metadata: &gofastly.PackageMetadata{
+			Name:        gofastly.ToPointer("wasm-test"),
+			Description: gofastly.ToPointer("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    "rust",
-			Size:        2015936,
-			FilesHash:   "a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d",
+			Language:    gofastly.ToPointer("rust"),
+			Size:        gofastly.ToPointer(int64(2015936)),
+			FilesHash:   gofastly.ToPointer("a763d3c88968ebc17691900d3c14306762296df8e47a1c2d7661cee0e0c5aa6d4c082a7c128d6e719fe333b73b46fe3ae32694716ccd2efa21f5d9f049ceec6d"),
 		},
 	}
 
 	want2 := gofastly.Package{
-		Metadata: gofastly.PackageMetadata{
-			Name:        "edge-compute-test",
-			Description: "Test Package",
+		Metadata: &gofastly.PackageMetadata{
+			Name:        gofastly.ToPointer("edge-compute-test"),
+			Description: gofastly.ToPointer("Test Package"),
 			Authors:     []string{"fastly@fastly.com"},
-			Language:    "rust",
-			Size:        2158517,
-			FilesHash:   "d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7",
+			Language:    gofastly.ToPointer("rust"),
+			Size:        gofastly.ToPointer(int64(2158517)),
+			FilesHash:   gofastly.ToPointer("d8f8a0448ae4d3a6f5f230caf1269c2986e7cba86ebd14add5118034607992eafebf16714e33c1733ecbd61f13f4aef0d4dbe7582313baec343d00e8fdc424f7"),
 		},
 	}
 
@@ -184,27 +184,27 @@ func testAccCheckFastlyServiceComputePackageAttributes(service *gofastly.Service
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		got, err := conn.GetPackage(&gofastly.GetPackageInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Package for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Package for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
-		if want.Metadata.Size != got.Metadata.Size {
-			return fmt.Errorf("package size mismatch, expected: %v, got: %v", want.Metadata.Size, got.Metadata.Size)
+		if gofastly.ToValue(want.Metadata.Size) != gofastly.ToValue(got.Metadata.Size) {
+			return fmt.Errorf("package size mismatch, expected: %v, got: %v", gofastly.ToValue(want.Metadata.Size), gofastly.ToValue(got.Metadata.Size))
 		}
 
-		if want.Metadata.FilesHash != got.Metadata.FilesHash {
-			return fmt.Errorf("package files_hash mismatch, expected: %v, got: %v", want.Metadata.FilesHash, got.Metadata.FilesHash)
+		if gofastly.ToValue(want.Metadata.FilesHash) != gofastly.ToValue(got.Metadata.FilesHash) {
+			return fmt.Errorf("package files_hash mismatch, expected: %v, got: %v", gofastly.ToValue(want.Metadata.FilesHash), gofastly.ToValue(got.Metadata.FilesHash))
 		}
 
-		if want.Metadata.Language != got.Metadata.Language {
-			return fmt.Errorf("package language mismatch, expected: %v, got: %v", want.Metadata.Language, got.Metadata.Language)
+		if gofastly.ToValue(want.Metadata.Language) != gofastly.ToValue(got.Metadata.Language) {
+			return fmt.Errorf("package language mismatch, expected: %v, got: %v", gofastly.ToValue(want.Metadata.Language), gofastly.ToValue(got.Metadata.Language))
 		}
 
-		if want.Metadata.Name != got.Metadata.Name {
-			return fmt.Errorf("package name mismatch, expected: %v, got: %v", want.Metadata.Name, got.Metadata.Name)
+		if gofastly.ToValue(want.Metadata.Name) != gofastly.ToValue(got.Metadata.Name) {
+			return fmt.Errorf("package name mismatch, expected: %v, got: %v", gofastly.ToValue(want.Metadata.Name), gofastly.ToValue(got.Metadata.Name))
 		}
 
 		return nil

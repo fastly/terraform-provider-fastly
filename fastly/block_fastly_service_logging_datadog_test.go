@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,11 +20,11 @@ func TestResourceFastlyFlattenDatadog(t *testing.T) {
 		{
 			remote: []*gofastly.Datadog{
 				{
-					ServiceVersion: 1,
-					Name:           "datadog-endpoint",
-					Token:          "token",
-					Region:         "US",
-					FormatVersion:  2,
+					ServiceVersion: gofastly.ToPointer(1),
+					Name:           gofastly.ToPointer("datadog-endpoint"),
+					Token:          gofastly.ToPointer("token"),
+					Region:         gofastly.ToPointer("US"),
+					FormatVersion:  gofastly.ToPointer(2),
 				},
 			},
 			local: []map[string]any{
@@ -134,30 +134,33 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		ServiceVersion: 1,
-		Name:           "datadog-endpoint",
-		Token:          "token",
-		Region:         "US",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b",
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("datadog-endpoint"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("token"),
 	}
 
 	log1AfterUpdate := gofastly.Datadog{
-		ServiceVersion: 1,
-		Name:           "datadog-endpoint",
-		Token:          "t0k3n",
-		Region:         "EU",
-		FormatVersion:  2,
-		Format:         "%h %l %u %t \"%r\" %>s %b %T",
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("datadog-endpoint"),
+		Region:            gofastly.ToPointer("EU"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("t0k3n"),
 	}
 
 	log2 := gofastly.Datadog{
-		ServiceVersion: 1,
-		Name:           "another-datadog-endpoint",
-		Token:          "another-token",
-		Region:         "US",
-		FormatVersion:  2,
-		Format:         datadogDefaultFormat + "\n",
+		Format:            gofastly.ToPointer(datadogDefaultFormat + "\n"),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("another-datadog-endpoint"),
+		Region:            gofastly.ToPointer("US"),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		Token:             gofastly.ToPointer("another-token"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,10 +199,10 @@ func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		ServiceVersion: 1,
-		Name:           "datadog-endpoint",
-		Token:          "token",
-		Region:         "US",
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("datadog-endpoint"),
+		Token:          gofastly.ToPointer("token"),
+		Region:         gofastly.ToPointer("US"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -228,11 +231,11 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		datadogList, err := conn.ListDatadog(&gofastly.ListDatadogInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Datadog Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Datadog Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(datadogList) != len(datadog) {
@@ -244,9 +247,9 @@ func testAccCheckFastlyServiceVCLDatadogAttributes(service *gofastly.ServiceDeta
 		var found int
 		for _, d := range datadog {
 			for _, dl := range datadogList {
-				if d.Name == dl.Name {
+				if gofastly.ToValue(d.Name) == gofastly.ToValue(dl.Name) {
 					// we don't know these things ahead of time, so populate them now
-					d.ServiceID = service.ID
+					d.ServiceID = service.ServiceID
 					d.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

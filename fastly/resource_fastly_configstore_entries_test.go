@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -130,7 +130,7 @@ func testAccCheckFastlyServiceConfigStoreEntriesRemoteState(storeName string, wa
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		stores, err := conn.ListConfigStores()
+		stores, err := conn.ListConfigStores(&gofastly.ListConfigStoresInput{})
 		if err != nil {
 			return fmt.Errorf("failed to get list of Config Stores")
 		}
@@ -149,7 +149,7 @@ func testAccCheckFastlyServiceConfigStoreEntriesRemoteState(storeName string, wa
 		}
 
 		entries, err := conn.ListConfigStoreItems(&gofastly.ListConfigStoreItemsInput{
-			StoreID: found.ID,
+			StoreID: found.StoreID,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to get Config Store entries")

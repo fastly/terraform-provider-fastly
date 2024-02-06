@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,13 +19,13 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 		{
 			remote: []*gofastly.Papertrail{
 				{
-					ServiceVersion:    1,
-					Name:              "papertrailtesting",
-					Address:           "test1.papertrailapp.com",
-					Port:              3600,
-					Format:            "%h %l %u %t %r %>s",
-					FormatVersion:     2,
-					ResponseCondition: "test_response_condition",
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("papertrailtesting"),
+					Address:           gofastly.ToPointer("test1.papertrailapp.com"),
+					Port:              gofastly.ToPointer(3600),
+					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
+					FormatVersion:     gofastly.ToPointer(2),
+					ResponseCondition: gofastly.ToPointer("test_response_condition"),
 				},
 			},
 			local: []map[string]any{
@@ -55,22 +55,23 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		ServiceVersion:    1,
-		Name:              "papertrailtesting",
-		Address:           "test1.papertrailapp.com",
-		Port:              3600,
-		Format:            `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:     2,
-		ResponseCondition: "test_response_condition",
+		Address:           gofastly.ToPointer("test1.papertrailapp.com"),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("papertrailtesting"),
+		Port:              gofastly.ToPointer(3600),
+		ResponseCondition: gofastly.ToPointer("test_response_condition"),
+		ServiceVersion:    gofastly.ToPointer(1),
 	}
 
 	log2 := gofastly.Papertrail{
-		ServiceVersion: 1,
-		Name:           "papertrailtesting2",
-		Address:        "test2.papertrailapp.com",
-		Port:           8080,
-		Format:         `%h %l %u %t "%r" %>s %b`,
-		FormatVersion:  2,
+		Address:           gofastly.ToPointer("test2.papertrailapp.com"),
+		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("papertrailtesting2"),
+		Port:              gofastly.ToPointer(8080),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -85,10 +86,8 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_papertrail.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_papertrail.#", "1"),
 				),
 			},
 
@@ -97,10 +96,8 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_papertrail.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_papertrail.#", "2"),
 				),
 			},
 		},
@@ -113,10 +110,10 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		ServiceVersion: 1,
-		Name:           "papertrailtesting",
-		Address:        "test1.papertrailapp.com",
-		Port:           3600,
+		Address:        gofastly.ToPointer("test1.papertrailapp.com"),
+		Name:           gofastly.ToPointer("papertrailtesting"),
+		Port:           gofastly.ToPointer(3600),
+		ServiceVersion: gofastly.ToPointer(1),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -131,10 +128,8 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_papertrail.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_papertrail.#", "1"),
 				),
 			},
 		},
@@ -145,11 +140,11 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		papertrailList, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up Papertrail for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(papertrailList) != len(papertrails) {
@@ -159,9 +154,9 @@ func testAccCheckFastlyServiceVCLPapertrailAttributes(service *gofastly.ServiceD
 		var found int
 		for _, p := range papertrails {
 			for _, lp := range papertrailList {
-				if p.Name == lp.Name {
+				if gofastly.ToValue(p.Name) == gofastly.ToValue(lp.Name) {
 					// we don't know these things ahead of time, so populate them now
-					p.ServiceID = service.ID
+					p.ServiceID = service.ServiceID
 					p.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

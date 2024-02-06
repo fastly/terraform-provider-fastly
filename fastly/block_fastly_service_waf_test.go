@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -189,15 +189,15 @@ func testAccCheckFastlyServiceVCLDeletedWAF(service *gofastly.ServiceDetail) res
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: service.ID,
-			FilterVersion: service.ActiveVersion.Number,
+			FilterService: gofastly.ToValue(service.ServiceID),
+			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
 			return err
 		}
 
 		if len(resp.Items) > 0 {
-			return fmt.Errorf("error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, service.ID, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error WAF %s should not be present for (%s), version (%v): %s", resp.Items[0].ID, gofastly.ToValue(service.ServiceID), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 		return nil
 	}
@@ -207,11 +207,11 @@ func testAccCheckFastlyServiceVCLAttributesWAF(service *gofastly.ServiceDetail, 
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		resp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: service.ID,
-			FilterVersion: service.ActiveVersion.Number,
+			FilterService: gofastly.ToValue(service.ServiceID),
+			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(resp.Items) != 1 {

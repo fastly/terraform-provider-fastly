@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -45,7 +45,7 @@ func dataSourceFastlyConfigStoresRead(_ context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Reading Config Stores")
 
-	remoteState, err := conn.ListConfigStores()
+	remoteState, err := conn.ListConfigStores(&gofastly.ListConfigStoresInput{})
 	if err != nil {
 		return diag.Errorf("error fetching Config Stores: %s", err)
 	}
@@ -71,7 +71,7 @@ func flattenDataSourceConfigStores(remoteState []*gofastly.ConfigStore) []map[st
 
 	for i, resource := range remoteState {
 		result[i] = map[string]any{
-			"id":   resource.ID,
+			"id":   resource.StoreID,
 			"name": resource.Name,
 		}
 	}

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,10 +24,10 @@ func TestAccFastlyServiceWAFVersionV1_FlattenWAFRuleExclusions(t *testing.T) {
 			remote: []*gofastly.WAFRuleExclusion{
 				{
 					ID:            "abc",
-					Number:        gofastly.Int(1),
-					Name:          gofastly.String("index page"),
-					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-					Condition:     gofastly.String("req.url.basename == \"index.html\""),
+					Number:        gofastly.ToPointer(1),
+					Name:          gofastly.ToPointer("index page"),
+					ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+					Condition:     gofastly.ToPointer("req.url.basename == \"index.html\""),
 					Rules: []*gofastly.WAFRule{
 						{
 							ID:       "2029718",
@@ -41,10 +41,10 @@ func TestAccFastlyServiceWAFVersionV1_FlattenWAFRuleExclusions(t *testing.T) {
 				},
 				{
 					ID:            "def",
-					Number:        gofastly.Int(2),
-					Name:          gofastly.String("index php"),
-					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-					Condition:     gofastly.String("req.url.basename == \"index.php\""),
+					Number:        gofastly.ToPointer(2),
+					Name:          gofastly.ToPointer("index php"),
+					ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+					Condition:     gofastly.ToPointer("req.url.basename == \"index.php\""),
 					Rules: []*gofastly.WAFRule{
 						{
 							ID:       "1010070",
@@ -54,10 +54,10 @@ func TestAccFastlyServiceWAFVersionV1_FlattenWAFRuleExclusions(t *testing.T) {
 				},
 				{
 					ID:            "ghi",
-					Number:        gofastly.Int(3),
-					Name:          gofastly.String("index asp"),
-					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
-					Condition:     gofastly.String("req.url.basename == \"index.asp\""),
+					Number:        gofastly.ToPointer(3),
+					Name:          gofastly.ToPointer("index asp"),
+					ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeWAF),
+					Condition:     gofastly.ToPointer("req.url.basename == \"index.asp\""),
 				},
 			},
 			local: []map[string]any{
@@ -106,9 +106,9 @@ func TestAccFastlyServiceWAFVersionV1_Validation(t *testing.T) {
 		{
 			exclusions: []gofastly.WAFRuleExclusion{
 				{
-					Name:          gofastly.String("index page"),
-					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
-					Condition:     gofastly.String("req.url.basename == \"index.html\""),
+					Name:          gofastly.ToPointer("index page"),
+					ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeWAF),
+					Condition:     gofastly.ToPointer("req.url.basename == \"index.html\""),
 					Rules: []*gofastly.WAFRule{
 						{
 							ModSecID: 2029718,
@@ -121,9 +121,9 @@ func TestAccFastlyServiceWAFVersionV1_Validation(t *testing.T) {
 		{
 			exclusions: []gofastly.WAFRuleExclusion{
 				{
-					Name:          gofastly.String("index page"),
-					ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-					Condition:     gofastly.String("req.url.basename == \"index.html\""),
+					Name:          gofastly.ToPointer("index page"),
+					ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+					Condition:     gofastly.ToPointer("req.url.basename == \"index.html\""),
 				},
 			},
 			expectedMessage: "must set \"modsec_rule_ids\" with \"rule\" exclusion type in exclusion \"index page\"",
@@ -176,9 +176,9 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 
 	exclusions1 := []gofastly.WAFRuleExclusion{
 		{
-			Name:          gofastly.String("index page"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     gofastly.String("req.url.basename == \"index.html\""),
+			Name:          gofastly.ToPointer("index page"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2029718,
@@ -189,9 +189,9 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          gofastly.String("index php"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     gofastly.String("req.url.basename == \"index.php\""),
+			Name:          gofastly.ToPointer("index php"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,
@@ -199,17 +199,17 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          gofastly.String("index asp"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeWAF),
-			Condition:     gofastly.String("req.url.basename == \"index.asp\""),
+			Name:          gofastly.ToPointer("index asp"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeWAF),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.asp\""),
 		},
 	}
 
 	exclusions2 := []gofastly.WAFRuleExclusion{
 		{
-			Name:          gofastly.String("index page"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     gofastly.String("req.url.basename == \"index.html\""),
+			Name:          gofastly.ToPointer("index page"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 21032607,
@@ -217,9 +217,9 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          gofastly.String("index php"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     gofastly.String("req.url.basename == \"index.php\""),
+			Name:          gofastly.ToPointer("index php"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index.php\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,
@@ -227,9 +227,9 @@ func TestAccFastlyServiceWAFVersionV1_AddUpdateDeleteExclusions(t *testing.T) {
 			},
 		},
 		{
-			Name:          gofastly.String("index new page"),
-			ExclusionType: gofastly.String(gofastly.WAFRuleExclusionTypeRule),
-			Condition:     gofastly.String("req.url.basename == \"index-new.html\""),
+			Name:          gofastly.ToPointer("index new page"),
+			ExclusionType: gofastly.ToPointer(gofastly.WAFRuleExclusionTypeRule),
+			Condition:     gofastly.ToPointer("req.url.basename == \"index-new.html\""),
 			Rules: []*gofastly.WAFRule{
 				{
 					ModSecID: 2037405,
@@ -275,11 +275,11 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		wafResp, err := conn.ListWAFs(&gofastly.ListWAFsInput{
-			FilterService: service.ID,
-			FilterVersion: service.ActiveVersion.Number,
+			FilterService: gofastly.ToValue(service.ServiceID),
+			FilterVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(wafResp.Items) != 1 {
@@ -293,7 +293,7 @@ func testAccCheckFastlyServiceWAFVersionV1CheckExclusions(service *gofastly.Serv
 			Include:          []string{"waf_rules"},
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up WAF records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		actual := exclResp.Items

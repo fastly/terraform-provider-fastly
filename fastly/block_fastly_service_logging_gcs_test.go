@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,17 +26,17 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 		{
 			remote: []*gofastly.GCS{
 				{
-					Name:             "GCS collector",
-					User:             "email@example.com",
-					Bucket:           "bucketname",
-					SecretKey:        secretKey,
-					Format:           "log format",
-					FormatVersion:    2,
-					Period:           3600,
-					GzipLevel:        0,
-					CompressionCodec: "zstd",
-					AccountName:      "service-account",
-					ProjectID:        "project-id",
+					Name:             gofastly.ToPointer("GCS collector"),
+					User:             gofastly.ToPointer("email@example.com"),
+					Bucket:           gofastly.ToPointer("bucketname"),
+					SecretKey:        gofastly.ToPointer(secretKey),
+					Format:           gofastly.ToPointer("log format"),
+					FormatVersion:    gofastly.ToPointer(2),
+					Period:           gofastly.ToPointer(3600),
+					GzipLevel:        gofastly.ToPointer(0),
+					CompressionCodec: gofastly.ToPointer("zstd"),
+					AccountName:      gofastly.ToPointer("service-account"),
+					ProjectID:        gofastly.ToPointer("project-id"),
 				},
 			},
 			local: []map[string]any{
@@ -162,25 +162,25 @@ func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 
 func testAccCheckFastlyServiceVCLAttributesGCS(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		gcsList, err := conn.ListGCSs(&gofastly.ListGCSsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up GCSs for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up GCSs for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(gcsList) != 1 {
 			return fmt.Errorf("gcs missing, expected: 1, got: %d", len(gcsList))
 		}
 
-		if gcsList[0].Name != gcsName {
-			return fmt.Errorf("gcs name mismatch, expected: %s, got: %#v", gcsName, gcsList[0].Name)
+		if gofastly.ToValue(gcsList[0].Name) != gcsName {
+			return fmt.Errorf("gcs name mismatch, expected: %s, got: %#v", gcsName, gofastly.ToValue(gcsList[0].Name))
 		}
 
 		return nil

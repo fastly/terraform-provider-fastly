@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -137,17 +137,17 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	opts := gofastly.CreateSyslogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Address:        gofastly.String(resource["address"].(string)),
-		Port:           gofastly.Int(resource["port"].(int)),
-		Token:          gofastly.String(resource["token"].(string)),
-		UseTLS:         gofastly.CBool(resource["use_tls"].(bool)),
-		TLSHostname:    gofastly.String(resource["tls_hostname"].(string)),
-		TLSCACert:      gofastly.String(resource["tls_ca_cert"].(string)),
-		TLSClientCert:  gofastly.String(resource["tls_client_cert"].(string)),
-		TLSClientKey:   gofastly.String(resource["tls_client_key"].(string)),
-		MessageType:    gofastly.String(resource["message_type"].(string)),
-		Format:         gofastly.String(vla.format),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Address:        gofastly.ToPointer(resource["address"].(string)),
+		Port:           gofastly.ToPointer(resource["port"].(int)),
+		Token:          gofastly.ToPointer(resource["token"].(string)),
+		UseTLS:         gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
+		TLSHostname:    gofastly.ToPointer(resource["tls_hostname"].(string)),
+		TLSCACert:      gofastly.ToPointer(resource["tls_ca_cert"].(string)),
+		TLSClientCert:  gofastly.ToPointer(resource["tls_client_cert"].(string)),
+		TLSClientKey:   gofastly.ToPointer(resource["tls_client_key"].(string)),
+		MessageType:    gofastly.ToPointer(resource["message_type"].(string)),
+		Format:         gofastly.ToPointer(vla.format),
 		FormatVersion:  vla.formatVersion,
 	}
 
@@ -155,10 +155,10 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 
 	log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
@@ -208,49 +208,49 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
-		opts.Address = gofastly.String(v.(string))
+		opts.Address = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["hostname"]; ok {
-		opts.Hostname = gofastly.String(v.(string))
+		opts.Hostname = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Int(v.(int))
+		opts.Port = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["use_tls"]; ok {
-		opts.UseTLS = gofastly.CBool(v.(bool))
+		opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["ipv4"]; ok {
-		opts.IPV4 = gofastly.String(v.(string))
+		opts.IPV4 = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_ca_cert"]; ok {
-		opts.TLSCACert = gofastly.String(v.(string))
+		opts.TLSCACert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_hostname"]; ok {
-		opts.TLSHostname = gofastly.String(v.(string))
+		opts.TLSHostname = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_client_cert"]; ok {
-		opts.TLSClientCert = gofastly.String(v.(string))
+		opts.TLSClientCert = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["tls_client_key"]; ok {
-		opts.TLSClientKey = gofastly.String(v.(string))
+		opts.TLSClientKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.String(v.(string))
+		opts.Token = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.String(v.(string))
+		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Syslog Opts: %#v", opts)
@@ -285,21 +285,49 @@ func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 func flattenSyslogs(remoteState []*gofastly.Syslog) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"address":            resource.Address,
-			"port":               resource.Port,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"token":              resource.Token,
-			"use_tls":            resource.UseTLS,
-			"tls_hostname":       resource.TLSHostname,
-			"tls_ca_cert":        resource.TLSCACert,
-			"tls_client_cert":    resource.TLSClientCert,
-			"tls_client_key":     resource.TLSClientKey,
-			"response_condition": resource.ResponseCondition,
-			"message_type":       resource.MessageType,
-			"placement":          resource.Placement,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Address != nil {
+			data["address"] = *resource.Address
+		}
+		if resource.Port != nil {
+			data["port"] = *resource.Port
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Token != nil {
+			data["token"] = *resource.Token
+		}
+		if resource.UseTLS != nil {
+			data["use_tls"] = *resource.UseTLS
+		}
+		if resource.TLSHostname != nil {
+			data["tls_hostname"] = *resource.TLSHostname
+		}
+		if resource.TLSCACert != nil {
+			data["tls_ca_cert"] = *resource.TLSCACert
+		}
+		if resource.TLSClientCert != nil {
+			data["tls_client_cert"] = *resource.TLSClientCert
+		}
+		if resource.TLSClientKey != nil {
+			data["tls_client_key"] = *resource.TLSClientKey
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
 		}
 
 		// prune any empty values that come from the default string value in structs

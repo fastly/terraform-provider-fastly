@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -70,16 +70,16 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 	opts := gofastly.CreateGzipInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		CacheCondition: gofastly.String(resource["cache_condition"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		CacheCondition: gofastly.ToPointer(resource["cache_condition"].(string)),
 	}
 
 	if v, ok := resource["content_types"]; ok {
-		opts.ContentTypes = gofastly.String(sliceToString(v.([]any)))
+		opts.ContentTypes = gofastly.ToPointer(sliceToString(v.([]any)))
 	}
 
 	if v, ok := resource["extensions"]; ok {
-		opts.Extensions = gofastly.String(sliceToString(v.([]any)))
+		opts.Extensions = gofastly.ToPointer(sliceToString(v.([]any)))
 	}
 
 	log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
@@ -159,22 +159,22 @@ func (h *GzipServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 		// where it used to accept an empty value but now will use a default value if no value provided.
 		// To allow "resetting" the value on modify (user removed the attribute or set empty value)
 		// we always default to sending an empty string
-		opts.ContentTypes = gofastly.String("")
+		opts.ContentTypes = gofastly.ToPointer("")
 
 		list := v.([]any)
 		if len(list) > 0 {
-			opts.ContentTypes = gofastly.String(sliceToString(list))
+			opts.ContentTypes = gofastly.ToPointer(sliceToString(list))
 		}
 	}
 	if v, ok := modified["extensions"]; ok {
-		opts.Extensions = gofastly.String("")
+		opts.Extensions = gofastly.ToPointer("")
 		list := v.([]any)
 		if len(list) > 0 {
-			opts.Extensions = gofastly.String(sliceToString(list))
+			opts.Extensions = gofastly.ToPointer(sliceToString(list))
 		}
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.String(v.(string))
+		opts.CacheCondition = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Gzip Opts: %#v", opts)
@@ -209,22 +209,24 @@ func (h *GzipServiceAttributeHandler) Delete(_ context.Context, d *schema.Resour
 func flattenGzips(remoteState []*gofastly.Gzip) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":            resource.Name,
-			"cache_condition": resource.CacheCondition,
-		}
+		data := map[string]any{}
 
-		if resource.Extensions != "" {
-			e := strings.Split(resource.Extensions, " ")
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.CacheCondition != nil {
+			data["cache_condition"] = *resource.CacheCondition
+		}
+		if resource.Extensions != nil {
+			e := strings.Split(*resource.Extensions, " ")
 			var et []any
 			for _, ev := range e {
 				et = append(et, ev)
 			}
 			data["extensions"] = et
 		}
-
-		if resource.ContentTypes != "" {
-			c := strings.Split(resource.ContentTypes, " ")
+		if resource.ContentTypes != nil {
+			c := strings.Split(*resource.ContentTypes, " ")
 			var ct []any
 			for _, cv := range c {
 				ct = append(ct, cv)

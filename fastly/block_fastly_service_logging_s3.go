@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -275,67 +275,67 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["bucket_name"]; ok {
-		opts.BucketName = gofastly.String(v.(string))
+		opts.BucketName = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["domain"]; ok {
-		opts.Domain = gofastly.String(v.(string))
+		opts.Domain = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["s3_access_key"]; ok {
-		opts.AccessKey = gofastly.String(v.(string))
+		opts.AccessKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["s3_secret_key"]; ok {
-		opts.SecretKey = gofastly.String(v.(string))
+		opts.SecretKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["s3_iam_role"]; ok {
-		opts.IAMRole = gofastly.String(v.(string))
+		opts.IAMRole = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["path"]; ok {
-		opts.Path = gofastly.String(v.(string))
+		opts.Path = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Int(v.(int))
+		opts.Period = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["compression_codec"]; ok {
-		opts.CompressionCodec = gofastly.String(v.(string))
+		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Int(v.(int))
+		opts.GzipLevel = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.String(v.(string))
+		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["timestamp_format"]; ok {
-		opts.TimestampFormat = gofastly.String(v.(string))
+		opts.TimestampFormat = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["redundancy"]; ok {
-		opts.Redundancy = gofastly.S3RedundancyPtr(gofastly.S3Redundancy(v.(string)))
+		opts.Redundancy = gofastly.ToPointer(gofastly.S3Redundancy(v.(string)))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["public_key"]; ok {
-		opts.PublicKey = gofastly.String(v.(string))
+		opts.PublicKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["server_side_encryption_kms_key_id"]; ok {
-		opts.ServerSideEncryptionKMSKeyID = gofastly.String(v.(string))
+		opts.ServerSideEncryptionKMSKeyID = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["server_side_encryption"]; ok {
-		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionPtr(gofastly.S3ServerSideEncryption(v.(string)))
+		opts.ServerSideEncryption = gofastly.ToPointer(gofastly.S3ServerSideEncryption(v.(string)))
 	}
 	if v, ok := modified["acl"]; ok {
-		opts.ACL = gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(v.(string)))
+		opts.ACL = gofastly.ToPointer(gofastly.S3AccessControlList(v.(string)))
 	}
 	if v, ok := modified["file_max_bytes"]; ok {
-		opts.FileMaxBytes = gofastly.Int(v.(int))
+		opts.FileMaxBytes = gofastly.ToPointer(v.(int))
 	}
 
 	log.Printf("[DEBUG] Update S3 Opts: %#v", opts)
@@ -401,35 +401,79 @@ func flattenS3s(remoteState []*gofastly.S3, localState []any) []map[string]any {
 		// it once.
 		for _, s := range localState {
 			v := s.(map[string]any)
-			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = v["gzip_level"].(int)
+			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"name":                              resource.Name,
-			"bucket_name":                       resource.BucketName,
-			"s3_access_key":                     resource.AccessKey,
-			"s3_secret_key":                     resource.SecretKey,
-			"s3_iam_role":                       resource.IAMRole,
-			"path":                              resource.Path,
-			"period":                            resource.Period,
-			"domain":                            resource.Domain,
-			"file_max_bytes":                    resource.FileMaxBytes,
-			"gzip_level":                        resource.GzipLevel,
-			"format":                            resource.Format,
-			"format_version":                    resource.FormatVersion,
-			"timestamp_format":                  resource.TimestampFormat,
-			"redundancy":                        resource.Redundancy,
-			"response_condition":                resource.ResponseCondition,
-			"message_type":                      resource.MessageType,
-			"public_key":                        resource.PublicKey,
-			"placement":                         resource.Placement,
-			"server_side_encryption":            resource.ServerSideEncryption,
-			"server_side_encryption_kms_key_id": resource.ServerSideEncryptionKMSKeyID,
-			"compression_codec":                 resource.CompressionCodec,
-			"acl":                               resource.ACL,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.BucketName != nil {
+			data["bucket_name"] = *resource.BucketName
+		}
+		if resource.AccessKey != nil {
+			data["s3_access_key"] = *resource.AccessKey
+		}
+		if resource.SecretKey != nil {
+			data["s3_secret_key"] = *resource.SecretKey
+		}
+		if resource.IAMRole != nil {
+			data["s3_iam_role"] = *resource.IAMRole
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
+		if resource.Domain != nil {
+			data["domain"] = *resource.Domain
+		}
+		if resource.FileMaxBytes != nil {
+			data["file_max_bytes"] = *resource.FileMaxBytes
+		}
+		if resource.GzipLevel != nil {
+			data["gzip_level"] = *resource.GzipLevel
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.TimestampFormat != nil {
+			data["timestamp_format"] = *resource.TimestampFormat
+		}
+		if resource.Redundancy != nil {
+			data["redundancy"] = *resource.Redundancy
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.PublicKey != nil {
+			data["public_key"] = *resource.PublicKey
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ServerSideEncryption != nil {
+			data["server_side_encryption"] = *resource.ServerSideEncryption
+		}
+		if resource.ServerSideEncryptionKMSKeyID != nil {
+			data["server_side_encryption_kms_key_id"] = *resource.ServerSideEncryptionKMSKeyID
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
+		}
+		if resource.ACL != nil {
+			data["acl"] = *resource.ACL
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -450,26 +494,26 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateS3Input{
-		ACL:                          gofastly.S3AccessControlListPtr(gofastly.S3AccessControlList(resource["acl"].(string))),
-		AccessKey:                    gofastly.String(resource["s3_access_key"].(string)),
-		BucketName:                   gofastly.String(resource["bucket_name"].(string)),
-		CompressionCodec:             gofastly.String(resource["compression_codec"].(string)),
-		Domain:                       gofastly.String(resource["domain"].(string)),
-		FileMaxBytes:                 gofastly.Int(resource["file_max_bytes"].(int)),
-		Format:                       gofastly.String(vla.format),
+		ACL:                          gofastly.ToPointer(gofastly.S3AccessControlList(resource["acl"].(string))),
+		AccessKey:                    gofastly.ToPointer(resource["s3_access_key"].(string)),
+		BucketName:                   gofastly.ToPointer(resource["bucket_name"].(string)),
+		CompressionCodec:             gofastly.ToPointer(resource["compression_codec"].(string)),
+		Domain:                       gofastly.ToPointer(resource["domain"].(string)),
+		FileMaxBytes:                 gofastly.ToPointer(resource["file_max_bytes"].(int)),
+		Format:                       gofastly.ToPointer(vla.format),
 		FormatVersion:                vla.formatVersion,
-		IAMRole:                      gofastly.String(resource["s3_iam_role"].(string)),
-		MessageType:                  gofastly.String(resource["message_type"].(string)),
-		Name:                         gofastly.String(resource["name"].(string)),
-		Path:                         gofastly.String(resource["path"].(string)),
-		Period:                       gofastly.Int(resource["period"].(int)),
-		PublicKey:                    gofastly.String(resource["public_key"].(string)),
-		Redundancy:                   gofastly.S3RedundancyPtr(gofastly.S3Redundancy(resource["redundancy"].(string))),
-		SecretKey:                    gofastly.String(resource["s3_secret_key"].(string)),
-		ServerSideEncryptionKMSKeyID: gofastly.String(resource["server_side_encryption_kms_key_id"].(string)),
+		IAMRole:                      gofastly.ToPointer(resource["s3_iam_role"].(string)),
+		MessageType:                  gofastly.ToPointer(resource["message_type"].(string)),
+		Name:                         gofastly.ToPointer(resource["name"].(string)),
+		Path:                         gofastly.ToPointer(resource["path"].(string)),
+		Period:                       gofastly.ToPointer(resource["period"].(int)),
+		PublicKey:                    gofastly.ToPointer(resource["public_key"].(string)),
+		Redundancy:                   gofastly.ToPointer(gofastly.S3Redundancy(resource["redundancy"].(string))),
+		SecretKey:                    gofastly.ToPointer(resource["s3_secret_key"].(string)),
+		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(resource["server_side_encryption_kms_key_id"].(string)),
 		ServiceID:                    serviceID,
 		ServiceVersion:               serviceVersion,
-		TimestampFormat:              gofastly.String(resource["timestamp_format"].(string)),
+		TimestampFormat:              gofastly.ToPointer(resource["timestamp_format"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
@@ -477,25 +521,25 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
 	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
-		opts.GzipLevel = gofastly.Int(gl)
+		opts.GzipLevel = gofastly.ToPointer(gl)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	encryption := resource["server_side_encryption"].(string)
 	switch encryption {
 	case string(gofastly.S3ServerSideEncryptionAES):
-		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionPtr(gofastly.S3ServerSideEncryptionAES)
+		opts.ServerSideEncryption = gofastly.ToPointer(gofastly.S3ServerSideEncryptionAES)
 	case string(gofastly.S3ServerSideEncryptionKMS):
-		opts.ServerSideEncryption = gofastly.S3ServerSideEncryptionPtr(gofastly.S3ServerSideEncryptionKMS)
+		opts.ServerSideEncryption = gofastly.ToPointer(gofastly.S3ServerSideEncryptionKMS)
 	}
 
 	return &opts, nil

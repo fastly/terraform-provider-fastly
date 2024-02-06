@@ -6,7 +6,7 @@ import (
 	"log"
 	"sort"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -52,7 +52,7 @@ func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta
 	}
 
 	// NOTE: `id` is exposed as a read-only attribute.
-	d.SetId(store.ID)
+	d.SetId(store.StoreID)
 
 	return nil
 }
@@ -61,7 +61,7 @@ func resourceFastlyKVStoreRead(_ context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.GetKVStoreInput{
-		ID: d.Id(),
+		StoreID: d.Id(),
 	}
 
 	log.Printf("[DEBUG] REFRESH: KV Store input: %#v", input)
@@ -105,15 +105,15 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 
 	// IMPORTANT: We must delete all keys first before we can delete the store.
 	p := conn.NewListKVStoreKeysPaginator(&gofastly.ListKVStoreKeysInput{
-		ID: d.Id(),
+		StoreID: d.Id(),
 	})
 	for p.Next() {
 		keys := p.Keys()
 		sort.Strings(keys)
 		for _, key := range keys {
 			err := conn.DeleteKVStoreKey(&gofastly.DeleteKVStoreKeyInput{
-				ID:  d.Id(),
-				Key: key,
+				StoreID: d.Id(),
+				Key:     key,
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error during KV Store key cleanup: %w", err))
@@ -125,7 +125,7 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 	}
 
 	input := gofastly.DeleteKVStoreInput{
-		ID: d.Id(),
+		StoreID: d.Id(),
 	}
 
 	log.Printf("[DEBUG] DELETE: KV Store input: %#v", input)
@@ -139,7 +139,7 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 
 func isKVStoreEmpty(storeID string, conn *gofastly.Client) (bool, error) {
 	keys, err := conn.ListKVStoreKeys(&gofastly.ListKVStoreKeysInput{
-		ID: storeID,
+		StoreID: storeID,
 	})
 	if err != nil {
 		return false, err

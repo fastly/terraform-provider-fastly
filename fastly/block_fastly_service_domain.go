@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -57,11 +57,11 @@ func (h *DomainServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	opts := gofastly.CreateDomainInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
 	}
 
 	if v, ok := resource["comment"]; ok {
-		opts.Comment = gofastly.String(v.(string))
+		opts.Comment = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Fastly Domain Addition opts: %#v", opts)
@@ -109,7 +109,7 @@ func (h *DomainServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	}
 
 	if v, ok := modified["comment"]; ok {
-		opts.Comment = gofastly.String(v.(string))
+		opts.Comment = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Domain Opts: %#v", opts)
@@ -145,10 +145,14 @@ func flattenDomains(remoteState []*gofastly.Domain) []map[string]any {
 	result := make([]map[string]any, 0, len(remoteState))
 
 	for _, resource := range remoteState {
-		result = append(result, map[string]any{
-			"name":    resource.Name,
-			"comment": resource.Comment,
-		})
+		data := map[string]any{}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Comment != nil {
+			data["comment"] = *resource.Comment
+		}
+		result = append(result, data)
 	}
 
 	return result

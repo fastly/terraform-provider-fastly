@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -118,23 +118,23 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 		Name:           name,
-		NewName:        gofastly.String(name),
-		Priority:       gofastly.Int(priority),
-		Content:        gofastly.String(content),
-		Type:           gofastly.SnippetTypePtr(gofastly.SnippetType(stype)),
+		NewName:        gofastly.ToPointer(name),
+		Priority:       gofastly.ToPointer(priority),
+		Content:        gofastly.ToPointer(content),
+		Type:           gofastly.ToPointer(gofastly.SnippetType(stype)),
 	}
 
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.Int(v.(int))
+		opts.Priority = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["content"]; ok {
-		opts.Content = gofastly.String(v.(string))
+		opts.Content = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["type"]; ok {
 		snippetType := strings.ToLower(v.(string))
-		opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
+		opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
 	}
 
 	log.Printf("[DEBUG] Update VCL Snippet Opts: %#v", opts)
@@ -168,14 +168,14 @@ func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 	resource := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
-		Name:     gofastly.String(resource["name"].(string)),
-		Content:  gofastly.String(resource["content"].(string)),
-		Priority: gofastly.Int(resource["priority"].(int)),
-		Dynamic:  gofastly.Int(0),
+		Name:     gofastly.ToPointer(resource["name"].(string)),
+		Content:  gofastly.ToPointer(resource["content"].(string)),
+		Priority: gofastly.ToPointer(resource["priority"].(int)),
+		Dynamic:  gofastly.ToPointer(0),
 	}
 
 	snippetType := strings.ToLower(resource["type"].(string))
-	opts.Type = gofastly.SnippetTypePtr(gofastly.SnippetType(snippetType))
+	opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
 
 	return &opts, nil
 }
@@ -185,15 +185,23 @@ func flattenSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
 		// Skip dynamic snippets
-		if resource.Dynamic == 1 {
+		if resource.Dynamic != nil && *resource.Dynamic == 1 {
 			continue
 		}
 
-		data := map[string]any{
-			"name":     resource.Name,
-			"type":     resource.Type,
-			"priority": int(resource.Priority),
-			"content":  resource.Content,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Type != nil {
+			data["type"] = *resource.Type
+		}
+		if resource.Priority != nil {
+			data["priority"] = *resource.Priority
+		}
+		if resource.Content != nil {
+			data["content"] = *resource.Content
 		}
 
 		// prune any empty values that come from the default string value in structs

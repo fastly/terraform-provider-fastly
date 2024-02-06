@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -104,7 +104,7 @@ func testAccCheckUserExists(n string, user *gofastly.User) resource.TestCheckFun
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		latest, err := conn.GetUser(&gofastly.GetUserInput{
-			ID: rs.Primary.ID,
+			UserID: rs.Primary.ID,
 		})
 		if err != nil {
 			return err
@@ -129,14 +129,14 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		}
 
 		l, err := conn.ListCustomerUsers(&gofastly.ListCustomerUsersInput{
-			CustomerID: u.CustomerID,
+			CustomerID: gofastly.ToValue(u.CustomerID),
 		})
 		if err != nil {
 			return fmt.Errorf("error listing users when deleting Fastly User (%s): %s", rs.Primary.ID, err)
 		}
 
 		for _, u := range l {
-			if u.ID == rs.Primary.ID {
+			if gofastly.ToValue(u.UserID) == rs.Primary.ID {
 				// user still found
 				return fmt.Errorf("tried deleting User (%s), but was still found", rs.Primary.ID)
 			}

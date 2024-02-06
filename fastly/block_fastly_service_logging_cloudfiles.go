@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -190,46 +190,46 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["user"]; ok {
-		opts.User = gofastly.String(v.(string))
+		opts.User = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["access_key"]; ok {
-		opts.AccessKey = gofastly.String(v.(string))
+		opts.AccessKey = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["bucket_name"]; ok {
-		opts.BucketName = gofastly.String(v.(string))
+		opts.BucketName = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["path"]; ok {
-		opts.Path = gofastly.String(v.(string))
+		opts.Path = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["region"]; ok {
-		opts.Region = gofastly.String(v.(string))
+		opts.Region = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["period"]; ok {
-		opts.Period = gofastly.Int(v.(int))
+		opts.Period = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.Int(v.(int))
+		opts.GzipLevel = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
-		opts.MessageType = gofastly.String(v.(string))
+		opts.MessageType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["timestamp_format"]; ok {
-		opts.TimestampFormat = gofastly.String(v.(string))
+		opts.TimestampFormat = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["public_key"]; ok {
-		opts.PublicKey = gofastly.String(v.(string))
+		opts.PublicKey = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Cloud Files Opts: %#v", opts)
@@ -292,29 +292,61 @@ func flattenCloudfiles(remoteState []*gofastly.Cloudfiles, localState []any) []m
 		// it once.
 		for _, s := range localState {
 			v := s.(map[string]any)
-			if v["name"].(string) == resource.Name && v["gzip_level"].(int) == -1 {
-				resource.GzipLevel = v["gzip_level"].(int)
+			if resource.Name != nil && v["name"].(string) == *resource.Name && v["gzip_level"].(int) == -1 {
+				resource.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
 				break
 			}
 		}
 
-		data := map[string]any{
-			"name":               resource.Name,
-			"bucket_name":        resource.BucketName,
-			"user":               resource.User,
-			"access_key":         resource.AccessKey,
-			"public_key":         resource.PublicKey,
-			"gzip_level":         resource.GzipLevel,
-			"message_type":       resource.MessageType,
-			"path":               resource.Path,
-			"region":             resource.Region,
-			"period":             resource.Period,
-			"timestamp_format":   resource.TimestampFormat,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"placement":          resource.Placement,
-			"response_condition": resource.ResponseCondition,
-			"compression_codec":  resource.CompressionCodec,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.BucketName != nil {
+			data["bucket_name"] = *resource.BucketName
+		}
+		if resource.User != nil {
+			data["user"] = *resource.User
+		}
+		if resource.AccessKey != nil {
+			data["access_key"] = *resource.AccessKey
+		}
+		if resource.PublicKey != nil {
+			data["public_key"] = *resource.PublicKey
+		}
+		if resource.GzipLevel != nil {
+			data["gzip_level"] = *resource.GzipLevel
+		}
+		if resource.MessageType != nil {
+			data["message_type"] = *resource.MessageType
+		}
+		if resource.Path != nil {
+			data["path"] = *resource.Path
+		}
+		if resource.Region != nil {
+			data["region"] = *resource.Region
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
+		if resource.TimestampFormat != nil {
+			data["timestamp_format"] = *resource.TimestampFormat
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.CompressionCodec != nil {
+			data["compression_codec"] = *resource.CompressionCodec
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -335,21 +367,21 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, servi
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateCloudfilesInput{
-		AccessKey:        gofastly.String(resource["access_key"].(string)),
-		BucketName:       gofastly.String(resource["bucket_name"].(string)),
-		CompressionCodec: gofastly.String(resource["compression_codec"].(string)),
-		Format:           gofastly.String(vla.format),
+		AccessKey:        gofastly.ToPointer(resource["access_key"].(string)),
+		BucketName:       gofastly.ToPointer(resource["bucket_name"].(string)),
+		CompressionCodec: gofastly.ToPointer(resource["compression_codec"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
 		FormatVersion:    vla.formatVersion,
-		MessageType:      gofastly.String(resource["message_type"].(string)),
-		Name:             gofastly.String(resource["name"].(string)),
-		Path:             gofastly.String(resource["path"].(string)),
-		Period:           gofastly.Int(resource["period"].(int)),
-		PublicKey:        gofastly.String(resource["public_key"].(string)),
-		Region:           gofastly.String(resource["region"].(string)),
+		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Path:             gofastly.ToPointer(resource["path"].(string)),
+		Period:           gofastly.ToPointer(resource["period"].(int)),
+		PublicKey:        gofastly.ToPointer(resource["public_key"].(string)),
+		Region:           gofastly.ToPointer(resource["region"].(string)),
 		ServiceID:        serviceID,
 		ServiceVersion:   serviceVersion,
-		TimestampFormat:  gofastly.String(resource["timestamp_format"].(string)),
-		User:             gofastly.String(resource["user"].(string)),
+		TimestampFormat:  gofastly.ToPointer(resource["timestamp_format"].(string)),
+		User:             gofastly.ToPointer(resource["user"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
@@ -357,17 +389,17 @@ func (h *CloudfilesServiceAttributeHandler) buildCreate(cloudfilesMap any, servi
 	// In some scenarios this can cause the API to reject the request.
 	// For example, configuring compression_codec + gzip_level is invalid.
 	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
-		opts.GzipLevel = gofastly.Int(gl)
+		opts.GzipLevel = gofastly.ToPointer(gl)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	return opts

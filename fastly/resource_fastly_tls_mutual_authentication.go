@@ -2,13 +2,12 @@ package fastly
 
 import (
 	"context"
-        "fmt"
+	"fmt"
 	"log"
 	"sort"
 
-        gofastly "github.com/fastly/go-fastly/v8/fastly"
-        "github.com/hashicorp/go-cty/cty"
-	"github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -70,7 +69,7 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &fastly.CreateTLSMutualAuthenticationInput{
+	input := &gofastly.CreateTLSMutualAuthenticationInput{
 		CertBundle: d.Get("cert_bundle").(string),
 	}
 
@@ -96,7 +95,7 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &fastly.GetTLSMutualAuthenticationInput{
+	input := &gofastly.GetTLSMutualAuthenticationInput{
 		ID: d.Id(),
 	}
 
@@ -107,19 +106,18 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 	log.Printf("[DEBUG] REFRESH: TLS Mutual Authentication input: %#v", input)
 
 	tma, err := conn.GetTLSMutualAuthentication(input)
-
 	if err != nil {
-        	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
-        	        id := d.Id()
-        	        d.SetId("")
-        	        return diag.Diagnostics{
-        	                diag.Diagnostic{
-        	                        Severity:      diag.Warning,
-        	                        Summary:       fmt.Sprintf("TLS Mutual Authentication (%s) not found - removing from state", id),
-        	                        AttributePath: cty.Path{cty.GetAttrStep{Name: id}},
-        	                },
-        	        }
-        	}
+		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
+			id := d.Id()
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity:      diag.Warning,
+					Summary:       fmt.Sprintf("TLS Mutual Authentication (%s) not found - removing from state", id),
+					AttributePath: cty.Path{cty.GetAttrStep{Name: id}},
+				},
+			}
+		}
 		return diag.FromErr(err)
 	}
 
@@ -153,7 +151,7 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &fastly.UpdateTLSMutualAuthenticationInput{
+	input := &gofastly.UpdateTLSMutualAuthenticationInput{
 		ID:         d.Id(),
 		CertBundle: d.Get("cert_bundle").(string),
 	}
@@ -177,7 +175,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 func resourceFastlyTLSMutualAuthenticationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &fastly.DeleteTLSMutualAuthenticationInput{
+	input := &gofastly.DeleteTLSMutualAuthenticationInput{
 		ID: d.Id(),
 	}
 

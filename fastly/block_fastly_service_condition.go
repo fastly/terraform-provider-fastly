@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -69,12 +69,12 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	opts := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Type:           gofastly.String(resource["type"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Type:           gofastly.ToPointer(resource["type"].(string)),
 		// need to trim leading/tailing spaces, incase the config has HEREDOC
 		// formatting and contains a trailing new line
-		Statement: gofastly.String(strings.TrimSpace(resource["statement"].(string))),
-		Priority:  gofastly.Int(resource["priority"].(int)),
+		Statement: gofastly.ToPointer(strings.TrimSpace(resource["statement"].(string))),
+		Priority:  gofastly.ToPointer(resource["priority"].(int)),
 	}
 
 	log.Printf("[DEBUG] Create Conditions Opts: %#v", opts)
@@ -114,10 +114,10 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	optsCreate := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Type:           gofastly.String(resource["type"].(string)),
-		Statement:      gofastly.String(strings.TrimSpace(resource["statement"].(string))),
-		Priority:       gofastly.Int(resource["priority"].(int)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Type:           gofastly.ToPointer(resource["type"].(string)),
+		Statement:      gofastly.ToPointer(strings.TrimSpace(resource["statement"].(string))),
+		Priority:       gofastly.ToPointer(resource["priority"].(int)),
 	}
 
 	optsUpdate := gofastly.UpdateConditionInput{
@@ -129,20 +129,20 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["comment"]; ok {
-		optsUpdate.Comment = gofastly.String(v.(string))
+		optsUpdate.Comment = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["statement"]; ok {
-		optsCreate.Statement = gofastly.String(v.(string))
-		optsUpdate.Statement = gofastly.String(v.(string))
+		optsCreate.Statement = gofastly.ToPointer(v.(string))
+		optsUpdate.Statement = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["priority"]; ok {
-		optsCreate.Priority = gofastly.Int(v.(int))
-		optsUpdate.Priority = gofastly.Int(v.(int))
+		optsCreate.Priority = gofastly.ToPointer(v.(int))
+		optsUpdate.Priority = gofastly.ToPointer(v.(int))
 	}
 	// NOTE: Fastly API doesn't support updating the condition "type".
 	// Therefore, we need to DELETE and CREATE if "type" attribute is changed.
 	if v, ok := modified["type"]; ok {
-		optsCreate.Type = gofastly.String(v.(string))
+		optsCreate.Type = gofastly.ToPointer(v.(string))
 		log.Printf("[DEBUG] Delete Condition: %s (type changed)", resource["name"].(string))
 		err := conn.DeleteCondition(&gofastly.DeleteConditionInput{
 			ServiceID:      d.Id(),
@@ -193,11 +193,19 @@ func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 func flattenConditions(remoteState []*gofastly.Condition) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":      resource.Name,
-			"statement": resource.Statement,
-			"type":      resource.Type,
-			"priority":  resource.Priority,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Statement != nil {
+			data["statement"] = *resource.Statement
+		}
+		if resource.Type != nil {
+			data["type"] = *resource.Type
+		}
+		if resource.Priority != nil {
+			data["priority"] = *resource.Priority
 		}
 
 		// prune any empty values that come from the default string value in structs

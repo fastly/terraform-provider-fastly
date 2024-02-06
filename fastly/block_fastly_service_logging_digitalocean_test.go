@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,23 +20,23 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 		{
 			remote: []*gofastly.DigitalOcean{
 				{
-					ServiceVersion:    1,
-					Name:              "digitalocean-endpoint",
-					BucketName:        "bucket",
-					AccessKey:         "access",
-					SecretKey:         "secret",
-					Domain:            "nyc3.digitaloceanspaces.com",
-					PublicKey:         pgpPublicKey(t),
-					Path:              "/",
-					Period:            3600,
-					TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-					GzipLevel:         0,
-					Format:            "%h %l %u %t \"%r\" %>s %b",
-					FormatVersion:     2,
-					MessageType:       "classic",
-					Placement:         "none",
-					ResponseCondition: "always",
-					CompressionCodec:  "zstd",
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("digitalocean-endpoint"),
+					BucketName:        gofastly.ToPointer("bucket"),
+					AccessKey:         gofastly.ToPointer("access"),
+					SecretKey:         gofastly.ToPointer("secret"),
+					Domain:            gofastly.ToPointer("nyc3.digitaloceanspaces.com"),
+					PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+					Path:              gofastly.ToPointer("/"),
+					Period:            gofastly.ToPointer(3600),
+					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					GzipLevel:         gofastly.ToPointer(0),
+					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+					FormatVersion:     gofastly.ToPointer(2),
+					MessageType:       gofastly.ToPointer("classic"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
 				},
 			},
 			local: []map[string]any{
@@ -76,61 +76,62 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.DigitalOcean{
-		ServiceVersion:    1,
-		Name:              "digitalocean-endpoint",
-		BucketName:        "bucket",
-		AccessKey:         "access",
-		SecretKey:         "secret",
-		Domain:            "nyc3.digitaloceanspaces.com",
-		PublicKey:         pgpPublicKey(t),
-		Path:              "/",
-		Period:            3600,
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		Format:            "%h %l %u %t \"%r\" %>s %b",
-		FormatVersion:     2,
-		MessageType:       "classic",
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
-		CompressionCodec:  "zstd",
+		AccessKey:         gofastly.ToPointer("access"),
+		BucketName:        gofastly.ToPointer("bucket"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
+		Domain:            gofastly.ToPointer("nyc3.digitaloceanspaces.com"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("digitalocean-endpoint"),
+		Path:              gofastly.ToPointer("/"),
+		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		SecretKey:         gofastly.ToPointer("secret"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 	}
 
 	log1AfterUpdate := gofastly.DigitalOcean{
-		ServiceVersion:    1,
-		Name:              "digitalocean-endpoint",
-		BucketName:        "bucketupdate",
-		AccessKey:         "accessupdate",
-		SecretKey:         "secretupdate",
-		Domain:            "nyc4.digitaloceanspaces.com",
-		PublicKey:         pgpPublicKey(t),
-		Path:              "new/",
-		Period:            3601,
-		Format:            "%h %l %u %t \"%r\" %>s %b %T",
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         2,
-		FormatVersion:     2,
-		MessageType:       "blank",
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
+		AccessKey:         gofastly.ToPointer("accessupdate"),
+		BucketName:        gofastly.ToPointer("bucketupdate"),
+		Domain:            gofastly.ToPointer("nyc4.digitaloceanspaces.com"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(2),
+		MessageType:       gofastly.ToPointer("blank"),
+		Name:              gofastly.ToPointer("digitalocean-endpoint"),
+		Path:              gofastly.ToPointer("new/"),
+		Period:            gofastly.ToPointer(3601),
+		Placement:         gofastly.ToPointer("none"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		SecretKey:         gofastly.ToPointer("secretupdate"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 	}
 
 	log2 := gofastly.DigitalOcean{
-		ServiceVersion:    1,
-		Name:              "another-digitalocean-endpoint",
-		BucketName:        "bucket2",
-		AccessKey:         "access2",
-		SecretKey:         "secret2",
-		Domain:            "nyc3.digitaloceanspaces.com",
-		PublicKey:         pgpPublicKey(t),
-		Path:              "two/",
-		Period:            3600,
-		Format:            "%h %l %u %t \"%r\" %>s %b",
-		TimestampFormat:   "%Y-%m-%dT%H:%M:%S.000",
-		GzipLevel:         0,
-		FormatVersion:     2,
-		MessageType:       "classic",
-		Placement:         "none",
-		ResponseCondition: "response_condition_test",
-		CompressionCodec:  "zstd",
+		AccessKey:         gofastly.ToPointer("access2"),
+		BucketName:        gofastly.ToPointer("bucket2"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
+		Domain:            gofastly.ToPointer("nyc3.digitaloceanspaces.com"),
+		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("another-digitalocean-endpoint"),
+		Path:              gofastly.ToPointer("two/"),
+		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
+		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		SecretKey:         gofastly.ToPointer("secret2"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -145,10 +146,8 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_digitalocean.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_digitalocean.#", "1"),
 				),
 			},
 
@@ -157,10 +156,8 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1AfterUpdate, &log2}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_digitalocean.#", "2"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_digitalocean.#", "2"),
 				),
 			},
 		},
@@ -173,18 +170,19 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.DigitalOcean{
-		ServiceVersion:   1,
-		Name:             "digitalocean-endpoint",
-		BucketName:       "bucket",
-		AccessKey:        "access",
-		SecretKey:        "secret",
-		Domain:           "nyc3.digitaloceanspaces.com",
-		PublicKey:        pgpPublicKey(t),
-		Path:             "/",
-		Period:           3600,
-		TimestampFormat:  "%Y-%m-%dT%H:%M:%S.000",
-		MessageType:      "classic",
-		CompressionCodec: "zstd",
+		AccessKey:        gofastly.ToPointer("access"),
+		BucketName:       gofastly.ToPointer("bucket"),
+		CompressionCodec: gofastly.ToPointer("zstd"),
+		Domain:           gofastly.ToPointer("nyc3.digitaloceanspaces.com"),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("digitalocean-endpoint"),
+		Path:             gofastly.ToPointer("/"),
+		Period:           gofastly.ToPointer(3600),
+		PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
+		SecretKey:        gofastly.ToPointer("secret"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -199,10 +197,8 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1}, ServiceTypeCompute),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_compute.foo", "logging_digitalocean.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_digitalocean.#", "1"),
 				),
 			},
 		},
@@ -213,11 +209,11 @@ func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.Servic
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up DigitalOcean Spaces Logging for (%s), version (%d): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up DigitalOcean Spaces Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(digitaloceanList) != len(digitalocean) {
@@ -228,9 +224,9 @@ func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.Servic
 
 		for _, e := range digitalocean {
 			for _, el := range digitaloceanList {
-				if e.Name == el.Name {
+				if gofastly.ToValue(e.Name) == gofastly.ToValue(el.Name) {
 					// we don't know these things ahead of time, so populate them now
-					e.ServiceID = service.ID
+					e.ServiceID = service.ServiceID
 					e.ServiceVersion = service.ActiveVersion.Number
 					// We don't track these, so clear them out because we also won't know
 					// these ahead of time

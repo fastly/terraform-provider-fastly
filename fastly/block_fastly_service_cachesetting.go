@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -70,17 +70,30 @@ func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := buildCacheSetting(resource)
-	if err != nil {
-		log.Printf("[DEBUG] Error building Cache Setting: %s", err)
-		return err
+	opts := &gofastly.CreateCacheSettingInput{
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		StaleTTL:       gofastly.ToPointer(resource["stale_ttl"].(int)),
+		CacheCondition: gofastly.ToPointer(resource["cache_condition"].(string)),
+	}
+
+	if v, ok := resource["ttl"]; ok {
+		opts.TTL = gofastly.ToPointer(v.(int))
+	}
+
+	act := strings.ToLower(resource["action"].(string))
+	switch act {
+	case "cache":
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionCache)
+	case "pass":
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionPass)
+	case "restart":
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingActionRestart)
 	}
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly Cache Settings Addition opts: %#v", opts)
-	_, err = conn.CreateCacheSetting(opts)
-	if err != nil {
+	if _, err := conn.CreateCacheSetting(opts); err != nil {
 		return err
 	}
 	return nil
@@ -121,16 +134,16 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["action"]; ok {
-		opts.Action = gofastly.CacheSettingAction(v.(string))
+		opts.Action = gofastly.ToPointer(gofastly.CacheSettingAction(v.(string)))
 	}
 	if v, ok := modified["ttl"]; ok {
-		opts.TTL = gofastly.Int(v.(int))
+		opts.TTL = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["stale_ttl"]; ok {
-		opts.StaleTTL = gofastly.Int(v.(int))
+		opts.StaleTTL = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["cache_condition"]; ok {
-		opts.CacheCondition = gofastly.String(v.(string))
+		opts.CacheCondition = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Cache Setting Opts: %#v", opts)
@@ -161,41 +174,26 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 	return nil
 }
 
-func buildCacheSetting(cacheMap any) (*gofastly.CreateCacheSettingInput, error) {
-	resource := cacheMap.(map[string]any)
-	opts := gofastly.CreateCacheSettingInput{
-		Name:           gofastly.String(resource["name"].(string)),
-		StaleTTL:       gofastly.Int(resource["stale_ttl"].(int)),
-		CacheCondition: gofastly.String(resource["cache_condition"].(string)),
-	}
-
-	if v, ok := resource["ttl"]; ok {
-		opts.TTL = gofastly.Int(v.(int))
-	}
-
-	act := strings.ToLower(resource["action"].(string))
-	switch act {
-	case "cache":
-		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionCache)
-	case "pass":
-		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionPass)
-	case "restart":
-		opts.Action = gofastly.CacheSettingActionPtr(gofastly.CacheSettingActionRestart)
-	}
-
-	return &opts, nil
-}
-
 // flattenCacheSettings models data into format suitable for saving to Terraform state.
 func flattenCacheSettings(remoteState []*gofastly.CacheSetting) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":            resource.Name,
-			"action":          resource.Action,
-			"cache_condition": resource.CacheCondition,
-			"stale_ttl":       resource.StaleTTL,
-			"ttl":             resource.TTL,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Action != nil {
+			data["action"] = *resource.Action
+		}
+		if resource.CacheCondition != nil {
+			data["cache_condition"] = *resource.CacheCondition
+		}
+		if resource.StaleTTL != nil {
+			data["stale_ttl"] = *resource.StaleTTL
+		}
+		if resource.TTL != nil {
+			data["ttl"] = *resource.TTL
 		}
 
 		// prune any empty values that come from the default string value in structs

@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -88,10 +88,16 @@ func flattenDataSourceDictionaries(remoteState []*gofastly.Dictionary) []map[str
 	}
 
 	for i, resource := range remoteState {
-		result[i] = map[string]any{
-			"id":         resource.ID,
-			"name":       resource.Name,
-			"write_only": resource.WriteOnly,
+		result[i] = map[string]any{}
+
+		if resource.DictionaryID != nil {
+			result[i]["id"] = *resource.DictionaryID
+		}
+		if resource.Name != nil {
+			result[i]["name"] = *resource.Name
+		}
+		if resource.WriteOnly != nil {
+			result[i]["write_only"] = *resource.WriteOnly
 		}
 	}
 

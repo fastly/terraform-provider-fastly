@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -171,30 +171,30 @@ func TestAccFastlyServiceDynamicSnippetContent_normal_snippet_is_not_removed(t *
 
 func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly.ServiceDetail, name, dynamicSnippetName, expectedContent string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		snippet, err := conn.GetSnippet(&gofastly.GetSnippetInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           dynamicSnippetName,
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up snippet records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		dynamicSnippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
-			ServiceID: service.ID,
-			ID:        snippet.ID,
+			ServiceID: gofastly.ToValue(service.ServiceID),
+			SnippetID: gofastly.ToValue(snippet.SnippetID),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up Dynamic snippet content for (%s), snippet (%s): %s", service.Name, snippet.ID, err)
+			return fmt.Errorf("error looking up Dynamic snippet content for (%s), snippet (%s): %s", gofastly.ToValue(service.Name), gofastly.ToValue(snippet.SnippetID), err)
 		}
 
-		if dynamicSnippet.Content != expectedContent {
-			return fmt.Errorf("error matching:\nexpected: %s\ngot: %s", expectedContent, dynamicSnippet.Content)
+		if gofastly.ToValue(dynamicSnippet.Content) != expectedContent {
+			return fmt.Errorf("error matching:\nexpected: %s\ngot: %s", expectedContent, gofastly.ToValue(dynamicSnippet.Content))
 		}
 
 		return nil
@@ -203,22 +203,22 @@ func testAccCheckFastlyServiceDynamicSnippetContentRemoteState(service *gofastly
 
 func testAccCheckFastlyServiceDynamicSnippetContentRemoteStateDoesntExist(service *gofastly.ServiceDetail, name, dynamicSnippetName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if service.Name != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, service.Name)
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 		snippets, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up snippet records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		for _, snippet := range snippets {
-			if snippet.Name == dynamicSnippetName {
-				return fmt.Errorf("dynamic snippet (%s) exists in service (%s)", dynamicSnippetName, service.Name)
+			if gofastly.ToValue(snippet.Name) == dynamicSnippetName {
+				return fmt.Errorf("dynamic snippet (%s) exists in service (%s)", dynamicSnippetName, gofastly.ToValue(service.Name))
 			}
 		}
 
@@ -230,49 +230,47 @@ func createDynamicSnippetThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
-		ServiceID:      service.ID,
-		ServiceVersion: service.ActiveVersion.Number,
+		ServiceID:      gofastly.ToValue(service.ServiceID),
+		ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 	})
 	if err != nil {
-		t.Fatalf("[ERR] Error cloning service version (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		t.Fatalf("[ERR] Error cloning service version (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 	}
 
 	dynamicSnippet, err := conn.CreateSnippet(&gofastly.CreateSnippetInput{
-		ServiceID:      service.ID,
-		ServiceVersion: newVersion.Number,
-		Name:           gofastly.String(dynamicSnippetName),
-		Type:           gofastly.SnippetTypePtr(snippetType),
-		Dynamic:        gofastly.Int(1),
-		Content:        gofastly.String("// vcl"),
+		ServiceID:      gofastly.ToValue(service.ServiceID),
+		ServiceVersion: gofastly.ToValue(newVersion.Number),
+		Name:           gofastly.ToPointer(dynamicSnippetName),
+		Type:           gofastly.ToPointer(snippetType),
+		Dynamic:        gofastly.ToPointer(1),
+		Content:        gofastly.ToPointer("// vcl"),
 	})
 	if err != nil {
-		t.Fatalf("[ERR] Error creating Dynamic snippet records for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+		t.Fatalf("[ERR] Error creating Dynamic snippet records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 	}
 
 	_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
-		ServiceID:      service.ID,
-		ServiceVersion: newVersion.Number,
+		ServiceID:      gofastly.ToValue(service.ServiceID),
+		ServiceVersion: gofastly.ToValue(newVersion.Number),
 	})
-
 	if err != nil {
-		t.Fatalf("[ERR] Error activating service version (%s), version (%v): %s", service.Name, newVersion.Number, err)
+		t.Fatalf("[ERR] Error activating service version (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(newVersion.Number), err)
 	}
 
 	_, err = conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
-		ServiceID: service.ID,
-		ID:        dynamicSnippet.ID,
-		Content:   gofastly.String(content),
+		ServiceID: gofastly.ToValue(service.ServiceID),
+		SnippetID: gofastly.ToValue(dynamicSnippet.SnippetID),
+		Content:   gofastly.ToPointer(content),
 	})
-
 	if err != nil {
-		t.Fatalf("[ERR] Error update content for Dynamic snippet records for (%s), snippet id (%v): %s", service.Name, dynamicSnippet.ID, err)
+		t.Fatalf("[ERR] Error update content for Dynamic snippet records for (%s), snippet id (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(dynamicSnippet.SnippetID), err)
 	}
 
 	latest, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-		ID: service.ID,
+		ServiceID: gofastly.ToValue(service.ServiceID),
 	})
 	if err != nil {
-		t.Fatalf("[ERR] Error retrieving service details for (%s): %s", service.ID, err)
+		t.Fatalf("[ERR] Error retrieving service details for (%s): %s", gofastly.ToValue(service.ServiceID), err)
 	}
 
 	*service = *latest

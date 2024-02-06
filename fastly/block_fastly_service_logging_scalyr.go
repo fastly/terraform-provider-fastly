@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -134,22 +134,22 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["token"]; ok {
-		opts.Token = gofastly.String(v.(string))
+		opts.Token = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["region"]; ok {
-		opts.Region = gofastly.String(v.(string))
+		opts.Region = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Scalyr Opts: %#v", opts)
@@ -193,14 +193,28 @@ func deleteScalyr(conn *gofastly.Client, i *gofastly.DeleteScalyrInput) error {
 func flattenScalyr(remoteState []*gofastly.Scalyr) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"region":             resource.Region,
-			"token":              resource.Token,
-			"response_condition": resource.ResponseCondition,
-			"format":             resource.Format,
-			"placement":          resource.Placement,
-			"format_version":     resource.FormatVersion,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Region != nil {
+			data["region"] = *resource.Region
+		}
+		if resource.Token != nil {
+			data["token"] = *resource.Token
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -221,26 +235,26 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateScalyrInput{
-		Format:         gofastly.String(vla.format),
+		Format:         gofastly.ToPointer(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Region:         gofastly.String(resource["region"].(string)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Region:         gofastly.ToPointer(resource["region"].(string)),
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
-		Token:          gofastly.String(resource["token"].(string)),
+		Token:          gofastly.ToPointer(resource["token"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	// if vla.placement != "" {
-	// 	opts.Placement = gofastly.String(vla.placement)
+	// 	opts.Placement = gofastly.ToPointer(vla.placement)
 	// }
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	return opts

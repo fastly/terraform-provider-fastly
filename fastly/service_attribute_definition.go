@@ -3,7 +3,7 @@ package fastly
 import (
 	"context"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -78,7 +78,7 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 			vla.format = val.(string)
 		}
 		if val, ok := data["format_version"]; ok {
-			vla.formatVersion = gofastly.Int(val.(int))
+			vla.formatVersion = gofastly.ToPointer(val.(int))
 		}
 		if val, ok := data["placement"]; ok {
 			vla.placement = val.(string)

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,10 +20,10 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 		{
 			remote: []*gofastly.Snippet{
 				{
-					Name:     "recv_test",
-					Type:     gofastly.SnippetTypeRecv,
-					Priority: 110,
-					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+					Name:     gofastly.ToPointer("recv_test"),
+					Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
+					Priority: gofastly.ToPointer(110),
+					Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
 				},
 			},
 			local: []map[string]any{
@@ -38,11 +38,11 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 		{
 			remote: []*gofastly.Snippet{
 				{
-					Name:     "recv_test",
-					Type:     gofastly.SnippetTypeRecv,
-					Priority: 110,
-					Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
-					Dynamic:  1,
+					Name:     gofastly.ToPointer("recv_test"),
+					Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
+					Priority: gofastly.ToPointer(110),
+					Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
+					Dynamic:  gofastly.ToPointer(1),
 				},
 			},
 			local: []map[string]any(nil),
@@ -62,24 +62,46 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
+	// We don't set all the available attributes in our TF config.
+	// Those not set will have the default value for their type sent to the API.
+	// The API will consequently respond with those default values.
+	// Hence we have to set those defaults below.
+	//
+	// In the case of the snippet resource, we actually hardcode the `dynamic` API
+	// field to be zero and so now the API responses in go-fastly are now pointers
+	// it means we explicitly need to set the zero value below.
+	//
+	// But also, the `id` field in the API response is a non-deterministic UUID
+	// and so in `testAccCheckFastlyServiceVCLSnippetAttributes()` we have to set
+	// it to a pointer to an empty string (hence that's what we also set below).
+	//
+	// Interestingly, although the snippet has a unique ID, we don't use it
+	// because the API for updating a 'versioned' snippet requires the snippet
+	// name instead of the ID. The ID is only used when updating a 'dynamic'
+	// snippet.
 	s1 := gofastly.Snippet{
-		Name:     "recv_test",
-		Type:     gofastly.SnippetTypeRecv,
-		Priority: int(110),
-		Content:  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
+		Content:   gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
+		Dynamic:   gofastly.ToPointer(0),
+		SnippetID: gofastly.ToPointer(""),
+		Name:      gofastly.ToPointer("recv_test"),
+		Priority:  gofastly.ToPointer(110),
+		Type:      gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
-
 	updatedS1 := gofastly.Snippet{
-		Name:     "recv_test",
-		Type:     gofastly.SnippetTypeRecv,
-		Priority: int(110),
-		Content:  "if ( req.url ) {\n set req.http.different-header = \"true\";\n}",
+		Content:   gofastly.ToPointer("if ( req.url ) {\n set req.http.different-header = \"true\";\n}"),
+		Dynamic:   gofastly.ToPointer(0),
+		SnippetID: gofastly.ToPointer(""),
+		Name:      gofastly.ToPointer("recv_test"),
+		Priority:  gofastly.ToPointer(110),
+		Type:      gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
 	updatedS2 := gofastly.Snippet{
-		Name:     "fetch_test",
-		Type:     gofastly.SnippetTypeFetch,
-		Priority: int(50),
-		Content:  "restart;\n",
+		Content:   gofastly.ToPointer("restart;\n"),
+		Dynamic:   gofastly.ToPointer(0),
+		SnippetID: gofastly.ToPointer(""),
+		Name:      gofastly.ToPointer("fetch_test"),
+		Priority:  gofastly.ToPointer(50),
+		Type:      gofastly.ToPointer(gofastly.SnippetTypeFetch),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,11 +157,11 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
-			ServiceID:      service.ID,
-			ServiceVersion: service.ActiveVersion.Number,
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", service.Name, service.ActiveVersion.Number, err)
+			return fmt.Errorf("error looking up VCL Snippets for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
 		if len(sList) != len(snippets) {
@@ -149,12 +171,12 @@ func testAccCheckFastlyServiceVCLSnippetAttributes(service *gofastly.ServiceDeta
 		var found int
 		for _, expected := range snippets {
 			for _, lr := range sList {
-				if expected.Name == lr.Name {
-					expected.ServiceID = service.ID
+				if gofastly.ToValue(expected.Name) == gofastly.ToValue(lr.Name) {
+					expected.ServiceID = service.ServiceID
 					expected.ServiceVersion = service.ActiveVersion.Number
 
 					// We don't know these things ahead of time, so ignore them
-					lr.ID = ""
+					lr.SnippetID = gofastly.ToPointer("")
 					lr.CreatedAt = nil
 					lr.UpdatedAt = nil
 

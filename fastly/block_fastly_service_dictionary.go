@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -157,10 +157,16 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 func flattenDictionaries(remoteState []*gofastly.Dictionary) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"dictionary_id": resource.ID,
-			"name":          resource.Name,
-			"write_only":    resource.WriteOnly,
+		data := map[string]any{}
+
+		if resource.DictionaryID != nil {
+			data["dictionary_id"] = *resource.DictionaryID
+		}
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.WriteOnly != nil {
+			data["write_only"] = *resource.WriteOnly
 		}
 
 		// prune any empty values that come from the default string value in structs
@@ -179,8 +185,8 @@ func flattenDictionaries(remoteState []*gofastly.Dictionary) []map[string]any {
 func buildDictionary(dictMap any) (*gofastly.CreateDictionaryInput, error) {
 	resource := dictMap.(map[string]any)
 	opts := gofastly.CreateDictionaryInput{
-		Name:      gofastly.String(resource["name"].(string)),
-		WriteOnly: gofastly.CBool(resource["write_only"].(bool)),
+		Name:      gofastly.ToPointer(resource["name"].(string)),
+		WriteOnly: gofastly.ToPointer(gofastly.Compatibool(resource["write_only"].(bool))),
 	}
 
 	return &opts, nil

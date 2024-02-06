@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -91,11 +91,11 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 	vla := h.getVCLLoggingAttributes(resource)
 
 	opts := gofastly.CreatePapertrailInput{
-		Address:        gofastly.String(resource["address"].(string)),
-		Format:         gofastly.String(vla.format),
+		Address:        gofastly.ToPointer(resource["address"].(string)),
+		Format:         gofastly.ToPointer(vla.format),
 		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.String(resource["name"].(string)),
-		Port:           gofastly.Int(resource["port"].(int)),
+		Name:           gofastly.ToPointer(resource["name"].(string)),
+		Port:           gofastly.ToPointer(resource["port"].(int)),
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	}
@@ -104,10 +104,10 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
 	if vla.placement != "" {
-		opts.Placement = gofastly.String(vla.placement)
+		opts.Placement = gofastly.ToPointer(vla.placement)
 	}
 	if vla.responseCondition != "" {
-		opts.ResponseCondition = gofastly.String(vla.responseCondition)
+		opts.ResponseCondition = gofastly.ToPointer(vla.responseCondition)
 	}
 
 	log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
@@ -157,22 +157,22 @@ func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["address"]; ok {
-		opts.Address = gofastly.String(v.(string))
+		opts.Address = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["port"]; ok {
-		opts.Port = gofastly.Int(v.(int))
+		opts.Port = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format_version"]; ok {
-		opts.FormatVersion = gofastly.Int(v.(int))
+		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["format"]; ok {
-		opts.Format = gofastly.String(v.(string))
+		opts.Format = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["response_condition"]; ok {
-		opts.ResponseCondition = gofastly.String(v.(string))
+		opts.ResponseCondition = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["placement"]; ok {
-		opts.Placement = gofastly.String(v.(string))
+		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 
 	log.Printf("[DEBUG] Update Papertrail Opts: %#v", opts)
@@ -207,14 +207,28 @@ func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.
 func flattenPapertrails(remoteState []*gofastly.Papertrail) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
-		data := map[string]any{
-			"name":               resource.Name,
-			"address":            resource.Address,
-			"port":               resource.Port,
-			"format":             resource.Format,
-			"format_version":     resource.FormatVersion,
-			"response_condition": resource.ResponseCondition,
-			"placement":          resource.Placement,
+		data := map[string]any{}
+
+		if resource.Name != nil {
+			data["name"] = *resource.Name
+		}
+		if resource.Address != nil {
+			data["address"] = *resource.Address
+		}
+		if resource.Port != nil {
+			data["port"] = *resource.Port
+		}
+		if resource.Format != nil {
+			data["format"] = *resource.Format
+		}
+		if resource.FormatVersion != nil {
+			data["format_version"] = *resource.FormatVersion
+		}
+		if resource.ResponseCondition != nil {
+			data["response_condition"] = *resource.ResponseCondition
+		}
+		if resource.Placement != nil {
+			data["placement"] = *resource.Placement
 		}
 
 		// prune any empty values that come from the default string value in structs

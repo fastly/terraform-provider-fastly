@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	gofastly "github.com/fastly/go-fastly/v8/fastly"
+	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -71,7 +71,10 @@ func (h *blockSetAttributeHandler) Register(s *schema.Resource) error {
 }
 
 func (h *blockSetAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
-	return h.handler.Read(ctx, d, nil, s.ActiveVersion.Number, conn)
+	if s.ActiveVersion == nil {
+		return fmt.Errorf("error: no service ActiveVersion object")
+	}
+	return h.handler.Read(ctx, d, nil, gofastly.ToValue(s.ActiveVersion.Number), conn)
 }
 
 func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, serviceVersion int, conn *gofastly.Client) error {

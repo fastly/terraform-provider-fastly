@@ -1,0 +1,23 @@
+---
+layout: "fastly"
+page_title: "Fastly: alert"
+sidebar_current: "docs-fastly-resource-alert"
+description: |-
+  Provides a Fastly Alert. Alerts send notifications to custom integrations (e.g., Slack channels, PagerDuty, Microsoft Teams and New Relic) when an observed metric either exceeds or falls below a threshold.
+---
+
+# fastly_alert
+
+Provides a Fastly Alert. Alerts send notifications to custom integrations (e.g., Slack channels, PagerDuty, Microsoft Teams and New Relic) when an observed metric either exceeds or falls below a threshold.
+
+## Example Usage
+
+{{ tffile "examples/resources/alert_basic_usage.tf" }}
+
+## Import
+
+Fastly Alerts can be imported using their Definition ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/alert_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

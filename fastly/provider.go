@@ -68,6 +68,7 @@ func Provider() *schema.Provider {
 			"fastly_waf_rules":                    dataSourceFastlyWAFRules(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"fastly_alert":                           resourceFastlyAlert(),
 			"fastly_configstore":                     resourceFastlyConfigStore(),
 			"fastly_configstore_entries":             resourceFastlyConfigStoreEntries(),
 			"fastly_kvstore":                         resourceFastlyKVStore(),

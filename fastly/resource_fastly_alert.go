@@ -23,26 +23,26 @@ func resourceFastlyAlert() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Text body included in Alert notifications.",
+				Description: "Additional text that is included in the alert notification.",
 			},
 
 			"dimensions": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				MaxItems:    1,
-				Description: "Dimension filters applied to the metric.",
+				Description: "More filters depending on the source type.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domains": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "Names of a subset of domains defined on the service that the Alert monitors.",
+							Description: "Names of a subset of domains that the alert monitors.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"origins": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							Description: "Addresses of a subset of backends defined on the service that the Alert monitors.",
+							Description: "Addresses of a subset of backends that the alert monitors.",
 							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -52,7 +52,7 @@ func resourceFastlyAlert() *schema.Resource {
 			"evaluation_strategy": {
 				Type:        schema.TypeList,
 				Required:    true,
-				Description: "Evaluation strategy for the Alert.",
+				Description: "Criteria on how to alert.",
 				MinItems:    1,
 				MaxItems:    1,
 				Elem: &schema.Resource{
@@ -65,7 +65,7 @@ func resourceFastlyAlert() *schema.Resource {
 						"threshold": {
 							Type:        schema.TypeFloat,
 							Required:    true,
-							Description: "Threshold used to trigger.",
+							Description: "Threshold used to alert.",
 						},
 						"type": {
 							Type:        schema.TypeString,
@@ -79,34 +79,34 @@ func resourceFastlyAlert() *schema.Resource {
 			"integration_ids": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Set of IDs of integrations that Alert notifications will be sent to.",
+				Description: "List of integrations used to notify when alert fires.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 
 			"metric": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the metric to monitor for Alert evaluation. For detailed information on metrics available for monitoring, see [Fastly Alerts API Documentation](https://developer.fastly.com/reference/api/observability/alerts/definition/).",
+				Description: "The metric name to alert on for a specific source: [domains](https://developer.fastly.com/reference/api/metrics-stats/domain-inspector/historical), [origins](https://developer.fastly.com/reference/api/metrics-stats/origin-inspector/historical), or [stats](https://developer.fastly.com/reference/api/metrics-stats/historical-stats).",
 			},
 
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Summary text of the Alert.",
+				Description: "The name of the alert.",
 			},
 
 			"service_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "ID of the Fastly Service that the Alert monitors.",
+				Description: "The service which the alert monitors.",
 			},
 
 			"source": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The metric source. One of: `stats`, `origins`, `domains`.",
+				Description: "The source where the metric comes from. One of: `domains`, `origins`, `stats`.",
 			},
 		},
 	}

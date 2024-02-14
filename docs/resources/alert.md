@@ -34,7 +34,7 @@ resource "fastly_alert" "example" {
 
 ## Import
 
-Fastly Alerts can be imported using their Definition ID, e.g.
+Fastly Alerts can be imported using their ID, e.g.
 
 ```sh
 $ terraform import fastly_alert.example xxxxxxxxxxxxxxxxxxxx
@@ -45,17 +45,17 @@ $ terraform import fastly_alert.example xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
-- `evaluation_strategy` (Block List, Min: 1, Max: 1) Evaluation strategy for the Alert. (see [below for nested schema](#nestedblock--evaluation_strategy))
-- `metric` (String) The name of the metric to monitor for Alert evaluation. For detailed information on metrics available for monitoring, see [Fastly Alerts API Documentation](https://developer.fastly.com/reference/api/observability/alerts/definition/).
-- `name` (String) Summary text of the Alert.
-- `service_id` (String) ID of the Fastly Service that the Alert monitors.
-- `source` (String) The metric source. One of: `stats`, `origins`, `domains`.
+- `evaluation_strategy` (Block List, Min: 1, Max: 1) Criteria on how to alert. (see [below for nested schema](#nestedblock--evaluation_strategy))
+- `metric` (String) The metric name to alert on for a specific source: [domains](https://developer.fastly.com/reference/api/metrics-stats/domain-inspector/historical), [origins](https://developer.fastly.com/reference/api/metrics-stats/origin-inspector/historical), or [stats](https://developer.fastly.com/reference/api/metrics-stats/historical-stats).
+- `name` (String) The name of the alert.
+- `service_id` (String) The service which the alert monitors.
+- `source` (String) The source where the metric comes from. One of: `domains`, `origins`, `stats`.
 
 ### Optional
 
-- `description` (String) Text body included in Alert notifications.
-- `dimensions` (Block List, Max: 1) Dimension filters applied to the metric. (see [below for nested schema](#nestedblock--dimensions))
-- `integration_ids` (Set of String) Set of IDs of integrations that Alert notifications will be sent to.
+- `description` (String) Additional text that is included in the alert notification.
+- `dimensions` (Block List, Max: 1) More filters depending on the source type. (see [below for nested schema](#nestedblock--dimensions))
+- `integration_ids` (Set of String) List of integrations used to notify when alert fires.
 
 ### Read-Only
 
@@ -67,7 +67,7 @@ $ terraform import fastly_alert.example xxxxxxxxxxxxxxxxxxxx
 Required:
 
 - `period` (String) The length of time to evaluate whether the conditions have been met. The data is polled every minute. One of: `5m`, `15m`, `30m`.
-- `threshold` (Number) Threshold used to trigger.
+- `threshold` (Number) Threshold used to alert.
 - `type` (String) Type of strategy to use to evaluate. One of: `above_threshold`, `below_threshold`.
 
 
@@ -76,5 +76,5 @@ Required:
 
 Optional:
 
-- `domains` (Set of String) Names of a subset of domains defined on the service that the Alert monitors.
-- `origins` (Set of String) Addresses of a subset of backends defined on the service that the Alert monitors.
+- `domains` (Set of String) Names of a subset of domains that the alert monitors.
+- `origins` (Set of String) Addresses of a subset of backends that the alert monitors.

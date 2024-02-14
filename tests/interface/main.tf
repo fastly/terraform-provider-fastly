@@ -217,3 +217,15 @@ resource "fastly_service_vcl" "interface-test-project" {
     response_object    = "test_response_object_waf"
   }
 }
+
+resource "fastly_alert" "interface-test-alert" {
+  name = "test_alert"
+  service_id = fastly_service_vcl.interface-test-project.id
+  source = "stats"
+  metric = "status_5xx"
+  
+  evaluation_strategy {
+    type = "above_threshold"
+    period = "5m"
+    threshold = 10
+  }

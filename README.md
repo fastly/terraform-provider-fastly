@@ -5,11 +5,10 @@
 - Mailing list: http://groups.google.com/group/terraform-tool
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
 
-Requirements
-------------
+## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.12.x or higher
--	[Go](https://golang.org/doc/install) 1.18 (to build the provider plugin)
+- [Terraform](https://www.terraform.io/downloads.html) 0.12.x or higher
+- [Go](https://golang.org/doc/install) 1.20 (to build the provider plugin)
 
 > NOTE: the last version of the Fastly provider to support Terraform 0.11.x and below was [v0.26.0](https://github.com/fastly/terraform-provider-fastly/releases/tag/v0.26.0)
 
@@ -31,7 +30,7 @@ $ make build
 
 ## Developing the Provider
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.18+ is *required*).
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.20+ is *required*).
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in a local `bin` directory.
 
@@ -43,7 +42,7 @@ $ make build
 Alongside the newly built binary a file called `developer_overrides.tfrc` will be created.  The `make build` target will communicate
 back details for setting the `TF_CLI_CONFIG_FILE` environment variable that will enable Terraform to use your locally built provider binary.
 
-* HashiCorp - [Development Overrides for Provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers).
+- HashiCorp - [Development Overrides for Provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers).
 
 > **NOTE**: If you have issues seeing any behaviours from code changes you've made to the provider, then it might be the terraform CLI is getting confused by which provider binary it should be using. Check inside the `./bin/` directory to see if there are multiple providers with different commit hashes (e.g. `terraform-provider-fastly_v2.2.0-5-gfdc37cee`) and delete them first before running `make build`. This should help the Terraform CLI resolve to the correct binary.
 
@@ -87,6 +86,7 @@ Then use Terraform as usual, and it will automatically use the provider in the d
 $ export TF_REATTACH_PROVIDERS='{"fastly/fastly":{"Protocol":"grpc","Pid":54132,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/qm/swg2hf4h5t8sdht8yhds4dg6m0000gn/T/plugin865249851"}}}'
 $ terraform plan
 ```
+
 You will then be able to set breakpoints and trace the provider's execution using the debugger as you would expect.
 
 The implementation for setting up debug mode presumes Terraform 0.13.x is being used. If you're using Terraform 0.12.x you'll need to manually modify the value assigned to `TF_REATTACH_PROVIDERS` so that the key `"fastly/fastly"` becomes `"registry.terraform.io/-/fastly"`. See HashiCorp's ["Support for Debuggable Provider Binaries"](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html#support-for-debuggable-provider-binaries) for more details.
@@ -160,18 +160,20 @@ Building the documentation copies the full markdown into the `docs` folder, read
 
 > NOTE: you'll need the [`tfplugindocs`](https://github.com/hashicorp/terraform-plugin-docs) tool for generating the Markdown to be deployed to Hashicorp. For more information on generating documentation, refer to https://www.terraform.io/docs/registry/providers/docs.html
 
-* To validate the `/template` directory structure:
+- To validate the `/template` directory structure:
+
 ```
 make validate-docs
 ```
 
-* To build the `/docs` documentation Markdown files:
+- To build the `/docs` documentation Markdown files:
+
 ```
 make generate-docs
 ```
 
-* To view the documentation:
-Paste `/docs` Markdown file content into https://registry.terraform.io/tools/doc-preview
+- To view the documentation:
+  Paste `/docs` Markdown file content into https://registry.terraform.io/tools/doc-preview
 
 ## Contributing
 

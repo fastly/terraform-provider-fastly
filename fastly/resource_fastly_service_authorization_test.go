@@ -1,9 +1,9 @@
 package fastly
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"math/rand"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"

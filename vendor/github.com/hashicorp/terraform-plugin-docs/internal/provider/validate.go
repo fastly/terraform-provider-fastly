@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/cli"
+	"github.com/hashicorp/cli"
 )
 
 func Validate(ui cli.Ui) error {
@@ -62,6 +62,7 @@ func validateTemplates(ui cli.Ui, dir string) error {
 		checkAllowedDirs(
 			"data-sources",
 			"guides",
+			"functions",
 			"resources",
 		),
 		checkBlockedExtensions(
@@ -97,6 +98,7 @@ func validateStaticDocs(ui cli.Ui, dir string) error {
 		checkAllowedDirs(
 			"data-sources",
 			"guides",
+			"functions",
 			"resources",
 			"cdktf",
 		),

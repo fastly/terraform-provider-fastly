@@ -25,7 +25,6 @@ DEPENDENCIES:
 - build(deps): bump actions/setup-go from 4 to 5 [#789](https://github.com/fastly/terraform-provider-fastly/pull/789)
 - build(deps): bump golang.org/x/crypto from 0.14.0 to 0.17.0 [#793](https://github.com/fastly/terraform-provider-fastly/pull/793)
 - build(deps): bump golang.org/x/net from 0.17.0 to 0.19.0 [#784](https://github.com/fastly/terraform-provider-fastly/pull/784)
-- xxx [#](https://github.com/fastly/terraform-provider-fastly/pull/)
 
 ## 5.6.0 (October 18, 2023)
 

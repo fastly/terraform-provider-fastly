@@ -81,7 +81,8 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 goreleaser-bin:
-	go install github.com/goreleaser/goreleaser@v1.18.2
+	@# This is the last version of goreleaser that supports Go 1.20.14 (the version used to build the provider)
+	go install github.com/goreleaser/goreleaser@v1.21.2
 
 nilaway:
 	@nilaway ./...

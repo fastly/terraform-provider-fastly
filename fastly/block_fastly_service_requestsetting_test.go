@@ -101,11 +101,25 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		TimerSupport:   gofastly.ToPointer(false),
 	}
 	rq3 := gofastly.RequestSetting{
-		DefaultHost:      "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
-		MaxStaleAge:      900,
-		Name:             "alt_backend",
-		RequestCondition: "serve_alt_backend",
-		XForwardedFor:    "append",
+		Action:           gofastly.ToPointer(gofastly.RequestSettingActionUnset),
+		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		MaxStaleAge:      gofastly.ToPointer(900),
+		Name:             gofastly.ToPointer("alt_backend"),
+		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
+		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
+
+		// We only set a few attributes in our TF config (see above).
+		// For all the other attributes (with the exception of `action` and `xff`,
+		// which are only sent to the API if they have a non-zero string value)
+		// the default value for their types are still sent to the API
+		// and so the API responds with those default values. Hence we have to set
+		// those defaults below...
+		BypassBusyWait: gofastly.ToPointer(false),
+		ForceMiss:      gofastly.ToPointer(false),
+		ForceSSL:       gofastly.ToPointer(false),
+		GeoHeaders:     gofastly.ToPointer(false),
+		HashKeys:       gofastly.ToPointer(""),
+		TimerSupport:   gofastly.ToPointer(false),
 	}
 
 	createAction := ""        // initially we expect no action to be set in HTTP request.

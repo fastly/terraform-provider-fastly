@@ -106,13 +106,13 @@ resource "fastly_service_vcl" "demo" {
 
   vcl {
     name    = "my_custom_main_vcl"
-    content = "${file("${path.module}/my_custom_main.vcl")}"
+    content = file("${path.module}/my_custom_main.vcl")
     main    = true
   }
 
   vcl {
     name    = "my_custom_library_vcl"
-    content = "${file("${path.module}/my_custom_library.vcl")}"
+    content = file("${path.module}/my_custom_library.vcl")
   }
 }
 ```

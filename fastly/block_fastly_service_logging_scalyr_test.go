@@ -28,6 +28,7 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 					FormatVersion:     gofastly.ToPointer(2),
 					Placement:         gofastly.ToPointer("none"),
+					ProjectID:         gofastly.ToPointer("example-project"),
 				},
 			},
 			local: []map[string]any{
@@ -39,6 +40,7 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
 					"placement":          "none",
 					"format_version":     2,
+					"project_id":         "example-project",
 				},
 			},
 		},
@@ -77,6 +79,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("newtkn"),
+		ProjectID:         gofastly.ToPointer("example-project"),
 	}
 
 	log2 := gofastly.Scalyr{
@@ -307,6 +310,7 @@ resource "fastly_service_vcl" "foo" {
 		format_version 		 = 2
 		response_condition = "response_condition_test"
 		placement 				 = "waf_debug"
+    project_id         = "example-project"
 	}
 
 	logging_scalyr {

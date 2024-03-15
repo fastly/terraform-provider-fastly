@@ -567,6 +567,7 @@ Required:
 
 Optional:
 
+- `project_id` (String) The name of the logfile field sent to Scalyr
 - `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 
 

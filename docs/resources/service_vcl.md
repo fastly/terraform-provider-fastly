@@ -1009,6 +1009,7 @@ Optional:
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `placement` (String) Where in the generated VCL the logging call should be placed.
+- `project_id` (String) The name of the logfile field sent to Scalyr
 - `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 

@@ -1,5 +1,15 @@
 ## 5.8.0 (Unreleased)
 
+## 5.7.1 (March 15, 2024)
+
+ENHANCEMENTS:
+
+- feat(scalyr): add project_id [#822](https://github.com/fastly/terraform-provider-fastly/pull/822)
+
+DEPENDENCIES:
+
+- chore: avoid extra string interpolation [#820](https://github.com/fastly/terraform-provider-fastly/pull/820)
+
 ## 5.7.0 (February 29, 2024)
 
 BUG FIXES:

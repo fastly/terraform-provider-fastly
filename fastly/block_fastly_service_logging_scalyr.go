@@ -37,6 +37,11 @@ func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the Scalyr logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
+		"project_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the logfile field sent to Scalyr",
+		},
 		"region": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -151,6 +156,9 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["project_id"]; ok {
+		opts.ProjectID = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Scalyr Opts: %#v", opts)
 	_, err := conn.UpdateScalyr(&opts)
@@ -216,6 +224,9 @@ func flattenScalyr(remoteState []*gofastly.Scalyr) []map[string]any {
 		if resource.FormatVersion != nil {
 			data["format_version"] = *resource.FormatVersion
 		}
+		if resource.ProjectID != nil {
+			data["project_id"] = *resource.ProjectID
+		}
 
 		// Prune any empty values that come from the default string value in structs.
 		for k, v := range data {
@@ -242,6 +253,10 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 		ServiceID:      serviceID,
 		ServiceVersion: serviceVersion,
 		Token:          gofastly.ToPointer(resource["token"].(string)),
+	}
+
+	if v := resource["project_id"].(string); v != "" {
+		opts.ProjectID = gofastly.ToPointer(v)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.

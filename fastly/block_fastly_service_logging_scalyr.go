@@ -247,9 +247,6 @@ func (h *ScalyrServiceAttributeHandler) buildCreate(scalyrMap any, serviceID str
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.
-	// if vla.placement != "" {
-	// 	opts.Placement = gofastly.ToPointer(vla.placement)
-	// }
 	if vla.placement != "" {
 		opts.Placement = gofastly.ToPointer(vla.placement)
 	}

@@ -294,10 +294,35 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// The configuration ID returned by the API is the initial TLS configuration when first
+	// activated. Instead, this value should represent the current TLS configuration id which
+	// can be found via the following API call.
+	// https://api.fastly.com/tls/domains?filter[tls_certificates.id]={cert-id}&include=tls_activations
 	err = d.Set("configuration_id", subscription.Configuration.ID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	var tlsDomains []*gofastly.TLSDomain
+	tlsDomains, err = conn.ListTLSDomains(&gofastly.ListTLSDomainsInput{
+		FilterTLSCertificateID: certificateID,
+		Include:                "tls_activations",
+	})
+	for _, tlsDomain := range tlsDomains {
+		// Activations may be empty (omitempty)
+		if tlsDomain.Activations == nil {
+			break
+		}
+		len := len(tlsDomain.Activations)
+		if len > 0 {
+			err = d.Set("configuration_id", tlsDomain.Activations[len-1].Configuration.ID)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			break
+		}
+	}
+
 	err = d.Set("created_at", subscription.CreatedAt.Format(time.RFC3339))
 	if err != nil {
 		return diag.FromErr(err)

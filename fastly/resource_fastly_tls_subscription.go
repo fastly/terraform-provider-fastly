@@ -294,10 +294,37 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// NOTE: The configuration_id should change depending on scenario.
+	// For example, prior to a subscription renewal the ID is the same.
+	// Once a subscription is renewed, we need to search for the latest ID.
+	// The following API endpoint is used to search for the latest ID.
+	// https://www.fastly.com/documentation/reference/api/tls/custom-certs/domains/#list-tls-domains
 	err = d.Set("configuration_id", subscription.Configuration.ID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	var tlsDomains []*gofastly.TLSDomain
+	tlsDomains, err = conn.ListTLSDomains(&gofastly.ListTLSDomainsInput{
+		FilterTLSCertificateID: certificateID,
+		Include:                "tls_activations",
+		Sort:                   "tls_activations.created_at",
+	})
+	for _, tlsDomain := range tlsDomains {
+		// Activations may be empty (omitempty)
+		if tlsDomain.Activations == nil {
+			break
+		}
+		activations := len(tlsDomain.Activations)
+		if activations > 0 {
+			err = d.Set("configuration_id", tlsDomain.Activations[0].Configuration.ID)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			break
+		}
+	}
+
 	err = d.Set("created_at", subscription.CreatedAt.Format(time.RFC3339))
 	if err != nil {
 		return diag.FromErr(err)

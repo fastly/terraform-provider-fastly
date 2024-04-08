@@ -108,8 +108,8 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 				"timeout": {
 					Type:        schema.TypeInt,
 					Optional:    true,
-					Default:     500,
-					Description: "Timeout in milliseconds. Default `500`",
+					Default:     5000,
+					Description: "Timeout in milliseconds. Default `5000`",
 				},
 				"window": {
 					Type:        schema.TypeInt,

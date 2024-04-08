@@ -506,7 +506,7 @@ Optional:
 - `initial` (Number) When loading a config, the initial number of probes to be seen as OK. Default `3`
 - `method` (String) Which HTTP method to use. Default `HEAD`
 - `threshold` (Number) How many Healthchecks must succeed to be considered healthy. Default `3`
-- `timeout` (Number) Timeout in milliseconds. Default `500`
+- `timeout` (Number) Timeout in milliseconds. Default `5000`
 - `window` (Number) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`
 
 

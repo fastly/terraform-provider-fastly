@@ -494,15 +494,6 @@ func flattenRateLimiter(remoteState []*gofastly.ERL, _ ServiceMetadata) []map[st
 		if o.RateLimiterID != nil {
 			data["ratelimiter_id"] = *o.RateLimiterID
 		}
-		if o.ResponseObjectName != nil {
-			data["response_object_name"] = *o.ResponseObjectName
-		}
-		if o.RpsLimit != nil {
-			data["rps_limit"] = *o.RpsLimit
-		}
-		if o.WindowSize != nil {
-			data["window_size"] = int(*o.WindowSize)
-		}
 		if o.Response != nil && o.Response.ERLContent != nil && o.Response.ERLContentType != nil && o.Response.ERLStatus != nil {
 			data["response"] = []map[string]any{
 				{
@@ -511,6 +502,18 @@ func flattenRateLimiter(remoteState []*gofastly.ERL, _ ServiceMetadata) []map[st
 					"status":       *o.Response.ERLStatus,
 				},
 			}
+		}
+		if o.ResponseObjectName != nil {
+			data["response_object_name"] = *o.ResponseObjectName
+		}
+		if o.RpsLimit != nil {
+			data["rps_limit"] = *o.RpsLimit
+		}
+		if o.URIDictionaryName != nil {
+			data["uri_dictionary_name"] = *o.URIDictionaryName
+		}
+		if o.WindowSize != nil {
+			data["window_size"] = int(*o.WindowSize)
 		}
 
 		result = append(result, data)

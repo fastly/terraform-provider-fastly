@@ -117,6 +117,31 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 		WindowSize: gofastly.ToPointer(gofastly.ERLSize60),
 	}
 
+	erl1Updated := gofastly.ERL{
+		Action: gofastly.ToPointer(gofastly.ERLActionResponse),
+		ClientKey: []*string{
+			gofastly.ToPointer("req.http.Fastly-Client-IP"),
+			gofastly.ToPointer("req.http.User-Agent"),
+		},
+		FeatureRevision: gofastly.ToPointer(1),
+		HTTPMethods: []*string{
+			gofastly.ToPointer("POST"),
+			gofastly.ToPointer("PUT"),
+			gofastly.ToPointer("PATCH"),
+			gofastly.ToPointer("DELETE"),
+		},
+		Name:               gofastly.ToPointer(rateLimiterName),
+		PenaltyBoxDuration: gofastly.ToPointer(31),
+		Response: &gofastly.ERLResponse{
+			ERLContent:     gofastly.ToPointer("example"),
+			ERLContentType: gofastly.ToPointer("plain/text"),
+			ERLStatus:      gofastly.ToPointer(429),
+		},
+		RpsLimit:          gofastly.ToPointer(100),
+		WindowSize:        gofastly.ToPointer(gofastly.ERLSize60),
+		URIDictionaryName: gofastly.ToPointer("rate_limit_endpoints"),
+	}
+
 	erl2 := gofastly.ERL{
 		Action: gofastly.ToPointer(gofastly.ERLActionResponse),
 		ClientKey: []*string{
@@ -151,9 +176,9 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLRateLimiter(serviceName, domainName, rateLimiterName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "rate_limiter.#", "1"),
+					testAccCheckServiceExists("fastly_service_vcl.example", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.example", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.example", "rate_limiter.#", "1"),
 					testAccCheckFastlyServiceVCLRateLimiterAttributes(&service, []*gofastly.ERL{&erl1}),
 				),
 			},
@@ -161,9 +186,10 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 			{
 				Config: testAccServiceVCLRateLimiterUpdate(serviceName, domainName, rateLimiterName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "rate_limiter.#", "2"),
-					testAccCheckFastlyServiceVCLRateLimiterAttributes(&service, []*gofastly.ERL{&erl1, &erl2}),
+					testAccCheckServiceExists("fastly_service_vcl.example", &service),
+					testAccCheckRateLimiterURIDictName("fastly_service_vcl.example"),
+					resource.TestCheckResourceAttr("fastly_service_vcl.example", "rate_limiter.#", "2"),
+					testAccCheckFastlyServiceVCLRateLimiterAttributes(&service, []*gofastly.ERL{&erl1Updated, &erl2}),
 				),
 			},
 
@@ -177,12 +203,21 @@ func TestAccFastlyServiceVCLRateLimiter_basic(t *testing.T) {
 
 func testAccServiceVCLRateLimiter(serviceName, domainName, rateLimiterName string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
+variable "mydict" {
+  type = string
+  default = "rate_limit_endpoints"
+}
+
+resource "fastly_service_vcl" "example" {
   name = "%s"
 
   domain {
     name    = "%s"
     comment = "demo"
+  }
+
+  dictionary {
+    name = var.mydict
   }
 
   rate_limiter {
@@ -203,12 +238,34 @@ resource "fastly_service_vcl" "foo" {
   }
 
   force_destroy = true
+}
+
+resource "fastly_service_dictionary_items" "rate_limit_endpoints" {
+  service_id = fastly_service_vcl.example.id
+  dictionary_id = { for d in fastly_service_vcl.example.dictionary : d.name => d.dictionary_id }[var.mydict]
+  items = {
+    key1: "value1"
+    key2: "value2"
+  }
 }`, serviceName, domainName, rateLimiterName)
 }
 
+// The following config...
+//
+// Updates:
+// - penalty_box_duration (30 -> 31)
+//
+// Adds:
+// - A second rate_limiter
+// - uri_dictionary_name (to the first rate_limter).
 func testAccServiceVCLRateLimiterUpdate(serviceName, domainName, rateLimiterName string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
+variable "mydict" {
+  type = string
+  default = "rate_limit_endpoints"
+}
+
+resource "fastly_service_vcl" "example" {
   name = "%s"
 
   domain {
@@ -216,12 +273,17 @@ resource "fastly_service_vcl" "foo" {
     comment = "demo"
   }
 
+  dictionary {
+    name = var.mydict
+  }
+
   rate_limiter {
     action               = "response"
     client_key           = "req.http.Fastly-Client-IP,req.http.User-Agent"
     http_methods         = "POST,PUT,PATCH,DELETE"
     name                 = "%s"
-    penalty_box_duration = 30
+    penalty_box_duration = 31
+    uri_dictionary_name  = var.mydict
 
     response {
       content      = "example"
@@ -251,6 +313,15 @@ resource "fastly_service_vcl" "foo" {
   }
 
   force_destroy = true
+}
+
+resource "fastly_service_dictionary_items" "rate_limit_endpoints" {
+  service_id = fastly_service_vcl.example.id
+  dictionary_id = { for d in fastly_service_vcl.example.dictionary : d.name => d.dictionary_id }[var.mydict]
+  items = {
+    key1: "value1"
+    key2: "value2"
+  }
 }`, serviceName, domainName, rateLimiterName, rateLimiterName)
 }
 
@@ -262,7 +333,7 @@ resource "fastly_service_vcl" "foo" {
 // The Fastly Terraform provider should return an error when generating the diff.
 func testAccServiceVCLMultipleRateLimiters(serviceName, domainName, rateLimiterName string) string {
 	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
+resource "fastly_service_vcl" "example" {
   name = "%s"
 
   domain {
@@ -372,6 +443,27 @@ func testAccCheckFastlyServiceVCLRateLimiterAttributes(service *gofastly.Service
 			return fmt.Errorf("error matching Rate Limiters (%d/%d)", found, len(want))
 		}
 
+		return nil
+	}
+}
+
+// testAccCheckRateLimiterURIDictName validates uri_dictionary_name is set with
+// a value after it is defined in the Terraform config.
+func testAccCheckRateLimiterURIDictName(vclServiceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[vclServiceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", vclServiceName)
+		}
+		attrs := rs.Primary.Attributes
+		a := "rate_limiter.0.uri_dictionary_name"
+		v, ok := attrs[a]
+		if !ok {
+			return fmt.Errorf("failed to lookup %s", a)
+		}
+		if v == "" {
+			return fmt.Errorf("%s is empty", a)
+		}
 		return nil
 	}
 }

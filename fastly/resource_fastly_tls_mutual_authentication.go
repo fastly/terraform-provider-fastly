@@ -22,6 +22,11 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"activation_id": {
+				Type:        schema.TypeString,
+				Description: "The ID of your TLS Activation object",
+				Required:    true,
+			},
 			"cert_bundle": {
 				Type:        schema.TypeString,
 				Description: "One or more certificates. Enter each individual certificate blob on a new line. Must be PEM-formatted.",
@@ -40,7 +45,7 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 			},
 			"include": {
 				Type:        schema.TypeString,
-				Description: "Comma-separated list of related objects to include (e.g. `tls_activations` will provide you with the TLS domain names that are related to your Mutual TLS authentication).",
+				Description: "Comma-separated list of related objects to include in the Fastly API response when the Terraform provider requests domain information (e.g. `tls_activations` will provide the TLS domain names that are related to your Mutual TLS authentication).",
 				Optional:    true,
 			},
 			"name": {
@@ -66,28 +71,45 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 	}
 }
 
+// There are two steps to setting up mTLS:
+//
+// 1. POST  /tls/mutual_authentications
+// 2. PATCH /tls/activations/tls_activation_id
+//
+// The fastly_tls_activation data source can be used to acquire the Activation
+// ID.
 func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &gofastly.CreateTLSMutualAuthenticationInput{
+	inputCreate := &gofastly.CreateTLSMutualAuthenticationInput{
 		CertBundle: d.Get("cert_bundle").(string),
 	}
 
 	if v, ok := d.GetOk("enforced"); ok {
-		input.Enforced = v.(bool)
+		inputCreate.Enforced = v.(bool)
 	}
 	if v, ok := d.GetOk("name"); ok {
-		input.Name = v.(string)
+		inputCreate.Name = v.(string)
 	}
 
-	log.Printf("[DEBUG] CREATE: TLS Mutual Authentication input: %#v", input)
+	log.Printf("[DEBUG] CREATE: TLS Mutual Authentication input: %#v", inputCreate)
 
-	output, err := conn.CreateTLSMutualAuthentication(input)
+	mTLS, err := conn.CreateTLSMutualAuthentication(inputCreate)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(output.ID)
+	d.SetId(mTLS.ID)
+
+	inputUpdate := &gofastly.UpdateTLSActivationInput{
+		ID:                   d.Get("activation_id").(string),
+		MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: mTLS.ID},
+	}
+	log.Printf("[DEBUG] CREATE: Update TLS Activation input: %#v", inputUpdate)
+	_, err = conn.UpdateTLSActivation(inputUpdate)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return resourceFastlyTLSMutualAuthenticationRead(ctx, d, meta)
 }
@@ -148,6 +170,14 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 	return nil
 }
 
+// There are two steps to setting up mTLS:
+//
+// 1. POST  /tls/mutual_authentications
+// 2. PATCH /tls/activations/tls_activation_id
+//
+// Once mTLS is set up and the Activation object updated with the mTLS object
+// ID, then for the resource's UPDATE operation we need to allow the user to
+// change the Activation ID.
 func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
@@ -169,6 +199,19 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	if d.HasChange("activation_id") {
+		inputUpdate := &gofastly.UpdateTLSActivationInput{
+			ID:                   d.Get("activation_id").(string),
+			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: d.Id()},
+		}
+		log.Printf("[DEBUG] UPDATE: TLS Activation input: %#v", inputUpdate)
+		_, err = conn.UpdateTLSActivation(inputUpdate)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return nil
 }
 

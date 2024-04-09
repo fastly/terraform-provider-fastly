@@ -305,7 +305,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	var tlsDomains []*gofastly.TLSDomain
-	tlsDomains, err = conn.ListTLSDomains(&gofastly.ListTLSDomainsInput{
+	tlsDomains, _ = conn.ListTLSDomains(&gofastly.ListTLSDomainsInput{
 		FilterTLSCertificateID: certificateID,
 		Include:                "tls_activations",
 		Sort:                   "tls_activations.created_at",

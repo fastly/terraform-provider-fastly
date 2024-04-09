@@ -45,7 +45,7 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 			},
 			"include": {
 				Type:        schema.TypeString,
-				Description: "Comma-separated list of related objects to include in the Fastly API response when the Terraform provider requests domain information (e.g. `tls_activations` will provide the TLS domain names that are related to your Mutual TLS authentication).",
+				Description: "A comma-separated list used by the Terraform provider during a state refresh to return more data related to your mutual authentication from the Fastly API (permitted values: `tls_activations`).",
 				Optional:    true,
 			},
 			"name": {

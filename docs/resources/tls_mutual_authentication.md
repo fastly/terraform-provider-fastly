@@ -112,11 +112,11 @@ resource "fastly_tls_mutual_authentication" "www" {
 
 ### Required
 
-- `activation_id` (String) The ID of your TLS Activation object
 - `cert_bundle` (String) One or more certificates. Enter each individual certificate blob on a new line. Must be PEM-formatted.
 
 ### Optional
 
+- `activation_id` (String) The ID of your TLS Activation object
 - `enforced` (Boolean) Determines whether Mutual TLS will fail closed (enforced) or fail open. A true value will require a successful Mutual TLS handshake for the connection to continue and will fail closed if unsuccessful. A false value will fail open and allow the connection to proceed (if this attribute is not set we default to `false`).
 - `include` (String) A comma-separated list used by the Terraform provider during a state refresh to return more data related to your mutual authentication from the Fastly API (permitted values: `tls_activations`).
 - `name` (String) A custom name for your mutual authentication. If name is not supplied we will auto-generate one.

@@ -209,8 +209,19 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 	}
 
 	if d.HasChange("activation_ids") {
-		activationIDs := d.Get("activation_ids").(*schema.Set).List()
-		for _, id := range activationIDs {
+		// First unset mTLS from the old TLS Activations.
+		old, _ := d.GetChange("activation_ids")
+		for _, id := range old.(*schema.Set).List() {
+			input := &gofastly.UpdateTLSActivationInput{
+				ID:                   id.(string),
+				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: ""},
+			}
+			log.Printf("[DEBUG] UPDATE: TLS Activation input: %#v", input)
+			_, _ = conn.UpdateTLSActivation(input)
+		}
+
+		// Once old Activations have mTLS unset, set mTLS on the new Activations.
+		for _, id := range d.Get("activation_ids").(*schema.Set).List() {
 			inputUpdate := &gofastly.UpdateTLSActivationInput{
 				ID:                   id.(string),
 				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: d.Id()},

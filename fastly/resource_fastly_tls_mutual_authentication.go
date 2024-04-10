@@ -74,13 +74,6 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 	}
 }
 
-// There are two steps to setting up mTLS:
-//
-// 1. POST  /tls/mutual_authentications
-// 2. PATCH /tls/activations/tls_activation_id
-//
-// The fastly_tls_activation data source can be used to acquire the Activation
-// ID.
 func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
@@ -178,14 +171,6 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 	return nil
 }
 
-// There are two steps to setting up mTLS:
-//
-// 1. POST  /tls/mutual_authentications
-// 2. PATCH /tls/activations/tls_activation_id
-//
-// Once mTLS is set up and the Activation object updated with the mTLS object
-// ID, then for the resource's UPDATE operation we need to allow the user to
-// change the Activation ID.
 func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 

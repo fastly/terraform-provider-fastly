@@ -25,7 +25,7 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 			"activation_id": {
 				Type:        schema.TypeString,
 				Description: "The ID of your TLS Activation object",
-				Required:    true,
+				Optional:    true,
 			},
 			"cert_bundle": {
 				Type:        schema.TypeString,
@@ -101,14 +101,16 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 
 	d.SetId(mTLS.ID)
 
-	inputUpdate := &gofastly.UpdateTLSActivationInput{
-		ID:                   d.Get("activation_id").(string),
-		MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: mTLS.ID},
-	}
-	log.Printf("[DEBUG] CREATE: Update TLS Activation input: %#v", inputUpdate)
-	_, err = conn.UpdateTLSActivation(inputUpdate)
-	if err != nil {
-		return diag.FromErr(err)
+	if v, ok := d.GetOk("activation_id"); ok {
+		inputUpdate := &gofastly.UpdateTLSActivationInput{
+			ID:                   v.(string),
+			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: mTLS.ID},
+		}
+		log.Printf("[DEBUG] CREATE: Update TLS Activation input: %#v", inputUpdate)
+		_, err = conn.UpdateTLSActivation(inputUpdate)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return resourceFastlyTLSMutualAuthenticationRead(ctx, d, meta)
@@ -217,6 +219,21 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 
 func resourceFastlyTLSMutualAuthenticationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
+
+	// IMPORTANT: You can't delete mTLS with active domains.
+	// You must first disable the active domains.
+	// To do that, you can set "" for the mTLS ID.
+	if d.Get("activation_id").(string) != "" {
+		input := &gofastly.UpdateTLSActivationInput{
+			ID:                   d.Get("activation_id").(string),
+			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: ""},
+		}
+		log.Printf("[DEBUG] DELETE: TLS Activation input: %#v", input)
+		_, err := conn.UpdateTLSActivation(input)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
 	input := &gofastly.DeleteTLSMutualAuthenticationInput{
 		ID: d.Id(),

@@ -14,12 +14,18 @@ The main Mutual Authentication object represents the certificate bundle and othe
 
 Mutual TLS can be added to existing TLS activations to allow for client-to-server authentication. In order to use mutual TLS, you must already have active server-side TLS using either custom certificates or an enabled Fastly-managed subscription.
 
-The example below demonstrates how to use Mutual Authentication along with a TLS Subscription. Refer to the `fastly_tls_subscription` resource documentation for a deeper explanation of that code.
+The examples below demonstrate how to use Mutual Authentication along with a TLS Subscription. Refer to the `fastly_tls_subscription` resource documentation for a deeper explanation of that code.
 
-## Example Usage
+## Example: Single Activation
 
 The following example sets up a TLS Subscription for `www.example.com` and then adds Mutual Authentication.
 
 {{ tffile "examples/resources/tls_mutual_authentication_basic_usage.tf" }}
+
+## Example: Multiple Activations
+
+The following example sets up a TLS Subscription for `foo.example.com` and `bar.example.com` and then adds Mutual Authentication to each TLS Activation.
+
+{{ tffile "examples/resources/tls_mutual_authentication_multiple_activations.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}

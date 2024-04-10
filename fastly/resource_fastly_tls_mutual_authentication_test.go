@@ -103,7 +103,7 @@ resource "fastly_tls_activation" "test" {
 }
 
 resource "fastly_tls_mutual_authentication" "test" {
-  activation_id = fastly_tls_activation.test.id
+  activation_ids = [fastly_tls_activation.test.id]
   cert_bundle = <<EOF
 %s
 EOF

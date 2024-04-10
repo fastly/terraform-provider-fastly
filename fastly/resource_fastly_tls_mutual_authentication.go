@@ -22,10 +22,13 @@ func resourceFastlyTLSMutualAuthentication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"activation_id": {
-				Type:        schema.TypeString,
-				Description: "The ID of your TLS Activation object",
+			"activation_ids": {
+				Type:        schema.TypeSet,
+				Description: "List of TLS Activation IDs",
 				Optional:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"cert_bundle": {
 				Type:        schema.TypeString,
@@ -101,15 +104,18 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 
 	d.SetId(mTLS.ID)
 
-	if v, ok := d.GetOk("activation_id"); ok {
-		inputUpdate := &gofastly.UpdateTLSActivationInput{
-			ID:                   v.(string),
-			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: mTLS.ID},
-		}
-		log.Printf("[DEBUG] CREATE: Update TLS Activation input: %#v", inputUpdate)
-		_, err = conn.UpdateTLSActivation(inputUpdate)
-		if err != nil {
-			return diag.FromErr(err)
+	if v, ok := d.GetOk("activation_ids"); ok {
+		activationIDs := v.(*schema.Set).List()
+		for _, id := range activationIDs {
+			inputUpdate := &gofastly.UpdateTLSActivationInput{
+				ID:                   id.(string),
+				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: mTLS.ID},
+			}
+			log.Printf("[DEBUG] CREATE: Update TLS Activation input: %#v", inputUpdate)
+			_, err = conn.UpdateTLSActivation(inputUpdate)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -202,15 +208,18 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	if d.HasChange("activation_id") {
-		inputUpdate := &gofastly.UpdateTLSActivationInput{
-			ID:                   d.Get("activation_id").(string),
-			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: d.Id()},
-		}
-		log.Printf("[DEBUG] UPDATE: TLS Activation input: %#v", inputUpdate)
-		_, err = conn.UpdateTLSActivation(inputUpdate)
-		if err != nil {
-			return diag.FromErr(err)
+	if d.HasChange("activation_ids") {
+		activationIDs := d.Get("activation_ids").(*schema.Set).List()
+		for _, id := range activationIDs {
+			inputUpdate := &gofastly.UpdateTLSActivationInput{
+				ID:                   id.(string),
+				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: d.Id()},
+			}
+			log.Printf("[DEBUG] UPDATE: Update TLS Activation input: %#v", inputUpdate)
+			_, err = conn.UpdateTLSActivation(inputUpdate)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -222,10 +231,11 @@ func resourceFastlyTLSMutualAuthenticationDelete(_ context.Context, d *schema.Re
 
 	// IMPORTANT: You can't delete mTLS with active domains.
 	// You must first disable the active domains.
-	// To do that, you can set "" for the mTLS ID.
-	if d.Get("activation_id").(string) != "" {
+	// To do that, you can set "" for the mTLS ID on each TLS Activation.
+	activationIDs := d.Get("activation_ids").(*schema.Set).List()
+	for _, id := range activationIDs {
 		input := &gofastly.UpdateTLSActivationInput{
-			ID:                   d.Get("activation_id").(string),
+			ID:                   id.(string),
 			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: ""},
 		}
 		log.Printf("[DEBUG] DELETE: TLS Activation input: %#v", input)

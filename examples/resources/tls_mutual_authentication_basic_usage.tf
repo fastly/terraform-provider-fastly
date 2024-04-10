@@ -51,7 +51,7 @@ resource "dnsimple_zone_record" "www_acme_challenge" {
   ttl       = "60"
   type      = "CNAME"
   value     = one([for obj in fastly_tls_subscription.www.managed_dns_challenges : obj.record_value if obj.record_name == "_acme-challenge.www.${var.zone}"])
-  zone_name = local.zone
+  zone_name = var.zone
 }
 
 resource "fastly_tls_subscription_validation" "www" {
@@ -69,7 +69,7 @@ resource "dnsimple_zone_record" "www" {
   ttl       = "60"
   type      = "CNAME"
   value     = one([for record in data.fastly_tls_configuration.default.dns_records : record.record_value if record.record_type == "CNAME"])
-  zone_name = local.zone
+  zone_name = var.zone
 }
 
 data "fastly_tls_activation" "www" {
@@ -78,7 +78,7 @@ data "fastly_tls_activation" "www" {
 }
 
 resource "fastly_tls_mutual_authentication" "www" {
-  activation_id = data.fastly_tls_activation.www.id
-  cert_bundle   = "-----BEGIN CERTIFICATE-----\n<REDACTED>\n-----END CERTIFICATE-----"
-  enforced      = true
+  activation_ids = [data.fastly_tls_activation.www.id]
+  cert_bundle    = "-----BEGIN CERTIFICATE-----\n<REDACTED>\n-----END CERTIFICATE-----"
+  enforced       = true
 }

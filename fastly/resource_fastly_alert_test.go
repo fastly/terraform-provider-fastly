@@ -75,6 +75,124 @@ func TestAccFastlyAlert_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyAlert_basic_stats(t *testing.T) {
+	var service gofastly.ServiceDetail
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	createAlert := gofastly.AlertDefinition{
+		Description: "Terraform test",
+		Dimensions:  map[string][]string{},
+		EvaluationStrategy: map[string]any{
+			"type":      "above_threshold",
+			"period":    "5m",
+			"threshold": float64(10),
+		},
+		Metric: "status_5xx",
+		Name:   fmt.Sprintf("Terraform test alert %s", acctest.RandString(10)),
+		Source: "stats",
+	}
+	updateAlert := gofastly.AlertDefinition{
+		Description: "Terraform test with new description",
+		Dimensions:  map[string][]string{},
+		EvaluationStrategy: map[string]any{
+			"type":      "below_threshold",
+			"period":    "15m",
+			"threshold": float64(100),
+		},
+		Metric: "status_4xx",
+		Name:   fmt.Sprintf("Terraform test alert %s", acctest.RandString(10)),
+		Source: "stats",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAlertStatsConfig(serviceName, domainName, createAlert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_bar", &service),
+					testAccCheckFastlyAlertsRemoteState(&service, serviceName, createAlert),
+				),
+			},
+			{
+				Config: testAccAlertStatsConfig(serviceName, domainName, updateAlert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.tf_bar", &service),
+					testAccCheckFastlyAlertsRemoteState(&service, serviceName, updateAlert),
+				),
+			},
+			{
+				ResourceName:      "fastly_alert.tf_bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyAlert_basic_stats_aggregate(t *testing.T) {
+	service := gofastly.ServiceDetail{
+		Name:      gofastly.ToPointer(""),
+		ServiceID: gofastly.ToPointer(""),
+	}
+
+	createAlert := gofastly.AlertDefinition{
+		Description: "Terraform test",
+		Dimensions:  map[string][]string{},
+		EvaluationStrategy: map[string]any{
+			"type":      "above_threshold",
+			"period":    "5m",
+			"threshold": float64(10),
+		},
+		Metric: "status_5xx",
+		Name:   fmt.Sprintf("Terraform test alert %s", acctest.RandString(10)),
+		Source: "stats",
+	}
+	updateAlert := gofastly.AlertDefinition{
+		Description: "Terraform test with new description",
+		Dimensions:  map[string][]string{},
+		EvaluationStrategy: map[string]any{
+			"type":      "below_threshold",
+			"period":    "15m",
+			"threshold": float64(100),
+		},
+		Metric: "status_4xx",
+		Name:   fmt.Sprintf("Terraform test alert %s", acctest.RandString(10)),
+		Source: "stats",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAlertAggregateStatsConfig(createAlert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyAlertsRemoteState(&service, "", createAlert),
+				),
+			},
+			{
+				Config: testAccAlertAggregateStatsConfig(updateAlert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyAlertsRemoteState(&service, "", updateAlert),
+				),
+			},
+			{
+				ResourceName:      "fastly_alert.tf_bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyAlertsRemoteState(service *gofastly.ServiceDetail, serviceName string, expected gofastly.AlertDefinition) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if gofastly.ToValue(service.Name) != serviceName {
@@ -102,7 +220,6 @@ func testAccCheckFastlyAlertsRemoteState(service *gofastly.ServiceDetail, servic
 			if cursor == "" {
 				break
 			}
-
 		}
 
 		var got *gofastly.AlertDefinition
@@ -193,4 +310,52 @@ resource "fastly_alert" "foo" {
     threshold = %v
   }
 }`, serviceName, domainName, alert.Name, alert.Description, alert.Source, alert.Metric, alert.Source, strings.Join(alert.Dimensions[alert.Source], "\", \""), alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
+}
+
+func testAccAlertStatsConfig(serviceName, domainName string, alert gofastly.AlertDefinition) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "tf_bar" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  product_enablement {
+    domain_inspector = false
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_alert" "tf_bar" {
+  name = "%s"
+  description = "%s"
+  service_id = fastly_service_vcl.tf_bar.id
+  source = "%s"
+  metric = "%s"
+
+  evaluation_strategy {
+    type = "%s"
+    period = "%s"
+    threshold = %v
+  }
+}`, serviceName, domainName, alert.Name, alert.Description, alert.Source, alert.Metric, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
+}
+
+func testAccAlertAggregateStatsConfig(alert gofastly.AlertDefinition) string {
+	return fmt.Sprintf(`
+resource "fastly_alert" "tf_bar" {
+  name = "%s"
+  description = "%s"
+  service_id = ""
+  source = "%s"
+  metric = "%s"
+
+  evaluation_strategy {
+    type = "%s"
+    period = "%s"
+    threshold = %v
+  }
+}`, alert.Name, alert.Description, alert.Source, alert.Metric, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
 }

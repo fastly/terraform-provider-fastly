@@ -126,10 +126,11 @@ func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta a
 		input.Description = gofastly.ToPointer(v.(string))
 	}
 
+	input.Dimensions = map[string][]string{}
 	if v, ok := d.GetOk("dimensions"); ok {
 		for _, r := range v.([]any) {
 			if m, ok := r.(map[string]any); ok {
-				input.Dimensions = buildDimensions(m)
+				input.Dimensions = buildDimensions(input.Dimensions, m)
 			}
 		}
 	}
@@ -226,10 +227,11 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = gofastly.ToPointer(v.(string))
 	}
 
+	input.Dimensions = map[string][]string{}
 	if v, ok := d.GetOk("dimensions"); ok {
 		for _, r := range v.([]any) {
 			if m, ok := r.(map[string]any); ok {
-				input.Dimensions = buildDimensions(m)
+				input.Dimensions = buildDimensions(input.Dimensions, m)
 			}
 		}
 	}
@@ -281,12 +283,11 @@ func flattenDimensions(remoteState map[string][]string) []map[string]any {
 	return []map[string]any{data}
 }
 
-func buildDimensions(v map[string]any) map[string][]string {
-	dimensions := map[string][]string{}
+func buildDimensions(data map[string][]string, v map[string]any) map[string][]string {
 	for dimension, values := range v {
-		dimensions[dimension] = buildStringSlice(values.(*schema.Set))
+		data[dimension] = buildStringSlice(values.(*schema.Set))
 	}
-	return dimensions
+	return data
 }
 
 func buildEvaluationStrategy(v map[string]any) map[string]any {

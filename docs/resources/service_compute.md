@@ -84,6 +84,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
+- `image_optimizer_default_settings` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
 - `logging_bigquery` (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_cloudfiles` (Block Set) (see [below for nested schema](#nestedblock--logging_cloudfiles))
@@ -185,6 +186,20 @@ Optional:
 Read-Only:
 
 - `dictionary_id` (String) The ID of the dictionary
+
+
+<a id="nestedblock--image_optimizer_default_settings"></a>
+### Nested Schema for `image_optimizer_default_settings`
+
+Optional:
+
+- `allow_video` (Boolean) Enables GIF to MP4 transformations on this service.
+- `jpeg_quality` (Number) The default quality to use with jpeg output. This can be overridden with the "quality" parameter on specific image optimizer requests.
+- `jpeg_type` (String) The default type of jpeg output to use. This can be overriden with "format=bjpeg" and "format=pjpeg" on specific image optimizer requests.
+- `resize_filter` (String) The type of filter to use while resizing an image.
+- `upscale` (Boolean) Whether or not we should allow output images to render at sizes larger than input.
+- `webp` (Boolean) Controls whether or not to default to webp output when the client supports it. This is equivalent to adding "auto=webp" to all image optimizer requests.
+- `webp_quality` (Number) The default quality to use with webp output. This can be overriden with the second option in the "quality" URL parameter on specific image optimizer requests
 
 
 <a id="nestedblock--logging_bigquery"></a>

@@ -260,6 +260,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `header` (Block Set) (see [below for nested schema](#nestedblock--header))
 - `healthcheck` (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
 - `http3` (Boolean) Enables support for the HTTP/3 (QUIC) protocol
+- `image_optimizer_default_settings` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
 - `logging_bigquery` (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
 - `logging_cloudfiles` (Block Set) (see [below for nested schema](#nestedblock--logging_cloudfiles))
@@ -508,6 +509,20 @@ Optional:
 - `threshold` (Number) How many Healthchecks must succeed to be considered healthy. Default `3`
 - `timeout` (Number) Timeout in milliseconds. Default `5000`
 - `window` (Number) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`
+
+
+<a id="nestedblock--image_optimizer_default_settings"></a>
+### Nested Schema for `image_optimizer_default_settings`
+
+Optional:
+
+- `allow_video` (Boolean) Enables GIF to MP4 transformations on this service.
+- `jpeg_quality` (Number) The default quality to use with jpeg output. This can be overridden with the "quality" parameter on specific image optimizer requests.
+- `jpeg_type` (String) The default type of jpeg output to use. This can be overriden with "format=bjpeg" and "format=pjpeg" on specific image optimizer requests.
+- `resize_filter` (String) The type of filter to use while resizing an image.
+- `upscale` (Boolean) Whether or not we should allow output images to render at sizes larger than input.
+- `webp` (Boolean) Controls whether or not to default to webp output when the client supports it. This is equivalent to adding "auto=webp" to all image optimizer requests.
+- `webp_quality` (Number) The default quality to use with webp output. This can be overriden with the second option in the "quality" URL parameter on specific image optimizer requests
 
 
 <a id="nestedblock--logging_bigquery"></a>

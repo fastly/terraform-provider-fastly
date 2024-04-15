@@ -200,4 +200,4 @@ jobs:
         with:
           install-only: true
       - name: Validate Goreleaser
-        run: make goreleaser GORELEASER_ARGS="--skip-validate --clean --snapshot" # snapshot is needed as local git has no tags
+        run: make goreleaser GORELEASER_ARGS="--skip=validate --clean --snapshot" # snapshot is needed as local git has no tags

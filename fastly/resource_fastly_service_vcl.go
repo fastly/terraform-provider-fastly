@@ -20,6 +20,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceHealthCheck(vclAttributes),
 		NewServiceBackend(vclAttributes),
 		NewServiceProductEnablement(vclAttributes),
+		NewServiceImageOptimizerDefaultSettings(vclAttributes),
 		NewServiceDirector(vclAttributes),
 		NewServiceHeader(vclAttributes),
 		NewServiceGzip(vclAttributes),

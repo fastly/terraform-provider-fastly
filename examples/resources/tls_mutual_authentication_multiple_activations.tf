@@ -88,8 +88,18 @@ resource "dnsimple_zone_record" "bar" {
   zone_name = var.zone
 }
 
+# IMPORTANT: The subscription's certificate_id attribute is initially empty.
+# So we can't reference the certificate_id attribute directly (not until a state refresh).
+# This means we need to use the subscription data source instead.
+# We need this data source to wait for the subscription process to complete.
+# Once complete we'll have a Certificate ID we can reference as input to the `fastly_tls_activation_ids` data source.
+data "fastly_tls_subscription" "example" {
+  id         = fastly_tls_subscription.example.id
+  depends_on = [fastly_tls_subscription_validation.example]
+}
+
 data "fastly_tls_activation_ids" "example" {
-  certificate_id = fastly_tls_subscription.example.certificate_id
+  certificate_id = one(data.fastly_tls_subscription.example.certificate_ids)
 }
 
 resource "fastly_tls_mutual_authentication" "example" {

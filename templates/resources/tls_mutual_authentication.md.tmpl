@@ -1,0 +1,31 @@
+---
+layout: "fastly"
+page_title: "Fastly: tls_mutual_authentication"
+sidebar_current: "docs-fastly-resource-tls_mutual_authentication"
+description: |-
+Allows for client-to-server authentication using client-side X.509 authentication.
+---
+
+# fastly_tls_mutual_authentication
+
+The Mutual TLS API allows for client-to-server authentication using client-side X.509 authentication.
+
+The main Mutual Authentication object represents the certificate bundle and other configurations which support Mutual TLS for your domains.
+
+Mutual TLS can be added to existing TLS activations to allow for client-to-server authentication. In order to use mutual TLS, you must already have active server-side TLS using either custom certificates or an enabled Fastly-managed subscription.
+
+The examples below demonstrate how to use Mutual Authentication along with a TLS Subscription. Refer to the `fastly_tls_subscription` resource documentation for a deeper explanation of that code.
+
+## Example: Single Activation
+
+The following example sets up a TLS Subscription for `www.example.com` and then adds Mutual Authentication.
+
+{{ tffile "examples/resources/tls_mutual_authentication_basic_usage.tf" }}
+
+## Example: Multiple Activations
+
+The following example sets up a TLS Subscription for `foo.example.com` and `bar.example.com` and then adds Mutual Authentication to each TLS Activation.
+
+{{ tffile "examples/resources/tls_mutual_authentication_multiple_activations.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

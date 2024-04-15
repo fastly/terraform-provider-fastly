@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/fastly/go-fastly/v9/fastly"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,6 +19,12 @@ func dataSourceFastlyTLSSubscription() *schema.Resource {
 				Computed:      true,
 				Description:   "The entity that issues and certifies the TLS certificates for the subscription.",
 				ConflictsWith: []string{"id"},
+			},
+			"certificate_ids": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "List of certificate IDs associated with the Subscription.",
 			},
 			"common_name": {
 				Type:        schema.TypeString,
@@ -167,12 +172,21 @@ func listTLSSubscriptions(conn *fastly.Client, filters ...TLSSubscriptionPredica
 func dataSourceFastlyTLSSubscriptionSetAttributes(subscription *fastly.TLSSubscription, d *schema.ResourceData) error {
 	d.SetId(subscription.ID)
 
+	var certIDs []string
+	for _, cert := range subscription.Certificates {
+		certIDs = append(certIDs, cert.ID)
+	}
+
 	var domains []string
 	for _, domain := range subscription.Domains {
 		domains = append(domains, domain.ID)
 	}
 
-	err := d.Set("configuration_id", subscription.Configuration.ID)
+	err := d.Set("certificate_ids", certIDs)
+	if err != nil {
+		return err
+	}
+	err = d.Set("configuration_id", subscription.Configuration.ID)
 	if err != nil {
 		return err
 	}

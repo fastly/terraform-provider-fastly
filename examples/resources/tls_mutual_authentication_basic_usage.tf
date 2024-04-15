@@ -43,7 +43,7 @@ resource "fastly_service_vcl" "example" {
 
 resource "fastly_tls_subscription" "www" {
   domains               = [for domain in fastly_service_vcl.example.domain : domain.name if domain.name == "www.${var.zone}"]
-  certificate_authority = "lets-encrypt"
+  certificate_authority = "certainly"
 }
 
 resource "dnsimple_zone_record" "www_acme_challenge" {

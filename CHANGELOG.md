@@ -1,5 +1,21 @@
 ## 5.8.0 (Unreleased)
 
+## 5.7.2 (April 15, 2024)
+
+ENHANCEMENTS:
+
+- fix: update the default timeout value for healthcheck consistency with Fastly App (UI) [#827](https://github.com/fastly/terraform-provider-fastly/pull/827)
+
+BUG FIXES:
+
+- fix(rate_limiter): persist uri_dictionary_name to state [#828](https://github.com/fastly/terraform-provider-fastly/pull/828)
+- fix(tls_subscription): ensure configuration_id is current value (not initial) [#824](https://github.com/fastly/terraform-provider-fastly/pull/824)
+- fix(tls_mutual_authentication): update activation after mtls creation [#829](https://github.com/fastly/terraform-provider-fastly/pull/829)
+
+DOCUMENTATION:
+
+- Update Certainly Documentation to Remove Beta Label [#826](https://github.com/fastly/terraform-provider-fastly/pull/826)
+
 ## 5.7.1 (March 15, 2024)
 
 ENHANCEMENTS:

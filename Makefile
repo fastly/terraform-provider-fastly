@@ -92,7 +92,7 @@ nilaway:
 # --clean will save you deleting the dist dir
 # --single-target will be quicker and only build for your os & architecture
 # e.g.
-# make goreleaser GORELEASER_ARGS="--skip-validate --clean"
+# make goreleaser GORELEASER_ARGS="--skip=validate --clean"
 goreleaser: goreleaser-bin
 	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" goreleaser build ${GORELEASER_ARGS}
 

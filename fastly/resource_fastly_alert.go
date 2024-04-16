@@ -57,6 +57,11 @@ func resourceFastlyAlert() *schema.Resource {
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ignore_below": {
+							Type:        schema.TypeFloat,
+							Optional:    true,
+							Description: "Floor noise that can be configured to ignore data points that are below this threshold.",
+						},
 						"period": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -291,11 +296,25 @@ func buildDimensions(data map[string][]string, v map[string]any) map[string][]st
 }
 
 func buildEvaluationStrategy(v map[string]any) map[string]any {
-	return map[string]any{
-		"type":      v["type"].(string),
-		"period":    v["period"].(string),
-		"threshold": v["threshold"].(float64),
+	evaluationStrategy := map[string]any{}
+
+	if value, ok := v["type"]; ok {
+		evaluationStrategy["type"] = value.(string)
 	}
+
+	if value, ok := v["period"]; ok {
+		evaluationStrategy["period"] = value.(string)
+	}
+
+	if value, ok := v["threshold"]; ok {
+		evaluationStrategy["threshold"] = value.(float64)
+	}
+
+	if value, ok := v["ignore_below"]; ok {
+		evaluationStrategy["ignore_below"] = value.(float64)
+	}
+
+	return evaluationStrategy
 }
 
 func buildStringSlice(s *schema.Set) []string {

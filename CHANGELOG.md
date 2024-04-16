@@ -1,5 +1,11 @@
 ## 5.8.0 (Unreleased)
 
+## 5.7.3 (April 16, 2024)
+
+BUG FIXES:
+
+- Fix stats alerts, add all service aggregate alerts [#831](https://github.com/fastly/terraform-provider-fastly/pull/831)
+
 ## 5.7.2 (April 15, 2024)
 
 ENHANCEMENTS:

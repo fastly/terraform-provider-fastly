@@ -85,8 +85,8 @@ func TestAccFastlyKVStore_WithLocation_validate(t *testing.T) {
 				ResourceName:      "fastly_kvstore.with_location",
 				ImportState:       true,
 				ImportStateVerify: true,
-				// These attributes are not stored on the Fastly API and must be ignored.
-				// Note: "location" should be validated if the API starts returning it in the response.
+				// Attributes not stored on the Fastly API are ignored.
+				// "location" should be validated if the API starts returning it in the response.
 				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported", "location"},
 			},
 			// IMPORTANT: Add a key to the store so we can validate force delete.

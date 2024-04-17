@@ -27,6 +27,12 @@ func resourceFastlyKVStore() *schema.Resource {
 				Optional:    true,
 				Description: "Allow the KV Store to be deleted, even if it contains entries. Defaults to false.",
 			},
+			"location": {
+				Type:        schema.TypeString,
+				Default:     "",
+				Optional:    true,
+				Description: "The regional location of the KV Store. Valid values are US, EU, ASIA, and AUS.",
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -41,7 +47,8 @@ func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.CreateKVStoreInput{
-		Name: d.Get("name").(string),
+		Name:     d.Get("name").(string),
+		Location: d.Get("location").(string),
 	}
 
 	log.Printf("[DEBUG] CREATE: KV Store input: %#v", input)

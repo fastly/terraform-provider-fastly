@@ -65,6 +65,7 @@ func Provider() *schema.Provider {
 			"fastly_tls_private_key_ids":          dataSourceFastlyTLSPrivateKeyIDs(),
 			"fastly_tls_subscription":             dataSourceFastlyTLSSubscription(),
 			"fastly_tls_subscription_ids":         dataSourceFastlyTLSSubscriptionIDs(),
+			"fastly_vcl_snippets":                 dataSourceFastlyVCLSnippets(),
 			"fastly_waf_rules":                    dataSourceFastlyWAFRules(),
 		},
 		ResourcesMap: map[string]*schema.Resource{

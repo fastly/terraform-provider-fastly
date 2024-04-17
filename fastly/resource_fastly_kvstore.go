@@ -31,7 +31,7 @@ func resourceFastlyKVStore() *schema.Resource {
 				Type:        schema.TypeString,
 				Default:     "",
 				Optional:    true,
-				Description: "The regional location of the KV Store. Valid values are US, EU, ASIA, and AUS.",
+				Description: "The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`.",
 			},
 			"name": {
 				Type:        schema.TypeString,

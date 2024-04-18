@@ -67,6 +67,7 @@ $ terraform import fastly_kvstore.example xxxxxxxxxxxxxxxxxxxx
 ### Optional
 
 - `force_destroy` (Boolean) Allow the KV Store to be deleted, even if it contains entries. Defaults to false.
+- `location` (String) The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`.
 
 ### Read-Only
 

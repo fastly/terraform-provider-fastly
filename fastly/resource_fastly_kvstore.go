@@ -9,6 +9,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceFastlyKVStore() *schema.Resource {
@@ -27,6 +28,16 @@ func resourceFastlyKVStore() *schema.Resource {
 				Optional:    true,
 				Description: "Allow the KV Store to be deleted, even if it contains entries. Defaults to false.",
 			},
+			// TODO: Move values to constants inside of go-fastly.
+			"location": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+					[]string{"US", "EU", "ASIA", "AUS"},
+					false,
+				)),
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -42,6 +53,10 @@ func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta
 
 	input := &gofastly.CreateKVStoreInput{
 		Name: d.Get("name").(string),
+	}
+
+	if v, ok := d.GetOk("location"); ok {
+		input.Location = v.(string)
 	}
 
 	log.Printf("[DEBUG] CREATE: KV Store input: %#v", input)

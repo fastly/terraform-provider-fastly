@@ -1,0 +1,21 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_vcl_snippets"
+sidebar_current: "docs-fastly-datasource-fastly_vcl_snippets"
+description: |-
+  Get information on Fastly service VCL Snippets.
+---
+
+# fastly_vcl_snippets
+
+VCL Snippets are blocks of VCL logic inserted into your service's configuration that don't require custom VCL.
+
+Use this data source to get a list of [Fastly VCL Snippets][1] for the specified service/version.
+
+## Example Usage
+
+{{ tffile "examples/data-sources/vcl_snippets.tf"}}
+
+[1]: https://www.fastly.com/documentation/reference/api/vcl-services/snippet/
+
+{{ .SchemaMarkdown | trimspace }}

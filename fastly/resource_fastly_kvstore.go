@@ -9,6 +9,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceFastlyKVStore() *schema.Resource {
@@ -29,9 +30,12 @@ func resourceFastlyKVStore() *schema.Resource {
 			},
 			"location": {
 				Type:        schema.TypeString,
-				Default:     "",
 				Optional:    true,
 				Description: "The regional location of the KV Store. Valid values are `US`, `EU`, `ASIA`, and `AUS`.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+					[]string{"US", "EU", "ASIA", "AUS"},
+					false,
+				)),
 			},
 			"name": {
 				Type:        schema.TypeString,
@@ -47,8 +51,11 @@ func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.CreateKVStoreInput{
-		Name:     d.Get("name").(string),
-		Location: d.Get("location").(string),
+		Name: d.Get("name").(string),
+	}
+
+	if v, ok := d.GetOk("location"); ok {
+		input.Location = v.(string)
 	}
 
 	log.Printf("[DEBUG] CREATE: KV Store input: %#v", input)

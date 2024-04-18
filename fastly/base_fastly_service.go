@@ -77,6 +77,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				// activate flag) then the active_version will be recomputed too.
 				return d.HasChange("cloned_version") && d.Get("activate").(bool)
 			}),
+			validateUniqueNames("backend"),
 			validateUniqueNames("rate_limiter"),
 			validateUniqueNames("snippet"),
 		),

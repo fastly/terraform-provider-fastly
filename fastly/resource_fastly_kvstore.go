@@ -28,6 +28,7 @@ func resourceFastlyKVStore() *schema.Resource {
 				Optional:    true,
 				Description: "Allow the KV Store to be deleted, even if it contains entries. Defaults to false.",
 			},
+			// TODO: Move values to constants inside of go-fastly.
 			"location": {
 				Type:        schema.TypeString,
 				Optional:    true,

@@ -1,4 +1,15 @@
-## 5.8.0 (Unreleased)
+## 5.9.0 (Unreleased)
+
+## 5.8.0 (April 18, 2024)
+
+BUG FIXES:
+
+- fix(fastly_vcl_service): ensure backend names are unique [#836](https://github.com/fastly/terraform-provider-fastly/pull/836)
+
+ENHANCEMENTS:
+
+- feat: vcl_snippets [#835](https://github.com/fastly/terraform-provider-fastly/pull/835)
+- Add support for specifying location when creating KV stores [#834](https://github.com/fastly/terraform-provider-fastly/pull/834)
 
 ## 5.7.3 (April 16, 2024)
 

@@ -126,16 +126,28 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(_ context.Co
 			"webp_quality":  remoteState.WebpQuality,
 		}
 
+		// The `name` attribute in this resource is used by default as a key for calculating diffs.
+		// This is handled as part of the internal abstraction logic.
+		//
+		// See the call ToServiceAttributeDefinition() inside NewServiceProductEnablement()
+		// See also the diffing logic:
+		//   - https://github.com/fastly/terraform-provider-fastly/blob/4b9506fba1fd17e2bf760f447cbd8c394bb1e153/fastly/service_crud_attribute_definition.go#L94
+		//   - https://github.com/fastly/terraform-provider-fastly/blob/4b9506fba1fd17e2bf760f447cbd8c394bb1e153/fastly/diff.go#L108-L117
+		//
+		// Because the name can be set by a user, we first check if the resource
+		// exists in their state, and if so we'll use the value assigned there. If
+		// they've not explicitly defined a name in their config, then the default
+		// value will be returned.
+		if len(localState) > 0 {
+			name := localState[0].(map[string]any)["name"].(string)
+			result["name"] = name
+		}
+
 		results := []map[string]any{result}
 
-		// IMPORTANT: Avoid runtime panic "set item just set doesn't exist".
-		// TF will panic when trying to append an empty map to a TypeSet.
-		// i.e. a typed nil.
-		if len(results[0]) > 0 {
-			if err := d.Set(h.Key(), results); err != nil {
-				log.Printf("[WARN] Error setting Product Enablement for (%s): %s", d.Id(), err)
-				return err
-			}
+		if err := d.Set(h.Key(), results); err != nil {
+			log.Printf("[WARN] Error setting Image Optimizer default setting for (%s): %s", d.Id(), err)
+			return err
 		}
 	}
 

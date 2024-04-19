@@ -204,7 +204,18 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 		case "webp_quality":
 			apiInput.WebpQuality = gofastly.ToPointer(value.(int))
 		case "jpeg_type":
-			apiInput.JpegType = gofastly.ToPointer(value.(string))
+			var jpegType gofastly.JpegType
+			switch value.(string) {
+			case "auto":
+				jpegType = gofastly.Auto
+			case "baseline":
+				jpegType = gofastly.Baseline
+			case "progressive":
+				jpegType = gofastly.Progressive
+			default:
+				return fmt.Errorf("got unexpected jpeg_type: %v", value)
+			}
+			apiInput.JpegType = &jpegType
 		case "jpeg_quality":
 			apiInput.JpegQuality = gofastly.ToPointer(value.(int))
 		case "upscale":

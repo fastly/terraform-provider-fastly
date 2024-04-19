@@ -188,23 +188,17 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 			}
 			apiInput.ResizeFilter = &resizeFilter
 		case "webp":
-			webp := value.(bool)
-			apiInput.Webp = &webp
+			apiInput.Webp = gofastly.ToPointer(value.(bool))
 		case "webp_quality":
-			webpQuality := value.(int)
-			apiInput.WebpQuality = &webpQuality
+			apiInput.WebpQuality = gofastly.ToPointer(value.(int))
 		case "jpeg_type":
-			jpegType := value.(string)
-			apiInput.JpegType = &jpegType
+			apiInput.JpegType = gofastly.ToPointer(value.(string))
 		case "jpeg_quality":
-			jpegQuality := value.(int)
-			apiInput.JpegQuality = &jpegQuality
+			apiInput.JpegQuality = gofastly.ToPointer(value.(int))
 		case "upscale":
-			upscale := value.(bool)
-			apiInput.Upscale = &upscale
+			apiInput.Upscale = gofastly.ToPointer(value.(bool))
 		case "allow_video":
-			allowVideo := value.(bool)
-			apiInput.AllowVideo = &allowVideo
+			apiInput.AllowVideo = gofastly.ToPointer(value.(bool))
 		default:
 			return fmt.Errorf("got unexpected image_optimizer_default_settings key: %v", key)
 		}

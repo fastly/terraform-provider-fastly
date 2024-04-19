@@ -110,6 +110,11 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(_ context.Co
 		if err != nil {
 			return err
 		}
+		// Handle the case where the service has no Image Optimizer default settings configured (for example, if it has never had Image
+		// Optimizer enabled.)
+		if remoteState == nil {
+			return nil
+		}
 
 		result := map[string]any{
 			"allow_video":   remoteState.AllowVideo,

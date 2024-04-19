@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -34,20 +35,20 @@ const (
 // ImageOptimizerDefaultSettings represents the returned default settings for Image Optimizer on a given service.
 type ImageOptimizerDefaultSettings struct {
 	// Type of filter to use while resizing an image.
-	ResizeFilter string `mapstructure:"resize_filter"`
+	ResizeFilter string `json:"resize_filter"`
 	// Whether or not to default to webp output when the client supports it. This is equivalent to adding "auto=webp" to all image optimizer requests.
-	Webp bool `mapstructure:"webp"`
+	Webp bool `json:"webp"`
 	// Default quality to use with webp output. This can be overriden with the second option in the "quality" URL parameter on specific image optimizer
 	// requests.
-	WebpQuality int `mapstructure:"webp_quality"`
+	WebpQuality int `json:"webp_quality"`
 	// Default type of jpeg output to use. This can be overriden with "format=bjpeg" and "format=pjpeg" on specific image optimizer requests.
-	JpegType string `mapstructure:"jpeg_type"`
+	JpegType string `json:"jpeg_type"`
 	// Default quality to use with jpeg output. This can be overridden with the "quality" parameter on specific image optimizer requests.
-	JpegQuality int `mapstructure:"jpeg_quality"`
+	JpegQuality int `json:"jpeg_quality"`
 	// Whether or not we should allow output images to render at sizes larger than input.
-	Upscale bool `mapstructure:"upscale"`
+	Upscale bool `json:"upscale"`
 	// Enables GIF to MP4 transformations on this service.
-	AllowVideo bool `mapstructure:"allow_video"`
+	AllowVideo bool `json:"allow_video"`
 }
 
 // GetImageOptimizerDefaultSettingsInput is used as input to the
@@ -86,6 +87,8 @@ type UpdateImageOptimizerDefaultSettingsInput struct {
 }
 
 // GetImageOptimizerDefaultSettings retrives the current Image Optimizer default settings on a given service version.
+//
+// Returns (nil, nil) if no default settings are set.
 func (c *Client) GetImageOptimizerDefaultSettings(i *GetImageOptimizerDefaultSettingsInput) (*ImageOptimizerDefaultSettings, error) {
 	if i.ServiceID == "" {
 		return nil, ErrMissingServiceID
@@ -98,12 +101,18 @@ func (c *Client) GetImageOptimizerDefaultSettings(i *GetImageOptimizerDefaultSet
 
 	resp, err := c.Get(path, nil)
 	if err != nil {
+		if herr, ok := err.(*HTTPError); ok {
+			if herr.StatusCode == 404 {
+				// API endpoint returns 404 for services without Image Optimizer settings set.
+				return nil, nil
+			}
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var iods *ImageOptimizerDefaultSettings
-	if err := decodeBodyMap(resp.Body, &iods); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&iods); err != nil {
 		return nil, err
 	}
 
@@ -131,7 +140,7 @@ func (c *Client) UpdateImageOptimizerDefaultSettings(i *UpdateImageOptimizerDefa
 	defer resp.Body.Close()
 
 	var iods *ImageOptimizerDefaultSettings
-	if err := decodeBodyMap(resp.Body, &iods); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&iods); err != nil {
 		return nil, err
 	}
 

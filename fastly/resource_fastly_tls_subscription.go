@@ -217,6 +217,9 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 
 	var domains []string
 	for _, domain := range subscription.Domains {
+		if domain == nil {
+			continue
+		}
 		domains = append(domains, domain.ID)
 	}
 

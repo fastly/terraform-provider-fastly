@@ -33,54 +33,65 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) GetSchema() *schema.Schema {
 	attributes := map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "image_optimizer_default_settings",
+			Description: "Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)",
+		},
 		"allow_video": {
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Enables GIF to MP4 transformations on this service.",
 		},
 		"jpeg_quality": {
 			Type:         schema.TypeInt,
 			Optional:     true,
+			Default:      85,
 			Description:  "The default quality to use with jpeg output. This can be overridden with the \"quality\" parameter on specific image optimizer requests.",
 			ValidateFunc: validation.IntBetween(1, 100),
 		},
 		"jpeg_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
+			Default:      "auto",
 			Description:  "The default type of jpeg output to use. This can be overriden with \"format=bjpeg\" and \"format=pjpeg\" on specific image optimizer requests.",
 			ValidateFunc: validation.StringInSlice([]string{"auto", "baseline", "progressive"}, false),
 		},
 		"resize_filter": {
 			Type:         schema.TypeString,
 			Optional:     true,
+			Default:      "lanczos3",
 			Description:  "The type of filter to use while resizing an image.",
 			ValidateFunc: validation.StringInSlice([]string{"lanczos3", "lanczos2", "bicubic", "bilinear", "nearest"}, false),
 		},
 		"upscale": {
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Whether or not we should allow output images to render at sizes larger than input.",
 		},
 		"webp": {
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     false,
 			Description: "Controls whether or not to default to webp output when the client supports it. This is equivalent to adding \"auto=webp\" to all image optimizer requests.",
 		},
 		"webp_quality": {
 			Type:         schema.TypeInt,
 			Optional:     true,
+			Default:      85,
 			Description:  "The default quality to use with webp output. This can be overriden with the second option in the \"quality\" URL parameter on specific image optimizer requests",
 			ValidateFunc: validation.IntBetween(1, 100),
 		},
 	}
 
-	// NOTE: Min/MaxItems: 1 (to enforce only one image_optimizer_default_settings per service).
-	// lintignore:S018
+	// NOTE: MaxItems: 1 (to enforce only one image_optimizer_default_settings per service).
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		MaxItems: 1,
-		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: attributes,
 		},

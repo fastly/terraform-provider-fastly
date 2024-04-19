@@ -33,12 +33,6 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) GetSchema() *schema.Schema {
 	attributes := map[string]*schema.Schema{
-		"name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "image_optimizer_default_settings",
-			Description: "Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)",
-		},
 		"allow_video": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -58,6 +52,12 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) GetSchema() *sche
 			Default:      "auto",
 			Description:  "The default type of jpeg output to use. This can be overriden with \"format=bjpeg\" and \"format=pjpeg\" on specific image optimizer requests.",
 			ValidateFunc: validation.StringInSlice([]string{"auto", "baseline", "progressive"}, false),
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "image_optimizer_default_settings",
+			Description: "Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)",
 		},
 		"resize_filter": {
 			Type:         schema.TypeString,
@@ -88,6 +88,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) GetSchema() *sche
 	}
 
 	// NOTE: MaxItems: 1 (to enforce only one image_optimizer_default_settings per service).
+	// lintignore:S018
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -210,10 +211,14 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 			apiInput.Upscale = gofastly.ToPointer(value.(bool))
 		case "allow_video":
 			apiInput.AllowVideo = gofastly.ToPointer(value.(bool))
+		case "name":
+			continue
 		default:
 			return fmt.Errorf("got unexpected image_optimizer_default_settings key: %v", key)
 		}
 	}
+
+	log.Printf("[DEBUG] Calling Image Optimizer default settings update API with parameters: %+v", apiInput)
 
 	if _, err := conn.UpdateImageOptimizerDefaultSettings(&apiInput); err != nil {
 		return err

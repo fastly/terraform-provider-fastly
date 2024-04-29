@@ -43,27 +43,35 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) GetSchema() *sche
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      85,
-			Description:  "The default quality to use with jpeg output. This can be overridden with the \"quality\" parameter on specific image optimizer requests.",
+			Description:  "The default quality to use with JPEG output. This can be overridden with the \"quality\" parameter on specific image optimizer requests.",
 			ValidateFunc: validation.IntBetween(1, 100),
 		},
 		"jpeg_type": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "auto",
-			Description:  "The default type of jpeg output to use. This can be overriden with \"format=bjpeg\" and \"format=pjpeg\" on specific image optimizer requests.",
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "auto",
+			Description: "The default type of JPEG output to use. This can be overridden with \"format=bjpeg\" and \"format=pjpeg\" on specific image optimizer requests. Valid values are `auto`, `baseline` and `progressive`." + `
+	- auto: Match the input JPEG type, or baseline if transforming from a non-JPEG input.
+	- baseline: Output baseline JPEG images
+	- progressive: Output progressive JPEG images`,
 			ValidateFunc: validation.StringInSlice([]string{"auto", "baseline", "progressive"}, false),
 		},
 		"name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "image_optimizer_default_settings",
-			Description: "Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)",
+			Description: "Used by the provider to identify modified settings. Changing this value will force the entire block to be deleted, then recreated.",
 		},
 		"resize_filter": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      "lanczos3",
-			Description:  "The type of filter to use while resizing an image.",
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "lanczos3",
+			Description: "The type of filter to use while resizing an image. Valid values are `lanczos3`, `lanczos2`, `bicubic`, `bilinear` and `nearest`." + `
+	- lanczos3: A Lanczos filter with a kernel size of 3. Lanczos filters can detect edges and linear features within an image, providing the best possible reconstruction.
+	- lanczos2: A Lanczos filter with a kernel size of 2.
+	- bicubic: A filter using an average of a 4x4 environment of pixels, weighing the innermost pixels higher.
+	- bilinear: A filter using an average of a 2x2 environment of pixels.
+	- nearest: A filter using the value of nearby translated pixel values. Preserves hard edges.`,
 			ValidateFunc: validation.StringInSlice([]string{"lanczos3", "lanczos2", "bicubic", "bilinear", "nearest"}, false),
 		},
 		"upscale": {
@@ -76,13 +84,13 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) GetSchema() *sche
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Controls whether or not to default to webp output when the client supports it. This is equivalent to adding \"auto=webp\" to all image optimizer requests.",
+			Description: "Controls whether or not to default to WebP output when the client supports it. This is equivalent to adding \"auto=webp\" to all image optimizer requests.",
 		},
 		"webp_quality": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      85,
-			Description:  "The default quality to use with webp output. This can be overriden with the second option in the \"quality\" URL parameter on specific image optimizer requests",
+			Description:  "The default quality to use with WebP output. This can be overridden with the second option in the \"quality\" URL parameter on specific image optimizer requests.",
 			ValidateFunc: validation.IntBetween(1, 100),
 		},
 	}

@@ -12,9 +12,7 @@ Fastly Image Optimizer supports a variety of image formats and applies specific 
 The [Image Optimizer default settings](https://developer.fastly.com/reference/api/services/image-optimizer-default-settings/) API allows customers to configure
 default settings for Image Optimizer requests, configuring the way images are optimized when not overridden by URL parameters on specific requests.
 
-Not all customers are entitled to use these endpoints and so care needs to be given when configuring an `image_optimizer` block in your Terraform configuration.
-
-Image Optimizer must also be enabled on the specific service. This can be achieved in terraform with the `product_enablement` block.
+The service must have the Image Optimizer product enabled using the Product Enablement API, UI, or Terraform block to use the `image_optimizer` block.
 
 ## Example Usage
 
@@ -59,5 +57,9 @@ NOTE: When added, `image_optimizer_default_settings` will always set all default
 
 ## Delete
 
-As Image Optimizer default settings will always have some value when a service has image optimizer enabled, deleting the `image_optimizer_default_settings`
-block is a no-op.
+Deleting the resource will reset all Image Optimizer default settings to their default values.
+
+If deleting the resource errors due to Image Optimizer no longer being enabled on the service, then this error will be ignored.
+
+When Image Optimizer is next re-enabled on a service, that service's Image Optimizer default settings will be reset - so a disabled service effectively already
+has deleted/default Image Optimizer default settings.

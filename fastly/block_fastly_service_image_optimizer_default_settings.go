@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -248,7 +250,87 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 
 // Delete deletes the resource.
 //
-// Note: The API does not expose any way to reset default settings, so we don't have much to do here.
-func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
+// This resets Image Optimizer default settings to their defaults, to make it possible to easily undo any effect this block had.
+//
+// This assumes the service wasn't modified with the UI or any other non-terraform method. Given terraform's regular mode of operating within the world is to
+// assume its in control of everything, I think that's quite a reasonable assumption.
+func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+	serviceID := d.Id()
+	log.Println("[DEBUG] Update Image Optimizer default settings")
+
+	apiInput := gofastly.UpdateImageOptimizerDefaultSettingsInput{
+		ServiceID:      serviceID,
+		ServiceVersion: serviceVersion,
+	}
+
+	for key, value := range resource {
+		switch key {
+		case "resize_filter":
+			var resizeFilter gofastly.ResizeFilter
+			switch value.(string) {
+			case "lanczos3":
+				resizeFilter = gofastly.Lanczos3
+			case "lanczos2":
+				resizeFilter = gofastly.Lanczos2
+			case "bicubic":
+				resizeFilter = gofastly.Bicubic
+			case "bilinear":
+				resizeFilter = gofastly.Bilinear
+			case "nearest":
+				resizeFilter = gofastly.Nearest
+			default:
+				return fmt.Errorf("got unexpected resize_filter: %v", value)
+			}
+			apiInput.ResizeFilter = &resizeFilter
+		case "webp":
+			apiInput.Webp = gofastly.ToPointer(value.(bool))
+		case "webp_quality":
+			apiInput.WebpQuality = gofastly.ToPointer(value.(int))
+		case "jpeg_type":
+			var jpegType gofastly.JpegType
+			switch value.(string) {
+			case "auto":
+				jpegType = gofastly.Auto
+			case "baseline":
+				jpegType = gofastly.Baseline
+			case "progressive":
+				jpegType = gofastly.Progressive
+			default:
+				return fmt.Errorf("got unexpected jpeg_type: %v", value)
+			}
+			apiInput.JpegType = &jpegType
+		case "jpeg_quality":
+			apiInput.JpegQuality = gofastly.ToPointer(value.(int))
+		case "upscale":
+			apiInput.Upscale = gofastly.ToPointer(value.(bool))
+		case "allow_video":
+			apiInput.AllowVideo = gofastly.ToPointer(value.(bool))
+		case "name":
+			continue
+		default:
+			return fmt.Errorf("got unexpected image_optimizer_default_settings key: %v", key)
+		}
+	}
+
+	log.Printf("[DEBUG] Calling Image Optimizer default settings update API with parameters: %+v", apiInput)
+
+	if _, err := conn.UpdateImageOptimizerDefaultSettings(&apiInput); err != nil {
+		// inspect the error type for a title that has a message indicating the user cannot call the API because they do not have Image Optimizer
+		// enabled. For these users we want to skip the error so that we can allow them to clean up their Terraform state. (also, because the Image Optimizer
+		// default settings for services with Image Optimizer are effectively cleared by disabling Image Optimizer.)
+		if he, ok := err.(*gofastly.HTTPError); ok {
+			if he.StatusCode == http.StatusBadRequest {
+				for _, e := range he.Errors {
+					if strings.Contains(e.Detail, "Image Optimizer is not enabled on this service") {
+						return nil
+					}
+				}
+			}
+		}
+
+		return err
+
+	}
+
 	return nil
 }

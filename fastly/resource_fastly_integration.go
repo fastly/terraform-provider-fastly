@@ -23,7 +23,7 @@ func resourceFastlyIntegration() *schema.Resource {
 			"config": {
 				Type:        schema.TypeMap,
 				Required:    true,
-				Description: "Configuration specific to the integration `type`.",
+				Description: "Configuration specific to the integration `type` (see documentation examples).",
 				Elem:        schema.TypeString,
 			},
 			"description": {
@@ -40,6 +40,10 @@ func resourceFastlyIntegration() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Type of the integration. One of: `mailinglist`, `microsoftteams`, `newrelic`, `pagerduty`, `slack`, `webhook`.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+					[]string{"mailinglist", "microsoftteams", "newrelic", "pagerduty", "slack", "webhook"},
+					false,
+				)),
 			},
 		},
 	}

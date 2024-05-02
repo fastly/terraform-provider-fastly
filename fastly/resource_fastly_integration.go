@@ -7,6 +7,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceFastlyIntegration() *schema.Resource {
@@ -25,6 +26,7 @@ func resourceFastlyIntegration() *schema.Resource {
 				Required:    true,
 				Description: "Configuration specific to the integration `type` (see documentation examples).",
 				Elem:        schema.TypeString,
+				Sensitive:   true,
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -49,7 +51,7 @@ func resourceFastlyIntegration() *schema.Resource {
 	}
 }
 
-func resourceFastlyIntegrationCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := gofastly.CreateIntegrationInput{
@@ -69,7 +71,7 @@ func resourceFastlyIntegrationCreate(_ context.Context, d *schema.ResourceData, 
 
 	d.SetId(*i.ID)
 
-	return nil
+	return resourceFastlyIntegrationRead(ctx, d, meta)
 }
 
 func resourceFastlyIntegrationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -102,6 +104,16 @@ func resourceFastlyIntegrationRead(_ context.Context, d *schema.ResourceData, me
 	err = d.Set("type", i.Type)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if i.Type != nil && *i.Type == "mailinglist" && i.Status != nil && *i.Status != "confirmed" {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Mailing list integration needs confirmation.",
+				Detail:   "Please visit https://manage.fastly.com/observability/alerts/integrations to send a confirmation email and/or verify status.",
+			},
+		}
 	}
 
 	return nil

@@ -90,7 +90,7 @@ resource "fastly_integration" "webhook_example" {
 
 ### Required
 
-- `config` (Map of String) Configuration specific to the integration `type`.
+- `config` (Map of String, Sensitive) Configuration specific to the integration `type` (see documentation examples).
 - `name` (String) User submitted name of the integration.
 - `type` (String) Type of the integration. One of: `mailinglist`, `microsoftteams`, `newrelic`, `pagerduty`, `slack`, `webhook`.
 

@@ -70,6 +70,10 @@ Required:
 - `threshold` (Number) Threshold used to alert.
 - `type` (String) Type of strategy to use to evaluate. One of: `above_threshold`, `below_threshold`.
 
+Optional:
+
+- `ignore_below` (Number) Floor noise that can be configured to ignore data points that are below this threshold.
+
 
 <a id="nestedblock--dimensions"></a>
 ### Nested Schema for `dimensions`

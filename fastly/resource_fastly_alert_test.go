@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyAlertBasic(t *testing.T) {
+func TestAccFastlyAlert_Basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -75,7 +75,7 @@ func TestAccFastlyAlertBasic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyAlertBasicStats(t *testing.T) {
+func TestAccFastlyAlert_BasicStats(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -134,7 +134,7 @@ func TestAccFastlyAlertBasicStats(t *testing.T) {
 	})
 }
 
-func TestAccFastlyAlertBasicStatsAggregate(t *testing.T) {
+func TestAccFastlyAlert_BasicStatsAggregate(t *testing.T) {
 	service := gofastly.ServiceDetail{
 		Name:      gofastly.ToPointer(""),
 		ServiceID: gofastly.ToPointer(""),
@@ -193,7 +193,7 @@ func TestAccFastlyAlertBasicStatsAggregate(t *testing.T) {
 	})
 }
 
-func TestAccFastlyAlertBasicStatsAggregatePercent(t *testing.T) {
+func TestAccFastlyAlert_BasicStatsAggregatePercent(t *testing.T) {
 	service := gofastly.ServiceDetail{
 		Name:      gofastly.ToPointer(""),
 		ServiceID: gofastly.ToPointer(""),

@@ -10,13 +10,11 @@ description: |-
 
 Provides a Fastly integration. Fastly will use these integrations to send you notifications and alerts related to the Fastly product. Mailing list, Microsoft Teams, New Relic, PagerDuty, Slack, and webhook are supported as integrations.
 
+~> **IMPORTANT:** The mailing list integrations require confirmation. To send a confirmation email and verify integration status, after applying changes using Terraform, please visit https://manage.fastly.com/observability/alerts/integrations
+
 ## Example Usage
 
 ```terraform
-# IMPORTANT: mailing list integrations require confirmation.
-# To send a confirmation email and verify integration status,
-# after applying changes using Terraform, please visit
-# https://manage.fastly.com/observability/alerts/integrations
 resource "fastly_integration" "mailinglist_example" {
   name = "my mailing list integration"
   description = "example mailing list integration"

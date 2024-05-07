@@ -60,7 +60,7 @@ func resourceFastlyAlert() *schema.Resource {
 						"ignore_below": {
 							Type:        schema.TypeFloat,
 							Optional:    true,
-							Description: "Floor noise that can be configured to ignore data points that are below this threshold.",
+							Description: "Threshold for the denominator value used in evaluations that calculate a rate or ratio. Usually used to filter out noise.",
 						},
 						"period": {
 							Type:        schema.TypeString,
@@ -296,25 +296,19 @@ func buildDimensions(data map[string][]string, v map[string]any) map[string][]st
 }
 
 func buildEvaluationStrategy(v map[string]any) map[string]any {
-	evaluationStrategy := map[string]any{}
-
-	if value, ok := v["type"]; ok {
-		evaluationStrategy["type"] = value.(string)
+	// Required attributes
+	m := map[string]any{
+		"type":      v["type"].(string),
+		"period":    v["period"].(string),
+		"threshold": v["threshold"].(float64),
 	}
 
-	if value, ok := v["period"]; ok {
-		evaluationStrategy["period"] = value.(string)
-	}
-
-	if value, ok := v["threshold"]; ok {
-		evaluationStrategy["threshold"] = value.(float64)
-	}
-
+	// Optional attributes
 	if value, ok := v["ignore_below"]; ok {
-		evaluationStrategy["ignore_below"] = value.(float64)
+		m["ignore_below"] = value.(float64)
 	}
 
-	return evaluationStrategy
+	return m
 }
 
 func buildStringSlice(s *schema.Set) []string {

@@ -72,7 +72,7 @@ Required:
 
 Optional:
 
-- `ignore_below` (Number) Floor noise that can be configured to ignore data points that are below this threshold.
+- `ignore_below` (Number) Threshold for the denominator value used in evaluations that calculate a rate or ratio. Usually used to filter out noise.
 
 
 <a id="nestedblock--dimensions"></a>

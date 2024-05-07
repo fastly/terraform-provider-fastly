@@ -66,9 +66,9 @@ $ terraform import fastly_alert.example xxxxxxxxxxxxxxxxxxxx
 
 Required:
 
-- `period` (String) The length of time to evaluate whether the conditions have been met. The data is polled every minute. One of: `5m`, `15m`, `30m`.
+- `period` (String) The length of time to evaluate whether the conditions have been met. The data is polled every minute. One of: `2m`, `3m`, `5m`, `15m`, `30m`.
 - `threshold` (Number) Threshold used to alert.
-- `type` (String) Type of strategy to use to evaluate. One of: `above_threshold`, `below_threshold`.
+- `type` (String) Type of strategy to use to evaluate. One of: `above_threshold`, `all_above_threshold`, `below_threshold`, `percent_absolute`, `percent_decrease`, `percent_increase`.
 
 Optional:
 

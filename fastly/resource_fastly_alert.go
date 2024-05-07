@@ -65,7 +65,7 @@ func resourceFastlyAlert() *schema.Resource {
 						"period": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "The length of time to evaluate whether the conditions have been met. The data is polled every minute. One of: `5m`, `15m`, `30m`.",
+							Description: "The length of time to evaluate whether the conditions have been met. The data is polled every minute. One of: `2m`, `3m`, `5m`, `15m`, `30m`.",
 						},
 						"threshold": {
 							Type:        schema.TypeFloat,
@@ -75,7 +75,7 @@ func resourceFastlyAlert() *schema.Resource {
 						"type": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Type of strategy to use to evaluate. One of: `above_threshold`, `below_threshold`.",
+							Description: "Type of strategy to use to evaluate. One of: `above_threshold`, `all_above_threshold`, `below_threshold`, `percent_absolute`, `percent_decrease`, `percent_increase`.",
 						},
 					},
 				},

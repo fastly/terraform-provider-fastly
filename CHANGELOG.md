@@ -1,4 +1,18 @@
-## 5.9.0 (Unreleased)
+## 5.10.0 (Unreleased)
+
+## 5.9.0 (May 9, 2024)
+
+ENHANCEMENTS:
+
+- feat(fastly_integration): implement resource and documentation [#844](https://github.com/fastly/terraform-provider-fastly/pull/844)
+- feat(fastly_alerts): add percentage alerts [#845](https://github.com/fastly/terraform-provider-fastly/pull/845)
+
+DEPENDENCIES:
+
+- build(deps): bump golang.org/x/net from 0.19.0 to 0.24.0 [#842](https://github.com/fastly/terraform-provider-fastly/pull/842)
+- build(deps): bump github.com/hashicorp/terraform-plugin-docs [#841](https://github.com/fastly/terraform-provider-fastly/pull/841)
+- build(deps): bump github.com/hashicorp/terraform-plugin-docs [#843](https://github.com/fastly/terraform-provider-fastly/pull/843)
+- build(deps): bump golang.org/x/net from 0.24.0 to 0.25.0 [#846](https://github.com/fastly/terraform-provider-fastly/pull/846)
 
 ## 5.8.0 (April 18, 2024)
 

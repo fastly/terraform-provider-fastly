@@ -2,11 +2,13 @@ package fastly
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
@@ -16,64 +18,44 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 	backendName := fmt.Sprintf("backend-tf-%s", acctest.RandString(10))
 	backendAddress := "httpbin.org"
 
-	config := fmt.Sprintf(`
-  resource "fastly_service_vcl" "foo" {
-	name = "%s"
+	block1 := `
+		resize_filter = "lanczos2"
+		webp = true
+		webp_quality = 100
+		jpeg_type = "progressive"
+		jpeg_quality = 100
+		upscale = true
+		allow_video = false
+	`
 
-	domain {
-	  name	= "%s"
-	  comment = "demo"
+	default_settings1 := gofastly.ImageOptimizerDefaultSettings{
+		ResizeFilter: "lanczos2",
+		Webp:         true,
+		WebpQuality:  100,
+		JpegType:     "progressive",
+		JpegQuality:  100,
+		Upscale:      true,
+		AllowVideo:   false,
 	}
 
-	backend {
-	  address = "%s"
-	  name	= "%s"
-	  port	= 443
-	  shield  = "amsterdam-nl"
-	}
+	block2 := `
+		resize_filter = "bicubic"
+		webp = false
+		webp_quality = 30
+		jpeg_type = "baseline"
+		jpeg_quality = 20
+		upscale = true
+		allow_video = true
+	`
 
-	image_optimizer_default_settings {
-	  allow_video = false
-	  jpeg_type = "auto"
-	  jpeg_quality = 85
-	  resize_filter = "lanczos3"
-	  upscale = false
-	  webp = false
-	  webp_quality = 85
-	}
-
-	product_enablement {
-	  image_optimizer = true
-	}
-
-	force_destroy = true
-  }
-  `, serviceName, domainName, backendAddress, backendName)
-
-	// The following backends are what we expect to exist after all our Terraform
-	// configuration settings have been applied. We expect them to correlate to
-	// the specific backend definitions in the Terraform configuration.
-
-	b1 := gofastly.Backend{
-		Address: gofastly.ToPointer(backendAddress),
-		Name:    gofastly.ToPointer(backendName),
-		Port:    gofastly.ToPointer(443),
-		Shield:  gofastly.ToPointer("amsterdam-nl"), // required for image_optimizer
-
-		// NOTE: The following are defaults applied by the API.
-		AutoLoadbalance:     gofastly.ToPointer(false),
-		BetweenBytesTimeout: gofastly.ToPointer(10000),
-		Comment:             gofastly.ToPointer(""),
-		ConnectTimeout:      gofastly.ToPointer(1000),
-		ErrorThreshold:      gofastly.ToPointer(0),
-		FirstByteTimeout:    gofastly.ToPointer(15000),
-		HealthCheck:         gofastly.ToPointer(""),
-		Hostname:            gofastly.ToPointer(backendAddress),
-		MaxConn:             gofastly.ToPointer(200),
-		RequestCondition:    gofastly.ToPointer(""),
-		SSLCheckCert:        gofastly.ToPointer(true),
-		Weight:              gofastly.ToPointer(100),
-		UseSSL:              gofastly.ToPointer(false),
+	def_settings2 := gofastly.ImageOptimizerDefaultSettings{
+		ResizeFilter: "bicubic",
+		Webp:         false,
+		WebpQuality:  30,
+		JpegType:     "baseline",
+		JpegQuality:  20,
+		Upscale:      true,
+		AllowVideo:   true,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,14 +66,72 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, block1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "1"),
-					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "image_optimizer_default_settings.#", "1"),
+					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, &default_settings1),
+				),
+			},
+
+			{
+				Config: testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, block2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "image_optimizer_default_settings.#", "1"),
+					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, &def_settings2),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(service *gofastly.ServiceDetail, want *gofastly.ImageOptimizerDefaultSettings) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		have, err := conn.GetImageOptimizerDefaultSettings(&gofastly.GetImageOptimizerDefaultSettingsInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Image Optimizer default settings for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+
+		if !reflect.DeepEqual(want, have) {
+			return fmt.Errorf("bad Image Optimizer default settings, expected (%#v), got (%#v)", want, have)
+		}
+
+		return nil
+	}
+}
+
+func testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, image_optimizer_settings string) string {
+	return fmt.Sprintf(`
+	resource "fastly_service_vcl" "foo" {
+	  name = "%s"
+
+	  domain {
+		name	= "%s"
+		comment = "demo"
+	  }
+
+	  backend {
+		address = "%s"
+		name	= "%s"
+		port	= 443
+		shield  = "amsterdam-nl"
+	  }
+
+	  image_optimizer_default_settings {
+		%s
+	  }
+
+	  product_enablement {
+		image_optimizer = true
+	  }
+
+	  force_destroy = true
+	}`, serviceName, domainName, backendAddress, backendName, image_optimizer_settings)
 }

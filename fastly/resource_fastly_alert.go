@@ -57,10 +57,15 @@ func resourceFastlyAlert() *schema.Resource {
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ignore_below": {
+							Type:        schema.TypeFloat,
+							Optional:    true,
+							Description: "Threshold for the denominator value used in evaluations that calculate a rate or ratio. Usually used to filter out noise.",
+						},
 						"period": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "The length of time to evaluate whether the conditions have been met. The data is polled every minute. One of: `5m`, `15m`, `30m`.",
+							Description: "The length of time to evaluate whether the conditions have been met. The data is polled every minute. One of: `2m`, `3m`, `5m`, `15m`, `30m`.",
 						},
 						"threshold": {
 							Type:        schema.TypeFloat,
@@ -70,7 +75,7 @@ func resourceFastlyAlert() *schema.Resource {
 						"type": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Type of strategy to use to evaluate. One of: `above_threshold`, `below_threshold`.",
+							Description: "Type of strategy to use to evaluate. One of: `above_threshold`, `all_above_threshold`, `below_threshold`, `percent_absolute`, `percent_decrease`, `percent_increase`.",
 						},
 					},
 				},
@@ -291,11 +296,19 @@ func buildDimensions(data map[string][]string, v map[string]any) map[string][]st
 }
 
 func buildEvaluationStrategy(v map[string]any) map[string]any {
-	return map[string]any{
+	// Required attributes
+	m := map[string]any{
 		"type":      v["type"].(string),
 		"period":    v["period"].(string),
 		"threshold": v["threshold"].(float64),
 	}
+
+	// Optional attributes
+	if value, ok := v["ignore_below"]; ok {
+		m["ignore_below"] = value.(float64)
+	}
+
+	return m
 }
 
 func buildStringSlice(s *schema.Set) []string {

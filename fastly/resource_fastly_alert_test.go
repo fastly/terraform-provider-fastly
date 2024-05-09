@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyAlert_basic(t *testing.T) {
+func TestAccFastlyAlert_Basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -75,7 +75,7 @@ func TestAccFastlyAlert_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyAlert_basic_stats(t *testing.T) {
+func TestAccFastlyAlert_BasicStats(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -134,7 +134,7 @@ func TestAccFastlyAlert_basic_stats(t *testing.T) {
 	})
 }
 
-func TestAccFastlyAlert_basic_stats_aggregate(t *testing.T) {
+func TestAccFastlyAlert_BasicStatsAggregate(t *testing.T) {
 	service := gofastly.ServiceDetail{
 		Name:      gofastly.ToPointer(""),
 		ServiceID: gofastly.ToPointer(""),
@@ -186,6 +186,69 @@ func TestAccFastlyAlert_basic_stats_aggregate(t *testing.T) {
 			},
 			{
 				ResourceName:      "fastly_alert.tf_bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFastlyAlert_BasicStatsAggregatePercent(t *testing.T) {
+	service := gofastly.ServiceDetail{
+		Name:      gofastly.ToPointer(""),
+		ServiceID: gofastly.ToPointer(""),
+	}
+
+	createAlert := gofastly.AlertDefinition{
+		Description: "Terraform percent test",
+		Dimensions:  map[string][]string{},
+		// 25 percent increase
+		EvaluationStrategy: map[string]any{
+			"type":         "percent_increase",
+			"period":       "2m",
+			"threshold":    0.25,
+			"ignore_below": float64(10),
+		},
+		Metric: "status_4xx",
+		Name:   fmt.Sprintf("Terraform test percent alert %s", acctest.RandString(10)),
+		Source: "stats",
+	}
+	updateAlert := gofastly.AlertDefinition{
+		Description: "Terraform test with new description",
+		Dimensions:  map[string][]string{},
+		// 10 percent increase
+		EvaluationStrategy: map[string]any{
+			"type":         "percent_increase",
+			"period":       "2m",
+			"threshold":    0.1,
+			"ignore_below": float64(10),
+		},
+		Metric: "status_4xx",
+		Name:   fmt.Sprintf("Terraform test update percent alert %s", acctest.RandString(10)),
+		Source: "stats",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAlertPercentAggregateStatsConfig(createAlert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyAlertsRemoteState(&service, "", createAlert),
+				),
+			},
+			{
+				Config: testAccAlertPercentAggregateStatsConfig(updateAlert),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFastlyAlertsRemoteState(&service, "", updateAlert),
+				),
+			},
+			{
+				ResourceName:      "fastly_alert.tf_percent",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -358,4 +421,22 @@ resource "fastly_alert" "tf_bar" {
     threshold = %v
   }
 }`, alert.Name, alert.Description, alert.Source, alert.Metric, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"])
+}
+
+func testAccAlertPercentAggregateStatsConfig(alert gofastly.AlertDefinition) string {
+	return fmt.Sprintf(`
+resource "fastly_alert" "tf_percent" {
+  name = "%s"
+  description = "%s"
+  service_id = ""
+  source = "%s"
+  metric = "%s"
+
+  evaluation_strategy {
+    type = "%s"
+    period = "%s"
+    threshold = %v
+    ignore_below = %v
+  }
+}`, alert.Name, alert.Description, alert.Source, alert.Metric, alert.EvaluationStrategy["type"], alert.EvaluationStrategy["period"], alert.EvaluationStrategy["threshold"], alert.EvaluationStrategy["ignore_below"])
 }

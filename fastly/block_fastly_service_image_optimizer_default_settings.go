@@ -322,6 +322,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(_ context.
 			if he.StatusCode == http.StatusBadRequest {
 				for _, e := range he.Errors {
 					if strings.Contains(e.Detail, "Image Optimizer is not enabled on this service") {
+						log.Printf("[DEBUG] Ignoring error %v, as a service without Image Optimizer enabled already effectively has no default settings.", e.Detail)
 						return nil
 					}
 				}

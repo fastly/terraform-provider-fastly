@@ -193,18 +193,18 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 	for key, value := range modified {
 		switch key {
 		case "resize_filter":
-			var resizeFilter gofastly.ResizeFilter
+			var resizeFilter gofastly.ImageOptimizerResizeFilter
 			switch value.(string) {
 			case "lanczos3":
-				resizeFilter = gofastly.Lanczos3
+				resizeFilter = gofastly.ImageOptimizerLanczos3
 			case "lanczos2":
-				resizeFilter = gofastly.Lanczos2
+				resizeFilter = gofastly.ImageOptimizerLanczos2
 			case "bicubic":
-				resizeFilter = gofastly.Bicubic
+				resizeFilter = gofastly.ImageOptimizerBicubic
 			case "bilinear":
-				resizeFilter = gofastly.Bilinear
+				resizeFilter = gofastly.ImageOptimizerBilinear
 			case "nearest":
-				resizeFilter = gofastly.Nearest
+				resizeFilter = gofastly.ImageOptimizerNearest
 			default:
 				return fmt.Errorf("got unexpected resize_filter: %v", value)
 			}
@@ -214,14 +214,14 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 		case "webp_quality":
 			apiInput.WebpQuality = gofastly.ToPointer(value.(int))
 		case "jpeg_type":
-			var jpegType gofastly.JpegType
+			var jpegType gofastly.ImageOptimizerJpegType
 			switch value.(string) {
 			case "auto":
-				jpegType = gofastly.Auto
+				jpegType = gofastly.ImageOptimizerAuto
 			case "baseline":
-				jpegType = gofastly.Baseline
+				jpegType = gofastly.ImageOptimizerBaseline
 			case "progressive":
-				jpegType = gofastly.Progressive
+				jpegType = gofastly.ImageOptimizerProgressive
 			default:
 				return fmt.Errorf("got unexpected jpeg_type: %v", value)
 			}
@@ -266,18 +266,18 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(_ context.
 	for key, value := range resource {
 		switch key {
 		case "resize_filter":
-			var resizeFilter gofastly.ResizeFilter
+			var resizeFilter gofastly.ImageOptimizerResizeFilter
 			switch value.(string) {
 			case "lanczos3":
-				resizeFilter = gofastly.Lanczos3
+				resizeFilter = gofastly.ImageOptimizerLanczos3
 			case "lanczos2":
-				resizeFilter = gofastly.Lanczos2
+				resizeFilter = gofastly.ImageOptimizerLanczos2
 			case "bicubic":
-				resizeFilter = gofastly.Bicubic
+				resizeFilter = gofastly.ImageOptimizerBicubic
 			case "bilinear":
-				resizeFilter = gofastly.Bilinear
+				resizeFilter = gofastly.ImageOptimizerBilinear
 			case "nearest":
-				resizeFilter = gofastly.Nearest
+				resizeFilter = gofastly.ImageOptimizerNearest
 			default:
 				return fmt.Errorf("got unexpected resize_filter: %v", value)
 			}
@@ -287,14 +287,14 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(_ context.
 		case "webp_quality":
 			apiInput.WebpQuality = gofastly.ToPointer(value.(int))
 		case "jpeg_type":
-			var jpegType gofastly.JpegType
+			var jpegType gofastly.ImageOptimizerJpegType
 			switch value.(string) {
 			case "auto":
-				jpegType = gofastly.Auto
+				jpegType = gofastly.ImageOptimizerAuto
 			case "baseline":
-				jpegType = gofastly.Baseline
+				jpegType = gofastly.ImageOptimizerBaseline
 			case "progressive":
-				jpegType = gofastly.Progressive
+				jpegType = gofastly.ImageOptimizerProgressive
 			default:
 				return fmt.Errorf("got unexpected jpeg_type: %v", value)
 			}

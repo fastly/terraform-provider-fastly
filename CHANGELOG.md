@@ -1,4 +1,10 @@
-## 5.10.0 (Unreleased)
+## 5.11.0 (Unreleased)
+
+## 5.10.0 (May 16, 2024)
+
+ENHANCEMENTS:
+
+- feat(image_optimizer_default_settings): add Image Optimizer default settings API [#832](https://github.com/fastly/terraform-provider-fastly/pull/832)
 
 ## 5.9.0 (May 9, 2024)
 

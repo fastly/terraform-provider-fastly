@@ -2,12 +2,15 @@ package fastly
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+const badAlertSourceServiceIdConfig = "empty `service_id` is only supported for `stats` as a source"
 
 func resourceFastlyAlert() *schema.Resource {
 	return &schema.Resource{
@@ -120,6 +123,11 @@ func resourceFastlyAlert() *schema.Resource {
 func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
+	err := validateSourceWithServiceId(d.Get("source").(string), d.Get("service_id").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	input := gofastly.CreateAlertDefinitionInput{
 		Metric:    gofastly.ToPointer(d.Get("metric").(string)),
 		Name:      gofastly.ToPointer(d.Get("name").(string)),
@@ -222,6 +230,11 @@ func resourceFastlyAlertRead(_ context.Context, d *schema.ResourceData, meta any
 func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
+	err := validateSourceWithServiceId(d.Get("source").(string), d.Get("service_id").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	input := gofastly.UpdateAlertDefinitionInput{
 		ID:     gofastly.ToPointer(d.Id()),
 		Metric: gofastly.ToPointer(d.Get("metric").(string)),
@@ -255,7 +268,7 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.IntegrationIDs = []string{}
 	}
 
-	_, err := conn.UpdateAlertDefinition(&input)
+	_, err = conn.UpdateAlertDefinition(&input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -320,4 +333,12 @@ func buildStringSlice(s *schema.Set) []string {
 		}
 	}
 	return sl
+}
+
+func validateSourceWithServiceId(source string, serviceId string) error {
+	if source != "stats" && serviceId == "" {
+		return errors.New(badAlertSourceServiceIdConfig)
+	}
+
+	return nil
 }

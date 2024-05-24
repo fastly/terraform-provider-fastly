@@ -102,9 +102,9 @@ func resourceFastlyAlert() *schema.Resource {
 
 			"service_id": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
-				Description: "The service which the alert monitors.",
+				Description: "The service which the alert monitors. Optional when using `stats` as the `source`.",
 			},
 
 			"source": {

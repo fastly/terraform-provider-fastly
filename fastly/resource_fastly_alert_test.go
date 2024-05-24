@@ -428,7 +428,6 @@ func testAccAlertPercentAggregateStatsConfig(alert gofastly.AlertDefinition) str
 resource "fastly_alert" "tf_percent" {
   name = "%s"
   description = "%s"
-  service_id = ""
   source = "%s"
   metric = "%s"
 

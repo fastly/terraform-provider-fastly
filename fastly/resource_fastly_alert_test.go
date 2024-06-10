@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -256,6 +257,55 @@ func TestAccFastlyAlert_BasicStatsAggregatePercent(t *testing.T) {
 	})
 }
 
+func TestAccFastlyAlert_BasicStatsBadConfig(t *testing.T) {
+	createAlert := gofastly.AlertDefinition{
+		Description: "Terraform percent test",
+		Dimensions:  map[string][]string{},
+		// 25 percent increase
+		EvaluationStrategy: map[string]any{
+			"type":         "percent_increase",
+			"period":       "2m",
+			"threshold":    0.25,
+			"ignore_below": float64(10),
+		},
+		Metric: "status_4xx",
+		Name:   fmt.Sprintf("Terraform test percent alert %s", acctest.RandString(10)),
+		Source: "origins",
+	}
+	updateAlert := gofastly.AlertDefinition{
+		Description: "Terraform test with new description",
+		Dimensions:  map[string][]string{},
+		// 10 percent increase
+		EvaluationStrategy: map[string]any{
+			"type":         "percent_increase",
+			"period":       "2m",
+			"threshold":    0.1,
+			"ignore_below": float64(10),
+		},
+		Metric: "status_4xx",
+		Name:   fmt.Sprintf("Terraform test update percent alert %s", acctest.RandString(10)),
+		Source: "domains",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAlertPercentAggregateStatsConfig(createAlert),
+				ExpectError: regexp.MustCompile(badAlertSourceServiceIdConfig),
+			},
+			{
+				Config:      testAccAlertPercentAggregateStatsConfig(updateAlert),
+				ExpectError: regexp.MustCompile(badAlertSourceServiceIdConfig),
+			},
+		},
+	})
+}
+
 func testAccCheckFastlyAlertsRemoteState(service *gofastly.ServiceDetail, serviceName string, expected gofastly.AlertDefinition) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if gofastly.ToValue(service.Name) != serviceName {
@@ -428,7 +478,6 @@ func testAccAlertPercentAggregateStatsConfig(alert gofastly.AlertDefinition) str
 resource "fastly_alert" "tf_percent" {
   name = "%s"
   description = "%s"
-  service_id = ""
   source = "%s"
   metric = "%s"
 

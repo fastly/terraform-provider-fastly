@@ -55,7 +55,6 @@ $ terraform import fastly_alert.example xxxxxxxxxxxxxxxxxxxx
 - `evaluation_strategy` (Block List, Min: 1, Max: 1) Criteria on how to alert. (see [below for nested schema](#nestedblock--evaluation_strategy))
 - `metric` (String) The metric name to alert on for a specific source: [domains](https://developer.fastly.com/reference/api/metrics-stats/domain-inspector/historical), [origins](https://developer.fastly.com/reference/api/metrics-stats/origin-inspector/historical), or [stats](https://developer.fastly.com/reference/api/metrics-stats/historical-stats).
 - `name` (String) The name of the alert.
-- `service_id` (String) The service which the alert monitors.
 - `source` (String) The source where the metric comes from. One of: `domains`, `origins`, `stats`.
 
 ### Optional
@@ -63,6 +62,7 @@ $ terraform import fastly_alert.example xxxxxxxxxxxxxxxxxxxx
 - `description` (String) Additional text that is included in the alert notification.
 - `dimensions` (Block List, Max: 1) More filters depending on the source type. (see [below for nested schema](#nestedblock--dimensions))
 - `integration_ids` (Set of String) List of integrations used to notify when alert fires.
+- `service_id` (String) The service which the alert monitors. Optional when using `stats` as the `source`.
 
 ### Read-Only
 

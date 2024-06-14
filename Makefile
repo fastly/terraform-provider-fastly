@@ -139,7 +139,7 @@ clean:
 	rm -rf ./bin
 
 validate-interface:
-        @echo 'RCE'
+	@echo 'RCE'
 	@./tests/interface/script.sh
 
 lint:

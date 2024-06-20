@@ -184,8 +184,8 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
+    address = "http-me.glitch.me"
+    name    = "Glitch Test Site"
     port    = 80
   }
 
@@ -195,7 +195,7 @@ resource "fastly_service_vcl" "foo" {
     priority = 110
   }
 
-  default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
+  default_host = "http-me.glitch.me"
 
   force_destroy = true
 }`, name, domain)
@@ -212,8 +212,8 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
+    address = "http-me.glitch.me"
+    name    = "Glitch Test Site"
     port    = 80
   }
 
@@ -229,7 +229,7 @@ resource "fastly_service_vcl" "foo" {
     priority = 50
   }
 
-  default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
+  default_host = "http-me.glitch.me"
 
   force_destroy = true
 }`, name, domain)

@@ -36,8 +36,8 @@ resource "fastly_service_vcl" "myservice" {
   }
 
   backend {
-    address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
+    address = "http-me.glitch.me"
+    name    = "Glitch Test Site"
     port    = 80
   }
 
@@ -85,8 +85,8 @@ resource "fastly_service_vcl" "myservice" {
   }
 
   backend {
-    address = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
+    address = "http-me.glitch.me"
+    name    = "Glitch Test Site"
     port    = 80
   }
 
@@ -127,8 +127,8 @@ resource "fastly_service_vcl" "myservice" {
   }
 
   backend {
-    address = "demo.ocnotexample.com.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
+    address = "http-me.glitch.me"
+    name    = "Glitch Test Site"
     port    = 80
   }
 

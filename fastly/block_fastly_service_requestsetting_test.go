@@ -20,7 +20,7 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 			remote: []*gofastly.RequestSetting{
 				{
 					Action:           gofastly.ToPointer(gofastly.RequestSettingActionPass),
-					DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+					DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
 					MaxStaleAge:      gofastly.ToPointer(90),
 					Name:             gofastly.ToPointer("alt_backend"),
 					RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -31,7 +31,7 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 				{
 					"action": gofastly.RequestSettingActionPass,
 					// "bypass_busy_wait":  false,
-					"default_host": "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com",
+					"default_host": "http-me.glitch.me",
 					// "force_miss":        false,
 					// "force_ssl":         false,
 					// "geo_headers":       false,
@@ -59,7 +59,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	rq1 := gofastly.RequestSetting{
-		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
 		MaxStaleAge:      gofastly.ToPointer(90),
 		Name:             gofastly.ToPointer("alt_backend"),
 		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -81,7 +81,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 
 	rq2 := gofastly.RequestSetting{
 		Action:           gofastly.ToPointer(gofastly.RequestSettingActionLookup),
-		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
 		MaxStaleAge:      gofastly.ToPointer(900),
 		Name:             gofastly.ToPointer("alt_backend"),
 		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -102,7 +102,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	}
 	rq3 := gofastly.RequestSetting{
 		Action:           gofastly.ToPointer(gofastly.RequestSettingActionUnset),
-		DefaultHost:      gofastly.ToPointer("tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"),
+		DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
 		MaxStaleAge:      gofastly.ToPointer(900),
 		Name:             gofastly.ToPointer("alt_backend"),
 		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -231,14 +231,14 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
-    name    = "AWS S3 hosting"
+    address = "http-me.glitch.me"
+    name    = "Glitch Test Site"
     port    = 80
   }
 
   backend {
-    address = "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"
-    name    = "OtherAWSS3hosting"
+    address = "server-timing-test.glitch.me"
+    name    = "Other Glitch Test Site"
     port    = 80
   }
 
@@ -251,13 +251,13 @@ resource "fastly_service_vcl" "foo" {
 
   request_setting {
     action            = "%s"
-    default_host      = "tftestingother.tftesting.net.s3-website-us-west-2.amazonaws.com"
+    default_host      = "http-me.glitch.me"
     name              = "alt_backend"
     request_condition = "serve_alt_backend"
     max_stale_age     = %s
   }
 
-  default_host = "tftesting.tftesting.net.s3-website-us-west-2.amazonaws.com"
+  default_host = "http-me.glitch.me"
 
   force_destroy = true
 }`, name, domain, action, maxStaleAge)

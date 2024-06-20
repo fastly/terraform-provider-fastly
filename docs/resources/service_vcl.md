@@ -51,10 +51,10 @@ resource "fastly_service_vcl" "demo" {
   }
 
   backend {
-    address       = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
-    name          = "AWS S3 hosting"
+    address       = "http-me.glitch.me"
+    name          = "Glitch Test Site"
     port          = 80
-    override_host = "demo.notexample.com.s3-website-us-west-2.amazonaws.com"
+    override_host = "http-me.glitch.me"
   }
 
   header {

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -46,6 +47,7 @@ func resourceFastlyTLSActivation() *schema.Resource {
 			"mutual_authentication_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "An alphanumeric string identifying a mutual authentication.",
 			},
 		},
@@ -86,21 +88,39 @@ func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("certificate_id", activation.Certificate.ID)
-	if err != nil {
-		return diag.FromErr(err)
+	if activation == nil {
+		return diag.FromErr(errors.New("unexpected nil value for TLSActivation"))
 	}
-	err = d.Set("configuration_id", activation.Configuration.ID)
-	if err != nil {
-		return diag.FromErr(err)
+
+	if activation.Certificate != nil {
+		err = d.Set("certificate_id", activation.Certificate.ID)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("domain", activation.Domain.ID)
-	if err != nil {
-		return diag.FromErr(err)
+	if activation.Configuration != nil {
+		err = d.Set("configuration_id", activation.Configuration.ID)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
-	err = d.Set("created_at", activation.CreatedAt.Format(time.RFC3339))
-	if err != nil {
-		return diag.FromErr(err)
+	if activation.Domain != nil {
+		err = d.Set("domain", activation.Domain.ID)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if activation.CreatedAt != nil {
+		err = d.Set("created_at", activation.CreatedAt.Format(time.RFC3339))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if activation.MutualAuthentication != nil {
+		err = d.Set("mutual_authentication_id", activation.MutualAuthentication.ID)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

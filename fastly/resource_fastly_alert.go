@@ -318,7 +318,9 @@ func buildEvaluationStrategy(v map[string]any) map[string]any {
 
 	// Optional attributes
 	if value, ok := v["ignore_below"]; ok {
-		m["ignore_below"] = value.(float64)
+		if v := value.(float64); v > 0 {
+			m["ignore_below"] = v
+		}
 	}
 
 	return m

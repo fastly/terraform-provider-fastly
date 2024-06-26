@@ -139,6 +139,10 @@ func (v *validator) validate(ctx context.Context) error {
 
 	var err error
 
+	if v.providerName == "" {
+		v.providerName = filepath.Base(v.providerDir)
+	}
+
 	if v.providersSchemaPath == "" {
 		v.logger.infof("exporting schema from Terraform")
 		v.providerSchema, err = TerraformProviderSchemaFromTerraform(ctx, v.providerName, v.providerDir, v.tfVersion, v.logger)
@@ -164,10 +168,6 @@ func (v *validator) validate(ctx context.Context) error {
 
 	v.logger.infof("running mixed directories check")
 	err = check.MixedDirectoriesCheck(files)
-	result = errors.Join(result, err)
-
-	v.logger.infof("running number of files check")
-	err = check.NumberOfFilesCheck(files)
 	result = errors.Join(result, err)
 
 	if dirExists(filepath.Join(v.providerDir, "docs")) {

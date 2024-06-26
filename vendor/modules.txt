@@ -53,8 +53,8 @@ github.com/bflad/gopaniccheck/passes/logpaniccallexpr
 github.com/bflad/gopaniccheck/passes/logpanicfcallexpr
 github.com/bflad/gopaniccheck/passes/logpaniclncallexpr
 github.com/bflad/gopaniccheck/passes/paniccallexpr
-# github.com/bflad/tfproviderlint v0.29.0
-## explicit; go 1.19
+# github.com/bflad/tfproviderlint v0.30.0
+## explicit; go 1.21
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/cmd/tfproviderlintx
 github.com/bflad/tfproviderlint/helper/analysisutils
@@ -161,8 +161,6 @@ github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatapartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetidcallexpr
-github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialcallexpr
-github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatasetpartialselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfo
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinfodatasourceonly
 github.com/bflad/tfproviderlint/passes/helper/schema/resourceinforesourceonly
@@ -171,17 +169,8 @@ github.com/bflad/tfproviderlint/passes/helper/schema/schemainfo
 github.com/bflad/tfproviderlint/passes/helper/schema/schemainfocomputedonly
 github.com/bflad/tfproviderlint/passes/helper/schema/schemamapcompositelit
 github.com/bflad/tfproviderlint/passes/helper/schema/schemavalidatefuncinfo
-github.com/bflad/tfproviderlint/passes/helper/validation/cidrnetworkselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/iprangecallexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/iprangeselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/singleipcallexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/singleipselectorexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/stringdoesnotmatchcallexpr
 github.com/bflad/tfproviderlint/passes/helper/validation/stringmatchcallexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validatejsonstringselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validatelistuniquestringsselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validateregexpselectorexpr
-github.com/bflad/tfproviderlint/passes/helper/validation/validaterfc3339timestringselectorexpr
 github.com/bflad/tfproviderlint/passes/stdlib/osexeccommandcallexpr
 github.com/bflad/tfproviderlint/passes/stdlib/osexeccommandcontextcallexpr
 github.com/bflad/tfproviderlint/passes/stdlib/osexeccommandcontextselectorexpr

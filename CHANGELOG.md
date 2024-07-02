@@ -1,4 +1,21 @@
-## 5.11.0 (Unreleased)
+## 5.12.0 (Unreleased)
+
+## 5.11.0 (July 2, 2024)
+
+BUG FIXES:
+
+- fix(alerts): make service_id attribute optional [#852](https://github.com/fastly/terraform-provider-fastly/pull/852)
+- fix handling of config store entries when store has been deleted [#864](https://github.com/fastly/terraform-provider-fastly/pull/864)
+- fix(tls_activation): update mutual_authentication_id [#866](https://github.com/fastly/terraform-provider-fastly/pull/866)
+- fix(alerts): ensure that alert creation works properly when 'ignore_below' is not specified [#869](https://github.com/fastly/terraform-provider-fastly/pull/869)
+
+DEPENDENCIES:
+
+- build(deps): bump github.com/bflad/tfproviderlint from 0.29.0 to 0.30.0 [#850](https://github.com/fastly/terraform-provider-fastly/pull/850)
+- build(deps): bump github.com/hashicorp/terraform-plugin-sdk/v2 [#853](https://github.com/fastly/terraform-provider-fastly/pull/853)
+- build(deps): bump github.com/hashicorp/terraform-plugin-docs [#857](https://github.com/fastly/terraform-provider-fastly/pull/857)
+- build(deps): bump golang.org/x/net from 0.25.0 to 0.26.0 [#859](https://github.com/fastly/terraform-provider-fastly/pull/859)
+- build(deps): bump github.com/fastly/go-fastly/v9 from 9.4.0 to 9.7.0 [#867](https://github.com/fastly/terraform-provider-fastly/pull/867)
 
 ## 5.10.0 (May 16, 2024)
 

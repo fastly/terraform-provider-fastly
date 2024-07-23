@@ -56,6 +56,7 @@ func resourceFastlyTLSActivation() *schema.Resource {
 
 func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
+	var diags diag.Diagnostics
 
 	var configuration *fastly.TLSConfiguration
 	if v, ok := d.GetOk("configuration_id"); ok {
@@ -73,7 +74,14 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(activation.ID)
 
-	return resourceFastlyTLSActivationRead(ctx, d, meta)
+	// Setting the mutual_authentication_id is only possible through an update via PATCH.
+	// See https://github.com/fastly/terraform-provider-fastly/issues/873
+	mtlsID := d.Get("mutual_authentication_id").(string)
+	if mtlsID != "" {
+		diags = append(diags, resourceFastlyTLSActivationUpdate(ctx, d, meta)...)
+	}
+
+	return append(diags, resourceFastlyTLSActivationRead(ctx, d, meta)...)
 }
 
 func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

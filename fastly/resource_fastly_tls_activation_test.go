@@ -61,6 +61,54 @@ func TestAccFastlyTLSActivation_basic(t *testing.T) {
 	})
 }
 
+func TestAccFastlyTLSActivation_mTLS(t *testing.T) {
+	domain := fmt.Sprintf("%s.com", acctest.RandomWithPrefix(testResourcePrefix))
+	key, cert, err := generateKeyAndCert(domain)
+	require.NoError(t, err)
+	_, mtlsCert, err := generateKeyAndCert(domain)
+	require.NoError(t, err)
+	key = strings.ReplaceAll(key, "\n", `\n`)
+	cert = strings.ReplaceAll(cert, "\n", `\n`)
+	name := acctest.RandomWithPrefix(testResourcePrefix)
+
+	resourceName := "fastly_tls_activation.mtls_test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccFastlyTLSActivationCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFastlyTLSActivationMTLSConfig(name, name, key, name, cert, domain, mtlsCert),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_id"),
+					resource.TestCheckResourceAttr(resourceName, "domain", domain),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					testAccFastlyTLSActivationCheckExists(resourceName),
+				),
+			},
+			{
+				Config: testAccFastlyTLSActivationMTLSConfig(name, name, key, name, cert, domain, mtlsCert),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_id"),
+					resource.TestCheckResourceAttr(resourceName, "domain", domain),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "mutual_authentication_id"),
+					testAccFastlyTLSActivationCheckExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccFastlyTLSActivationConfig(serviceName, keyName, key, certName, cert, domain string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "test" {
@@ -95,6 +143,50 @@ resource "fastly_tls_activation" "test" {
   depends_on = [fastly_service_vcl.test]
 }
 `, serviceName, domain, key, keyName, cert, certName, domain)
+}
+
+func testAccFastlyTLSActivationMTLSConfig(serviceName, keyName, key, certName, cert, domain, certBundle string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "mtls_test" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_tls_private_key" "mtls_test" {
+  key_pem = "%s"
+  name = "%s"
+}
+
+resource "fastly_tls_certificate" "mtls_test" {
+  certificate_body = "%s"
+  name = "%s"
+  depends_on = [fastly_tls_private_key.mtls_test]
+}
+
+resource "fastly_tls_activation" "mtls_test" {
+  certificate_id = fastly_tls_certificate.mtls_test.id
+  domain = "%s"
+  depends_on = [fastly_service_vcl.mtls_test]
+  mutual_authentication_id = fastly_tls_mutual_authentication.mtls_test.id
+}
+
+resource "fastly_tls_mutual_authentication" "mtls_test" {
+  cert_bundle = <<EOF
+%s
+EOF
+  name = "example_mtls"
+}
+`, serviceName, domain, key, keyName, cert, certName, domain, certBundle)
 }
 
 func testAccFastlyTLSActivationCheckExists(resourceName string) resource.TestCheckFunc {

@@ -64,7 +64,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["image_optimizer"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Enable Image Optimizer support (requires at least one backend with a `shield` attribute)",
+			Description: "Enable Image Optimizer support (all backends must have a `shield` attribute)",
 		}
 		blockAttributes["origin_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,

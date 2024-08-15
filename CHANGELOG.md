@@ -1,4 +1,20 @@
-## 5.12.0 (Unreleased)
+## 5.13.0 (Unreleased)
+
+## 5.12.0 (August 15, 2024)
+
+ENHANCEMENTS:
+
+- feat(tls_activation): support mutual_authentication_id in domain activation at creation [#875](https://github.com/fastly/terraform-provider-fastly/pull/875)
+
+BUG FIXES:
+
+- Clarify Image Optimizer shield requirements [#874](https://github.com/fastly/terraform-provider-fastly/pull/874)
+
+DEPENDENCIES:
+
+- build(deps): bump golang.org/x/net from 0.26.0 to 0.27.0 [#872](https://github.com/fastly/terraform-provider-fastly/pull/872)
+- build(deps): bump golang.org/x/net from 0.27.0 to 0.28.0 [#877](https://github.com/fastly/terraform-provider-fastly/pull/877)
+- build(deps): bump github.com/fastly/go-fastly/v9 from 9.7.0 to 9.8.0 [#878](https://github.com/fastly/terraform-provider-fastly/pull/878)
 
 ## 5.11.0 (July 2, 2024)
 

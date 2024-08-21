@@ -137,6 +137,7 @@ resource "fastly_service_vcl" "interface-test-project" {
   }
 
   product_enablement {
+    bot_management     = false
     brotli_compression = true
     domain_inspector   = false
     image_optimizer    = false

@@ -51,6 +51,11 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		blockAttributes["bot_management"] = &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable Bot Management support",
+		}
 		blockAttributes["brotli_compression"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -111,6 +116,16 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		if resource["bot_management"].(bool) {
+			log.Println("[DEBUG] bot_management set")
+			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
+				ProductID: gofastly.ProductBotManagement,
+				ServiceID: serviceID,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to enable bot_management: %w", err)
+			}
+		}
 		if resource["brotli_compression"].(bool) {
 			log.Println("[DEBUG] brotli_compression set")
 			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
@@ -210,6 +225,12 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
+				ProductID: gofastly.ProductBotManagement,
+				ServiceID: d.Id(),
+			}); err == nil {
+				result["bot_management"] = true
+			}
+			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
 				ProductID: gofastly.ProductBrotliCompression,
 				ServiceID: d.Id(),
 			}); err == nil {
@@ -299,6 +320,29 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
+		if v, ok := modified["bot_management"]; ok {
+			if v.(bool) {
+				log.Println("[DEBUG] bot_management will be enabled")
+				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
+					ProductID: gofastly.ProductBotManagement,
+					ServiceID: serviceID,
+				})
+				if err != nil {
+					return fmt.Errorf("failed to enable bot_management: %w", err)
+				}
+			} else {
+				log.Println("[DEBUG] bot_management will be disabled")
+				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
+					ProductID: gofastly.ProductBotManagement,
+					ServiceID: serviceID,
+				})
+				if err != nil {
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
+				}
+			}
+		}
 		if v, ok := modified["brotli_compression"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] brotli_compression will be enabled")
@@ -469,8 +513,19 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	}
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-		log.Println("[DEBUG] disable brotli_compression")
+		log.Println("[DEBUG] disable bot_management")
 		err := conn.DisableProduct(&gofastly.ProductEnablementInput{
+			ProductID: gofastly.ProductBotManagement,
+			ServiceID: d.Id(),
+		})
+		if err != nil {
+			if e := h.checkAPIError(err); e != nil {
+				return e
+			}
+		}
+
+		log.Println("[DEBUG] disable brotli_compression")
+		err = conn.DisableProduct(&gofastly.ProductEnablementInput{
 			ProductID: gofastly.ProductBrotliCompression,
 			ServiceID: d.Id(),
 		})

@@ -1134,6 +1134,7 @@ Optional:
 
 Optional:
 
+- `bot_management` (Boolean) Enable Bot Management support
 - `brotli_compression` (Boolean) Enable Brotli Compression support
 - `domain_inspector` (Boolean) Enable Domain Inspector support
 - `image_optimizer` (Boolean) Enable Image Optimizer support (all backends must have a `shield` attribute)

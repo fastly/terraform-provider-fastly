@@ -1,4 +1,14 @@
-## 5.13.0 (Unreleased)
+## 5.14.0 (Unreleased)
+
+## 5.13.0 (August 26, 2024)
+
+ENHANCEMENTS:
+
+-  feat(product_enablement) - Add support for Fastly Bot Management. [#880](https://github.com/fastly/terraform-provider-fastly/pull/880)
+
+DEPENDENCIES:
+
+- build(deps): bump github.com/fastly/go-fastly/v9 from 9.8.0 to 9.9.0 (part of #880)
 
 ## 5.12.0 (August 15, 2024)
 

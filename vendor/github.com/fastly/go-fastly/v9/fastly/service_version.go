@@ -1,23 +1,31 @@
 package fastly
 
 import (
-	"fmt"
+	"strconv"
 	"time"
 )
 
 // Version represents a distinct configuration version.
 type Version struct {
-	Active    *bool      `mapstructure:"active"`
-	Comment   *string    `mapstructure:"comment"`
-	CreatedAt *time.Time `mapstructure:"created_at"`
-	DeletedAt *time.Time `mapstructure:"deleted_at"`
-	Deployed  *bool      `mapstructure:"deployed"`
-	Locked    *bool      `mapstructure:"locked"`
-	Number    *int       `mapstructure:"number"`
-	ServiceID *string    `mapstructure:"service_id"`
-	Staging   *bool      `mapstructure:"staging"`
-	Testing   *bool      `mapstructure:"testing"`
-	UpdatedAt *time.Time `mapstructure:"updated_at"`
+	Active       *bool          `mapstructure:"active"`
+	Comment      *string        `mapstructure:"comment"`
+	CreatedAt    *time.Time     `mapstructure:"created_at"`
+	DeletedAt    *time.Time     `mapstructure:"deleted_at"`
+	Deployed     *bool          `mapstructure:"deployed"`
+	Locked       *bool          `mapstructure:"locked"`
+	Number       *int           `mapstructure:"number"`
+	ServiceID    *string        `mapstructure:"service_id"`
+	Staging      *bool          `mapstructure:"staging"`
+	Testing      *bool          `mapstructure:"testing"`
+	UpdatedAt    *time.Time     `mapstructure:"updated_at"`
+	Environments []*Environment `mapstructure:"environments"`
+}
+
+// Environment represents a distinct deployment environment.
+type Environment struct {
+	ServiceVersion *int64  `mapstructure:"active_version"`
+	Name           *string `mapstructure:"name"`
+	ServiceID      *string `mapstructure:"service_id"`
 }
 
 // ListVersionsInput is the input to the ListVersions function.
@@ -32,7 +40,8 @@ func (c *Client) ListVersions(i *ListVersionsInput) ([]*Version, error) {
 		return nil, ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s/version", i.ServiceID)
+	path := ToSafeURL("service", i.ServiceID, "version")
+
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
@@ -90,7 +99,8 @@ func (c *Client) CreateVersion(i *CreateVersionInput) (*Version, error) {
 		return nil, ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s/version", i.ServiceID)
+	path := ToSafeURL("service", i.ServiceID, "version")
+
 	resp, err := c.PostForm(path, i, nil)
 	if err != nil {
 		return nil, err
@@ -121,7 +131,7 @@ func (c *Client) GetVersion(i *GetVersionInput) (*Version, error) {
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d", i.ServiceID, i.ServiceVersion)
+	path := ToSafeURL("service", i.ServiceID, "version", strconv.Itoa(i.ServiceVersion))
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
@@ -154,7 +164,7 @@ func (c *Client) UpdateVersion(i *UpdateVersionInput) (*Version, error) {
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d", i.ServiceID, i.ServiceVersion)
+	path := ToSafeURL("service", i.ServiceID, "version", strconv.Itoa(i.ServiceVersion))
 	resp, err := c.PutForm(path, i, nil)
 	if err != nil {
 		return nil, err
@@ -174,6 +184,8 @@ type ActivateVersionInput struct {
 	ServiceID string
 	// ServiceVersion is the specific configuration version (required).
 	ServiceVersion int
+	// Environment is the Fastly environment to activate this version to (optional).
+	Environment string
 }
 
 // ActivateVersion activates the given version.
@@ -185,7 +197,13 @@ func (c *Client) ActivateVersion(i *ActivateVersionInput) (*Version, error) {
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/activate", i.ServiceID, i.ServiceVersion)
+	components := []string{"service", i.ServiceID, "version", strconv.Itoa(i.ServiceVersion), "activate"}
+	if i.Environment != "" {
+		components = append(components, i.Environment)
+	}
+
+	path := ToSafeURL(components...)
+
 	resp, err := c.Put(path, nil)
 	if err != nil {
 		return nil, err
@@ -205,6 +223,8 @@ type DeactivateVersionInput struct {
 	ServiceID string
 	// ServiceVersion is the specific configuration version (required).
 	ServiceVersion int
+	// Environment is the Fastly environment to deactivate this version from (optional).
+	Environment string
 }
 
 // DeactivateVersion deactivates the given version.
@@ -216,7 +236,13 @@ func (c *Client) DeactivateVersion(i *DeactivateVersionInput) (*Version, error) 
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/deactivate", i.ServiceID, i.ServiceVersion)
+	components := []string{"service", i.ServiceID, "version", strconv.Itoa(i.ServiceVersion), "deactivate"}
+	if i.Environment != "" {
+		components = append(components, i.Environment)
+	}
+
+	path := ToSafeURL(components...)
+
 	resp, err := c.Put(path, nil)
 	if err != nil {
 		return nil, err
@@ -250,7 +276,7 @@ func (c *Client) CloneVersion(i *CloneVersionInput) (*Version, error) {
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/clone", i.ServiceID, i.ServiceVersion)
+	path := ToSafeURL("service", i.ServiceID, "version", strconv.Itoa(i.ServiceVersion), "clone")
 	resp, err := c.Put(path, nil)
 	if err != nil {
 		return nil, err
@@ -283,7 +309,7 @@ func (c *Client) ValidateVersion(i *ValidateVersionInput) (bool, string, error) 
 		return false, msg, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/validate", i.ServiceID, i.ServiceVersion)
+	path := ToSafeURL("service", i.ServiceID, "version", strconv.Itoa(i.ServiceVersion), "validate")
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return false, msg, err
@@ -316,7 +342,7 @@ func (c *Client) LockVersion(i *LockVersionInput) (*Version, error) {
 		return nil, ErrMissingServiceVersion
 	}
 
-	path := fmt.Sprintf("/service/%s/version/%d/lock", i.ServiceID, i.ServiceVersion)
+	path := ToSafeURL("service", i.ServiceID, "version", strconv.Itoa(i.ServiceVersion), "lock")
 	resp, err := c.Put(path, nil)
 	if err != nil {
 		return nil, err

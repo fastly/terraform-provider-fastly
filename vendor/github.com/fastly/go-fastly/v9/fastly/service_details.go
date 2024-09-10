@@ -7,31 +7,33 @@ import (
 
 // Service represents a server response from the Fastly API.
 type Service struct {
-	ActiveVersion *int       `mapstructure:"version"`
-	Comment       *string    `mapstructure:"comment"`
-	CreatedAt     *time.Time `mapstructure:"created_at"`
-	CustomerID    *string    `mapstructure:"customer_id"`
-	DeletedAt     *time.Time `mapstructure:"deleted_at"`
-	ServiceID     *string    `mapstructure:"id"`
-	Name          *string    `mapstructure:"name"`
-	Type          *string    `mapstructure:"type"`
-	UpdatedAt     *time.Time `mapstructure:"updated_at"`
-	Versions      []*Version `mapstructure:"versions"`
+	ActiveVersion *int           `mapstructure:"version"`
+	Comment       *string        `mapstructure:"comment"`
+	CreatedAt     *time.Time     `mapstructure:"created_at"`
+	CustomerID    *string        `mapstructure:"customer_id"`
+	DeletedAt     *time.Time     `mapstructure:"deleted_at"`
+	ServiceID     *string        `mapstructure:"id"`
+	Name          *string        `mapstructure:"name"`
+	Type          *string        `mapstructure:"type"`
+	UpdatedAt     *time.Time     `mapstructure:"updated_at"`
+	Versions      []*Version     `mapstructure:"versions"`
+	Environments  []*Environment `mapstructure:"environments"`
 }
 
 // ServiceDetail represents a server response from the Fastly API.
 type ServiceDetail struct {
-	ActiveVersion *Version   `mapstructure:"active_version"`
-	Comment       *string    `mapstructure:"comment"`
-	CreatedAt     *time.Time `mapstructure:"created_at"`
-	CustomerID    *string    `mapstructure:"customer_id"`
-	DeletedAt     *time.Time `mapstructure:"deleted_at"`
-	ServiceID     *string    `mapstructure:"id"`
-	Name          *string    `mapstructure:"name"`
-	Type          *string    `mapstructure:"type"`
-	UpdatedAt     *time.Time `mapstructure:"updated_at"`
-	Version       *Version   `mapstructure:"version"`
-	Versions      []*Version `mapstructure:"versions"`
+	ActiveVersion *Version       `mapstructure:"active_version"`
+	Comment       *string        `mapstructure:"comment"`
+	CreatedAt     *time.Time     `mapstructure:"created_at"`
+	CustomerID    *string        `mapstructure:"customer_id"`
+	DeletedAt     *time.Time     `mapstructure:"deleted_at"`
+	ServiceID     *string        `mapstructure:"id"`
+	Name          *string        `mapstructure:"name"`
+	Type          *string        `mapstructure:"type"`
+	UpdatedAt     *time.Time     `mapstructure:"updated_at"`
+	Version       *Version       `mapstructure:"version"`
+	Versions      []*Version     `mapstructure:"versions"`
+	Environments  []*Environment `mapstructure:"environments"`
 }
 
 // ServiceDomain represents a server response from the Fastly API.
@@ -143,7 +145,8 @@ func (c *Client) GetService(i *GetServiceInput) (*Service, error) {
 		return nil, ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s", i.ServiceID)
+	path := ToSafeURL("service", i.ServiceID)
+
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
@@ -178,7 +181,8 @@ func (c *Client) GetServiceDetails(i *GetServiceInput) (*ServiceDetail, error) {
 		return nil, ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s/details", i.ServiceID)
+	path := ToSafeURL("service", i.ServiceID, "details")
+
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
@@ -209,7 +213,8 @@ func (c *Client) UpdateService(i *UpdateServiceInput) (*Service, error) {
 		return nil, ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s", i.ServiceID)
+	path := ToSafeURL("service", i.ServiceID)
+
 	resp, err := c.PutForm(path, i, nil)
 	if err != nil {
 		return nil, err
@@ -235,7 +240,8 @@ func (c *Client) DeleteService(i *DeleteServiceInput) error {
 		return ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s", i.ServiceID)
+	path := ToSafeURL("service", i.ServiceID)
+
 	resp, err := c.Delete(path, nil)
 	if err != nil {
 		return err
@@ -297,7 +303,8 @@ func (c *Client) ListServiceDomains(i *ListServiceDomainInput) (ServiceDomainsLi
 		return nil, ErrMissingServiceID
 	}
 
-	path := fmt.Sprintf("/service/%s/domain", i.ServiceID)
+	path := ToSafeURL("service", i.ServiceID, "domain")
+
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err

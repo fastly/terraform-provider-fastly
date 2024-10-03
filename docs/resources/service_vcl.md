@@ -1139,6 +1139,7 @@ Optional:
 - `domain_inspector` (Boolean) Enable Domain Inspector support
 - `image_optimizer` (Boolean) Enable Image Optimizer support (all backends must have a `shield` attribute)
 - `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)
+- `ngwaf` (Boolean) Enable Next-Gen WAF support
 - `origin_inspector` (Boolean) Enable Origin Inspector support
 - `websockets` (Boolean) Enable WebSockets support
 

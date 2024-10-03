@@ -74,7 +74,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["ngwaf"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Enable NGWAF support",
+			Description: "Enable Next-Gen WAF support",
 		}
 		blockAttributes["origin_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,

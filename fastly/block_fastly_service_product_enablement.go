@@ -71,6 +71,11 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Description: "Enable Image Optimizer support (all backends must have a `shield` attribute)",
 		}
+		blockAttributes["ngwaf"] = &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable NGWAF support",
+		}
 		blockAttributes["origin_inspector"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -156,6 +161,17 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 			})
 			if err != nil {
 				return fmt.Errorf("failed to enable image_optimizer: %w", err)
+			}
+		}
+
+		if resource["ngwaf"].(bool) {
+			log.Println("[DEBUG] ngwaf set")
+			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
+				ProductID: gofastly.ProductNGWAF,
+				ServiceID: serviceID,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to enable ngwaf: %w", err)
 			}
 		}
 
@@ -249,6 +265,13 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 				ServiceID: d.Id(),
 			}); err == nil {
 				result["image_optimizer"] = true
+			}
+
+			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
+				ProductID: gofastly.ProductNGWAF,
+				ServiceID: d.Id(),
+			}); err == nil {
+				result["ngwaf"] = true
 			}
 
 			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
@@ -415,6 +438,30 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 			}
 		}
 
+		if v, ok := modified["ngwaf"]; ok {
+			if v.(bool) {
+				log.Println("[DEBUG] ngwaf will be enabled")
+				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
+					ProductID: gofastly.ProductNGWAF,
+					ServiceID: serviceID,
+				})
+				if err != nil {
+					return fmt.Errorf("failed to enable ngwaf: %w", err)
+				}
+			} else {
+				log.Println("[DEBUG] ngwaf will be disabled")
+				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
+					ProductID: gofastly.ProductNGWAF,
+					ServiceID: serviceID,
+				})
+				if err != nil {
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
+				}
+			}
+		}
+
 		if v, ok := modified["origin_inspector"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] origin_inspector will be enabled")
@@ -549,6 +596,17 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		log.Println("[DEBUG] disable image_optimizer")
 		err = conn.DisableProduct(&gofastly.ProductEnablementInput{
 			ProductID: gofastly.ProductImageOptimizer,
+			ServiceID: d.Id(),
+		})
+		if err != nil {
+			if e := h.checkAPIError(err); e != nil {
+				return e
+			}
+		}
+
+		log.Println("[DEBUG] disable ngwaf")
+		err = conn.DisableProduct(&gofastly.ProductEnablementInput{
+			ProductID: gofastly.ProductNGWAF,
 			ServiceID: d.Id(),
 		})
 		if err != nil {

@@ -141,6 +141,7 @@ resource "fastly_service_vcl" "interface-test-project" {
     brotli_compression = true
     domain_inspector   = false
     image_optimizer    = false
+    ngwaf              = false
     origin_inspector   = false
     websockets         = false
   }

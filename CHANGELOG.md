@@ -1,4 +1,16 @@
-## 5.14.0 (Unreleased)
+## 5.15.0 (Unreleased)
+
+## 5.14.0 (October 3, 2024)
+
+ENHANCEMENTS:
+
+- feat(product_enablement): Add support for NGWAF product. [#886](https://github.com/fastly/terraform-provider-fastly/pull/886)
+
+DEPENDENCIES:
+
+- build(deps): bump golang.org/x/net from 0.28.0 to 0.29.0 [#882](https://github.com/fastly/terraform-provider-fastly/pull/882)
+- build(deps): bump github.com/fastly/go-fastly/v9 from 9.9.0 to 9.10.0 [#883](https://github.com/fastly/terraform-provider-fastly/pull/883)
+- build(deps): Update to go-fastly 9.11.0. [#886](https://github.com/fastly/terraform-provider-fastly/pull/886)
 
 ## 5.13.0 (August 26, 2024)
 

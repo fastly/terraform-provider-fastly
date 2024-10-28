@@ -179,9 +179,11 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 		CertBundle: d.Get("cert_bundle").(string),
 	}
 
-	if d.HasChange("enforced") {
-		input.Enforced = d.Get("enforced").(bool)
-	}
+	// Since a boolean value is not 'optional', the input struct
+	// must always contain the expected value of the 'enforced'
+	// setting, whether it was changed or not
+	input.Enforced = d.Get("enforced").(bool)
+
 	if d.HasChange("name") {
 		input.Name = d.Get("name").(string)
 	}

@@ -40,6 +40,7 @@ var vclService = &BaseServiceDefinition{
 		NewServiceLoggingDatadog(vclAttributes),
 		NewServiceLoggingLoggly(vclAttributes),
 		NewServiceLoggingGooglePubSub(vclAttributes),
+		NewServiceLoggingGrafanaCloudLogs(vclAttributes),
 		NewServiceLoggingScalyr(vclAttributes),
 		NewServiceLoggingNewRelic(vclAttributes),
 		NewServiceLoggingNewRelicOTLP(vclAttributes),

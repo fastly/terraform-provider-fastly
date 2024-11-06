@@ -270,6 +270,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `logging_ftp` (Block Set) (see [below for nested schema](#nestedblock--logging_ftp))
 - `logging_gcs` (Block Set) (see [below for nested schema](#nestedblock--logging_gcs))
 - `logging_googlepubsub` (Block Set) (see [below for nested schema](#nestedblock--logging_googlepubsub))
+- `logging_grafanacloudlogs` (Block Set) (see [below for nested schema](#nestedblock--logging_grafanacloudlogs))
 - `logging_heroku` (Block Set) (see [below for nested schema](#nestedblock--logging_heroku))
 - `logging_honeycomb` (Block Set) (see [below for nested schema](#nestedblock--logging_honeycomb))
 - `logging_https` (Block Set) (see [below for nested schema](#nestedblock--logging_https))
@@ -746,6 +747,25 @@ Optional:
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 - `secret_key` (String, Sensitive) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
 - `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.
+
+
+<a id="nestedblock--logging_grafanacloudlogs"></a>
+### Nested Schema for `logging_grafanacloudlogs`
+
+Required:
+
+- `index` (String) The stream identifier as a JSON string
+- `name` (String) The unique name of the GrafanaCloudLogs logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
+- `token` (String, Sensitive) The Access Policy Token key for your GrafanaCloudLogs account
+- `url` (String) The URL to stream logs to
+- `user` (String) The Grafana User ID
+
+Optional:
+
+- `format` (String) Apache-style string or VCL variables to use for log formatting.
+- `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
+- `response_condition` (String) The name of the condition to apply.
 
 
 <a id="nestedblock--logging_heroku"></a>

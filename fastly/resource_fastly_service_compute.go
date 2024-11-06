@@ -34,6 +34,7 @@ var computeService = &BaseServiceDefinition{
 		NewServiceLoggingDatadog(computeAttributes),
 		NewServiceLoggingLoggly(computeAttributes),
 		NewServiceLoggingGooglePubSub(computeAttributes),
+		NewServiceLoggingGrafanaCloudLogs(computeAttributes),
 		NewServiceLoggingScalyr(computeAttributes),
 		NewServiceLoggingNewRelic(computeAttributes),
 		NewServiceLoggingKafka(computeAttributes),

@@ -37,7 +37,6 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
       brotli_compression = true
       domain_inspector   = false
       image_optimizer    = false
-      ngwaf              = false
       origin_inspector   = false
       websockets         = false
     }

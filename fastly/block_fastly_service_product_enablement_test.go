@@ -33,12 +33,13 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
     }
 
     product_enablement {
-      bot_management     = false
-      brotli_compression = true
-      domain_inspector   = false
-      image_optimizer    = false
-      origin_inspector   = false
-      websockets         = false
+      bot_management        = false
+      brotli_compression    = true
+      domain_inspector      = false
+      image_optimizer       = false
+      log_explorer_insights = false
+      origin_inspector      = false
+      websockets            = false
     }
 
     force_destroy = true

@@ -1158,6 +1158,7 @@ Optional:
 - `brotli_compression` (Boolean) Enable Brotli Compression support
 - `domain_inspector` (Boolean) Enable Domain Inspector support
 - `image_optimizer` (Boolean) Enable Image Optimizer support (all backends must have a `shield` attribute)
+- `log_explorer_insights` (Boolean) Enable Log Explorer & Insights
 - `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)
 - `origin_inspector` (Boolean) Enable Origin Inspector support
 - `websockets` (Boolean) Enable WebSockets support

@@ -699,6 +699,7 @@ Optional:
 Optional:
 
 - `fanout` (Boolean) Enable Fanout support
+- `log_explorer_insights` (Boolean) Enable Log Explorer & Insights
 - `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)
 - `websockets` (Boolean) Enable WebSockets support
 

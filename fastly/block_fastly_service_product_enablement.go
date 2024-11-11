@@ -42,6 +42,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		},
 	}
 
+	// These products are supported only on Compute (WASM) services.
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		blockAttributes["fanout"] = &schema.Schema{
 			Type:        schema.TypeBool,
@@ -50,6 +51,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		}
 	}
 
+	// These products are supported only on Delivery (VCL) services.
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		blockAttributes["bot_management"] = &schema.Schema{
 			Type:        schema.TypeBool,
@@ -78,11 +80,16 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		}
 	}
 
-	// websockets is supported for both Compute (wasm) and Deliver (vcl) services.
+	// These products are supported for both Compute (WASM) and Delivery (VCL) services.
 	blockAttributes["websockets"] = &schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Enable WebSockets support",
+	}
+	blockAttributes["log_explorer_insights"] = &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Enable Log Explorer & Insights",
 	}
 
 	// NOTE: Min/MaxItems: 1 (to enforce only one product_enablement per service).
@@ -182,6 +189,17 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 		}
 	}
 
+	if resource["log_explorer_insights"].(bool) {
+		log.Println("[DEBUG] log_explorer_insights set")
+		_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
+			ProductID: gofastly.ProductLogExplorerInsights,
+			ServiceID: serviceID,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to enable log_explorer_insights: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -264,6 +282,13 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 			ServiceID: d.Id(),
 		}); err == nil {
 			result["websockets"] = true
+		}
+
+		if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
+			ProductID: gofastly.ProductLogExplorerInsights,
+			ServiceID: d.Id(),
+		}); err == nil {
+			result["log_explorer_insights"] = true
 		}
 
 		results := []map[string]any{result}
@@ -464,6 +489,30 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		}
 	}
 
+	if v, ok := modified["log_explorer_insights"]; ok {
+		if v.(bool) {
+			log.Println("[DEBUG] log_explorer_insights will be enabled")
+			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
+				ProductID: gofastly.ProductLogExplorerInsights,
+				ServiceID: serviceID,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to enable log_explorer_insights: %w", err)
+			}
+		} else {
+			log.Println("[DEBUG] log_explorer_insights will be disabled")
+			err := conn.DisableProduct(&gofastly.ProductEnablementInput{
+				ProductID: gofastly.ProductLogExplorerInsights,
+				ServiceID: serviceID,
+			})
+			if err != nil {
+				if e := h.checkAPIError(err); e != nil {
+					return e
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -572,6 +621,17 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	log.Println("[DEBUG] disable websockets")
 	err := conn.DisableProduct(&gofastly.ProductEnablementInput{
 		ProductID: gofastly.ProductWebSockets,
+		ServiceID: d.Id(),
+	})
+	if err != nil {
+		if e := h.checkAPIError(err); e != nil {
+			return e
+		}
+	}
+
+	log.Println("[DEBUG] disable log_explorer_insights")
+	err = conn.DisableProduct(&gofastly.ProductEnablementInput{
+		ProductID: gofastly.ProductLogExplorerInsights,
 		ServiceID: d.Id(),
 	})
 	if err != nil {

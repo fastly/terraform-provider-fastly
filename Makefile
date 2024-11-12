@@ -82,9 +82,9 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
+# v2.2.0 was the last goreleaser version to support Go 1.22
 goreleaser-bin:
-	@# This is the last version of goreleaser that supports Go 1.20.14 (the version used to build the provider)
-	$(GO_BIN) install github.com/goreleaser/goreleaser@v1.21.2
+	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@v2.2.0
 
 nilaway:
 	@nilaway ./...

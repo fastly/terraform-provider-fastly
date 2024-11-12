@@ -1,4 +1,22 @@
-## 5.15.0 (Unreleased)
+## 5.16.0 (Unreleased)
+
+## 5.15.0 (November 12, 2024)
+
+ENHANCEMENTS:
+
+- Support for Grafana Cloud Logs. [#895](https://github.com/fastly/terraform-provider-fastly/pull/895)
+- feat(product_enablement): Add support for Log Explorer & Insights product. [#896](https://github.com/fastly/terraform-provider-fastly/pull/896)
+
+BUG FIXES:
+
+- fix(tls_mutual_authentication): Ensure that 'enforced' property does not revert to default during changes. [#890](https://github.com/fastly/terraform-provider-fastly/pull/890)
+- breaking(product_enablement): Remove support for NGWAF product. [#893](https://github.com/fastly/terraform-provider-fastly/pull/893)
+
+DEPENDENCIES:
+
+- build(deps): bump golang.org/x/net from 0.29.0 to 0.30.0 [#889](https://github.com/fastly/terraform-provider-fastly/pull/889)
+- build(deps): Update to go-fastly 9.12.0. [#894](https://github.com/fastly/terraform-provider-fastly/pull/894)
+- build(deps): bump golang.org/x/net from 0.30.0 to 0.31.0 [#897](https://github.com/fastly/terraform-provider-fastly/pull/897)
 
 ## 5.14.0 (October 3, 2024)
 

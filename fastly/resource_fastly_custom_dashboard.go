@@ -12,102 +12,108 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var schemaDataSource = schema.Schema{
-	Type:        schema.TypeSet,
-	Required:    true,
-	Description: "An object which describes the data to display.",
-	MaxItems:    1,
-	MinItems:    1,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"config": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "Configuration options for the selected data source.",
-				MaxItems:    1,
-				MinItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metrics": {
-							Type:        schema.TypeList,
-							Required:    true,
-							Description: "The metrics to visualize. Valid options are defined by the selected data source: [stats.edge](https://www.fastly.com/documentation/reference/api/observability/custom-dashboards/metrics/edge/), [stats.domain](https://www.fastly.com/documentation/reference/api/observability/custom-dashboards/metrics/domain/), [stats.origin](https://www.fastly.com/documentation/reference/api/observability/custom-dashboards/metrics/origin/).",
-							Elem:        &schema.Schema{Type: schema.TypeString},
-						},
-					},
+var (
+	schemaDataSource = schema.Schema{
+		Type:        schema.TypeSet,
+		Required:    true,
+		Description: "An object which describes the data to display.",
+		MaxItems:    1,
+		MinItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"config": &schemaDataSourceConfig,
+				"type": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The source of the data to display. One of: `stats.edge`, `stats.domain`, `stats.origin`.",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"stats.edge", "stats.domain", "stats.origin"},
+						false,
+					)),
 				},
 			},
-			"type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The source of the data to display. One of: `stats.edge`, `stats.domain`, `stats.origin`.",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-					[]string{"stats.edge", "stats.domain", "stats.origin"},
-					false,
-				)),
-			},
 		},
-	},
-}
+	}
 
-var schemaVisualization = schema.Schema{
-	Type:        schema.TypeSet,
-	Required:    true,
-	Description: "An object which describes the data visualization to display.",
-	MaxItems:    1,
-	MinItems:    1,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"config": {
-				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "Configuration options for the selected data source.",
-				MaxItems:    1,
-				MinItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"calculation_method": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The aggregation function to apply to the dataset. One of: `avg`, `sum`, `min`, `max`, `latest`, `p95`.",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-								[]string{"avg", "sum", "min", "max", "latest", "p95"},
-								false,
-							)),
-						},
-						"format": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The units to use to format the data. One of: `number`, `bytes`, `percent`, `requests`, `responses`, `seconds`, `milliseconds`, `ratio`, `bitrate`.",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-								[]string{"number", "bytes", "percent", "requests", "responses"},
-								false,
-							)),
-						},
-						"plot_type": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "The type of chart to display. One of: `line`, `bar`, `single-metric`, `donut`.",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-								[]string{"line", "bar", "single-metric", "donut"},
-								false,
-							)),
-						},
-					},
+	schemaDataSourceConfig = schema.Schema{
+		Type:        schema.TypeSet,
+		Required:    true,
+		Description: "Configuration options for the selected data source.",
+		MaxItems:    1,
+		MinItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"metrics": {
+					Type:        schema.TypeList,
+					Required:    true,
+					Description: "The metrics to visualize. Valid options are defined by the selected data source: [stats.edge](https://www.fastly.com/documentation/reference/api/observability/custom-dashboards/metrics/edge/), [stats.domain](https://www.fastly.com/documentation/reference/api/observability/custom-dashboards/metrics/domain/), [stats.origin](https://www.fastly.com/documentation/reference/api/observability/custom-dashboards/metrics/origin/).",
+					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
-			"type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The type of visualization to display. One of: `chart`.",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-					[]string{"chart"},
-					false,
-				)),
+		},
+	}
+
+	schemaVisualization = schema.Schema{
+		Type:        schema.TypeSet,
+		Required:    true,
+		Description: "An object which describes the data visualization to display.",
+		MaxItems:    1,
+		MinItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"config": &schemaVisualizationConfig,
+				"type": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The type of visualization to display. One of: `chart`.",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"chart"},
+						false,
+					)),
+				},
 			},
 		},
-	},
-}
+	}
+
+	schemaVisualizationConfig = schema.Schema{
+		Type:        schema.TypeSet,
+		Required:    true,
+		Description: "Configuration options for the selected data source.",
+		MaxItems:    1,
+		MinItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"calculation_method": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The aggregation function to apply to the dataset. One of: `avg`, `sum`, `min`, `max`, `latest`, `p95`.",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"avg", "sum", "min", "max", "latest", "p95"},
+						false,
+					)),
+				},
+				"format": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "The units to use to format the data. One of: `number`, `bytes`, `percent`, `requests`, `responses`, `seconds`, `milliseconds`, `ratio`, `bitrate`.",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"number", "bytes", "percent", "requests", "responses"},
+						false,
+					)),
+				},
+				"plot_type": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The type of chart to display. One of: `line`, `bar`, `single-metric`, `donut`.",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"line", "bar", "single-metric", "donut"},
+						false,
+					)),
+				},
+			},
+		},
+	}
+)
 
 func resourceFastlyCustomDashboard() *schema.Resource {
 	return &schema.Resource{
@@ -128,6 +134,7 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 				MaxItems:    100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"id":          {Type: schema.TypeString, Computed: true},
 						"data_source": &schemaDataSource,
 						"span": {
 							Type:        schema.TypeInt,
@@ -153,6 +160,10 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "A short description of the dashboard.",
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:        schema.TypeString,
@@ -321,6 +332,39 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	}, nil
 }
 
+func dashboardItemToMap(di gofastly.DashboardItem) map[string]interface{} {
+	var metrics []any
+	for _, m := range di.DataSource.Config.Metrics {
+		metrics = append(metrics, m)
+	}
+	sourceConfigSet := schema.NewSet(schema.HashResource(schemaDataSourceConfig.Elem.(*schema.Resource)), nil)
+	sourceConfigSet.Add(map[string]any{"metrics": metrics})
+
+	dataSourceSet := schema.NewSet(schema.HashResource(schemaDataSource.Elem.(*schema.Resource)), nil)
+	dataSourceSet.Add(map[string]any{"type": string(di.DataSource.Type), "config": sourceConfigSet})
+
+	var format, calcMethod string
+	if di.Visualization.Config.CalculationMethod != nil {
+		calcMethod = string(*di.Visualization.Config.CalculationMethod)
+	}
+	if di.Visualization.Config.Format != nil {
+		format = string(*di.Visualization.Config.Format)
+	}
+	vizConfigSet := schema.NewSet(schema.HashResource(schemaVisualizationConfig.Elem.(*schema.Resource)), nil)
+	vizConfigSet.Add(map[string]any{"plot_type": string(di.Visualization.Config.PlotType), "format": format, "calculation_method": calcMethod})
+
+	visualizationSet := schema.NewSet(schema.HashResource(schemaVisualization.Elem.(*schema.Resource)), nil)
+	visualizationSet.Add(map[string]any{"type": string(di.Visualization.Type), "config": vizConfigSet})
+	return map[string]interface{}{
+		"id":            di.ID,
+		"title":         di.Title,
+		"subtitle":      di.Subtitle,
+		"span":          di.Span,
+		"data_source":   dataSourceSet,
+		"visualization": visualizationSet,
+	}
+}
+
 func resourceFastlyCustomDashboardRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Custom Dashboard for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
@@ -345,20 +389,18 @@ func resourceFastlyCustomDashboardRead(_ context.Context, d *schema.ResourceData
 			return diag.FromErr(err)
 		}
 	}
-	// if len(dash.Items) > 0 {
-	// 	for i, di := range dash.Items {
-	// 		err = d.Set(fmt.Sprintf("items.%d", i), di)
-	// 		if err != nil {
-	// 			return diag.FromErr(err)
-	// 		}
-	// 	}
-	// }
+	if len(dash.Items) > 0 {
+		var itemMaps []map[string]interface{}
+		for _, di := range dash.Items {
+			itemMaps = append(itemMaps, dashboardItemToMap(di))
+		}
+		err = d.Set("dashboard_item", itemMaps)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	return nil
 }
-
-// func flattenItemsRecursively() map[string]any {
-// 	return nil
-// }
 
 func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn

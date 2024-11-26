@@ -14,9 +14,6 @@ import (
 )
 
 func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
-	// var (
-	// 	dashboard gofastly.ObservabilityCustomDashboard
-	// )
 	rand := acctest.RandString(10)
 	dashboardName := fmt.Sprintf("Custom Dashboard %s", rand)
 	dashboardDescription := fmt.Sprintf("Created by tf-test-%s", rand)
@@ -72,10 +69,16 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObservabilityCustomDashboard(input),
+				Config: testAccObservabilityCustomDashboard(t, input),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCustomDashboardRemoteState(dashboardName, dashboardDescription, dashboardItems),
 				),
+			},
+			{
+				ResourceName:      "fastly_custom_dashboard.example",
+				RefreshState:      true,
+				ImportState:       false,
+				ImportStateVerify: false,
 			},
 		},
 	})
@@ -116,7 +119,8 @@ func testAccCustomDashboardRemoteState(dashboardName, dashboardDescription strin
 	}
 }
 
-func testAccObservabilityCustomDashboard(input gofastly.CreateObservabilityCustomDashboardInput) string {
+func testAccObservabilityCustomDashboard(t *testing.T, input gofastly.CreateObservabilityCustomDashboardInput) string {
+	t.Helper()
 	f := template.FuncMap{"join": strings.Join, "quote": func(s []string) []string {
 		final := make([]string, len(s))
 		for i, q := range s {
@@ -159,27 +163,29 @@ func testAccObservabilityCustomDashboard(input gofastly.CreateObservabilityCusto
 	}
 	`))
 	b := new(bytes.Buffer)
-	tmpl.Execute(b, input)
+	if err := tmpl.Execute(b, input); err != nil {
+		t.Fatal(err)
+	}
 	return b.String()
 }
 
 func testAccCheckCustomDashboardDestroy(s *terraform.State) error {
-	// for _, rs := range s.RootModule().Resources {
-	// 	if rs.Type != "fastly_custom_dashboard" {
-	// 		continue
-	// 	}
-	//
-	// 	conn := testAccProvider.Meta().(*APIClient).conn
-	// 	dashResp, err := conn.ListObservabilityCustomDashboards(&gofastly.ListObservabilityCustomDashboardsInput{})
-	// 	if err != nil {
-	// 		return fmt.Errorf("error listing custom dashboards when checking dashboard destroy (%s): %s", rs.Primary, err)
-	// 	}
-	//
-	// 	for _, dash := range dashResp.Data {
-	// 		if dash.ID == rs.Primary.ID {
-	// 			return fmt.Errorf("tried deleting dashboard (%s), but was still found", rs.Primary.ID)
-	// 		}
-	// 	}
-	// }
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "fastly_custom_dashboard" {
+			continue
+		}
+
+		conn := testAccProvider.Meta().(*APIClient).conn
+		dashResp, err := conn.ListObservabilityCustomDashboards(&gofastly.ListObservabilityCustomDashboardsInput{})
+		if err != nil {
+			return fmt.Errorf("error listing custom dashboards when checking dashboard destroy (%s): %s", rs.Primary, err)
+		}
+
+		for _, dash := range dashResp.Data {
+			if dash.ID == rs.Primary.ID {
+				return fmt.Errorf("tried deleting dashboard (%s), but was still found", rs.Primary.ID)
+			}
+		}
+	}
 	return nil
 }

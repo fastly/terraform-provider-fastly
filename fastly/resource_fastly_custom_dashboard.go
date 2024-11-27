@@ -14,7 +14,7 @@ import (
 
 var (
 	schemaDataSource = schema.Schema{
-		Type:        schema.TypeSet,
+		Type:        schema.TypeList,
 		Required:    true,
 		Description: "An object which describes the data to display.",
 		MaxItems:    1,
@@ -36,7 +36,7 @@ var (
 	}
 
 	schemaDataSourceConfig = schema.Schema{
-		Type:        schema.TypeSet,
+		Type:        schema.TypeList,
 		Required:    true,
 		Description: "Configuration options for the selected data source.",
 		MaxItems:    1,
@@ -54,7 +54,7 @@ var (
 	}
 
 	schemaVisualization = schema.Schema{
-		Type:        schema.TypeSet,
+		Type:        schema.TypeList,
 		Required:    true,
 		Description: "An object which describes the data visualization to display.",
 		MaxItems:    1,
@@ -76,7 +76,7 @@ var (
 	}
 
 	schemaVisualizationConfig = schema.Schema{
-		Type:        schema.TypeSet,
+		Type:        schema.TypeList,
 		Required:    true,
 		Description: "Configuration options for the selected data source.",
 		MaxItems:    1,
@@ -174,7 +174,7 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 	}
 }
 
-func resourceFastlyCustomDashboardCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := gofastly.CreateObservabilityCustomDashboardInput{
@@ -209,7 +209,7 @@ func resourceFastlyCustomDashboardCreate(_ context.Context, d *schema.ResourceDa
 
 	d.SetId(dash.ID)
 
-	return nil
+	return resourceFastlyCustomDashboardRead(ctx, d, meta)
 }
 
 func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
@@ -218,16 +218,15 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 		title, subtitle string
 		span            int
 
-		dataSourceSet, sourceConfigSet *schema.Set
-		dataSource, sourceConfig       map[string]any
-		sourceType                     string
-		metrics                        []string
+		dataSourceList, sourceConfigList []any
+		dataSource, sourceConfig         map[string]any
+		sourceType                       string
+		metrics                          []string
 
-		vizSet, vizConfigSet               *schema.Set
+		vizList, vizConfigList             []any
 		visualization, visualizationConfig map[string]any
 		visualizationType                  string
-		plotType                           string
-		format, calcMethod                 *string
+		plotType, format, calcMethod       string
 	)
 
 	var ok bool
@@ -242,26 +241,25 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	if span, ok = m["span"].(int); !ok {
 		errs = append(errs, fmt.Errorf("invalid span: %#v", m["span"]))
 	}
-	if dataSourceSet, ok = m["data_source"].(*schema.Set); !ok {
+	if dataSourceList, ok = m["data_source"].([]any); !ok {
+		errs = append(errs, fmt.Errorf("invalid data_source: %#v", m["data_source"]))
+	}
+	if len(dataSourceList) != 1 {
 		errs = append(errs, fmt.Errorf("invalid data_source: %#v", m["data_source"]))
 	} else {
-		if dsl := dataSourceSet.List(); len(dsl) != 1 {
+		if dataSource, ok = dataSourceList[0].(map[string]any); !ok {
 			errs = append(errs, fmt.Errorf("invalid data_source: %#v", m["data_source"]))
-		} else {
-			if dataSource, ok = dsl[0].(map[string]any); !ok {
-				errs = append(errs, fmt.Errorf("invalid data_source: %#v", m["data_source"]))
-			}
 		}
 	}
-	if vizSet, ok = m["visualization"].(*schema.Set); !ok {
+
+	if vizList, ok = m["visualization"].([]any); !ok {
+		errs = append(errs, fmt.Errorf("invalid visualization: %#v", m["visualization"]))
+	}
+	if len(vizList) != 1 {
 		errs = append(errs, fmt.Errorf("invalid visualization: %#v", m["visualization"]))
 	} else {
-		if vizList := vizSet.List(); len(vizList) != 1 {
+		if visualization, ok = vizList[0].(map[string]any); !ok {
 			errs = append(errs, fmt.Errorf("invalid visualization: %#v", m["visualization"]))
-		} else {
-			if visualization, ok = vizList[0].(map[string]any); !ok {
-				errs = append(errs, fmt.Errorf("invalid visualization: %#v", m["visualization"]))
-			}
 		}
 	}
 
@@ -269,13 +267,13 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	if sourceType, ok = dataSource["type"].(string); !ok {
 		errs = append(errs, fmt.Errorf("invalid data_source.type: %#v", dataSource["type"]))
 	}
-	if sourceConfigSet, ok = dataSource["config"].(*schema.Set); !ok {
+	if sourceConfigList, ok = dataSource["config"].([]any); !ok {
 		errs = append(errs, fmt.Errorf("invalid data_source.config: %#v", dataSource["config"]))
 	}
-	if scl := sourceConfigSet.List(); len(scl) != 1 {
+	if len(sourceConfigList) != 1 {
 		errs = append(errs, fmt.Errorf("invalid data_source.config: %#v", dataSource["config"]))
 	} else {
-		if sourceConfig, ok = scl[0].(map[string]any); !ok {
+		if sourceConfig, ok = sourceConfigList[0].(map[string]any); !ok {
 			errs = append(errs, fmt.Errorf("invalid data_source.config: %#v", dataSource["config"]))
 		}
 	}
@@ -291,21 +289,25 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	if visualizationType, ok = visualization["type"].(string); !ok {
 		errs = append(errs, fmt.Errorf("invalid visualization.type: %#v", visualization["type"]))
 	}
-	if vizConfigSet, ok = visualization["config"].(*schema.Set); !ok {
+	if vizConfigList, ok = visualization["config"].([]any); !ok {
 		errs = append(errs, fmt.Errorf("invalid visualization.config: %#v", visualization["config"]))
 	}
-	if vcl := vizConfigSet.List(); len(vcl) != 1 {
+	if len(vizConfigList) != 1 {
 		errs = append(errs, fmt.Errorf("invalid visualization.config: %#v", visualization["config"]))
 	} else {
-		if visualizationConfig, ok = vcl[0].(map[string]any); !ok {
+		if visualizationConfig, ok = vizConfigList[0].(map[string]any); !ok {
 			errs = append(errs, fmt.Errorf("invalid visualization.config: %#v", visualization["config"]))
 		}
 	}
 	if plotType, ok = visualizationConfig["plot_type"].(string); !ok {
 		errs = append(errs, fmt.Errorf("invalid visualization.config.plot_type: %#v", visualizationConfig["plot_type"]))
 	}
-	format, _ = visualizationConfig["format"].(*string)
-	calcMethod, _ = visualizationConfig["calculation_method"].(*string)
+	if format, ok = visualizationConfig["format"].(string); !ok {
+		errs = append(errs, fmt.Errorf("invalid visualization.config.format: %#v", visualizationConfig["format"]))
+	}
+	if calcMethod, ok = visualizationConfig["calculation_method"].(string); !ok {
+		errs = append(errs, fmt.Errorf("invalid visualization.config.calculation_method: %#v", visualizationConfig["calculation_method"]))
+	}
 
 	if len(errs) > 0 {
 		return nil, errors.Join(errs...)
@@ -323,8 +325,8 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 		Title:    title,
 		Visualization: gofastly.DashboardVisualization{
 			Config: gofastly.VisualizationConfig{
-				CalculationMethod: (*gofastly.CalculationMethod)(calcMethod),
-				Format:            (*gofastly.VisualizationFormat)(format),
+				CalculationMethod: gofastly.ToPointer(gofastly.CalculationMethod(calcMethod)),
+				Format:            gofastly.ToPointer(gofastly.VisualizationFormat(format)),
 				PlotType:          gofastly.PlotType(plotType),
 			},
 			Type: gofastly.VisualizationType(visualizationType),
@@ -333,35 +335,32 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 }
 
 func dashboardItemToMap(di gofastly.DashboardItem) map[string]interface{} {
-	var metrics []any
-	for _, m := range di.DataSource.Config.Metrics {
-		metrics = append(metrics, m)
+	dataSource := map[string]any{
+		"type":   di.DataSource.Type,
+		"config": []any{map[string]any{"metrics": di.DataSource.Config.Metrics}},
 	}
-	sourceConfigSet := schema.NewSet(schema.HashResource(schemaDataSourceConfig.Elem.(*schema.Resource)), nil)
-	sourceConfigSet.Add(map[string]any{"metrics": metrics})
 
-	dataSourceSet := schema.NewSet(schema.HashResource(schemaDataSource.Elem.(*schema.Resource)), nil)
-	dataSourceSet.Add(map[string]any{"type": string(di.DataSource.Type), "config": sourceConfigSet})
-
-	var format, calcMethod string
+	vizConfig := map[string]any{
+		"plot_type": di.Visualization.Config.PlotType,
+	}
 	if di.Visualization.Config.CalculationMethod != nil {
-		calcMethod = string(*di.Visualization.Config.CalculationMethod)
+		vizConfig["calculation_method"] = string(*di.Visualization.Config.CalculationMethod)
 	}
 	if di.Visualization.Config.Format != nil {
-		format = string(*di.Visualization.Config.Format)
+		vizConfig["format"] = string(*di.Visualization.Config.Format)
 	}
-	vizConfigSet := schema.NewSet(schema.HashResource(schemaVisualizationConfig.Elem.(*schema.Resource)), nil)
-	vizConfigSet.Add(map[string]any{"plot_type": string(di.Visualization.Config.PlotType), "format": format, "calculation_method": calcMethod})
+	visualization := map[string]any{
+		"type":   di.Visualization.Type,
+		"config": []any{vizConfig},
+	}
 
-	visualizationSet := schema.NewSet(schema.HashResource(schemaVisualization.Elem.(*schema.Resource)), nil)
-	visualizationSet.Add(map[string]any{"type": string(di.Visualization.Type), "config": vizConfigSet})
 	return map[string]interface{}{
 		"id":            di.ID,
 		"title":         di.Title,
 		"subtitle":      di.Subtitle,
 		"span":          di.Span,
-		"data_source":   dataSourceSet,
-		"visualization": visualizationSet,
+		"data_source":   []any{dataSource},
+		"visualization": []any{visualization},
 	}
 }
 
@@ -405,18 +404,24 @@ func resourceFastlyCustomDashboardRead(_ context.Context, d *schema.ResourceData
 func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
+	var items = make([]gofastly.DashboardItem, 0)
 	input := gofastly.UpdateObservabilityCustomDashboardInput{
 		Description: gofastly.ToPointer(d.Get("description").(string)),
 		ID:          gofastly.ToPointer(d.Id()),
 		Name:        gofastly.ToPointer(d.Get("name").(string)),
 	}
-	// if v, ok := d.GetOk("dashboard_items"); ok {
-	// 	for i, r := range v.([]any) {
-	// 		if _, ok := r.(map[string]any); ok {
-	// 			(*input.Items)[i].Title = r.Get("title").(string)
-	// 		}
-	// 	}
-	// }
+	if v, ok := d.GetOk("dashboard_items"); ok {
+		for _, r := range v.([]any) {
+			if m, ok := r.(map[string]any); ok {
+				item, err := mapToDashboardItem(m)
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				items = append(items, *item)
+			}
+		}
+	}
+	input.Items = &items
 	_, err := conn.UpdateObservabilityCustomDashboard(&input)
 	if err != nil {
 		return diag.FromErr(err)

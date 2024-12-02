@@ -134,8 +134,12 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 				MaxItems:    100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id":          {Type: schema.TypeString, Computed: true},
 						"data_source": &schemaDataSource,
+						"id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Dashboard item identifier (UUID).",
+						},
 						"span": {
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -162,8 +166,9 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 				Description: "A short description of the dashboard.",
 			},
 			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Dashboard identifier (UUID).",
 			},
 			"name": {
 				Type:        schema.TypeString,

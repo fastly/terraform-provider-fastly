@@ -1,0 +1,23 @@
+---
+layout: "fastly"
+page_title: "Fastly: custom_dashboard"
+sidebar_current: "docs-fastly-resource-custom_dashboard"
+description: |-
+  Provides a Custom Dashboard which can be viewed in the Fastly Web UI.
+---
+
+# fastly_custom_dashboard
+
+Provides a Custom Dashboard which can be viewed in the Fastly Web UI.
+
+## Example Usage
+
+{{ tffile "examples/resources/custom_dashboard_basic_usage.tf" }}
+
+## Import
+
+Fastly Custom Dashboards can be imported using their ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/custom_dashboard_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

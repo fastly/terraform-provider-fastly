@@ -215,8 +215,8 @@ func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.Resource
 func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	var errs []error
 	var (
-		title, subtitle string
-		span            int
+		id, title, subtitle string
+		span                int
 
 		dataSourceList, sourceConfigList []any
 		dataSource, sourceConfig         map[string]any
@@ -232,6 +232,9 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	var ok bool
 
 	// Top-level fields
+	if id, ok = m["id"].(string); !ok {
+		errs = append(errs, fmt.Errorf("invalid id: %#v", m["id"]))
+	}
 	if title, ok = m["title"].(string); !ok {
 		errs = append(errs, fmt.Errorf("invalid title: %#v", m["title"]))
 	}
@@ -314,6 +317,7 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	}
 
 	return &gofastly.DashboardItem{
+		ID: id,
 		DataSource: gofastly.DashboardDataSource{
 			Config: gofastly.DashboardSourceConfig{
 				Metrics: metrics,
@@ -410,7 +414,7 @@ func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.Resource
 		ID:          gofastly.ToPointer(d.Id()),
 		Name:        gofastly.ToPointer(d.Get("name").(string)),
 	}
-	if v, ok := d.GetOk("dashboard_items"); ok {
+	if v, ok := d.GetOk("dashboard_item"); ok {
 		for _, r := range v.([]any) {
 			if m, ok := r.(map[string]any); ok {
 				item, err := mapToDashboardItem(m)

@@ -55,10 +55,39 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 		},
 	}
 
-	input := gofastly.CreateObservabilityCustomDashboardInput{
+	createDashboard := gofastly.CreateObservabilityCustomDashboardInput{
 		Name:        dashboardName,
 		Description: gofastly.ToPointer(dashboardDescription),
 		Items:       dashboardItems,
+	}
+
+	updatedItems := []gofastly.DashboardItem{}
+	updatedItems = append(updatedItems, dashboardItems[0])
+	updatedItems[0].Subtitle = "This is STILL the first chart"
+	updatedItems = append(updatedItems, gofastly.DashboardItem{
+		Title:    "NEW Chart",
+		Subtitle: "This is the new Chart #2",
+		DataSource: gofastly.DashboardDataSource{
+			Type:   gofastly.SourceTypeStatsOrigin,
+			Config: gofastly.DashboardSourceConfig{Metrics: []string{"all_status_2xx"}},
+		},
+		Visualization: gofastly.DashboardVisualization{
+			Type:   gofastly.VisualizationTypeChart,
+			Config: gofastly.VisualizationConfig{PlotType: gofastly.PlotTypeSingleMetric},
+		},
+	})
+	updatedItems = append(updatedItems, dashboardItems[1])
+	updatedItems[2].Title = "Chart #3"
+	updatedItems[2].Subtitle = "This is chart, the third now"
+	updatedItems[2].Visualization.Config.PlotType = gofastly.PlotTypeDonut
+	updatedItems[2].Visualization.Config.CalculationMethod = nil
+
+	updatedName := "This is an updated dashboard"
+	updatedDescription := fmt.Sprintf("Updated by tf-test-%s", rand)
+	updateDashboard := gofastly.UpdateObservabilityCustomDashboardInput{
+		Description: &updatedDescription,
+		Items:       &updatedItems,
+		Name:        &updatedName,
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -69,16 +98,17 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 		CheckDestroy:      testAccCheckCustomDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObservabilityCustomDashboard(t, input),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCustomDashboardRemoteState(dashboardName, dashboardDescription, dashboardItems),
-				),
+				Config: testAccObservabilityCustomDashboard(t, createDashboard),
+				Check:  testAccCustomDashboardRemoteState(dashboardName, dashboardDescription, dashboardItems),
+			},
+			{
+				Config: testAccObservabilityCustomDashboard(t, updateDashboard),
+				Check:  testAccCustomDashboardRemoteState(updatedName, updatedDescription, updatedItems),
 			},
 			{
 				ResourceName:      "fastly_custom_dashboard.example",
-				RefreshState:      true,
-				ImportState:       false,
-				ImportStateVerify: false,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -112,14 +142,14 @@ func testAccCustomDashboardRemoteState(dashboardName, dashboardDescription strin
 		} else if got.Description != dashboardDescription {
 			return fmt.Errorf("bad description, expected (%s), got (%s)", dashboardDescription, got.Description)
 		} else if len(got.Items) != len(dashboardItems) {
-			return fmt.Errorf("bad items, expected (%d items), got (%d items)", len(dashboardItems), len(got.Items))
+			return fmt.Errorf("bad items, expected (%d items), got (%d items), %#v", len(dashboardItems), len(got.Items), got)
 		}
 
 		return nil
 	}
 }
 
-func testAccObservabilityCustomDashboard(t *testing.T, input gofastly.CreateObservabilityCustomDashboardInput) string {
+func testAccObservabilityCustomDashboard(t *testing.T, input any) string {
 	t.Helper()
 	f := template.FuncMap{"join": strings.Join, "quote": func(s []string) []string {
 		final := make([]string, len(s))
@@ -135,6 +165,9 @@ func testAccObservabilityCustomDashboard(t *testing.T, input gofastly.CreateObse
 
 		{{ range .Items -}}
 		dashboard_item {
+			{{if .ID -}}
+				id = ".ID"
+			{{- end}}
 			title = "{{- .Title -}}"
 			subtitle = "{{- .Subtitle -}}"
 			{{if .Span -}}

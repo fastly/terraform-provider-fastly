@@ -97,7 +97,7 @@ var (
 					Optional:    true,
 					Description: "The units to use to format the data. One of: `number`, `bytes`, `percent`, `requests`, `responses`, `seconds`, `milliseconds`, `ratio`, `bitrate`.",
 					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-						[]string{"number", "bytes", "percent", "requests", "responses"},
+						[]string{"number", "bytes", "percent", "requests", "responses", "seconds", "milliseconds", "ratio", "bitrate"},
 						false,
 					)),
 				},

@@ -185,22 +185,11 @@ func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.Resource
 		input.Description = gofastly.ToPointer(v.(string))
 	}
 
-	if v, ok := d.GetOk("dashboard_item"); ok {
-		var errs []error
-		for _, r := range v.([]interface{}) {
-			if m, ok := r.(map[string]any); ok {
-				di, err := mapToDashboardItem(m)
-				if err != nil {
-					errs = append(errs, err)
-				} else {
-					input.Items = append(input.Items, *di)
-				}
-			}
-		}
-		if errs != nil {
-			return diag.FromErr(errors.Join(errs...))
-		}
+	items, err := resourceItems(d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
+	input.Items = items
 
 	dash, err := conn.CreateObservabilityCustomDashboard(&input)
 	if err != nil {
@@ -210,6 +199,131 @@ func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.Resource
 	d.SetId(dash.ID)
 
 	return resourceFastlyCustomDashboardRead(ctx, d, meta)
+}
+
+func resourceFastlyCustomDashboardRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	log.Printf("[DEBUG] Refreshing Custom Dashboard for (%s)", d.Id())
+	conn := meta.(*APIClient).conn
+
+	dash, err := conn.GetObservabilityCustomDashboard(&gofastly.GetObservabilityCustomDashboardInput{
+		ID: gofastly.ToPointer(d.Id()),
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(dash.ID)
+	if len(dash.Name) > 0 {
+		err = d.Set("name", dash.Name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if len(dash.Description) > 0 {
+		err = d.Set("description", dash.Description)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if len(dash.Items) > 0 {
+		itemList := flattenDashboardItems(dash.Items)
+		err = d.Set("dashboard_item", itemList)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	return nil
+}
+
+func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
+
+	var items = make([]gofastly.DashboardItem, 0)
+	input := gofastly.UpdateObservabilityCustomDashboardInput{
+		Description: gofastly.ToPointer(d.Get("description").(string)),
+		ID:          gofastly.ToPointer(d.Id()),
+		Name:        gofastly.ToPointer(d.Get("name").(string)),
+	}
+
+	items, err := resourceItems(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	input.Items = &items
+
+	_, err = conn.UpdateObservabilityCustomDashboard(&input)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return resourceFastlyCustomDashboardRead(ctx, d, meta)
+}
+
+func resourceFastlyCustomDashboardDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	conn := meta.(*APIClient).conn
+
+	err := conn.DeleteObservabilityCustomDashboard(&gofastly.DeleteObservabilityCustomDashboardInput{
+		ID: gofastly.ToPointer(d.Id()),
+	})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func flattenDashboardItems(remoteState []gofastly.DashboardItem) []map[string]interface{} {
+	var result []map[string]any
+	for _, di := range remoteState {
+		dataSource := map[string]any{
+			"type":   di.DataSource.Type,
+			"config": []any{map[string]any{"metrics": di.DataSource.Config.Metrics}},
+		}
+
+		vizConfig := map[string]any{
+			"plot_type": di.Visualization.Config.PlotType,
+		}
+		if di.Visualization.Config.CalculationMethod != nil {
+			vizConfig["calculation_method"] = string(*di.Visualization.Config.CalculationMethod)
+		}
+		if di.Visualization.Config.Format != nil {
+			vizConfig["format"] = string(*di.Visualization.Config.Format)
+		}
+		visualization := map[string]any{
+			"type":   di.Visualization.Type,
+			"config": []any{vizConfig},
+		}
+
+		result = append(result, map[string]interface{}{
+			"id":            di.ID,
+			"title":         di.Title,
+			"subtitle":      di.Subtitle,
+			"span":          di.Span,
+			"data_source":   []any{dataSource},
+			"visualization": []any{visualization},
+		})
+	}
+	return result
+}
+
+func resourceItems(d *schema.ResourceData) ([]gofastly.DashboardItem, error) {
+	var items []gofastly.DashboardItem
+	var errs []error
+	if v, ok := d.GetOk("dashboard_item"); ok {
+		for i, r := range v.([]any) {
+			if m, ok := r.(map[string]any); ok {
+				item, err := mapToDashboardItem(m)
+				if err != nil {
+					errs = append(errs, fmt.Errorf("item #%d is invalid: %w", i, err))
+				}
+				items = append(items, *item)
+			}
+		}
+	}
+	if errs != nil {
+		return nil, errors.Join(errs...)
+	}
+	return items, nil
 }
 
 func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
@@ -336,113 +450,4 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 			Type: gofastly.VisualizationType(visualizationType),
 		},
 	}, nil
-}
-
-func dashboardItemToMap(di gofastly.DashboardItem) map[string]interface{} {
-	dataSource := map[string]any{
-		"type":   di.DataSource.Type,
-		"config": []any{map[string]any{"metrics": di.DataSource.Config.Metrics}},
-	}
-
-	vizConfig := map[string]any{
-		"plot_type": di.Visualization.Config.PlotType,
-	}
-	if di.Visualization.Config.CalculationMethod != nil {
-		vizConfig["calculation_method"] = string(*di.Visualization.Config.CalculationMethod)
-	}
-	if di.Visualization.Config.Format != nil {
-		vizConfig["format"] = string(*di.Visualization.Config.Format)
-	}
-	visualization := map[string]any{
-		"type":   di.Visualization.Type,
-		"config": []any{vizConfig},
-	}
-
-	return map[string]interface{}{
-		"id":            di.ID,
-		"title":         di.Title,
-		"subtitle":      di.Subtitle,
-		"span":          di.Span,
-		"data_source":   []any{dataSource},
-		"visualization": []any{visualization},
-	}
-}
-
-func resourceFastlyCustomDashboardRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	log.Printf("[DEBUG] Refreshing Custom Dashboard for (%s)", d.Id())
-	conn := meta.(*APIClient).conn
-
-	dash, err := conn.GetObservabilityCustomDashboard(&gofastly.GetObservabilityCustomDashboardInput{
-		ID: gofastly.ToPointer(d.Id()),
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(dash.ID)
-	if len(dash.Name) > 0 {
-		err = d.Set("name", dash.Name)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if len(dash.Description) > 0 {
-		err = d.Set("description", dash.Description)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if len(dash.Items) > 0 {
-		var itemMaps []map[string]interface{}
-		for _, di := range dash.Items {
-			itemMaps = append(itemMaps, dashboardItemToMap(di))
-		}
-		err = d.Set("dashboard_item", itemMaps)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	return nil
-}
-
-func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*APIClient).conn
-
-	var items = make([]gofastly.DashboardItem, 0)
-	input := gofastly.UpdateObservabilityCustomDashboardInput{
-		Description: gofastly.ToPointer(d.Get("description").(string)),
-		ID:          gofastly.ToPointer(d.Id()),
-		Name:        gofastly.ToPointer(d.Get("name").(string)),
-	}
-	if v, ok := d.GetOk("dashboard_item"); ok {
-		for _, r := range v.([]any) {
-			if m, ok := r.(map[string]any); ok {
-				item, err := mapToDashboardItem(m)
-				if err != nil {
-					return diag.FromErr(err)
-				}
-				items = append(items, *item)
-			}
-		}
-	}
-	input.Items = &items
-	_, err := conn.UpdateObservabilityCustomDashboard(&input)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return resourceFastlyCustomDashboardRead(ctx, d, meta)
-}
-
-func resourceFastlyCustomDashboardDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*APIClient).conn
-
-	err := conn.DeleteObservabilityCustomDashboard(&gofastly.DeleteObservabilityCustomDashboardInput{
-		ID: gofastly.ToPointer(d.Id()),
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
 }

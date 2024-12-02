@@ -13,11 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
+func generateDashboardParams(t *testing.T) (name, description string, items []gofastly.DashboardItem) {
+	t.Helper()
+
 	rand := acctest.RandString(10)
-	dashboardName := fmt.Sprintf("Custom Dashboard %s", rand)
-	dashboardDescription := fmt.Sprintf("Created by tf-test-%s", rand)
-	dashboardItems := []gofastly.DashboardItem{
+	name = fmt.Sprintf("Custom Dashboard %s", rand)
+	description = fmt.Sprintf("Created by tf-test-%s", rand)
+	items = []gofastly.DashboardItem{
 		{
 			DataSource: gofastly.DashboardDataSource{
 				Config: gofastly.DashboardSourceConfig{
@@ -55,18 +57,31 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 		},
 	}
 
+	return
+}
+
+func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
+	dashboardName, dashboardDescription, dashboardItems := generateDashboardParams(t)
+
 	createDashboard := gofastly.CreateObservabilityCustomDashboardInput{
 		Name:        dashboardName,
 		Description: gofastly.ToPointer(dashboardDescription),
 		Items:       dashboardItems,
 	}
 
+	// Leave one item alone
 	updatedItems := []gofastly.DashboardItem{}
 	updatedItems = append(updatedItems, dashboardItems[0])
-	updatedItems[0].Subtitle = "This is STILL the first chart"
+
+	// Update one item in place
+	updatedItems = append(updatedItems, dashboardItems[1])
+	updatedItems[1].Visualization.Config.PlotType = gofastly.PlotTypeDonut
+	updatedItems[1].Visualization.Config.CalculationMethod = nil
+
+	// Add a new item
 	updatedItems = append(updatedItems, gofastly.DashboardItem{
 		Title:    "NEW Chart",
-		Subtitle: "This is the new Chart #2",
+		Subtitle: "This is the new Chart #3",
 		DataSource: gofastly.DashboardDataSource{
 			Type:   gofastly.SourceTypeStatsOrigin,
 			Config: gofastly.DashboardSourceConfig{Metrics: []string{"all_status_2xx"}},
@@ -76,19 +91,17 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 			Config: gofastly.VisualizationConfig{PlotType: gofastly.PlotTypeSingleMetric},
 		},
 	})
-	updatedItems = append(updatedItems, dashboardItems[1])
-	updatedItems[2].Title = "Chart #3"
-	updatedItems[2].Subtitle = "This is chart, the third now"
-	updatedItems[2].Visualization.Config.PlotType = gofastly.PlotTypeDonut
-	updatedItems[2].Visualization.Config.CalculationMethod = nil
 
 	updatedName := "This is an updated dashboard"
-	updatedDescription := fmt.Sprintf("Updated by tf-test-%s", rand)
-	updateDashboard := gofastly.UpdateObservabilityCustomDashboardInput{
-		Description: &updatedDescription,
+	update1 := gofastly.UpdateObservabilityCustomDashboardInput{
+		Description: &dashboardDescription,
 		Items:       &updatedItems,
 		Name:        &updatedName,
 	}
+
+	// Update again, deleting first and last item
+	update2 := update1
+	update2.Items = &[]gofastly.DashboardItem{updatedItems[1]}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -99,11 +112,41 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObservabilityCustomDashboard(t, createDashboard),
-				Check:  testAccCustomDashboardRemoteState(dashboardName, dashboardDescription, dashboardItems),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCustomDashboardRemoteState(dashboardName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "name", dashboardName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "description", dashboardDescription),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.#", "2"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.title", "Chart #1"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.title", "Chart #2"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.plot_type", "line"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.calculation_method", "avg"),
+				),
 			},
 			{
-				Config: testAccObservabilityCustomDashboard(t, updateDashboard),
-				Check:  testAccCustomDashboardRemoteState(updatedName, updatedDescription, updatedItems),
+				Config: testAccObservabilityCustomDashboard(t, update1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCustomDashboardRemoteState(updatedName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "name", updatedName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "description", dashboardDescription),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.#", "3"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.title", "Chart #1"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.title", "Chart #2"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.plot_type", "donut"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.calculation_method", ""),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.2.title", "NEW Chart"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.2.span", "4"),
+				),
+			},
+			{
+				Config: testAccObservabilityCustomDashboard(t, update2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCustomDashboardRemoteState(updatedName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "name", updatedName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "description", dashboardDescription),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.#", "1"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.title", "Chart #2"),
+				),
 			},
 			{
 				ResourceName:      "fastly_custom_dashboard.example",
@@ -115,7 +158,7 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 
 }
 
-func testAccCustomDashboardRemoteState(dashboardName, dashboardDescription string, dashboardItems []gofastly.DashboardItem) resource.TestCheckFunc {
+func testAccCustomDashboardRemoteState(dashboardName string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 
@@ -135,14 +178,6 @@ func testAccCustomDashboardRemoteState(dashboardName, dashboardDescription strin
 		}
 		if !found || got == nil {
 			return fmt.Errorf("error looking up the dashboard")
-		}
-
-		if got.Name != dashboardName {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", dashboardName, got.Name)
-		} else if got.Description != dashboardDescription {
-			return fmt.Errorf("bad description, expected (%s), got (%s)", dashboardDescription, got.Description)
-		} else if len(got.Items) != len(dashboardItems) {
-			return fmt.Errorf("bad items, expected (%d items), got (%d items), %#v", len(dashboardItems), len(got.Items), got)
 		}
 
 		return nil
@@ -166,7 +201,7 @@ func testAccObservabilityCustomDashboard(t *testing.T, input any) string {
 		{{ range .Items -}}
 		dashboard_item {
 			{{if .ID -}}
-				id = ".ID"
+				id = "{{- .ID -}}"
 			{{- end}}
 			title = "{{- .Title -}}"
 			subtitle = "{{- .Subtitle -}}"

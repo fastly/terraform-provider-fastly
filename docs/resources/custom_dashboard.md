@@ -15,7 +15,7 @@ Provides a Custom Dashboard which can be viewed in the Fastly Web UI.
 ```terraform
 resource "fastly_custom_dashboard" "example" {
   name        = "Example Custom Dashboard"
-  description = "This is an example custom dashboard. A few dashboard items are been provided to help you get started."
+  description = "This is an example custom dashboard. A few dashboard items are provided to help you get started."
 
   dashboard_item {
     title    = "Total Requests"
@@ -60,7 +60,7 @@ resource "fastly_custom_dashboard" "example" {
 
   dashboard_item {
     title    = "Client & Server Errors"
-    subtitle = "Total errors served from the client of server."
+    subtitle = "Total errors served from the client or server."
 
     data_source {
       type = "stats.edge"

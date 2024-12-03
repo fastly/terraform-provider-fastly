@@ -304,10 +304,6 @@ Optional:
 
 - `span` (Number) The number of columns for the dashboard item to span. Dashboards are rendered on a 12-column grid on "desktop" screen sizes.
 
-Read-Only:
-
-- `id` (String) Dashboard item identifier (UUID).
-
 <a id="nestedblock--dashboard_item--data_source"></a>
 ### Nested Schema for `dashboard_item.data_source`
 

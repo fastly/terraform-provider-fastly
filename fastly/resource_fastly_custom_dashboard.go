@@ -135,11 +135,6 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_source": &schemaDataSource,
-						"id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Dashboard item identifier (UUID).",
-						},
 						"span": {
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -300,7 +295,6 @@ func flattenDashboardItems(remoteState []gofastly.DashboardItem) []map[string]in
 		}
 
 		result = append(result, map[string]interface{}{
-			"id":            di.ID,
 			"title":         di.Title,
 			"subtitle":      di.Subtitle,
 			"span":          di.Span,
@@ -334,8 +328,8 @@ func resourceItems(d *schema.ResourceData) ([]gofastly.DashboardItem, error) {
 func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	var errs []error
 	var (
-		id, title, subtitle string
-		span                int
+		title, subtitle string
+		span            int
 
 		dataSourceList, sourceConfigList []any
 		dataSource, sourceConfig         map[string]any
@@ -351,9 +345,6 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	var ok bool
 
 	// Top-level fields
-	if id, ok = m["id"].(string); !ok {
-		errs = append(errs, fmt.Errorf("invalid id: %#v", m["id"]))
-	}
 	if title, ok = m["title"].(string); !ok {
 		errs = append(errs, fmt.Errorf("invalid title: %#v", m["title"]))
 	}
@@ -436,7 +427,6 @@ func mapToDashboardItem(m map[string]any) (*gofastly.DashboardItem, error) {
 	}
 
 	return &gofastly.DashboardItem{
-		ID: id,
 		DataSource: gofastly.DashboardDataSource{
 			Config: gofastly.DashboardSourceConfig{
 				Metrics: metrics,

@@ -1,1 +1,0 @@
-$ terraform import fastly_custom_dashboard.example xxxxxxxxxxxxxxxxxxxx

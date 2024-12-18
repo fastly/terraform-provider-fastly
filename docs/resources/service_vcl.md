@@ -213,11 +213,11 @@ Fastly documentation on [Amazon S3][fastly-s3].
 
 ## Product Enablement
 
-The [Product Enablement](https://developer.fastly.com/reference/api/products/enablement/) APIs allow customers to enable and disable specific products.
+The [Product Enablement](https://developer.fastly.com/reference/api/products) APIs allow customers to enable and disable specific products.
 
 Not all customers are entitled to use these endpoints and so care needs to be given when configuring a `product_enablement` block in your Terraform configuration.
 
-Consult the [Product Enablement Guide](/docs/guides/product_enablement) to understand the internal workings for the `product_enablement` block.
+Consult the [Product Enablement Guide](../guides/product_enablement) to understand the internal workings for the `product_enablement` block.
 
 ## Import
 

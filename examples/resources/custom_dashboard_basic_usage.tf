@@ -67,7 +67,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
-    title    = "Domains Requests"
+    title    = "Domain Requests"
     subtitle = "Requests by Domain."
     span     = 6
 
@@ -201,7 +201,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
-    title    = "DDOS - Request Flood Attempts"
+    title    = "DDoS - Request Flood Attempts"
     subtitle = "Number of connections the limit-streams action was applied."
     span     = 6
 
@@ -225,7 +225,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
-    title    = "DDOS - Malicious Bot Attack"
+    title    = "DDoS - Malicious Bot Attack"
     subtitle = "Number of times the blackhole action was taken."
     span     = 6
 

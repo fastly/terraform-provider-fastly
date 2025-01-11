@@ -18,7 +18,6 @@ func TestAccFastlyAlert_Basic(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	createAlert := gofastly.AlertDefinition{
-		Description: "my description",
 		Dimensions: map[string][]string{
 			"domains": {"example.com", "fastly.com"},
 		},
@@ -345,8 +344,9 @@ func testAccCheckFastlyAlertsRemoteState(service *gofastly.ServiceDetail, servic
 		if got == nil {
 			return fmt.Errorf("error looking up the alert")
 		}
-		if expected.Description != got.Description {
-			return fmt.Errorf("bad description, expected (%s), got (%s)", expected.Description, got.Description)
+		expectedDescription := strings.TrimSpace(expected.Description + " Managed by Terraform")
+		if expectedDescription != got.Description {
+			return fmt.Errorf("bad description, expected (%s), got (%s)", expectedDescription, got.Description)
 		}
 		if diff := cmp.Diff(expected.Dimensions, got.Dimensions); diff != "" {
 			return fmt.Errorf("bad dimensions -expected +got\n%v", diff)

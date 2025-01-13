@@ -12,7 +12,7 @@ import (
 )
 
 const badAlertSourceServiceIdConfig = "empty `service_id` is only supported for `stats` as a source"
-const managedByTerraform = "Managed by Terraform"
+const ManagedByTerraform = "Managed by Terraform"
 
 func resourceFastlyAlert() *schema.Resource {
 	return &schema.Resource{
@@ -137,9 +137,9 @@ func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta a
 		Source:    gofastly.ToPointer(d.Get("source").(string)),
 	}
 
-	description := managedByTerraform
+	description := ManagedByTerraform
 	if v, ok := d.GetOk("description"); ok {
-		description = v.(string) + " " + managedByTerraform
+		description = v.(string) + " " + ManagedByTerraform
 	}
 	input.Description = gofastly.ToPointer(description)
 
@@ -187,7 +187,7 @@ func resourceFastlyAlertRead(_ context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	description := strings.TrimSpace(strings.TrimSuffix(ad.Description, managedByTerraform))
+	description := strings.TrimSpace(strings.TrimSuffix(ad.Description, ManagedByTerraform))
 	if len(description) > 0 {
 		err = d.Set("description", description)
 		if err != nil {
@@ -246,9 +246,9 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Name:   gofastly.ToPointer(d.Get("name").(string)),
 	}
 
-	description := managedByTerraform
+	description := ManagedByTerraform
 	if v, ok := d.GetOk("description"); ok {
-		description = v.(string) + " " + managedByTerraform
+		description = v.(string) + " " + ManagedByTerraform
 	}
 	input.Description = gofastly.ToPointer(description)
 

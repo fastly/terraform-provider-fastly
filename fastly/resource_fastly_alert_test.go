@@ -344,7 +344,7 @@ func testAccCheckFastlyAlertsRemoteState(service *gofastly.ServiceDetail, servic
 		if got == nil {
 			return fmt.Errorf("error looking up the alert")
 		}
-		expectedDescription := strings.TrimSpace(expected.Description + " Managed by Terraform")
+		expectedDescription := strings.TrimSpace(expected.Description + " " + ManagedByTerraform)
 		if expectedDescription != got.Description {
 			return fmt.Errorf("bad description, expected (%s), got (%s)", expectedDescription, got.Description)
 		}

@@ -307,13 +307,13 @@ $ terraform import fastly_custom_dashboard.example xxxxxxxxxxxxxxxxxxxx
 Required:
 
 - `data_source` (Block List, Min: 1, Max: 1) An object which describes the data to display. (see [below for nested schema](#nestedblock--dashboard_item--data_source))
+- `id` (String) Dashboard item identifier (alphanumeric). Must be unique, relative to other items in the same dashboard.
 - `subtitle` (String) A human-readable subtitle for the dashboard item. Often a description of the visualization.
 - `title` (String) A human-readable title for the dashboard item.
 - `visualization` (Block List, Min: 1, Max: 1) An object which describes the data visualization to display. (see [below for nested schema](#nestedblock--dashboard_item--visualization))
 
 Optional:
 
-- `id` (String) Dashboard item identifier (alphanumeric). Must be unique, relative to other items in the same dashboard.
 - `span` (Number) The number of columns for the dashboard item to span. Dashboards are rendered on a 12-column grid on "desktop" screen sizes.
 
 <a id="nestedblock--dashboard_item--data_source"></a>

@@ -137,7 +137,7 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 						"data_source": &schemaDataSource,
 						"id": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Dashboard item identifier (alphanumeric). Must be unique, relative to other items in the same dashboard.",
 						},
 						"span": {

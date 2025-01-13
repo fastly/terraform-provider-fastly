@@ -3,7 +3,7 @@ layout: "fastly"
 page_title: "Fastly: custom_dashboard"
 sidebar_current: "docs-fastly-resource-custom_dashboard"
 description: |-
-  Provides a Custom Dashboard which can be viewed in the Fastly Web UI.
+  Provides a Custom Dashboard which can be viewed in the Fastly Control Panel.
 ---
 
 # fastly_custom_dashboard
@@ -18,6 +18,7 @@ resource "fastly_custom_dashboard" "example" {
   description = "This is an example custom dashboard. A few dashboard items are provided to help you get started."
 
   dashboard_item {
+    id       = "example1"
     title    = "Total Requests"
     subtitle = "Number of requests processed."
 
@@ -38,6 +39,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example2"
     title    = "Hit Ratio"
     subtitle = "Ratio of requests served from Fastly."
 
@@ -59,6 +61,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example3"
     title    = "Client & Server Errors"
     subtitle = "Total errors served from the client or server."
 
@@ -82,7 +85,8 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
-    title    = "Domains Requests"
+    id       = "example4"
+    title    = "Domain Requests"
     subtitle = "Requests by Domain."
     span     = 6
 
@@ -103,6 +107,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example5"
     title    = "Origin Responses"
     subtitle = "Responses by Origin."
     span     = 6
@@ -123,6 +128,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example6"
     title    = "Total Bandwidth"
     subtitle = "Total bandwidth served."
     span     = 12
@@ -144,6 +150,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example7"
     title    = "Products - Image Optimizer & Real-Time Log Streaming"
     subtitle = "Total IO images served and log statements sent."
     span     = 8
@@ -167,6 +174,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example8"
     title    = "Transport Protocols & Security"
     subtitle = "HTTP Protocols & TLS."
 
@@ -195,6 +203,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example9"
     title    = "Origin Miss Latency"
     subtitle = "Miss latency times for your origins."
     span     = 12
@@ -216,7 +225,8 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
-    title    = "DDOS - Request Flood Attempts"
+    id       = "example10"
+    title    = "DDoS - Request Flood Attempts"
     subtitle = "Number of connections the limit-streams action was applied."
     span     = 6
 
@@ -240,7 +250,8 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
-    title    = "DDOS - Malicious Bot Attack"
+    id       = "example11"
+    title    = "DDoS - Malicious Bot Attack"
     subtitle = "Number of times the blackhole action was taken."
     span     = 6
 
@@ -302,11 +313,8 @@ Required:
 
 Optional:
 
+- `id` (String) Dashboard item identifier (alphanumeric). Must be unique, relative to other items in the same dashboard.
 - `span` (Number) The number of columns for the dashboard item to span. Dashboards are rendered on a 12-column grid on "desktop" screen sizes.
-
-Read-Only:
-
-- `id` (String) Dashboard item identifier (UUID).
 
 <a id="nestedblock--dashboard_item--data_source"></a>
 ### Nested Schema for `dashboard_item.data_source`

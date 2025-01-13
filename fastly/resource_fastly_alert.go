@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,6 +12,7 @@ import (
 )
 
 const badAlertSourceServiceIdConfig = "empty `service_id` is only supported for `stats` as a source"
+const ManagedByTerraform = "Managed by Terraform"
 
 func resourceFastlyAlert() *schema.Resource {
 	return &schema.Resource{
@@ -135,9 +137,11 @@ func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta a
 		Source:    gofastly.ToPointer(d.Get("source").(string)),
 	}
 
+	description := ManagedByTerraform
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		description = v.(string) + " " + ManagedByTerraform
 	}
+	input.Description = gofastly.ToPointer(description)
 
 	input.Dimensions = map[string][]string{}
 	if v, ok := d.GetOk("dimensions"); ok {
@@ -183,8 +187,9 @@ func resourceFastlyAlertRead(_ context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	if len(ad.Description) > 0 {
-		err = d.Set("description", ad.Description)
+	description := strings.TrimSpace(strings.TrimSuffix(ad.Description, ManagedByTerraform))
+	if len(description) > 0 {
+		err = d.Set("description", description)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -241,9 +246,11 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Name:   gofastly.ToPointer(d.Get("name").(string)),
 	}
 
+	description := ManagedByTerraform
 	if v, ok := d.GetOk("description"); ok {
-		input.Description = gofastly.ToPointer(v.(string))
+		description = v.(string) + " " + ManagedByTerraform
 	}
+	input.Description = gofastly.ToPointer(description)
 
 	input.Dimensions = map[string][]string{}
 	if v, ok := d.GetOk("dimensions"); ok {

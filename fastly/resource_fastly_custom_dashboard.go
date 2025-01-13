@@ -137,7 +137,7 @@ func resourceFastlyCustomDashboard() *schema.Resource {
 						"data_source": &schemaDataSource,
 						"id": {
 							Type:        schema.TypeString,
-							Computed:    true,
+							Optional:    true,
 							Description: "Dashboard item identifier (UUID).",
 						},
 						"span": {

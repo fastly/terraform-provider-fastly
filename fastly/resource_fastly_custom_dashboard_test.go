@@ -21,6 +21,7 @@ func generateDashboardParams(t *testing.T) (name, description string, items []go
 	description = fmt.Sprintf("Created by tf-test-%s", rand)
 	items = []gofastly.DashboardItem{
 		{
+			ID: "item1",
 			DataSource: gofastly.DashboardDataSource{
 				Config: gofastly.DashboardSourceConfig{
 					Metrics: []string{"requests"},
@@ -38,6 +39,7 @@ func generateDashboardParams(t *testing.T) (name, description string, items []go
 			},
 		},
 		{
+			ID: "item2",
 			DataSource: gofastly.DashboardDataSource{
 				Config: gofastly.DashboardSourceConfig{
 					Metrics: []string{"status_4xx", "status_5xx"},
@@ -80,6 +82,7 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 
 	// Add a new item
 	updatedItems = append(updatedItems, gofastly.DashboardItem{
+		ID:       "item3",
 		Title:    "NEW Chart",
 		Subtitle: "This is the new Chart #3",
 		DataSource: gofastly.DashboardDataSource{
@@ -99,9 +102,13 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 		Name:        &updatedName,
 	}
 
-	// Update again, deleting first and last item
+	// Reverse `Items` to test item IDs are honored
 	update2 := update1
-	update2.Items = &[]gofastly.DashboardItem{updatedItems[1]}
+	update2.Items = &[]gofastly.DashboardItem{updatedItems[2], updatedItems[1], updatedItems[0]}
+
+	// Update again, deleting first and last item
+	update3 := update1
+	update3.Items = &[]gofastly.DashboardItem{updatedItems[1]}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -117,7 +124,9 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "name", dashboardName),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "description", dashboardDescription),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.#", "2"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.id", "item1"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.title", "Chart #1"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.id", "item2"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.title", "Chart #2"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.plot_type", "line"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.calculation_method", "avg"),
@@ -130,10 +139,13 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "name", updatedName),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "description", dashboardDescription),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.#", "3"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.id", "item1"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.title", "Chart #1"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.id", "item2"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.title", "Chart #2"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.plot_type", "donut"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.calculation_method", ""),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.2.id", "item3"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.2.title", "NEW Chart"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.2.span", "4"),
 				),
@@ -144,7 +156,26 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 					testAccCustomDashboardRemoteState(updatedName),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "name", updatedName),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "description", dashboardDescription),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.#", "3"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.id", "item3"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.title", "NEW Chart"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.span", "4"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.id", "item2"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.title", "Chart #2"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.plot_type", "donut"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.1.visualization.0.config.0.calculation_method", ""),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.2.id", "item1"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.2.title", "Chart #1"),
+				),
+			},
+			{
+				Config: testAccObservabilityCustomDashboard(t, update3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCustomDashboardRemoteState(updatedName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "name", updatedName),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "description", dashboardDescription),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.#", "1"),
+					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.id", "item2"),
 					resource.TestCheckResourceAttr("fastly_custom_dashboard.example", "dashboard_item.0.title", "Chart #2"),
 				),
 			},

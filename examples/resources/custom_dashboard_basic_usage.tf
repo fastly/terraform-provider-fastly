@@ -3,6 +3,7 @@ resource "fastly_custom_dashboard" "example" {
   description = "This is an example custom dashboard. A few dashboard items are provided to help you get started."
 
   dashboard_item {
+    id       = "example1"
     title    = "Total Requests"
     subtitle = "Number of requests processed."
 
@@ -23,6 +24,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example2"
     title    = "Hit Ratio"
     subtitle = "Ratio of requests served from Fastly."
 
@@ -44,6 +46,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example3"
     title    = "Client & Server Errors"
     subtitle = "Total errors served from the client or server."
 
@@ -67,6 +70,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example4"
     title    = "Domain Requests"
     subtitle = "Requests by Domain."
     span     = 6
@@ -88,6 +92,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example5"
     title    = "Origin Responses"
     subtitle = "Responses by Origin."
     span     = 6
@@ -108,6 +113,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example6"
     title    = "Total Bandwidth"
     subtitle = "Total bandwidth served."
     span     = 12
@@ -129,6 +135,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example7"
     title    = "Products - Image Optimizer & Real-Time Log Streaming"
     subtitle = "Total IO images served and log statements sent."
     span     = 8
@@ -152,6 +159,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example8"
     title    = "Transport Protocols & Security"
     subtitle = "HTTP Protocols & TLS."
 
@@ -180,6 +188,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example9"
     title    = "Origin Miss Latency"
     subtitle = "Miss latency times for your origins."
     span     = 12
@@ -201,6 +210,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example10"
     title    = "DDoS - Request Flood Attempts"
     subtitle = "Number of connections the limit-streams action was applied."
     span     = 6
@@ -225,6 +235,7 @@ resource "fastly_custom_dashboard" "example" {
   }
 
   dashboard_item {
+    id       = "example11"
     title    = "DDoS - Malicious Bot Attack"
     subtitle = "Number of times the blackhole action was taken."
     span     = 6

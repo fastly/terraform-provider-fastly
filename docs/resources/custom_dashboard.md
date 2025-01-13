@@ -8,7 +8,7 @@ description: |-
 
 # fastly_custom_dashboard
 
-Provides a Custom Dashboard which can be viewed in the Fastly Web UI.
+Provides a Custom Dashboard which can be viewed in the Fastly Control Panel.
 
 ## Example Usage
 

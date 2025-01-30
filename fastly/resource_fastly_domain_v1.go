@@ -30,7 +30,7 @@ func resourceFastlyDomainV1() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The fully-qualified domain name for your domain. Can be created, but not updated.",
+				Description: "The fully-qualified domain name for your domain (e.g. `www.example.com`, no trailing dot). Can be created, but not updated.",
 			},
 			"service_id": {
 				Type:        schema.TypeString,

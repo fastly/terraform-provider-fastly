@@ -17,7 +17,7 @@ description: |-
 
 ### Required
 
-- `fqdn` (String) The fully-qualified domain name for your domain. Can be created, but not updated.
+- `fqdn` (String) The fully-qualified domain name for your domain (e.g. `www.example.com`, no trailing dot). Can be created, but not updated.
 
 ### Optional
 

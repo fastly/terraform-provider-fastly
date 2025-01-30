@@ -1,8 +1,6 @@
 module github.com/fastly/terraform-provider-fastly
 
-go 1.21.0
-
-toolchain go1.21.13
+go 1.21
 
 require (
 	github.com/bflad/tfproviderlint v0.30.0

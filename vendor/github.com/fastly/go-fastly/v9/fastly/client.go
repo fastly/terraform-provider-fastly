@@ -62,7 +62,7 @@ const UserAgentEnvVar = "FASTLY_USER_AGENT"
 var ProjectURL = "github.com/fastly/go-fastly"
 
 // ProjectVersion is the version of this library.
-var ProjectVersion = "9.11.0"
+var ProjectVersion = "9.13.0"
 
 // UserAgent is the user agent for this particular client.
 var UserAgent = fmt.Sprintf("FastlyGo/%s (+%s; %s)",
@@ -207,6 +207,20 @@ func (c *Client) Get(p string, ro *RequestOptions) (*http.Response, error) {
 		ro = new(RequestOptions)
 	}
 	ro.Parallel = true
+	return c.Request("GET", p, ro)
+}
+
+// GetJSON issues an HTTP GET request and indicates that the response
+// should be JSON encoded.
+func (c *Client) GetJSON(p string, ro *RequestOptions) (*http.Response, error) {
+	if ro == nil {
+		ro = new(RequestOptions)
+	}
+	if ro.Headers == nil {
+		ro.Headers = make(map[string]string)
+	}
+	ro.Parallel = true
+	ro.Headers["Accept"] = JSONMimeType
 	return c.Request("GET", p, ro)
 }
 
@@ -651,8 +665,8 @@ func checkResp(resp *http.Response, err error) (*http.Response, error) {
 	}
 }
 
-// decodeBodyMap is used to decode an HTTP response body into a mapstructure struct.
-func decodeBodyMap(body io.Reader, out any) error {
+// DecodeBodyMap is used to decode an HTTP response body into a mapstructure struct.
+func DecodeBodyMap(body io.Reader, out any) error {
 	var parsed any
 	dec := json.NewDecoder(body)
 	if err := dec.Decode(&parsed); err != nil {

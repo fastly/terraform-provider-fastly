@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - go mod tidy
@@ -24,7 +25,7 @@ builds:
       goarch: '386'
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
-- format: zip
+- formats: [zip]
   name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
@@ -44,4 +45,4 @@ signs:
 release:
   draft: true
 changelog:
-  skip: true
+  disable: true

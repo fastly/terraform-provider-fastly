@@ -73,6 +73,7 @@ func Provider() *schema.Provider {
 			"fastly_configstore":                     resourceFastlyConfigStore(),
 			"fastly_configstore_entries":             resourceFastlyConfigStoreEntries(),
 			"fastly_custom_dashboard":                resourceFastlyCustomDashboard(),
+			"fastly_domain_v1":                       resourceFastlyDomainV1(),
 			"fastly_integration":                     resourceFastlyIntegration(),
 			"fastly_kvstore":                         resourceFastlyKVStore(),
 			"fastly_secretstore":                     resourceFastlySecretStore(),

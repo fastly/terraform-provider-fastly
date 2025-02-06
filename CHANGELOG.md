@@ -4,6 +4,7 @@
 
 ENHANCEMENTS:
 
+- Upgrade to Go 1.22 for building the provider [#917](https://github.com/fastly/terraform-provider-fastly/pull/917)
 - feat(domains): add support for v1 functionality [#917](https://github.com/fastly/terraform-provider-fastly/pull/917)
 - feat(dashboard): add support for Observability custom dashboards [#905](https://github.com/fastly/terraform-provider-fastly/pull/905)
 - feat(alerts): append 'Managed by Terraform' to descriptions [#914](https://github.com/fastly/terraform-provider-fastly/pull/914)

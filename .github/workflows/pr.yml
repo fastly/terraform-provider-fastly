@@ -13,13 +13,6 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: 1.22.x
-    - name: Restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-mod-
     - name: Fmt
       run: make fmt
     - name: Vet
@@ -39,15 +32,14 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
-    - name: Restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-mod-
     - name: Test
       run: make test
+
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: dangoslen/changelog-enforcer@v3
+
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -79,13 +71,6 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: 1.22.x
-    - name: Restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-mod-
     - name: Install Terraform CLI
       uses: hashicorp/setup-terraform@v3
     - name: Validate Interface
@@ -129,13 +114,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.x
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-mod-
       - name: Install Terraform CLI
         uses: hashicorp/setup-terraform@v3
       - name: Validate Interface
@@ -188,13 +166,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22.x
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-mod-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:

@@ -1,7 +1,9 @@
-GO_BIN ?= go ## Allows overriding go executable.
+# Specifies the standard Go toolchain used to build the provider
+GOTOOLCHAIN ?= go1.22.12
+export GOTOOLCHAIN
 
-TEST?=$$($(GO_BIN) list ./... |grep -v 'vendor')
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+TEST?=$$(go list ./...)
+GOFMT_FILES?=$$(find . -name '*.go')
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=fastly
 FULL_PKG_NAME=github.com/fastly/terraform-provider-fastly
@@ -11,7 +13,7 @@ VERSION_SHORT=$(shell git describe --tags --always --abbrev=0)
 DOCS_PROVIDER_VERSION=$(subst v,,$(VERSION_SHORT))
 
 # Enables support for tools such as https://github.com/rakyll/gotest
-TEST_COMMAND ?= $(GO_BIN) test
+TEST_COMMAND ?= go test
 
 # R019: ignore large number of arguments passed to HasChanges().
 # R018: replace sleep with either resource.Retry() or WaitForState().
@@ -21,8 +23,8 @@ TFPROVIDERLINT_DEFAULT_FLAGS=-R001=false -R018=false -R019=false
 # XAT001: missing resource.TestCase ErrorCheck.
 TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false
 
-GOHOSTOS ?= $(shell $(GO_BIN) env GOHOSTOS || echo unknown)
-GOHOSTARCH ?= $(shell $(GO_BIN) env GOHOSTARCH || echo unknown)
+GOHOSTOS ?= $(shell go env GOHOSTOS || echo unknown)
+GOHOSTARCH ?= $(shell go env GOHOSTARCH || echo unknown)
 
 # Use a parallelism of 4 by default for tests, overriding whatever GOMAXPROCS is
 # set to. For the acceptance tests especially, the main bottleneck affecting the
@@ -34,7 +36,7 @@ TEST_PARALLELISM?=4
 default: build
 
 build: clean
-	$(GO_BIN) build -o bin/terraform-provider-$(PKG_NAME)_$(VERSION) -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(VERSION)"
+	go build -o bin/terraform-provider-$(PKG_NAME)_$(VERSION) -ldflags="-X $(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=$(VERSION)"
 	@sh -c "'$(CURDIR)/scripts/generate-dev-overrides.sh'"
 
 test:
@@ -67,7 +69,7 @@ clean_test:
 	fi
 
 vet:
-	@$(GO_BIN) vet $$($(GO_BIN) list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
+	@go vet $$(go list ./...) ; if [ $$? -eq 1 ]; then \
 		echo "\nVet found suspicious constructs. Please check the reported constructs"; \
 		echo "and fix them if necessary before submitting the code for review."; \
 		exit 1; \
@@ -83,7 +85,7 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 goreleaser-bin:
-	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@latest
+	go install github.com/goreleaser/goreleaser/v2@latest
 
 nilaway:
 	@nilaway ./...
@@ -108,7 +110,7 @@ test-compile:
 BIN=$(CURDIR)/bin
 $(BIN)/%:
 	@echo "Installing tools from tools/tools.go"
-	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} $(GO_BIN) install {}
+	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} go install {}
 
 generate-docs: $(BIN)/tfplugindocs
 	$(shell sed -e "s/__VERSION__/$(DOCS_PROVIDER_VERSION)/g" examples/index-fastly-provider.tf.tmpl > examples/index-fastly-provider.tf)

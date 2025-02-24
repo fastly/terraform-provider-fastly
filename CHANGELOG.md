@@ -1,5 +1,9 @@
 ## 5.17.0 (Unreleased)
 
+DEPENDENCIES:
+
+- build(deps): Remove 'vendor' directory and all processes which refer to it.
+
 ## 5.16.0 (January 31, 2025)
 
 ENHANCEMENTS:

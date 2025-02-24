@@ -1,5 +1,9 @@
 ## 5.17.0 (Unreleased)
 
+DEPENDENCIES:
+
+- build(deps): Pin goreleaser to v2.2.0, the last version compatible with Go 1.22.
+
 ## 5.16.0 (January 31, 2025)
 
 ENHANCEMENTS:

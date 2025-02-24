@@ -83,7 +83,7 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 goreleaser-bin:
-	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@latest
+	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@v2.2.0
 
 nilaway:
 	@nilaway ./...

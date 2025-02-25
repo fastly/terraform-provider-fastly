@@ -39,7 +39,7 @@ func TestAccFastlyConfigStore_validate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported"},
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported", "stage"},
 			},
 			// IMPORTANT: Add a key to the store so we can validate force delete.
 			{

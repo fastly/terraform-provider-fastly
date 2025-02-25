@@ -38,7 +38,7 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported"},
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported", "stage"},
 			},
 		},
 	})

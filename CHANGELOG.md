@@ -1,5 +1,10 @@
 ## 5.17.0 (Unreleased)
 
+ENHANCEMENTS:
+
+- feat(fastly_compute_service): Add support for 'staging' of service-versions.
+- feat(fastly_vcl_service): Add support for 'staging' of service-versions.
+
 ## 5.16.0 (January 31, 2025)
 
 ENHANCEMENTS:

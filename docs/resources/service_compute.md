@@ -79,7 +79,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Optional
 
-- `activate` (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `activate` (Boolean) Conditionally prevents new service-versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
@@ -116,6 +116,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `product_enablement` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--product_enablement))
 - `resource_link` (Block Set) A resource link represents a link between a shared resource (such as an KV Store or Config Store) and a service version. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
+- `stage` (Boolean) Conditionally enables new service-versions to be staged. The apply step will create a new draft version but will not stage it if this is set to `false`. Default `false`
 - `version_comment` (String) Description field for the version
 
 ### Read-Only
@@ -125,6 +126,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `force_refresh` (Boolean) Used internally by the provider to temporarily indicate if all resources should call their associated API to update the local state. This is for scenarios where the service version has been reverted outside of Terraform (e.g. via the Fastly UI) and the provider needs to resync the state for a different active version (this is only if `activate` is `true`).
 - `id` (String) The ID of this resource.
 - `imported` (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
+- `staged_version` (Number) The currently staged version of your Fastly Service
 
 <a id="nestedblock--domain"></a>
 ### Nested Schema for `domain`

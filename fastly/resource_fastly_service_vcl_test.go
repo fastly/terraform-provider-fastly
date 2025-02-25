@@ -345,7 +345,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "imported"},
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "imported", "stage"},
 				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
 					return fmt.Sprintf("%s@2", gofastly.ToValue(service.ServiceID)), nil
 				},

@@ -245,7 +245,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 ### Optional
 
 - `acl` (Block Set) (see [below for nested schema](#nestedblock--acl))
-- `activate` (Boolean) Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `activate` (Boolean) Conditionally prevents new service-versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `cache_setting` (Block Set) (see [below for nested schema](#nestedblock--cache_setting))
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
@@ -295,6 +295,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `response_object` (Block Set) (see [below for nested schema](#nestedblock--response_object))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
 - `snippet` (Block Set) (see [below for nested schema](#nestedblock--snippet))
+- `stage` (Boolean) Conditionally enables new service-versions to be staged. The apply step will create a new draft version but will not stage it if this is set to `false`. Default `false`
 - `stale_if_error` (Boolean) Enables serving a stale object if there is an error
 - `stale_if_error_ttl` (Number) The default time-to-live (TTL) for serving the stale object for the version
 - `vcl` (Block Set) (see [below for nested schema](#nestedblock--vcl))
@@ -308,6 +309,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `force_refresh` (Boolean) Used internally by the provider to temporarily indicate if all resources should call their associated API to update the local state. This is for scenarios where the service version has been reverted outside of Terraform (e.g. via the Fastly UI) and the provider needs to resync the state for a different active version (this is only if `activate` is `true`).
 - `id` (String) The ID of this resource.
 - `imported` (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
+- `staged_version` (Number) The currently staged version of your Fastly Service
 
 <a id="nestedblock--domain"></a>
 ### Nested Schema for `domain`

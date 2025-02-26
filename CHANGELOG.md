@@ -1,4 +1,12 @@
-## 5.17.0 (Unreleased)
+## [UNRELEASED]
+
+ENHANCEMENTS:
+
+BUG FIXES:
+
+DEPENDENCIES:
+
+DOCUMENTATION:
 
 ## 5.16.0 (January 31, 2025)
 

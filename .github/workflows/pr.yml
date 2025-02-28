@@ -4,6 +4,26 @@ on:
     types: [ok-to-test-command] # corresponds to ./ok-to-test.yml `commands:` field
 name: Pull request
 jobs:
+  dependabot-changelog-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: dangoslen/dependabot-changelog-helper@v3
+        with:
+          activationLabels: dependencies
+          changelogPath: './CHANGELOG.md'
+          entryPrefix: 'build(deps): '
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs(CHANGELOG.md): add dependency bump from dependabot"
+  changelog:
+    needs: dependabot-changelog-update
+    runs-on: ubuntu-latest
+    steps:
+    - uses: dangoslen/changelog-enforcer@v3
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -12,14 +32,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.20.x
-    - name: Restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-mod-
+        go-version: 1.22.x
     - name: Fmt
       run: make fmt
     - name: Vet
@@ -29,7 +42,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.20.x]
+        go-version: [1.22.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -39,13 +52,6 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go-version }}
-    - name: Restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-mod-
     - name: Test
       run: make test
   docs:
@@ -58,16 +64,14 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.20.x
+        go-version: 1.22.x
     - name: Generate Docs
       run: |
         make generate-docs
     - name: Check diff
       run: |
         git diff --exit-code --ignore-all-space ./docs/
-
   # NOTE: The following two `validate-` jobs (and the top-of-file config) are inspired by: https://github.com/imjohnbo/ok-to-test
-
   # Branch-based pull request from owner or trusted developer who has WRITE access.
   validate-interface-trusted:
     if: "!contains(github.event.pull_request.labels.*.name, 'breaking-change') && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository"
@@ -78,14 +82,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.20.x
-    - name: Restore cache
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-mod-
+        go-version: 1.22.x
     - name: Install Terraform CLI
       uses: hashicorp/setup-terraform@v3
     - name: Validate Interface
@@ -95,7 +92,6 @@ jobs:
         # IMPORTANT: Workflows from forks do not have access to sensitive data such as secrets
         # https://bit.ly/gh-actions-fork-secret-access
         # We work around this using ./ok-to-test.yml
-
   check-inputs:
     runs-on: ubuntu-latest
     steps:
@@ -107,7 +103,6 @@ jobs:
           echo 'github.event.client_payload.pull_request.head.sha: ${{ github.event.client_payload.pull_request.head.sha }}'
           echo 'github.event.client_payload.slash_command.args.named.sha: ${{ github.event.client_payload.slash_command.args.named.sha }}'
           echo 'github.event.client_payload.pull_request.number: ${{ github.event.client_payload.pull_request.number }}'
-
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
   # This will run the build not as the forked owner but as your own token user.
   validate-interface-fork:
@@ -128,14 +123,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.20.x
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-mod-
+          go-version: 1.22.x
       - name: Install Terraform CLI
         uses: hashicorp/setup-terraform@v3
       - name: Validate Interface
@@ -178,7 +166,6 @@ jobs:
             });
 
             return result;
-
   validate-goreleaser:
     runs-on: ubuntu-latest
     steps:
@@ -187,17 +174,11 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.20.x
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-mod-
+          go-version: 1.22.x
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
+          version: v2.6.1
           install-only: true
       - name: Validate Goreleaser
         run: make goreleaser GORELEASER_ARGS="--skip=validate --clean --snapshot" # snapshot is needed as local git has no tags

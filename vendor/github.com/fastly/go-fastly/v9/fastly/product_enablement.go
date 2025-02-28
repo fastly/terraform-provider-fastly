@@ -59,6 +59,9 @@ type ProductEnablementInput struct {
 }
 
 // GetProduct retrieves the details of the product enabled on the service.
+//
+// Deprecated: The 'Get' functions in the product-specific packages
+// should be used instead of this function.
 func (c *Client) GetProduct(i *ProductEnablementInput) (*ProductEnablement, error) {
 	if i.ProductID == ProductUndefined {
 		return nil, ErrMissingProductID
@@ -76,7 +79,7 @@ func (c *Client) GetProduct(i *ProductEnablementInput) (*ProductEnablement, erro
 	defer resp.Body.Close()
 
 	var h *ProductEnablement
-	if err := decodeBodyMap(resp.Body, &h); err != nil {
+	if err := DecodeBodyMap(resp.Body, &h); err != nil {
 		return nil, err
 	}
 
@@ -84,6 +87,9 @@ func (c *Client) GetProduct(i *ProductEnablementInput) (*ProductEnablement, erro
 }
 
 // EnableProduct enables the specified product on the service.
+//
+// Deprecated: The 'Enable' functions in the product-specific packages
+// should be used instead of this function.
 func (c *Client) EnableProduct(i *ProductEnablementInput) (*ProductEnablement, error) {
 	if i.ProductID == ProductUndefined {
 		return nil, ErrMissingProductID
@@ -101,13 +107,16 @@ func (c *Client) EnableProduct(i *ProductEnablementInput) (*ProductEnablement, e
 	defer resp.Body.Close()
 
 	var http3 *ProductEnablement
-	if err := decodeBodyMap(resp.Body, &http3); err != nil {
+	if err := DecodeBodyMap(resp.Body, &http3); err != nil {
 		return nil, err
 	}
 	return http3, nil
 }
 
 // DisableProduct disables the specified product on the service.
+//
+// Deprecated: The 'Disable' functions in the product-specific packages
+// should be used instead of this function.
 func (c *Client) DisableProduct(i *ProductEnablementInput) error {
 	if i.ProductID == ProductUndefined {
 		return ErrMissingProductID

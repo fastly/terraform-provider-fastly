@@ -83,14 +83,13 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 goreleaser-bin:
-	@# This is the last version of goreleaser that supports Go 1.20.14 (the version used to build the provider)
-	$(GO_BIN) install github.com/goreleaser/goreleaser@v1.21.2
+	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@latest
 
 nilaway:
 	@nilaway ./...
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
-# --skip-validate will skip the checks
+# --skip=validate will skip the checks
 # --clean will save you deleting the dist dir
 # --single-target will be quicker and only build for your os & architecture
 # e.g.

@@ -1,4 +1,32 @@
-## 5.16.0 (Unreleased)
+## [UNRELEASED]
+
+ENHANCEMENTS:
+
+BUG FIXES:
+
+DEPENDENCIES:
+
+DOCUMENTATION:
+
+## 5.16.0 (January 31, 2025)
+
+ENHANCEMENTS:
+
+- feat(domains): add support for v1 functionality [#917](https://github.com/fastly/terraform-provider-fastly/pull/917)
+- feat(dashboard): add support for Observability custom dashboards [#905](https://github.com/fastly/terraform-provider-fastly/pull/905)
+- feat(alerts): append 'Managed by Terraform' to descriptions [#914](https://github.com/fastly/terraform-provider-fastly/pull/914)
+
+BUG FIXES:
+
+- fix(fastly_package_hash): unnecessary `source_code_hash` conflict [#909](https://github.com/fastly/terraform-provider-fastly/pull/909)
+
+DEPENDENCIES:
+
+- build(deps): bump github.com/stretchr/testify from 1.8.4 to 1.10.0 [#901](https://github.com/fastly/terraform-provider-fastly/pull/901)
+
+DOCUMENTATION:
+
+- docs: correct links in Product Enablement documentation [#907](https://github.com/fastly/terraform-provider-fastly/pull/907)
 
 ## 5.15.0 (November 12, 2024)
 

@@ -33,13 +33,6 @@ func validateLoggingCompressionCodec() schema.SchemaValidateDiagFunc {
 	}, false))
 }
 
-func validateLoggingPlacement() schema.SchemaValidateDiagFunc {
-	return validation.ToDiagFunc(validation.StringInSlice([]string{
-		"none",
-		"waf_debug",
-	}, false))
-}
-
 func validateLoggingServerSideEncryption() schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		string(gofastly.S3ServerSideEncryptionAES),

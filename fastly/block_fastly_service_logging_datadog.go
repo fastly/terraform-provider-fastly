@@ -70,10 +70,9 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The name of the condition to apply.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "Where in the generated VCL the logging call should be placed.",
-			ValidateDiagFunc: validateLoggingPlacement(),
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Where in the generated VCL the logging call should be placed (ignored).",
 		}
 	}
 

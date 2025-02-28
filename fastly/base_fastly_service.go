@@ -149,7 +149,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 			"stage": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally enables new service-versions to be staged. The apply step will create a new draft version but will not stage it if this is set to `false`. Default `false`",
+				Description: "Conditionally enables new service-versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`",
 				Default:     false,
 				Optional:    true,
 			},
@@ -320,7 +320,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*APIClient).conn
 
 	shouldActivate := d.Get("activate").(bool)
-	shouldStage := d.Get("stage").(bool)
 	// Update Name and/or Comment. No new version is required for this.
 	if d.HasChanges("name", "comment") && shouldActivate {
 		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
@@ -364,6 +363,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	initialVersion := false
 
 	if needsChange {
+		shouldStage := d.Get("stage").(bool)
+
 		var latestVersion int
 		if d.IsNewResource() {
 			initialVersion = true

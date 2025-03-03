@@ -8,6 +8,10 @@ DEPENDENCIES:
 
 DOCUMENTATION:
 
+### Dependencies
+
+- build(deps): `dangoslen/dependabot-changelog-helper` from 3 to 4 ([#939](https://github.com/fastly/terraform-provider-fastly/pull/939))
+
 ## 5.16.0 (January 31, 2025)
 
 ENHANCEMENTS:

@@ -13,6 +13,7 @@ DOCUMENTATION:
 - build(deps): `github.com/google/go-cmp` from 0.6.0 to 0.7.0 ([#932](https://github.com/fastly/terraform-provider-fastly/pull/932))
 - build(deps): `golang.org/x/net` from 0.34.0 to 0.35.0 ([#921](https://github.com/fastly/terraform-provider-fastly/pull/921))
 - build(deps): `github.com/fastly/go-fastly/v9` from 9.13.0 to 9.13.1 ([#927](https://github.com/fastly/terraform-provider-fastly/pull/927))
+- build(deps): `github.com/bflad/tfproviderlint` from 0.30.0 to 0.31.0 ([#928](https://github.com/fastly/terraform-provider-fastly/pull/928))
 
 ## 5.16.0 (January 31, 2025)
 

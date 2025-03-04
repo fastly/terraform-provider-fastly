@@ -10,6 +10,7 @@ DOCUMENTATION:
 
 ### Dependencies
 - build(deps): `github.com/hashicorp/terraform-plugin-docs` from 0.19.4 to 0.21.0 ([#937](https://github.com/fastly/terraform-provider-fastly/pull/937))
+- build(deps): `github.com/google/go-cmp` from 0.6.0 to 0.7.0 ([#932](https://github.com/fastly/terraform-provider-fastly/pull/932))
 
 ## 5.16.0 (January 31, 2025)
 

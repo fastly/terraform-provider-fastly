@@ -6,7 +6,7 @@ toolchain go1.22.11
 require (
 	github.com/bflad/tfproviderlint v0.30.0
 	github.com/fastly/go-fastly/v9 v9.13.0
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/terraform-plugin-docs v0.21.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0

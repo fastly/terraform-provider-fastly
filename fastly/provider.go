@@ -66,7 +66,6 @@ func Provider() *schema.Provider {
 			"fastly_tls_subscription":             dataSourceFastlyTLSSubscription(),
 			"fastly_tls_subscription_ids":         dataSourceFastlyTLSSubscriptionIDs(),
 			"fastly_vcl_snippets":                 dataSourceFastlyVCLSnippets(),
-			"fastly_waf_rules":                    dataSourceFastlyWAFRules(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"fastly_alert":                           resourceFastlyAlert(),
@@ -83,7 +82,6 @@ func Provider() *schema.Provider {
 			"fastly_service_dictionary_items":        resourceServiceDictionaryItems(),
 			"fastly_service_dynamic_snippet_content": resourceServiceDynamicSnippetContent(),
 			"fastly_service_vcl":                     resourceServiceVCL(),
-			"fastly_service_waf_configuration":       resourceServiceWAFConfiguration(),
 			"fastly_tls_activation":                  resourceFastlyTLSActivation(),
 			"fastly_tls_certificate":                 resourceFastlyTLSCertificate(),
 			"fastly_tls_mutual_authentication":       resourceFastlyTLSMutualAuthentication(),

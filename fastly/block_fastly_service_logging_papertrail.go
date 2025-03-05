@@ -70,10 +70,9 @@ func (h *PaperTrailServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of 2 are placed in `vcl_log` and those with `format_version` of 1 are placed in `vcl_deliver`",
-			ValidateDiagFunc: validateLoggingPlacement(),
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Where in the generated VCL the logging call should be placed. Ignored, but endpoints with `format_version` of 2 are placed in `vcl_log` and those with `format_version` of 1 are placed in `vcl_deliver`",
 		}
 	}
 

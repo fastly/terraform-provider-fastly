@@ -58,14 +58,6 @@ resource "fastly_service_vcl" "interface-test-project" {
     type      = "REQUEST"
   }
 
-  # Required for `waf` to work with no diff (see waf test file for details).
-  condition {
-    name      = "test_req_condition_ALWAYS_FALSE"
-    priority  = 10
-    statement = "!req.url"
-    type      = "REQUEST"
-  }
-
   condition {
     name      = "test_res_condition"
     priority  = 10
@@ -191,14 +183,6 @@ resource "fastly_service_vcl" "interface-test-project" {
     status            = 200
   }
 
-  response_object {
-    content           = "content"
-    name              = "test_response_object_waf"
-    request_condition = "test_req_condition_ALWAYS_FALSE"
-    response          = "Forbidden"
-    status            = "403"
-  }
-
   snippet {
     content  = "if ( req.url ) { set req.http.different-header = \"true\"; }"
     name     = "recv_test"
@@ -210,11 +194,5 @@ resource "fastly_service_vcl" "interface-test-project" {
     content = "# some vcl here"
     main    = true
     name    = "test_vcl"
-  }
-
-  waf {
-    disabled           = false
-    prefetch_condition = "test_prefetch_condition"
-    response_object    = "test_response_object_waf"
   }
 }

@@ -3,6 +3,7 @@ package fastly
 import (
 	"fmt"
 	"testing"
+	"text/template"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -38,7 +39,120 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported"},
+				ImportStateVerifyIgnore: []string{"activate", "force_destroy", "package.0.filename", "imported", "stage"},
+			},
+		},
+	})
+}
+
+func TestAccFastlyServiceCompute_stage(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	backendName1 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	backendName3 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+
+	type Config struct {
+		Name     string
+		Domain   string
+		Backends []string
+		Stage    bool
+	}
+
+	tmplText := `
+data "fastly_package_hash" "example" {
+  filename = "./test_fixtures/package/valid.tar.gz"
+}
+
+resource "fastly_service_compute" "foo" {
+  name = "{{ .Name }}"
+
+  {{ if .Stage }}
+  activate = false
+  stage = true
+  {{ end }}
+
+  domain {
+    name    = "{{ .Domain }}"
+    comment = "tf-testing-domain"
+  }
+
+  {{ range .Backends }}
+  backend {
+    address = "{{ . }}"
+    name    = "tf-test backend {{ . }}"
+  }
+  {{ end }}
+
+  package {
+    filename = "test_fixtures/package/valid.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
+  }
+
+  force_destroy = true
+}`
+
+	tmpl, err := template.New("test").Parse(tmplText)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceComputeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: renderTestConfigTemplate(t, tmpl, Config{
+					Name:     name,
+					Domain:   domain,
+					Backends: []string{backendName1},
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName1}, 1),
+				),
+			},
+
+			{
+				Config: renderTestConfigTemplate(t, tmpl, Config{
+					Name:     name,
+					Domain:   domain,
+					Backends: []string{backendName1, backendName2},
+					Stage:    true,
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName1, backendName2}, 2),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "active_version", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "staged_version", "2"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "backend.#", "2"),
+				),
+			},
+
+			{
+				Config: renderTestConfigTemplate(t, tmpl, Config{
+					Name:     name,
+					Domain:   domain,
+					Backends: []string{backendName1, backendName2, backendName3},
+					Stage:    true,
+				}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
+					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName1, backendName2, backendName3}, 2),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "active_version", "1"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "staged_version", "2"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "backend.#", "3"),
+				),
 			},
 		},
 	})

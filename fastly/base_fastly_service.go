@@ -77,6 +77,11 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				// activate flag) then the active_version will be recomputed too.
 				return d.HasChange("cloned_version") && d.Get("activate").(bool)
 			}),
+			customdiff.ComputedIf("staged_version", func(_ context.Context, d *schema.ResourceDiff, _ any) bool {
+				// If cloned_version is recomputed and we are automatically staging new versions (controlled with the
+				// stage flag) then the staged_version will be recomputed too.
+				return d.HasChange("cloned_version") && d.Get("stage").(bool)
+			}),
 			validateUniqueNames("backend"),
 			validateUniqueNames("rate_limiter"),
 			validateUniqueNames("snippet"),
@@ -84,13 +89,13 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"activate": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally prevents the Service from being activated. The apply step will continue to create a new draft version but will not activate it if this is set to `false`. Default `true`",
+				Description: "Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`",
 				Default:     true,
 				Optional:    true,
 			},
 			// Active Version represents the currently activated version in Fastly. In
 			// Terraform, we abstract this number away from the users and manage
-			// creating and activating. It's used internally, but also exported for
+			// creation and activating. It's used internally, but also exported for
 			// users to see.
 			"active_version": {
 				Type:        schema.TypeInt,
@@ -99,9 +104,11 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 			// Cloned Version represents the latest cloned version by the provider. It
 			// gets set whenever Terraform detects changes and clones the currently
-			// activated version in order to modify it. Active Version and Cloned
-			// Version can be different if the Activate field is set to false in order
-			// to prevent the service from being activated.
+			// activated version in order to modify it. Active Version, Staged
+			// Version, and Cloned Version can be different if the Activate field is
+			// set to false in order to prevent a new version from being activated, or
+			// if the Stage field is set to false in order to prevent a new version
+			// from being staged.
 			"cloned_version": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -139,6 +146,20 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 				Optional:      true,
 				Description:   "Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`",
 				ConflictsWith: []string{"force_destroy"},
+			},
+			"stage": {
+				Type:        schema.TypeBool,
+				Description: "Conditionally enables new service versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`",
+				Default:     false,
+				Optional:    true,
+			},
+			// Staged Version represents the currently staged version in Fastly. In
+			// Terraform, we abstract this number away from the users and manage
+			// creation and staging.
+			"staged_version": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The currently staged version of your Fastly Service",
 			},
 			"version_comment": {
 				Type:        schema.TypeString,
@@ -342,6 +363,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	initialVersion := false
 
 	if needsChange {
+		shouldStage := d.Get("stage").(bool)
+
 		var latestVersion int
 		if d.IsNewResource() {
 			initialVersion = true
@@ -350,43 +373,67 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			latestVersion = 1
 		} else {
 			latestVersion = d.Get("cloned_version").(int)
-			// Clone the latest version, giving us an unlocked version we can modify.
-			log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
-			newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
+
+			log.Printf("[DEBUG] Getting current state of version (%d)", latestVersion)
+			existingVersion, err := conn.GetVersion(&gofastly.GetVersionInput{
 				ServiceID:      d.Id(),
 				ServiceVersion: latestVersion,
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-
-			// The new version number is named "Number".
-			if newVersion.Number == nil {
-				return diag.Errorf("error: cloned service version number is nil")
+			if existingVersion.Locked == nil {
+				return diag.Errorf("error: latest service version 'locked' is nil")
 			}
-			latestVersion = *newVersion.Number
 
-			// New versions are not immediately found in the API, or are not
-			// immediately mutable, so we need to sleep a few and let Fastly ready
-			// itself. Typically, 7 seconds is enough.
-			log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
+			// If 'stage = false' (the default), then the latest version must be
+			// cloned even if it is not locked because that was the behavior before
+			// 'stage' support was added to the provider.
+			//
+			// If 'stage = true' and the latest version is not locked, then the user
+			// expects the provider to apply *more* changes to that existing draft
+			// version rather than creating another draft version. In this case there
+			// is no need to clone the latest version.
 
-			// TODO: Replace sleep with either resource.Retry() or WaitForState().
-			// https://github.com/bflad/tfproviderlint/tree/main/passes/R018
-			time.Sleep(7 * time.Second)
-
-			// Update the cloned version's comment.
-			if d.Get("version_comment").(string) != "" {
-				opts := gofastly.UpdateVersionInput{
+			if !shouldStage || *existingVersion.Locked {
+				// Clone the latest version, giving us an unlocked version we can modify.
+				log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
+				newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
 					ServiceID:      d.Id(),
 					ServiceVersion: latestVersion,
-					Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
-				}
-
-				log.Printf("[DEBUG] Update Version opts: %#v", opts)
-				_, err := conn.UpdateVersion(&opts)
+				})
 				if err != nil {
 					return diag.FromErr(err)
+				}
+
+				// The new version number is named "Number".
+				if newVersion.Number == nil {
+					return diag.Errorf("error: cloned service version number is nil")
+				}
+				latestVersion = *newVersion.Number
+
+				// New versions are not immediately found in the API, or are not
+				// immediately mutable, so we need to sleep a few and let Fastly ready
+				// itself. Typically, 7 seconds is enough.
+				log.Print("[DEBUG] Sleeping 7 seconds to allow Fastly Version to be available")
+
+				// TODO: Replace sleep with either resource.Retry() or WaitForState().
+				// https://github.com/bflad/tfproviderlint/tree/main/passes/R018
+				time.Sleep(7 * time.Second)
+
+				// Update the cloned version's comment.
+				if d.Get("version_comment").(string) != "" {
+					opts := gofastly.UpdateVersionInput{
+						ServiceID:      d.Id(),
+						ServiceVersion: latestVersion,
+						Comment:        gofastly.ToPointer(d.Get("version_comment").(string)),
+					}
+
+					log.Printf("[DEBUG] Update Version opts: %#v", opts)
+					_, err := conn.UpdateVersion(&opts)
+					if err != nil {
+						return diag.FromErr(err)
+					}
 				}
 			}
 		}
@@ -410,32 +457,60 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		// Only validate the service if `activate = true`.
+		// Only validate the service if `activate = true` or `stage = true`.
 		// This is primarily for compute services with no package defined.
-		// The user needs to set `activate = false` to prevent errors.
-		// As they can't activate a service without a package.
+		// The user needs to set `activate = false` and `stage = false` to prevent errors.
+		// As they can't activate or stage a service without a package.
 		// There's no value showing validation errors to users in 'draft' mode.
+		mustValidate := false
 		if i := d.Get("activate"); i != nil {
 			if i.(bool) {
-				// Validate version.
-				log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-				valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
-					ServiceID:      d.Id(),
-					ServiceVersion: latestVersion,
-				})
-				if err != nil {
-					return diag.Errorf("error checking validation: %s", err)
-				}
+				mustValidate = true
+			}
+		}
+		if i := d.Get("stage"); i != nil {
+			if i.(bool) {
+				mustValidate = true
+			}
+		}
+		if mustValidate {
+			// Validate version.
+			log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+			valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
+				ServiceID:      d.Id(),
+				ServiceVersion: latestVersion,
+			})
+			if err != nil {
+				return diag.Errorf("error checking validation: %s", err)
+			}
 
-				if !valid {
-					return diag.Errorf("invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
-				}
+			if !valid {
+				return diag.Errorf("invalid configuration for Fastly Service (%s): %s", d.Id(), msg)
 			}
 		}
 
 		err := d.Set("cloned_version", latestVersion)
 		if err != nil {
 			return diag.FromErr(err)
+		}
+
+		// If staging has been requested, then stage the latest version.
+		if shouldStage {
+			log.Printf("[DEBUG] Staging Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
+			_, err := conn.ActivateVersion(&gofastly.ActivateVersionInput{
+				ServiceID:      d.Id(),
+				ServiceVersion: latestVersion,
+				Environment:    "staging",
+			})
+			if err != nil {
+				return diag.Errorf("error staging version (%d): %s", latestVersion, err)
+			}
+
+			// Only if the version is valid and staged do we set the staged_version.
+			err = d.Set("staged_version", latestVersion)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -627,6 +702,22 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 		}
 	} else {
 		log.Printf("[DEBUG] Active Version for Service (%s) is empty, no state to refresh", d.Id())
+	}
+
+	// Get the current staged version, if any
+	if s.Environments != nil {
+		for _, e := range s.Environments {
+			if e.Name == nil || *e.Name != "staging" {
+				continue
+			}
+			if e.ServiceVersion != nil {
+				err := d.Set("staged_version", e.ServiceVersion)
+				if err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			break
+		}
 	}
 
 	// To ensure nested resources (e.g. backends, domains etc) don't continue to

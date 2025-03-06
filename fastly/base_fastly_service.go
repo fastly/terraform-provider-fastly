@@ -89,7 +89,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"activate": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally prevents new service-versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`",
+				Description: "Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`",
 				Default:     true,
 				Optional:    true,
 			},
@@ -149,7 +149,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 			"stage": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally enables new service-versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`",
+				Description: "Conditionally enables new service versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`",
 				Default:     false,
 				Optional:    true,
 			},

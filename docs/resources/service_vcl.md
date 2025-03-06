@@ -269,7 +269,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 ### Optional
 
 - `acl` (Block Set) (see [below for nested schema](#nestedblock--acl))
-- `activate` (Boolean) Conditionally prevents new service-versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `activate` (Boolean) Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `cache_setting` (Block Set) (see [below for nested schema](#nestedblock--cache_setting))
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
@@ -319,7 +319,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `response_object` (Block Set) (see [below for nested schema](#nestedblock--response_object))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
 - `snippet` (Block Set) (see [below for nested schema](#nestedblock--snippet))
-- `stage` (Boolean) Conditionally enables new service-versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`
+- `stage` (Boolean) Conditionally enables new service versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`
 - `stale_if_error` (Boolean) Enables serving a stale object if there is an error
 - `stale_if_error_ttl` (Number) The default time-to-live (TTL) for serving the stale object for the version
 - `vcl` (Block Set) (see [below for nested schema](#nestedblock--vcl))

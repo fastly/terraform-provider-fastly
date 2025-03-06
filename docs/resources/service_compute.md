@@ -103,7 +103,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Optional
 
-- `activate` (Boolean) Conditionally prevents new service-versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
+- `activate` (Boolean) Conditionally prevents new service versions from being activated. The apply step will create a new draft version but will not activate it if this is set to `false`. Default `true`
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
@@ -140,7 +140,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `product_enablement` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--product_enablement))
 - `resource_link` (Block Set) A resource link represents a link between a shared resource (such as an KV Store or Config Store) and a service version. (see [below for nested schema](#nestedblock--resource_link))
 - `reuse` (Boolean) Services that are active cannot be destroyed. If set to `true` a service Terraform intends to destroy will instead be deactivated (allowing it to be reused by importing it into another Terraform project). If `false`, attempting to destroy an active service will cause an error. Default `false`
-- `stage` (Boolean) Conditionally enables new service-versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`
+- `stage` (Boolean) Conditionally enables new service versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`
 - `version_comment` (String) Description field for the version
 
 ### Read-Only

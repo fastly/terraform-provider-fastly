@@ -1,10 +1,10 @@
 ## [UNRELEASED]
 
-BREAKING:
+### BREAKING:
 
 - breaking(waf): Support for the Fastly WAF (legacy, not Next-Gen WAF)
   product has been removed. The product passed its End-of-Life date
-  quite some time ago, and it is no longer in use by customers.
+  quite some time ago, and it is no longer in use by customers
   [#936](https://github.com/fastly/terraform-provider-fastly/pull/936)
 
 - breaking(logging): The 'placement' attribute in the logging
@@ -13,13 +13,32 @@ BREAKING:
   longer supported.
   [#936](https://github.com/fastly/terraform-provider-fastly/pull/936)
 
-ENHANCEMENTS:
+### ENHANCEMENTS:
 
-BUG FIXES:
+### BUG FIXES:
 
-DEPENDENCIES:
+### DEPENDENCIES:
 
-DOCUMENTATION:
+### DOCUMENTATION:
+
+## 5.17.0 (March 10, 2025)
+
+### ENHANCEMENTS:
+
+- feat(fastly_compute_service): Add support for 'staging' of service versions.
+- feat(fastly_vcl_service): Add support for 'staging' of service versions.
+
+### BUG FIXES:
+
+- fix(fastly_vcl_service): Always 'validate' services after applying changes.
+
+### DEPENDENCIES:
+
+- build(deps): `github.com/hashicorp/terraform-plugin-docs` from 0.19.4 to 0.21.0 ([#937](https://github.com/fastly/terraform-provider-fastly/pull/937))
+- build(deps): `github.com/google/go-cmp` from 0.6.0 to 0.7.0 ([#932](https://github.com/fastly/terraform-provider-fastly/pull/932))
+- build(deps): `golang.org/x/net` from 0.34.0 to 0.35.0 ([#921](https://github.com/fastly/terraform-provider-fastly/pull/921))
+- build(deps): `github.com/fastly/go-fastly/v9` from 9.13.0 to 9.13.1 ([#927](https://github.com/fastly/terraform-provider-fastly/pull/927))
+- build(deps): `github.com/bflad/tfproviderlint` from 0.30.0 to 0.31.0 ([#928](https://github.com/fastly/terraform-provider-fastly/pull/928))
 
 ## 5.16.0 (January 31, 2025)
 

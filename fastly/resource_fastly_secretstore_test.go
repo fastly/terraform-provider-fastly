@@ -36,7 +36,7 @@ func TestAccFastlySecretStore_validate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These attributes are not stored on the Fastly API and must be ignored.
-				ImportStateVerifyIgnore: []string{"activate", "package.0.filename", "imported"},
+				ImportStateVerifyIgnore: []string{"activate", "package.0.filename", "imported", "stage"},
 			},
 			{
 				Config: testAccSecretStoreConfigDeleteStep1(secretStoreName, serviceName, domainName),

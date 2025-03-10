@@ -1,4 +1,12 @@
-4# Release Process
+# Release Process
+
+## Prerequisites
+
+For security we sign tags. To be able to sign tags you need to tell Git which key you would like to use. Please follow these
+[steps](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key) to
+tell Git about your signing key.
+
+## Steps
 
 1. Merge all PRs intended for the release.
 1. Rebase latest remote main branch locally (`git pull --rebase origin main`).

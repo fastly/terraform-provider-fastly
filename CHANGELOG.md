@@ -7,6 +7,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+- fix(fastly_vcl_service): Always 'validate' services after applying changes.
+
 DEPENDENCIES:
 
 - build(deps): `github.com/hashicorp/terraform-plugin-docs` from 0.19.4 to 0.21.0 ([#937](https://github.com/fastly/terraform-provider-fastly/pull/937))

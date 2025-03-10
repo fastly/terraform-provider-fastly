@@ -457,23 +457,18 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		// Only validate the service if `activate = true` or `stage = true`.
-		// This is primarily for compute services with no package defined.
-		// The user needs to set `activate = false` and `stage = false` to prevent errors.
-		// As they can't activate or stage a service without a package.
-		// There's no value showing validation errors to users in 'draft' mode.
-		mustValidate := false
-		if i := d.Get("activate"); i != nil {
-			if i.(bool) {
-				mustValidate = true
-			}
-		}
-		if i := d.Get("stage"); i != nil {
-			if i.(bool) {
-				mustValidate = true
-			}
-		}
-		if mustValidate {
+		// Delivery (VCL) services should always be validated
+		// after changes are made, even if they will not be
+		// activated or staged.
+		//
+		// Compute (WASM) services should only be validated if
+		// they will be activated or staged, since the service
+		// may not have a WASM package attached while it is
+		// 'draft' and validation would fail. If the user is
+		// expecting to activate or stage the service, though,
+		// it must have a WASM package attached and pass
+		// validation.
+		if (serviceDef.GetType() == ServiceTypeVCL) || d.Get("activate").(bool) || d.Get("stage").(bool) {
 			// Validate version.
 			log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
 			valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{

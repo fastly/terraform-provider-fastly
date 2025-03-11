@@ -1,12 +1,12 @@
 module github.com/fastly/terraform-provider-fastly
 
 go 1.22.0
-toolchain go1.22.11
+toolchain go1.23.7
 
 require (
 	github.com/bflad/tfproviderlint v0.31.0
 	github.com/deckarep/golang-set/v2 v2.7.0
-	github.com/fastly/go-fastly/v9 v9.13.1
+	github.com/fastly/go-fastly/v9 v9.14.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.4.1
 	github.com/hashicorp/terraform-plugin-docs v0.21.0
@@ -79,7 +79,7 @@ require (
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
 	go.abhg.dev/goldmark/frontmatter v0.2.0 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
 	golang.org/x/mod v0.23.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect

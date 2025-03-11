@@ -109,6 +109,14 @@ var ErrMissingType = NewFieldError("Type")
 // requires a "CustomerID" key, but one was not set.
 var ErrMissingCustomerID = NewFieldError("CustomerID")
 
+// ErrMissingAccessKeyID is an error that is returned when an input struct
+// requires a "AccessKeyID" key, but one was not set.
+var ErrMissingAccessKeyID = NewFieldError("AccessKeyID")
+
+// ErrMissingDescription is an error that is returned when an input struct
+// requires a "Description" key, but one was not set.
+var ErrMissingDescription = NewFieldError("Description")
+
 // ErrMissingDictionaryID is an error that is returned when an input struct
 // requires a "DictionaryID" key, but one was not set.
 var ErrMissingDictionaryID = NewFieldError("DictionaryID")
@@ -236,6 +244,10 @@ var ErrMissingUserID = NewFieldError("UserID")
 // ErrMissingPermission is an error that is returned when an input struct
 // requires a "Permission" key, but one was not set.
 var ErrMissingPermission = NewFieldError("Permission")
+
+// ErrInvalidPermission is an error that is returned when an input struct
+// has a "Permission" key, but the one provided is invalid.
+var ErrInvalidPermission = NewFieldError("Permission").Message("invalid")
 
 // ErrMissingServiceVersion is an error that is returned when an input struct
 // requires a "ServiceVersion" key, but one was not set.
@@ -554,4 +566,9 @@ func (e *HTTPError) IsBadRequest() bool {
 // IsNotFound returns true if the HTTP status code is 404, false otherwise.
 func (e *HTTPError) IsNotFound() bool {
 	return e.StatusCode == http.StatusNotFound
+}
+
+// IsPreconditionFailed returns true if the HTTP status code is 412, false otherwise.
+func (e *HTTPError) IsPreconditionFailed() bool {
+	return e.StatusCode == http.StatusPreconditionFailed
 }

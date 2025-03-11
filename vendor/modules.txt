@@ -221,8 +221,8 @@ github.com/deckarep/golang-set/v2
 ## explicit; go 1.15
 github.com/dnaeon/go-vcr/cassette
 github.com/dnaeon/go-vcr/recorder
-# github.com/fastly/go-fastly/v9 v9.13.1
-## explicit; go 1.22.0
+# github.com/fastly/go-fastly/v9 v9.14.0
+## explicit; go 1.23.0
 github.com/fastly/go-fastly/v9/fastly
 github.com/fastly/go-fastly/v9/fastly/domains/v1
 # github.com/fatih/color v1.16.0
@@ -487,8 +487,8 @@ github.com/zclconf/go-cty/cty/set
 # go.abhg.dev/goldmark/frontmatter v0.2.0
 ## explicit; go 1.20
 go.abhg.dev/goldmark/frontmatter
-# golang.org/x/crypto v0.33.0
-## explicit; go 1.20
+# golang.org/x/crypto v0.35.0
+## explicit; go 1.23.0
 golang.org/x/crypto/argon2
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blake2b

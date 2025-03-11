@@ -70,10 +70,9 @@ func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "Where in the generated VCL the logging call should be placed.",
-			ValidateDiagFunc: validateLoggingPlacement(),
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Where in the generated VCL the logging call should be placed (ignored).",
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,

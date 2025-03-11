@@ -59,12 +59,6 @@ Basic usage with [custom Director](https://developer.fastly.com/reference/api/lo
 
 {{ tffile "examples/resources/service_vcl_usage_with_custom_director.tf" }}
 
--> **Note:** The following example is only available from 0.20.0 of the Fastly Terraform provider.
-
-Basic usage with [Web Application Firewall](https://developer.fastly.com/reference/api/waf/):
-
-{{ tffile "examples/resources/service_vcl_usage_with_web_app_firewall.tf" }}
-
 -> **Note:** For an AWS S3 Bucket, the Backend address is
 `<domain>.s3-website-<region>.amazonaws.com`. The `override_host` attribute
 should be set to `<bucket_name>.s3-website-<region>.amazonaws.com` in the `backend` block. See the

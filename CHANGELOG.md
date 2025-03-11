@@ -1,5 +1,18 @@
 ## [UNRELEASED]
 
+### BREAKING:
+
+- breaking(waf): Support for the Fastly WAF (legacy, not Next-Gen WAF)
+  product has been removed. The product passed its End-of-Life date
+  quite some time ago, and it is no longer in use by customers
+  [#936](https://github.com/fastly/terraform-provider-fastly/pull/936)
+
+- breaking(logging): The 'placement' attribute in the logging
+  endpoints has been changed to ignore any value provided by the user;
+  it was only used in combination with the Fastly WAF, which is no
+  longer supported.
+  [#936](https://github.com/fastly/terraform-provider-fastly/pull/936)
+
 ### ENHANCEMENTS:
 
 ### BUG FIXES:

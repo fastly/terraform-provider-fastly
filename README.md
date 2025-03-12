@@ -8,7 +8,7 @@
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.x or higher
-- [Go](https://golang.org/doc/install) 1.22 (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.23 (to build the provider plugin)
 
 > NOTE: the last version of the Fastly provider to support Terraform 0.11.x and below was [v0.26.0](https://github.com/fastly/terraform-provider-fastly/releases/tag/v0.26.0)
 
@@ -49,7 +49,7 @@ $ make build
 
 ## Developing the Provider
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.22+ is *required*).
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.23+ is *required*).
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in a local `bin` directory.
 

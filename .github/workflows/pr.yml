@@ -23,7 +23,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.22.x
+        go-version: 1.23.x
     - name: Fmt
       run: make fmt
     - name: Vet
@@ -33,7 +33,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.22.x]
+        go-version: [1.23.x]
         platform: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -55,7 +55,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.22.x
+        go-version: 1.23.x
     - name: Generate Docs
       run: |
         make generate-docs
@@ -73,7 +73,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
-        go-version: 1.22.x
+        go-version: 1.23.x
     - name: Install Terraform CLI
       uses: hashicorp/setup-terraform@v3
     - name: Validate Interface
@@ -114,7 +114,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.x
+          go-version: 1.23.x
       - name: Install Terraform CLI
         uses: hashicorp/setup-terraform@v3
       - name: Validate Interface
@@ -165,7 +165,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.x
+          go-version: 1.23.x
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 	"text/template"
@@ -15,7 +14,6 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -107,30 +105,6 @@ func TestEscapePercentSign(t *testing.T) {
 
 func appendNewLine(s string) string {
 	return s + "\n"
-}
-
-// assertEqualsSliceOfMaps compares a slice of maps even if they include schema.Set values
-func assertEqualsSliceOfMaps(t *testing.T, actualSlice []map[string]any, expectedSlice []map[string]any) {
-	for i, actualMap := range actualSlice {
-		var keysToBeRemoved []string
-		for key, value := range actualMap {
-			if v, ok := value.(*schema.Set); ok {
-				expected := expectedSlice[i][key]
-				keysToBeRemoved = append(keysToBeRemoved, key)
-				if !v.Equal(expected) {
-					t.Errorf("expected sets %s to be equal: %#v\n     got: %#v", key, expected, actualSlice)
-				}
-			}
-		}
-		for _, key := range keysToBeRemoved {
-			delete(actualMap, key)
-			delete(expectedSlice[i], key)
-		}
-	}
-
-	if !reflect.DeepEqual(actualSlice, expectedSlice) {
-		t.Fatalf("Error matching:\nexpected: %#v\n     got: %#v", expectedSlice, actualSlice)
-	}
 }
 
 // generateHex produces a slice of 16 random bytes.

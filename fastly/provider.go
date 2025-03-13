@@ -75,6 +75,7 @@ func Provider() *schema.Provider {
 			"fastly_domain_v1":                       resourceFastlyDomainV1(),
 			"fastly_integration":                     resourceFastlyIntegration(),
 			"fastly_kvstore":                         resourceFastlyKVStore(),
+			"fastly_object_storage_access_keys":      resourceObjectStorageAccessKey(),
 			"fastly_secretstore":                     resourceFastlySecretStore(),
 			"fastly_service_acl_entries":             resourceServiceACLEntries(),
 			"fastly_service_authorization":           resourceServiceAuthorization(),

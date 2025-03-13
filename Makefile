@@ -1,7 +1,7 @@
 GO_BIN ?= go ## Allows overriding go executable.
 
-TEST?=$$($(GO_BIN) list ./... |grep -v 'vendor')
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+TEST?=$$($(GO_BIN) list ./...)
+GOFMT_FILES?=$$(find . -name '*.go')
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=fastly
 FULL_PKG_NAME=github.com/fastly/terraform-provider-fastly
@@ -67,7 +67,7 @@ clean_test:
 	fi
 
 vet:
-	@$(GO_BIN) vet $$($(GO_BIN) list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
+	@$(GO_BIN) vet ./...; if [ $$? -eq 1 ]; then \
 		echo "\nVet found suspicious constructs. Please check the reported constructs"; \
 		echo "and fix them if necessary before submitting the code for review."; \
 		exit 1; \

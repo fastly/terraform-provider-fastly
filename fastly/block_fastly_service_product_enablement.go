@@ -8,6 +8,14 @@ import (
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	"github.com/fastly/go-fastly/v9/fastly/products/botmanagement"
+	"github.com/fastly/go-fastly/v9/fastly/products/brotlicompression"
+	"github.com/fastly/go-fastly/v9/fastly/products/domaininspector"
+	"github.com/fastly/go-fastly/v9/fastly/products/fanout"
+	"github.com/fastly/go-fastly/v9/fastly/products/imageoptimizer"
+	"github.com/fastly/go-fastly/v9/fastly/products/logexplorerinsights"
+	"github.com/fastly/go-fastly/v9/fastly/products/origininspector"
+	"github.com/fastly/go-fastly/v9/fastly/products/websockets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -112,10 +120,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		if resource["fanout"].(bool) {
 			log.Println("[DEBUG] fanout set")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductFanout,
-				ServiceID: serviceID,
-			})
+			_, err := fanout.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable fanout: %w", err)
 			}
@@ -125,20 +130,14 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		if resource["bot_management"].(bool) {
 			log.Println("[DEBUG] bot_management set")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductBotManagement,
-				ServiceID: serviceID,
-			})
+			_, err := botmanagement.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable bot_management: %w", err)
 			}
 		}
 		if resource["brotli_compression"].(bool) {
 			log.Println("[DEBUG] brotli_compression set")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductBrotliCompression,
-				ServiceID: serviceID,
-			})
+			_, err := brotlicompression.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable brotli_compression: %w", err)
 			}
@@ -146,10 +145,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 		if resource["domain_inspector"].(bool) {
 			log.Println("[DEBUG] domain_inspector set")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductDomainInspector,
-				ServiceID: serviceID,
-			})
+			_, err := domaininspector.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable domain_inspector: %w", err)
 			}
@@ -157,10 +153,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 		if resource["image_optimizer"].(bool) {
 			log.Println("[DEBUG] image_optimizer set")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductImageOptimizer,
-				ServiceID: serviceID,
-			})
+			_, err := imageoptimizer.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable image_optimizer: %w", err)
 			}
@@ -168,10 +161,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 		if resource["origin_inspector"].(bool) {
 			log.Println("[DEBUG] origin_inspector set")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductOriginInspector,
-				ServiceID: serviceID,
-			})
+			_, err := origininspector.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable origin_inspector: %w", err)
 			}
@@ -180,10 +170,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 	if resource["websockets"].(bool) {
 		log.Println("[DEBUG] websockets set")
-		_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductWebSockets,
-			ServiceID: serviceID,
-		})
+		_, err := websockets.Enable(conn, serviceID)
 		if err != nil {
 			return fmt.Errorf("failed to enable websockets: %w", err)
 		}
@@ -191,10 +178,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 	if resource["log_explorer_insights"].(bool) {
 		log.Println("[DEBUG] log_explorer_insights set")
-		_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductLogExplorerInsights,
-			ServiceID: serviceID,
-		})
+		_, err := logexplorerinsights.Enable(conn, serviceID)
 		if err != nil {
 			return fmt.Errorf("failed to enable log_explorer_insights: %w", err)
 		}
@@ -208,7 +192,8 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 	localState := d.Get(h.Key()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
-		log.Printf("[DEBUG] Refreshing Product Enablement Configuration for (%s)", d.Id())
+		serviceID := d.Id()
+		log.Printf("[DEBUG] Refreshing Product Enablement Configuration for (%s)", serviceID)
 
 		// The API returns a 400 if a product is not enabled.
 		// The API client returns an error if a non-2xx is returned from the API.
@@ -233,61 +218,38 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
-			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductFanout,
-				ServiceID: d.Id(),
-			}); err == nil {
+			if _, err := fanout.Get(conn, serviceID); err == nil {
 				result["fanout"] = true
 			}
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductBotManagement,
-				ServiceID: d.Id(),
-			}); err == nil {
+			if _, err := botmanagement.Get(conn, serviceID); err == nil {
 				result["bot_management"] = true
 			}
-			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductBrotliCompression,
-				ServiceID: d.Id(),
-			}); err == nil {
+
+			if _, err := brotlicompression.Get(conn, serviceID); err == nil {
 				result["brotli_compression"] = true
 			}
 
-			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductDomainInspector,
-				ServiceID: d.Id(),
-			}); err == nil {
+			if _, err := domaininspector.Get(conn, serviceID); err == nil {
 				result["domain_inspector"] = true
 			}
 
-			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductImageOptimizer,
-				ServiceID: d.Id(),
-			}); err == nil {
+			if _, err := imageoptimizer.Get(conn, serviceID); err == nil {
 				result["image_optimizer"] = true
 			}
 
-			if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductOriginInspector,
-				ServiceID: d.Id(),
-			}); err == nil {
+			if _, err := origininspector.Get(conn, serviceID); err == nil {
 				result["origin_inspector"] = true
 			}
 		}
 
-		if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductWebSockets,
-			ServiceID: d.Id(),
-		}); err == nil {
+		if _, err := websockets.Get(conn, serviceID); err == nil {
 			result["websockets"] = true
 		}
 
-		if _, err := conn.GetProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductLogExplorerInsights,
-			ServiceID: d.Id(),
-		}); err == nil {
+		if _, err := logexplorerinsights.Get(conn, serviceID); err == nil {
 			result["log_explorer_insights"] = true
 		}
 
@@ -298,7 +260,7 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 		// i.e. a typed nil.
 		if len(results[0]) > 0 {
 			if err := d.Set(h.Key(), results); err != nil {
-				log.Printf("[WARN] Error setting Product Enablement for (%s): %s", d.Id(), err)
+				log.Printf("[WARN] Error setting Product Enablement for (%s): %s", serviceID, err)
 				return err
 			}
 		}
@@ -322,19 +284,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["fanout"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] fanout will be enabled")
-				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductFanout,
-					ServiceID: serviceID,
-				})
+				_, err := fanout.Enable(conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable fanout: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] fanout will be disabled")
-				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductFanout,
-					ServiceID: serviceID,
-				})
+				err := fanout.Disable(conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -348,19 +304,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["bot_management"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] bot_management will be enabled")
-				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductBotManagement,
-					ServiceID: serviceID,
-				})
+				_, err := botmanagement.Enable(conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable bot_management: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] bot_management will be disabled")
-				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductBotManagement,
-					ServiceID: serviceID,
-				})
+				err := botmanagement.Disable(conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -368,22 +318,17 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 				}
 			}
 		}
+
 		if v, ok := modified["brotli_compression"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] brotli_compression will be enabled")
-				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductBrotliCompression,
-					ServiceID: serviceID,
-				})
+				_, err := brotlicompression.Enable(conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable brotli_compression: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] brotli_compression will be disabled")
-				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductBrotliCompression,
-					ServiceID: serviceID,
-				})
+				err := brotlicompression.Disable(conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -395,19 +340,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["domain_inspector"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] domain_inspector will be enabled")
-				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductDomainInspector,
-					ServiceID: serviceID,
-				})
+				_, err := domaininspector.Enable(conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable domain_inspector: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] domain_inspector will be disabled")
-				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductDomainInspector,
-					ServiceID: serviceID,
-				})
+				err := domaininspector.Disable(conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -419,19 +358,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["image_optimizer"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] image_optimizer will be enabled")
-				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductImageOptimizer,
-					ServiceID: serviceID,
-				})
+				_, err := imageoptimizer.Enable(conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable image_optimizer: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] image_optimizer will be disabled")
-				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductImageOptimizer,
-					ServiceID: serviceID,
-				})
+				err := imageoptimizer.Disable(conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -443,19 +376,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["origin_inspector"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] origin_inspector will be enabled")
-				_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductOriginInspector,
-					ServiceID: serviceID,
-				})
+				_, err := origininspector.Enable(conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable origin_inspector: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] origin_inspector will be disabled")
-				err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-					ProductID: gofastly.ProductOriginInspector,
-					ServiceID: serviceID,
-				})
+				err := origininspector.Disable(conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -468,19 +395,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 	if v, ok := modified["websockets"]; ok {
 		if v.(bool) {
 			log.Println("[DEBUG] websockets will be enabled")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductWebSockets,
-				ServiceID: serviceID,
-			})
+			_, err := websockets.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable websockets: %w", err)
 			}
 		} else {
 			log.Println("[DEBUG] websockets will be disabled")
-			err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductWebSockets,
-				ServiceID: serviceID,
-			})
+			err := websockets.Disable(conn, serviceID)
 			if err != nil {
 				if e := h.checkAPIError(err); e != nil {
 					return e
@@ -492,19 +413,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 	if v, ok := modified["log_explorer_insights"]; ok {
 		if v.(bool) {
 			log.Println("[DEBUG] log_explorer_insights will be enabled")
-			_, err := conn.EnableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductLogExplorerInsights,
-				ServiceID: serviceID,
-			})
+			_, err := logexplorerinsights.Enable(conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable log_explorer_insights: %w", err)
 			}
 		} else {
 			log.Println("[DEBUG] log_explorer_insights will be disabled")
-			err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-				ProductID: gofastly.ProductLogExplorerInsights,
-				ServiceID: serviceID,
-			})
+			err := logexplorerinsights.Disable(conn, serviceID)
 			if err != nil {
 				if e := h.checkAPIError(err); e != nil {
 					return e
@@ -548,12 +463,11 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 // passed a data structure that indicates what has changed like we do with the
 // TypeSet data type. So it'll be a trade-off.
 func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
+	serviceID := d.Id()
+
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		log.Println("[DEBUG] disable fanout")
-		err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductFanout,
-			ServiceID: d.Id(),
-		})
+		err := fanout.Disable(conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -563,10 +477,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		log.Println("[DEBUG] disable bot_management")
-		err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductBotManagement,
-			ServiceID: d.Id(),
-		})
+		err := botmanagement.Disable(conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -574,10 +485,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable brotli_compression")
-		err = conn.DisableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductBrotliCompression,
-			ServiceID: d.Id(),
-		})
+		err = brotlicompression.Disable(conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -585,10 +493,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable domain_inspector")
-		err = conn.DisableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductDomainInspector,
-			ServiceID: d.Id(),
-		})
+		err = domaininspector.Disable(conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -596,10 +501,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable image_optimizer")
-		err = conn.DisableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductImageOptimizer,
-			ServiceID: d.Id(),
-		})
+		err = imageoptimizer.Disable(conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -607,10 +509,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable origin_inspector")
-		err = conn.DisableProduct(&gofastly.ProductEnablementInput{
-			ProductID: gofastly.ProductOriginInspector,
-			ServiceID: d.Id(),
-		})
+		err = origininspector.Disable(conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -619,10 +518,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	}
 
 	log.Println("[DEBUG] disable websockets")
-	err := conn.DisableProduct(&gofastly.ProductEnablementInput{
-		ProductID: gofastly.ProductWebSockets,
-		ServiceID: d.Id(),
-	})
+	err := websockets.Disable(conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e
@@ -630,10 +526,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	}
 
 	log.Println("[DEBUG] disable log_explorer_insights")
-	err = conn.DisableProduct(&gofastly.ProductEnablementInput{
-		ProductID: gofastly.ProductLogExplorerInsights,
-		ServiceID: d.Id(),
-	})
+	err = logexplorerinsights.Disable(conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e

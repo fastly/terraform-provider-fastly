@@ -23,6 +23,7 @@
 - build(deps): `github.com/fastly/go-fastly/v9` from 9.13.1 to 9.14.0 ([#947](https://github.com/fastly/terraform-provider-fastly/pull/947))
 - build(deps): `golang.org/x/net` from 0.35.0 to 0.37.0 ([#948](https://github.com/fastly/terraform-provider-fastly/pull/948))
 - build(deps): `github.com/deckarep/golang-set/v2` from 2.7.0 to 2.8.0 ([#953](https://github.com/fastly/terraform-provider-fastly/pull/953))
+- build(deps): `github.com/hashicorp/go-cty` from 1.4.1 to 1.5.0 ([#952](https://github.com/fastly/terraform-provider-fastly/pull/952))
 
 ### DOCUMENTATION:
 

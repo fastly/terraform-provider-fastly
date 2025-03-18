@@ -9,7 +9,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/fastly/go-fastly/v9 v9.14.0
 	github.com/google/go-cmp v0.7.0
-	github.com/hashicorp/go-cty v1.4.1
+	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/terraform-plugin-docs v0.21.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
 	github.com/stretchr/testify v1.10.0

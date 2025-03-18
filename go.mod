@@ -6,7 +6,7 @@ toolchain go1.23.7
 
 require (
 	github.com/bflad/tfproviderlint v0.31.0
-	github.com/deckarep/golang-set/v2 v2.7.0
+	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/fastly/go-fastly/v9 v9.14.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.4.1

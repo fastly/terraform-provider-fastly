@@ -15,8 +15,8 @@
 
 ### ENHANCEMENTS:
 
-- feat(fastly_compute_service): Add DDoS protection product enablement ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
-- feat(fastly_vcl_service): Add DDoS protection product enablement ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
+- feat(fastly_compute_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
+- feat(fastly_vcl_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
 
 ### BUG FIXES:
 

@@ -1129,12 +1129,22 @@ Optional:
 
 - `bot_management` (Boolean) Enable Bot Management support
 - `brotli_compression` (Boolean) Enable Brotli Compression support
+- `ddos_protection` (Block List, Max: 1) DDoS Protection product (see [below for nested schema](#nestedblock--product_enablement--ddos_protection))
 - `domain_inspector` (Boolean) Enable Domain Inspector support
 - `image_optimizer` (Boolean) Enable Image Optimizer support (all backends must have a `shield` attribute)
 - `log_explorer_insights` (Boolean) Enable Log Explorer & Insights
 - `name` (String) Used by the provider to identify modified settings (changing this value will force the entire block to be deleted, then recreated)
 - `origin_inspector` (Boolean) Enable Origin Inspector support
 - `websockets` (Boolean) Enable WebSockets support
+
+<a id="nestedblock--product_enablement--ddos_protection"></a>
+### Nested Schema for `product_enablement.ddos_protection`
+
+Required:
+
+- `enabled` (Boolean) Enable DDoS Protection support
+- `mode` (String) Operation mode
+
 
 
 <a id="nestedblock--rate_limiter"></a>

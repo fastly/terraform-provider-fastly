@@ -15,9 +15,13 @@
 
 ### ENHANCEMENTS:
 
+- feat(fastly_compute_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
+- feat(fastly_vcl_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+
 - build(go.mod) upgrade to go 1.23.0
 - build(deps): `github.com/hashicorp/go-cty` from 1.4.1-0.20200414143053-d3edf31b6320 to 1.4.1 ([#946](https://github.com/fastly/terraform-provider-fastly/pull/946))
 - build(deps): `github.com/fastly/go-fastly/v9` from 9.13.1 to 9.14.0 ([#947](https://github.com/fastly/terraform-provider-fastly/pull/947))
@@ -31,12 +35,12 @@
 
 ### ENHANCEMENTS:
 
-- feat(fastly_compute_service): Add support for 'staging' of service versions.
-- feat(fastly_vcl_service): Add support for 'staging' of service versions.
+- feat(fastly_compute_service): Add support for 'staging' of service versions ([#933](https://github.com/fastly/terraform-provider-fastly/pull/933))
+- feat(fastly_vcl_service): Add support for 'staging' of service versions ([#933](https://github.com/fastly/terraform-provider-fastly/pull/933))
 
 ### BUG FIXES:
 
-- fix(fastly_vcl_service): Always 'validate' services after applying changes.
+- fix(fastly_vcl_service): Always 'validate' services after applying changes ([#942](https://github.com/fastly/terraform-provider-fastly/pull/942))
 
 ### DEPENDENCIES:
 
@@ -100,7 +104,7 @@ DEPENDENCIES:
 
 ENHANCEMENTS:
 
--  feat(product_enablement) - Add support for Fastly Bot Management. [#880](https://github.com/fastly/terraform-provider-fastly/pull/880)
+- feat(product_enablement) - Add support for Fastly Bot Management. [#880](https://github.com/fastly/terraform-provider-fastly/pull/880)
 
 DEPENDENCIES:
 

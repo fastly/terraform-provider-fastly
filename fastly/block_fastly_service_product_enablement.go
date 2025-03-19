@@ -10,6 +10,7 @@ import (
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
 	"github.com/fastly/go-fastly/v9/fastly/products/botmanagement"
 	"github.com/fastly/go-fastly/v9/fastly/products/brotlicompression"
+	"github.com/fastly/go-fastly/v9/fastly/products/ddosprotection"
 	"github.com/fastly/go-fastly/v9/fastly/products/domaininspector"
 	"github.com/fastly/go-fastly/v9/fastly/products/fanout"
 	"github.com/fastly/go-fastly/v9/fastly/products/imageoptimizer"
@@ -17,6 +18,7 @@ import (
 	"github.com/fastly/go-fastly/v9/fastly/products/origininspector"
 	"github.com/fastly/go-fastly/v9/fastly/products/websockets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // ProductEnablementServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -98,6 +100,31 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Enable Log Explorer & Insights",
+	}
+	blockAttributes["ddos_protection"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "DDoS Protection product",
+		MaxItems:    1,
+		MinItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"enabled": {
+					Type:        schema.TypeBool,
+					Required:    true,
+					Description: "Enable DDoS Protection support",
+				},
+				"mode": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Operation mode",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+						[]string{"off", "log", "block"},
+						false,
+					)),
+				},
+			},
+		},
 	}
 
 	// NOTE: Min/MaxItems: 1 (to enforce only one product_enablement per service).
@@ -184,6 +211,28 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 		}
 	}
 
+	ddp := resource["ddos_protection"].([]any)
+	if len(ddp) != 0 {
+		if ddp[0].(map[string]any)["enabled"].(bool) {
+			log.Println("[DEBUG] ddos_protection set")
+			_, err := ddosprotection.Enable(conn, serviceID)
+			if err != nil {
+				return fmt.Errorf("failed to enable ddos_protection: %w", err)
+			}
+
+			// The operation mode is set by default to "log"
+			mode := ddp[0].(map[string]any)["mode"].(string)
+			if mode != "log" {
+				_, err := ddosprotection.UpdateConfiguration(conn, serviceID, ddosprotection.ConfigureInput{
+					Mode: mode,
+				})
+				if err != nil {
+					return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -251,6 +300,25 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 
 		if _, err := logexplorerinsights.Get(conn, serviceID); err == nil {
 			result["log_explorer_insights"] = true
+		}
+
+		if _, err := ddosprotection.Get(conn, serviceID); err == nil {
+			c, err := ddosprotection.GetConfiguration(conn, serviceID)
+			if err != nil {
+				return fmt.Errorf("error looking up DDoS Protection product configuration for (%s): %s", serviceID, err)
+			}
+
+			ddp := []map[string]any{}
+			ddp = append(ddp, map[string]any{
+				"enabled": true,
+				"mode":    *c.Configuration.Mode,
+			})
+
+			result["ddos_protection"] = ddp
+		} else {
+			ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
+
+			result["ddos_protection"] = ddp
 		}
 
 		results := []map[string]any{result}
@@ -428,6 +496,39 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		}
 	}
 
+	if v, ok := modified["ddos_protection"]; ok {
+		ddp := v.([]any)
+		if len(ddp) != 0 {
+			if ddp[0].(map[string]any)["enabled"].(bool) {
+				log.Println("[DEBUG] ddos_protection will be enabled")
+				_, err := ddosprotection.Enable(conn, serviceID)
+				if err != nil {
+					return fmt.Errorf("failed to enable ddos_protection: %w", err)
+				}
+
+				// The operation mode is set by default to "log"
+				mode := ddp[0].(map[string]any)["mode"].(string)
+				if mode != "log" {
+					log.Println("[DEBUG] ddos_protection mode will be updated")
+					_, err := ddosprotection.UpdateConfiguration(conn, serviceID, ddosprotection.ConfigureInput{
+						Mode: mode,
+					})
+					if err != nil {
+						return fmt.Errorf("failed to set the configuration of ddos_protection: %w", err)
+					}
+				}
+			} else {
+				log.Println("[DEBUG] ddos_protection will be disabled")
+				err := ddosprotection.Disable(conn, serviceID)
+				if err != nil {
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -527,6 +628,14 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 
 	log.Println("[DEBUG] disable log_explorer_insights")
 	err = logexplorerinsights.Disable(conn, serviceID)
+	if err != nil {
+		if e := h.checkAPIError(err); e != nil {
+			return e
+		}
+	}
+
+	log.Println("[DEBUG] disable ddos_protection")
+	err = ddosprotection.Disable(conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e

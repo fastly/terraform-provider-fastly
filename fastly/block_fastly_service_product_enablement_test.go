@@ -40,6 +40,11 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
       log_explorer_insights = false
       origin_inspector      = false
       websockets            = false
+
+	  ddos_protection {
+	    enabled = false
+		mode    = "block"
+	  }
     }
 
     force_destroy = true

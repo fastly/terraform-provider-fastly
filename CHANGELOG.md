@@ -17,6 +17,8 @@
 
 - feat(fastly_compute_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
 - feat(fastly_vcl_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
+- feat(fastly_compute_service): Add Next-Gen WAF product enablement/configuration ([#956](https://github.com/fastly/terraform-provider-fastly/pull/956))
+- feat(fastly_vcl_service): Add Next-Gen WAF product enablement/configuration ([#956](https://github.com/fastly/terraform-provider-fastly/pull/956))
 
 ### BUG FIXES:
 

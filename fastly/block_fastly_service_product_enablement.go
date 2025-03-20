@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v9/fastly"
@@ -15,6 +16,7 @@ import (
 	"github.com/fastly/go-fastly/v9/fastly/products/fanout"
 	"github.com/fastly/go-fastly/v9/fastly/products/imageoptimizer"
 	"github.com/fastly/go-fastly/v9/fastly/products/logexplorerinsights"
+	"github.com/fastly/go-fastly/v9/fastly/products/ngwaf"
 	"github.com/fastly/go-fastly/v9/fastly/products/origininspector"
 	"github.com/fastly/go-fastly/v9/fastly/products/websockets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -126,6 +128,34 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 			},
 		},
 	}
+	blockAttributes["ngwaf"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Next-Gen WAF product",
+		MaxItems:    1,
+		MinItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"enabled": {
+					Type:        schema.TypeBool,
+					Required:    true,
+					Description: "Enable Next-Gen WAF support",
+				},
+				"traffic_ramp": {
+					Type:        schema.TypeInt,
+					Optional:    true,
+					Default:     100,
+					Description: "The percentage of traffic to inspect",
+					ValidateFunc: validation.IntBetween(1, 100),
+				},
+				"workspace_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The workspace to link",
+				},
+			},
+		},
+	}
 
 	// NOTE: Min/MaxItems: 1 (to enforce only one product_enablement per service).
 	// lintignore:S018
@@ -233,6 +263,33 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 		}
 	}
 
+	ngw := resource["ngwaf"].([]any)
+	if len(ngw) != 0 {
+		if ngw[0].(map[string]any)["enabled"].(bool) {
+			log.Println("[DEBUG] ngwaf set")
+
+			id := ngw[0].(map[string]any)["workspace_id"].(string)
+			_, err := ngwaf.Enable(conn, serviceID, ngwaf.EnableInput{
+				WorkspaceID: id,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to enable ngwaf: %w", err)
+			}
+
+			// The percentage of traffic to inspect is set by default to 100
+			tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
+			if tr != 100 {
+				_, err := ngwaf.UpdateConfiguration(conn, serviceID, ngwaf.ConfigureInput{
+					WorkspaceID: id,
+					TrafficRamp: strconv.Itoa(tr),
+				})
+				if err != nil {
+					return fmt.Errorf("failed to set the configuration of ngwaf: %w", err)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -319,6 +376,31 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 			ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
 
 			result["ddos_protection"] = ddp
+		}
+
+		if _, err := ngwaf.Get(conn, serviceID); err == nil {
+			c, err := ngwaf.GetConfiguration(conn, serviceID)
+			if err != nil {
+				return fmt.Errorf("error looking up Next-Gen WAF product configuration for (%s): %s", serviceID, err)
+			}
+
+			tf, err := strconv.Atoi(*c.Configuration.TrafficRamp)
+			if err != nil {
+				return fmt.Errorf("error converting Next-Gen WAF's percentage of traffic for (%s): %s", serviceID, err)
+			}
+
+			ngw := []map[string]any{}
+			ngw = append(ngw, map[string]any{
+				"enabled":      true,
+				"workspace_id": *c.Configuration.WorkspaceID,
+				"traffic_ramp": tf,
+			})
+
+			result["ngwaf"] = ngw
+		} else {
+			ngw := localState[0].(map[string]any)["ngwaf"].([]any)
+
+			result["ngwaf"] = ngw
 		}
 
 		results := []map[string]any{result}
@@ -529,6 +611,40 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		}
 	}
 
+	if v, ok := modified["ngwaf"]; ok {
+		ngw := v.([]any)
+		if len(ngw) != 0 {
+			if ngw[0].(map[string]any)["enabled"].(bool) {
+				log.Println("[DEBUG] ngwaf will be enabled")
+
+				id := ngw[0].(map[string]any)["workspace_id"].(string)
+				_, err := ngwaf.Enable(conn, serviceID, ngwaf.EnableInput{
+					WorkspaceID: id,
+				})
+				if err != nil {
+					return fmt.Errorf("failed to enable ngwaf: %w", err)
+				}
+
+				tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
+				_, err = ngwaf.UpdateConfiguration(conn, serviceID, ngwaf.ConfigureInput{
+					WorkspaceID: id,
+					TrafficRamp: strconv.Itoa(tr),
+				})
+				if err != nil {
+					return fmt.Errorf("failed to set the configuration of ngwaf: %w", err)
+				}
+			} else {
+				log.Println("[DEBUG] ngwaf will be disabled")
+				err := ngwaf.Disable(conn, serviceID)
+				if err != nil {
+					if e := h.checkAPIError(err); e != nil {
+						return e
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -636,6 +752,14 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 
 	log.Println("[DEBUG] disable ddos_protection")
 	err = ddosprotection.Disable(conn, serviceID)
+	if err != nil {
+		if e := h.checkAPIError(err); e != nil {
+			return e
+		}
+	}
+
+	log.Println("[DEBUG] disable ngwaf")
+	err = ngwaf.Disable(conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e

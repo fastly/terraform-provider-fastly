@@ -42,8 +42,14 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
       websockets            = false
 
       ddos_protection {
-        name    = false
+        enabled = false
         mode    = "block"
+      }
+
+      ngwaf {
+        enabled      = false
+        workspace_id = "7JFbo4RNA0OKdFWC04r6B3"
+        traffic_ramp = 100
       }
     }
 

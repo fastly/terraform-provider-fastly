@@ -146,13 +146,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Default:     100,
 					Description: "The percentage of traffic to inspect",
-					ValidateFunc: func(val any, key string) (warns []string, errs []error) {
-						v := val.(int)
-						if v < 0 || v > 100 {
-							errs = append(errs, fmt.Errorf("%q must be between 0 and 100 inclusive, got: %d", key, v))
-						}
-						return
-					},
+					ValidateFunc: validation.IntBetween(1, 100),
 				},
 				"workspace_id": {
 					Type:        schema.TypeString,

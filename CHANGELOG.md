@@ -1,4 +1,6 @@
-## [UNRELEASED]
+### DOCUMENTATION:
+
+## 6.0.0 (March 20, 2025)
 
 ### BREAKING:
 
@@ -21,8 +23,6 @@
 - feat(fastly_vcl_service): Add Next-Gen WAF product enablement/configuration ([#956](https://github.com/fastly/terraform-provider-fastly/pull/956))
 - feat(resource_fastly_object_storage_access_key): Add object storage access keys configuration ([#955](https://github.com/fastly/terraform-provider-fastly/pull/955))
 
-### BUG FIXES:
-
 ### DEPENDENCIES:
 
 - build(go.mod) upgrade to go 1.23.0
@@ -31,8 +31,6 @@
 - build(deps): `golang.org/x/net` from 0.35.0 to 0.37.0 ([#948](https://github.com/fastly/terraform-provider-fastly/pull/948))
 - build(deps): `github.com/deckarep/golang-set/v2` from 2.7.0 to 2.8.0 ([#953](https://github.com/fastly/terraform-provider-fastly/pull/953))
 - build(deps): `github.com/hashicorp/go-cty` from 1.4.1 to 1.5.0 ([#952](https://github.com/fastly/terraform-provider-fastly/pull/952))
-
-### DOCUMENTATION:
 
 ## 5.17.0 (March 10, 2025)
 

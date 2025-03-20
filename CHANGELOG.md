@@ -1,5 +1,13 @@
 ## [UNRELEASED]
 
+### BREAKING:
+
+### ENHANCEMENTS:
+
+### BUG FIXES:
+
+### DEPENDENCIES:
+
 ## 6.0.0 (March 20, 2025)
 
 ### BREAKING:

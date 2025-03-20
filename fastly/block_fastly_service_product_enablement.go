@@ -142,10 +142,10 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 					Description: "Enable Next-Gen WAF support",
 				},
 				"traffic_ramp": {
-					Type:        schema.TypeInt,
-					Optional:    true,
-					Default:     100,
-					Description: "The percentage of traffic to inspect",
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      100,
+					Description:  "The percentage of traffic to inspect",
 					ValidateFunc: validation.IntBetween(1, 100),
 				},
 				"workspace_id": {

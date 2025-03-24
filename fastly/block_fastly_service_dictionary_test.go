@@ -122,7 +122,11 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfigDictionaryWriteOnly(name, dictName, backendName, domainName),
+				Config:      testAccServiceVCLConfigDictionaryWriteOnly(name, dictName, backendName, domainName),
+				ExpectError: regexp.MustCompile("cannot delete.*write_only.*"),
+			},
+			{
+				Config: testAccServiceVCLConfigDictionaryWriteOnlyForceDestroy(name, dictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, true),
@@ -247,6 +251,31 @@ resource "fastly_service_vcl" "foo" {
   dictionary {
     name       = "%s"
     write_only = true
+  }
+
+  force_destroy = true
+}`, name, domainName, backendName, dictName)
+}
+
+func testAccServiceVCLConfigDictionaryWriteOnlyForceDestroy(name, dictName, backendName, domainName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  dictionary {
+    name       		= "%s"
+    write_only 		= true
+	force_destroy 	= true
   }
 
   force_destroy = true

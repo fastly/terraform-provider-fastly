@@ -184,7 +184,6 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 		FormatVersion:     gofastly.ToPointer(2),
-		Placement:         gofastly.ToPointer("waf_debug"),
 	}
 
 	log2 := gofastly.Pubsub{
@@ -430,7 +429,6 @@ resource "fastly_service_vcl" "foo" {
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
-		placement          = "waf_debug"
 	}
 
 	logging_googlepubsub {

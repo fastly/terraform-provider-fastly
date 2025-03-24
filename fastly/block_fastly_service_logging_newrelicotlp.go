@@ -50,10 +50,9 @@ func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The unique name of the New Relic OTLP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"placement": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Description:      "Where in the generated VCL the logging call should be placed.",
-			ValidateDiagFunc: validateLoggingPlacement(),
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Where in the generated VCL the logging call should be placed (ignored).",
 		},
 		"region": {
 			Type:        schema.TypeString,

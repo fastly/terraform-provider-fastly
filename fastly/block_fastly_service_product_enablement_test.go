@@ -40,6 +40,17 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
       log_explorer_insights = false
       origin_inspector      = false
       websockets            = false
+
+      ddos_protection {
+        enabled = false
+        mode    = "block"
+      }
+
+      ngwaf {
+        enabled      = false
+        workspace_id = "7JFbo4RNA0OKdFWC04r6B3"
+        traffic_ramp = 100
+      }
     }
 
     force_destroy = true

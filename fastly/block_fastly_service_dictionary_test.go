@@ -111,9 +111,14 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 	var dictionary gofastly.Dictionary
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
+	updatedDictName := fmt.Sprintf("new dict %s", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
+	// 3 part test:
+	// 1. Create service with a write only dictionary
+	// 2. Rename the dictionary, should fail because it's write only
+	// 3. Rename and set force_destroy=true to skip the deletion check
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -126,10 +131,14 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 				ExpectError: regexp.MustCompile("cannot delete.*write_only.*"),
 			},
 			{
-				Config: testAccServiceVCLConfigDictionaryWriteOnlyForceDestroy(name, dictName, backendName, domainName),
+				Config:      testAccServiceVCLConfigDictionaryWriteOnly(name, updatedDictName, backendName, domainName),
+				ExpectError: regexp.MustCompile("cannot delete.*write_only.*"),
+			},
+			{
+				Config: testAccServiceVCLConfigDictionaryWriteOnlyForceDestroy(name, updatedDictName, backendName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, true),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, true),
 				),
 			},
 		},

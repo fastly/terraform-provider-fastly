@@ -6,7 +6,13 @@
 
 ### BUG FIXES:
 
-- fix(fastly/block_fastly_service_dictionary): adds error check preventing deletion of write only dictionaries without force destroy [#959](https://github.com/fastly/terraform-provider-fastly/pull/959)
+### DEPENDENCIES:
+
+## 6.0.1 (March 25, 2025)
+
+### BUG FIXES:
+
+- fix(dictionary): add error check preventing deletion of write only dictionaries without force destroy [#959](https://github.com/fastly/terraform-provider-fastly/pull/959)
 - fix(product_enablement): first check if state exists before accessing it [#961](https://github.com/fastly/terraform-provider-fastly/pull/961)
 
 ### DEPENDENCIES:
@@ -17,24 +23,22 @@
 
 ### BREAKING:
 
-- breaking(waf): Support for the Fastly WAF (legacy, not Next-Gen WAF)
+- breaking(waf): support for the Fastly WAF (legacy, not Next-Gen WAF)
   product has been removed. The product passed its End-of-Life date
   quite some time ago, and it is no longer in use by customers
   [#936](https://github.com/fastly/terraform-provider-fastly/pull/936)
 
-- breaking(logging): The 'placement' attribute in the logging
+- breaking(logging): the 'placement' attribute in the logging
   endpoints has been changed to ignore any value provided by the user;
   it was only used in combination with the Fastly WAF, which is no
-  longer supported.
+  longer supported
   [#936](https://github.com/fastly/terraform-provider-fastly/pull/936)
 
 ### ENHANCEMENTS:
 
-- feat(fastly_compute_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
-- feat(fastly_vcl_service): Add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
-- feat(fastly_compute_service): Add Next-Gen WAF product enablement/configuration ([#956](https://github.com/fastly/terraform-provider-fastly/pull/956))
-- feat(fastly_vcl_service): Add Next-Gen WAF product enablement/configuration ([#956](https://github.com/fastly/terraform-provider-fastly/pull/956))
-- feat(resource_fastly_object_storage_access_key): Add object storage access keys configuration ([#955](https://github.com/fastly/terraform-provider-fastly/pull/955))
+- feat(product_enablement): add DDoS protection product enablement/configuration ([#954](https://github.com/fastly/terraform-provider-fastly/pull/954))
+- feat(product_enablement): add Next-Gen WAF product enablement/configuration ([#956](https://github.com/fastly/terraform-provider-fastly/pull/956))
+- feat(object_storage_access_key): add object storage access keys configuration ([#955](https://github.com/fastly/terraform-provider-fastly/pull/955))
 
 ### DEPENDENCIES:
 
@@ -49,12 +53,11 @@
 
 ### ENHANCEMENTS:
 
-- feat(fastly_compute_service): Add support for 'staging' of service versions ([#933](https://github.com/fastly/terraform-provider-fastly/pull/933))
-- feat(fastly_vcl_service): Add support for 'staging' of service versions ([#933](https://github.com/fastly/terraform-provider-fastly/pull/933))
+- feat(staging): add support for 'staging' of service versions ([#933](https://github.com/fastly/terraform-provider-fastly/pull/933))
 
 ### BUG FIXES:
 
-- fix(fastly_vcl_service): Always 'validate' services after applying changes ([#942](https://github.com/fastly/terraform-provider-fastly/pull/942))
+- fix(fastly_vcl_service): always 'validate' services after applying changes ([#942](https://github.com/fastly/terraform-provider-fastly/pull/942))
 
 ### DEPENDENCIES:
 

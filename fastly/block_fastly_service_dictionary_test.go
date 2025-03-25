@@ -111,9 +111,15 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 	var dictionary gofastly.Dictionary
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	dictName := fmt.Sprintf("dict %s", acctest.RandString(10))
+	updatedDictName := fmt.Sprintf("new dict %s", acctest.RandString(10))
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
+	// 4 part test:
+	// 1. Create service with a write only dictionary
+	// 2. Rename the dictionary, should fail because it's write only
+	// 3. Without renaming, set force_destroy=true to skip the deletion check
+	// 4. Try to rename again, expect to succeed
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -126,6 +132,24 @@ func TestAccFastlyServiceVCL_dictionary_write_only(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, true),
+				),
+			},
+			{
+				Config:      testAccServiceVCLConfigDictionaryWriteOnly(name, updatedDictName, backendName, domainName),
+				ExpectError: regexp.MustCompile("cannot delete.*write_only.*"),
+			},
+			{
+				Config: testAccServiceVCLConfigDictionaryWriteOnlyForceDestroy(name, dictName, backendName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, dictName, true),
+				),
+			},
+			{
+				Config: testAccServiceVCLConfigDictionaryWriteOnlyForceDestroy(name, updatedDictName, backendName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLAttributesDictionary(&service, &dictionary, name, updatedDictName, true),
 				),
 			},
 		},
@@ -247,6 +271,31 @@ resource "fastly_service_vcl" "foo" {
   dictionary {
     name       = "%s"
     write_only = true
+  }
+
+  force_destroy = true
+}`, name, domainName, backendName, dictName)
+}
+
+func testAccServiceVCLConfigDictionaryWriteOnlyForceDestroy(name, dictName, backendName, domainName string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  dictionary {
+    name       		= "%s"
+    write_only 		= true
+	force_destroy 	= true
   }
 
   force_destroy = true

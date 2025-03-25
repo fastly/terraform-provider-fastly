@@ -6,6 +6,8 @@
 
 ### BUG FIXES:
 
+- fix(fastly/block_fastly_service_dictionary): adds error check preventing deletion of write only dictionaries without force destroy [#959](https://github.com/fastly/terraform-provider-fastly/pull/959)
+
 ### DEPENDENCIES:
 
 ## 6.0.0 (March 20, 2025)

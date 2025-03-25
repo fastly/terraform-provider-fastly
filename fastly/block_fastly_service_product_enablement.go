@@ -373,9 +373,10 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 
 			result["ddos_protection"] = ddp
 		} else {
-			ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
-
-			result["ddos_protection"] = ddp
+			if len(localState) > 0 {
+				ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
+				result["ddos_protection"] = ddp
+			}
 		}
 
 		if _, err := ngwaf.Get(conn, serviceID); err == nil {
@@ -398,9 +399,10 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 
 			result["ngwaf"] = ngw
 		} else {
-			ngw := localState[0].(map[string]any)["ngwaf"].([]any)
-
-			result["ngwaf"] = ngw
+			if len(localState) > 0 {
+				ngw := localState[0].(map[string]any)["ngwaf"].([]any)
+				result["ngwaf"] = ngw
+			}
 		}
 
 		results := []map[string]any{result}

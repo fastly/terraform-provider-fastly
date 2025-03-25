@@ -7,8 +7,10 @@
 ### BUG FIXES:
 
 - fix(fastly/block_fastly_service_dictionary): adds error check preventing deletion of write only dictionaries without force destroy [#959](https://github.com/fastly/terraform-provider-fastly/pull/959)
+- fix(product_enablement): first check if state exists before accessing it [#961](https://github.com/fastly/terraform-provider-fastly/pull/961)
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.34.0 to 2.36.1 ([#960](https://github.com/fastly/terraform-provider-fastly/pull/960))
 
 ## 6.0.0 (March 20, 2025)

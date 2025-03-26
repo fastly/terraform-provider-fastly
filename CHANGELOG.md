@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(service): improve Fastly 404 error message for service permissions [#964](https://github.com/fastly/terraform-provider-fastly/pull/964)
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

@@ -32,6 +32,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 					FormatVersion:     gofastly.ToPointer(1),
 					Name:              gofastly.ToPointer("test-splunk"),
+					Placement:         gofastly.ToPointer("none"),
 					ResponseCondition: gofastly.ToPointer("error_response"),
 					TLSCACert:         gofastly.ToPointer(cert),
 					TLSClientCert:     gofastly.ToPointer(cert),
@@ -46,6 +47,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"format_version":     1,
 					"name":               "test-splunk",
+					"placement":          "none",
 					"response_condition": "error_response",
 					"tls_ca_cert":        cert,
 					"tls_client_cert":    cert,
@@ -74,6 +76,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 		FormatVersion:     gofastly.ToPointer(1),
 		Name:              gofastly.ToPointer("test-splunk-1"),
+		Placement:         gofastly.ToPointer("none"),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
@@ -87,6 +90,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("test-splunk-1"),
+		Placement:         gofastly.ToPointer("none"),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
@@ -100,6 +104,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("test-splunk-2"),
+		Placement:         gofastly.ToPointer("none"),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
@@ -227,6 +232,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 		FormatVersion:     gofastly.ToPointer(1),
 		Name:              gofastly.ToPointer("test-splunk-1"),
+		Placement:         gofastly.ToPointer("none"),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
@@ -243,6 +249,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("test-splunk-1"),
+		Placement:         gofastly.ToPointer("none"),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		TLSCACert:         gofastly.ToPointer(cert),
 		TLSClientCert:     gofastly.ToPointer(cert),
@@ -259,6 +266,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("test-splunk-2"),
+		Placement:         gofastly.ToPointer("none"),
 		RequestMaxBytes:   gofastly.ToPointer(0),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
@@ -464,6 +472,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "test-token"
     format             = %q
     format_version     = 1
+    placement          = "none"
     response_condition = "error_response_5XX"
 	use_tls            = true
   }
@@ -507,6 +516,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "test-token"
     format             = %q
     format_version     = 1
+    placement          = "none"
     tls_hostname       = "example.com"
     tls_ca_cert        = %q
     tls_client_cert    = %q
@@ -556,6 +566,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "test-token"
     format             = %q
     format_version     = 2
+    placement          = "none"
     response_condition = "error_response_5XX"
   }
 
@@ -565,6 +576,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "test-token"
     format             = %q
     format_version     = 2
+    placement          = "none"
     response_condition = "ok_response_2XX"
   }
 
@@ -613,6 +625,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "test-token"
     format             = %q
     format_version     = 2
+    placement          = "none"
     tls_hostname       = "example.com"
     tls_ca_cert        = %q
     tls_client_cert    = %q
@@ -626,6 +639,7 @@ resource "fastly_service_vcl" "foo" {
     token              = "test-token"
     format             = %q
     format_version     = 2
+    placement          = "none"
     tls_hostname       = "example.com"
     tls_ca_cert        = %q
     tls_client_cert    = %q

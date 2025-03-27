@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(logging): Restore support for 'placement' attribute
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

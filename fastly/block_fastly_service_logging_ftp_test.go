@@ -103,6 +103,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 		Password:          gofastly.ToPointer("p@ssw0rd2"),
 		Path:              gofastly.ToPointer("/path"),
 		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
 		Port:              gofastly.ToPointer(21),
 		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -354,6 +355,7 @@ resource "fastly_service_vcl" "foo" {
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
     gzip_level = 4
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    placement = "none"
   }
 
   logging_ftp {

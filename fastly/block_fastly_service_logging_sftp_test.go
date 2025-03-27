@@ -112,6 +112,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		Password:          gofastly.ToPointer(""),
 		Path:              gofastly.ToPointer("/logs/"),
 		Period:            gofastly.ToPointer(3600),
+		Placement:         gofastly.ToPointer("none"),
 		Port:              gofastly.ToPointer(2600),
 		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
@@ -403,6 +404,7 @@ resource "fastly_service_vcl" "foo" {
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
     message_type = "blank"
     response_condition = "response_condition_test"
+    placement = "none"
     gzip_level = 3
   }
 

@@ -74,6 +74,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("scalyrlogger"),
+		Placement:         gofastly.ToPointer("none"),
 		Region:            gofastly.ToPointer("EU"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ServiceVersion:    gofastly.ToPointer(1),
@@ -306,8 +307,9 @@ resource "fastly_service_vcl" "foo" {
 		region             = "EU"
 		token              = "newtkn"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
-		format_version 		 = 2
+		format_version     = 2
 		response_condition = "response_condition_test"
+		placement          = "none"
                 project_id         = "example-project"
 	}
 
@@ -316,8 +318,8 @@ resource "fastly_service_vcl" "foo" {
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		region             = "US"
 		token              = "tknb"
-		format_version 		 = 2
-		placement 				 = "none"
+		format_version     = 2
+		placement          = "none"
 	}
 
 	force_destroy = true

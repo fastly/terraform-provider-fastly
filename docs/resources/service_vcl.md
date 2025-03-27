@@ -523,7 +523,7 @@ Optional:
 - `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `email` (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
 - `format` (String) The logging format desired.
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `response_condition` (String) Name of a condition to apply this logging.
 - `secret_key` (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
 - `template` (String) BigQuery table name suffix template
@@ -548,7 +548,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
 - `period` (Number) How frequently the logs should be transferred in seconds. Default `3600`
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `response_condition` (String) The name of the condition to apply
 - `sas_token` (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
@@ -574,7 +574,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `public_key` (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `region` (String) The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
@@ -593,7 +593,7 @@ Optional:
 
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 - `response_condition` (String) The name of the condition to apply.
 
@@ -618,7 +618,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
@@ -639,7 +639,7 @@ Optional:
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `password` (String, Sensitive) BasicAuth password for Elasticsearch
 - `pipeline` (String) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `request_max_bytes` (Number) The maximum number of logs sent in one request. Defaults to `0` for unbounded
 - `request_max_entries` (Number) The maximum number of bytes sent in one request. Defaults to `0` for unbounded
 - `response_condition` (String) The name of the condition to apply
@@ -669,7 +669,7 @@ Optional:
 - `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `port` (Number) The port number. Default: `21`
 - `public_key` (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `response_condition` (String) The name of the condition to apply.
@@ -694,7 +694,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default 3600)
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `project_id` (String) The ID of your Google Cloud Platform project
 - `response_condition` (String) Name of a condition to apply this logging.
 - `secret_key` (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
@@ -716,7 +716,7 @@ Optional:
 - `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 - `secret_key` (String, Sensitive) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
 - `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.
@@ -737,7 +737,7 @@ Optional:
 
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `response_condition` (String) The name of the condition to apply.
 
 
@@ -754,7 +754,7 @@ Optional:
 
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 
@@ -771,7 +771,7 @@ Optional:
 
 - `format` (String) Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 
@@ -793,7 +793,7 @@ Optional:
 - `json_format` (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `method` (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed
 - `request_max_bytes` (Number) The maximum number of bytes sent in one request
 - `request_max_entries` (Number) The maximum number of logs sent in one request
 - `response_condition` (String) The name of the condition to apply
@@ -820,7 +820,7 @@ Optional:
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `parse_log_keyvals` (Boolean) Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers
 - `password` (String, Sensitive) SASL Pass
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `request_max_bytes` (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
 - `required_acks` (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1` Wait for all in-sync replicas to respond
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
@@ -846,7 +846,7 @@ Optional:
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `region` (String) The AWS region the stream resides in. (Default: `us-east-1`)
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 - `secret_key` (String, Sensitive) The AWS secret access key to authenticate with
@@ -864,7 +864,7 @@ Optional:
 
 - `format` (String) Apache-style string or VCL variables to use for log formatting
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `port` (Number) The port number configured in Logentries
 - `response_condition` (String) Name of blockAttributes condition to apply this logging.
 - `use_tls` (Boolean) Whether to use TLS for secure logging
@@ -882,7 +882,7 @@ Optional:
 
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 
@@ -899,7 +899,7 @@ Optional:
 
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 
 
@@ -915,7 +915,7 @@ Optional:
 
 - `format` (String) Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `region` (String) The region that log data will be sent to. Default: `US`
 - `response_condition` (String) The name of the condition to apply.
 
@@ -932,7 +932,7 @@ Optional:
 
 - `format` (String) Apache style log formatting. Your log must produce valid JSON that New Relic OTLP can ingest.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `region` (String) The region that log data will be sent to. Default: `US`
 - `response_condition` (String) The name of the condition to apply.
 - `url` (String) The optional New Relic Trace Observer URL to stream logs to for Infinite Tracing.
@@ -958,7 +958,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
@@ -977,7 +977,7 @@ Optional:
 
 - `format` (String) A Fastly [log format string](https://docs.fastly.com/en/guides/custom-log-formats)
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. The logging call gets placed by default in `vcl_log` if `format_version` is set to `2` and in `vcl_deliver` if `format_version` is set to `1`
-- `placement` (String) Where in the generated VCL the logging call should be placed. Ignored, but endpoints with `format_version` of 2 are placed in `vcl_log` and those with `format_version` of 1 are placed in `vcl_deliver`
+- `placement` (String) Where in the generated VCL the logging call should be placed. If not set, endpoints with `format_version` of 2 are placed in `vcl_log` and those with `format_version` of 1 are placed in `vcl_deliver`
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute
 
 
@@ -1001,7 +1001,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `redundancy` (String) The S3 storage class (redundancy level). Should be one of: `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier`, `glacier_ir`, `deep_archive`, or `reduced_redundancy`
 - `response_condition` (String) Name of blockAttributes condition to apply this logging.
@@ -1025,7 +1025,7 @@ Optional:
 
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `project_id` (String) The name of the logfile field sent to Scalyr
 - `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
@@ -1051,7 +1051,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `password` (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `port` (Number) The port the SFTP service listens on. (Default: `22`)
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `response_condition` (String) The name of the condition to apply.
@@ -1072,7 +1072,7 @@ Optional:
 
 - `format` (String) Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t "%r" %>s %b`)
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed
 - `response_condition` (String) The name of the condition to apply
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format.
@@ -1094,7 +1094,7 @@ Optional:
 - `format` (String) Apache-style string or VCL variables to use for log formatting
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `response_condition` (String) Name of blockAttributes condition to apply this logging.
 
 
@@ -1111,7 +1111,7 @@ Optional:
 - `format` (String) Apache-style string or VCL variables to use for log formatting
 - `format_version` (Number) The version of the custom logging format. Can be either 1 or 2. (Default: 2)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- `placement` (String) Where in the generated VCL the logging call should be placed (ignored).
+- `placement` (String) Where in the generated VCL the logging call should be placed.
 - `port` (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`
 - `response_condition` (String) Name of blockAttributes condition to apply this logging.
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`

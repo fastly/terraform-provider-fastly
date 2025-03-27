@@ -61,6 +61,27 @@ func TestValidateLoggingMessageType(t *testing.T) {
 	}
 }
 
+func TestValidateLoggingPlacement(t *testing.T) {
+	for _, testcase := range []struct {
+		value          string
+		expectedWarns  int
+		expectedErrors int
+	}{
+		{"none", 0, 0},
+		{"NONE", 0, 1},
+	} {
+		t.Run(testcase.value, func(t *testing.T) {
+			actualWarns, actualErrors := diagToWarnsAndErrs(validateLoggingPlacement()(testcase.value, cty.GetAttrPath("placement")))
+			if len(actualWarns) != testcase.expectedWarns {
+				t.Errorf("expected %d warnings, actual %d ", testcase.expectedWarns, len(actualWarns))
+			}
+			if len(actualErrors) != testcase.expectedErrors {
+				t.Errorf("expected %d errors, actual %d ", testcase.expectedErrors, len(actualErrors))
+			}
+		})
+	}
+}
+
 func TestValidateLoggingServerSideEncryption(t *testing.T) {
 	for _, testcase := range []struct {
 		value          string

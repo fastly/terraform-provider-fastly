@@ -549,14 +549,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 		ServiceID: d.Id(),
 	})
 	if err != nil {
-		// Check if not found, if so, clear ID field and exit early.
-		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
-			log.Printf("[WARN] %s for ID (%s)", errFastlyNoServiceFound, d.Id())
-			d.SetId("")
-			return diag.FromErr(err)
-		}
+		// Use the helper function to handle 404s and add enhanced error diagnostics
+		err = HandleNotFoundError(err, d.Id(), "Fastly Service")
+		d.SetId("")
+
 		return diag.FromErr(err)
 	}
+
 	// Check if deleted, if so, clear ID field and exit early.
 	if s.DeletedAt != nil {
 		log.Printf("[WARN] Service ID (%s) has been deleted", d.Id())

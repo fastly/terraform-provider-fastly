@@ -130,9 +130,10 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 			ValidateDiagFunc: validateLoggingFormatVersion(),
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Where in the generated VCL the logging call should be placed (ignored).",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,

@@ -33,6 +33,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
 					FormatVersion:     gofastly.ToPointer(2),
 					MessageType:       gofastly.ToPointer("classic"),
+					Placement:         gofastly.ToPointer("none"),
 					ResponseCondition: gofastly.ToPointer("error_response"),
 					FileMaxBytes:      gofastly.ToPointer(1048576),
 					CompressionCodec:  gofastly.ToPointer("zstd"),
@@ -52,6 +53,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					"format_version":     2,
 					"gzip_level":         0,
 					"message_type":       "classic",
+					"placement":          "none",
 					"response_condition": "error_response",
 					"file_max_bytes":     1048576,
 					"compression_codec":  "zstd",
@@ -84,6 +86,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		Name:              gofastly.ToPointer("test-blobstorage-1"),
 		Path:              gofastly.ToPointer("/5XX/"),
 		Period:            gofastly.ToPointer(12),
+		Placement:         gofastly.ToPointer("none"),
 		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
@@ -101,6 +104,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		Name:              gofastly.ToPointer("test-blobstorage-1"),
 		Path:              gofastly.ToPointer("/5XX/"),
 		Period:            gofastly.ToPointer(12),
+		Placement:         gofastly.ToPointer("none"),
 		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
@@ -119,6 +123,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		Name:              gofastly.ToPointer("test-blobstorage-2"),
 		Path:              gofastly.ToPointer("/2XX/"),
 		Period:            gofastly.ToPointer(12),
+		Placement:         gofastly.ToPointer("none"),
 		PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
 		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
@@ -357,6 +362,7 @@ resource "fastly_service_vcl" "foo" {
     format = %q
     format_version = 1
     message_type = "blank"
+    placement = "none"
     response_condition = "error_response_5XX"
     file_max_bytes     = 1048576
     compression_codec = "zstd"
@@ -455,6 +461,7 @@ resource "fastly_service_vcl" "foo" {
     gzip_level = 1
     format_version = 2
     message_type = "blank"
+    placement = "none"
     response_condition = "error_response_5XX"
     file_max_bytes     = 1048576
   }
@@ -471,6 +478,7 @@ resource "fastly_service_vcl" "foo" {
     format = %q
     format_version = 2
     message_type = "blank"
+    placement = "none"
     response_condition = "ok_response_2XX"
     file_max_bytes     = 2097152
     compression_codec  = "zstd"

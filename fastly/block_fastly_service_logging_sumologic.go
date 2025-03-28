@@ -72,9 +72,10 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "Name of blockAttributes condition to apply this logging.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Where in the generated VCL the logging call should be placed (ignored).",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

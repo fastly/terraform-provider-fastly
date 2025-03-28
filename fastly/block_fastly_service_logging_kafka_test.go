@@ -119,6 +119,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 		FormatVersion:     gofastly.ToPointer(2),
+		Placement:         gofastly.ToPointer("none"),
 		ParseLogKeyvals:   gofastly.ToPointer(true),
 		RequestMaxBytes:   gofastly.ToPointer(12345),
 		AuthMethod:        gofastly.ToPointer("scram-sha-256"),
@@ -407,6 +408,7 @@ resource "fastly_service_vcl" "foo" {
 		response_condition = "response_condition_test"
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
+		placement          = "none"
 		parse_log_keyvals  = true
 		request_max_bytes  = 12345
 		auth_method        = "scram-sha-256"

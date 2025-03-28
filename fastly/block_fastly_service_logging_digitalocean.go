@@ -125,9 +125,10 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The name of an existing condition in the configured endpoint, or leave blank to always execute.",
 		}
 		blockAttributes["placement"] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Where in the generated VCL the logging call should be placed (ignored).",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Where in the generated VCL the logging call should be placed. Can be `none` or `none`.",
+			ValidateDiagFunc: validateLoggingPlacement(),
 		}
 	}
 

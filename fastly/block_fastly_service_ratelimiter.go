@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -240,7 +240,7 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 		}
 	}
 
-	input := h.buildUpdateERLInput(rateLimiterID, d.Id(), serviceVersion, resource, modified)
+	input := h.buildUpdateERLInput(rateLimiterID, modified)
 
 	log.Printf("[DEBUG] Update Rate Limiter: %#v", input)
 	_, err = conn.UpdateERL(&input)
@@ -367,7 +367,7 @@ func (h *RateLimiterAttributeHandler) buildCreateERLInput(service string, latest
 	return input
 }
 
-func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID, serviceID string, latestVersion int, resource, modified map[string]any) gofastly.UpdateERLInput {
+func (h *RateLimiterAttributeHandler) buildUpdateERLInput(rateLimiterID string, modified map[string]any) gofastly.UpdateERLInput {
 	input := gofastly.UpdateERLInput{
 		ERLID: rateLimiterID,
 	}

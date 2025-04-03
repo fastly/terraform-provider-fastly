@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -119,7 +119,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 				Config: testAccServiceVCLNewRelicOTLPConfig(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(&service, []*gofastly.NewRelicOTLP{&log1}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(&service, []*gofastly.NewRelicOTLP{&log1}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_newrelicotlp.#", "1"),
 				),
@@ -129,7 +129,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 				Config: testAccServiceVCLNewRelicOTLPConfigUpdate(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(&service, []*gofastly.NewRelicOTLP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(&service, []*gofastly.NewRelicOTLP{&log1AfterUpdate, &log2}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_newrelicotlp.#", "2"),
 				),
@@ -139,7 +139,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(service *gofastly.ServiceDetail, newrelicotlp []*gofastly.NewRelicOTLP, serviceType string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(service *gofastly.ServiceDetail, newrelicotlp []*gofastly.NewRelicOTLP) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		newrelicotlpList, err := conn.ListNewRelicOTLP(&gofastly.ListNewRelicOTLPInput{

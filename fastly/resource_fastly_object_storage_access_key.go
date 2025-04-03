@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
-	"github.com/fastly/go-fastly/v9/fastly/objectstorage/accesskeys"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v10/fastly/objectstorage/accesskeys"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )

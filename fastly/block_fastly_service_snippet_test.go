@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,7 +22,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 				{
 					Name:     gofastly.ToPointer("recv_test"),
 					Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
-					Priority: gofastly.ToPointer(110),
+					Priority: gofastly.ToPointer("110"),
 					Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
 				},
 			},
@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 				{
 					"name":     "recv_test",
 					"type":     gofastly.SnippetTypeRecv,
-					"priority": 110,
+					"priority": "110",
 					"content":  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 				},
 			},
@@ -40,7 +40,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 				{
 					Name:     gofastly.ToPointer("recv_test"),
 					Type:     gofastly.ToPointer(gofastly.SnippetTypeRecv),
-					Priority: gofastly.ToPointer(110),
+					Priority: gofastly.ToPointer("110"),
 					Content:  gofastly.ToPointer("if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"),
 					Dynamic:  gofastly.ToPointer(1),
 				},
@@ -84,7 +84,7 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 		Dynamic:   gofastly.ToPointer(0),
 		SnippetID: gofastly.ToPointer(""),
 		Name:      gofastly.ToPointer("recv_test"),
-		Priority:  gofastly.ToPointer(110),
+		Priority:  gofastly.ToPointer("110"),
 		Type:      gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
 	updatedS1 := gofastly.Snippet{
@@ -92,7 +92,7 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 		Dynamic:   gofastly.ToPointer(0),
 		SnippetID: gofastly.ToPointer(""),
 		Name:      gofastly.ToPointer("recv_test"),
-		Priority:  gofastly.ToPointer(110),
+		Priority:  gofastly.ToPointer("110"),
 		Type:      gofastly.ToPointer(gofastly.SnippetTypeRecv),
 	}
 	updatedS2 := gofastly.Snippet{
@@ -100,7 +100,7 @@ func TestAccFastlyServiceVCLSnippet_basic(t *testing.T) {
 		Dynamic:   gofastly.ToPointer(0),
 		SnippetID: gofastly.ToPointer(""),
 		Name:      gofastly.ToPointer("fetch_test"),
-		Priority:  gofastly.ToPointer(50),
+		Priority:  gofastly.ToPointer("50"),
 		Type:      gofastly.ToPointer(gofastly.SnippetTypeFetch),
 	}
 
@@ -215,7 +215,7 @@ resource "fastly_service_vcl" "foo" {
   snippet {
     name     = "recv_test"
     type     = "recv"
-    priority = 110
+    priority = "110"
     content  = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
   }
 
@@ -244,14 +244,14 @@ resource "fastly_service_vcl" "foo" {
   snippet {
     name     = "recv_test"
     type     = "recv"
-    priority = 110
+    priority = "110"
     content  = "if ( req.url ) {\n set req.http.different-header = \"true\";\n}"
   }
 
   snippet {
     name     = "fetch_test"
     type     = "fetch"
-    priority = 50
+    priority = "50"
     content  = "restart;\n"
   }
 
@@ -284,21 +284,21 @@ resource "fastly_service_vcl" "foo" {
   snippet {
     name     = "recv_test"
     type     = "recv"
-    priority = 110
+    priority = "110"
     content  = "if ( req.url ) {\n set req.http.different-header = \"true\";\n}"
   }
 
   snippet {
     name     = "fetch_test"
     type     = "fetch"
-    priority = 50
+    priority = "50"
     content  = "restart;\n"
   }
 
   snippet {
     name     = "fetch_test"
     type     = "fetch"
-    priority = 110
+    priority = "110"
     content  = "restart;\n"
   }
 

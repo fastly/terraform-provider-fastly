@@ -11,6 +11,7 @@
 
 ### DEPENDENCIES:
 - build(deps): `golang.org/x/net` from 0.37.0 to 0.38.0 ([#966](https://github.com/fastly/terraform-provider-fastly/pull/966))
+- build(deps): `go-fastly` from 9.14.0 to 10.0.0 ([#970](https://github.com/fastly/terraform-provider-fastly/pull/970))
 
 ## 6.0.1 (March 25, 2025)
 

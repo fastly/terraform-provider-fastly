@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -95,14 +95,6 @@ func validateSnippetType() schema.SchemaValidateDiagFunc {
 		"deliver",
 		"log",
 		"none",
-	}, false))
-}
-
-func validateRuleStatusType() schema.SchemaValidateDiagFunc {
-	return validation.ToDiagFunc(validation.StringInSlice([]string{
-		"log",
-		"score",
-		"block",
 	}, false))
 }
 

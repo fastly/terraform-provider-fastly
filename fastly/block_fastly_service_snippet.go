@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -110,7 +110,7 @@ func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	// Safety check in case keys aren't actually set in the HCL.
 	name, _ := resource["name"].(string)
-	priority, _ := resource["priority"].(int)
+	priority, _ := resource["priority"].(string)
 	content, _ := resource["content"].(string)
 	stype, _ := resource["type"].(string)
 
@@ -127,7 +127,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.ToPointer(v.(int))
+		opts.Priority = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["content"]; ok {
 		opts.Content = gofastly.ToPointer(v.(string))
@@ -170,7 +170,7 @@ func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 	opts := gofastly.CreateSnippetInput{
 		Name:     gofastly.ToPointer(resource["name"].(string)),
 		Content:  gofastly.ToPointer(resource["content"].(string)),
-		Priority: gofastly.ToPointer(resource["priority"].(int)),
+		Priority: gofastly.ToPointer(resource["priority"].(string)),
 		Dynamic:  gofastly.ToPointer(0),
 	}
 

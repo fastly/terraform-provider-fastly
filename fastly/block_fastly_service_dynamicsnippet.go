@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -122,7 +122,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.ToPointer(v.(int))
+		opts.Priority = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["content"]; ok {
 		opts.Content = gofastly.ToPointer(v.(string))
@@ -165,7 +165,7 @@ func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, e
 		Content:  gofastly.ToPointer(resource["content"].(string)),
 		Dynamic:  gofastly.ToPointer(1),
 		Name:     gofastly.ToPointer(resource["name"].(string)),
-		Priority: gofastly.ToPointer(resource["priority"].(int)),
+		Priority: gofastly.ToPointer(resource["priority"].(string)),
 	}
 
 	snippetType := strings.ToLower(resource["type"].(string))

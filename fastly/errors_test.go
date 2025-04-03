@@ -3,7 +3,7 @@ package fastly
 import (
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v9/fastly"
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,7 +11,7 @@ func TestHandleNotFoundError_NotFound(t *testing.T) {
 	err := &gofastly.HTTPError{
 		StatusCode: 404,
 		Errors: []*gofastly.ErrorObject{
-			&gofastly.ErrorObject{
+			{
 				Code: "404",
 			},
 		},
@@ -26,7 +26,7 @@ func TestHandleNotFoundError_OtherError(t *testing.T) {
 	err := &gofastly.HTTPError{
 		StatusCode: 500,
 		Errors: []*gofastly.ErrorObject{
-			&gofastly.ErrorObject{
+			{
 				Code:   "500",
 				Title:  "Internal server error",
 				Detail: "This should be returned now",

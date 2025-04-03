@@ -6,15 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
-// intOrDefault accepts a pointer and returns the deferenced value, otherwise it
-// returns the zero value.
-func intOrDefault(int *int) int {
-	if int == nil {
-		return 0
-	}
-	return *int
-}
-
 // diagToErr takes a diag.Diagnostics and finds the first Error (ignoring Warnings).
 // This is useful for some of the SDK functions which are context aware but still return Go errors, e.g. StateContext
 // and resource.RetryContext.

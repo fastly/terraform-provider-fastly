@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 				{
 					"name":     "recv_test",
 					"type":     gofastly.SnippetTypeRecv,
-					"priority": 110,
+					"priority": "110",
 					"content":  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 				},
 			},
@@ -215,7 +215,7 @@ resource "fastly_service_vcl" "foo" {
   snippet {
     name     = "recv_test"
     type     = "recv"
-    priority = 110
+    priority = "110"
     content  = "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}"
   }
 
@@ -244,14 +244,14 @@ resource "fastly_service_vcl" "foo" {
   snippet {
     name     = "recv_test"
     type     = "recv"
-    priority = 110
+    priority = "110"
     content  = "if ( req.url ) {\n set req.http.different-header = \"true\";\n}"
   }
 
   snippet {
     name     = "fetch_test"
     type     = "fetch"
-    priority = 50
+    priority = "50"
     content  = "restart;\n"
   }
 
@@ -284,21 +284,21 @@ resource "fastly_service_vcl" "foo" {
   snippet {
     name     = "recv_test"
     type     = "recv"
-    priority = 110
+    priority = "110"
     content  = "if ( req.url ) {\n set req.http.different-header = \"true\";\n}"
   }
 
   snippet {
     name     = "fetch_test"
     type     = "fetch"
-    priority = 50
+    priority = "50"
     content  = "restart;\n"
   }
 
   snippet {
     name     = "fetch_test"
     type     = "fetch"
-    priority = 110
+    priority = "110"
     content  = "restart;\n"
   }
 

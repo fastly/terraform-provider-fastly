@@ -1,0 +1,81 @@
+---
+page_title: "Fastly: fastly_acl"
+subcategory: ""
+description: |-
+  Provides a Fastly ACL resource.
+---
+
+# fastly_acl
+
+Provides a Fastly ACL (Access Control List) resource. ACLs allow you to create allow/deny lists of IP addresses to control access to your content.
+
+## Example Usage
+
+Basic usage:
+
+```hcl
+resource "fastly_service_vcl" "example" {
+  name = "example_service"
+
+  domain {
+    name    = "example.com"
+    comment = "example domain"
+  }
+
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+    port    = 80
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_acl" "example" {
+  name       = "example_acl"
+  service_id = fastly_service_vcl.example.id
+}
+
+# Optionally manage ACL entries
+resource "fastly_service_acl_entries" "entries" {
+  service_id = fastly_service_vcl.example.id
+  acl_id     = fastly_acl.example.acl_id
+
+  entry {
+    ip      = "192.168.0.1"
+    subnet  = "24"
+    comment = "Block internal IPs"
+    negated = true
+  }
+  
+  entry {
+    ip      = "10.0.0.1"
+    subnet  = "16"
+    comment = "Allow office IPs"
+  }
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `name` - (Required) A unique name to identify the ACL.
+* `service_id` - (Required) The ID of the Fastly service that the ACL belongs to.
+* `force_destroy` - (Optional) Allow the ACL to be deleted even if it contains entries. Defaults to `false`.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `acl_id` - The ID of the ACL.
+
+## Import
+
+Fastly ACLs can be imported using a composite ID of the service_id and ACL ID, e.g.,
+
+```
+$ terraform import fastly_acl.example xxxxxxxxxxxxxxxxxxxx/aN8uz78RFcmXH0ZJ5l9c3
+```
+
+Where `xxxxxxxxxxxxxxxxxxxx` is the service ID and `aN8uz78RFcmXH0ZJ5l9c3` is the ACL ID.

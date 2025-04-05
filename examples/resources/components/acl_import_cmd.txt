@@ -1,0 +1,1 @@
+terraform import fastly_acl.example {service_id}/{acl_id}

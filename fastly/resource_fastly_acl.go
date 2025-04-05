@@ -21,6 +21,11 @@ func resourceFastlyACL() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"acl_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ID of the ACL",
+			},
 			"force_destroy": {
 				Type:        schema.TypeBool,
 				Default:     false,
@@ -39,11 +44,6 @@ func resourceFastlyACL() *schema.Resource {
 				Description: "The ID of the service that the ACL belongs to",
 				ForceNew:    true,
 			},
-			"acl_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The ID of the ACL",
-			},
 		},
 	}
 }
@@ -52,7 +52,7 @@ func resourceFastlyACLCreate(_ context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
-	
+
 	// Get the latest active service version
 	latestVersion, err := getLatestServiceVersion(serviceID, conn)
 	if err != nil {
@@ -74,7 +74,7 @@ func resourceFastlyACLCreate(_ context.Context, d *schema.ResourceData, meta any
 
 	// Set the ACL ID
 	if acl.ACLID != nil {
-		d.Set("acl_id", *acl.ACLID)
+		d.Set("acl_id", acl.ACLID)
 	}
 
 	// Set the resource ID to a composite of service_id/acl_id
@@ -85,7 +85,7 @@ func resourceFastlyACLCreate(_ context.Context, d *schema.ResourceData, meta any
 
 func resourceFastlyACLRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
-	
+
 	// Extract service_id and acl_id from the composite ID
 	serviceID, aclID, err := parseACLID(d.Id())
 	if err != nil {
@@ -96,7 +96,7 @@ func resourceFastlyACLRead(_ context.Context, d *schema.ResourceData, meta any) 
 	if d.Get("service_id").(string) == "" {
 		d.Set("service_id", serviceID)
 	}
-	
+
 	// Get the latest active service version
 	latestVersion, err := getLatestServiceVersion(serviceID, conn)
 	if err != nil {
@@ -111,7 +111,7 @@ func resourceFastlyACLRead(_ context.Context, d *schema.ResourceData, meta any) 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	
+
 	var acl *gofastly.ACL
 	for _, a := range acls {
 		if a.ACLID != nil && *a.ACLID == aclID {
@@ -119,17 +119,17 @@ func resourceFastlyACLRead(_ context.Context, d *schema.ResourceData, meta any) 
 			break
 		}
 	}
-	
+
 	if acl == nil {
 		log.Printf("[WARN] No ACL found with ID '%s'", aclID)
 		d.SetId("")
 		return nil
 	}
-	
+
 	d.Set("acl_id", aclID)
-	
+
 	if acl.Name != nil {
-		d.Set("name", *acl.Name)
+		d.Set("name", acl.Name)
 	}
 
 	return nil
@@ -198,7 +198,7 @@ func resourceFastlyACLDelete(_ context.Context, d *schema.ResourceData, meta any
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	
+
 	var aclName string
 	for _, a := range acls {
 		if a.ACLID != nil && *a.ACLID == aclID {
@@ -206,7 +206,7 @@ func resourceFastlyACLDelete(_ context.Context, d *schema.ResourceData, meta any
 			break
 		}
 	}
-	
+
 	if aclName == "" {
 		// ACL not found, it might have been deleted already
 		d.SetId("")
@@ -229,7 +229,7 @@ func resourceFastlyACLDelete(_ context.Context, d *schema.ResourceData, meta any
 		}
 		return diag.FromErr(err)
 	}
-	
+
 	d.SetId("")
 	return nil
 }
@@ -242,7 +242,7 @@ func getLatestServiceVersion(serviceID string, conn *gofastly.Client) (int, erro
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// Find the latest active version
 	var latestVersion int
 	for _, version := range service.Versions {
@@ -252,7 +252,7 @@ func getLatestServiceVersion(serviceID string, conn *gofastly.Client) (int, erro
 			}
 		}
 	}
-	
+
 	if latestVersion == 0 {
 		// If no active version, use the latest version
 		for _, version := range service.Versions {
@@ -261,11 +261,11 @@ func getLatestServiceVersion(serviceID string, conn *gofastly.Client) (int, erro
 			}
 		}
 	}
-	
+
 	if latestVersion == 0 {
 		return 0, fmt.Errorf("no active version found for service %s", serviceID)
 	}
-	
+
 	return latestVersion, nil
 }
 

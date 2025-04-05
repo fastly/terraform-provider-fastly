@@ -15,7 +15,7 @@ func TestAccFastlyACL_basic(t *testing.T) {
 	var acl gofastly.ACL
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("tf-test-acl-%s", acctest.RandString(10))
-	
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -45,11 +45,11 @@ func TestAccFastlyACL_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyACL_import(t *testing.T) {
+func TestAccFastlyACL_WithImport(t *testing.T) {
 	var acl gofastly.ACL
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("tf-test-acl-%s", acctest.RandString(10))
-	
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -149,7 +149,7 @@ func testAccCheckFastlyACLExists(name string, acl *gofastly.ACL) resource.TestCh
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		
+
 		serviceID, aclID, err := parseACLID(rs.Primary.ID)
 		if err != nil {
 			return err

@@ -13,7 +13,7 @@ Provides a Fastly ACL (Access Control List) resource. ACLs allow you to create a
 
 Basic usage:
 
-```terraform
+```hcl
 ```terraform
 resource "fastly_service_vcl" "example" {
   name = "example_service"

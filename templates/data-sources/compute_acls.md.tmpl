@@ -1,0 +1,19 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_compute_acls"
+sidebar_current: "docs-fastly-datasource-fastly_compute_acls"
+description: |-
+  Get information on Fastly Compute@Edge ACLs.
+---
+
+# fastly_compute_acls
+
+Use this data source to get a list of [Fastly Compute@Edge ACLs][1].
+
+## Example Usage
+
+{{ tffile "examples/data-sources/compute_acls.tf"}}
+
+[1]: https://developer.fastly.com/reference/api/acls/
+
+{{ .SchemaMarkdown | trimspace }}

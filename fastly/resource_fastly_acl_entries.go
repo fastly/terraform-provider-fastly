@@ -168,7 +168,7 @@ func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData,
 				Action:    gofastly.ToPointer(val["action"].(string)),
 			})
 
-			log.Printf("[DEBUG] Deleting ACL entry for ACL %s: %s", aclID, prefix)
+			log.Printf("[DEBUG] Creating ACL entry for ACL %s: %s", aclID, prefix)
 		}
 
 		// Find entries to add
@@ -182,18 +182,41 @@ func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData,
 				Action:    gofastly.ToPointer(val["action"].(string)),
 			})
 
-			log.Printf("[DEBUG] Deleting ACL entry for ACL %s: %s", aclID, prefix)
+			log.Printf("[DEBUG] Creating ACL entry for ACL %s: %s", aclID, prefix)
 		}
 
 		// Find entries to update - need to delete and recreate since direct update isn't supported
 		for _, vRaw := range newSet.Intersection(oldSet).List() {
-			val := vRaw.(map[string]any)
+			newVal := vRaw.(map[string]any)
 
-			batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
-				Operation: gofastly.ToPointer("update"),
-				Prefix:    gofastly.ToPointer(val["prefix"].(string)),
-				Action:    gofastly.ToPointer(val["action"].(string)),
-			})
+			// Find the old entry with the same prefix
+			var oldAction string
+			for _, oRaw := range oldSet.List() {
+				oldVal := oRaw.(map[string]any)
+				if oldVal["prefix"].(string) == newVal["prefix"].(string) {
+					oldAction = oldVal["action"].(string)
+					break
+				}
+			}
+
+			// Only update if the action has changed
+			if oldAction != newVal["action"].(string) {
+				// Delete the old entry first
+				batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
+					Operation: gofastly.ToPointer("delete"),
+					Prefix:    gofastly.ToPointer(newVal["prefix"].(string)),
+					Action:    gofastly.ToPointer(oldAction),
+				})
+
+				// Then create a new entry with the updated action
+				batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
+					Operation: gofastly.ToPointer("create"),
+					Prefix:    gofastly.ToPointer(newVal["prefix"].(string)),
+					Action:    gofastly.ToPointer(newVal["action"].(string)),
+				})
+
+				log.Printf("[DEBUG] Updating ACL entry for ACL %s: %s", aclID, newVal["prefix"].(string))
+			}
 		}
 
 		computeacls.Update(conn, &computeacls.UpdateInput{

@@ -69,6 +69,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"fastly_acl":                             resourceFastlyACL(),
+			"fastly_acl_entries":                     resourceFastlyACLEntries(),
 			"fastly_alert":                           resourceFastlyAlert(),
 			"fastly_configstore":                     resourceFastlyConfigStore(),
 			"fastly_configstore_entries":             resourceFastlyConfigStoreEntries(),

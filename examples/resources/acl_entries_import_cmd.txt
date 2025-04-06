@@ -1,0 +1,1 @@
+terraform import fastly_acl_entries.entries 12345abc/entries

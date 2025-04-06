@@ -28,6 +28,28 @@ func resourceFastlyACLEntries() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of the ACL that the entries belong to",
 			},
+			"entries": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "ACL Entries",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return !d.Get("manage_entries").(bool)
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"action": {
+							Type:        schema.TypeString,
+							Description: "The action to take on the entry.  Valid values are `allow` or `block`",
+							Required:    true,
+						},
+						"prefix": {
+							Type:        schema.TypeString,
+							Description: "The ACL entry prefix in Classless Inter-Domain Routing (CIDR) notation",
+							Required:    true,
+						},
+					},
+				},
+			},
 			"force_destroy": {
 				Type:        schema.TypeBool,
 				Default:     false,
@@ -39,44 +61,6 @@ func resourceFastlyACLEntries() *schema.Resource {
 				Default:     true,
 				Optional:    true,
 				Description: "Whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally",
-			},
-			"entry": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "ACL Entries",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.Get("manage_entries").(bool)
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"comment": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "A personal freeform descriptive note",
-						},
-						"id": {
-							Type:        schema.TypeString,
-							Description: "The unique ID of the entry",
-							Computed:    true,
-						},
-						"ip": {
-							Type:        schema.TypeString,
-							Description: "An IP address that is the focus for the ACL",
-							Required:    true,
-						},
-						"negated": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
-							Description: "A boolean that will negate the match if true",
-						},
-						"subnet": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "An optional subnet mask applied to the IP address",
-						},
-					},
-				},
 			},
 		},
 	}

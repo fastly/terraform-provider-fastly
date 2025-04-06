@@ -9,7 +9,7 @@ description: |-
 
 Provides a Fastly resource to add, update, and remove entries from a Compute ACL.
 
-~> **Note:** This resource is distinct from `fastly_service_acl_entries` which manages ACL entries in the context of a Fastly service.
+~> **Note:** This resource is distinct from `fastly_service_acl_entries` which manages ACL entries in the context of a Fastly service. This resource is for managing entries in Compute@Edge ACLs.
 
 ## Example Usage
 
@@ -21,17 +21,15 @@ Provides a Fastly resource to add, update, and remove entries from a Compute ACL
 
 The following arguments are supported:
 
-* `acl_id` - (Required) The ID of the ACL.
-* `entry` - (Optional) Set of ACL entries. See below for ACL entry properties.
-* `force_destroy` - (Optional) Allow the ACL entries to be deleted during destroy. Default is `false`.
-* `manage_entries` - (Optional) Boolean flag to control whether to manage entries that have been added via other means than Terraform. Default is `true`.
+* `acl_id` - (Required) The ID of the ACL that the entries belong to.
+* `entries` - (Optional) Set of ACL entries. See below for ACL entry properties.
+* `force_destroy` - (Optional) Allow all ACL entries to be deleted during destroy. Default is `false`.
+* `manage_entries` - (Optional) Boolean flag to control whether to reapply changes if the state of the entries drifts, i.e. if entries are managed externally. Default is `true`.
 
-The `entry` attribute supports the following keys:
+The `entries` attribute supports the following keys:
 
-* `ip` - (Required) An IP address that will be used for the ACL entry.
-* `subnet` - (Optional) An optional subnet for the IP address.
-* `negated` - (Optional) Whether to negate the match. Default: `false`.
-* `comment` - (Optional) A personal freeform descriptive note.
+* `action` - (Required) The action to take on the entry. Valid values are `allow` or `block`.
+* `prefix` - (Required) The ACL entry prefix in Classless Inter-Domain Routing (CIDR) notation.
 
 ## Attribute Reference
 
@@ -44,5 +42,5 @@ In addition to the arguments listed above, the following attributes are exported
 Fastly ACL entries can be imported using the ACL ID, e.g.
 
 ```
-$ terraform import fastly_acl_entries.entries 12345abc
+terraform import fastly_acl.example 7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf/entries
 ```

@@ -22,7 +22,6 @@ Basic usage:
 The following arguments are supported:
 
 * `name` - (Required) A unique name to identify the ACL.
-* `service_id` - (Required) The ID of the Fastly service that the ACL belongs to.
 * `force_destroy` - (Optional) Allow the ACL to be deleted even if it contains entries. Defaults to `false`.
 
 ## Attributes Reference
@@ -33,13 +32,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Fastly ACLs can be imported using a composite ID of the service_id and ACL ID, e.g.,
+Fastly ACLs can be imported using the ACL ID (UUID), e.g.,
 
 ```
-$ terraform import fastly_acl.example xxxxxxxxxxxxxxxxxxxx/aN8uz78RFcmXH0ZJ5l9c3
+$ terraform import fastly_acl.example 7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf
 ```
 
-Where `xxxxxxxxxxxxxxxxxxxx` is the service ID and `aN8uz78RFcmXH0ZJ5l9c3` is the ACL ID.
+Where `7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf` is the ACL ID.
 
 {{ .SchemaMarkdown | trimspace }}
 

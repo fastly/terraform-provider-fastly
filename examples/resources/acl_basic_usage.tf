@@ -1,40 +1,24 @@
-resource "fastly_service_vcl" "example" {
-  name = "example_service"
+resource "fastly_service_compute" "example" {
+  name = "my_compute_service"
 
   domain {
-    name    = "example.com"
-    comment = "example domain"
+    name = "demo.example.com"
   }
 
-  backend {
-    address = "127.0.0.1"
-    name    = "localhost"
-    port    = 80
+  package {
+    filename         = "package.tar.gz"
+    source_code_hash = data.fastly_package_hash.example.hash
+  }
+
+  resource_link {
+    name        = "my_resource_link"
+    resource_id = fastly_acl.example.id
   }
 
   force_destroy = true
 }
 
 resource "fastly_acl" "example" {
-  name       = "example_acl"
-  service_id = fastly_service_vcl.example.id
-}
-
-# Optionally manage ACL entries
-resource "fastly_service_acl_entries" "entries" {
-  service_id = fastly_service_vcl.example.id
-  acl_id     = fastly_acl.example.acl_id
-
-  entry {
-    ip      = "192.168.0.1"
-    subnet  = "24"
-    comment = "Block internal IPs"
-    negated = true
-  }
-  
-  entry {
-    ip      = "10.0.0.1"
-    subnet  = "16"
-    comment = "Allow office IPs"
-  }
+  name          = "example_acl"
+  force_destroy = true
 }

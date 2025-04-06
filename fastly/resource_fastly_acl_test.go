@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v10/fastly/computeacls"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -82,56 +83,22 @@ func testAccCheckFastlyACLDestroy(s *terraform.State) error {
 			continue
 		}
 
-		serviceID, aclID, err := parseACLID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		aclID := rs.Primary.ID
 
-		// Get the latest service version
-		service, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-			ServiceID: serviceID,
+		// Try to get the ACL
+		_, err := computeacls.Describe(conn, &computeacls.DescribeInput{
+			ComputeACLID: gofastly.ToPointer(aclID),
 		})
-		if err != nil {
-			if httpErr, ok := err.(*gofastly.HTTPError); ok && httpErr.StatusCode == 404 {
-				return nil
-			}
-			return err
+		if err == nil {
+			return fmt.Errorf("ACL still exists: %s", rs.Primary.ID)
 		}
 
-		var latestVersion int
-		for _, version := range service.Versions {
-			if version.Active != nil && *version.Active && version.Number != nil {
-				if *version.Number > latestVersion {
-					latestVersion = *version.Number
-				}
-			}
+		// Check if the error is a 404
+		if httpErr, ok := err.(*gofastly.HTTPError); ok && httpErr.StatusCode == 404 {
+			continue
 		}
 
-		if latestVersion == 0 {
-			// If no active version, use the latest version
-			for _, version := range service.Versions {
-				if version.Number != nil && *version.Number > latestVersion {
-					latestVersion = *version.Number
-				}
-			}
-		}
-
-		acls, err := conn.ListACLs(&gofastly.ListACLsInput{
-			ServiceID:      serviceID,
-			ServiceVersion: latestVersion,
-		})
-		if err != nil {
-			if httpErr, ok := err.(*gofastly.HTTPError); ok && httpErr.StatusCode == 404 {
-				return nil
-			}
-			return err
-		}
-
-		for _, acl := range acls {
-			if acl.ACLID != nil && *acl.ACLID == aclID {
-				return fmt.Errorf("ACL still exists: %s", rs.Primary.ID)
-			}
-		}
+		return err
 	}
 
 	return nil
@@ -149,61 +116,21 @@ func testAccCheckFastlyACLExists(name string, acl *gofastly.ACL) resource.TestCh
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
+		aclID := rs.Primary.ID
 
-		serviceID, aclID, err := parseACLID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		// Get the latest service version
-		service, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
-			ServiceID: serviceID,
+		// Get the ACL
+		computeACL, err := computeacls.Describe(conn, &computeacls.DescribeInput{
+			ComputeACLID: gofastly.ToPointer(aclID),
 		})
 		if err != nil {
 			return err
 		}
 
-		var latestVersion int
-		for _, version := range service.Versions {
-			if version.Active != nil && *version.Active && version.Number != nil {
-				if *version.Number > latestVersion {
-					latestVersion = *version.Number
-				}
-			}
-		}
+		// Convert to legacy ACL struct for test compatibility
+		acl.ACLID = gofastly.ToPointer(computeACL.ComputeACLID)
+		acl.Name = gofastly.ToPointer(computeACL.Name)
 
-		if latestVersion == 0 {
-			// If no active version, use the latest version
-			for _, version := range service.Versions {
-				if version.Number != nil && *version.Number > latestVersion {
-					latestVersion = *version.Number
-				}
-			}
-		}
-
-		acls, err := conn.ListACLs(&gofastly.ListACLsInput{
-			ServiceID:      serviceID,
-			ServiceVersion: latestVersion,
-		})
-		if err != nil {
-			return err
-		}
-
-		var found *gofastly.ACL
-		for _, a := range acls {
-			if a.ACLID != nil && *a.ACLID == aclID {
-				found = a
-				break
-			}
-		}
-
-		if found == nil {
-			return fmt.Errorf("ACL not found: %s", aclID)
-		}
-
-		*acl = *found
 		log.Printf("[DEBUG] Found ACL: %s", aclID)
-
 		return nil
 	}
 }
@@ -228,8 +155,7 @@ resource "fastly_service_vcl" "test" {
 }
 
 resource "fastly_acl" "test" {
-  name       = "%s"
-  service_id = fastly_service_vcl.test.id
+  name = "%s"
 }
 `, serviceName, aclName)
 }
@@ -255,7 +181,6 @@ resource "fastly_service_vcl" "test" {
 
 resource "fastly_acl" "test" {
   name          = "%s"
-  service_id    = fastly_service_vcl.test.id
   force_destroy = true
 }
 `, serviceName, aclName)

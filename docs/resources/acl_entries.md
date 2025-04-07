@@ -25,17 +25,13 @@ resource "fastly_acl_entries" "entries" {
   force_destroy = true
 
   entry {
-    ip = "127.0.0.1"
-    subnet = "24"
-    negated = false
-    comment = "ACL Entry 1"
+    prefix = "127.0.0.1/32"
+    action = "BLOCK"
   }
 
   entry {
-    ip = "192.168.0.1"
-    subnet = "32" 
-    negated = true
-    comment = "ACL Entry 2"
+    ip = "192.168.0.1/32"
+    action = "ALLOW"
   }
 }
 ```

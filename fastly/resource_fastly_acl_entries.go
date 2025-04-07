@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
@@ -28,7 +29,7 @@ func resourceFastlyACLEntries() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of the ACL that the entries belong to",
 			},
-			"entries": {
+			"entry": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "ACL Entries",
@@ -41,11 +42,25 @@ func resourceFastlyACLEntries() *schema.Resource {
 							Type:        schema.TypeString,
 							Description: "The action to take on the entry.  Valid values are `allow` or `block`",
 							Required:    true,
+							ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+								v := val.(string)
+								if v != "ALLOW" && v != "BLOCK" {
+									errs = append(errs, fmt.Errorf("%q must be either `ALLOW` or `BLOCK` case sensitive, got: %q", key, v))
+								}
+								return
+							},
 						},
 						"prefix": {
 							Type:        schema.TypeString,
 							Description: "The ACL entry prefix in Classless Inter-Domain Routing (CIDR) notation",
 							Required:    true,
+							ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+								v := val.(string)
+								if _, _, err := net.ParseCIDR(v); err != nil {
+									errs = append(errs, fmt.Errorf("%q must be a valid CIDR notation, got: %q", key, v))
+								}
+								return
+							},
 						},
 					},
 				},
@@ -79,32 +94,26 @@ func resourceFastlyACLEntriesCreate(ctx context.Context, d *schema.ResourceData,
 		return resourceFastlyACLEntriesRead(ctx, d, meta)
 	}
 
+	var batchEntries []*computeacls.BatchComputeACLEntry = []*computeacls.BatchComputeACLEntry{}
 	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]any)
 
-		// We need to create an entry with the ACL resource
-		createEntry := &gofastly.CreateACLEntryInput{
-			ServiceID: "", // Not used for compute ACLs
-			ACLID:     aclID,
-			IP:        gofastly.ToPointer(val["ip"].(string)),
-			Negated:   gofastly.ToPointer(gofastly.Compatibool(val["negated"].(bool))),
-		}
+		prefix := val["prefix"].(string)
+		batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
+			Operation: gofastly.ToPointer("create"),
+			Prefix:    gofastly.ToPointer(val["prefix"].(string)),
+			Action:    gofastly.ToPointer(val["action"].(string)),
+		})
 
-		if comment, ok := val["comment"].(string); ok && comment != "" {
-			createEntry.Comment = gofastly.ToPointer(comment)
-		}
+		log.Printf("[DEBUG] Creating ACL entry for ACL %s: %s", aclID, prefix)
+	}
+	err := computeacls.Update(conn, &computeacls.UpdateInput{
+		ComputeACLID: gofastly.ToPointer(aclID),
+		Entries:      batchEntries,
+	})
 
-		if subnet, ok := val["subnet"].(string); ok && subnet != "" {
-			subnetInt := computeConvertSubnetToInt(subnet)
-			createEntry.Subnet = gofastly.ToPointer(subnetInt)
-		}
-
-		log.Printf("[DEBUG] Creating ACL entry for ACL %s: %#v", aclID, createEntry)
-		entry, err := conn.CreateACLEntry(createEntry)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error creating ACL entry for ACL %s: %w", aclID, err))
-		}
-		log.Printf("[DEBUG] Created ACL entry %s for ACL %s", *entry.EntryID, aclID)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating ACL entries for ACL %s: %w", aclID, err))
 	}
 
 	return resourceFastlyACLEntriesRead(ctx, d, meta)
@@ -155,7 +164,7 @@ func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData,
 		oldSet := old.(*schema.Set)
 		newSet := new.(*schema.Set)
 
-		var batchEntries []*computeacls.BatchComputeACLEntry
+		var batchEntries []*computeacls.BatchComputeACLEntry = []*computeacls.BatchComputeACLEntry{}
 
 		// Find entries to remove
 		for _, vRaw := range oldSet.Difference(newSet).List() {
@@ -165,7 +174,6 @@ func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData,
 			batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
 				Operation: gofastly.ToPointer("delete"),
 				Prefix:    gofastly.ToPointer(val["prefix"].(string)),
-				Action:    gofastly.ToPointer(val["action"].(string)),
 			})
 
 			log.Printf("[DEBUG] Creating ACL entry for ACL %s: %s", aclID, prefix)
@@ -205,7 +213,6 @@ func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData,
 				batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
 					Operation: gofastly.ToPointer("delete"),
 					Prefix:    gofastly.ToPointer(newVal["prefix"].(string)),
-					Action:    gofastly.ToPointer(oldAction),
 				})
 
 				// Then create a new entry with the updated action
@@ -219,10 +226,13 @@ func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		computeacls.Update(conn, &computeacls.UpdateInput{
+		err := computeacls.Update(conn, &computeacls.UpdateInput{
 			ComputeACLID: gofastly.ToPointer(aclID),
 			Entries:      batchEntries,
 		})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error updating ACL entries for ACL %s: %w", aclID, err))
+		}
 	}
 
 	return resourceFastlyACLEntriesRead(ctx, d, meta)
@@ -237,7 +247,7 @@ func resourceFastlyACLEntriesDelete(_ context.Context, d *schema.ResourceData, m
 		return diag.Errorf("refusing to delete ACL entries for ACL %s without force_destroy set to true", aclID)
 	}
 
-	var batchEntries []*computeacls.BatchComputeACLEntry
+	var batchEntries []*computeacls.BatchComputeACLEntry = []*computeacls.BatchComputeACLEntry{}
 	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]any)
 		prefix := val["prefix"].(string)
@@ -247,7 +257,6 @@ func resourceFastlyACLEntriesDelete(_ context.Context, d *schema.ResourceData, m
 		batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
 			Operation: gofastly.ToPointer("delete"),
 			Prefix:    gofastly.ToPointer(prefix),
-			Action:    gofastly.ToPointer(val["action"].(string)),
 		})
 	}
 
@@ -262,18 +271,6 @@ func resourceFastlyACLEntriesDelete(_ context.Context, d *schema.ResourceData, m
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting ACL entries for ACL %s: %w", aclID, err))
-	}
-
-	err = computeacls.Delete(conn, &computeacls.DeleteInput{
-		ComputeACLID: gofastly.ToPointer(aclID),
-	})
-
-	if err != nil {
-		if e, ok := err.(*gofastly.HTTPError); ok && e.StatusCode == 404 {
-			// ACL was already deleted
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error deleting ACL %s: %w", aclID, err))
 	}
 
 	d.SetId("")
@@ -312,12 +309,4 @@ func flattenComputeACLEntries(entries []computeacls.ComputeACLEntry) []map[strin
 	}
 
 	return result
-}
-
-func computeConvertSubnetToInt(s string) int {
-	subnet := 0
-	if s != "" {
-		fmt.Sscanf(s, "%d", &subnet)
-	}
-	return subnet
 }

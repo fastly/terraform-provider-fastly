@@ -232,26 +232,48 @@ func resourceFastlyACLEntriesDelete(_ context.Context, d *schema.ResourceData, m
 	conn := meta.(*APIClient).conn
 	aclID := d.Get("acl_id").(string)
 
-	if !d.Get("force_destroy").(bool) {
+	entries := d.Get("entry").(*schema.Set)
+	if entries.Len() != 0 && !d.Get("force_destroy").(bool) {
 		return diag.Errorf("refusing to delete ACL entries for ACL %s without force_destroy set to true", aclID)
 	}
 
-	entries := d.Get("entry").(*schema.Set)
+	var batchEntries []*computeacls.BatchComputeACLEntry
 	for _, vRaw := range entries.List() {
 		val := vRaw.(map[string]any)
-		entryID := val["id"].(string)
+		prefix := val["prefix"].(string)
 
-		log.Printf("[DEBUG] Deleting ACL entry %s from ACL %s", entryID, aclID)
+		log.Printf("[DEBUG] Deleting ACL entry %s from ACL %s", prefix, aclID)
 
-		// Use the regular API to delete entries
-		err := conn.DeleteACLEntry(&gofastly.DeleteACLEntryInput{
-			ServiceID: "", // Not used for compute ACLs
-			ACLID:     aclID,
-			EntryID:   entryID,
+		batchEntries = append(batchEntries, &computeacls.BatchComputeACLEntry{
+			Operation: gofastly.ToPointer("delete"),
+			Prefix:    gofastly.ToPointer(prefix),
+			Action:    gofastly.ToPointer(val["action"].(string)),
 		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error deleting ACL entry %s from ACL %s: %w", entryID, aclID, err))
+	}
+
+	// Use the regular API to delete entries
+	err := computeacls.Update(conn, &computeacls.UpdateInput{
+		ComputeACLID: gofastly.ToPointer(aclID),
+		Entries:      batchEntries,
+	})
+	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.StatusCode == 404 {
+			// ACL was already deleted
+			return nil
 		}
+		return diag.FromErr(fmt.Errorf("error deleting ACL entries for ACL %s: %w", aclID, err))
+	}
+
+	err = computeacls.Delete(conn, &computeacls.DeleteInput{
+		ComputeACLID: gofastly.ToPointer(aclID),
+	})
+
+	if err != nil {
+		if e, ok := err.(*gofastly.HTTPError); ok && e.StatusCode == 404 {
+			// ACL was already deleted
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("error deleting ACL %s: %w", aclID, err))
 	}
 
 	d.SetId("")

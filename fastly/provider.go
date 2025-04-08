@@ -44,6 +44,7 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
+			"fastly_acls":                         dataSourceFastlyACLs(),
 			"fastly_configstores":                 dataSourceFastlyConfigStores(),
 			"fastly_datacenters":                  dataSourceFastlyDatacenters(),
 			"fastly_dictionaries":                 dataSourceFastlyDictionaries(),

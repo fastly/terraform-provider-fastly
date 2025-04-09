@@ -1,13 +1,13 @@
 ---
-page_title: "Fastly: fastly_acl"
+page_title: "Fastly: fastly_compute_acl"
 subcategory: ""
 description: |-
-  Provides a Fastly ACL resource.
+  Provides a Fastly Compute@Edge ACL resource.
 ---
 
-# fastly_acl
+# fastly_compute_acl
 
-Provides a Fastly ACL (Access Control List) resource. ACLs allow you to create allow/deny lists of IP addresses to control access to your content.
+Provides a Fastly Compute@Edge ACL (Access Control List) resource. ACLs allow you to create allow/deny lists of IP addresses to control access to your Compute@Edge services.
 
 ## Example Usage
 
@@ -29,13 +29,13 @@ resource "fastly_service_compute" "example" {
 
   resource_link {
     name        = "my_resource_link"
-    resource_id = fastly_acl.example.id
+    resource_id = fastly_compute_acl.example.id
   }
 
   force_destroy = true
 }
 
-resource "fastly_acl" "example" {
+resource "fastly_compute_acl" "example" {
   name          = "example_acl"
   force_destroy = true
 }
@@ -57,10 +57,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Fastly ACLs can be imported using the ACL ID (UUID), e.g.,
+Fastly Compute@Edge ACLs can be imported using the ACL ID (UUID), e.g.,
 
 ```
-$ terraform import fastly_acl.example 7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf
+$ terraform import fastly_compute_acl.example 7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf
 ```
 
 Where `7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf` is the ACL ID.

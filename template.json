@@ -1,0 +1,775 @@
+{
+    "Conditions": {
+      "HasPreferredAvailabilityZones": {
+        "Fn::Not": [
+          {
+            "Fn::Equals": [
+              {
+                "Fn::Join": [
+                  ",",
+                  {
+                    "Ref": "PreferredCacheClusterAZs"
+                  }
+                ]
+              },
+              ""
+            ]
+          }
+        ]
+      },
+      "IsAutomaticFailoverEnabled": {
+        "Fn::And": [
+          {
+            "Condition": "IsMultiNodeCluster"
+          },
+          {
+            "Fn::Not": [
+              {
+                "Condition": "IsTInstanceClass"
+              }
+            ]
+          }
+        ]
+      },
+      "IsEncryptionEnabled": {
+        "Fn::Equals": [
+          {
+            "Ref": "Encrypted"
+          },
+          "true"
+        ]
+      },
+      "IsMultiNodeCluster": {
+        "Fn::Not": [
+          {
+            "Fn::Equals": [
+              {
+                "Fn::FindInMap": [
+                  "ClusterMapping",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "NumNodes"
+                ]
+              },
+              "1"
+            ]
+          }
+        ]
+      },
+      "IsProductDatadotworld": {
+        "Fn::Equals": [
+          {
+            "Fn::FindInMap": [
+              "AccountENV",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              "product"
+            ]
+          },
+          "datadotworld"
+        ]
+      },
+      "IsTInstanceClass": {
+        "Fn::Or": [
+          {
+            "Fn::Equals": [
+              {
+                "Fn::FindInMap": [
+                  "ClusterMapping",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "NodeType"
+                ]
+              },
+              "cache.t1.micro"
+            ]
+          },
+          {
+            "Fn::Equals": [
+              {
+                "Fn::FindInMap": [
+                  "ClusterMapping",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "NodeType"
+                ]
+              },
+              "cache.t2.micro"
+            ]
+          },
+          {
+            "Fn::Equals": [
+              {
+                "Fn::FindInMap": [
+                  "ClusterMapping",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "NodeType"
+                ]
+              },
+              "cache.t2.small"
+            ]
+          },
+          {
+            "Fn::Equals": [
+              {
+                "Fn::FindInMap": [
+                  "ClusterMapping",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "NodeType"
+                ]
+              },
+              "cache.t2.medium"
+            ]
+          }
+        ]
+      },
+      "KMSHasCustomKeyMapping": {
+        "Fn::Not": [
+          {
+            "Fn::Equals": [
+              {
+                "Fn::FindInMap": [
+                  "KMSCustomKey",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  {
+                    "Ref": "AWS::AccountId"
+                  }
+                ]
+              },
+              ""
+            ]
+          }
+        ]
+      }
+    },
+    "Description": "HootAppCache elasticache cluster (redis cluster)",
+    "Mappings": {
+      "AccountDNS": {
+        "076710063136": {
+          "HostedZoneId": "Z3SNXJRY0SSUJ3"
+        },
+        "169748203720": {
+          "HostedZoneId": ""
+        },
+        "465428570792": {
+          "HostedZoneId": "Z3JY2YGN1L04X"
+        },
+        "650022819355": {
+          "HostedZoneId": ""
+        },
+        "656517325237": {
+          "HostedZoneId": ""
+        },
+        "657998355928": {
+          "HostedZoneId": "Z22ZLZNER71XWU"
+        },
+        "685876426864": {
+          "HostedZoneId": ""
+        },
+        "971314574228": {
+          "HostedZoneId": "Z1Q6GDP0SAJDJE"
+        }
+      },
+      "AccountENV": {
+        "001010638448": {
+          "env": "o",
+          "name": "opendata",
+          "product": "",
+          "public": false
+        },
+        "076710063136": {
+          "env": "l",
+          "name": "load",
+          "product": "datadotworld",
+          "public": true
+        },
+        "140663388666": {
+          "env": "wunderman",
+          "name": "wunderman",
+          "product": "svc",
+          "public": false
+        },
+        "169114321338": {
+          "env": "marketplace",
+          "name": "marketplace",
+          "product": "marketplace",
+          "public": false
+        },
+        "169748203720": {
+          "env": "n",
+          "name": "indeed",
+          "product": "vpc",
+          "public": true
+        },
+        "170364057064": {
+          "env": "r",
+          "name": "run",
+          "product": "",
+          "public": false
+        },
+        "225946409073": {
+          "env": "ops",
+          "name": "operations",
+          "product": "operations",
+          "public": false
+        },
+        "274992196715": {
+          "env": "i",
+          "name": "identity",
+          "product": "identity",
+          "public": false
+        },
+        "465428570792": {
+          "env": "p",
+          "name": "prod",
+          "product": "datadotworld",
+          "public": true
+        },
+        "621799806001": {
+          "env": "a",
+          "name": "artifacts",
+          "product": "artifacts",
+          "public": false
+        },
+        "640845339822": {
+          "env": "c",
+          "name": "census",
+          "product": "",
+          "public": false
+        },
+        "650022819355": {
+          "env": "dev",
+          "name": "dev",
+          "product": "grafo",
+          "public": false
+        },
+        "656517325237": {
+          "env": "prod",
+          "name": "prod",
+          "product": "grafo",
+          "public": true
+        },
+        "657998355928": {
+          "env": "d",
+          "name": "dev",
+          "product": "datadotworld",
+          "public": false
+        },
+        "685876426864": {
+          "env": "m",
+          "name": "mckinsey",
+          "product": "vpc",
+          "public": true
+        },
+        "971314574228": {
+          "env": "s",
+          "name": "stage",
+          "product": "datadotworld",
+          "public": false
+        }
+      },
+      "ClusterMapping": {
+        "169748203720": {
+          "NodeType": "cache.m5.large",
+          "NumNodes": 1
+        },
+        "465428570792": {
+          "NodeType": "cache.m5.large",
+          "NumNodes": 1
+        },
+        "657998355928": {
+          "NodeType": "cache.t3.medium",
+          "NumNodes": 1
+        },
+        "685876426864": {
+          "NodeType": "cache.m5.large",
+          "NumNodes": 1
+        }
+      },
+      "KMSCustomKey": {
+        "default": {
+          "076710063136": "",
+          "169748203720": "",
+          "225946409073": "",
+          "465428570792": "",
+          "650022819355": "",
+          "656517325237": "",
+          "657998355928": "",
+          "685876426864": "",
+          "971314574228": ""
+        },
+        "eu-north-1": {
+          "076710063136": "",
+          "169748203720": "",
+          "225946409073": "",
+          "465428570792": "",
+          "650022819355": "",
+          "656517325237": "",
+          "657998355928": "arn:aws:kms:eu-north-1:650022819355:key/bc316ed3-c835-4dc4-98c2-f2d880823264",
+          "685876426864": "",
+          "971314574228": "arn:aws:kms:eu-north-1:650022819355:key/dd20c24e-726b-4c21-8b41-c336686f65ff"
+        },
+        "eu-west-1": {
+          "076710063136": "",
+          "169748203720": "",
+          "225946409073": "",
+          "465428570792": "",
+          "650022819355": "",
+          "656517325237": "",
+          "657998355928": "arn:aws:kms:eu-west-1:650022819355:key/09f4ebf9-ae00-4b23-9455-dbeb87ad42db",
+          "685876426864": "",
+          "971314574228": "arn:aws:kms:eu-west-1:650022819355:key/b71a41ff-0af8-47cf-9db6-9d7ed2e0454e"
+        },
+        "us-east-1": {
+          "076710063136": "",
+          "169748203720": "",
+          "225946409073": "",
+          "465428570792": "",
+          "650022819355": "",
+          "656517325237": "",
+          "657998355928": "arn:aws:kms:us-east-1:650022819355:key/b9f663d0-238b-4f8c-8b17-81d2f2227873",
+          "685876426864": "arn:aws:kms:us-east-1:620483020254:key/883fbcbd-3c03-4830-b542-d1497563f655",
+          "971314574228": "arn:aws:kms:us-east-1:650022819355:key/3f28c9f1-3776-4152-93ed-5fffda3683ad"
+        },
+        "us-west-2": {
+          "076710063136": "",
+          "169748203720": "",
+          "225946409073": "",
+          "465428570792": "",
+          "650022819355": "",
+          "656517325237": "",
+          "657998355928": "arn:aws:kms:us-west-2:650022819355:key/72347372-f343-4310-8fd2-20836c4bacba",
+          "685876426864": "arn:aws:kms:us-west-2:620483020254:key/74b4fa50-98cc-49f9-a2b2-4e2ec589cb89",
+          "971314574228": "arn:aws:kms:us-west-2:650022819355:key/1d0a7f5c-073d-40aa-97ff-fb123822acf6"
+        }
+      }
+    },
+    "Outputs": {
+      "Port": {
+        "Description": "Replication group port",
+        "Export": {
+          "Name": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "ClusterId"
+                },
+                "Port"
+              ]
+            ]
+          }
+        },
+        "Value": {
+          "Fn::GetAtt": [
+            "ReplicationGroup",
+            "PrimaryEndPoint.Port"
+          ]
+        }
+      },
+      "PrimaryEndpoint": {
+        "Description": "Primary cache node endpoint",
+        "Export": {
+          "Name": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "ClusterId"
+                },
+                "PrimaryEndpoint"
+              ]
+            ]
+          }
+        },
+        "Value": {
+          "Fn::GetAtt": [
+            "ReplicationGroup",
+            "PrimaryEndPoint.Address"
+          ]
+        }
+      },
+      "ReadEndpoints": {
+        "Description": "Comma-separated list of endpoints for all cache nodes",
+        "Export": {
+          "Name": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "ClusterId"
+                },
+                "ReadEndpoints"
+              ]
+            ]
+          }
+        },
+        "Value": {
+          "Fn::Join": [
+            ",",
+            {
+              "Fn::GetAtt": [
+                "ReplicationGroup",
+                "ReadEndPoint.Addresses.List"
+              ]
+            }
+          ]
+        }
+      },
+      "ReaderEndpoint": {
+        "Description": "Replica cache node endpoint",
+        "Export": {
+          "Name": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "ClusterId"
+                },
+                "ReaderEndpoint"
+              ]
+            ]
+          }
+        },
+        "Value": {
+          "Fn::GetAtt": [
+            "ReplicationGroup",
+            "ReaderEndPoint.Address"
+          ]
+        }
+      }
+    },
+    "Parameters": {
+      "ClusterId": {
+        "Description": "Cluster identifier unique to the AWS account",
+        "Type": "String"
+      },
+      "Encrypted": {
+        "AllowedValues": [
+          "true",
+          "false"
+        ],
+        "Default": "true",
+        "Description": "Whether to enable encryption-at-rest and encryption-in-transit",
+        "Type": "String"
+      },
+      "EngineVersion": {
+        "AllowedValues": [
+          "4.0.10",
+          "5.0.4",
+          "5.0.5",
+          "5.0.6"
+        ],
+        "Description": "Engine version for the redis cluster",
+        "Type": "String"
+      },
+      "Owner": {
+        "AllowedPattern": "[a-z]{2}",
+        "Default": "dw",
+        "Description": "Two character value indicating owner of this stack (ie: \"dw\")",
+        "Type": "String"
+      },
+      "ParameterGroupFamily": {
+        "AllowedValues": [
+          "redis4.0",
+          "redis5.0"
+        ],
+        "Default": "redis5.0",
+        "Description": "Parameter group family to use",
+        "Type": "String"
+      },
+      "Port": {
+        "Default": "6379",
+        "Description": "Port for the cache cluster to listen on",
+        "Type": "Number"
+      },
+      "PreferredCacheClusterAZs": {
+        "Default": "",
+        "Description": "Must match the # of nodes in NumCacheClusters.",
+        "Type": "CommaDelimitedList"
+      },
+      "PreferredMaintenanceWindow": {
+        "Default": "Mon:04:00-Mon:05:00",
+        "Description": "A (minimum 60 minute) window in DDD:HH:MM-DDD:HH:MM format in UTC for backups. Default: Sunday 3am-4am PST",
+        "Type": "String"
+      },
+      "SnapshotRetentionLimit": {
+        "Default": "3",
+        "Description": "The number of daily snapshots to retain. Only valid for clusters with the redis Engine.",
+        "Type": "Number"
+      },
+      "SnapshotWindow": {
+        "Default": "Mon:03:00-Mon:04:00",
+        "Description": "For Redis cache clusters, daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your node group. For example, you can specify 05:00-09:00.",
+        "Type": "String"
+      }
+    },
+    "Resources": {
+      "ParameterGroup": {
+        "Properties": {
+          "CacheParameterGroupFamily": "redis5.0",
+          "Description": "HootAppCache",
+          "Properties": {
+            "maxmemory-policy": "noeviction"
+          }
+        },
+        "Type": "AWS::ElastiCache::ParameterGroup"
+      },
+      "ReplicationGroup": {
+        "Properties": {
+          "AtRestEncryptionEnabled": {
+            "Fn::If": [
+              "IsEncryptionEnabled",
+              true,
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "AutomaticFailoverEnabled": {
+            "Fn::If": [
+              "IsAutomaticFailoverEnabled",
+              true,
+              false
+            ]
+          },
+          "CacheNodeType": {
+            "Fn::FindInMap": [
+              "ClusterMapping",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              "NodeType"
+            ]
+          },
+          "CacheParameterGroupName": {
+            "Ref": "ParameterGroup"
+          },
+          "CacheSubnetGroupName": {
+            "Ref": "SubnetGroup"
+          },
+          "Engine": "redis",
+          "EngineVersion": {
+            "Ref": "EngineVersion"
+          },
+          "KmsKeyId": {
+            "Fn::If": [
+              "KMSHasCustomKeyMapping",
+              {
+                "Fn::FindInMap": [
+                  "KMSCustomKey",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  {
+                    "Ref": "AWS::AccountId"
+                  }
+                ]
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "NumCacheClusters": {
+            "Fn::FindInMap": [
+              "ClusterMapping",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              "NumNodes"
+            ]
+          },
+          "Port": {
+            "Ref": "Port"
+          },
+          "PreferredCacheClusterAZs": {
+            "Fn::If": [
+              "HasPreferredAvailabilityZones",
+              {
+                "Ref": "PreferredCacheClusterAZs"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          "PreferredMaintenanceWindow": {
+            "Ref": "PreferredMaintenanceWindow"
+          },
+          "ReplicationGroupDescription": "HootAppCache",
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroup"
+            }
+          ],
+          "SnapshotRetentionLimit": {
+            "Fn::If": [
+              "IsTInstanceClass",
+              {
+                "Ref": "AWS::NoValue"
+              },
+              {
+                "Ref": "SnapshotRetentionLimit"
+              }
+            ]
+          },
+          "SnapshotWindow": {
+            "Fn::If": [
+              "IsTInstanceClass",
+              {
+                "Ref": "AWS::NoValue"
+              },
+              {
+                "Ref": "SnapshotWindow"
+              }
+            ]
+          },
+          "Tags": [
+            {
+              "Key": "dw-environment",
+              "Value": {
+                "Fn::FindInMap": [
+                  "AccountENV",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "env"
+                ]
+              }
+            },
+            {
+              "Key": "dw-owner",
+              "Value": {
+                "Ref": "Owner"
+              }
+            },
+            {
+              "Key": "dw-rediscluster",
+              "Value": {
+                "Ref": "ClusterId"
+              }
+            }
+          ],
+          "TransitEncryptionEnabled": {
+            "Fn::If": [
+              "IsEncryptionEnabled",
+              true,
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        },
+        "Type": "AWS::ElastiCache::ReplicationGroup"
+      },
+      "ReplicationGroupPrimaryDNSRecord": {
+        "DependsOn": [
+          "ReplicationGroup"
+        ],
+        "Properties": {
+          "HostedZoneId": {
+            "Fn::If": [
+              "IsProductDatadotworld",
+              {
+                "Fn::FindInMap": [
+                  "AccountDNS",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  "HostedZoneId"
+                ]
+              },
+              {
+                "Fn::ImportValue": "DNS-AccountHostedZone"
+              }
+            ]
+          },
+          "Name": {
+            "Fn::Join": [
+              "",
+              [
+                {
+                  "Ref": "ClusterId"
+                },
+                "-primary-",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".",
+                {
+                  "Fn::ImportValue": "DNS-AccountRootDomain"
+                },
+                "."
+              ]
+            ]
+          },
+          "ResourceRecords": [
+            {
+              "Fn::GetAtt": [
+                "ReplicationGroup",
+                "PrimaryEndPoint.Address"
+              ]
+            }
+          ],
+          "TTL": "60",
+          "Type": "CNAME"
+        },
+        "Type": "AWS::Route53::RecordSet"
+      },
+      "SecurityGroup": {
+        "Properties": {
+          "GroupDescription": "HootAppCache security group",
+          "VpcId": {
+            "Fn::ImportValue": "VPC-Id"
+          }
+        },
+        "Type": "AWS::EC2::SecurityGroup"
+      },
+      "SecurityGroupIngress": {
+        "DependsOn": [
+          "SecurityGroup"
+        ],
+        "Properties": {
+          "FromPort": {
+            "Ref": "Port"
+          },
+          "GroupId": {
+            "Ref": "SecurityGroup"
+          },
+          "IpProtocol": "tcp",
+          "SourceSecurityGroupId": {
+            "Fn::ImportValue": "VPC-SecurityGroups-Default"
+          },
+          "ToPort": {
+            "Ref": "Port"
+          }
+        },
+        "Type": "AWS::EC2::SecurityGroupIngress"
+      },
+      "SubnetGroup": {
+        "Properties": {
+          "Description": "HootAppCache subnet group.",
+          "SubnetIds": {
+            "Fn::Split": [
+              ",",
+              {
+                "Fn::ImportValue": "VPC-Subnets-Private"
+              }
+            ]
+          }
+        },
+        "Type": "AWS::ElastiCache::SubnetGroup"
+      }
+    }
+  }

@@ -12,13 +12,13 @@ resource "fastly_service_compute" "example" {
 
   resource_link {
     name        = "my_resource_link"
-    resource_id = fastly_acl.example.id
+    resource_id = fastly_compute_acl.example.id
   }
 
   force_destroy = true
 }
 
-resource "fastly_acl" "example" {
+resource "fastly_compute_acl" "example" {
   name          = "example_acl"
   force_destroy = true
 }

@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceFastlyACLs() *schema.Resource {
+func dataSourceFastlyComputeACLs() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFastlyACLsRead,
+		ReadContext: dataSourceFastlyComputeACLsRead,
 		Schema: map[string]*schema.Schema{
 			"acls": {
 				Type:        schema.TypeSet,
@@ -39,7 +39,7 @@ func dataSourceFastlyACLs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyACLsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyComputeACLsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading ACLs")

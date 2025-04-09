@@ -1,31 +1,31 @@
 ---
 layout: "fastly"
-page_title: "Fastly: fastly_acls"
-sidebar_current: "docs-fastly-datasource-fastly_acls"
+page_title: "Fastly: fastly_compute_acls"
+sidebar_current: "docs-fastly-datasource-fastly_compute_acls"
 description: |-
-  Get information on Fastly ACLs.
+  Get information on Fastly Compute@Edge ACLs.
 ---
 
-# fastly_acls
+# fastly_compute_acls
 
-Use this data source to get a list of [Fastly ACLs][1].
+Use this data source to get a list of [Fastly Compute@Edge ACLs][1].
 
 ## Example Usage
 
 ```terraform
-data "fastly_acls" "fastly_all" {}
+data "fastly_compute_acls" "fastly_all" {}
 
-data "fastly_acls" "fastly_by_name" {
+data "fastly_compute_acls" "fastly_by_name" {
     acls {
         name = "My ACL"
     }
 }
 
-output "fastly_acls_all" {
-  value = data.fastly_acls.fastly_all
+output "fastly_compute_acls_all" {
+  value = data.fastly_compute_acls.fastly_all
 }
-output "fastly_acls_filtered" {
-  value = data.fastly_acls.fastly_by_name
+output "fastly_compute_acls_filtered" {
+  value = data.fastly_compute_acls.fastly_by_name
 }
 ```
 

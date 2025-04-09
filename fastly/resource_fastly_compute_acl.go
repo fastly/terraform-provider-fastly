@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceFastlyACL() *schema.Resource {
+func resourceFastlyComputeACL() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFastlyACLCreate,
-		ReadContext:   resourceFastlyACLRead,
-		UpdateContext: resourceFastlyACLUpdate,
-		DeleteContext: resourceFastlyACLDelete,
+		CreateContext: resourceFastlyComputeACLCreate,
+		ReadContext:   resourceFastlyComputeACLRead,
+		UpdateContext: resourceFastlyComputeACLUpdate,
+		DeleteContext: resourceFastlyComputeACLDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -42,7 +42,7 @@ func resourceFastlyACL() *schema.Resource {
 	}
 }
 
-func resourceFastlyACLCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &computeacls.CreateInput{
@@ -65,7 +65,7 @@ func resourceFastlyACLCreate(_ context.Context, d *schema.ResourceData, meta any
 	return nil
 }
 
-func resourceFastlyACLRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	aclID := d.Id()
@@ -89,7 +89,7 @@ func resourceFastlyACLRead(_ context.Context, d *schema.ResourceData, meta any) 
 	return nil
 }
 
-func resourceFastlyACLUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// The Update operation doesn't support updating name directly in the computeacls API
 	// If we need to support this, we would need to do a Delete and Create operation
 	// For now, we'll return an error if name changes
@@ -100,7 +100,7 @@ func resourceFastlyACLUpdate(_ context.Context, d *schema.ResourceData, meta any
 	return nil
 }
 
-func resourceFastlyACLDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	aclID := d.Id()
 

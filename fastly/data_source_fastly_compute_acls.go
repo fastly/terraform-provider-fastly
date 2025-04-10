@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"regexp"
 	"strconv"
 
 	"github.com/fastly/go-fastly/v10/fastly/computeacls"
@@ -49,13 +50,13 @@ func dataSourceFastlyComputeACLsRead(_ context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error fetching ACLs: %s", err)
 	}
 
-	var filteredACLs []computeacls.ComputeACL
+	var filteredACLs []computeacls.ComputeACL = []computeacls.ComputeACL{}
 	if input := d.Get("acls").(*schema.Set); input.Len() != 0 {
 		name := input.List()[0].(map[string]any)["name"].(string)
+		regex := regexp.MustCompile(name)
 		for _, acl := range acls.Data {
-			if acl.Name != name {
+			if regex.MatchString(acl.Name) {
 				filteredACLs = append(filteredACLs, acl)
-				break
 			}
 		}
 	} else {
@@ -72,13 +73,9 @@ func dataSourceFastlyComputeACLsRead(_ context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error setting ACLs: %s", err)
 	}
 
-	hashBase, _ := json.Marshal(acls)
+	hashBase, _ := json.Marshal(aclsToSet)
 	hashString := strconv.Itoa(hashcode.String(string(hashBase)))
 	d.SetId(hashString)
-
-	if err := d.Set("acls", flattenDataSourceACLs(acls)); err != nil {
-		return diag.Errorf("error setting stores: %s", err)
-	}
 
 	return nil
 }

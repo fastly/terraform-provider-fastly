@@ -22,7 +22,7 @@ func TestAccFastlyDataSourceACLs_Basic(t *testing.T) {
 				Config: testAccFastlyDataSourceACLsConfig(h),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						r := s.RootModule().Resources["data.fastly_acls.example"]
+						r := s.RootModule().Resources["data.fastly_compute_acls.example"]
 						a := r.Primary.Attributes
 
 						want := generateNames(h, 3)
@@ -62,23 +62,23 @@ func TestAccFastlyDataSourceACLs_Basic(t *testing.T) {
 
 func testAccFastlyDataSourceACLsConfig(h string) string {
 	tf := `
-resource "fastly_acl" "example_1" {
+resource "fastly_compute_acl" "example_1" {
   name          = "tf_%s_1"
   force_destroy = true
 }
 
-resource "fastly_acl" "example_2" {
+resource "fastly_compute_acl" "example_2" {
   name          = "tf_%s_2"
   force_destroy = true
 }
 
-resource "fastly_acl" "example_3" {
+resource "fastly_compute_acl" "example_3" {
   name          = "tf_%s_3"
   force_destroy = true
 }
 
-data "fastly_acls" "example" {
-  depends_on = [fastly_acl.example_1, fastly_acl.example_2, fastly_acl.example_3]
+data "fastly_compute_acls" "example" {
+  depends_on = [fastly_compute_acl.example_1, fastly_compute_acl.example_2, fastly_compute_acl.example_3]
 }
 `
 

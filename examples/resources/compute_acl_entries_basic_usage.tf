@@ -1,9 +1,9 @@
-resource "fastly_acl" "my_acl" {
+resource "fastly_compute_acl" "my_acl" {
   name = "My ACL"
   force_destroy = true
 }
 
-resource "fastly_acl_entries" "entries" {
+resource "fastly_compute_acl_entries" "entries" {
   acl_id = fastly_acl.my_acl.acl_id
   force_destroy = true
 

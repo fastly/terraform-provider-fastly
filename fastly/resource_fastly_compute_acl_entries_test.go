@@ -11,22 +11,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyACLEntries_basic(t *testing.T) {
+func TestAccFastlyComputeACLEntries_basic(t *testing.T) {
 	var acl gofastly.ACL
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	resourceName := "fastly_acl_entries.entries"
+	resourceName := "fastly_compute_acl_entries.entries"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckFastlyACLEntriesDestroy,
+		CheckDestroy:      testAccCheckFastlyComputeACLEntriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyACLEntriesConfig(name),
+				Config: testAccFastlyComputeACLEntriesConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyACLExists("fastly_acl.test", &acl),
+					testAccCheckFastlyComputeACLExists("fastly_compute_acl.test", &acl),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "entry.0.prefix", "192.168.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "entry.0.action", "ALLOW"),
@@ -43,29 +43,29 @@ func TestAccFastlyACLEntries_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyACLEntries_update(t *testing.T) {
+func TestAccFastlyComputeACLEntries_update(t *testing.T) {
 	var acl gofastly.ACL
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	resourceName := "fastly_acl_entries.entries"
+	resourceName := "fastly_compute_acl_entries.entries"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckFastlyACLEntriesDestroy,
+		CheckDestroy:      testAccCheckFastlyComputeACLEntriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyACLEntriesConfig(name),
+				Config: testAccFastlyComputeACLEntriesConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyACLExists("fastly_acl.test", &acl),
+					testAccCheckFastlyComputeACLExists("fastly_compute_acl.test", &acl),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 				),
 			},
 			{
-				Config: testAccFastlyACLEntriesConfigUpdate(name),
+				Config: testAccFastlyComputeACLEntriesConfigUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyACLExists("fastly_acl.test", &acl),
+					testAccCheckFastlyComputeACLExists("fastly_compute_acl.test", &acl),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "entry.0.prefix", "192.168.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "entry.0.action", "ALLOW"),
@@ -79,11 +79,11 @@ func TestAccFastlyACLEntries_update(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyACLEntriesDestroy(s *terraform.State) error {
+func testAccCheckFastlyComputeACLEntriesDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_acl_entries" {
+		if rs.Type != "fastly_compute_acl_entries" {
 			continue
 		}
 
@@ -101,14 +101,14 @@ func testAccCheckFastlyACLEntriesDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFastlyACLEntriesConfig(name string) string {
+func testAccFastlyComputeACLEntriesConfig(name string) string {
 	return fmt.Sprintf(`
-resource "fastly_acl" "test" {
+resource "fastly_compute_acl" "test" {
   name = "%s"
   force_destroy = true
 }
 
-resource "fastly_acl_entries" "entries" {
+resource "fastly_compute_acl_entries" "entries" {
   acl_id = fastly_acl.test.acl_id
   force_destroy = true
 
@@ -124,14 +124,14 @@ resource "fastly_acl_entries" "entries" {
 }`, name)
 }
 
-func testAccFastlyACLEntriesConfigUpdate(name string) string {
+func testAccFastlyComputeACLEntriesConfigUpdate(name string) string {
 	return fmt.Sprintf(`
-resource "fastly_acl" "test" {
+resource "fastly_compute_acl" "test" {
   name = "%s"
   force_destroy = true
 }
 
-resource "fastly_acl_entries" "entries" {
+resource "fastly_compute_acl_entries" "entries" {
   acl_id = fastly_acl.test.acl_id
   force_destroy = true
 

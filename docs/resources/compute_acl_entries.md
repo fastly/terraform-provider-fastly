@@ -1,11 +1,11 @@
 ---
-page_title: "Fastly: fastly_acl_entries"
+page_title: "Fastly: fastly_compute_acl_entries"
 subcategory: "Compute"
 description: |-
   Provides a Fastly ACL Entries resource that can be used to add, update, and remove entries from a Compute ACL.
 ---
 
-# fastly_acl_entries
+# fastly_compute_acl_entries
 
 Provides a Fastly resource to add, update, and remove entries from a Compute ACL.
 
@@ -15,12 +15,12 @@ Provides a Fastly resource to add, update, and remove entries from a Compute ACL
 
 ```hcl
 ```terraform
-resource "fastly_acl" "my_acl" {
+resource "fastly_compute_acl" "my_acl" {
   name = "My ACL"
   force_destroy = true
 }
 
-resource "fastly_acl_entries" "entries" {
+resource "fastly_compute_acl_entries" "entries" {
   acl_id = fastly_acl.my_acl.acl_id
   force_destroy = true
 
@@ -62,5 +62,5 @@ In addition to the arguments listed above, the following attributes are exported
 Fastly ACL entries can be imported using the ACL ID, e.g.
 
 ```
-terraform import fastly_acl.example 7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf/entries
+terraform import fastly_compute_acl_entries.example 7d991f5f-7c40-4c8c-a0c1-6ea5e45e4bcf/entries
 ```

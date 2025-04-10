@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyACL_basic(t *testing.T) {
+func TestAccFastlyComputeACL_basic(t *testing.T) {
 	var acl gofastly.ACL
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("tf-test-acl-%s", acctest.RandString(10))
@@ -22,31 +22,31 @@ func TestAccFastlyACL_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckFastlyACLDestroy,
+		CheckDestroy:      testAccCheckFastlyComputeACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyACLConfig(serviceName, aclName),
+				Config: testAccFastlyComputeACLConfig(serviceName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyACLExists("fastly_acl.test", &acl),
-					resource.TestCheckResourceAttr("fastly_acl.test", "name", aclName),
-					resource.TestCheckResourceAttrSet("fastly_acl.test", "acl_id"),
-					resource.TestCheckResourceAttr("fastly_acl.test", "force_destroy", "false"),
+					testAccCheckFastlyComputeACLExists("fastly_compute_acl.test", &acl),
+					resource.TestCheckResourceAttr("fastly_compute_acl.test", "name", aclName),
+					resource.TestCheckResourceAttrSet("fastly_compute_acl.test", "acl_id"),
+					resource.TestCheckResourceAttr("fastly_compute_acl.test", "force_destroy", "false"),
 				),
 			},
 			{
-				Config: testAccFastlyACLConfigForceDestroy(serviceName, aclName),
+				Config: testAccFastlyComputeACLConfigForceDestroy(serviceName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyACLExists("fastly_acl.test", &acl),
-					resource.TestCheckResourceAttr("fastly_acl.test", "name", aclName),
-					resource.TestCheckResourceAttrSet("fastly_acl.test", "acl_id"),
-					resource.TestCheckResourceAttr("fastly_acl.test", "force_destroy", "true"),
+					testAccCheckFastlyComputeACLExists("fastly_compute_acl.test", &acl),
+					resource.TestCheckResourceAttr("fastly_compute_acl.test", "name", aclName),
+					resource.TestCheckResourceAttrSet("fastly_compute_acl.test", "acl_id"),
+					resource.TestCheckResourceAttr("fastly_compute_acl.test", "force_destroy", "true"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccFastlyACL_WithImport(t *testing.T) {
+func TestAccFastlyComputeACL_WithImport(t *testing.T) {
 	var acl gofastly.ACL
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	aclName := fmt.Sprintf("tf-test-acl-%s", acctest.RandString(10))
@@ -56,18 +56,18 @@ func TestAccFastlyACL_WithImport(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckFastlyACLDestroy,
+		CheckDestroy:      testAccCheckFastlyComputeACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyACLConfig(serviceName, aclName),
+				Config: testAccFastlyComputeACLConfig(serviceName, aclName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFastlyACLExists("fastly_acl.test", &acl),
-					resource.TestCheckResourceAttr("fastly_acl.test", "name", aclName),
-					resource.TestCheckResourceAttrSet("fastly_acl.test", "acl_id"),
+					testAccCheckFastlyComputeACLExists("fastly_compute_acl.test", &acl),
+					resource.TestCheckResourceAttr("fastly_compute_acl.test", "name", aclName),
+					resource.TestCheckResourceAttrSet("fastly_compute_acl.test", "acl_id"),
 				),
 			},
 			{
-				ResourceName:      "fastly_acl.test",
+				ResourceName:      "fastly_compute_acl.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -75,11 +75,11 @@ func TestAccFastlyACL_WithImport(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyACLDestroy(s *terraform.State) error {
+func testAccCheckFastlyComputeACLDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*APIClient).conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_acl" {
+		if rs.Type != "fastly_compute_acl" {
 			continue
 		}
 
@@ -104,7 +104,7 @@ func testAccCheckFastlyACLDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckFastlyACLExists(name string, acl *gofastly.ACL) resource.TestCheckFunc {
+func testAccCheckFastlyComputeACLExists(name string, acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -135,7 +135,7 @@ func testAccCheckFastlyACLExists(name string, acl *gofastly.ACL) resource.TestCh
 	}
 }
 
-func testAccFastlyACLConfig(serviceName, aclName string) string {
+func testAccFastlyComputeACLConfig(serviceName, aclName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "test" {
   name = "%s"
@@ -154,13 +154,13 @@ resource "fastly_service_vcl" "test" {
   force_destroy = true
 }
 
-resource "fastly_acl" "test" {
+resource "fastly_compute_acl" "test" {
   name = "%s"
 }
 `, serviceName, aclName)
 }
 
-func testAccFastlyACLConfigForceDestroy(serviceName, aclName string) string {
+func testAccFastlyComputeACLConfigForceDestroy(serviceName, aclName string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "test" {
   name = "%s"
@@ -179,7 +179,7 @@ resource "fastly_service_vcl" "test" {
   force_destroy = true
 }
 
-resource "fastly_acl" "test" {
+resource "fastly_compute_acl" "test" {
   name          = "%s"
   force_destroy = true
 }

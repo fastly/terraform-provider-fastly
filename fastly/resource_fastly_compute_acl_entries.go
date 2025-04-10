@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceFastlyACLEntries() *schema.Resource {
+func resourceFastlyComputeACLEntries() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFastlyACLEntriesCreate,
-		ReadContext:   resourceFastlyACLEntriesRead,
-		UpdateContext: resourceFastlyACLEntriesUpdate,
-		DeleteContext: resourceFastlyACLEntriesDelete,
+		CreateContext: resourceFastlyComputeACLEntriesCreate,
+		ReadContext:   resourceFastlyComputeACLEntriesRead,
+		UpdateContext: resourceFastlyComputeACLEntriesUpdate,
+		DeleteContext: resourceFastlyComputeACLEntriesDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAclEntriesImport,
 		},
@@ -81,7 +81,7 @@ func resourceFastlyACLEntries() *schema.Resource {
 	}
 }
 
-func resourceFastlyACLEntriesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLEntriesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	aclID := d.Get("acl_id").(string)
 	entries := d.Get("entry").(*schema.Set)
@@ -91,7 +91,7 @@ func resourceFastlyACLEntriesCreate(ctx context.Context, d *schema.ResourceData,
 
 	// Don't process entries if there are none to process
 	if entries.Len() == 0 {
-		return resourceFastlyACLEntriesRead(ctx, d, meta)
+		return resourceFastlyComputeACLEntriesRead(ctx, d, meta)
 	}
 
 	var batchEntries []*computeacls.BatchComputeACLEntry = []*computeacls.BatchComputeACLEntry{}
@@ -116,10 +116,10 @@ func resourceFastlyACLEntriesCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error creating ACL entries for ACL %s: %w", aclID, err))
 	}
 
-	return resourceFastlyACLEntriesRead(ctx, d, meta)
+	return resourceFastlyComputeACLEntriesRead(ctx, d, meta)
 }
 
-func resourceFastlyACLEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	aclID := d.Get("acl_id").(string)
 
@@ -155,7 +155,7 @@ func resourceFastlyACLEntriesRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	aclID := d.Get("acl_id").(string)
 
@@ -235,10 +235,10 @@ func resourceFastlyACLEntriesUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	return resourceFastlyACLEntriesRead(ctx, d, meta)
+	return resourceFastlyComputeACLEntriesRead(ctx, d, meta)
 }
 
-func resourceFastlyACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	aclID := d.Get("acl_id").(string)
 

@@ -8,7 +8,7 @@ updates:
     groups:
       go-dependencies:
         patterns:
-          "*"
+          - "*"
   # Dependencies listed in .github/workflows/*.yml
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -17,4 +17,4 @@ updates:
     groups:
       gha-dependencies:
         patterns:
-          "*"
+          - "*"

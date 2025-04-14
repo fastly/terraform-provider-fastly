@@ -121,7 +121,7 @@ jobs:
         run: make validate-interface
         env:
           FASTLY_API_KEY: ${{ secrets.FASTLY_API_TOKEN }}
-      - uses: actions/github-script@v6
+      - uses: actions/github-script@v7
         id: update-check-run
         if: ${{ always() }}
         env:

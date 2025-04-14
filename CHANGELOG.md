@@ -14,6 +14,7 @@
 - build(deps): `go-fastly` from 9.14.0 to 10.0.0 ([#970](https://github.com/fastly/terraform-provider-fastly/pull/970))
 - build(deps): `golang.org/x/net` from 0.38.0 to 0.39.0 ([#974](https://github.com/fastly/terraform-provider-fastly/pull/974))
 - build(deps): `actions/create-github-app-token` from 1 to 2 ([#973](https://github.com/fastly/terraform-provider-fastly/pull/973))
+- build(deps): `actions/github-script` from 6 to 7 ([#976](https://github.com/fastly/terraform-provider-fastly/pull/976))
 
 ## 6.0.1 (March 25, 2025)
 

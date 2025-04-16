@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var errFastlyNoServiceFound = errors.New("no matching Fastly service found")
+
 const (
 	// ServiceTypeVCL is the type for VCL services.
 	ServiceTypeVCL = "vcl"
@@ -547,9 +549,12 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 		ServiceID: d.Id(),
 	})
 	if err != nil {
-		// Use the helper function to handle 404s and add enhanced error diagnostics
-		err = HandleNotFoundError(err, d.Id(), "Fastly Service")
-		d.SetId("")
+		// Check if not found, if so, clear ID field and exit early.
+		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
+			log.Printf("[WARN] %s for ID (%s)", errFastlyNoServiceFound, d.Id())
+			d.SetId("")
+			return diag.FromErr(err)
+		}
 
 		return diag.FromErr(err)
 	}

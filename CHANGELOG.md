@@ -4,11 +4,15 @@
 
 ### ENHANCEMENTS:
 
-- feat(logging): Restore support for 'placement' attribute
+- feat(logging): restore support for `placement` attribute ([#965](https://github.com/fastly/terraform-provider-fastly/pull/965))
 
 ### BUG FIXES:
 
+- fix(snippet): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
+- fix(dynamicsnippet): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
+
 ### DEPENDENCIES:
+
 - build(deps): `golang.org/x/net` from 0.37.0 to 0.38.0 ([#966](https://github.com/fastly/terraform-provider-fastly/pull/966))
 - build(deps): `go-fastly` from 9.14.0 to 10.0.0 ([#970](https://github.com/fastly/terraform-provider-fastly/pull/970))
 - build(deps): `golang.org/x/net` from 0.38.0 to 0.39.0 ([#974](https://github.com/fastly/terraform-provider-fastly/pull/974))

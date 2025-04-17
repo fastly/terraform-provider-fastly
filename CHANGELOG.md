@@ -8,8 +8,9 @@
 
 ### BUG FIXES:
 
-- fix(snippet): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
-- fix(dynamicsnippet): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
+- fix(block_fastly_service_snippet_test.go): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
+- fix(block_fastly_service_dynamicsnippet.go): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
+- fix(data_source_vcl_snippets.go): breaking changes introduced by `go-fastly` v10.0.1 ([#982](https://github.com/fastly/terraform-provider-fastly/pull/982))
 
 ### DEPENDENCIES:
 

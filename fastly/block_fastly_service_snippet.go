@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
@@ -110,7 +111,7 @@ func (h *SnippetServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	// Safety check in case keys aren't actually set in the HCL.
 	name, _ := resource["name"].(string)
-	priority, _ := resource["priority"].(string)
+	priority := strconv.Itoa(resource["priority"].(int))
 	content, _ := resource["content"].(string)
 	stype, _ := resource["type"].(string)
 
@@ -127,7 +128,7 @@ func (h *SnippetServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.ToPointer(v.(string))
+		opts.Priority = gofastly.ToPointer(strconv.Itoa(v.(int)))
 	}
 	if v, ok := modified["content"]; ok {
 		opts.Content = gofastly.ToPointer(v.(string))
@@ -170,7 +171,7 @@ func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 	opts := gofastly.CreateSnippetInput{
 		Name:     gofastly.ToPointer(resource["name"].(string)),
 		Content:  gofastly.ToPointer(resource["content"].(string)),
-		Priority: gofastly.ToPointer(resource["priority"].(string)),
+		Priority: gofastly.ToPointer(strconv.Itoa(resource["priority"].(int))),
 		Dynamic:  gofastly.ToPointer(0),
 	}
 
@@ -198,7 +199,8 @@ func flattenSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 			data["type"] = *resource.Type
 		}
 		if resource.Priority != nil {
-			data["priority"] = *resource.Priority
+			p, _ := strconv.Atoi(*resource.Priority)
+			data["priority"] = p
 		}
 		if resource.Content != nil {
 			data["content"] = *resource.Content

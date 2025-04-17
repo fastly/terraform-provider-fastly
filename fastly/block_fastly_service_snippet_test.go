@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenSnippets(t *testing.T) {
 				{
 					"name":     "recv_test",
 					"type":     gofastly.SnippetTypeRecv,
-					"priority": "110",
+					"priority": 110,
 					"content":  "if ( req.url ) {\n set req.http.my-snippet-test-header = \"true\";\n}",
 				},
 			},

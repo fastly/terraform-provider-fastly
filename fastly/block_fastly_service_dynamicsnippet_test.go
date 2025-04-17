@@ -30,7 +30,7 @@ func TestResourceFastlyFlattenDynamicSnippets(t *testing.T) {
 				{
 					"name":     "recv_test_01",
 					"type":     gofastly.SnippetTypeRecv,
-					"priority": "110",
+					"priority": 110,
 				},
 			},
 		},

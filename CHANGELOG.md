@@ -4,6 +4,14 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+## 6.1.0 (April 17, 2025)
+
+### ENHANCEMENTS:
+
 - feat(logging): restore support for `placement` attribute ([#965](https://github.com/fastly/terraform-provider-fastly/pull/965))
 
 ### BUG FIXES:

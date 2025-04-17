@@ -110,7 +110,8 @@ func flattenDataSourceVCLSnippets(remoteState []*gofastly.Snippet) []map[string]
 			result[i]["name"] = *resource.Name
 		}
 		if resource.Priority != nil {
-			result[i]["priority"] = *resource.Priority
+			p, _ := strconv.Atoi(*resource.Priority)
+			result[i]["priority"] = p
 		}
 		if resource.Type != nil {
 			result[i]["type"] = *resource.Type

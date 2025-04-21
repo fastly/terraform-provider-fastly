@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+feat(acl): add support for Compute@Edge ACLs
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

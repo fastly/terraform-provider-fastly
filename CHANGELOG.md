@@ -4,17 +4,30 @@
 
 ### ENHANCEMENTS:
 
-- feat(service): improve Fastly 404 error message for service permissions [#964](https://github.com/fastly/terraform-provider-fastly/pull/964)
-- feat(logging): Restore support for 'placement' attribute
-- feat(acl): Add support for Fastly ACLs
-
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+
+## 6.1.0 (April 17, 2025)
+
+### ENHANCEMENTS:
+
+- feat(logging): restore support for `placement` attribute ([#965](https://github.com/fastly/terraform-provider-fastly/pull/965))
+
+### BUG FIXES:
+
+- fix(block_fastly_service_snippet_test.go): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
+- fix(block_fastly_service_dynamicsnippet.go): breaking changes introduced by `go-fastly` v10.0.1 ([#981](https://github.com/fastly/terraform-provider-fastly/pull/981))
+- fix(data_source_vcl_snippets.go): breaking changes introduced by `go-fastly` v10.0.1 ([#982](https://github.com/fastly/terraform-provider-fastly/pull/982))
+
+### DEPENDENCIES:
+
 - build(deps): `golang.org/x/net` from 0.37.0 to 0.38.0 ([#966](https://github.com/fastly/terraform-provider-fastly/pull/966))
 - build(deps): `go-fastly` from 9.14.0 to 10.0.0 ([#970](https://github.com/fastly/terraform-provider-fastly/pull/970))
 - build(deps): `golang.org/x/net` from 0.38.0 to 0.39.0 ([#974](https://github.com/fastly/terraform-provider-fastly/pull/974))
 - build(deps): `actions/create-github-app-token` from 1 to 2 ([#973](https://github.com/fastly/terraform-provider-fastly/pull/973))
+- build(deps): `actions/github-script` from 6 to 7 ([#976](https://github.com/fastly/terraform-provider-fastly/pull/976))
+- build(deps): `github.com/fastly/go-fastly/v10` from 10.0.0 to 10.0.1 ([#977](https://github.com/fastly/terraform-provider-fastly/pull/977))
 
 ## 6.0.1 (March 25, 2025)
 

@@ -45,7 +45,7 @@ func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 			Description: "The Write Key from the Account page of your Honeycomb account",
 		},
 	}

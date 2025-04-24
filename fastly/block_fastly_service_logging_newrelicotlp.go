@@ -69,7 +69,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 			Description: "The Insert API key from the Account page of your New Relic account",
 		},
 		"url": {

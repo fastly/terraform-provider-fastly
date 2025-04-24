@@ -148,14 +148,14 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Default:     "",
 			Description: "Client certificate attached to origin. Used when connecting to the backend",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"ssl_client_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
 			Description: "Client key attached to origin. Used when connecting to the backend",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"ssl_sni_hostname": {
 			Type:        schema.TypeString,

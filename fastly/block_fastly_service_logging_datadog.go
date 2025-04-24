@@ -46,7 +46,7 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 			Description: "The API key from your Datadog account",
 		},
 	}

@@ -46,7 +46,7 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "BasicAuth password for Elasticsearch",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"pipeline": {
 			Type:        schema.TypeString,
@@ -81,7 +81,7 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "The client private key used to make authenticated requests. Must be in PEM format",
-			Sensitive:        true,
+			Sensitive:        !DisplaySensitiveFields,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
 		"tls_hostname": {

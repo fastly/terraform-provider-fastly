@@ -30,6 +30,12 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("FASTLY_API_URL", gofastly.DefaultEndpoint),
 				Description: "Fastly API URL",
 			},
+			"display_sensitive_fields": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Set to `true` if you want to display sensitive information in your output",
+			},
 			"force_http2": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -96,11 +102,12 @@ func Provider() *schema.Provider {
 
 	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		config := Config{
-			APIKey:     d.Get("api_key").(string),
-			BaseURL:    d.Get("base_url").(string),
-			NoAuth:     d.Get("no_auth").(bool),
-			ForceHTTP2: d.Get("force_http2").(bool),
-			UserAgent:  provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
+			APIKey:                 d.Get("api_key").(string),
+			BaseURL:                d.Get("base_url").(string),
+			DisplaySensitiveFields: d.Get("display_sensitive_fields").(bool),
+			ForceHTTP2:             d.Get("force_http2").(bool),
+			NoAuth:                 d.Get("no_auth").(bool),
+			UserAgent:              provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
 		}
 		return config.Client()
 	}

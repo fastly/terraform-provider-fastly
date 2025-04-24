@@ -35,7 +35,7 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 			Description: "Your OpenStack account access key",
 		},
 		"bucket_name": {

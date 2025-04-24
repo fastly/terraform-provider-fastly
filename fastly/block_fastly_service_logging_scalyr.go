@@ -52,7 +52,7 @@ func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The token to use for authentication (https://www.scalyr.com/keys)",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 	}
 

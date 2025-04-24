@@ -16,12 +16,15 @@ import (
 //
 // NOTE: The fields correlate to the root TCL schema.
 type Config struct {
-	APIKey     string
-	BaseURL    string
-	UserAgent  string
-	NoAuth     bool
-	ForceHTTP2 bool
+	APIKey                 string
+	BaseURL                string
+	DisplaySensitiveFields bool
+	ForceHTTP2             bool
+	NoAuth                 bool
+	UserAgent              string
 }
+
+var DisplaySensitiveFields bool = false
 
 // APIClient is a HTTP API Client.
 type APIClient struct {
@@ -80,5 +83,8 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	}
 
 	client.conn = fastlyClient
+
+	DisplaySensitiveFields = c.DisplaySensitiveFields
+
 	return &client, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,19 +19,25 @@ func resourceFastlyConfigStoreEntry() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceFastlyConfigStoreEntryImport,
 		},
+		Description: "Manages an individual entry in a Fastly ConfigStore",
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"store_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "ID of the ConfigStore",
-			},
 			"key": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "Key of the ConfigStore entry",
+			},
+			"store_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "ID of the ConfigStore",
 			},
 			"value": {
 				Type:        schema.TypeString,

@@ -6,6 +6,7 @@
 
 - feat(service): improve Fastly 404 error message for service permissions [#964](https://github.com/fastly/terraform-provider-fastly/pull/964)
 - feat(logging): Restore support for 'placement' attribute
+- feat(configstore): Add new resource for configuring a single item in the configstore
 
 ### BUG FIXES:
 

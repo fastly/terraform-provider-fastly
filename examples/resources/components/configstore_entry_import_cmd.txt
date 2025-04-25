@@ -1,0 +1,2 @@
+# Format: [STORE_ID]/[KEY]
+terraform import fastly_configstore_entry.example_entry cs_xxxxxxxxxxxxxxxxxxxx/api_endpoint

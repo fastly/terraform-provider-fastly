@@ -7,7 +7,8 @@
 
 ### New Feature Submissions:
 
-* [ ] Does your submission pass tests?
+* [ ] Does your submission pass tests? 
+* [ ] Post the output of your test runs
 
 ### Changes to Core Features:
 

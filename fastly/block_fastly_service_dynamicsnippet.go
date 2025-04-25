@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
@@ -122,7 +123,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 	// NOTE: When converting from an interface{} we lose the underlying type.
 	// Converting to the wrong type will result in a runtime panic.
 	if v, ok := modified["priority"]; ok {
-		opts.Priority = gofastly.ToPointer(v.(string))
+		opts.Priority = gofastly.ToPointer(strconv.Itoa(v.(int)))
 	}
 	if v, ok := modified["content"]; ok {
 		opts.Content = gofastly.ToPointer(v.(string))
@@ -165,7 +166,7 @@ func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, e
 		Content:  gofastly.ToPointer(resource["content"].(string)),
 		Dynamic:  gofastly.ToPointer(1),
 		Name:     gofastly.ToPointer(resource["name"].(string)),
-		Priority: gofastly.ToPointer(resource["priority"].(string)),
+		Priority: gofastly.ToPointer(strconv.Itoa(resource["priority"].(int))),
 	}
 
 	snippetType := strings.ToLower(resource["type"].(string))
@@ -195,7 +196,8 @@ func flattenDynamicSnippets(remoteState []*gofastly.Snippet) []map[string]any {
 			data["type"] = *resource.Type
 		}
 		if resource.Priority != nil {
-			data["priority"] = *resource.Priority
+			p, _ := strconv.Atoi(*resource.Priority)
+			data["priority"] = p
 		}
 
 		// prune any empty values that come from the default string value in structs

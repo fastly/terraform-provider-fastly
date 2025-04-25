@@ -5,9 +5,16 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-
+    groups:
+      go-dependencies:
+        patterns:
+          - "*"
   # Dependencies listed in .github/workflows/*.yml
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      gha-dependencies:
+        patterns:
+          - "*"

@@ -80,6 +80,5 @@ func (c *Config) Client() (*APIClient, diag.Diagnostics) {
 	}
 
 	client.conn = fastlyClient
-
 	return &client, nil
 }

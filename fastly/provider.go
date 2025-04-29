@@ -33,7 +33,7 @@ func Provider() *schema.Provider {
 			"display_sensitive_fields": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
+				Default:     false,
 				Description: "Set to `true` if you want to display sensitive information in your output",
 			},
 			"force_http2": {

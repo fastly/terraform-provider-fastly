@@ -40,7 +40,7 @@ $ terraform import fastly_tls_private_key.demo xxxxxxxxxxx
 
 ### Required
 
-- `key_pem` (String, Sensitive) Private key in PEM format.
+- `key_pem` (String) Private key in PEM format.
 - `name` (String) Customisable name of the private key.
 
 ### Read-Only

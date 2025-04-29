@@ -114,6 +114,5 @@ The following arguments are supported in the `provider` block:
 
 - `api_key` (String) Fastly API Key from https://app.fastly.com/#account
 - `base_url` (String) Fastly API URL
-- `display_sensitive_fields` (Boolean) Set to `true` if you want to display sensitive information in your output
 - `force_http2` (Boolean) Set this to `true` to disable HTTP/1.x fallback mechanism that the underlying Go library will attempt upon connection to `api.fastly.com:443` by default. This may slightly improve the provider's performance and reduce unnecessary TLS handshakes. Default: `false`
 - `no_auth` (Boolean) Set to `true` if your configuration only consumes data sources that do not require authentication, such as `fastly_ip_ranges`

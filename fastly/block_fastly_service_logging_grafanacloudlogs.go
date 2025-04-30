@@ -45,7 +45,7 @@ func (h *GrafanaCloudLogsServiceAttributeHandler) GetSchema() *schema.Schema {
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 			Description: "The Access Policy Token key for your GrafanaCloudLogs account",
 		},
 		"url": {

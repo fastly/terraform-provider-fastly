@@ -48,7 +48,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_BQ_EMAIL", ""),
 			Description: "The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"name": {
 			Type:        schema.TypeString,
@@ -65,7 +65,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:         true,
 			DefaultFunc:      schema.EnvDefaultFunc("FASTLY_BQ_SECRET_KEY", ""),
 			Description:      "The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines",
-			Sensitive:        true,
+			Sensitive:        !DisplaySensitiveFields,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
 		"table": {

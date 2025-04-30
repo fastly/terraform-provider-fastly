@@ -42,7 +42,7 @@ func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
 		"token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 			Description: "The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)",
 		},
 

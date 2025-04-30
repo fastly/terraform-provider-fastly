@@ -97,7 +97,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE", ""),
 			Description: "The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"timestamp_format": {
 			Type:        schema.TypeString,

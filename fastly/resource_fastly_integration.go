@@ -26,7 +26,7 @@ func resourceFastlyIntegration() *schema.Resource {
 				Required:    true,
 				Description: "Configuration specific to the integration `type` (see documentation examples).",
 				Elem:        schema.TypeString,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 			},
 			"description": {
 				Type:        schema.TypeString,

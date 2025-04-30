@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(config): add an environment variable allowing users to override the sensitive attribute ([#985](https://github.com/fastly/terraform-provider-fastly/pull/985))
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

@@ -69,7 +69,7 @@ func (h *FTPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The password for the server (for anonymous use an email address)",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"path": {
 			Type:        schema.TypeString,

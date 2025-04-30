@@ -21,7 +21,7 @@ var DisplaySensitiveFields bool = false
 // Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
 
-	DisplaySensitiveFields = os.Getenv("FASTLY_TERRAFORM_PROVIDER_DISPLAY_SENSITIVE_FIELDS") == "true"
+	DisplaySensitiveFields = os.Getenv("FASTLY_TF_DISPLAY_SENSITIVE_FIELDS") == "true"
 
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{

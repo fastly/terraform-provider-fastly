@@ -46,7 +46,7 @@ func resourceObjectStorageAccessKey() *schema.Resource {
 			"secret_key": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 				Description: "Secret key for the object storage access token",
 			},
 		},

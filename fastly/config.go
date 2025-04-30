@@ -18,9 +18,9 @@ import (
 type Config struct {
 	APIKey     string
 	BaseURL    string
-	UserAgent  string
-	NoAuth     bool
 	ForceHTTP2 bool
+	NoAuth     bool
+	UserAgent  string
 }
 
 // APIClient is a HTTP API Client.

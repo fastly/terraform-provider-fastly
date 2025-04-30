@@ -62,7 +62,7 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "SASL Pass",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"request_max_bytes": {
 			Type:        schema.TypeInt,
@@ -90,7 +90,7 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Description:      "The client private key used to make authenticated requests. Must be in PEM format",
-			Sensitive:        true,
+			Sensitive:        !DisplaySensitiveFields,
 			ValidateDiagFunc: validateStringTrimmed,
 		},
 		"tls_hostname": {

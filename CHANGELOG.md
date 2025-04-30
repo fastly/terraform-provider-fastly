@@ -4,7 +4,8 @@
 
 ### ENHANCEMENTS:
 
-feat(acl): add support for Compute@Edge ACLs
+- feat(acl): add support for Compute@Edge ACLs
+- feat(config): add an environment variable allowing users to override the sensitive attribute ([#985](https://github.com/fastly/terraform-provider-fastly/pull/985))
 
 ### BUG FIXES:
 

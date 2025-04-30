@@ -72,7 +72,7 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_SYSLOG_CLIENT_KEY", ""),
 			Description: "The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"tls_hostname": {
 			Type:        schema.TypeString,

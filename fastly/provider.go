@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"context"
+	"os"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,8 +15,14 @@ import (
 // any API requests made by the provider.
 const TerraformProviderProductUserAgent = "terraform-provider-fastly"
 
+// This value can be set to allow terraform output to display sensitive info
+var DisplaySensitiveFields bool = false
+
 // Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
+
+	DisplaySensitiveFields = os.Getenv("FASTLY_TF_DISPLAY_SENSITIVE_FIELDS") == "true"
+
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_key": {
@@ -100,8 +107,8 @@ func Provider() *schema.Provider {
 		config := Config{
 			APIKey:     d.Get("api_key").(string),
 			BaseURL:    d.Get("base_url").(string),
-			NoAuth:     d.Get("no_auth").(bool),
 			ForceHTTP2: d.Get("force_http2").(bool),
+			NoAuth:     d.Get("no_auth").(bool),
 			UserAgent:  provider.UserAgent(TerraformProviderProductUserAgent, version.ProviderVersion),
 		}
 		return config.Client()

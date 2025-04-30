@@ -150,7 +150,7 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_ACCESS_KEY", ""),
 			Description: "AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"s3_iam_role": {
 			Type:        schema.TypeString,
@@ -164,7 +164,7 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("FASTLY_S3_SECRET_KEY", ""),
 			Description: "AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`",
-			Sensitive:   true,
+			Sensitive:   !DisplaySensitiveFields,
 		},
 		"server_side_encryption": {
 			Type:             schema.TypeString,

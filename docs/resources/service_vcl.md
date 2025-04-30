@@ -339,8 +339,8 @@ Optional:
 - `ssl_cert_hostname` (String) Configure certificate validation. Does not affect SNI at all
 - `ssl_check_cert` (Boolean) Be strict about checking SSL certs. Default `true`
 - `ssl_ciphers` (String) Cipher list consisting of one or more cipher strings separated by colons. Commas or spaces are also acceptable separators but colons are normally used.
-- `ssl_client_cert` (String) Client certificate attached to origin. Used when connecting to the backend
-- `ssl_client_key` (String) Client key attached to origin. Used when connecting to the backend
+- `ssl_client_cert` (String, Sensitive) Client certificate attached to origin. Used when connecting to the backend
+- `ssl_client_key` (String, Sensitive) Client key attached to origin. Used when connecting to the backend
 - `ssl_sni_hostname` (String) Configure SNI in the TLS handshake. Does not affect cert validation at all
 - `use_ssl` (Boolean) Whether or not to use SSL to reach the Backend. Default `false`
 - `weight` (Number) The [portion of traffic](https://docs.fastly.com/en/guides/load-balancing-configuration#how-weight-affects-load-balancing) to send to this Backend. Each Backend receives weight / total of the traffic. Default `100`
@@ -521,11 +521,11 @@ Required:
 Optional:
 
 - `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
-- `email` (String) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
+- `email` (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
 - `format` (String) The logging format desired.
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `response_condition` (String) Name of a condition to apply this logging.
-- `secret_key` (String) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
+- `secret_key` (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
 - `template` (String) BigQuery table name suffix template
 
 
@@ -551,7 +551,7 @@ Optional:
 - `placement` (String) Where in the generated VCL the logging call should be placed
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `response_condition` (String) The name of the condition to apply
-- `sas_token` (String) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
+- `sas_token` (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
@@ -560,7 +560,7 @@ Optional:
 
 Required:
 
-- `access_key` (String) Your Cloud File account access key
+- `access_key` (String, Sensitive) Your Cloud File account access key
 - `bucket_name` (String) The name of your Cloud Files container
 - `name` (String) The unique name of the Rackspace Cloud Files logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - `user` (String) The username for your Cloud Files account
@@ -587,7 +587,7 @@ Optional:
 Required:
 
 - `name` (String) The unique name of the Datadog logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The API key from your Datadog account
+- `token` (String, Sensitive) The API key from your Datadog account
 
 Optional:
 
@@ -603,10 +603,10 @@ Optional:
 
 Required:
 
-- `access_key` (String) Your DigitalOcean Spaces account access key
+- `access_key` (String, Sensitive) Your DigitalOcean Spaces account access key
 - `bucket_name` (String) The name of the DigitalOcean Space
 - `name` (String) The unique name of the DigitalOcean Spaces logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `secret_key` (String) Your DigitalOcean Spaces account secret key
+- `secret_key` (String, Sensitive) Your DigitalOcean Spaces account secret key
 
 Optional:
 
@@ -637,7 +637,7 @@ Optional:
 
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
-- `password` (String) BasicAuth password for Elasticsearch
+- `password` (String, Sensitive) BasicAuth password for Elasticsearch
 - `pipeline` (String) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `request_max_bytes` (Number) The maximum number of logs sent in one request. Defaults to `0` for unbounded
@@ -645,7 +645,7 @@ Optional:
 - `response_condition` (String) The name of the condition to apply
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format
-- `tls_client_key` (String) The client private key used to make authenticated requests. Must be in PEM format
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
 - `tls_hostname` (String) The hostname used to verify the server's certificate. It can either be the Common Name (CN) or a Subject Alternative Name (SAN)
 - `user` (String) BasicAuth username for Elasticsearch
 
@@ -657,7 +657,7 @@ Required:
 
 - `address` (String) The FTP address to stream logs to
 - `name` (String) The unique name of the FTP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `password` (String) The password for the server (for anonymous use an email address)
+- `password` (String, Sensitive) The password for the server (for anonymous use an email address)
 - `path` (String) The path to upload log files to. If the path ends in `/` then it is treated as a directory
 - `user` (String) The username for the server (can be `anonymous`)
 
@@ -697,7 +697,7 @@ Optional:
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `project_id` (String) The ID of your Google Cloud Platform project
 - `response_condition` (String) Name of a condition to apply this logging.
-- `secret_key` (String) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
+- `secret_key` (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 - `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GCS_EMAIL`.
 
@@ -718,7 +718,7 @@ Optional:
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-- `secret_key` (String) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
+- `secret_key` (String, Sensitive) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
 - `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.
 
 
@@ -729,7 +729,7 @@ Required:
 
 - `index` (String) The stream identifier as a JSON string
 - `name` (String) The unique name of the GrafanaCloudLogs logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The Access Policy Token key for your GrafanaCloudLogs account
+- `token` (String, Sensitive) The Access Policy Token key for your GrafanaCloudLogs account
 - `url` (String) The URL to stream logs to
 - `user` (String) The Grafana User ID
 
@@ -747,7 +747,7 @@ Optional:
 Required:
 
 - `name` (String) The unique name of the Heroku logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)
+- `token` (String, Sensitive) The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)
 - `url` (String) The URL to stream logs to
 
 Optional:
@@ -765,7 +765,7 @@ Required:
 
 - `dataset` (String) The Honeycomb Dataset you want to log to
 - `name` (String) The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The Write Key from the Account page of your Honeycomb account
+- `token` (String, Sensitive) The Write Key from the Account page of your Honeycomb account
 
 Optional:
 
@@ -799,7 +799,7 @@ Optional:
 - `response_condition` (String) The name of the condition to apply
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format
-- `tls_client_key` (String) The client private key used to make authenticated requests. Must be in PEM format
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
 - `tls_hostname` (String) Used during the TLS handshake to validate the certificate
 
 
@@ -819,14 +819,14 @@ Optional:
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `parse_log_keyvals` (Boolean) Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers
-- `password` (String) SASL Pass
+- `password` (String, Sensitive) SASL Pass
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `request_max_bytes` (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
 - `required_acks` (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1` Wait for all in-sync replicas to respond
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format
-- `tls_client_key` (String) The client private key used to make authenticated requests. Must be in PEM format
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format
 - `tls_hostname` (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
 - `use_tls` (Boolean) Whether to use TLS for secure logging. Can be either `true` or `false`
 - `user` (String) SASL User
@@ -842,14 +842,14 @@ Required:
 
 Optional:
 
-- `access_key` (String) The AWS access key to be used to write to the stream
+- `access_key` (String, Sensitive) The AWS access key to be used to write to the stream
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.
 - `placement` (String) Where in the generated VCL the logging call should be placed. Can be `none` or `none`.
 - `region` (String) The AWS region the stream resides in. (Default: `us-east-1`)
 - `response_condition` (String) The name of an existing condition in the configured endpoint, or leave blank to always execute.
-- `secret_key` (String) The AWS secret access key to authenticate with
+- `secret_key` (String, Sensitive) The AWS secret access key to authenticate with
 
 
 <a id="nestedblock--logging_logentries"></a>
@@ -876,7 +876,7 @@ Optional:
 Required:
 
 - `name` (String) The unique name of the Loggly logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
+- `token` (String, Sensitive) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
 
 Optional:
 
@@ -892,7 +892,7 @@ Optional:
 Required:
 
 - `name` (String) The unique name of the Log Shuttle logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The data authentication token associated with this endpoint
+- `token` (String, Sensitive) The data authentication token associated with this endpoint
 - `url` (String) Your Log Shuttle endpoint URL
 
 Optional:
@@ -909,7 +909,7 @@ Optional:
 Required:
 
 - `name` (String) The unique name of the New Relic logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The Insert API key from the Account page of your New Relic account
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account
 
 Optional:
 
@@ -926,7 +926,7 @@ Optional:
 Required:
 
 - `name` (String) The unique name of the New Relic OTLP logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The Insert API key from the Account page of your New Relic account
+- `token` (String, Sensitive) The Insert API key from the Account page of your New Relic account
 
 Optional:
 
@@ -943,7 +943,7 @@ Optional:
 
 Required:
 
-- `access_key` (String) Your OpenStack account access key
+- `access_key` (String, Sensitive) Your OpenStack account access key
 - `bucket_name` (String) The name of your OpenStack container
 - `name` (String) The unique name of the OpenStack logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - `url` (String) Your OpenStack auth url
@@ -1005,9 +1005,9 @@ Optional:
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `redundancy` (String) The S3 storage class (redundancy level). Should be one of: `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier`, `glacier_ir`, `deep_archive`, or `reduced_redundancy`
 - `response_condition` (String) Name of blockAttributes condition to apply this logging.
-- `s3_access_key` (String) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
+- `s3_access_key` (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
 - `s3_iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to S3. Not required if `access_key` and `secret_key` are provided. You can provide this value via an environment variable, `FASTLY_S3_IAM_ROLE`
-- `s3_secret_key` (String) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
+- `s3_secret_key` (String, Sensitive) AWS Secret Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This secret will be not be encrypted. Not required if `iam_role` is provided. You can provide this secret via an environment variable, `FASTLY_S3_SECRET_KEY`
 - `server_side_encryption` (String) Specify what type of server side encryption should be used. Can be either `AES256` or `aws:kms`
 - `server_side_encryption_kms_key_id` (String) Optional server-side KMS Key Id. Must be set if server_side_encryption is set to `aws:kms`
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
@@ -1019,7 +1019,7 @@ Optional:
 Required:
 
 - `name` (String) The unique name of the Scalyr logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The token to use for authentication (https://www.scalyr.com/keys)
+- `token` (String, Sensitive) The token to use for authentication (https://www.scalyr.com/keys)
 
 Optional:
 
@@ -1049,13 +1049,13 @@ Optional:
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `gzip_level` (Number) Level of Gzip compression from `0-9`. `0` means no compression. `1` is the fastest and the least compressed version, `9` is the slowest and the most compressed version. Default `0`
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
-- `password` (String) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
+- `password` (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - `placement` (String) Where in the generated VCL the logging call should be placed.
 - `port` (Number) The port the SFTP service listens on. (Default: `22`)
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `response_condition` (String) The name of the condition to apply.
-- `secret_key` (String) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
+- `secret_key` (String, Sensitive) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
 
@@ -1065,7 +1065,7 @@ Optional:
 Required:
 
 - `name` (String) A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource
-- `token` (String) The Splunk token to be used for authentication
+- `token` (String, Sensitive) The Splunk token to be used for authentication
 - `url` (String) The Splunk URL to stream logs to
 
 Optional:
@@ -1076,7 +1076,7 @@ Optional:
 - `response_condition` (String) The name of the condition to apply
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format.
-- `tls_client_key` (String) The client private key used to make authenticated requests. Must be in PEM format.
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
 - `tls_hostname` (String) The hostname used to verify the server's certificate. It can either be the Common Name or a Subject Alternative Name (SAN)
 - `use_tls` (Boolean) Whether to use TLS for secure logging. Default: `false`
 
@@ -1116,7 +1116,7 @@ Optional:
 - `response_condition` (String) Name of blockAttributes condition to apply this logging.
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CLIENT_CERT`
-- `tls_client_key` (String) The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`
+- `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`
 - `tls_hostname` (String) Used during the TLS handshake to validate the certificate
 - `token` (String) Whether to prepend each message with a specific token
 - `use_tls` (Boolean) Whether to use TLS for secure logging. Default `false`

@@ -16,7 +16,7 @@ import (
 const TerraformProviderProductUserAgent = "terraform-provider-fastly"
 
 // This value can be set to allow terraform output to display sensitive info
-var DisplaySensitiveFields bool
+var DisplaySensitiveFields bool = false
 
 // Provider returns a *schema.Provider.
 func Provider() *schema.Provider {

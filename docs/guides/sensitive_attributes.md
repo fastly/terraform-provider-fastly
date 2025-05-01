@@ -5,11 +5,13 @@ subcategory: "Guides"
 
 ## Sensitive Attributes
 
-If Terraform detects a attribute with the `Sensitive` attribute inside of a block, it will not display any attribute from that block in the output, instead commenting `At least one attribute in this block is (or was) sensitive, so its contents will not be displayed.` This can prevent usrs from being able to see other attributes that they want to, or even the values of the sensitive fields themselves.
+When Terraform detects an attribute marked as Sensitive within a block, it will prevent that attribute from being displayed in the output. Instead, Terraform will comment:
+“At least one attribute in this block is (or was) sensitive, so its contents will not be displayed.” 
+This behavior can prevent users from viewing other attributes in the block that they may need, as well as hiding the values of the sensitive fields themselves.
 
 ## Displaying Sensitive Fields
 
-The Fastly Terraform Provider can suppress this warning and display the information in all blocks containing attributes marked `Sensitive` by setting the environment variable `FASTLY_TF_DISPLAY_SENSITIVE_FIELDS` to true in a place where your Golang env can read it (usually the `.zshrc` or `.bashrc` on a local machine or in env vars for Docker containers).
+The Fastly Terraform Provider allows you to override this behavior by setting the environment variable `FASTLY_TF_DISPLAY_SENSITIVE_FIELDS` to true. This will enable the display of sensitive field values within blocks that contain such attributes. To ensure this setting is applied, you must set the variable in an environment where your Go-based environment can access it—typically in the .zshrc or .bashrc file on your local machine, or as an environment variable in Docker containers.
 
 ## Warnings
-It is not advised to set this variable on CI jobs as it could lead to your data being persisted on those CI job records
+Be cautious when enabling this setting in continuous integration (CI) environments. Exposing sensitive data in CI job logs can result in your data being inadvertently persisted in job records, which may lead to security risks.

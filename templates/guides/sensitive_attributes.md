@@ -11,7 +11,7 @@ This behavior can prevent users from viewing other attributes in the block that 
 
 ## Displaying Sensitive Fields
 
-The Fastly Terraform Provider allows you to override this behavior by setting the environment variable `FASTLY_TF_DISPLAY_SENSITIVE_FIELDS` to true. This will enable the display of sensitive field values within blocks that contain such attributes. To ensure this setting is applied, you must set the variable in an environment where your Go-based environment can access it—typically in the .zshrc or .bashrc file on your local machine, or as an environment variable in Docker containers.
+The Fastly Terraform Provider allows you to override this behavior by setting the environment variable `FASTLY_TF_DISPLAY_SENSITIVE_FIELDS` to `true`. This will enable the display of sensitive field values within blocks that contain such attributes. To ensure this setting is applied, you must set the variable in an environment where your Go processes can access it—typically in the .zshrc or .bashrc file on your local machine, or as an environment variable in Docker containers.
 
 ## Warnings
 Be cautious when enabling this setting in continuous integration (CI) environments. Exposing sensitive data in CI job logs can result in your data being inadvertently persisted in job records, which may lead to security risks.

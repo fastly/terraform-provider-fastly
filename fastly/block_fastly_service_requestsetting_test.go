@@ -34,7 +34,6 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 					"default_host": "http-me.glitch.me",
 					// "force_miss":        false,
 					// "force_ssl":         false,
-					// "geo_headers":       false,
 					"max_stale_age":     90,
 					"name":              "alt_backend",
 					"request_condition": "serve_alt_backend",

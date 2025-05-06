@@ -1,5 +1,9 @@
 # Contributing
 
+We're happy to receive feature requests and PRs. If your change is nontrivial,
+please open an [issue](https://github.com/fastly/terraform-provider-fastly/issues/new) to discuss the
+idea and implementation strategy before submitting a PR.
+
 1. Fork the repository**.
 2. Create an `upstream` remote.
 ```bash

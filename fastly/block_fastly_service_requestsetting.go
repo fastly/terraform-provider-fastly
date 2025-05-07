@@ -62,14 +62,6 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Forces the request to use SSL (Redirects a non-SSL request to SSL)",
 				},
-				// TODO: Although Fastly API has been exposing this parameter over years
-				// it turned out that setting this parameter does nothing. We should remove this attribute in v3.0.0
-				"geo_headers": {
-					Type:        schema.TypeBool,
-					Optional:    true,
-					Deprecated:  "'geo_headers' attribute has been deprecated and will be removed in the next major version release",
-					Description: "Injects Fastly-Geo-Country, Fastly-Geo-City, and Fastly-Geo-Region into the request headers",
-				},
 				"hash_keys": {
 					Type:        schema.TypeString,
 					Optional:    true,
@@ -199,9 +191,6 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 	if v, ok := modified["timer_support"]; ok {
 		opts.TimerSupport = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
-	if v, ok := modified["geo_headers"]; ok {
-		opts.GeoHeaders = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
-	}
 	if v, ok := modified["default_host"]; ok {
 		opts.DefaultHost = gofastly.ToPointer(v.(string))
 	}
@@ -270,9 +259,6 @@ func flattenRequestSettings(remoteState []*gofastly.RequestSetting) []map[string
 		if resource.TimerSupport != nil {
 			data["timer_support"] = *resource.TimerSupport
 		}
-		if resource.GeoHeaders != nil {
-			data["geo_headers"] = *resource.GeoHeaders
-		}
 		if resource.DefaultHost != nil {
 			data["default_host"] = *resource.DefaultHost
 		}
@@ -300,7 +286,6 @@ func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingI
 		DefaultHost:    gofastly.ToPointer(resource["default_host"].(string)),
 		ForceMiss:      gofastly.ToPointer(gofastly.Compatibool(resource["force_miss"].(bool))),
 		ForceSSL:       gofastly.ToPointer(gofastly.Compatibool(resource["force_ssl"].(bool))),
-		GeoHeaders:     gofastly.ToPointer(gofastly.Compatibool(resource["geo_headers"].(bool))),
 		HashKeys:       gofastly.ToPointer(resource["hash_keys"].(string)),
 		MaxStaleAge:    gofastly.ToPointer(resource["max_stale_age"].(int)),
 		Name:           gofastly.ToPointer(resource["name"].(string)),

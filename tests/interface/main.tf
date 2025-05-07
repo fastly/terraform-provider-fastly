@@ -164,7 +164,6 @@ resource "fastly_service_vcl" "interface-test-project" {
     default_host      = "interface-test-project.fastly-terraform.com"
     force_miss        = true
     force_ssl         = false
-    geo_headers       = false                         # DEPRECATED
     hash_keys         = "req.url.path, req.http.host" # Omitted because of error... Syntax error: Expected string variable or constant
     max_stale_age     = "300"
     name              = "test_request_setting"

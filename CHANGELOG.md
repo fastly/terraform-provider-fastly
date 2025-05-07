@@ -2,6 +2,8 @@
 
 ### BREAKING:
 
+- feat(fastly): remove deprecated `geo_headers` field from fastly service ([#992](https://github.com/fastly/terraform-provider-fastly/pull/992))
+
 ### ENHANCEMENTS:
 
 - feat(config): add an environment variable allowing users to override the sensitive attribute ([#985](https://github.com/fastly/terraform-provider-fastly/pull/985))

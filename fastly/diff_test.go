@@ -2,9 +2,10 @@ package fastly
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSetDiff_Diff(t *testing.T) {
@@ -90,7 +91,7 @@ func TestSetDiff_Diff(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		t.Run(fmt.Sprintf(c.name), func(t *testing.T) {
+		t.Run(fmt.Sprint(c.name), func(t *testing.T) {
 			var differ *SetDiff
 			if c.keyFunc != nil {
 				differ = NewSetDiff(c.keyFunc)

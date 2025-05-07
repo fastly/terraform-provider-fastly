@@ -1,16 +1,14 @@
 module github.com/fastly/terraform-provider-fastly
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.23.7
+toolchain go1.24.2
 
 require (
-	github.com/bflad/tfproviderlint v0.31.0
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/fastly/go-fastly/v10 v10.0.1
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
-	github.com/hashicorp/terraform-plugin-docs v0.21.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/net v0.40.0
@@ -27,6 +25,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/bflad/gopaniccheck v0.1.0 // indirect
+	github.com/bflad/tfproviderlint v0.31.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.8.1 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
@@ -52,6 +51,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.22.0 // indirect
 	github.com/hashicorp/terraform-json v0.24.0 // indirect
+	github.com/hashicorp/terraform-plugin-docs v0.21.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.26.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.2.4 // indirect
@@ -93,4 +93,10 @@ require (
 	google.golang.org/protobuf v1.36.3 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+tool (
+	github.com/bflad/tfproviderlint/cmd/tfproviderlint
+	github.com/bflad/tfproviderlint/cmd/tfproviderlintx
+	github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 )

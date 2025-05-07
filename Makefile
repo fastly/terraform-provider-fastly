@@ -105,24 +105,19 @@ test-compile:
 	fi
 	$(TEST_COMMAND) -c $(TEST) $(TESTARGS)
 
-BIN=$(CURDIR)/bin
-$(BIN)/%:
-	@echo "Installing tools from tools/tools.go"
-	@cat tools/tools.go | grep _ | awk -F '"' '{print $$2}' | GOBIN=$(BIN) xargs -tI {} $(GO_BIN) install {}
-
-generate-docs: $(BIN)/tfplugindocs
+generate-docs:
 	$(shell sed -e "s/__VERSION__/$(DOCS_PROVIDER_VERSION)/g" examples/index-fastly-provider.tf.tmpl > examples/index-fastly-provider.tf)
-	$(BIN)/tfplugindocs generate
+	$(GO_BIN) tool tfplugindocs generate
 	rm examples/index-fastly-provider.tf
 
-validate-docs: $(BIN)/tfplugindocs
-	$(BIN)/tfplugindocs validate
+validate-docs:
+	$(GO_BIN) tool tfplugindocs validate
 
-tfproviderlintx: $(BIN)/tfproviderlintx
-	$(BIN)/tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
+tfproviderlintx:
+	$(GO_BIN) tool tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
 
-tfproviderlint: $(BIN)/tfproviderlint
-	$(BIN)/tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
+tfproviderlint:
+	$(GO_BIN) tool tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
 
 # Run third-party static analysis.
 # To ignore lines use: //lint:ignore <CODE> <REASON>

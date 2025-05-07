@@ -3,6 +3,7 @@
 ### BREAKING:
 
 - feat(fastly): remove deprecated `geo_headers` field from fastly service ([#992](https://github.com/fastly/terraform-provider-fastly/pull/992))
+- feat(go.mod): upgrade golang to 1.24.0 and make appropriate changes ([#993](https://github.com/fastly/terraform-provider-fastly/pull/993))
 
 ### ENHANCEMENTS:
 

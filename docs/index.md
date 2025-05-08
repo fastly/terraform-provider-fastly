@@ -43,6 +43,12 @@ resource "fastly_service_vcl" "myservice" {
 }
 ```
 
+## Importing
+
+Importing using the standard Terraform documentation should work for most usecases. If you have sensitive blocks where 
+you want to see the output, please see the Sensitive Attributes guide.
+
+
 ## Authentication
 
 The Fastly provider offers an API key based method of providing credentials for

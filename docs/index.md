@@ -45,7 +45,8 @@ resource "fastly_service_vcl" "myservice" {
 
 ## Importing
 
-Importing using the standard Terraform documentation should work for most use cases. If any of your Fastly resources have attributes which are considered sensitive (e.g. credentials for logging endpoints, TLS private keys) please see the Sensitive Attributes guide for the configuration necessary to ensure that those attributes will be imported.
+Importing using the standard Terraform documentation should work for most usecases. If you have sensitive blocks where 
+you want to see the output, please see the Sensitive Attributes guide.
 
 
 ## Authentication

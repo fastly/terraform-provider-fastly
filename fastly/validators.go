@@ -146,7 +146,7 @@ func validateUserRole() schema.SchemaValidateDiagFunc {
 // type `pemType`.
 func validatePEMBlock(pemType string) schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(func(val any, key string) ([]string, []error) {
-		stringVal, _ := val.(string)
+		stringVal := val.(string)
 		b, rest := pem.Decode([]byte(stringVal))
 		if b == nil {
 			return nil, []error{fmt.Errorf("expected %s to be a valid PEM-format block", key)}
@@ -165,7 +165,7 @@ func validatePEMBlock(pemType string) schema.SchemaValidateDiagFunc {
 // type `pemType`.
 func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(func(val any, key string) ([]string, []error) {
-		stringVal, _ := val.(string)
+		stringVal := val.(string)
 		pemRest := []byte(stringVal)
 		numBlocks := 0
 		for {
@@ -189,7 +189,7 @@ func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
 }
 
 func validateStringTrimmed(i any, path cty.Path) diag.Diagnostics {
-	v, _ := i.(string)
+	v := i.(string)
 	attr, _ := path[len(path)-1].(cty.GetAttrStep)
 	if v != strings.TrimSpace(v) {
 		return diag.Errorf("%s must not contain trailing space characters (e.g., \\n\\t\\r\\f). Consider using trimspace() function", attr.Name)

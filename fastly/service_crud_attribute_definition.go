@@ -104,7 +104,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Deleted {
-		resource, _ := resource.(map[string]any)
+		resource := resource.(map[string]any)
 		err := h.handler.Delete(ctx, d, resource, serviceVersion, conn)
 		if err != nil {
 			return err
@@ -112,7 +112,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Added {
-		resource, _ := resource.(map[string]any)
+		resource := resource.(map[string]any)
 		err := h.handler.Create(ctx, d, resource, serviceVersion, conn)
 		if err != nil {
 			return err
@@ -120,7 +120,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Modified {
-		resource, _ := resource.(map[string]any)
+		resource := resource.(map[string]any)
 		modified := setDiff.Filter(resource, oldSet)
 		err := h.handler.Update(ctx, d, resource, modified, serviceVersion, conn)
 		if err != nil {

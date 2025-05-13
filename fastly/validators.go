@@ -190,7 +190,7 @@ func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
 
 func validateStringTrimmed(i any, path cty.Path) diag.Diagnostics {
 	v := i.(string)
-	attr, _ := path[len(path)-1].(cty.GetAttrStep)
+	attr := path[len(path)-1].(cty.GetAttrStep)
 	if v != strings.TrimSpace(v) {
 		return diag.Errorf("%s must not contain trailing space characters (e.g., \\n\\t\\r\\f). Consider using trimspace() function", attr.Name)
 	}

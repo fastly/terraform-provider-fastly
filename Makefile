@@ -69,7 +69,7 @@ clean_test:
 fmt:
 	golangci-lint fmt
 
-goreleaser-bin
+goreleaser-bin:
 	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@latest
 
 # You can pass flags to goreleaser via GORELEASER_ARGS

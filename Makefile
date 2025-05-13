@@ -70,7 +70,7 @@ fmt:
 	golangci-lint fmt
 
 goreleaser-bin:
-	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@latest
+	$(GO_BIN) get -modfile=tools.mod -tool github.com/goreleaser/goreleaser/v2@latest
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip=validate will skip the checks
@@ -79,7 +79,7 @@ goreleaser-bin:
 # e.g.
 # make goreleaser GORELEASER_ARGS="--skip=validate --clean"
 goreleaser: goreleaser-bin
-	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" tool -modfile=tools.mod goreleaser build ${GORELEASER_ARGS}
+	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" $(GO_BIN) tool -modfile=tools.mod goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

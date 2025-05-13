@@ -156,3 +156,19 @@ jobs:
             });
 
             return result;
+  validate-goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.x
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: v2.6.1
+          install-only: true
+      - name: Validate Goreleaser
+        run: make goreleaser GORELEASER_ARGS="--skip=validate --clean --snapshot" # snapshot is needed as local git has no tags

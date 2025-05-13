@@ -117,11 +117,10 @@ func generateHex() string {
 }
 
 // generateNames produces slice of names seeded with initial unique value.
-// e.g. generateNames(generateHex(), 3)
-// nolint: unparam
-func generateNames(unique string, size int) []string {
+// e.g. generateNames(generateHex())
+func generateNames(unique string) []string {
 	names := []string{}
-	for i := 1; i < size+1; i++ {
+	for i := 1; i < 4; i++ {
 		names = append(names, fmt.Sprintf("tf_%s_%d", unique, i))
 	}
 	return names

@@ -25,7 +25,7 @@ func TestAccFastlyDataSourceKVStores_Config(t *testing.T) {
 						r := s.RootModule().Resources["data.fastly_kvstores.example"]
 						a := r.Primary.Attributes
 
-						want := generateNames(h, 3)
+						want := generateNames(h)
 						var (
 							found int
 							got   []string

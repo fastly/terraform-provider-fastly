@@ -37,7 +37,7 @@ func TestAccFastlyDataSourceDictionaries_Config(t *testing.T) {
 						// NOTE: API doesn't guarantee dictionary order.
 						for i := 0; i < 3; i++ {
 							var found bool
-							for _, d := range generateNames(h, 3) {
+							for _, d := range generateNames(h) {
 								if a[fmt.Sprintf("dictionaries.%d.name", i)] == d {
 									found = true
 									break

@@ -9,10 +9,11 @@ import (
 	"strings"
 	"time"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 var errFastlyNoServiceFound = errors.New("no matching Fastly service found")
@@ -247,7 +248,7 @@ func resourceDelete(serviceDef ServiceDefinition) schema.DeleteContextFunc {
 	}
 }
 
-// resourceImport satisfies the Terraform resource schema Importer "interface"
+// resourceImport satisfies the Terraform resource schema Importer "interface".
 func resourceImport() *schema.ResourceImporter {
 	return &schema.ResourceImporter{
 		StateContext: func(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
@@ -670,12 +671,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 	// Otherwise, cloned_version should track the active version
 	if !d.Get("activate").(bool) {
 		s.ActiveVersion.Number = gofastly.ToPointer(d.Get("cloned_version").(int))
-	} else {
-		if s.ActiveVersion.Number != nil {
-			err := d.Set("cloned_version", s.ActiveVersion.Number)
-			if err != nil {
-				return diag.FromErr(err)
-			}
+	} else if s.ActiveVersion.Number != nil {
+		err := d.Set("cloned_version", s.ActiveVersion.Number)
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 

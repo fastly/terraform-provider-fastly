@@ -12,9 +12,10 @@ import (
 	"text/template"
 
 	mapset "github.com/deckarep/golang-set/v2"
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // pgpPublicKey returns a PEM encoded PGP public key suitable for testing.
@@ -32,7 +33,7 @@ func certificate(t *testing.T) string {
 	return readTestFile("./test_fixtures/fastly_test_certificate", t)
 }
 
-// caCert returns a CA certificate suitable for testing
+// caCert returns a CA certificate suitable for testing.
 func caCert(t *testing.T) string {
 	return readTestFile("./test_fixtures/fastly_test_cacert", t)
 }
@@ -117,6 +118,7 @@ func generateHex() string {
 
 // generateNames produces slice of names seeded with initial unique value.
 // e.g. generateNames(generateHex(), 3)
+// nolint: unparam
 func generateNames(unique string, size int) []string {
 	names := []string{}
 	for i := 1; i < size+1; i++ {
@@ -127,7 +129,7 @@ func generateNames(unique string, size int) []string {
 
 // renderTestConfigTemplate is used in acceptance tests to render a
 // template and associated data into a Terraform 'configuration file'
-// (HCL)
+// (HCL).
 func renderTestConfigTemplate(t *testing.T, tmpl *template.Template, data any) string {
 	var output bytes.Buffer
 
@@ -140,7 +142,7 @@ func renderTestConfigTemplate(t *testing.T, tmpl *template.Template, data any) s
 
 // testAccCheckFastlyServiceAttributesBackends is used in acceptance
 // tests to compare a list of expected backends against the list of
-// configured backends for a service-version
+// configured backends for a service-version.
 func testAccCheckFastlyServiceAttributesBackends(service *gofastly.ServiceDetail, name string, backends []string, version int) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if gofastly.ToValue(service.Name) != name {

@@ -6,10 +6,11 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestResourceFastlyFlattenAcl(t *testing.T) {
@@ -140,8 +141,7 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 	}
 }
 
-// testAccAddACLEntries doesn't technically check for anything despite returning a TestCheckFunc. Instead it is used for
-// its side effect of adding an ACL Entry
+// its side effect of adding an ACL Entry.
 func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn

@@ -6,11 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestAccFastlyAlert_Basic(t *testing.T) {
@@ -295,11 +296,11 @@ func TestAccFastlyAlert_BasicStatsBadConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAlertPercentAggregateStatsConfig(createAlert),
-				ExpectError: regexp.MustCompile(badAlertSourceServiceIdConfig),
+				ExpectError: regexp.MustCompile(badAlertSourceServiceIDConfig),
 			},
 			{
 				Config:      testAccAlertPercentAggregateStatsConfig(updateAlert),
-				ExpectError: regexp.MustCompile(badAlertSourceServiceIdConfig),
+				ExpectError: regexp.MustCompile(badAlertSourceServiceIDConfig),
 			},
 		},
 	})

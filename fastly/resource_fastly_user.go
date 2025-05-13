@@ -4,9 +4,10 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func resourceUser() *schema.Resource {
@@ -76,13 +77,22 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.
 	}
 
 	if u.Login != nil {
-		d.Set("login", u.Login)
+		err = d.Set("login", u.Login)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if u.Name != nil {
-		d.Set("name", u.Name)
+		err = d.Set("name", u.Name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if u.Role != nil {
-		d.Set("role", u.Role)
+		err = d.Set("role", u.Role)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

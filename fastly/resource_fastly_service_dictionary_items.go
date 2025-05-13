@@ -6,9 +6,10 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func resourceServiceDictionaryItems() *schema.Resource {
@@ -33,7 +34,7 @@ func resourceServiceDictionaryItems() *schema.Resource {
 				Description:      "A map representing an entry in the dictionary, (key/value)",
 				ValidateDiagFunc: validateDictionaryItems(),
 				Elem:             schema.TypeString,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
 					return !d.HasChange("dictionary_id") && !d.Get("manage_items").(bool)
 				},
 			},

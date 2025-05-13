@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 
 func dataSourceFastlyTLSConfigurationIDs() *schema.Resource {

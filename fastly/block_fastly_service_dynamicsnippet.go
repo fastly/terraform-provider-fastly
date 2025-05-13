@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // DynamicSnippetServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -73,16 +74,13 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *DynamicSnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := buildDynamicSnippet(resource)
-	if err != nil {
-		log.Printf("[DEBUG] Error building VCL Dynamic Snippet: %s", err)
-		return err
-	}
+	opts := buildDynamicSnippet(resource)
+
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Addition opts: %#v", opts)
-	_, err = conn.CreateSnippet(opts)
+	_, err := conn.CreateSnippet(opts)
 	if err != nil {
 		return err
 	}
@@ -160,7 +158,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *sch
 	return nil
 }
 
-func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, error) {
+func buildDynamicSnippet(dynamicSnippetMap any) *gofastly.CreateSnippetInput {
 	resource := dynamicSnippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
 		Content:  gofastly.ToPointer(resource["content"].(string)),
@@ -172,7 +170,7 @@ func buildDynamicSnippet(dynamicSnippetMap any) (*gofastly.CreateSnippetInput, e
 	snippetType := strings.ToLower(resource["type"].(string))
 	opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
 
-	return &opts, nil
+	return &opts
 }
 
 // flattenDynamicSnippets models data into format suitable for saving to Terraform state.

@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // ServiceCRUDAttributeDefinition is an interface for most ServiceAttributeDefinition implementations which can be
@@ -103,7 +104,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Deleted {
-		resource := resource.(map[string]any)
+		resource, _ := resource.(map[string]any)
 		err := h.handler.Delete(ctx, d, resource, serviceVersion, conn)
 		if err != nil {
 			return err
@@ -111,7 +112,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Added {
-		resource := resource.(map[string]any)
+		resource, _ := resource.(map[string]any)
 		err := h.handler.Create(ctx, d, resource, serviceVersion, conn)
 		if err != nil {
 			return err
@@ -119,7 +120,7 @@ func (h *blockSetAttributeHandler) Process(ctx context.Context, d *schema.Resour
 	}
 
 	for _, resource := range diffResult.Modified {
-		resource := resource.(map[string]any)
+		resource, _ := resource.(map[string]any)
 		modified := setDiff.Filter(resource, oldSet)
 		err := h.handler.Update(ctx, d, resource, modified, serviceVersion, conn)
 		if err != nil {

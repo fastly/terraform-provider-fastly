@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"golang.org/x/net/http2"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // Config is the base configuration for the HTTP client.

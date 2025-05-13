@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestAccFastlyServiceDynamicSnippetContent_create(t *testing.T) {
@@ -351,6 +352,7 @@ resource "fastly_service_dynamic_snippet_content" "content" {
 }`, dynamicSnippetName, dynamicSnippetContent, serviceName, domainName, backendName, snippetName, snippetContent)
 }
 
+// nolint: unparam
 func testAccServiceDynamicSnippetContentConfigWithDynamicSnippet(serviceName, dynamicSnippetName, content string, manageSnippets bool) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))

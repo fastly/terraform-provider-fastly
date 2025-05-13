@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func resourceServiceACLEntries() *schema.Resource {
@@ -33,7 +34,7 @@ func resourceServiceACLEntries() *schema.Resource {
 				Optional:    true,
 				Description: "ACL Entries",
 				MaxItems:    gofastly.MaximumACLSize,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
 					return !d.HasChange("acl_id") && !d.Get("manage_entries").(bool)
 				},
 				Elem: &schema.Resource{
@@ -117,7 +118,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	remoteState, err := getAllAclEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
+	remoteState, err := getAllACLEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
@@ -334,7 +335,7 @@ func convertSubnetToInt(s string) int {
 	return subnet
 }
 
-func getAllAclEntriesViaPaginator(conn *gofastly.Client, input *gofastly.GetACLEntriesInput) ([]*gofastly.ACLEntry, error) {
+func getAllACLEntriesViaPaginator(conn *gofastly.Client, input *gofastly.GetACLEntriesInput) ([]*gofastly.ACLEntry, error) {
 	paginator := conn.GetACLEntries(input)
 
 	var entries []*gofastly.ACLEntry

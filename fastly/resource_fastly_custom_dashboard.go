@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 var (
@@ -243,7 +244,6 @@ func resourceFastlyCustomDashboardRead(_ context.Context, d *schema.ResourceData
 func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	var items = make([]gofastly.DashboardItem, 0)
 	input := gofastly.UpdateObservabilityCustomDashboardInput{
 		Description: gofastly.ToPointer(d.Get("description").(string)),
 		ID:          gofastly.ToPointer(d.Id()),

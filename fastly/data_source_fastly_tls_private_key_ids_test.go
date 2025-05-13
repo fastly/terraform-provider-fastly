@@ -22,10 +22,10 @@ func TestAccFastlyDataSourceTLSPrivateKeyIds_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceTLSPrivateKeyIdsConfigOnlyTestKey(key, name),
+				Config: testAccFastlyDataSourceTLSPrivateKeyIDsConfigOnlyTestKey(key, name),
 			},
 			{
-				Config: testAccFastlyDataSourceTLSPrivateKeyIdsConfigTestKeyWithData(key, name),
+				Config: testAccFastlyDataSourceTLSPrivateKeyIDsConfigTestKeyWithData(key, name),
 				Check: resource.TestCheckTypeSetElemAttrPair(
 					"data.fastly_tls_private_key_ids.subject", "ids.*",
 					"fastly_tls_private_key.test", "id",
@@ -35,7 +35,7 @@ func TestAccFastlyDataSourceTLSPrivateKeyIds_basic(t *testing.T) {
 	})
 }
 
-func testAccFastlyDataSourceTLSPrivateKeyIdsConfigOnlyTestKey(key, name string) string {
+func testAccFastlyDataSourceTLSPrivateKeyIDsConfigOnlyTestKey(key, name string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "test" {
   key_pem = <<EOF
@@ -46,7 +46,7 @@ EOF
 `, key, name)
 }
 
-func testAccFastlyDataSourceTLSPrivateKeyIdsConfigTestKeyWithData(key, name string) string {
+func testAccFastlyDataSourceTLSPrivateKeyIDsConfigTestKeyWithData(key, name string) string {
 	return fmt.Sprintf(`
 resource "fastly_tls_private_key" "test" {
   key_pem = <<EOF

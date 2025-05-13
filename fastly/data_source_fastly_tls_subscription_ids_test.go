@@ -20,10 +20,10 @@ func TestAccDataSourceFastlyTLSSubscriptionIds_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceFastlyTLSSubscriptionIdsConfigResources(name, domain),
+				Config: testAccDataSourceFastlyTLSSubscriptionIDsConfigResources(name, domain),
 			},
 			{
-				Config: testAccDataSourceFastlyTLSSubscriptionIdsConfigWithDataSource(name, domain),
+				Config: testAccDataSourceFastlyTLSSubscriptionIDsConfigWithDataSource(name, domain),
 				Check: resource.TestCheckTypeSetElemAttrPair(
 					datasourceName, "ids.*",
 					"fastly_tls_subscription.test", "id",
@@ -33,7 +33,7 @@ func TestAccDataSourceFastlyTLSSubscriptionIds_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceFastlyTLSSubscriptionIdsConfigResources(name, domain string) string {
+func testAccDataSourceFastlyTLSSubscriptionIDsConfigResources(name, domain string) string {
 	return fmt.Sprintf(
 		`
 resource "fastly_service_vcl" "test" {
@@ -60,9 +60,9 @@ resource "fastly_tls_subscription" "test" {
 	)
 }
 
-func testAccDataSourceFastlyTLSSubscriptionIdsConfigWithDataSource(name, domain string) string {
+func testAccDataSourceFastlyTLSSubscriptionIDsConfigWithDataSource(name, domain string) string {
 	return fmt.Sprintf(`
 %s
 data "fastly_tls_subscription_ids" "subject" {}
-`, testAccDataSourceFastlyTLSSubscriptionIdsConfigResources(name, domain))
+`, testAccDataSourceFastlyTLSSubscriptionIDsConfigResources(name, domain))
 }

@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/fastly/go-fastly/v10/fastly/products/botmanagement"
 	"github.com/fastly/go-fastly/v10/fastly/products/brotlicompression"
@@ -19,8 +22,6 @@ import (
 	"github.com/fastly/go-fastly/v10/fastly/products/ngwaf"
 	"github.com/fastly/go-fastly/v10/fastly/products/origininspector"
 	"github.com/fastly/go-fastly/v10/fastly/products/websockets"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // ProductEnablementServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -372,11 +373,10 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 			})
 
 			result["ddos_protection"] = ddp
-		} else {
-			if len(localState) > 0 {
-				ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
-				result["ddos_protection"] = ddp
-			}
+		} else if len(localState) > 0 {
+			ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
+			result["ddos_protection"] = ddp
+
 		}
 
 		if _, err := ngwaf.Get(conn, serviceID); err == nil {
@@ -398,11 +398,10 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 			})
 
 			result["ngwaf"] = ngw
-		} else {
-			if len(localState) > 0 {
-				ngw := localState[0].(map[string]any)["ngwaf"].([]any)
-				result["ngwaf"] = ngw
-			}
+		} else if len(localState) > 0 {
+			ngw := localState[0].(map[string]any)["ngwaf"].([]any)
+			result["ngwaf"] = ngw
+
 		}
 
 		results := []map[string]any{result}
@@ -428,7 +427,7 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 // This is to provide a non-breaking workaround for customers who used an older
 // version of the Fastly Terraform provider. See details in the PR:
 // https://github.com/fastly/terraform-provider-fastly/pull/763
-func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, _ int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	log.Println("[DEBUG] Update Product Enablement")
 

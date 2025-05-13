@@ -4,9 +4,10 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func resourceServiceAuthorization() *schema.Resource {
@@ -77,9 +78,18 @@ func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	d.SetId(sa.ID)
-	d.Set("service_id", sa.Service.ID)
-	d.Set("user_id", sa.User.ID)
-	d.Set("permission", sa.Permission)
+	err = d.Set("service_id", sa.Service.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("user_id", sa.User.ID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = d.Set("permission", sa.Permission)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }

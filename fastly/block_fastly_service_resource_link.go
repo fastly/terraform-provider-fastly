@@ -4,8 +4,9 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // ResourceLinkServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -102,7 +103,7 @@ func (h *ResourceLinkServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.UpdateResourceInput{
 		ResourceID:     resource["link_id"].(string),
 		Name:           gofastly.ToPointer(resource["name"].(string)),

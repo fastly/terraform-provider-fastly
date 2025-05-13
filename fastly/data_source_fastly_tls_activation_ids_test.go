@@ -25,7 +25,7 @@ func TestAccDataSourceFastlyTLSActivationIds_basic(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceFastlyTLSActivationIdsConfig(key, cert, domain),
+				Config: testAccDataSourceFastlyTLSActivationIDsConfig(key, cert, domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(
@@ -38,7 +38,7 @@ func TestAccDataSourceFastlyTLSActivationIds_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceFastlyTLSActivationIdsConfig(key, cert, domain string) string {
+func testAccDataSourceFastlyTLSActivationIDsConfig(key, cert, domain string) string {
 	name := acctest.RandomWithPrefix(testResourcePrefix)
 
 	return fmt.Sprintf(

@@ -7,12 +7,13 @@ import (
 	"strings"
 	"time"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func resourceFastlyTLSSubscription() *schema.Resource {
@@ -416,8 +417,14 @@ func resourceFastlyTLSSubscriptionSetNewComputed(_ context.Context, d *schema.Re
 	// We should work around this and set the new values immediately upon applying so that other resources
 	// that are dependent on this resource can properly see the diff and trigger updates accordingly upon applying.
 	if d.HasChange("domains") {
-		d.SetNewComputed("managed_dns_challenges")
-		d.SetNewComputed("managed_http_challenges")
+		err := d.SetNewComputed("managed_dns_challenges")
+		if err != nil {
+			return err
+		}
+		err = d.SetNewComputed("managed_http_challenges")
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

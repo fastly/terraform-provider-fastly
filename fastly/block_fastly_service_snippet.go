@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // SnippetServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -166,6 +167,7 @@ func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 	return nil
 }
 
+// nolint: unparam
 func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 	resource := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{

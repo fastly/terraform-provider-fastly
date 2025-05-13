@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // DictionaryServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -65,16 +66,12 @@ func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := buildDictionary(resource)
-	if err != nil {
-		log.Printf("[DEBUG] Error building Dicitionary: %s", err)
-		return err
-	}
+	opts := buildDictionary(resource)
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly Dictionary Addition opts: %#v", opts)
-	_, err = conn.CreateDictionary(opts)
+	_, err := conn.CreateDictionary(opts)
 	if err != nil {
 		return err
 	}
@@ -186,14 +183,14 @@ func flattenDictionaries(remoteState []*gofastly.Dictionary) []map[string]any {
 	return result
 }
 
-func buildDictionary(dictMap any) (*gofastly.CreateDictionaryInput, error) {
+func buildDictionary(dictMap any) *gofastly.CreateDictionaryInput {
 	resource := dictMap.(map[string]any)
 	opts := gofastly.CreateDictionaryInput{
 		Name:      gofastly.ToPointer(resource["name"].(string)),
 		WriteOnly: gofastly.ToPointer(gofastly.Compatibool(resource["write_only"].(bool))),
 	}
 
-	return &opts, nil
+	return &opts
 }
 
 func isDictionaryEmpty(serviceID, dictID string, conn *gofastly.Client) (bool, error) {

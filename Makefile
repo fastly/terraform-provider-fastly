@@ -74,7 +74,7 @@ vet:
 	fi
 
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	golangci-lint fmt
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"

@@ -6,9 +6,10 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func resourceFastlyConfigStoreEntries() *schema.Resource {
@@ -26,7 +27,7 @@ func resourceFastlyConfigStoreEntries() *schema.Resource {
 				Required:    true,
 				Description: "A map representing an entry in the Config Store, (key/value)",
 				Elem:        schema.TypeString,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
 					// Suppress the diff unless the user wishes Terraform to manage the entries.
 					return !d.HasChange("store_id") && !d.Get("manage_entries").(bool)
 				},

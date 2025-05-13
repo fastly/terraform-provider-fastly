@@ -3,8 +3,9 @@ package fastly
 import (
 	"context"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // ServiceAttributeDefinition provides an interface for service attributes.
@@ -45,7 +46,7 @@ func (h *DefaultServiceAttributeHandler) GetKey() string {
 	return h.key
 }
 
-// GetServiceMetadata is provided to allow internal methods to get the service Metadata
+// GetServiceMetadata is provided to allow internal methods to get the service Metadata.
 func (h *DefaultServiceAttributeHandler) GetServiceMetadata() ServiceMetadata {
 	return h.serviceMetadata
 }
@@ -68,7 +69,7 @@ type VCLLoggingAttributes struct {
 	responseCondition string
 }
 
-// getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes
+// getVCLLoggingAttributes provides default values to Compute services for VCL only logging attributes.
 func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string]any) VCLLoggingAttributes {
 	vla := VCLLoggingAttributes{
 		placement: "none",
@@ -92,12 +93,11 @@ func (h *DefaultServiceAttributeHandler) getVCLLoggingAttributes(data map[string
 
 // pruneVCLLoggingAttributes deletes the keys corresponding to VCL-only logging attributes which aren't present for
 // Compute services.
-func (h *DefaultServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) map[string]any {
+func (h *DefaultServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		delete(data, "format")
 		delete(data, "format_version")
 		delete(data, "placement")
 		delete(data, "response_condition")
 	}
-	return data
 }

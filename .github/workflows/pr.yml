@@ -24,6 +24,8 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: 1.24.x
+    - name: tfproviderlintx
+      run: make tfproviderlintx
     - name: golangci-lint
       uses: golangci/golangci-lint-action@v8
       with:

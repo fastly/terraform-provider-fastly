@@ -117,7 +117,7 @@ func generateHex() string {
 }
 
 // generateNames produces slice of names seeded with initial unique value.
-// e.g. generateNames(generateHex())
+// e.g. generateNames(generateHex()).
 func generateNames(unique string) []string {
 	names := []string{}
 	for i := 1; i < 4; i++ {

@@ -141,6 +141,7 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 	}
 }
 
+// testAccAddACLEntries doesn't technically check for anything despite returning a TestCheckFunc. Instead it is used for
 // its side effect of adding an ACL Entry.
 func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {

@@ -188,6 +188,7 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 	}
 }
 
+// testAccAddDictionaryItems doesn't technically check for anything despite returning a TestCheckFunc. Instead it is
 // used for its side effect of adding a Dictionary Item.
 func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {

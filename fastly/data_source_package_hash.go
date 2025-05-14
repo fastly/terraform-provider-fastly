@@ -48,7 +48,7 @@ func dataSourceFastlyPackageHash() *schema.Resource {
 func dataSourceFastlyPackageHashRead(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	log.Printf("[DEBUG] Generating Package hash")
 
-	pkg := fmt.Sprintf("temp-%s-package.tar.gz", rand.Text())
+	pkg := fmt.Sprintf("temp-%s-package.tar.gz", rand.Text()[:10])
 	filename := d.Get("filename").(string)
 
 	if filename != "" {

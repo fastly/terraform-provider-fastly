@@ -7,6 +7,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
 	"time"
@@ -137,7 +138,7 @@ func buildCertificate(privateKey *rsa.PrivateKey, domains ...string) (string, er
 
 func buildCertificateFromCA(ca *x509.Certificate, privateKey *rsa.PrivateKey, caKey *rsa.PrivateKey, domains ...string) (string, error) {
 	now := time.Now()
-	serialNumber, err := rand.Int(rand.Reader, big.NewInt(1000))
+	serialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
 	if err != nil {
 		return emptyString, err
 	}

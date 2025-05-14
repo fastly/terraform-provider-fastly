@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/fastly/go-fastly/v10/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 
-func dataSourceFastlyTLSActivationIds() *schema.Resource {
+func dataSourceFastlyTLSActivationIDs() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyTLSActivationIDsRead,
 		Schema: map[string]*schema.Schema{

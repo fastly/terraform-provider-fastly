@@ -7,10 +7,11 @@ import (
 	"testing"
 	"text/template"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func generateDashboardParams(t *testing.T) (name, description string, items []gofastly.DashboardItem) {
@@ -186,7 +187,6 @@ func TestAccFastlyCustomDashboard_Basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCustomDashboardRemoteState(dashboardName string) resource.TestCheckFunc {

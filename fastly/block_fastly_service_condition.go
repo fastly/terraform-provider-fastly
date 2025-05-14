@@ -6,8 +6,9 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // ConditionServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.

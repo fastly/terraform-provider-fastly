@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // PackageServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -74,7 +75,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			if err != nil {
 				return fmt.Errorf("error decoding base64 string for package %s: %s", d.Id(), err)
 			}
-			input.PackageContent = []byte(decoded)
+			input.PackageContent = decoded
 		}
 		if v := pkg["filename"].(string); v != "" {
 			input.PackagePath = gofastly.ToPointer(v)

@@ -53,7 +53,7 @@ test:
 # reference:
 # https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#running-acceptance-tests
 #
-testacc: staticcheck tfproviderlintx fmtcheck
+testacc: lint tfproviderlintx fmt
 	TF_ACC=1 $(TEST_COMMAND) $(TEST) -v $(TESTARGS) -parallel=$(TEST_PARALLELISM) -timeout 360m -ldflags="-X=$(FULL_PKG_NAME)/$(VERSION_PLACEHOLDER)=acc"
 
 # WARNING: This target will delete infrastructure.
@@ -66,27 +66,11 @@ clean_test:
 		TEST_PARALLELISM=8 make testacc; \
 	fi
 
-vet:
-	@$(GO_BIN) vet ./...; if [ $$? -eq 1 ]; then \
-		echo "\nVet found suspicious constructs. Please check the reported constructs"; \
-		echo "and fix them if necessary before submitting the code for review."; \
-		exit 1; \
-	fi
-
 fmt:
-	gofmt -w $(GOFMT_FILES)
-
-fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
-
-errcheck:
-	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
+	golangci-lint fmt
 
 goreleaser-bin:
-	$(GO_BIN) install github.com/goreleaser/goreleaser/v2@latest
-
-nilaway:
-	@nilaway ./...
+	$(GO_BIN) get -modfile=tools.mod -tool github.com/goreleaser/goreleaser/v2@latest
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip=validate will skip the checks
@@ -95,7 +79,7 @@ nilaway:
 # e.g.
 # make goreleaser GORELEASER_ARGS="--skip=validate --clean"
 goreleaser: goreleaser-bin
-	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" goreleaser build ${GORELEASER_ARGS}
+	@GOHOSTOS="${GOHOSTOS}" GOHOSTARCH="${GOHOSTARCH}" $(GO_BIN) tool -modfile=tools.mod goreleaser build ${GORELEASER_ARGS}
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -107,23 +91,17 @@ test-compile:
 
 generate-docs:
 	$(shell sed -e "s/__VERSION__/$(DOCS_PROVIDER_VERSION)/g" examples/index-fastly-provider.tf.tmpl > examples/index-fastly-provider.tf)
-	$(GO_BIN) tool tfplugindocs generate
+	$(GO_BIN) tool -modfile=tools.mod tfplugindocs generate
 	rm examples/index-fastly-provider.tf
 
 validate-docs:
-	$(GO_BIN) tool tfplugindocs validate
+	$(GO_BIN) tool -modfile=tools.mod tfplugindocs validate
 
 tfproviderlintx:
-	$(GO_BIN) tool tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
+	$(GO_BIN) tool -modfile=tools.mod tfproviderlintx $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINTX_DEFAULT_FLAGS) $(TFPROVIDERLINTX_ARGS) ./...
 
 tfproviderlint:
-	$(GO_BIN) tool tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
-
-# Run third-party static analysis.
-# To ignore lines use: //lint:ignore <CODE> <REASON>
-.PHONY: staticcheck
-staticcheck:
-	staticcheck -f json ./... | jq
+	$(GO_BIN) tool -modfile=tools.mod tfproviderlint $(TFPROVIDERLINT_DEFAULT_FLAGS) $(TFPROVIDERLINT_ARGS) ./...
 
 sweep:
 	@if [ "$(SILENCE)" != "true" ]; then \

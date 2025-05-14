@@ -7,10 +7,11 @@ import (
 	"strconv"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestResourceFastlyFlattenAclEntries(t *testing.T) {
@@ -431,7 +432,7 @@ func testAccCheckFastlyServiceACLEntriesRemoteState(service *gofastly.ServiceDet
 			return fmt.Errorf("error looking up ACL records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
-		aclEntries, err := getAllAclEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
+		aclEntries, err := getAllACLEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
 			ServiceID: gofastly.ToValue(service.ServiceID),
 			ACLID:     gofastly.ToValue(acl.ACLID),
 		})

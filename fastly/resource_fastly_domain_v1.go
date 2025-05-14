@@ -4,10 +4,11 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
-	v1 "github.com/fastly/go-fastly/v10/fastly/domains/v1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	v1 "github.com/fastly/go-fastly/v10/fastly/domains/v1"
 )
 
 func resourceFastlyDomainV1() *schema.Resource {

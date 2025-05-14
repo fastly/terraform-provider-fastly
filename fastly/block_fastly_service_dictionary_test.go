@@ -6,10 +6,11 @@ import (
 	"regexp"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestResourceFastlyFlattenDictionary(t *testing.T) {
@@ -188,7 +189,7 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 }
 
 // testAccAddDictionaryItems doesn't technically check for anything despite returning a TestCheckFunc. Instead it is
-// used for its side effect of adding a Dictionary Item
+// used for its side effect of adding a Dictionary Item.
 func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn

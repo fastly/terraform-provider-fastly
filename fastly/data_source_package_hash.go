@@ -5,13 +5,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"os"
 	"sort"
 
@@ -48,7 +48,7 @@ func dataSourceFastlyPackageHash() *schema.Resource {
 func dataSourceFastlyPackageHashRead(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	log.Printf("[DEBUG] Generating Package hash")
 
-	pkg := fmt.Sprintf("temp-%s-package.tar.gz", randStringBytes(10))
+	pkg := fmt.Sprintf("temp-%s-package.tar.gz", rand.Text()[:10])
 	filename := d.Get("filename").(string)
 
 	if filename != "" {
@@ -61,7 +61,7 @@ func dataSourceFastlyPackageHashRead(_ context.Context, d *schema.ResourceData, 
 			return diag.Errorf("failed to decode base64 content: %s", err)
 		}
 
-		err = os.WriteFile(pkg, data, 0o644)
+		err = os.WriteFile(pkg, data, 0o600)
 		if err != nil {
 			return diag.Errorf("failed to write decoded base64 content to disk: %s", err)
 		}
@@ -102,16 +102,6 @@ func dataSourceFastlyPackageHashRead(_ context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
-}
-
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func randStringBytes(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
 }
 
 // https://developer.fastly.com/learning/compute/#limitations-and-constraints

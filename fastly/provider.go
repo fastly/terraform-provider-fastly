@@ -4,9 +4,10 @@ import (
 	"context"
 	"os"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/version"
 )
@@ -15,12 +16,11 @@ import (
 // any API requests made by the provider.
 const TerraformProviderProductUserAgent = "terraform-provider-fastly"
 
-// This value can be set to allow terraform output to display sensitive info
-var DisplaySensitiveFields bool = false
+// This value can be set to allow terraform output to display sensitive info.
+var DisplaySensitiveFields = false
 
 // Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
-
 	DisplaySensitiveFields = os.Getenv("FASTLY_TF_DISPLAY_SENSITIVE_FIELDS") == "true"
 
 	provider := &schema.Provider{
@@ -60,7 +60,7 @@ func Provider() *schema.Provider {
 			"fastly_secretstores":                 dataSourceFastlySecretStores(),
 			"fastly_services":                     dataSourceFastlyServices(),
 			"fastly_tls_activation":               dataSourceFastlyTLSActivation(),
-			"fastly_tls_activation_ids":           dataSourceFastlyTLSActivationIds(),
+			"fastly_tls_activation_ids":           dataSourceFastlyTLSActivationIDs(),
 			"fastly_tls_certificate":              dataSourceFastlyTLSCertificate(),
 			"fastly_tls_certificate_ids":          dataSourceFastlyTLSCertificateIDs(),
 			"fastly_tls_configuration":            dataSourceFastlyTLSConfiguration(),

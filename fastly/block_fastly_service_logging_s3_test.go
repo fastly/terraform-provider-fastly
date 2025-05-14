@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 const (
@@ -684,7 +685,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, domain, key, secret)
 }
 
-// struct to preserve the current environment
+// struct to preserve the current environment.
 type currentEnv struct {
 	Key, Secret string
 }

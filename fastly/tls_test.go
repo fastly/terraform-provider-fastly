@@ -7,8 +7,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"math"
 	"math/big"
-	rnd "math/rand"
 	"strings"
 	"time"
 )
@@ -106,7 +106,10 @@ func buildPrivateKey() (*rsa.PrivateKey, string, error) {
 
 func buildCertificate(privateKey *rsa.PrivateKey, domains ...string) (string, error) {
 	now := time.Now()
-	serialNumber := new(big.Int).SetInt64(rnd.Int63())
+	serialNumber, err := rand.Int(rand.Reader, big.NewInt(1000))
+	if err != nil {
+		return emptyString, err
+	}
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
@@ -135,7 +138,10 @@ func buildCertificate(privateKey *rsa.PrivateKey, domains ...string) (string, er
 
 func buildCertificateFromCA(ca *x509.Certificate, privateKey *rsa.PrivateKey, caKey *rsa.PrivateKey, domains ...string) (string, error) {
 	now := time.Now()
-	serialNumber := new(big.Int).SetInt64(rnd.Int63())
+	serialNumber, err := rand.Int(rand.Reader, big.NewInt(math.MaxInt64))
+	if err != nil {
+		return emptyString, err
+	}
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
@@ -163,7 +169,10 @@ func buildCertificateFromCA(ca *x509.Certificate, privateKey *rsa.PrivateKey, ca
 
 func buildCACertificate(domains ...string) (*x509.Certificate, string, *rsa.PrivateKey, error) {
 	now := time.Now()
-	serialNumber := new(big.Int).SetInt64(rnd.Int63())
+	serialNumber, err := rand.Int(rand.Reader, big.NewInt(1000))
+	if err != nil {
+		return nil, emptyString, nil, err
+	}
 	template := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{

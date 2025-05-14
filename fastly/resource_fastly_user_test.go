@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
+
+const fastlyUser = "fastly_user.foo"
 
 func TestAccFastlyUser_basic(t *testing.T) {
 	var user gofastly.User
@@ -28,24 +31,24 @@ func TestAccFastlyUser_basic(t *testing.T) {
 			{
 				Config: testAccUserConfig(login, name, role),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("fastly_user.foo", &user),
+					testAccCheckFastlyUserExists(&user),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "login", login),
+						fastlyUser, "login", login),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "name", name),
+						fastlyUser, "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "role", role),
+						fastlyUser, "role", role),
 				),
 			},
 
 			{
 				Config: testAccUserConfig(login, name2, role2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("fastly_user.foo", &user),
+					testAccCheckFastlyUserExists(&user),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "name", name2),
+						fastlyUser, "name", name2),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "role", role2),
+						fastlyUser, "role", role2),
 				),
 			},
 		},
@@ -69,33 +72,33 @@ func TestAccFastlyUser_updateLogin(t *testing.T) {
 			{
 				Config: testAccUserConfig(login, name, role),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("fastly_user.foo", &user),
+					testAccCheckFastlyUserExists(&user),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "login", login),
+						fastlyUser, "login", login),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "name", name),
+						fastlyUser, "name", name),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "role", role),
+						fastlyUser, "role", role),
 				),
 			},
 
 			{
 				Config: testAccUserConfig(login2, name, role),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists("fastly_user.foo", &user),
+					testAccCheckFastlyUserExists(&user),
 					resource.TestCheckResourceAttr(
-						"fastly_user.foo", "login", login2),
+						fastlyUser, "login", login2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckUserExists(n string, user *gofastly.User) resource.TestCheckFunc {
+func testAccCheckFastlyUserExists(user *gofastly.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[fastlyUser]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("not found: %s", fastlyUser)
 		}
 
 		if rs.Primary.ID == "" {

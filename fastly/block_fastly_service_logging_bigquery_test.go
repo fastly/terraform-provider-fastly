@@ -6,11 +6,12 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
@@ -256,7 +257,7 @@ func setBQEnv(email, secretKey string, t *testing.T) func() {
 	}
 }
 
-// struct to preserve the current environment
+// struct to preserve the current environment.
 type currentBQEnv struct {
 	Key, Secret string
 }
@@ -270,7 +271,7 @@ func getBQEnv() *currentBQEnv {
 	}
 }
 
-// TestResourceFastlyFlattenBigQuery tests the flattenBigQuery function
+// TestResourceFastlyFlattenBigQuery tests the flattenBigQuery function.
 func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 	secretKey, err := generateKey()
 	if err != nil {

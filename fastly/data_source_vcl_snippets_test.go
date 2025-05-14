@@ -37,7 +37,7 @@ func TestAccFastlyDataSourceVCLSnippets_Config(t *testing.T) {
 						// NOTE: API doesn't guarantee order.
 						for i := 0; i < 3; i++ {
 							var found bool
-							for _, d := range generateNames(h, 3) {
+							for _, d := range generateNames(h) {
 								if a[fmt.Sprintf("vcl_snippets.%d.name", i)] == d {
 									found = true
 									break

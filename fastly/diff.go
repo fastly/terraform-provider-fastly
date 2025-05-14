@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// KeyFunc calculates a key from an element
+// KeyFunc calculates a key from an element.
 type KeyFunc func(any) (any, error)
 
 // SetDiff diffs two sets using a key to identify which elements have been added, changed, removed or not modified.
@@ -21,7 +21,7 @@ type SetDiff struct {
 	keyFunc KeyFunc
 }
 
-// DiffResult contains the differences between two sets
+// DiffResult contains the differences between two sets.
 type DiffResult struct {
 	Added      []any
 	Modified   []any

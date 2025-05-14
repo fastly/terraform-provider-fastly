@@ -6,8 +6,9 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // HeaderServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -114,16 +115,13 @@ func (h *HeaderServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *HeaderServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := buildHeader(resource)
-	if err != nil {
-		log.Printf("[DEBUG] Error building Header: %s", err)
-		return err
-	}
+	opts := buildHeader(resource)
+
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly Header Addition opts: %#v", opts)
-	_, err = conn.CreateHeader(opts)
+	_, err := conn.CreateHeader(opts)
 	if err != nil {
 		return err
 	}
@@ -280,7 +278,7 @@ func flattenHeaders(remoteState []*gofastly.Header) []map[string]any {
 	return result
 }
 
-func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {
+func buildHeader(headerMap any) *gofastly.CreateHeaderInput {
 	resource := headerMap.(map[string]any)
 	opts := gofastly.CreateHeaderInput{
 		Name:              gofastly.ToPointer(resource["name"].(string)),
@@ -321,5 +319,5 @@ func buildHeader(headerMap any) (*gofastly.CreateHeaderInput, error) {
 		opts.Type = gofastly.ToPointer(gofastly.HeaderTypeResponse)
 	}
 
-	return &opts, nil
+	return &opts
 }

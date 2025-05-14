@@ -5,11 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
+
+	"github.com/fastly/go-fastly/v10/fastly"
 )
 
 func init() {
@@ -138,7 +139,8 @@ func testSweepTLSPlatformCertificates(region string) error {
 
 	for _, certificate := range certificates {
 		for _, domain := range certificate.Domains {
-			//lint:ignore SA4017 ignoring because HasPrefix returned value IS being used.
+			// SA4017 ignoring because HasPrefix returned value IS being used.
+			//nolint: staticcheck
 			if !strings.HasPrefix(domain.ID, testResourcePrefix) || !strings.HasPrefix(domain.ID, ".test") {
 				continue
 			}

@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func validateLoggingFormatVersion() schema.SchemaValidateDiagFunc {
@@ -99,7 +100,7 @@ func validateSnippetType() schema.SchemaValidateDiagFunc {
 }
 
 func validateDictionaryItems() schema.SchemaValidateDiagFunc {
-	max := gofastly.MaximumDictionarySize
+	maxSize := gofastly.MaximumDictionarySize
 
 	return validation.ToDiagFunc(func(i any, k string) (s []string, es []error) {
 		v, ok := i.(map[string]any)
@@ -108,8 +109,8 @@ func validateDictionaryItems() schema.SchemaValidateDiagFunc {
 			return s, es
 		}
 
-		if len(v) > max {
-			es = append(es, fmt.Errorf("expected %s to be at most (%d), got %d", k, max, len(v)))
+		if len(v) > maxSize {
+			es = append(es, fmt.Errorf("expected %s to be at most (%d), got %d", k, maxSize, len(v)))
 			return s, es
 		}
 
@@ -145,7 +146,8 @@ func validateUserRole() schema.SchemaValidateDiagFunc {
 // type `pemType`.
 func validatePEMBlock(pemType string) schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(func(val any, key string) ([]string, []error) {
-		b, rest := pem.Decode([]byte(val.(string)))
+		stringVal := val.(string)
+		b, rest := pem.Decode([]byte(stringVal))
 		if b == nil {
 			return nil, []error{fmt.Errorf("expected %s to be a valid PEM-format block", key)}
 		}
@@ -163,7 +165,8 @@ func validatePEMBlock(pemType string) schema.SchemaValidateDiagFunc {
 // type `pemType`.
 func validatePEMBlocks(pemType string) schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(func(val any, key string) ([]string, []error) {
-		pemRest := []byte(val.(string))
+		stringVal := val.(string)
+		pemRest := []byte(stringVal)
 		numBlocks := 0
 		for {
 			block, rest := pem.Decode(pemRest)

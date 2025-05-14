@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // S3LoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -224,12 +225,9 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := h.buildCreate(resource, d.Id(), serviceVersion)
-	if err != nil {
-		return err
-	}
+	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
-	err = createS3(conn, opts)
+	err := createS3(conn, opts)
 	if err != nil {
 		return err
 	}
@@ -489,7 +487,7 @@ func flattenS3s(remoteState []*gofastly.S3, localState []any) []map[string]any {
 	return result
 }
 
-func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID string, serviceVersion int) (*gofastly.CreateS3Input, error) {
+func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID string, serviceVersion int) *gofastly.CreateS3Input {
 	resource := s3Map.(map[string]any)
 
 	vla := h.getVCLLoggingAttributes(resource)
@@ -542,7 +540,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 		opts.ServerSideEncryption = gofastly.ToPointer(gofastly.S3ServerSideEncryptionKMS)
 	}
 
-	return &opts, nil
+	return &opts
 }
 
 func (h *S3LoggingServiceAttributeHandler) buildDelete(s3Map any, serviceID string, serviceVersion int) *gofastly.DeleteS3Input {

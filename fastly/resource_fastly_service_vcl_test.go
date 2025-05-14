@@ -7,10 +7,11 @@ import (
 	"testing"
 	"text/template"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func init() {
@@ -19,6 +20,8 @@ func init() {
 		F:    testSweepServices,
 	})
 }
+
+const defaultTTL = 3400
 
 func TestAccFastlyServiceVCL_updateDomain(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -113,7 +116,7 @@ func TestAccFastlyServiceVCL_updateBackend(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName, backendName2}, 2),
@@ -173,7 +176,7 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName, backendName2}, 1),
@@ -183,7 +186,7 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName, backendName2}, 3),
@@ -222,7 +225,7 @@ func TestAccFastlyServiceVCL_updateInvalidBackend(t *testing.T) {
 			},
 
 			{
-				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2, 3400),
+				Config: testAccServiceVCLConfigBackendUpdate(name, domain, backendName, backendName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName, backendName2}, 1),
@@ -357,7 +360,7 @@ func TestAccFastlyServiceVCL_basic(t *testing.T) {
 
 // ServiceVCL_disappears – test that a non-empty plan is returned when a Fastly
 // Service is destroyed outside of Terraform, and can no longer be found,
-// correctly clearing the ID field and generating a new plan
+// correctly clearing the ID field and generating a new plan.
 func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -586,7 +589,7 @@ func TestAccFastlyServiceVCL_defaultTTL(t *testing.T) {
 			},
 			// update default TTL
 			{
-				Config: testAccServiceVCLConfigBackendTTL(name, domain, backendName, 3400),
+				Config: testAccServiceVCLConfigBackendTTL(name, domain, backendName, defaultTTL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName}, 2),
@@ -1006,7 +1009,7 @@ resource "fastly_service_vcl" "foo" {
 }`, name, ttl, domain, backend)
 }
 
-func testAccServiceVCLConfigBackendUpdate(name, domain, backend, backend2 string, ttl uint) string {
+func testAccServiceVCLConfigBackendUpdate(name, domain, backend, backend2 string) string {
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -1030,7 +1033,7 @@ resource "fastly_service_vcl" "foo" {
   }
 
   force_destroy = true
-}`, name, ttl, domain, backend, backend2)
+}`, name, defaultTTL, domain, backend, backend2)
 }
 
 func testAccServiceVCLConfigBrokenSnippet(name, domain, backendName, snippet string) string {

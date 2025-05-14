@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // SnippetServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -67,16 +68,12 @@ func (h *SnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *SnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := buildSnippet(resource)
-	if err != nil {
-		log.Printf("[DEBUG] Error building VCL Snippet: %s", err)
-		return err
-	}
+	opts := buildSnippet(resource)
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly VCL Snippet Addition opts: %#v", opts)
-	_, err = conn.CreateSnippet(opts)
+	_, err := conn.CreateSnippet(opts)
 	if err != nil {
 		return err
 	}
@@ -166,7 +163,7 @@ func (h *SnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.Res
 	return nil
 }
 
-func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
+func buildSnippet(snippetMap any) *gofastly.CreateSnippetInput {
 	resource := snippetMap.(map[string]any)
 	opts := gofastly.CreateSnippetInput{
 		Name:     gofastly.ToPointer(resource["name"].(string)),
@@ -178,7 +175,7 @@ func buildSnippet(snippetMap any) (*gofastly.CreateSnippetInput, error) {
 	snippetType := strings.ToLower(resource["type"].(string))
 	opts.Type = gofastly.ToPointer(gofastly.SnippetType(snippetType))
 
-	return &opts, nil
+	return &opts
 }
 
 // flattenSnippets models data into format suitable for saving to Terraform state.

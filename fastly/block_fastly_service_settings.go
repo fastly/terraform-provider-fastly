@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // SettingsServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -85,17 +86,32 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	}
 
 	if settings.DefaultHost != nil {
-		d.Set("default_host", settings.DefaultHost)
+		err = d.Set("default_host", settings.DefaultHost)
+		if err != nil {
+			return err
+		}
 	}
 	if settings.DefaultTTL != nil {
-		d.Set("default_ttl", int(*settings.DefaultTTL))
+		err = d.Set("default_ttl", int(*settings.DefaultTTL))
+		if err != nil {
+			return err
+		}
 	}
-	d.Set("http3", false)
+	err = d.Set("http3", false)
+	if err != nil {
+		return err
+	}
 	if settings.StaleIfError != nil {
-		d.Set("stale_if_error", settings.StaleIfError)
+		err = d.Set("stale_if_error", settings.StaleIfError)
+		if err != nil {
+			return err
+		}
 	}
 	if settings.StaleIfErrorTTL != nil {
-		d.Set("stale_if_error_ttl", int(*settings.StaleIfErrorTTL))
+		err = d.Set("stale_if_error_ttl", int(*settings.StaleIfErrorTTL))
+		if err != nil {
+			return err
+		}
 	}
 
 	// The API returns a 404 if HTTP3 is not enabled.
@@ -105,7 +121,10 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersionNumber,
 	}); err == nil {
-		d.Set("http3", true)
+		err = d.Set("http3", true)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

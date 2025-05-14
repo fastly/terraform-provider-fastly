@@ -6,8 +6,9 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 // RequestSettingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -101,16 +102,12 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 
 // Create creates the resource.
 func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
-	opts, err := buildRequestSetting(resource)
-	if err != nil {
-		log.Printf("[DEBUG] Error building Request Setting: %s", err)
-		return err
-	}
+	opts := buildRequestSetting(resource)
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Create Request Setting Opts: %#v", opts)
-	_, err = conn.CreateRequestSetting(opts)
+	_, err := conn.CreateRequestSetting(opts)
 	if err != nil {
 		return err
 	}
@@ -279,7 +276,7 @@ func flattenRequestSettings(remoteState []*gofastly.RequestSetting) []map[string
 	return result
 }
 
-func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingInput, error) {
+func buildRequestSetting(requestSettingMap any) *gofastly.CreateRequestSettingInput {
 	resource := requestSettingMap.(map[string]any)
 	opts := gofastly.CreateRequestSettingInput{
 		BypassBusyWait: gofastly.ToPointer(gofastly.Compatibool(resource["bypass_busy_wait"].(bool))),
@@ -318,5 +315,5 @@ func buildRequestSetting(requestSettingMap any) (*gofastly.CreateRequestSettingI
 		opts.XForwardedFor = gofastly.ToPointer(gofastly.RequestSettingXFFOverwrite)
 	}
 
-	return &opts, nil
+	return &opts
 }

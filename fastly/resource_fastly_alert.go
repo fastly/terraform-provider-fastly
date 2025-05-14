@@ -6,13 +6,16 @@ import (
 	"log"
 	"strings"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
-const badAlertSourceServiceIdConfig = "empty `service_id` is only supported for `stats` as a source"
-const ManagedByTerraform = "Managed by Terraform"
+const (
+	badAlertSourceServiceIDConfig = "empty `service_id` is only supported for `stats` as a source"
+	ManagedByTerraform            = "Managed by Terraform"
+)
 
 func resourceFastlyAlert() *schema.Resource {
 	return &schema.Resource{
@@ -125,7 +128,7 @@ func resourceFastlyAlert() *schema.Resource {
 func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := validateSourceWithServiceId(d.Get("source").(string), d.Get("service_id").(string))
+	err := validateSourceWithServiceID(d.Get("source").(string), d.Get("service_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -235,7 +238,7 @@ func resourceFastlyAlertRead(_ context.Context, d *schema.ResourceData, meta any
 func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := validateSourceWithServiceId(d.Get("source").(string), d.Get("service_id").(string))
+	err := validateSourceWithServiceID(d.Get("source").(string), d.Get("service_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -344,9 +347,9 @@ func buildStringSlice(s *schema.Set) []string {
 	return sl
 }
 
-func validateSourceWithServiceId(source string, serviceId string) error {
-	if source != "stats" && serviceId == "" {
-		return errors.New(badAlertSourceServiceIdConfig)
+func validateSourceWithServiceID(source string, serviceID string) error {
+	if source != "stats" && serviceID == "" {
+		return errors.New(badAlertSourceServiceIDConfig)
 	}
 
 	return nil

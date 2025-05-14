@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestResourceFastlyFlattenBackend(t *testing.T) {
@@ -201,7 +202,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		UseSSL:              gofastly.ToPointer(false),
 	}
 	// This validates the ShareKey is unset.
-	b1_updated := gofastly.Backend{
+	b1Updated := gofastly.Backend{
 		Address: gofastly.ToPointer(backendAddress),
 		Name:    gofastly.ToPointer(backendName),
 		Port:    gofastly.ToPointer(443),
@@ -293,7 +294,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "3"),
-					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1_updated, &b2, &b3}),
+					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1Updated, &b2, &b3}),
 				),
 			},
 		},

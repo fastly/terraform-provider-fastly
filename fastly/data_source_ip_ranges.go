@@ -5,9 +5,10 @@ import (
 	"log"
 	"sort"
 
-	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 
 func dataSourceFastlyIPRanges() *schema.Resource {

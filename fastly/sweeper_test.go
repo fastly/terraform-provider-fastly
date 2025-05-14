@@ -6,11 +6,13 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/fastly/terraform-provider-fastly/version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/terraform-provider-fastly/version"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
+	"github.com/fastly/go-fastly/v10/fastly"
 )
 
 const testResourcePrefix = "tf-test"
@@ -33,7 +35,7 @@ func sharedClientForRegion(region string) (*fastly.Client, diag.Diagnostics) {
 	}
 
 	buildInfo, _ := debug.ReadBuildInfo()
-	var sdkVersion = "unknown"
+	sdkVersion := "unknown"
 	for _, v := range buildInfo.Deps {
 		if v.Path == "github.com/hashicorp/terraform-plugin-framework" {
 			sdkVersion = v.Version

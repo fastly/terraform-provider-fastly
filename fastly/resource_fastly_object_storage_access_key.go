@@ -4,10 +4,11 @@ import (
 	"context"
 	"log"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
-	"github.com/fastly/go-fastly/v10/fastly/objectstorage/accesskeys"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v10/fastly/objectstorage/accesskeys"
 )
 
 func resourceObjectStorageAccessKey() *schema.Resource {
@@ -77,11 +78,18 @@ func resourceObjectStorageAccessKeyCreate(_ context.Context, resourceData *schem
 		return diag.Errorf("error: accessKey.AccessKeyID is empty")
 	}
 	resourceData.SetId(createdAK.AccessKeyID)
-	resourceData.Set("access_key_id", createdAK.AccessKeyID)
+	err = resourceData.Set("access_key_id", createdAK.AccessKeyID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	if createdAK.SecretKey == "" {
 		return diag.Errorf("error: accessKey.SecretKey is empty")
 	}
-	resourceData.Set("secret_key", createdAK.SecretKey)
+	err = resourceData.Set("secret_key", createdAK.SecretKey)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -99,10 +107,16 @@ func resourceObjectStorageAccessKeyRead(_ context.Context, resourceData *schema.
 		return diag.FromErr(err)
 	}
 	if readAK.Permission != "" {
-		resourceData.Set("permission", readAK.Permission)
+		err = resourceData.Set("permission", readAK.Permission)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if readAK.Description != "" {
-		resourceData.Set("description", readAK.Description)
+		err = resourceData.Set("description", readAK.Description)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if len(readAK.Buckets) != 0 {
 		err = resourceData.Set("buckets", readAK.Buckets)
@@ -111,10 +125,16 @@ func resourceObjectStorageAccessKeyRead(_ context.Context, resourceData *schema.
 		}
 	}
 	if readAK.SecretKey != "" {
-		resourceData.Set("secret_key", readAK.SecretKey)
+		err = resourceData.Set("secret_key", readAK.SecretKey)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if readAK.AccessKeyID != "" {
-		resourceData.Set("access_key_id", readAK.SecretKey)
+		err = resourceData.Set("access_key_id", readAK.SecretKey)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

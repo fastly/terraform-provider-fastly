@@ -6,11 +6,12 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestResourceFastlyFlattenGCS(t *testing.T) {
@@ -283,7 +284,7 @@ func setGcsEnv(email, secretKey string, t *testing.T) func() {
 	}
 }
 
-// struct to preserve the current environment
+// struct to preserve the current environment.
 type currentGcsEnv struct {
 	Key, Secret string
 }

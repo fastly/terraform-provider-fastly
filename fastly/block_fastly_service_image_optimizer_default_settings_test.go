@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
 
 func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 		allow_video = false
 	`
 
-	default_settings1 := gofastly.ImageOptimizerDefaultSettings{
+	defaultSettings1 := gofastly.ImageOptimizerDefaultSettings{
 		ResizeFilter: "lanczos2",
 		Webp:         true,
 		WebpQuality:  100,
@@ -48,7 +49,7 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 		allow_video = true
 	`
 
-	def_settings2 := gofastly.ImageOptimizerDefaultSettings{
+	defSettings2 := gofastly.ImageOptimizerDefaultSettings{
 		ResizeFilter: "bicubic",
 		Webp:         false,
 		WebpQuality:  30,
@@ -71,7 +72,7 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "image_optimizer_default_settings.#", "1"),
-					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, &default_settings1),
+					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, &defaultSettings1),
 				),
 			},
 
@@ -81,7 +82,7 @@ func TestAccFastlyServiceImageOptimizerDefaultSettings_basic(t *testing.T) {
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "image_optimizer_default_settings.#", "1"),
-					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, &def_settings2),
+					testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(&service, &defSettings2),
 				),
 			},
 		},
@@ -107,7 +108,7 @@ func testAccCheckFastlyServiceImageOptimizerDefaultSettingsAttributes(service *g
 	}
 }
 
-func testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, image_optimizer_settings string) string {
+func testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, backendAddress, backendName, imageOptimizerSettings string) string {
 	return fmt.Sprintf(`
 	resource "fastly_service_vcl" "foo" {
 	  name = "%s"
@@ -133,5 +134,5 @@ func testAccImageOptimizerDefaultSettingsVCLConfig(serviceName, domainName, back
 	  }
 
 	  force_destroy = true
-	}`, serviceName, domainName, backendAddress, backendName, image_optimizer_settings)
+	}`, serviceName, domainName, backendAddress, backendName, imageOptimizerSettings)
 }

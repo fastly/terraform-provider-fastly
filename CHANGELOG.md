@@ -2,20 +2,28 @@
 
 ### BREAKING:
 
+### ENHANCEMENTS:
+
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+## 7.0.0 (May 21, 2025)
+
+### BREAKING:
+
 - feat(fastly): remove deprecated `geo_headers` field from fastly service ([#992](https://github.com/fastly/terraform-provider-fastly/pull/992))
-- feat(go.mod): upgrade golang to 1.24.0 and make appropriate changes ([#993](https://github.com/fastly/terraform-provider-fastly/pull/993))
 
 ### ENHANCEMENTS:
 
 - feat(config): add an environment variable allowing users to override the sensitive attribute ([#985](https://github.com/fastly/terraform-provider-fastly/pull/985))
-
-### BUG FIXES:
 
 ### DEPENDENCIES:
 - build(deps): `golang.org/x/net` from 0.39.0 to 0.40.0 ([#990](https://github.com/fastly/terraform-provider-fastly/pull/990))
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.0.1 to 10.1.0 ([#996](https://github.com/fastly/terraform-provider-fastly/pull/996))
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.36.1 to 2.37.0 ([#998](https://github.com/fastly/terraform-provider-fastly/pull/998))
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.1.0 to 10.2.0 ([#1000](https://github.com/fastly/terraform-provider-fastly/pull/1000))
+- build(go.mod): upgrade golang to 1.24.0 and make appropriate changes ([#993](https://github.com/fastly/terraform-provider-fastly/pull/993))
 
 ## 6.1.0 (April 17, 2025)
 

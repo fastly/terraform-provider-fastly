@@ -74,7 +74,6 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		BypassBusyWait: gofastly.ToPointer(false),
 		ForceMiss:      gofastly.ToPointer(false),
 		ForceSSL:       gofastly.ToPointer(false),
-		GeoHeaders:     gofastly.ToPointer(false),
 		HashKeys:       gofastly.ToPointer(""),
 		TimerSupport:   gofastly.ToPointer(false),
 	}
@@ -96,7 +95,6 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		BypassBusyWait: gofastly.ToPointer(false),
 		ForceMiss:      gofastly.ToPointer(false),
 		ForceSSL:       gofastly.ToPointer(false),
-		GeoHeaders:     gofastly.ToPointer(false),
 		HashKeys:       gofastly.ToPointer(""),
 		TimerSupport:   gofastly.ToPointer(false),
 	}
@@ -117,7 +115,6 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		BypassBusyWait: gofastly.ToPointer(false),
 		ForceMiss:      gofastly.ToPointer(false),
 		ForceSSL:       gofastly.ToPointer(false),
-		GeoHeaders:     gofastly.ToPointer(false),
 		HashKeys:       gofastly.ToPointer(""),
 		TimerSupport:   gofastly.ToPointer(false),
 	}

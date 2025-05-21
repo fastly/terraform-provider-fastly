@@ -15,6 +15,7 @@
 - build(deps): `golang.org/x/net` from 0.39.0 to 0.40.0 ([#990](https://github.com/fastly/terraform-provider-fastly/pull/990))
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.0.1 to 10.1.0 ([#996](https://github.com/fastly/terraform-provider-fastly/pull/996))
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.36.1 to 2.37.0 ([#998](https://github.com/fastly/terraform-provider-fastly/pull/998))
+- build(deps): `github.com/fastly/go-fastly/v10` from 10.1.0 to 10.2.0 ([#1000](https://github.com/fastly/terraform-provider-fastly/pull/1000))
 
 ## 6.1.0 (April 17, 2025)
 

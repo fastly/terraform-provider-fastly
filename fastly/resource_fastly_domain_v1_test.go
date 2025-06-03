@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccFastlyDomainV1_Basic(t *testing.T) {
+	description := "example"
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -24,11 +25,13 @@ func TestAccFastlyDomainV1_Basic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(`
 				resource "fastly_domain_v1" "example" {
+				    description = "%s"
 				    fqdn = "%s"
 				}
-				`, domainName),
+				`, description, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_domain_v1.example", "fqdn", domainName),
+					resource.TestCheckResourceAttr("fastly_domain_v1.example", "description", description),
 					resource.TestCheckNoResourceAttr("fastly_domain_v1.example", "service_id"),
 				),
 			},
@@ -42,12 +45,14 @@ func TestAccFastlyDomainV1_Basic(t *testing.T) {
 					force_destroy = true
 				}
 				resource "fastly_domain_v1" "example" {
+				    description = "%s"
 				    fqdn = "%s"
 					service_id = resource.fastly_service_vcl.example.id
 				}
-				`, domainName, domainName, domainName),
+				`, domainName, domainName, description+"-updated", domainName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_domain_v1.example", "fqdn", domainName),
+					resource.TestCheckResourceAttr("fastly_domain_v1.example", "description", description+"-updated"),
 					resource.TestCheckResourceAttrSet("fastly_domain_v1.example", "service_id"),
 				),
 			},

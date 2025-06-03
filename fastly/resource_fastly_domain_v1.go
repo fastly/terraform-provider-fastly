@@ -22,6 +22,11 @@ func resourceFastlyDomainV1() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The description for your domain.",
+			},
 			"domain_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -46,6 +51,9 @@ func resourceFastlyDomainV1Create(_ context.Context, d *schema.ResourceData, met
 	conn := meta.(*APIClient).conn
 
 	var input v1.CreateInput
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = gofastly.ToPointer(v.(string))
+	}
 	if v, ok := d.GetOk("fqdn"); ok {
 		input.FQDN = gofastly.ToPointer(v.(string))
 	}
@@ -79,6 +87,9 @@ func resourceFastlyDomainV1Read(_ context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("description", data.Description); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("domain_id", data.DomainID); err != nil {
 		return diag.FromErr(err)
 	}
@@ -97,6 +108,9 @@ func resourceFastlyDomainV1Update(ctx context.Context, d *schema.ResourceData, m
 
 	input := &v1.UpdateInput{
 		DomainID: gofastly.ToPointer(d.Id()),
+	}
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := d.GetOk("service_id"); ok {
 		input.ServiceID = gofastly.ToPointer(v.(string))

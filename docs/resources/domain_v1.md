@@ -21,6 +21,7 @@ description: |-
 
 ### Optional
 
+- `description` (String) The description for your domain.
 - `service_id` (String) The service_id associated with your domain or null if there is no association.
 
 ### Read-Only

@@ -195,6 +195,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
 		RequestCondition:    gofastly.ToPointer(""),
 		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
@@ -217,6 +218,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
 		RequestCondition:    gofastly.ToPointer(""),
 		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
@@ -238,6 +240,7 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
 		RequestCondition:    gofastly.ToPointer(""),
 		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
@@ -266,10 +269,33 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
 		RequestCondition:    gofastly.ToPointer(""),
 		Shield:              gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),
+	}
+	b4 := gofastly.Backend{
+		Address:    gofastly.ToPointer(backendAddress),
+		Name:       gofastly.ToPointer(backendName + " ipv6"),
+		Port:       gofastly.ToPointer(443),
+		PreferIPv6: gofastly.ToPointer(true),
+
+		// NOTE: The following are defaults applied by the API.
+		AutoLoadbalance:     gofastly.ToPointer(false),
+		BetweenBytesTimeout: gofastly.ToPointer(10000),
+		Comment:             gofastly.ToPointer(""),
+		ConnectTimeout:      gofastly.ToPointer(1000),
+		ErrorThreshold:      gofastly.ToPointer(0),
+		FirstByteTimeout:    gofastly.ToPointer(15000),
+		HealthCheck:         gofastly.ToPointer(""),
+		Hostname:            gofastly.ToPointer(backendAddress),
+		MaxConn:             gofastly.ToPointer(200),
+		RequestCondition:    gofastly.ToPointer(""),
+		Shield:              gofastly.ToPointer(""),
+		SSLCheckCert:        gofastly.ToPointer(true),
+		Weight:              gofastly.ToPointer(100),
+		UseSSL:              gofastly.ToPointer(false),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -293,8 +319,8 @@ func TestAccFastlyServiceVCLBackend_basic(t *testing.T) {
 				Config: testAccServiceVCLBackendUpdate(serviceName, domainName, backendAddress, backendName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "3"),
-					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1Updated, &b2, &b3}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "backend.#", "4"),
+					testAccCheckFastlyServiceVCLBackendAttributes(&service, []*gofastly.Backend{&b1Updated, &b2, &b3, &b4}),
 				),
 			},
 		},
@@ -355,8 +381,15 @@ resource "fastly_service_vcl" "foo" {
     ssl_cert_hostname = "httpbin.org"
   }
 
+  backend {
+    address     = "%s"
+    name        = "%s ipv6"
+    port        = 443
+    prefer_ipv6 = true
+  }
+
   force_destroy = true
-}`, serviceName, domainName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName)
+}`, serviceName, domainName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName, backendAddress, backendName)
 }
 
 func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDetail, want []*gofastly.Backend) resource.TestCheckFunc {

@@ -108,6 +108,12 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     80,
 			Description: "The port number on which the Backend responds. Default `80`",
 		},
+		"prefer_ipv6": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Prefer IPv6 connections to origins for hostname backends. Default `false`",
+		},
 		"share_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -290,6 +296,7 @@ func (h *BackendServiceAttributeHandler) buildCreateBackendInput(service string,
 		MaxConn:             gofastly.ToPointer(resource["max_conn"].(int)),
 		Name:                gofastly.ToPointer(resource["name"].(string)),
 		Port:                gofastly.ToPointer(resource["port"].(int)),
+		PreferIPv6:          gofastly.ToPointer(gofastly.Compatibool(resource["prefer_ipv6"].(bool))),
 		SSLCheckCert:        gofastly.ToPointer(gofastly.Compatibool(resource["ssl_check_cert"].(bool))),
 		ServiceID:           service,
 		ServiceVersion:      latestVersion,
@@ -357,6 +364,9 @@ func (h *BackendServiceAttributeHandler) buildUpdateBackendInput(serviceID strin
 	}
 	if v, ok := modified["port"]; ok {
 		opts.Port = gofastly.ToPointer(v.(int))
+	}
+	if v, ok := modified["prefer_ipv6"]; ok {
+		opts.PreferIPv6 = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
 	if v, ok := modified["override_host"]; ok {
 		opts.OverrideHost = gofastly.ToPointer(v.(string))
@@ -482,6 +492,9 @@ func flattenBackend(remoteState []*gofastly.Backend, sa ServiceMetadata) []map[s
 		}
 		if resource.Port != nil {
 			data["port"] = *resource.Port
+		}
+		if resource.PreferIPv6 != nil {
+			data["prefer_ipv6"] = *resource.PreferIPv6
 		}
 		if resource.ShareKey != nil {
 			data["share_key"] = *resource.ShareKey

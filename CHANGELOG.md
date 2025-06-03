@@ -5,6 +5,7 @@
 ### ENHANCEMENTS:
 
 - feat(domains/v1): add `description` field ([#1002](https://github.com/fastly/terraform-provider-fastly/pull/1002))
+- feat(backend): Add support for 'prefer IPv6' attribute. ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1003))
 
 ### BUG FIXES:
 

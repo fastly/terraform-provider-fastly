@@ -1,5 +1,11 @@
 ## \[UNRELEASED\]
 
+## [UNRELEASED]
+
+### Dependencies
+
+- build(deps): `github.com/fastly/go-fastly/v10` from 10.2.0 to 10.3.0 ([#1004](https://github.com/fastly/terraform-provider-fastly/pull/1004))
+
 ### BREAKING:
 
 ### ENHANCEMENTS:

@@ -6,6 +6,7 @@
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.2.0 to 10.3.0 ([#1004](https://github.com/fastly/terraform-provider-fastly/pull/1004))
 - build(deps): `github.com/cloudflare/circl` from 1.6.0 to 1.6.1 ([#1006](https://github.com/fastly/terraform-provider-fastly/pull/1006))
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.2.0 to 10.3.0 ([#1004](https://github.com/fastly/terraform-provider-fastly/pull/1004))
+- build(deps): `golang.org/x/net` from 0.40.0 to 0.41.0 ([#1005](https://github.com/fastly/terraform-provider-fastly/pull/1005))
 
 ### BREAKING:
 

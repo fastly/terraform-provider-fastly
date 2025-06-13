@@ -283,47 +283,6 @@ resource "aws_route53_record" "subdomain" {
 }
 ```
 
-## Argument Reference
-
-The following arguments are supported:
-
-* `domains` - (Required) List of domains on which to enable TLS.
-* `certificate_authority` - (Required) The entity that issues and certifies the TLS certificates for your subscription. Valid values are `lets-encrypt` or `globalsign`.
-* `configuration_id` - (Optional) The ID of the set of TLS configuration options that apply to the enabled domains on this subscription.
-* `force_update` - (Optional) Always update subscription, even when active domains are present. Defaults to false.
-* `force_destroy` - (Optional) Always delete subscription, even when active domains are present. Defaults to false.
-
-!> **Warning:** by default, the Fastly API protects you from disabling production traffic by preventing updating or deleting subscriptions with active domains. The use of `force_update` and `force_destroy` will override these protections. Take extra care using these options if you are handling production traffic.
-
-## Attributes Reference
-
-In addition to the arguments listed above, the following attributes are exported:
-
-* `created_at` - Timestamp (GMT) when the subscription was created.
-* `updated_at` - Timestamp (GMT) when the subscription was last updated.
-* `state` - The current state of the subscription. The list of possible states are: `pending`, `processing`, `issued`, and `renewing`.
-* `managed_dns_challenges` - A list of options for configuring DNS to respond to ACME DNS challenge in order to verify domain ownership. See Managed DNS Challenge below for details.
-* `managed_http_challenges` - A list of options for configuring DNS to respond to ACME HTTP challenge in order to verify domain ownership. See Managed HTTP Challenges below for details.
-
-### Managed DNS Challenge
-
-The available attributes in the `managed_dns_challenges` block are:
-
-* `record_name` - The name of the DNS record to add. For example `_acme-challenge.example.com`. Accessed like this, `fastly_tls_subscription.tls.managed_dns_challenges.record_name`.
-* `record_type` - The type of DNS record to add, e.g. `A`, or `CNAME`.
-* `record_value` - The value to which the DNS record should point, e.g. `xxxxx.fastly-validations.com`.
-
-### Managed HTTP Challenges
-
-The `managed_http_challenges` attribute is a set of different records that could be added depending on requirements.
-For example, whether you are adding TLS to an apex domain, or a subdomain will determine which record you require.
-Please note that these records will redirect production traffic to Fastly, so make sure the service is configured correctly first.
-Each record in the set has the following attributes:
-
-* `record_name` - The name of the DNS record to add. For example `example.com`. Best accessed through a `for` expression to filter the relevant record.
-* `record_type` - The type of DNS record to add, e.g. `A`, or `CNAME`.
-* `record_values` - A list with the value(s) to which the DNS record should point.
-
 ## Import
 
 A subscription can be imported using its Fastly subscription ID, e.g.

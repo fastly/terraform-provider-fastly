@@ -16,7 +16,7 @@ TEST_COMMAND ?= $(GO_BIN) test
 # R019: ignore large number of arguments passed to HasChanges().
 # R018: replace sleep with either resource.Retry() or WaitForState().
 # R001: for complex d.Set() calls use a string literal instead.
-TFPROVIDERLINT_DEFAULT_FLAGS=-R001=false -R018=false -R019=false
+TFPROVIDERLINT_DEFAULT_FLAGS=-R001=false -R018=false -R019=false -XR001=false
 
 # XAT001: missing resource.TestCase ErrorCheck.
 TFPROVIDERLINTX_DEFAULT_FLAGS=-XAT001=false

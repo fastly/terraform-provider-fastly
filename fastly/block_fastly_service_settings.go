@@ -33,6 +33,7 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 		opts.DefaultHost = gofastly.ToPointer(attr.(string))
 	}
 
+	//nolint:staticcheck
 	if attr, ok := d.GetOkExists("stale_if_error"); ok {
 		opts.StaleIfError = gofastly.ToPointer(attr.(bool))
 	}

@@ -9,6 +9,7 @@
 
 ### BUG FIXES:
 - fix(block_fastly_service_settings): fix detection of falsey value for stale_if_error field ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1009))
+- fix(backend): Set default 'prefer IPv6' attribute differently for Delivery and Compute services. ([#10](https://github.com/fastly/terraform-provider-fastly/pull/10))
 
 ### DEPENDENCIES:
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.2.0 to 10.3.0 ([#1004](https://github.com/fastly/terraform-provider-fastly/pull/1004))

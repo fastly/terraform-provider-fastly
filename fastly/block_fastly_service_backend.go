@@ -194,14 +194,14 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     "",
 			Description: "Name of a condition, which if met, will select this backend during a request.",
 		}
-		blockAttributes["prefer_ipv6"]  = &schema.Schema {
+		blockAttributes["prefer_ipv6"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
 			Description: "Prefer IPv6 connections to origins for hostname backends. Default `false`",
 		}
 	} else {
-		blockAttributes["prefer_ipv6"]  = &schema.Schema {
+		blockAttributes["prefer_ipv6"] = &schema.Schema{
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,

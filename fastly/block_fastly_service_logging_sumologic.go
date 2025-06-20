@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -44,6 +45,13 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A unique name to identify this Sumologic endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"url": {
 			Type:        schema.TypeString,
@@ -93,13 +101,14 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSumologicInput{
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
-		MessageType:    gofastly.ToPointer(resource["message_type"].(string)),
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-		URL:            gofastly.ToPointer(resource["url"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		URL:              gofastly.ToPointer(resource["url"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -179,6 +188,9 @@ func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Sumologic Opts: %#v", opts)
 	_, err := conn.UpdateSumologic(&opts)
@@ -234,6 +246,9 @@ func flattenSumologics(remoteState []*gofastly.Sumologic) []map[string]any {
 		}
 		if resource.Placement != nil {
 			data["placement"] = *resource.Placement
+		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
 		}
 
 		// prune any empty values that come from the default string value in structs

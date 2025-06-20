@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -37,6 +38,13 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A unique name to identify the Splunk endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
@@ -122,18 +130,19 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-		TLSCACert:      gofastly.ToPointer(resource["tls_ca_cert"].(string)),
-		TLSClientCert:  gofastly.ToPointer(resource["tls_client_cert"].(string)),
-		TLSClientKey:   gofastly.ToPointer(resource["tls_client_key"].(string)),
-		TLSHostname:    gofastly.ToPointer(resource["tls_hostname"].(string)),
-		Token:          gofastly.ToPointer(resource["token"].(string)),
-		URL:            gofastly.ToPointer(resource["url"].(string)),
-		UseTLS:         gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		TLSCACert:        gofastly.ToPointer(resource["tls_ca_cert"].(string)),
+		TLSClientCert:    gofastly.ToPointer(resource["tls_client_cert"].(string)),
+		TLSClientKey:     gofastly.ToPointer(resource["tls_client_key"].(string)),
+		TLSHostname:      gofastly.ToPointer(resource["tls_hostname"].(string)),
+		Token:            gofastly.ToPointer(resource["token"].(string)),
+		URL:              gofastly.ToPointer(resource["url"].(string)),
+		UseTLS:           gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -231,6 +240,9 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	if v, ok := modified["use_tls"]; ok {
 		opts.UseTLS = gofastly.ToPointer(gofastly.Compatibool(v.(bool)))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Splunk Opts: %#v", opts)
 	_, err := conn.UpdateSplunk(&opts)
@@ -301,6 +313,9 @@ func flattenSplunks(remoteState []*gofastly.Splunk) []map[string]any {
 		}
 		if resource.TLSClientKey != nil {
 			data["tls_client_key"] = *resource.TLSClientKey
+		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
 		}
 
 		// prune any empty values that come from the default string value in structs

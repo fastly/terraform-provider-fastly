@@ -41,6 +41,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					TLSHostname:       gofastly.ToPointer("example.com"),
 					Token:             gofastly.ToPointer("test-token"),
 					URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -56,6 +57,7 @@ func TestResourceFastlyFlattenSplunk(t *testing.T) {
 					"tls_hostname":       "example.com",
 					"token":              "test-token",
 					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -85,6 +87,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		Token:             gofastly.ToPointer("test-token"),
 		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 		UseTLS:            gofastly.ToPointer(true),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	splunkLogOneUpdated := gofastly.Splunk{
@@ -99,6 +102,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		Token:             gofastly.ToPointer("test-token"),
 		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 		UseTLS:            gofastly.ToPointer(false),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	splunkLogTwo := gofastly.Splunk{
@@ -113,6 +117,7 @@ func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 		Token:             gofastly.ToPointer("test-token"),
 		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 		UseTLS:            gofastly.ToPointer(false),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -157,6 +162,7 @@ func TestAccFastlyServiceVCL_splunk_basic_compute(t *testing.T) {
 		Token:             gofastly.ToPointer("test-token"),
 		URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
 		UseTLS:            gofastly.ToPointer(false),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -430,6 +436,7 @@ resource "fastly_service_compute" "foo" {
     name               = "test-splunk-1"
     url                = "https://mysplunkendpoint.example.com/services/collector/event"
     token              = "test-token"
+    processing_region = "us"
   }
 
   package {
@@ -476,6 +483,7 @@ resource "fastly_service_vcl" "foo" {
     placement          = "none"
     response_condition = "error_response_5XX"
 	use_tls            = true
+    processing_region = "us"
   }
 
   force_destroy = true

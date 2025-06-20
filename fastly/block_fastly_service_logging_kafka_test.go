@@ -41,6 +41,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					AuthMethod:        gofastly.ToPointer("scram-sha-512"),
 					User:              gofastly.ToPointer("user"),
 					Password:          gofastly.ToPointer("password"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -64,6 +65,7 @@ func TestResourceFastlyFlattenKafka(t *testing.T) {
 					"auth_method":        "scram-sha-512",
 					"user":               "user",
 					"password":           "password",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -103,6 +105,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		AuthMethod:        gofastly.ToPointer("plain"),
 		User:              gofastly.ToPointer("user"),
 		Password:          gofastly.ToPointer("password"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Kafka{
@@ -126,6 +129,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		AuthMethod:        gofastly.ToPointer("scram-sha-256"),
 		User:              gofastly.ToPointer("user"),
 		Password:          gofastly.ToPointer("password"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Kafka{
@@ -149,6 +153,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		AuthMethod:        gofastly.ToPointer("scram-sha-256"),
 		User:              gofastly.ToPointer("user"),
 		Password:          gofastly.ToPointer("password"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -207,6 +212,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic_compute(t *testing.T) {
 		Topic:            gofastly.ToPointer("topic"),
 		UseTLS:           gofastly.ToPointer(true),
 		User:             gofastly.ToPointer(""),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -312,6 +318,7 @@ resource "fastly_service_compute" "foo" {
 		tls_client_cert    = file("test_fixtures/fastly_test_certificate")
 		tls_client_key     = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example.com"
+    processing_region = "us"
 	}
 
 	package {
@@ -366,6 +373,7 @@ resource "fastly_service_vcl" "foo" {
 		auth_method        = "plain"
 		user               = "user"
 		password           = "password"
+    processing_region = "us"
 	}
 
 	force_destroy = true

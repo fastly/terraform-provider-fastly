@@ -50,6 +50,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					ServerSideEncryption:         gofastly.ToPointer(gofastly.S3ServerSideEncryptionAES),
 					ServerSideEncryptionKMSKeyID: gofastly.ToPointer("kmskey"),
 					TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					ProcessingRegion:             gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -73,6 +74,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"server_side_encryption":            gofastly.S3ServerSideEncryptionAES,
 					"server_side_encryption_kms_key_id": "kmskey",
 					"timestamp_format":                  "%Y-%m-%dT%H:%M:%S.000",
+					"processing_region":                 "eu",
 				},
 			},
 			unset: true, // validating the user didn't set gzip_level
@@ -182,6 +184,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(""),
 		ServiceVersion:               gofastly.ToPointer(1),
 		TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:             gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.S3{
@@ -205,6 +208,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(""),
 		ServiceVersion:               gofastly.ToPointer(1),
 		TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:             gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.S3{
@@ -229,6 +233,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(""),
 		ServiceVersion:               gofastly.ToPointer(1),
 		TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:             gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -285,6 +290,7 @@ func TestAccFastlyServiceVCL_s3logging_basic_compute(t *testing.T) {
 		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(""),
 		ServiceVersion:               gofastly.ToPointer(1),
 		TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:             gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -333,6 +339,7 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(""),
 		ServiceVersion:               gofastly.ToPointer(1),
 		TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:             gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -381,6 +388,7 @@ func TestAccFastlyServiceVCL_s3logging_formatVersion(t *testing.T) {
 		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(""),
 		ServiceVersion:               gofastly.ToPointer(1),
 		TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:             gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -560,6 +568,7 @@ resource "fastly_service_compute" "foo" {
     s3_secret_key = "%s"
     public_key = file("test_fixtures/fastly_test_publickey")
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   package {
@@ -602,6 +611,7 @@ resource "fastly_service_vcl" "foo" {
     response_condition = "response_condition_test"
     public_key = file("test_fixtures/fastly_test_publickey")
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   force_destroy = true

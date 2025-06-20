@@ -27,6 +27,7 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
 					FormatVersion:     gofastly.ToPointer(2),
 					ResponseCondition: gofastly.ToPointer("test_response_condition"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -37,6 +38,7 @@ func TestResourceFastlyFlattenPapertrail(t *testing.T) {
 					"format":             "%h %l %u %t %r %>s",
 					"format_version":     2,
 					"response_condition": "test_response_condition",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -63,6 +65,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		Port:              gofastly.ToPointer(3600),
 		ResponseCondition: gofastly.ToPointer("test_response_condition"),
 		ServiceVersion:    gofastly.ToPointer(1),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log2 := gofastly.Papertrail{
@@ -73,6 +76,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		Port:              gofastly.ToPointer(8080),
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -111,10 +115,11 @@ func TestAccFastlyServiceVCL_papertrail_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Papertrail{
-		Address:        gofastly.ToPointer("test1.papertrailapp.com"),
-		Name:           gofastly.ToPointer("papertrailtesting"),
-		Port:           gofastly.ToPointer(3600),
-		ServiceVersion: gofastly.ToPointer(1),
+		Address:          gofastly.ToPointer("test1.papertrailapp.com"),
+		Name:             gofastly.ToPointer("papertrailtesting"),
+		Port:             gofastly.ToPointer(3600),
+		ServiceVersion:   gofastly.ToPointer(1),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -211,6 +216,7 @@ resource "fastly_service_compute" "foo" {
     name               = "papertrailtesting"
     address            = "test1.papertrailapp.com"
     port               = 3600
+    processing_region = "us"
   }
 
   package {
@@ -249,6 +255,7 @@ resource "fastly_service_vcl" "foo" {
     address            = "test1.papertrailapp.com"
     port               = 3600
 		response_condition = "test_response_condition"
+    processing_region = "us"
   }
 
   force_destroy = true

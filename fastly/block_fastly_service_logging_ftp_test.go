@@ -37,6 +37,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					Placement:        gofastly.ToPointer("none"),
 					MessageType:      gofastly.ToPointer("classic"),
 					CompressionCodec: gofastly.ToPointer("zstd"),
+					ProcessingRegion: gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -56,6 +57,7 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					"placement":         "none",
 					"message_type":      "classic",
 					"compression_codec": "zstd",
+					"processing_region": "eu",
 				},
 			},
 		},
@@ -92,6 +94,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		Username:          gofastly.ToPointer("user"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.FTP{
@@ -111,6 +114,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		Username:          gofastly.ToPointer("user"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.FTP{
@@ -131,6 +135,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		Username:          gofastly.ToPointer("user"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -181,6 +186,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic_compute(t *testing.T) {
 		ServiceVersion:   gofastly.ToPointer(1),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		Username:         gofastly.ToPointer("user"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -287,6 +293,7 @@ resource "fastly_service_compute" "foo" {
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     message_type = "classic"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   package {
@@ -325,6 +332,7 @@ resource "fastly_service_vcl" "foo" {
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     placement = "none"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   force_destroy = true

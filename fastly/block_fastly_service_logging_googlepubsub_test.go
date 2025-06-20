@@ -34,6 +34,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 					FormatVersion:     gofastly.ToPointer(2),
 					Placement:         gofastly.ToPointer("none"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -47,6 +48,7 @@ func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
 					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
 					"placement":          "none",
 					"format_version":     2,
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -173,6 +175,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Pubsub{
@@ -186,6 +189,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Pubsub{
@@ -199,6 +203,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -241,12 +246,13 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Pubsub{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("googlepubsublogger"),
-		User:           gofastly.ToPointer("user"),
-		SecretKey:      gofastly.ToPointer(privateKey(t)),
-		ProjectID:      gofastly.ToPointer("project-id"),
-		Topic:          gofastly.ToPointer("topic"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		Name:             gofastly.ToPointer("googlepubsublogger"),
+		User:             gofastly.ToPointer("user"),
+		SecretKey:        gofastly.ToPointer(privateKey(t)),
+		ProjectID:        gofastly.ToPointer("project-id"),
+		Topic:            gofastly.ToPointer("topic"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -349,6 +355,7 @@ resource "fastly_service_compute" "foo" {
 		secret_key         = file("test_fixtures/fastly_test_privatekey")
 		project_id         = "project-id"
 	  topic  						 = "topic"
+    processing_region = "us"
 	}
 
 	package {
@@ -393,6 +400,7 @@ resource "fastly_service_vcl" "foo" {
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
 		placement          = "none"
+    processing_region = "us"
 	}
 
 	force_destroy = true

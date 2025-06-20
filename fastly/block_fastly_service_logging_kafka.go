@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -64,6 +65,13 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Description: "SASL Pass",
 			Sensitive:   !DisplaySensitiveFields,
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"request_max_bytes": {
 			Type:        schema.TypeInt,
@@ -253,6 +261,9 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 	if v, ok := modified["password"]; ok {
 		opts.Password = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Kafka Opts: %#v", opts)
 	_, err := conn.UpdateKafka(&opts)
@@ -353,6 +364,9 @@ func flattenKafka(remoteState []*gofastly.Kafka) []map[string]any {
 		if resource.Password != nil {
 			data["password"] = *resource.Password
 		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
+		}
 
 		// prune any empty values that come from the default string value in structs
 		for k, v := range data {
@@ -391,6 +405,7 @@ func (h *KafkaServiceAttributeHandler) buildCreate(kafkaMap any, serviceID strin
 		Topic:            gofastly.ToPointer(resource["topic"].(string)),
 		UseTLS:           gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
 		User:             gofastly.ToPointer(resource["user"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.

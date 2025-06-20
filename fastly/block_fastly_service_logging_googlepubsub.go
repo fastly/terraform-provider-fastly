@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -43,6 +44,13 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Google Cloud Pub/Sub logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"project_id": {
 			Type:        schema.TypeString,
@@ -178,6 +186,9 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Google Cloud Pub/Sub Opts: %#v", opts)
 	_, err := conn.UpdatePubsub(&opts)
@@ -254,6 +265,9 @@ func flattenGooglePubSub(remoteState []*gofastly.Pubsub) []map[string]any {
 		if resource.ResponseCondition != nil {
 			data["response_condition"] = *resource.ResponseCondition
 		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
+		}
 
 		// Prune any empty values that come from the default string value in structs.
 		for k, v := range data {
@@ -273,15 +287,16 @@ func (h *GooglePubSubServiceAttributeHandler) buildCreate(googlepubsubMap any, s
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreatePubsubInput{
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		ProjectID:      gofastly.ToPointer(resource["project_id"].(string)),
-		SecretKey:      gofastly.ToPointer(resource["secret_key"].(string)),
-		ServiceID:      serviceID,
-		ServiceVersion: serviceVersion,
-		Topic:          gofastly.ToPointer(resource["topic"].(string)),
-		User:           gofastly.ToPointer(resource["user"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		ProjectID:        gofastly.ToPointer(resource["project_id"].(string)),
+		SecretKey:        gofastly.ToPointer(resource["secret_key"].(string)),
+		ServiceID:        serviceID,
+		ServiceVersion:   serviceVersion,
+		Topic:            gofastly.ToPointer(resource["topic"].(string)),
+		User:             gofastly.ToPointer(resource["user"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.

@@ -114,6 +114,13 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     3600,
 			Description: "How frequently the logs should be transferred, in seconds. Default `3600`",
 		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
+		},
 		"public_key": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -335,6 +342,9 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	if v, ok := modified["file_max_bytes"]; ok {
 		opts.FileMaxBytes = gofastly.ToPointer(v.(int))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update S3 Opts: %#v", opts)
 	_, err := conn.UpdateS3(&opts)
@@ -473,6 +483,9 @@ func flattenS3s(remoteState []*gofastly.S3, localState []any) []map[string]any {
 		if resource.ACL != nil {
 			data["acl"] = *resource.ACL
 		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
+		}
 
 		// Prune any empty values that come from the default string value in structs.
 		for k, v := range data {
@@ -512,6 +525,7 @@ func (h *S3LoggingServiceAttributeHandler) buildCreate(s3Map any, serviceID stri
 		ServiceID:                    serviceID,
 		ServiceVersion:               serviceVersion,
 		TimestampFormat:              gofastly.ToPointer(resource["timestamp_format"].(string)),
+		ProcessingRegion:             gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.

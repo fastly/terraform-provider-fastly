@@ -29,6 +29,7 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 					ResponseCondition: gofastly.ToPointer("response_condition_test"),
 					ServiceVersion:    gofastly.ToPointer(1), // expect this not to be persisted to tf state as it's tracked by the parent 'service' resource
 					Token:             gofastly.ToPointer("mytoken"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -40,6 +41,7 @@ func TestResourceFastlyFlattenLogentries(t *testing.T) {
 					"port":               8080,
 					"response_condition": "response_condition_test",
 					"token":              "mytoken",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -67,6 +69,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
 		FormatVersion:     gofastly.ToPointer(2),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log2 := gofastly.Logentries{
@@ -78,6 +81,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 		Format:            gofastly.ToPointer("%h %u %t %r %>s"),
 		FormatVersion:     gofastly.ToPointer(2),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -127,6 +131,7 @@ func TestAccFastlyServiceVCL_logentries_basic_compute(t *testing.T) {
 		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
 		FormatVersion:     gofastly.ToPointer(2),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -262,6 +267,7 @@ resource "fastly_service_compute" "foo" {
   logging_logentries {
     name               = "somelogentriesname"
     token              = "token"
+    processing_region = "us"
   }
 
   package {
@@ -295,6 +301,7 @@ resource "fastly_service_vcl" "foo" {
     name               = "somelogentriesname"
     token              = "token"
     response_condition = "response_condition_test"
+    processing_region = "us"
   }
   force_destroy = true
 }`, name, domain)

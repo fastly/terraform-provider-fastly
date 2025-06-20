@@ -26,6 +26,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 					FormatVersion:     gofastly.ToPointer(2),
 					MessageType:       gofastly.ToPointer("classic"),
 					ResponseCondition: gofastly.ToPointer("condition 1"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -36,6 +37,7 @@ func TestResourceFastlyFlattenSumologic(t *testing.T) {
 					"format_version":     2,
 					"message_type":       "classic",
 					"response_condition": "condition 1",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -56,17 +58,19 @@ func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	s := gofastly.Sumologic{
-		Name:          gofastly.ToPointer("sumologger"),
-		URL:           gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
-		FormatVersion: gofastly.ToPointer(2),
-		Format:        gofastly.ToPointer("my format"),
+		Name:             gofastly.ToPointer("sumologger"),
+		URL:              gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+		FormatVersion:    gofastly.ToPointer(2),
+		Format:           gofastly.ToPointer("my format"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	sn := gofastly.Sumologic{
-		Name:          gofastly.ToPointer("sumologger"),
-		URL:           gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
-		FormatVersion: gofastly.ToPointer(2),
-		Format:        gofastly.ToPointer("my format new"),
+		Name:             gofastly.ToPointer("sumologger"),
+		URL:              gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+		FormatVersion:    gofastly.ToPointer(2),
+		Format:           gofastly.ToPointer("my format new"),
+		ProcessingRegion: gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -109,8 +113,9 @@ func TestAccFastlyServiceVCL_sumologic_compute(t *testing.T) {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	s := gofastly.Sumologic{
-		Name: gofastly.ToPointer("sumologger"),
-		URL:  gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+		Name:             gofastly.ToPointer("sumologger"),
+		URL:              gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -188,6 +193,7 @@ resource "fastly_service_compute" "foo" {
   logging_sumologic {
     name = "%s"
     url = "%s"
+    processing_region = "us"
   }
 
   package {
@@ -219,6 +225,7 @@ resource "fastly_service_vcl" "foo" {
     url = "%s"
     format_version = %d
     format = "%s"
+    processing_region = "us"
   }
 
   force_destroy = true

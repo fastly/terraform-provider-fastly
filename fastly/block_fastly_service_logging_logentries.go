@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -43,6 +44,13 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Default:     20000,
 			Description: "The port number configured in Logentries",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"token": {
 			Type:        schema.TypeString,
@@ -98,14 +106,15 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateLogentriesInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		Port:           gofastly.ToPointer(resource["port"].(int)),
-		UseTLS:         gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
-		Token:          gofastly.ToPointer(resource["token"].(string)),
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Port:             gofastly.ToPointer(resource["port"].(int)),
+		UseTLS:           gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
+		Token:            gofastly.ToPointer(resource["token"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -188,6 +197,9 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Logentries Opts: %#v", opts)
 	_, err := conn.UpdateLogentries(&opts)
@@ -246,6 +258,9 @@ func flattenLogentries(remoteState []*gofastly.Logentries) []map[string]any {
 		}
 		if resource.Placement != nil {
 			data["placement"] = *resource.Placement
+		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
 		}
 
 		// prune any empty values that come from the default string value in structs

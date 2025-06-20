@@ -3,9 +3,9 @@ package fastly
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -38,6 +38,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					ResponseCondition: gofastly.ToPointer("error_response"),
 					FileMaxBytes:      gofastly.ToPointer(1048576),
 					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -58,6 +59,7 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					"response_condition": "error_response",
 					"file_max_bytes":     1048576,
 					"compression_codec":  "zstd",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -65,8 +67,8 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 
 	for _, c := range cases {
 		out := flattenBlobStorages(c.remote, nil)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
 		}
 	}
 }
@@ -92,6 +94,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	blobStorageLogOneUpdated := gofastly.BlobStorage{
@@ -110,6 +113,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	blobStorageLogTwo := gofastly.BlobStorage{
@@ -129,6 +133,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
 		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,6 +183,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic_compute(t *testing.T) {
 		PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
 		SASToken:         gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -219,6 +225,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		SASToken:          gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	// FileMaxBytes Path PublicKey ResponseCondition
@@ -310,8 +317,8 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 					// these ahead of time
 					rbs.CreatedAt = nil
 					rbs.UpdatedAt = nil
-					if !reflect.DeepEqual(lbs, rbs) {
-						return fmt.Errorf("bad match Blob Storage logging match, expected (%#v), got (%#v)", lbs, rbs)
+					if diff := cmp.Diff(lbs, rbs); diff != "" {
+						return fmt.Errorf("bad match Blob Storage logging match: %s", diff)
 					}
 					found++
 				}
@@ -367,6 +374,7 @@ resource "fastly_service_vcl" "foo" {
     response_condition = "error_response_5XX"
     file_max_bytes     = 1048576
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -406,6 +414,7 @@ resource "fastly_service_compute" "foo" {
     public_key = file("test_fixtures/fastly_test_publickey")
     sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    processing_region = "us"
   }
 
   package {

@@ -33,6 +33,7 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 					Placement:         gofastly.ToPointer("none"),
 					ResponseCondition: gofastly.ToPointer("always"),
 					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -46,6 +47,7 @@ func TestResourceFastlyFlattenKinesis(t *testing.T) {
 					"placement":          "none",
 					"response_condition": "always",
 					"format_version":     2,
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -102,6 +104,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 		SecretKey:         gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		StreamName:        gofastly.ToPointer("stream-name"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Kinesis{
@@ -115,6 +118,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 		SecretKey:         gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		StreamName:        gofastly.ToPointer("new-stream-name"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Kinesis{
@@ -128,6 +132,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 		SecretKey:         gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		StreamName:        gofastly.ToPointer("another-stream-name"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -166,13 +171,14 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Kinesis{
-		AccessKey:      gofastly.ToPointer("whywouldyoucheckthis"),
-		IAMRole:        gofastly.ToPointer(""),
-		Name:           gofastly.ToPointer("kinesis-endpoint"),
-		Region:         gofastly.ToPointer("us-east-1"),
-		SecretKey:      gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
-		ServiceVersion: gofastly.ToPointer(1),
-		StreamName:     gofastly.ToPointer("stream-name"),
+		AccessKey:        gofastly.ToPointer("whywouldyoucheckthis"),
+		IAMRole:          gofastly.ToPointer(""),
+		Name:             gofastly.ToPointer("kinesis-endpoint"),
+		Region:           gofastly.ToPointer("us-east-1"),
+		SecretKey:        gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		StreamName:       gofastly.ToPointer("stream-name"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -264,6 +270,7 @@ resource "fastly_service_vcl" "foo" {
     access_key  = "whywouldyoucheckthis"
     secret_key  = "thisisthesecretthatneedstobe40characters"
     format      = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -339,6 +346,7 @@ resource "fastly_service_compute" "foo" {
     region      = "us-east-1"
     access_key  = "whywouldyoucheckthis"
     secret_key  = "thisisthesecretthatneedstobe40characters"
+    processing_region = "us"
   }
 
   package {

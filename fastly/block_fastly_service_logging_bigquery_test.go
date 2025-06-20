@@ -191,6 +191,7 @@ resource "fastly_service_vcl" "foo" {
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
     format     = "%%h %%l %%u %%t %%r %%>s"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -225,6 +226,7 @@ resource "fastly_service_compute" "foo" {
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
+    processing_region = "us"
   }
 
   package {
@@ -316,6 +318,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					Placement:         gofastly.ToPointer("none"),
 					ResponseCondition: gofastly.ToPointer("error_response"),
 					SecretKey:         gofastly.ToPointer(secretKey),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -329,6 +332,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					"format":             "%h %l %u %t \"%r\" %>s %b",
 					"placement":          "none",
 					"response_condition": "error_response",
+					"processing_region":  "eu",
 				},
 			},
 		},

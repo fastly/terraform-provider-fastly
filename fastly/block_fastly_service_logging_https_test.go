@@ -29,6 +29,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					ContentType:       gofastly.ToPointer("application/json"),
 					MessageType:       gofastly.ToPointer("blank"),
 					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -40,6 +41,7 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					"content_type":        "application/json",
 					"message_type":        "blank",
 					"format_version":      2,
+					"processing_region":   "eu",
 				},
 			},
 		},
@@ -74,6 +76,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TLSHostname:       gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer("https://example.com/logs/1"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.HTTPS{
@@ -92,6 +95,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TLSHostname:       gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer("https://example.com/logs/1"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.HTTPS{
@@ -110,6 +114,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TLSHostname:       gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer("https://example.com/logs/2"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -160,6 +165,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TLSHostname:       gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer("https://example.com/logs/1"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -254,6 +260,7 @@ resource "fastly_service_vcl" "foo" {
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
+    processing_region = "us"
 	}
 
 	force_destroy = true
@@ -283,6 +290,7 @@ resource "fastly_service_compute" "foo" {
 		name               = "httpslogger"
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
+    processing_region = "us"
 	}
 
   package {

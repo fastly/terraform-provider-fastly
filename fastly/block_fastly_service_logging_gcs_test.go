@@ -38,6 +38,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					CompressionCodec: gofastly.ToPointer("zstd"),
 					AccountName:      gofastly.ToPointer("service-account"),
 					ProjectID:        gofastly.ToPointer("project-id"),
+					ProcessingRegion: gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -53,6 +54,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					"compression_codec": "zstd",
 					"account_name":      "service-account",
 					"project_id":        "project-id",
+					"processing_region": "eu",
 				},
 			},
 		},
@@ -216,6 +218,7 @@ resource "fastly_service_vcl" "foo" {
     format = "log format"
     response_condition = ""
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -252,6 +255,7 @@ resource "fastly_service_compute" "foo" {
     bucket_name = "bucketname"
     secret_key = %q
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
  package {

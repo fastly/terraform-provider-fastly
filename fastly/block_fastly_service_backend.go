@@ -108,12 +108,6 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Default:     80,
 			Description: "The port number on which the Backend responds. Default `80`",
 		},
-		"prefer_ipv6": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Prefer IPv6 connections to origins for hostname backends. Default `false`",
-		},
 		"share_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -199,6 +193,19 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Default:     "",
 			Description: "Name of a condition, which if met, will select this backend during a request.",
+		}
+		blockAttributes["prefer_ipv6"] = &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Prefer IPv6 connections to origins for hostname backends. Default `false`",
+		}
+	} else {
+		blockAttributes["prefer_ipv6"] = &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Prefer IPv6 connections to origins for hostname backends. Default `true`",
 		}
 	}
 

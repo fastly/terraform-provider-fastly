@@ -4,15 +4,25 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+## 7.1.0 (June 20, 2025)
+
+### ENHANCEMENTS:
+
 - feat(domains/v1): add `description` field ([#1002](https://github.com/fastly/terraform-provider-fastly/pull/1002))
 - feat(backend): Add support for 'prefer IPv6' attribute. ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1003))
 - feat(logging): Add support for 'processing region' attribute. ([#1011](https://github.com/fastly/terraform-provider-fastly/pull/1011))
 
 ### BUG FIXES:
+
 - fix(block_fastly_service_settings): fix detection of falsey value for stale_if_error field ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1009))
 - fix(backend): Set default 'prefer IPv6' attribute differently for Delivery and Compute services. ([#1010](https://github.com/fastly/terraform-provider-fastly/pull/1010))
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.2.0 to 10.3.0 ([#1004](https://github.com/fastly/terraform-provider-fastly/pull/1004))
 - build(deps): `github.com/cloudflare/circl` from 1.6.0 to 1.6.1 ([#1006](https://github.com/fastly/terraform-provider-fastly/pull/1006))
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.2.0 to 10.3.0 ([#1004](https://github.com/fastly/terraform-provider-fastly/pull/1004))

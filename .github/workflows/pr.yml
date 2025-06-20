@@ -48,6 +48,7 @@ jobs:
       run: make test
   docs:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'Skip-Docs')"
     steps:
     - name: Checkout code
       uses: actions/checkout@v4

@@ -1,4 +1,6 @@
 name: Generate changelog entry for Dependabot
+permissions:
+  contents: read
 
 on:
   pull_request:

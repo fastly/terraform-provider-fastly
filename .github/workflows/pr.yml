@@ -9,6 +9,8 @@ on:
   repository_dispatch:
     types: [ok-to-test-command] # corresponds to ./ok-to-test.yml `commands:` field
 name: Pull request
+permissions:
+  contents: read
 jobs:
   changelog:
     if: github.actor != 'dependabot[bot]'

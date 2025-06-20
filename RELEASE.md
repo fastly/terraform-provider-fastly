@@ -12,7 +12,9 @@ tell Git about your signing key.
 1. Rebase latest remote main branch locally (`git pull --rebase origin main`).
 1. Ensure all analysis checks and tests are passing (`TEST_PARALLELISM=8 make testacc`).
 1. Run `make goreleaser GORELEASER_ARGS="--snapshot --skip=validate --clean"`.
+1. Manually update generated `docs/index.md`.
 1. Open a new PR to update CHANGELOG ([example](https://github.com/fastly/terraform-provider-fastly/pull/498/files)).
+    - make sure to use the `Skip-Docs` label before opening to ensure the docs action doesn't fail with the new version
     - We utilize [semantic versioning](https://semver.org/) and only include relevant/significant changes within the CHANGELOG.
 1. 🚨 Ensure any _removals_ are considered a BREAKING CHANGE and must be published in a major release.
 1. Merge CHANGELOG.

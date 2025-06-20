@@ -21,17 +21,19 @@ func TestResourceFastlyFlattenLoggly(t *testing.T) {
 		{
 			remote: []*gofastly.Loggly{
 				{
-					ServiceVersion: gofastly.ToPointer(1),
-					Name:           gofastly.ToPointer("loggly-endpoint"),
-					Token:          gofastly.ToPointer("token"),
-					FormatVersion:  gofastly.ToPointer(2),
+					ServiceVersion:   gofastly.ToPointer(1),
+					Name:             gofastly.ToPointer("loggly-endpoint"),
+					Token:            gofastly.ToPointer("token"),
+					FormatVersion:    gofastly.ToPointer(2),
+					ProcessingRegion: gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
 				{
-					"name":           "loggly-endpoint",
-					"token":          "token",
-					"format_version": 2,
+					"name":              "loggly-endpoint",
+					"token":             "token",
+					"format_version":    2,
+					"processing_region": "eu",
 				},
 			},
 		},
@@ -57,6 +59,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("s3cr3t"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Loggly{
@@ -66,6 +69,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("secret"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Loggly{
@@ -75,6 +79,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("another-token"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,9 +118,10 @@ func TestAccFastlyServiceVCL_logging_loggly_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Loggly{
-		Name:           gofastly.ToPointer("loggly-endpoint"),
-		ServiceVersion: gofastly.ToPointer(1),
-		Token:          gofastly.ToPointer("s3cr3t"),
+		Name:             gofastly.ToPointer("loggly-endpoint"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		Token:            gofastly.ToPointer("s3cr3t"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -213,6 +219,7 @@ resource "fastly_service_compute" "foo" {
   logging_loggly {
     name   = "loggly-endpoint"
     token  = "s3cr3t"
+    processing_region = "us"
   }
 
   package {
@@ -244,6 +251,7 @@ resource "fastly_service_vcl" "foo" {
     name   = "loggly-endpoint"
     token  = "s3cr3t"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    processing_region = "us"
   }
 
   force_destroy = true

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -55,6 +56,13 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Default:     514,
 			Description: "The port associated with the address where the Syslog endpoint can be accessed. Default `514`",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"tls_ca_cert": {
 			Type:        schema.TypeString,
@@ -136,20 +144,21 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSyslogInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		Address:        gofastly.ToPointer(resource["address"].(string)),
-		Port:           gofastly.ToPointer(resource["port"].(int)),
-		Token:          gofastly.ToPointer(resource["token"].(string)),
-		UseTLS:         gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
-		TLSHostname:    gofastly.ToPointer(resource["tls_hostname"].(string)),
-		TLSCACert:      gofastly.ToPointer(resource["tls_ca_cert"].(string)),
-		TLSClientCert:  gofastly.ToPointer(resource["tls_client_cert"].(string)),
-		TLSClientKey:   gofastly.ToPointer(resource["tls_client_key"].(string)),
-		MessageType:    gofastly.ToPointer(resource["message_type"].(string)),
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Address:          gofastly.ToPointer(resource["address"].(string)),
+		Port:             gofastly.ToPointer(resource["port"].(int)),
+		Token:            gofastly.ToPointer(resource["token"].(string)),
+		UseTLS:           gofastly.ToPointer(gofastly.Compatibool(resource["use_tls"].(bool))),
+		TLSHostname:      gofastly.ToPointer(resource["tls_hostname"].(string)),
+		TLSCACert:        gofastly.ToPointer(resource["tls_ca_cert"].(string)),
+		TLSClientCert:    gofastly.ToPointer(resource["tls_client_cert"].(string)),
+		TLSClientKey:     gofastly.ToPointer(resource["tls_client_key"].(string)),
+		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -253,6 +262,9 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Syslog Opts: %#v", opts)
 	_, err := conn.UpdateSyslog(&opts)
@@ -329,6 +341,9 @@ func flattenSyslogs(remoteState []*gofastly.Syslog) []map[string]any {
 		}
 		if resource.Placement != nil {
 			data["placement"] = *resource.Placement
+		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
 		}
 
 		// prune any empty values that come from the default string value in structs

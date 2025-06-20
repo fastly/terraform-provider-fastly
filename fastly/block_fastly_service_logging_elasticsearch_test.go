@@ -38,6 +38,7 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
 					FormatVersion:     gofastly.ToPointer(2),
 					Placement:         gofastly.ToPointer("none"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -58,6 +59,7 @@ func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
 					"request_max_entries": 10,
 					"request_max_bytes":   10,
 					"format_version":      2,
+					"processing_region":   "eu",
 				},
 			},
 		},
@@ -94,6 +96,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 		TLSHostname:       gofastly.ToPointer("example.com"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		Placement:         gofastly.ToPointer("none"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Elasticsearch{
@@ -114,6 +117,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 		TLSHostname:       gofastly.ToPointer("example.com"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		Placement:         gofastly.ToPointer("none"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Elasticsearch{
@@ -134,6 +138,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic(t *testing.T) {
 		TLSHostname:       gofastly.ToPointer("example.com"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		Placement:         gofastly.ToPointer("none"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -189,6 +194,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 		TLSClientCert:     gofastly.ToPointer(certificate(t)),
 		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
 		TLSHostname:       gofastly.ToPointer("example.com"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -296,6 +302,7 @@ resource "fastly_service_compute" "foo" {
     tls_client_cert   = file("test_fixtures/fastly_test_certificate")
     tls_client_key    = file("test_fixtures/fastly_test_privatekey")
     tls_hostname       = "example.com"
+    processing_region = "us"
   }
 
   package {
@@ -344,6 +351,7 @@ resource "fastly_service_vcl" "foo" {
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
 		placement          = "none"
+    processing_region = "us"
   }
 
   force_destroy = true

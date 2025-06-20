@@ -38,6 +38,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					ResponseCondition: gofastly.ToPointer("response_condition"),
 					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -58,6 +59,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					"response_condition": "response_condition",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"compression_codec":  "zstd",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -94,6 +96,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:              gofastly.ToPointer("user"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Cloudfiles{
@@ -113,6 +116,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:              gofastly.ToPointer("userupdate"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Cloudfiles{
@@ -133,6 +137,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:              gofastly.ToPointer("user2"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -184,6 +189,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic_compute(t *testing.T) {
 		Period:           gofastly.ToPointer(3600),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		CompressionCodec: gofastly.ToPointer("zstd"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -286,6 +292,7 @@ resource "fastly_service_compute" "none" {
     period = 3600
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   package {
@@ -336,6 +343,7 @@ resource "fastly_service_vcl" "none" {
     response_condition = "response_condition_test"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     user = "user"
+    processing_region = "us"
   }
 
   force_destroy = true

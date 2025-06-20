@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -49,6 +50,13 @@ func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Kinesis logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"region": {
 			Type:        schema.TypeString,
@@ -178,6 +186,9 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Kinesis Opts: %#v", opts)
 	_, err := conn.UpdateKinesis(&opts)
@@ -254,6 +265,9 @@ func flattenKinesis(remoteState []*gofastly.Kinesis) []map[string]any {
 		if resource.ResponseCondition != nil {
 			data["response_condition"] = *resource.ResponseCondition
 		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
+		}
 
 		// Prune any empty values that come from the default string value in structs.
 		for k, v := range data {
@@ -273,16 +287,17 @@ func (h *KinesisServiceAttributeHandler) buildCreate(kinesisMap any, serviceID s
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateKinesisInput{
-		AccessKey:      gofastly.ToPointer(resource["access_key"].(string)),
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
-		IAMRole:        gofastly.ToPointer(resource["iam_role"].(string)),
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		Region:         gofastly.ToPointer(resource["region"].(string)),
-		SecretKey:      gofastly.ToPointer(resource["secret_key"].(string)),
-		ServiceID:      serviceID,
-		ServiceVersion: serviceVersion,
-		StreamName:     gofastly.ToPointer(resource["topic"].(string)),
+		AccessKey:        gofastly.ToPointer(resource["access_key"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		IAMRole:          gofastly.ToPointer(resource["iam_role"].(string)),
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Region:           gofastly.ToPointer(resource["region"].(string)),
+		SecretKey:        gofastly.ToPointer(resource["secret_key"].(string)),
+		ServiceID:        serviceID,
+		ServiceVersion:   serviceVersion,
+		StreamName:       gofastly.ToPointer(resource["topic"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.

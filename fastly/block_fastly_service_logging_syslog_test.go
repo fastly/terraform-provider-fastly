@@ -42,6 +42,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 					TLSHostname:       gofastly.ToPointer("example.com"),
 					TLSClientCert:     gofastly.ToPointer(cert),
 					TLSClientKey:      gofastly.ToPointer(key),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -59,6 +60,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 					"tls_ca_cert":        cert,
 					"tls_client_cert":    cert,
 					"tls_client_key":     key,
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -96,6 +98,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		TLSHostname:       gofastly.ToPointer(""),
 		Token:             gofastly.ToPointer(""),
 		UseTLS:            gofastly.ToPointer(false),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 	log1AfterUpdate := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.1"),
@@ -110,6 +113,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		TLSHostname:       gofastly.ToPointer(""),
 		Token:             gofastly.ToPointer(""),
 		UseTLS:            gofastly.ToPointer(false),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 	log2 := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.2"),
@@ -124,6 +128,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 		TLSHostname:       gofastly.ToPointer(""),
 		Token:             gofastly.ToPointer(""),
 		UseTLS:            gofastly.ToPointer(false),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -166,15 +171,16 @@ func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Syslog{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("somesyslogname"),
-		Address:        gofastly.ToPointer("127.0.0.1"),
-		IPV4:           gofastly.ToPointer("127.0.0.1"),
-		Port:           gofastly.ToPointer(514),
-		MessageType:    gofastly.ToPointer("classic"),
-		TLSHostname:    gofastly.ToPointer(""),
-		Token:          gofastly.ToPointer(""),
-		UseTLS:         gofastly.ToPointer(false),
+		ServiceVersion:   gofastly.ToPointer(1),
+		Name:             gofastly.ToPointer("somesyslogname"),
+		Address:          gofastly.ToPointer("127.0.0.1"),
+		IPV4:             gofastly.ToPointer("127.0.0.1"),
+		Port:             gofastly.ToPointer(514),
+		MessageType:      gofastly.ToPointer("classic"),
+		TLSHostname:      gofastly.ToPointer(""),
+		Token:            gofastly.ToPointer(""),
+		UseTLS:           gofastly.ToPointer(false),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -378,6 +384,7 @@ resource "fastly_service_compute" "foo" {
   logging_syslog {
     name               = "somesyslogname"
     address            = "127.0.0.1"
+    processing_region = "us"
   }
   package {
     filename = "test_fixtures/package/valid.tar.gz"
@@ -409,6 +416,7 @@ resource "fastly_service_vcl" "foo" {
     name               = "somesyslogname"
     address            = "127.0.0.1"
     response_condition = "response_condition_test"
+    processing_region = "us"
   }
   force_destroy = true
 }`, name, domain)

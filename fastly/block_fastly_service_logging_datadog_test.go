@@ -21,19 +21,21 @@ func TestResourceFastlyFlattenDatadog(t *testing.T) {
 		{
 			remote: []*gofastly.Datadog{
 				{
-					ServiceVersion: gofastly.ToPointer(1),
-					Name:           gofastly.ToPointer("datadog-endpoint"),
-					Token:          gofastly.ToPointer("token"),
-					Region:         gofastly.ToPointer("US"),
-					FormatVersion:  gofastly.ToPointer(2),
+					ServiceVersion:   gofastly.ToPointer(1),
+					Name:             gofastly.ToPointer("datadog-endpoint"),
+					Token:            gofastly.ToPointer("token"),
+					Region:           gofastly.ToPointer("US"),
+					FormatVersion:    gofastly.ToPointer(2),
+					ProcessingRegion: gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
 				{
-					"name":           "datadog-endpoint",
-					"token":          "token",
-					"region":         "US",
-					"format_version": 2,
+					"name":              "datadog-endpoint",
+					"token":             "token",
+					"region":            "US",
+					"format_version":    2,
+					"processing_region": "eu",
 				},
 			},
 		},
@@ -142,6 +144,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("token"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Datadog{
@@ -152,6 +155,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("t0k3n"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Datadog{
@@ -162,6 +166,7 @@ func TestAccFastlyServiceVCL_logging_datadog_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("another-token"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -200,10 +205,11 @@ func TestAccFastlyServiceVCL_logging_datadog_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Datadog{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("datadog-endpoint"),
-		Token:          gofastly.ToPointer("token"),
-		Region:         gofastly.ToPointer("US"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		Name:             gofastly.ToPointer("datadog-endpoint"),
+		Token:            gofastly.ToPointer("token"),
+		Region:           gofastly.ToPointer("US"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -301,6 +307,7 @@ resource "fastly_service_vcl" "foo" {
     token  = "token"
     region = "US"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -366,6 +373,7 @@ resource "fastly_service_compute" "foo" {
     name   = "datadog-endpoint"
     token  = "token"
     region = "US"
+    processing_region = "us"
   }
 
   package {

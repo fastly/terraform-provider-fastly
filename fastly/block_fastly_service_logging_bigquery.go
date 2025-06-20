@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -55,6 +56,13 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "A unique name to identify this BigQuery logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"project_id": {
 			Type:        schema.TypeString,
@@ -116,15 +124,16 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBigQueryInput{
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		ProjectID:      gofastly.ToPointer(resource["project_id"].(string)),
-		Dataset:        gofastly.ToPointer(resource["dataset"].(string)),
-		Table:          gofastly.ToPointer(resource["table"].(string)),
-		User:           gofastly.ToPointer(resource["email"].(string)),
-		SecretKey:      gofastly.ToPointer(resource["secret_key"].(string)),
-		Template:       gofastly.ToPointer(resource["template"].(string)),
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		ProjectID:        gofastly.ToPointer(resource["project_id"].(string)),
+		Dataset:          gofastly.ToPointer(resource["dataset"].(string)),
+		Table:            gofastly.ToPointer(resource["table"].(string)),
+		User:             gofastly.ToPointer(resource["email"].(string)),
+		SecretKey:        gofastly.ToPointer(resource["secret_key"].(string)),
+		Template:         gofastly.ToPointer(resource["template"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -223,6 +232,9 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update BigQuery Opts: %#v", opts)
 	_, err := conn.UpdateBigQuery(&opts)
@@ -292,6 +304,9 @@ func flattenBigQuery(remoteState []*gofastly.BigQuery) []map[string]any {
 		}
 		if resource.Placement != nil {
 			data["placement"] = *resource.Placement
+		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
 		}
 
 		// prune any empty values that come from the default string value in structs

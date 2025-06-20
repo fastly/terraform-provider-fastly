@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -82,6 +83,13 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:    true,
 			Default:     3600,
 			Description: "How frequently the logs should be transferred, in seconds. Default `3600`",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"public_key": {
 			Type:             schema.TypeString,
@@ -234,6 +242,9 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update OpenStack Opts: %#v", opts)
 	_, err := conn.UpdateOpenstack(&opts)
@@ -351,6 +362,9 @@ func flattenOpenstack(remoteState []*gofastly.Openstack, localState []any) []map
 		if resource.CompressionCodec != nil {
 			data["compression_codec"] = *resource.CompressionCodec
 		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
+		}
 
 		// Prune any empty values that come from the default string value in structs.
 		for k, v := range data {
@@ -385,6 +399,7 @@ func (h *OpenstackServiceAttributeHandler) buildCreate(openstackMap any, service
 		TimestampFormat:  gofastly.ToPointer(resource["timestamp_format"].(string)),
 		URL:              gofastly.ToPointer(resource["url"].(string)),
 		User:             gofastly.ToPointer(resource["user"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.

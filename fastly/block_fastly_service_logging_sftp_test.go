@@ -41,6 +41,7 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					Placement:         gofastly.ToPointer("none"),
 					GzipLevel:         gofastly.ToPointer(0),
 					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -63,6 +64,7 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"placement":          "none",
 					"compression_codec":  "zstd",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -101,6 +103,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:              gofastly.ToPointer("username"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.SFTP{
@@ -122,6 +125,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:              gofastly.ToPointer("user"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.SFTP{
@@ -144,6 +148,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:              gofastly.ToPointer("user"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -197,6 +202,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic_compute(t *testing.T) {
 		ServiceVersion:   gofastly.ToPointer(1),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:             gofastly.ToPointer("username"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -320,6 +326,7 @@ resource "fastly_service_compute" "foo" {
     ssh_known_hosts = "sftp.example.com"
     message_type = "classic"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   package {
@@ -366,6 +373,7 @@ resource "fastly_service_vcl" "foo" {
     placement = "none"
     response_condition = "response_condition_test"
     compression_codec = "zstd"
+    processing_region = "us"
   }
   force_destroy = true
 }`, name, domain)

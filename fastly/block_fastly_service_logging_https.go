@@ -76,6 +76,13 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
+		},
 		"request_max_bytes": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -248,6 +255,9 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
 	_, err := conn.UpdateHTTPS(&opts)
@@ -348,6 +358,9 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS) []map[string]any {
 		if resource.FormatVersion != nil {
 			data["format_version"] = *resource.FormatVersion
 		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
+		}
 
 		// prune any empty values that come from the default string value in structs
 		for k, v := range data {
@@ -385,6 +398,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 		TLSClientKey:      gofastly.ToPointer(resource["tls_client_key"].(string)),
 		TLSHostname:       gofastly.ToPointer(resource["tls_hostname"].(string)),
 		URL:               gofastly.ToPointer(resource["url"].(string)),
+		ProcessingRegion:  gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.

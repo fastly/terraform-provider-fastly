@@ -30,6 +30,7 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 					FormatVersion:     gofastly.ToPointer(2),
 					Placement:         gofastly.ToPointer("none"),
 					ProjectID:         gofastly.ToPointer("example-project"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -42,6 +43,7 @@ func TestResourceFastlyFlattenScalyr(t *testing.T) {
 					"placement":          "none",
 					"format_version":     2,
 					"project_id":         "example-project",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -69,6 +71,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("tkn"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Scalyr{
@@ -81,6 +84,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("newtkn"),
 		ProjectID:         gofastly.ToPointer("example-project"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Scalyr{
@@ -92,6 +96,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("tknb"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,10 +135,11 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		Name:           gofastly.ToPointer("scalyrlogger"),
-		Region:         gofastly.ToPointer("US"),
-		ServiceVersion: gofastly.ToPointer(1),
-		Token:          gofastly.ToPointer("tkn"),
+		Name:             gofastly.ToPointer("scalyrlogger"),
+		Region:           gofastly.ToPointer("US"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		Token:            gofastly.ToPointer("tkn"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -232,6 +238,7 @@ resource "fastly_service_compute" "foo" {
 		name               = "scalyrlogger"
 		region             = "US"
 		token              = "tkn"
+    processing_region = "us"
 	}
 
   package {
@@ -274,6 +281,7 @@ resource "fastly_service_vcl" "foo" {
 		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version 		 = 2
 		placement 				 = "none"
+    processing_region = "us"
 	}
 
 	force_destroy = true

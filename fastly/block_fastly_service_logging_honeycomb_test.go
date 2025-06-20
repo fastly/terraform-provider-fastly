@@ -60,6 +60,7 @@ func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 					ResponseCondition: gofastly.ToPointer("always"),
 					Format:            gofastly.ToPointer(honeycombDefaultFormat),
 					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -71,6 +72,7 @@ func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
 					"response_condition": "always",
 					"format":             honeycombDefaultFormat,
 					"format_version":     2,
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -97,6 +99,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer(""),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("s3cr3t"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Honeycomb{
@@ -108,6 +111,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("secret"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Honeycomb{
@@ -119,6 +123,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("another-token"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -157,10 +162,11 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Honeycomb{
-		Dataset:        gofastly.ToPointer("dataset"),
-		Name:           gofastly.ToPointer("honeycomb-endpoint"),
-		ServiceVersion: gofastly.ToPointer(1),
-		Token:          gofastly.ToPointer("s3cr3t"),
+		Dataset:          gofastly.ToPointer("dataset"),
+		Name:             gofastly.ToPointer("honeycomb-endpoint"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		Token:            gofastly.ToPointer("s3cr3t"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -252,6 +258,7 @@ resource "fastly_service_vcl" "foo" {
     format = <<EOF
 `+escapePercentSign(honeycombDefaultFormat)+`
 EOF
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -331,6 +338,7 @@ resource "fastly_service_compute" "foo" {
     name   = "honeycomb-endpoint"
     token  = "s3cr3t"
     dataset = "dataset"
+    processing_region = "us"
   }
 
   package {

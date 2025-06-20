@@ -6,6 +6,7 @@
 
 - feat(domains/v1): add `description` field ([#1002](https://github.com/fastly/terraform-provider-fastly/pull/1002))
 - feat(backend): Add support for 'prefer IPv6' attribute. ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1003))
+- feat(logging): Add support for 'processing region' attribute. ([#10](https://github.com/fastly/terraform-provider-fastly/pull/10))
 
 ### BUG FIXES:
 - fix(block_fastly_service_settings): fix detection of falsey value for stale_if_error field ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1009))

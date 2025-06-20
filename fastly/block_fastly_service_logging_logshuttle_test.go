@@ -29,6 +29,7 @@ func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
 					Placement:         gofastly.ToPointer("none"),
 					ResponseCondition: gofastly.ToPointer("always"),
 					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -40,6 +41,7 @@ func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
 					"placement":          "none",
 					"response_condition": "always",
 					"format_version":     2,
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -66,6 +68,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("s3cr3t"),
 		URL:               gofastly.ToPointer("https://example.com"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Logshuttle{
@@ -76,6 +79,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("secret"),
 		URL:               gofastly.ToPointer("https://new.example.com"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Logshuttle{
@@ -87,6 +91,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 		ServiceVersion:    gofastly.ToPointer(1),
 		Token:             gofastly.ToPointer("another-token"),
 		URL:               gofastly.ToPointer("https://another.example.com"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -125,10 +130,11 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		Name:           gofastly.ToPointer("logshuttle-endpoint"),
-		ServiceVersion: gofastly.ToPointer(1),
-		Token:          gofastly.ToPointer("s3cr3t"),
-		URL:            gofastly.ToPointer("https://example.com"),
+		Name:             gofastly.ToPointer("logshuttle-endpoint"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		Token:            gofastly.ToPointer("s3cr3t"),
+		URL:              gofastly.ToPointer("https://example.com"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -218,6 +224,7 @@ resource "fastly_service_vcl" "foo" {
     token  = "s3cr3t"
 		url    = "https://example.com"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -291,6 +298,7 @@ resource "fastly_service_compute" "foo" {
     name   = "logshuttle-endpoint"
     token  = "s3cr3t"
     url    = "https://example.com"
+    processing_region = "us"
   }
 
   package {

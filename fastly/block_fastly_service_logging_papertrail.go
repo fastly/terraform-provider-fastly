@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -47,6 +48,13 @@ func (h *PaperTrailServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Required:    true,
 			Description: "The port associated with the address where the Papertrail endpoint can be accessed",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 	}
 
@@ -92,13 +100,14 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 	vla := h.getVCLLoggingAttributes(resource)
 
 	opts := gofastly.CreatePapertrailInput{
-		Address:        gofastly.ToPointer(resource["address"].(string)),
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		Port:           gofastly.ToPointer(resource["port"].(int)),
-		ServiceID:      d.Id(),
-		ServiceVersion: serviceVersion,
+		Address:          gofastly.ToPointer(resource["address"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Port:             gofastly.ToPointer(resource["port"].(int)),
+		ServiceID:        d.Id(),
+		ServiceVersion:   serviceVersion,
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -175,6 +184,9 @@ func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Papertrail Opts: %#v", opts)
 	_, err := conn.UpdatePapertrail(&opts)
@@ -230,6 +242,9 @@ func flattenPapertrails(remoteState []*gofastly.Papertrail) []map[string]any {
 		}
 		if resource.Placement != nil {
 			data["placement"] = *resource.Placement
+		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
 		}
 
 		// prune any empty values that come from the default string value in structs

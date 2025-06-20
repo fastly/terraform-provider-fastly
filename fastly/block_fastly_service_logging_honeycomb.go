@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -42,6 +43,13 @@ func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"token": {
 			Type:        schema.TypeString,
@@ -151,6 +159,9 @@ func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update Honeycomb Opts: %#v", opts)
 	_, err := conn.UpdateHoneycomb(&opts)
@@ -218,6 +229,9 @@ func flattenHoneycomb(remoteState []*gofastly.Honeycomb) []map[string]any {
 		if resource.ResponseCondition != nil {
 			data["response_condition"] = *resource.ResponseCondition
 		}
+		if resource.ProcessingRegion != nil {
+			data["processing_region"] = *resource.ProcessingRegion
+		}
 
 		// Prune any empty values that come from the default string value in structs.
 		for k, v := range data {
@@ -237,13 +251,14 @@ func (h *HoneycombServiceAttributeHandler) buildCreate(honeycombMap any, service
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateHoneycombInput{
-		Dataset:        gofastly.ToPointer(resource["dataset"].(string)),
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		ServiceID:      serviceID,
-		ServiceVersion: serviceVersion,
-		Token:          gofastly.ToPointer(resource["token"].(string)),
+		Dataset:          gofastly.ToPointer(resource["dataset"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		ServiceID:        serviceID,
+		ServiceVersion:   serviceVersion,
+		Token:            gofastly.ToPointer(resource["token"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.

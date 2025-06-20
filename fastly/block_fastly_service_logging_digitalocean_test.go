@@ -38,6 +38,7 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					Placement:         gofastly.ToPointer("none"),
 					ResponseCondition: gofastly.ToPointer("always"),
 					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -58,6 +59,7 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					"placement":          "none",
 					"response_condition": "always",
 					"compression_codec":  "zstd",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -94,6 +96,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 		SecretKey:         gofastly.ToPointer("secret"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.DigitalOcean{
@@ -113,6 +116,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 		SecretKey:         gofastly.ToPointer("secretupdate"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.DigitalOcean{
@@ -133,6 +137,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 		SecretKey:         gofastly.ToPointer("secret2"),
 		ServiceVersion:    gofastly.ToPointer(1),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -184,6 +189,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 		SecretKey:        gofastly.ToPointer("secret"),
 		ServiceVersion:   gofastly.ToPointer(1),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -290,6 +296,7 @@ resource "fastly_service_vcl" "foo" {
     placement = "none"
     response_condition = "response_condition_test"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -389,6 +396,7 @@ resource "fastly_service_compute" "foo" {
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     message_type = "classic"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   package {

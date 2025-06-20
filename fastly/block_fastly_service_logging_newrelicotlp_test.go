@@ -22,11 +22,12 @@ func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
 		{
 			remote: []*gofastly.NewRelicOTLP{
 				{
-					ServiceVersion: gofastly.ToPointer(1),
-					Name:           gofastly.ToPointer("newrelicotlp-endpoint"),
-					Token:          gofastly.ToPointer("token"),
-					Region:         gofastly.ToPointer("US"),
-					FormatVersion:  gofastly.ToPointer(2),
+					ServiceVersion:   gofastly.ToPointer(1),
+					Name:             gofastly.ToPointer("newrelicotlp-endpoint"),
+					Token:            gofastly.ToPointer("token"),
+					Region:           gofastly.ToPointer("US"),
+					FormatVersion:    gofastly.ToPointer(2),
+					ProcessingRegion: gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -39,6 +40,7 @@ func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
 					"response_condition": responseCondition, // implies nil
 					"token":              gofastly.ToPointer("token"),
 					"url":                loggingURL, // implies nil
+					"processing_region":  gofastly.ToPointer("eu"),
 				},
 			},
 		},
@@ -83,6 +85,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
 		ResponseCondition: gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer(""),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.NewRelicOTLP{
@@ -95,6 +98,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
 		ResponseCondition: gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer(""),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.NewRelicOTLP{
@@ -107,6 +111,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		Format:         gofastly.ToPointer(appendNewLine(newrelicotlpDefaultFormat)),
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
 		ResponseCondition: gofastly.ToPointer(""),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,6 +209,7 @@ resource "fastly_service_vcl" "foo" {
     name   = "newrelicotlp-endpoint"
     token  = "token"
     format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    processing_region = "us"
   }
 
   force_destroy = true

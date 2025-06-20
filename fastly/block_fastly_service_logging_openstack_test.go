@@ -37,6 +37,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					Period:            gofastly.ToPointer(3600),
 					GzipLevel:         gofastly.ToPointer(0),
 					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
 				},
 			},
 			local: []map[string]any{
@@ -57,6 +58,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					"period":             3600,
 					"gzip_level":         0,
 					"compression_codec":  "zstd",
+					"processing_region":  "eu",
 				},
 			},
 		},
@@ -93,6 +95,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		TimestampFormat:   gofastly.ToPointer(`%Y-%m-%dT%H:%M:%S.000`),
 		URL:               gofastly.ToPointer("https://auth.example.com/v1"), // /v1, /v2 or /v3 are required to be in the path.
 		User:              gofastly.ToPointer("user"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
 	log1AfterUpdate := gofastly.Openstack{
@@ -112,6 +115,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		TimestampFormat:   gofastly.ToPointer(`%Y-%m-%dT%H:%M:%S.000`),
 		URL:               gofastly.ToPointer("https://auth.example.com/v2"), // /v1, /v2 or /v3 are required to be in the path.
 		User:              gofastly.ToPointer("userupdate"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	log2 := gofastly.Openstack{
@@ -132,6 +136,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		TimestampFormat:   gofastly.ToPointer(`%Y-%m-%dT%H:%M:%S.000`),
 		URL:               gofastly.ToPointer("https://auth.example.com/v3"), // /v1, /v2 or /v3 are required to be in the path.
 		User:              gofastly.ToPointer("user2"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -183,6 +188,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic_compute(t *testing.T) {
 		TimestampFormat:  gofastly.ToPointer(`%Y-%m-%dT%H:%M:%S.000`),
 		URL:              gofastly.ToPointer("https://auth.example.com/v1"), // /v1, /v2 or /v3 are required to be in the path.
 		User:             gofastly.ToPointer("user"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -287,6 +293,7 @@ resource "fastly_service_vcl" "foo" {
 		timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   force_destroy = true
@@ -380,6 +387,7 @@ resource "fastly_service_compute" "foo" {
     path = "/"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     compression_codec = "zstd"
+    processing_region = "us"
   }
 
   package {

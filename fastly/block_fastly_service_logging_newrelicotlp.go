@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v10/fastly"
 )
@@ -55,6 +56,13 @@ func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 			Optional:         true,
 			Description:      "Where in the generated VCL the logging call should be placed.",
 			ValidateDiagFunc: validateLoggingPlacement(),
+		},
+		"processing_region": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "none",
+			Description:  "Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.",
+			ValidateFunc: validation.StringInSlice([]string{"none", "us", "eu"}, false),
 		},
 		"region": {
 			Type:        schema.TypeString,
@@ -154,6 +162,9 @@ func (h *NewRelicOTLPServiceAttributeHandler) Update(_ context.Context, d *schem
 	if v, ok := modified["url"]; ok {
 		opts.URL = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["processing_region"]; ok {
+		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update New Relic OTLP Opts: %#v", opts)
 	_, err := conn.UpdateNewRelicOTLP(&opts)
@@ -200,6 +211,7 @@ func flattenNewRelicOTLP(remoteState []*gofastly.NewRelicOTLP) []map[string]any 
 			"response_condition": resource.ResponseCondition,
 			"token":              resource.Token,
 			"url":                resource.URL,
+			"processing_region":  resource.ProcessingRegion,
 		}
 
 		// Prune any empty values that come from the default string value in structs.
@@ -220,14 +232,15 @@ func (h *NewRelicOTLPServiceAttributeHandler) buildCreate(newrelicotlpMap any, s
 
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := &gofastly.CreateNewRelicOTLPInput{
-		Format:         gofastly.ToPointer(vla.format),
-		FormatVersion:  vla.formatVersion,
-		Name:           gofastly.ToPointer(resource["name"].(string)),
-		Region:         gofastly.ToPointer(resource["region"].(string)),
-		ServiceID:      serviceID,
-		ServiceVersion: serviceVersion,
-		Token:          gofastly.ToPointer(resource["token"].(string)),
-		URL:            gofastly.ToPointer(resource["url"].(string)),
+		Format:           gofastly.ToPointer(vla.format),
+		FormatVersion:    vla.formatVersion,
+		Name:             gofastly.ToPointer(resource["name"].(string)),
+		Region:           gofastly.ToPointer(resource["region"].(string)),
+		ServiceID:        serviceID,
+		ServiceVersion:   serviceVersion,
+		Token:            gofastly.ToPointer(resource["token"].(string)),
+		URL:              gofastly.ToPointer(resource["url"].(string)),
+		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.

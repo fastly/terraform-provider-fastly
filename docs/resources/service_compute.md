@@ -253,6 +253,7 @@ Optional:
 
 - `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
 - `email` (String, Sensitive) The email for the service account with write access to your BigQuery dataset. If not provided, this will be pulled from a `FASTLY_BQ_EMAIL` environment variable
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `secret_key` (String, Sensitive) The secret key associated with the service account that has write access to your BigQuery table. If not provided, this will be pulled from the `FASTLY_BQ_SECRET_KEY` environment variable. Typical format for this is a private key in a string with newlines
 - `template` (String) BigQuery table name suffix template
 
@@ -274,6 +275,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
 - `period` (Number) How frequently the logs should be transferred in seconds. Default `3600`
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `sas_token` (String, Sensitive) The Azure shared access signature providing write access to the blob service objects. Be sure to update your token before it expires or the logging functionality will not work
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
@@ -296,6 +298,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `public_key` (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `region` (String) The region to stream logs to. One of: DFW (Dallas), ORD (Chicago), IAD (Northern Virginia), LON (London), SYD (Sydney), HKG (Hong Kong)
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
@@ -311,6 +314,7 @@ Required:
 
 Optional:
 
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 
 
@@ -332,6 +336,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
@@ -349,6 +354,7 @@ Optional:
 
 - `password` (String, Sensitive) BasicAuth password for Elasticsearch
 - `pipeline` (String) The ID of the Elasticsearch ingest pipeline to apply pre-process transformations to before indexing
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `request_max_bytes` (Number) The maximum number of logs sent in one request. Defaults to `0` for unbounded
 - `request_max_entries` (Number) The maximum number of bytes sent in one request. Defaults to `0` for unbounded
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
@@ -376,6 +382,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
 - `port` (Number) The port number. Default: `21`
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `public_key` (String) The PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
@@ -396,6 +403,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default 3600)
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `project_id` (String) The ID of your Google Cloud Platform project
 - `secret_key` (String, Sensitive) The secret key associated with the target gcs bucket on your account. You may optionally provide this secret via an environment variable, `FASTLY_GCS_SECRET_KEY`. A typical format for the key is PEM format, containing actual newline characters where required
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
@@ -414,6 +422,7 @@ Required:
 Optional:
 
 - `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `secret_key` (String, Sensitive) Your Google Cloud Platform account secret key. The `private_key` field in your service account authentication JSON. You may optionally provide this secret via an environment variable, `FASTLY_GOOGLE_PUBSUB_SECRET_KEY`.
 - `user` (String) Your Google Cloud Platform service account email address. The `client_email` field in your service account authentication JSON. You may optionally provide this via an environment variable, `FASTLY_GOOGLE_PUBSUB_EMAIL`.
 
@@ -429,6 +438,10 @@ Required:
 - `url` (String) The URL to stream logs to
 - `user` (String) The Grafana User ID
 
+Optional:
+
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
+
 
 <a id="nestedblock--logging_heroku"></a>
 ### Nested Schema for `logging_heroku`
@@ -439,6 +452,10 @@ Required:
 - `token` (String, Sensitive) The token to use for authentication (https://www.heroku.com/docs/customer-token-authentication-token/)
 - `url` (String) The URL to stream logs to
 
+Optional:
+
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
+
 
 <a id="nestedblock--logging_honeycomb"></a>
 ### Nested Schema for `logging_honeycomb`
@@ -448,6 +465,10 @@ Required:
 - `dataset` (String) The Honeycomb Dataset you want to log to
 - `name` (String) The unique name of the Honeycomb logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - `token` (String, Sensitive) The Write Key from the Account page of your Honeycomb account
+
+Optional:
+
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 
 
 <a id="nestedblock--logging_https"></a>
@@ -466,6 +487,7 @@ Optional:
 - `json_format` (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `method` (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `request_max_bytes` (Number) The maximum number of bytes sent in one request
 - `request_max_entries` (Number) The maximum number of logs sent in one request
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
@@ -489,6 +511,7 @@ Optional:
 - `compression_codec` (String) The codec used for compression of your logs. One of: `gzip`, `snappy`, `lz4`
 - `parse_log_keyvals` (Boolean) Enables parsing of key=value tuples from the beginning of a logline, turning them into record headers
 - `password` (String, Sensitive) SASL Pass
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `request_max_bytes` (Number) Maximum size of log batch, if non-zero. Defaults to 0 for unbounded
 - `required_acks` (String) The Number of acknowledgements a leader must receive before a write is considered successful. One of: `1` (default) One server needs to respond. `0` No servers need to respond. `-1` Wait for all in-sync replicas to respond
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format
@@ -511,6 +534,7 @@ Optional:
 
 - `access_key` (String, Sensitive) The AWS access key to be used to write to the stream
 - `iam_role` (String) The Amazon Resource Name (ARN) for the IAM role granting Fastly access to Kinesis. Not required if `access_key` and `secret_key` are provided.
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `region` (String) The AWS region the stream resides in. (Default: `us-east-1`)
 - `secret_key` (String, Sensitive) The AWS secret access key to authenticate with
 
@@ -526,6 +550,7 @@ Required:
 Optional:
 
 - `port` (Number) The port number configured in Logentries
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `use_tls` (Boolean) Whether to use TLS for secure logging
 
 
@@ -537,6 +562,10 @@ Required:
 - `name` (String) The unique name of the Loggly logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - `token` (String, Sensitive) The token to use for authentication (https://www.loggly.com/docs/customer-token-authentication-token/).
 
+Optional:
+
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
+
 
 <a id="nestedblock--logging_logshuttle"></a>
 ### Nested Schema for `logging_logshuttle`
@@ -546,6 +575,10 @@ Required:
 - `name` (String) The unique name of the Log Shuttle logging endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - `token` (String, Sensitive) The data authentication token associated with this endpoint
 - `url` (String) Your Log Shuttle endpoint URL
+
+Optional:
+
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 
 
 <a id="nestedblock--logging_newrelic"></a>
@@ -558,6 +591,7 @@ Required:
 
 Optional:
 
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `region` (String) The region that log data will be sent to. Default: `US`
 
 
@@ -579,6 +613,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
 
@@ -591,6 +626,10 @@ Required:
 - `address` (String) The address of the Papertrail endpoint
 - `name` (String) A unique name to identify this Papertrail endpoint. It is important to note that changing this attribute will delete and recreate the resource
 - `port` (Number) The port associated with the address where the Papertrail endpoint can be accessed
+
+Optional:
+
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 
 
 <a id="nestedblock--logging_s3"></a>
@@ -611,6 +650,7 @@ Optional:
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `redundancy` (String) The S3 storage class (redundancy level). Should be one of: `standard`, `intelligent_tiering`, `standard_ia`, `onezone_ia`, `glacier`, `glacier_ir`, `deep_archive`, or `reduced_redundancy`
 - `s3_access_key` (String, Sensitive) AWS Access Key of an account with the required permissions to post logs. It is **strongly** recommended you create a separate IAM user with permissions to only operate on this Bucket. This key will be not be encrypted. Not required if `iam_role` is provided. You can provide this key via an environment variable, `FASTLY_S3_ACCESS_KEY`
@@ -631,6 +671,7 @@ Required:
 
 Optional:
 
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `project_id` (String) The name of the logfile field sent to Scalyr
 - `region` (String) The region that log data will be sent to. One of `US` or `EU`. Defaults to `US` if undefined
 
@@ -654,6 +695,7 @@ Optional:
 - `password` (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
 - `port` (Number) The port the SFTP service listens on. (Default: `22`)
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `public_key` (String) A PGP public key that Fastly will use to encrypt your log files before writing them to disk
 - `secret_key` (String, Sensitive) The SSH private key for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - `timestamp_format` (String) The `strftime` specified timestamp formatting (default `%Y-%m-%dT%H:%M:%S.000`)
@@ -670,6 +712,7 @@ Required:
 
 Optional:
 
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SPLUNK_CA_CERT`
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format.
 - `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format.
@@ -688,6 +731,7 @@ Required:
 Optional:
 
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 
 
 <a id="nestedblock--logging_syslog"></a>
@@ -702,6 +746,7 @@ Optional:
 
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `port` (Number) The port associated with the address where the Syslog endpoint can be accessed. Default `514`
+- `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `tls_ca_cert` (String) A secure certificate to authenticate the server with. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CA_CERT`
 - `tls_client_cert` (String) The client certificate used to make authenticated requests. Must be in PEM format. You can provide this certificate via an environment variable, `FASTLY_SYSLOG_CLIENT_CERT`
 - `tls_client_key` (String, Sensitive) The client private key used to make authenticated requests. Must be in PEM format. You can provide this key via an environment variable, `FASTLY_SYSLOG_CLIENT_KEY`

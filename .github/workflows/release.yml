@@ -8,6 +8,8 @@
 # private key in the `GPG_PRIVATE_KEY` secret and passphrase in the `PASSPHRASE`
 # secret. We use the fastly fork to ensure safety GPG handling.
 name: release
+permissions:
+  contents: write
 on:
   push:
     tags:

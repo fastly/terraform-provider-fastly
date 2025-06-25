@@ -7,6 +7,7 @@
 ### BUG FIXES:
 
 ### DEPENDENCIES:
+- build(deps): `github.com/fastly/go-fastly/v10` from 10.4.0 to 10.5.0 ([#1019](https://github.com/fastly/terraform-provider-fastly/pull/1019))
 
 ## 7.1.0 (June 20, 2025)
 

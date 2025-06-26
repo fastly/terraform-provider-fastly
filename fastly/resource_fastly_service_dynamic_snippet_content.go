@@ -121,8 +121,25 @@ func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
-	// Dynamic snippet content cannot be deleted. Removing from state only
+func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	// Dynamic snippet content should be set to empty if manage_snippets=true.
+	// Otherwise remove it from state only.
+	if d.Get("manage_snippets").(bool) {
+		conn := meta.(*APIClient).conn
+
+		serviceID := d.Get("service_id").(string)
+		snippetID := d.Get("snippet_id").(string)
+
+		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
+			ServiceID: serviceID,
+			SnippetID: snippetID,
+			Content:   gofastly.ToPointer(""),
+		})
+		if err != nil {
+			return diag.Errorf("error deleting dynamic snippet content: service %s, snippet %s, %#v", serviceID, snippetID, err)
+		}
+	}
+
 	d.SetId("")
 	return nil
 }

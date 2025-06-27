@@ -22,30 +22,38 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the NGWAF Workspace.",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the NGWAF Workspace.",
-			},
-			"mode": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The mode of the NGWAF Workspace.",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-					[]string{"off", "log", "block"},
-					false,
-				)),
-			},
-			"ip_anonymization": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Description:      "Whether IPs should be anonymized in the NGWAF Workspace.",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"hashed"}, false)),
+			"attack_signal_thresholds": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"immediate": {
+							Type:        schema.TypeBool,
+							Description: "Ignore thresholds and block immediately when at least one attack signal is detected.",
+							Optional:    true,
+						},
+						"one_hour": {
+							Type:             schema.TypeInt,
+							Description:      "The one-hour interval threshold.",
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
+						},
+						"one_minute": {
+							Type:             schema.TypeInt,
+							Description:      "The one-minute interval threshold.",
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
+						},
+						"ten_minutes": {
+							Type:             schema.TypeInt,
+							Description:      "The ten-minute interval threshold.",
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
+						},
+					},
+				},
+				MaxItems:    1,
+				Description: "Attack signal thresholds configuration.",
 			},
 			"client_ip_headers": {
 				Type:        schema.TypeList,
@@ -60,34 +68,30 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 				Default:     406,
 				Description: "Default HTTP response code for blocking actions.",
 			},
-			"attack_signal_thresholds": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"one_minute": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
-						},
-						"ten_minutes": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
-						},
-						"one_hour": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
-						},
-						"immediate": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-				MaxItems:    1,
-				Description: "Attack signal thresholds configuration.",
+			"description": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Description of the Workspace.",
+			},
+			"ip_anonymization": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Whether IPs should be anonymized in the Workspace.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"hashed"}, false)),
+			},
+			"mode": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The mode of the Workspace.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+					[]string{"off", "log", "block"},
+					false,
+				)),
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the Workspace.",
 			},
 		},
 	}
@@ -151,7 +155,7 @@ func resourceFastlyNGWAFWorkspaceRead(_ context.Context, d *schema.ResourceData,
 	workspace, err := ws.Get(conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
-			log.Printf("[WARN] NGWAF Workspace not found '%s'", d.Id())
+			log.Printf("[WARN] Workspace not found '%s'", d.Id())
 			d.SetId("")
 			return nil
 		}

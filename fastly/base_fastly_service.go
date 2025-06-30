@@ -150,7 +150,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 			},
 			"stage": {
 				Type:        schema.TypeBool,
-				Description: "Conditionally enables new service versions to be staged. If `set` to true, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`",
+				Description: "Conditionally enables new service versions to be staged. If set to `true`, all changes made by an `apply` step will be staged, even if `apply` did not create a new draft version. Default `false`",
 				Default:     false,
 				Optional:    true,
 			},

@@ -21,18 +21,18 @@ func dataSourceFastlyNGWAFWorkspaces() *schema.Resource {
 			"workspaces": {
 				Type:        schema.TypeSet,
 				Computed:    true,
-				Description: "List of all NGWAF Workspaces.",
+				Description: "List of all workspaces.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Alphanumeric string identifying the NGWAF Workspace.",
+							Description: "Base62-encoded representation of a UUID used to uniquely identify the workspace",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Name of the NGWAF Workspace.",
+							Description: "User-submitted display name of the workspace",
 						},
 					},
 				},
@@ -44,11 +44,11 @@ func dataSourceFastlyNGWAFWorkspaces() *schema.Resource {
 func dataSourceFastlyNGWAFWorkspacesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	log.Printf("[DEBUG] Reading NGWAF Workspaces")
+	log.Printf("[DEBUG] Reading NGWAF workspaces")
 
 	remoteState, err := ws.List(conn, &ws.ListInput{})
 	if err != nil {
-		return diag.Errorf("error fetching NGWAF Workspaces: %s", err)
+		return diag.Errorf("error fetching workspaces: %s", err)
 	}
 
 	parsed, _ := json.Marshal(remoteState)

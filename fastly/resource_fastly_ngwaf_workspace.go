@@ -22,72 +22,77 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the NGWAF Workspace.",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Description of the NGWAF Workspace.",
-			},
-			"mode": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The mode of the NGWAF Workspace.",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
-					[]string{"off", "log", "block"},
-					false,
-				)),
-			},
-			"ip_anonymization": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Description:      "Whether IPs should be anonymized in the NGWAF Workspace.",
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"hashed"}, false)),
-			},
-			"client_ip_headers": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "List of headers used to determine the client IP address.",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				MaxItems:    10,
-			},
-			"default_blocking_response_code": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     406,
-				Description: "Default HTTP response code for blocking actions.",
-			},
 			"attack_signal_thresholds": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"immediate": {
+							Type:        schema.TypeBool,
+							Description: "Ignore thresholds and block immediately when at least one attack signal is detected",
+							Optional:    true,
+						},
+						"one_hour": {
+							Type:             schema.TypeInt,
+							Description:      "The one-hour interval threshold. Minimum 1 and maximum 10,000",
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
+						},
 						"one_minute": {
 							Type:             schema.TypeInt,
+							Description:      "The one-minute interval threshold. Minimum 1 and maximum 10,000",
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
 						},
 						"ten_minutes": {
 							Type:             schema.TypeInt,
+							Description:      "The ten-minute interval threshold. Minimum 1 and maximum 10,000",
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
-						},
-						"one_hour": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
-						},
-						"immediate": {
-							Type:     schema.TypeBool,
-							Optional: true,
 						},
 					},
 				},
 				MaxItems:    1,
-				Description: "Attack signal thresholds configuration.",
+				Description: "Attack threshold parameters for system site alerts. Each threshold value is the number of attack signals per IP address that must be detected during the interval before the related IP address is flagged",
+			},
+			"client_ip_headers": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Specifies the request headers containing the client IP address. Maximum of 10 header names",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				MaxItems:    10,
+			},
+			"default_blocking_response_code": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          406,
+				Description:      "The status code returned when a request is blocked. This configuration is applied at the workspace but can be overwritten in rules. Accepted values are [`301`, `302`, `400..599`]. Default value `406`",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IntBetween(400, 599), validation.IntInSlice([]int{301, 302}))),
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "User-submitted description of the workspace",
+			},
+			"ip_anonymization": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Agents will anonymize IP addresses according to the option selected. Accepted value is `hashed`",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"hashed"}, false)),
+			},
+			"mode": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "User-configured mode of the workspace. Accepted values are [`off`, `block`, `log`]",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
+					[]string{"off", "log", "block"},
+					false,
+				)),
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "User-submitted display name of the workspace",
 			},
 		},
 	}
@@ -127,7 +132,7 @@ func resourceFastlyNGWAFWorkspaceCreate(_ context.Context, d *schema.ResourceDat
 		}
 	}
 
-	log.Printf("[DEBUG] CREATE: NGWAF Workspace input: %#v", i)
+	log.Printf("[DEBUG] CREATE: NGWAF workspace input: %#v", i)
 
 	workspace, err := ws.Create(conn, &i)
 	if err != nil {
@@ -146,12 +151,12 @@ func resourceFastlyNGWAFWorkspaceRead(_ context.Context, d *schema.ResourceData,
 		WorkspaceID: gofastly.ToPointer(d.Id()),
 	}
 
-	log.Printf("[DEBUG] REFRESH: NGWAF Workspace input: %#v", i)
+	log.Printf("[DEBUG] REFRESH: NGWAF workspace input: %#v", i)
 
 	workspace, err := ws.Get(conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
-			log.Printf("[WARN] NGWAF Workspace not found '%s'", d.Id())
+			log.Printf("[WARN] workspace not found '%s'", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -227,7 +232,7 @@ func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	log.Printf("[DEBUG] UPDATE: NGWAF Workspace input: %#v", i)
+	log.Printf("[DEBUG] UPDATE: NGWAF workspace input: %#v", i)
 
 	_, err := ws.Update(conn, &i)
 	if err != nil {
@@ -244,7 +249,7 @@ func resourceFastlyNGWAFWorkspaceDelete(_ context.Context, d *schema.ResourceDat
 		WorkspaceID: gofastly.ToPointer(d.Id()),
 	}
 
-	log.Printf("[DEBUG] DELETE: NGWAF Workspace input: %#v", i)
+	log.Printf("[DEBUG] DELETE: NGWAF workspace input: %#v", i)
 
 	if err := ws.Delete(conn, &i); err != nil {
 		return diag.FromErr(err)

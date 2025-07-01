@@ -63,7 +63,7 @@ func testAccFastlyDataSourceNGWAFWorkspacesConfig(h string) string {
 	tf := `
 resource "fastly_ngwaf_workspace" "example_1" {
   name = "tf_%s_1"
-  description = "Test NGWAF Workspace 1"
+  description = "Test NGWAF Workspace %s_1"
   mode = "block"
   ip_anonymization = "hashed"
 
@@ -77,7 +77,7 @@ resource "fastly_ngwaf_workspace" "example_1" {
 
 resource "fastly_ngwaf_workspace" "example_2" {
   name = "tf_%s_2"
-  description = "Test NGWAF Workspace 2"
+  description = "Test NGWAF Workspace %s_2"
   mode = "block"
   ip_anonymization = "hashed"
 
@@ -91,7 +91,7 @@ resource "fastly_ngwaf_workspace" "example_2" {
 
 resource "fastly_ngwaf_workspace" "example_3" {
   name = "tf_%s_3"
-  description = "Test NGWAF Workspace 3"
+  description = "Test NGWAF Workspace %s_3"
   mode = "block"
   ip_anonymization = "hashed"
 
@@ -111,5 +111,5 @@ data "fastly_ngwaf_workspaces" "example" {
   ]
 }
 `
-	return fmt.Sprintf(tf, h, h, h)
+	return fmt.Sprintf(tf, h, h, h, h, h, h)
 }

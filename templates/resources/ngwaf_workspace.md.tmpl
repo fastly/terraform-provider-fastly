@@ -1,0 +1,27 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_workspace"
+sidebar_current: "docs-fastly-resource-ngwaf-workspace"
+description: |-
+  Provides a Fastly Next-Gen WAF Workspace
+---
+
+# ngwaf_workspace
+
+Provides a Fastly Next-Gen WAF Workspace, representing a container for
+rules, signals, and various other resources that are offered by the
+Next-Gen WAF product.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_workspace_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF Workspaces can be imported using their workspace ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/workspace_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

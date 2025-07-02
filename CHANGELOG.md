@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- doc(guides): Add guide for Fastly Object Storage.
+
 ### BUG FIXES:
 
 - fix(snippets): delete dynamic snippet contents when the resource is deleted if `manage_snippets` is `true`. ([#1021](https://github.com/fastly/terraform-provider-fastly/pull/1021))

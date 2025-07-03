@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(ngwaf_workspace): Add support for Next-Gen WAF Workspaces. ([#1018](https://github.com/fastly/terraform-provider-fastly/pull/1018))
+
 ### BUG FIXES:
 
 - fix(snippets): delete dynamic snippet contents when the resource is deleted if `manage_snippets` is `true`. ([#1021](https://github.com/fastly/terraform-provider-fastly/pull/1021))

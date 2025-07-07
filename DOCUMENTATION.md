@@ -33,13 +33,13 @@ documentation, which includes details of making use of that
 resource/data source, along with the details of its schema.
 
 If you do not write a template for a resource or data source that you
-create, `make generate-docs` will use a basic template when it
-generates documentation for the provider. This template will include
-only the name of the resource/data source and the details of its
-schema. For resources in particular, this is insufficient to guide
-users as it does not include examples of HCL which make use of the
-resource, or instructions for how to import an existing resource into
-the Terraform state.
+create, `make generate-docs` will use a basic template to generate the
+documentation for the provider. This template will include only the
+name of the resource/data source and the details of its schema. For
+resources in particular, this is insufficient to guide users as it
+does not include examples of HCL which make use of the resource, or
+instructions for how to import an existing resource into the Terraform
+state.
 
 Note: The documentation generation tool gathers the list of known data
 sources and resources from the provider itself, not by scanning the
@@ -47,7 +47,7 @@ source directory. As a result, if you have created a new data source
 or resource but you have not added into the top-level schema in
 [provider.go](fastly/provider.go) it will not be included in the
 generated documentation. If you create a template for the new data
-source or resources and run `make validate-docs` the validator will
+source or resource and run `make validate-docs` the validator will
 produce an error as it will be unable to find the new data source or
 resource. The simplest way to avoid this problem is to write and
 execute the acceptance tests for the new data source or resource
@@ -70,7 +70,7 @@ used as a reference.
 ## Resources
 
 Each resource should have a template file and at least two example
-files: one showing basic usage of the data source in HCL, and the
+files: one showing basic usage of the resource in HCL, and the
 other demonstrating how to import an existing resource into the
 Terraform state. The examples should be fully functional: they should
 include all resources necessary to create the resource being
@@ -84,7 +84,7 @@ Every attribute in every schema must include a description. The
 description should provide all of the information necessary for a user
 to understand the purpose and usage of that attribute.
 
-To accomplish this, follow these steps:
+To write consistent and helpful attribute descriptions, follow these steps:
 
 1. Use the description (from the public documentation) of the
    corresponding attribute of the API resource that the schema
@@ -92,7 +92,7 @@ To accomplish this, follow these steps:
 
 1. If the attribute allows only a limited set of values (an
    enumeration), include a sentence such as "Accepted values are
-   [`value 1`, `value 2`, `value 3`]".
+   `value 1`, `value 2`, and `value 3`".
 
 1. If the attribute allows only a range of values (numeric), include a
    sentence such as "Minimum 1 and maximum 10,000".

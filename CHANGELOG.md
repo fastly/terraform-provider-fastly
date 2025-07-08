@@ -5,6 +5,7 @@
 ### ENHANCEMENTS:
 
 - feat(ngwaf_workspace): Add support for Next-Gen WAF Workspaces. ([#1018](https://github.com/fastly/terraform-provider-fastly/pull/1018))
+- doc(guides): Add guide for Fastly Object Storage. ([#1024](https://github.com/fastly/terraform-provider-fastly/pull/1024))
 
 ### BUG FIXES:
 

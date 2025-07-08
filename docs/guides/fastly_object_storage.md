@@ -35,7 +35,7 @@ module "fos" {
 }
 ```
 
-The second will need to be placed in a directory named `fos`, and
+The second will need to be placed in a directory named `fos` and
 named `fos/main.tf`:
 
 ```terraform
@@ -75,14 +75,15 @@ resource "aws_s3_bucket" "main" {
 
 ```
 
-Note: This example uses the `us-east` region of Fastly Object Storage;
-if you wish to use a different region, ensure that the proper region
+Note: This example uses the `us-east` region of Fastly Object Storage.
+To use a different region, ensure that the proper region
 code is included in the `endpoints` block above.
 
 ## Getting Started
 
 With the example files in place, you'll need to initialize Terraform
-and obtain Fastly Object Storage credentials.
+and obtain Fastly Object Storage credentials. To do this, run the following
+commands:
 
 ```bash
 export FASTLY_API_KEY=<your Fastly API key here>
@@ -91,22 +92,22 @@ terraform apply -target=fastly_object_storage_access_keys.main
 ```
 
 Note: Terraform will issue a warning because the `-target` option is
-used. This usage of that option is safe.
+used. This use of that option is safe.
 
 This step will connect to the Fastly API using the Fastly Terraform
 provider and obtain a set of Fastly Object Storage credentials. Those
 credentials will be stored in the Terraform state files (or other
-state storage), they will not be displayed.
+state storage) and will not be displayed.
 
 This initial step is necessary because the credentials are required by
-the AWS Terraform provider, and if Terraform attempts to apply the
-entire configuration the AWS provider will report an error because the
+the AWS Terraform provider. If Terraform attempts to apply the
+entire configuration without them, the AWS provider will report an error because the
 credentials are missing.
 
 ## Completing the Process
 
-With the credentials obtained, a normal Terraform `apply` step can be
-used to create the remaining infrastructure; in this case a bucket in
+With the credentials obtained, a standard Terraform `apply` step can be
+used to create the remaining infrastructure; in this case, a bucket in
 Fastly Object Storage named `my-test-bucket-123`. Terraform will pass
 the Fastly Object Storage credentials to the AWS Terraform provider so
 that it can use them to authenticate its API interactions with the

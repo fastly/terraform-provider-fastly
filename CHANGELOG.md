@@ -10,7 +10,7 @@
 ### BUG FIXES:
 
 - fix(snippets): delete dynamic snippet contents when the resource is deleted if `manage_snippets` is `true`. ([#1021](https://github.com/fastly/terraform-provider-fastly/pull/1021))
-- fix(examples): Replace http-me.glitch.me with http-me.fastly.dev ([#10](https://github.com/fastly/terraform-provider-fastly/pull/10))
+- fix(examples): Replace http-me.glitch.me with http-me.fastly.dev ([#1026](https://github.com/fastly/terraform-provider-fastly/pull/1026))
 
 ### DEPENDENCIES:
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.4.0 to 10.5.0 ([#1019](https://github.com/fastly/terraform-provider-fastly/pull/1019))

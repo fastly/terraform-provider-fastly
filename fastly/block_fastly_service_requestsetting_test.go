@@ -21,7 +21,7 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 			remote: []*gofastly.RequestSetting{
 				{
 					Action:           gofastly.ToPointer(gofastly.RequestSettingActionPass),
-					DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
+					DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
 					MaxStaleAge:      gofastly.ToPointer(90),
 					Name:             gofastly.ToPointer("alt_backend"),
 					RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -32,7 +32,7 @@ func TestResourceFastlyFlattenRequestSettings(t *testing.T) {
 				{
 					"action": gofastly.RequestSettingActionPass,
 					// "bypass_busy_wait":  false,
-					"default_host": "http-me.glitch.me",
+					"default_host": "http-me.fastly.dev",
 					// "force_miss":        false,
 					// "force_ssl":         false,
 					"max_stale_age":     90,
@@ -59,7 +59,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	rq1 := gofastly.RequestSetting{
-		DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
+		DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
 		MaxStaleAge:      gofastly.ToPointer(90),
 		Name:             gofastly.ToPointer("alt_backend"),
 		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -80,7 +80,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 
 	rq2 := gofastly.RequestSetting{
 		Action:           gofastly.ToPointer(gofastly.RequestSettingActionLookup),
-		DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
+		DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
 		MaxStaleAge:      gofastly.ToPointer(900),
 		Name:             gofastly.ToPointer("alt_backend"),
 		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -100,7 +100,7 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 	}
 	rq3 := gofastly.RequestSetting{
 		Action:           gofastly.ToPointer(gofastly.RequestSettingActionUnset),
-		DefaultHost:      gofastly.ToPointer("http-me.glitch.me"),
+		DefaultHost:      gofastly.ToPointer("http-me.fastly.dev"),
 		MaxStaleAge:      gofastly.ToPointer(900),
 		Name:             gofastly.ToPointer("alt_backend"),
 		RequestCondition: gofastly.ToPointer("serve_alt_backend"),
@@ -228,7 +228,7 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "http-me.glitch.me"
+    address = "http-me.fastly.dev"
     name    = "Glitch Test Site"
     port    = 80
   }
@@ -248,13 +248,13 @@ resource "fastly_service_vcl" "foo" {
 
   request_setting {
     action            = "%s"
-    default_host      = "http-me.glitch.me"
+    default_host      = "http-me.fastly.dev"
     name              = "alt_backend"
     request_condition = "serve_alt_backend"
     max_stale_age     = %s
   }
 
-  default_host = "http-me.glitch.me"
+  default_host = "http-me.fastly.dev"
 
   force_destroy = true
 }`, name, domain, action, maxStaleAge)

@@ -28,7 +28,7 @@ resource "fastly_service_vcl" "myservice" {
   }
 
   backend {
-    address = "http-me.glitch.me"
+    address = "http-me.fastly.dev"
     name    = "Glitch Test Site"
     port    = 80
   }
@@ -39,7 +39,7 @@ resource "fastly_service_vcl" "myservice" {
     priority = 110
   }
 
-  default_host = "http-me.glitch.me"
+  default_host = "http-me.fastly.dev"
 
   force_destroy = true
 }
@@ -68,7 +68,7 @@ resource "fastly_service_vcl" "myservice" {
   }
 
   backend {
-    address = "http-me.glitch.me"
+    address = "http-me.fastly.dev"
     name    = "Glitch Test Site"
     port    = 80
   }
@@ -85,7 +85,7 @@ resource "fastly_service_vcl" "myservice" {
     priority = 110
   }
 
-  default_host = "http-me.glitch.me"
+  default_host = "http-me.fastly.dev"
 
   force_destroy = true
 }

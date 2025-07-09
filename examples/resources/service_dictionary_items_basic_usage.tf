@@ -12,7 +12,7 @@ resource "fastly_service_vcl" "myservice" {
   }
 
   backend {
-    address = "http-me.glitch.me"
+    address = "http-me.fastly.dev"
     name    = "Glitch Test Site"
     port    = 80
   }

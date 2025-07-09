@@ -75,10 +75,10 @@ resource "fastly_service_vcl" "demo" {
   }
 
   backend {
-    address       = "http-me.glitch.me"
+    address       = "http-me.fastly.dev"
     name          = "Glitch Test Site"
     port          = 80
-    override_host = "http-me.glitch.me"
+    override_host = "http-me.fastly.dev"
   }
 
   header {

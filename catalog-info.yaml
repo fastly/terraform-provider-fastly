@@ -1,0 +1,14 @@
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    github.com/project-slug: fastly/terraform-provider-fastly
+  description: Terraform Fastly provider
+  name: terraform-provider-fastly
+  title: fastly/terraform-provider-fastly
+spec:
+  lifecycle: source
+  owner: group:developer-relations
+  type: repository

@@ -11,17 +11,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
-	"github.com/fastly/go-fastly/v10/fastly/products/botmanagement"
-	"github.com/fastly/go-fastly/v10/fastly/products/brotlicompression"
-	"github.com/fastly/go-fastly/v10/fastly/products/ddosprotection"
-	"github.com/fastly/go-fastly/v10/fastly/products/domaininspector"
-	"github.com/fastly/go-fastly/v10/fastly/products/fanout"
-	"github.com/fastly/go-fastly/v10/fastly/products/imageoptimizer"
-	"github.com/fastly/go-fastly/v10/fastly/products/logexplorerinsights"
-	"github.com/fastly/go-fastly/v10/fastly/products/ngwaf"
-	"github.com/fastly/go-fastly/v10/fastly/products/origininspector"
-	"github.com/fastly/go-fastly/v10/fastly/products/websockets"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/products/botmanagement"
+	"github.com/fastly/go-fastly/v11/fastly/products/brotlicompression"
+	"github.com/fastly/go-fastly/v11/fastly/products/ddosprotection"
+	"github.com/fastly/go-fastly/v11/fastly/products/domaininspector"
+	"github.com/fastly/go-fastly/v11/fastly/products/fanout"
+	"github.com/fastly/go-fastly/v11/fastly/products/imageoptimizer"
+	"github.com/fastly/go-fastly/v11/fastly/products/logexplorerinsights"
+	"github.com/fastly/go-fastly/v11/fastly/products/ngwaf"
+	"github.com/fastly/go-fastly/v11/fastly/products/origininspector"
+	"github.com/fastly/go-fastly/v11/fastly/products/websockets"
 )
 
 // ProductEnablementServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -172,13 +172,13 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, _ int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, _ int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		if resource["fanout"].(bool) {
 			log.Println("[DEBUG] fanout set")
-			_, err := fanout.Enable(conn, serviceID)
+			_, err := fanout.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable fanout: %w", err)
 			}
@@ -188,14 +188,14 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		if resource["bot_management"].(bool) {
 			log.Println("[DEBUG] bot_management set")
-			_, err := botmanagement.Enable(conn, serviceID)
+			_, err := botmanagement.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable bot_management: %w", err)
 			}
 		}
 		if resource["brotli_compression"].(bool) {
 			log.Println("[DEBUG] brotli_compression set")
-			_, err := brotlicompression.Enable(conn, serviceID)
+			_, err := brotlicompression.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable brotli_compression: %w", err)
 			}
@@ -203,7 +203,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 		if resource["domain_inspector"].(bool) {
 			log.Println("[DEBUG] domain_inspector set")
-			_, err := domaininspector.Enable(conn, serviceID)
+			_, err := domaininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable domain_inspector: %w", err)
 			}
@@ -211,7 +211,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 		if resource["image_optimizer"].(bool) {
 			log.Println("[DEBUG] image_optimizer set")
-			_, err := imageoptimizer.Enable(conn, serviceID)
+			_, err := imageoptimizer.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable image_optimizer: %w", err)
 			}
@@ -219,7 +219,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 		if resource["origin_inspector"].(bool) {
 			log.Println("[DEBUG] origin_inspector set")
-			_, err := origininspector.Enable(conn, serviceID)
+			_, err := origininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable origin_inspector: %w", err)
 			}
@@ -228,7 +228,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 	if resource["websockets"].(bool) {
 		log.Println("[DEBUG] websockets set")
-		_, err := websockets.Enable(conn, serviceID)
+		_, err := websockets.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			return fmt.Errorf("failed to enable websockets: %w", err)
 		}
@@ -236,7 +236,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 
 	if resource["log_explorer_insights"].(bool) {
 		log.Println("[DEBUG] log_explorer_insights set")
-		_, err := logexplorerinsights.Enable(conn, serviceID)
+		_, err := logexplorerinsights.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			return fmt.Errorf("failed to enable log_explorer_insights: %w", err)
 		}
@@ -246,7 +246,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 	if len(ddp) != 0 {
 		if ddp[0].(map[string]any)["enabled"].(bool) {
 			log.Println("[DEBUG] ddos_protection set")
-			_, err := ddosprotection.Enable(conn, serviceID)
+			_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable ddos_protection: %w", err)
 			}
@@ -254,7 +254,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 			// The operation mode is set by default to "log"
 			mode := ddp[0].(map[string]any)["mode"].(string)
 			if mode != "log" {
-				_, err := ddosprotection.UpdateConfiguration(conn, serviceID, ddosprotection.ConfigureInput{
+				_, err := ddosprotection.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.ConfigureInput{
 					Mode: mode,
 				})
 				if err != nil {
@@ -270,7 +270,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 			log.Println("[DEBUG] ngwaf set")
 
 			id := ngw[0].(map[string]any)["workspace_id"].(string)
-			_, err := ngwaf.Enable(conn, serviceID, ngwaf.EnableInput{
+			_, err := ngwaf.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.EnableInput{
 				WorkspaceID: id,
 			})
 			if err != nil {
@@ -280,7 +280,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 			// The percentage of traffic to inspect is set by default to 100
 			tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
 			if tr != 100 {
-				_, err := ngwaf.UpdateConfiguration(conn, serviceID, ngwaf.ConfigureInput{
+				_, err := ngwaf.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.ConfigureInput{
 					WorkspaceID: id,
 					TrafficRamp: strconv.Itoa(tr),
 				})
@@ -295,7 +295,7 @@ func (h *ProductEnablementServiceAttributeHandler) Create(_ context.Context, d *
 }
 
 // Read refreshes the resource.
-func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	localState := d.Get(h.Key()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
@@ -325,43 +325,43 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
-			if _, err := fanout.Get(conn, serviceID); err == nil {
+			if _, err := fanout.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["fanout"] = true
 			}
 		}
 
 		if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
-			if _, err := botmanagement.Get(conn, serviceID); err == nil {
+			if _, err := botmanagement.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["bot_management"] = true
 			}
 
-			if _, err := brotlicompression.Get(conn, serviceID); err == nil {
+			if _, err := brotlicompression.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["brotli_compression"] = true
 			}
 
-			if _, err := domaininspector.Get(conn, serviceID); err == nil {
+			if _, err := domaininspector.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["domain_inspector"] = true
 			}
 
-			if _, err := imageoptimizer.Get(conn, serviceID); err == nil {
+			if _, err := imageoptimizer.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["image_optimizer"] = true
 			}
 
-			if _, err := origininspector.Get(conn, serviceID); err == nil {
+			if _, err := origininspector.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 				result["origin_inspector"] = true
 			}
 		}
 
-		if _, err := websockets.Get(conn, serviceID); err == nil {
+		if _, err := websockets.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 			result["websockets"] = true
 		}
 
-		if _, err := logexplorerinsights.Get(conn, serviceID); err == nil {
+		if _, err := logexplorerinsights.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
 			result["log_explorer_insights"] = true
 		}
 
-		if _, err := ddosprotection.Get(conn, serviceID); err == nil {
-			c, err := ddosprotection.GetConfiguration(conn, serviceID)
+		if _, err := ddosprotection.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
+			c, err := ddosprotection.GetConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("error looking up DDoS Protection product configuration for (%s): %s", serviceID, err)
 			}
@@ -379,8 +379,8 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 
 		}
 
-		if _, err := ngwaf.Get(conn, serviceID); err == nil {
-			c, err := ngwaf.GetConfiguration(conn, serviceID)
+		if _, err := ngwaf.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
+			c, err := ngwaf.GetConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("error looking up Next-Gen WAF product configuration for (%s): %s", serviceID, err)
 			}
@@ -427,7 +427,7 @@ func (h *ProductEnablementServiceAttributeHandler) Read(_ context.Context, d *sc
 // This is to provide a non-breaking workaround for customers who used an older
 // version of the Fastly Terraform provider. See details in the PR:
 // https://github.com/fastly/terraform-provider-fastly/pull/763
-func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, _ int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, _, modified map[string]any, _ int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	log.Println("[DEBUG] Update Product Enablement")
 
@@ -435,13 +435,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["fanout"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] fanout will be enabled")
-				_, err := fanout.Enable(conn, serviceID)
+				_, err := fanout.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable fanout: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] fanout will be disabled")
-				err := fanout.Disable(conn, serviceID)
+				err := fanout.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -455,13 +455,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["bot_management"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] bot_management will be enabled")
-				_, err := botmanagement.Enable(conn, serviceID)
+				_, err := botmanagement.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable bot_management: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] bot_management will be disabled")
-				err := botmanagement.Disable(conn, serviceID)
+				err := botmanagement.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -473,13 +473,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["brotli_compression"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] brotli_compression will be enabled")
-				_, err := brotlicompression.Enable(conn, serviceID)
+				_, err := brotlicompression.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable brotli_compression: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] brotli_compression will be disabled")
-				err := brotlicompression.Disable(conn, serviceID)
+				err := brotlicompression.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -491,13 +491,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["domain_inspector"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] domain_inspector will be enabled")
-				_, err := domaininspector.Enable(conn, serviceID)
+				_, err := domaininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable domain_inspector: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] domain_inspector will be disabled")
-				err := domaininspector.Disable(conn, serviceID)
+				err := domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -509,13 +509,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["image_optimizer"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] image_optimizer will be enabled")
-				_, err := imageoptimizer.Enable(conn, serviceID)
+				_, err := imageoptimizer.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable image_optimizer: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] image_optimizer will be disabled")
-				err := imageoptimizer.Disable(conn, serviceID)
+				err := imageoptimizer.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -527,13 +527,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if v, ok := modified["origin_inspector"]; ok {
 			if v.(bool) {
 				log.Println("[DEBUG] origin_inspector will be enabled")
-				_, err := origininspector.Enable(conn, serviceID)
+				_, err := origininspector.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable origin_inspector: %w", err)
 				}
 			} else {
 				log.Println("[DEBUG] origin_inspector will be disabled")
-				err := origininspector.Disable(conn, serviceID)
+				err := origininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -546,13 +546,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 	if v, ok := modified["websockets"]; ok {
 		if v.(bool) {
 			log.Println("[DEBUG] websockets will be enabled")
-			_, err := websockets.Enable(conn, serviceID)
+			_, err := websockets.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable websockets: %w", err)
 			}
 		} else {
 			log.Println("[DEBUG] websockets will be disabled")
-			err := websockets.Disable(conn, serviceID)
+			err := websockets.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				if e := h.checkAPIError(err); e != nil {
 					return e
@@ -564,13 +564,13 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 	if v, ok := modified["log_explorer_insights"]; ok {
 		if v.(bool) {
 			log.Println("[DEBUG] log_explorer_insights will be enabled")
-			_, err := logexplorerinsights.Enable(conn, serviceID)
+			_, err := logexplorerinsights.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				return fmt.Errorf("failed to enable log_explorer_insights: %w", err)
 			}
 		} else {
 			log.Println("[DEBUG] log_explorer_insights will be disabled")
-			err := logexplorerinsights.Disable(conn, serviceID)
+			err := logexplorerinsights.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 			if err != nil {
 				if e := h.checkAPIError(err); e != nil {
 					return e
@@ -584,7 +584,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 		if len(ddp) != 0 {
 			if ddp[0].(map[string]any)["enabled"].(bool) {
 				log.Println("[DEBUG] ddos_protection will be enabled")
-				_, err := ddosprotection.Enable(conn, serviceID)
+				_, err := ddosprotection.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					return fmt.Errorf("failed to enable ddos_protection: %w", err)
 				}
@@ -593,7 +593,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 				mode := ddp[0].(map[string]any)["mode"].(string)
 				if mode != "log" {
 					log.Println("[DEBUG] ddos_protection mode will be updated")
-					_, err := ddosprotection.UpdateConfiguration(conn, serviceID, ddosprotection.ConfigureInput{
+					_, err := ddosprotection.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ddosprotection.ConfigureInput{
 						Mode: mode,
 					})
 					if err != nil {
@@ -602,7 +602,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 				}
 			} else {
 				log.Println("[DEBUG] ddos_protection will be disabled")
-				err := ddosprotection.Disable(conn, serviceID)
+				err := ddosprotection.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -619,7 +619,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 				log.Println("[DEBUG] ngwaf will be enabled")
 
 				id := ngw[0].(map[string]any)["workspace_id"].(string)
-				_, err := ngwaf.Enable(conn, serviceID, ngwaf.EnableInput{
+				_, err := ngwaf.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.EnableInput{
 					WorkspaceID: id,
 				})
 				if err != nil {
@@ -627,7 +627,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 				}
 
 				tr := ngw[0].(map[string]any)["traffic_ramp"].(int)
-				_, err = ngwaf.UpdateConfiguration(conn, serviceID, ngwaf.ConfigureInput{
+				_, err = ngwaf.UpdateConfiguration(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID, ngwaf.ConfigureInput{
 					WorkspaceID: id,
 					TrafficRamp: strconv.Itoa(tr),
 				})
@@ -636,7 +636,7 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 				}
 			} else {
 				log.Println("[DEBUG] ngwaf will be disabled")
-				err := ngwaf.Disable(conn, serviceID)
+				err := ngwaf.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 				if err != nil {
 					if e := h.checkAPIError(err); e != nil {
 						return e
@@ -680,12 +680,12 @@ func (h *ProductEnablementServiceAttributeHandler) Update(_ context.Context, d *
 // `Process` method that handles both CREATE and UPDATE stages and doesn't get
 // passed a data structure that indicates what has changed like we do with the
 // TypeSet data type. So it'll be a trade-off.
-func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
+func (h *ProductEnablementServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, _ map[string]any, _ int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
 		log.Println("[DEBUG] disable fanout")
-		err := fanout.Disable(conn, serviceID)
+		err := fanout.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -695,7 +695,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 
 	if h.GetServiceMetadata().serviceType == ServiceTypeVCL {
 		log.Println("[DEBUG] disable bot_management")
-		err := botmanagement.Disable(conn, serviceID)
+		err := botmanagement.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -703,7 +703,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable brotli_compression")
-		err = brotlicompression.Disable(conn, serviceID)
+		err = brotlicompression.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -711,7 +711,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable domain_inspector")
-		err = domaininspector.Disable(conn, serviceID)
+		err = domaininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -719,7 +719,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable image_optimizer")
-		err = imageoptimizer.Disable(conn, serviceID)
+		err = imageoptimizer.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -727,7 +727,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 		}
 
 		log.Println("[DEBUG] disable origin_inspector")
-		err = origininspector.Disable(conn, serviceID)
+		err = origininspector.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 		if err != nil {
 			if e := h.checkAPIError(err); e != nil {
 				return e
@@ -736,7 +736,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	}
 
 	log.Println("[DEBUG] disable websockets")
-	err := websockets.Disable(conn, serviceID)
+	err := websockets.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e
@@ -744,7 +744,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	}
 
 	log.Println("[DEBUG] disable log_explorer_insights")
-	err = logexplorerinsights.Disable(conn, serviceID)
+	err = logexplorerinsights.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e
@@ -752,7 +752,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	}
 
 	log.Println("[DEBUG] disable ddos_protection")
-	err = ddosprotection.Disable(conn, serviceID)
+	err = ddosprotection.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e
@@ -760,7 +760,7 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(_ context.Context, d *
 	}
 
 	log.Println("[DEBUG] disable ngwaf")
-	err = ngwaf.Disable(conn, serviceID)
+	err = ngwaf.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
 	if err != nil {
 		if e := h.checkAPIError(err); e != nil {
 			return e

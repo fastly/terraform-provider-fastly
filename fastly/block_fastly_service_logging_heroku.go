@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // HerokuServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -97,21 +97,22 @@ func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HerokuServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Heroku logging addition opts: %#v", opts)
 
-	return createHeroku(conn, opts)
+	_, err := conn.CreateHeroku(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Heroku logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListHerokus(&gofastly.ListHerokusInput{
+		remoteState, err := conn.ListHerokus(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListHerokusInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -134,7 +135,7 @@ func (h *HerokuServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHerokuInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -166,7 +167,7 @@ func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Update Heroku Opts: %#v", opts)
-	_, err := conn.UpdateHeroku(&opts)
+	_, err := conn.UpdateHeroku(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -174,21 +175,12 @@ func (h *HerokuServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *HerokuServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HerokuServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Heroku logging endpoint removal opts: %#v", opts)
 
-	return deleteHeroku(conn, opts)
-}
-
-func createHeroku(conn *gofastly.Client, i *gofastly.CreateHerokuInput) error {
-	_, err := conn.CreateHeroku(i)
-	return err
-}
-
-func deleteHeroku(conn *gofastly.Client, i *gofastly.DeleteHerokuInput) error {
-	err := conn.DeleteHeroku(i)
+	err := conn.DeleteHeroku(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

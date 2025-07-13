@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // HoneycombServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -95,21 +95,22 @@ func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HoneycombServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Honeycomb logging addition opts: %#v", opts)
 
-	return createHoneycomb(conn, opts)
+	_, err := conn.CreateHoneycomb(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Honeycomb logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListHoneycombs(&gofastly.ListHoneycombsInput{
+		remoteState, err := conn.ListHoneycombs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListHoneycombsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -132,7 +133,7 @@ func (h *HoneycombServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHoneycombInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -164,7 +165,7 @@ func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Update Honeycomb Opts: %#v", opts)
-	_, err := conn.UpdateHoneycomb(&opts)
+	_, err := conn.UpdateHoneycomb(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -172,21 +173,12 @@ func (h *HoneycombServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *HoneycombServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HoneycombServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Honeycomb logging endpoint removal opts: %#v", opts)
 
-	return deleteHoneycomb(conn, opts)
-}
-
-func createHoneycomb(conn *gofastly.Client, i *gofastly.CreateHoneycombInput) error {
-	_, err := conn.CreateHoneycomb(i)
-	return err
-}
-
-func deleteHoneycomb(conn *gofastly.Client, i *gofastly.DeleteHoneycombInput) error {
-	err := conn.DeleteHoneycomb(i)
+	err := conn.DeleteHoneycomb(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

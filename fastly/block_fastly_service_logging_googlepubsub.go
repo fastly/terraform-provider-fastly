@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // GooglePubSubServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -113,21 +113,22 @@ func (h *GooglePubSubServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *GooglePubSubServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging addition opts: %#v", opts)
 
-	return createGooglePubSub(conn, opts)
+	_, err := conn.CreatePubsub(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Google Cloud Pub/Sub logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
+		remoteState, err := conn.ListPubsubs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListPubsubsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -150,7 +151,7 @@ func (h *GooglePubSubServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdatePubsubInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -191,7 +192,7 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 	}
 
 	log.Printf("[DEBUG] Update Google Cloud Pub/Sub Opts: %#v", opts)
-	_, err := conn.UpdatePubsub(&opts)
+	_, err := conn.UpdatePubsub(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -199,21 +200,12 @@ func (h *GooglePubSubServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *GooglePubSubServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GooglePubSubServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Google Cloud Pub/Sub logging endpoint removal opts: %#v", opts)
 
-	return deleteGooglePubSub(conn, opts)
-}
-
-func createGooglePubSub(conn *gofastly.Client, i *gofastly.CreatePubsubInput) error {
-	_, err := conn.CreatePubsub(i)
-	return err
-}
-
-func deleteGooglePubSub(conn *gofastly.Client, i *gofastly.DeletePubsubInput) error {
-	err := conn.DeletePubsub(i)
+	err := conn.DeletePubsub(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

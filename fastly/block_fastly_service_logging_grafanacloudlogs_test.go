@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenGrafanaCloudLogs(t *testing.T) {
@@ -187,7 +188,7 @@ func TestAccFastlyServiceVCL_logging_grafanacloudlogs_basic_compute(t *testing.T
 func testAccCheckFastlyServiceVCLGrafanaCloudLogsAttributes(service *gofastly.ServiceDetail, grafanacloudlogs []*gofastly.GrafanaCloudLogs, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		grafanacloudlogsList, err := conn.ListGrafanaCloudLogs(&gofastly.ListGrafanaCloudLogsInput{
+		grafanacloudlogsList, err := conn.ListGrafanaCloudLogs(context.TODO(), &gofastly.ListGrafanaCloudLogsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

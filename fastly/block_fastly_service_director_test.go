@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -11,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenDirectors(t *testing.T) {
@@ -242,7 +243,7 @@ func TestAccFastlyServiceVCL_directors_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLDirectorsAttributes(service *gofastly.ServiceDetail, directors []*gofastly.Director) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+		directorList, err := conn.ListDirectors(context.TODO(), &gofastly.ListDirectorsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
@@ -285,7 +286,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		directorList, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+		directorList, err := conn.ListDirectors(context.TODO(), &gofastly.ListDirectorsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
@@ -329,7 +330,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 			}
 		}
 
-		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		backendList, err := conn.ListBackends(context.TODO(), &gofastly.ListBackendsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
@@ -341,7 +342,7 @@ func testAccCheckFastlyServiceVCLDirectorBackends(service *gofastly.ServiceDetai
 
 		for _, director := range directorList {
 			for _, backend := range backendList {
-				directorBackendGet, err := conn.GetDirectorBackend(&gofastly.GetDirectorBackendInput{
+				directorBackendGet, err := conn.GetDirectorBackend(context.TODO(), &gofastly.GetDirectorBackendInput{
 					ServiceID:      gofastly.ToValue(service.ServiceID),
 					ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 					Director:       gofastly.ToValue(director.Name),

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func init() {
@@ -114,7 +115,7 @@ func testAccResourceFastlyTLSSubscriptionExists(resourceName string, id *string)
 		*id = r.Primary.ID
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		_, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
+		_, err := conn.GetTLSSubscription(context.TODO(), &fastly.GetTLSSubscriptionInput{
 			ID: r.Primary.ID,
 		})
 		return err
@@ -139,7 +140,7 @@ func testSweepTLSSubscription(region string) error {
 		return diagToErr(diagnostics)
 	}
 
-	subscriptions, err := client.ListTLSSubscriptions(&fastly.ListTLSSubscriptionsInput{PageSize: 1000})
+	subscriptions, err := client.ListTLSSubscriptions(context.TODO(), &fastly.ListTLSSubscriptionsInput{PageSize: 1000})
 	if err != nil {
 		return err
 	}
@@ -150,7 +151,7 @@ func testSweepTLSSubscription(region string) error {
 				continue
 			}
 
-			err = client.DeleteTLSSubscription(&fastly.DeleteTLSSubscriptionInput{
+			err = client.DeleteTLSSubscription(context.TODO(), &fastly.DeleteTLSSubscriptionInput{
 				ID: subscription.ID,
 			})
 			if err != nil {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
@@ -65,7 +65,7 @@ func dataSourceFastlyTLSPlatformCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSPlatformCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
@@ -73,7 +73,7 @@ func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Res
 	var certificate *fastly.BulkCertificate
 
 	if v, ok := d.GetOk("id"); ok {
-		cert, err := conn.GetBulkCertificate(&fastly.GetBulkCertificateInput{
+		cert, err := conn.GetBulkCertificate(ctx, &fastly.GetBulkCertificateInput{
 			ID: v.(string),
 		})
 		if err != nil {
@@ -84,7 +84,7 @@ func dataSourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Res
 	} else {
 		filters := getPlatformTLSCertificateFilters(d)
 
-		certificates, err := listPlatformTLSCertificates(conn, filters...)
+		certificates, err := listPlatformTLSCertificates(ctx, conn, filters...)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -136,11 +136,11 @@ func getPlatformTLSCertificateFilters(d *schema.ResourceData) []PlatformTLSCerti
 	return filters
 }
 
-func listPlatformTLSCertificates(conn *fastly.Client, filters ...PlatformTLSCertificatePredicate) ([]*fastly.BulkCertificate, error) {
+func listPlatformTLSCertificates(ctx context.Context, conn *fastly.Client, filters ...PlatformTLSCertificatePredicate) ([]*fastly.BulkCertificate, error) {
 	var certificates []*fastly.BulkCertificate
 	pageNumber := 1
 	for {
-		list, err := conn.ListBulkCertificates(&fastly.ListBulkCertificatesInput{
+		list, err := conn.ListBulkCertificates(ctx, &fastly.ListBulkCertificatesInput{
 			PageNumber: pageNumber,
 			PageSize:   10,
 		})

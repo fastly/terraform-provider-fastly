@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // ACLServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -56,7 +56,7 @@ func (h *ACLServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, latestVersion int, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, latestVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateACLInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: latestVersion,
@@ -64,7 +64,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Fastly ACL creation opts: %#v", opts)
-	_, err := conn.CreateACL(&opts)
+	_, err := conn.CreateACL(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (h *ACLServiceAttributeHandler) Create(_ context.Context, d *schema.Resourc
 }
 
 // Read refreshes the resource.
-func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, latestVersion int, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, latestVersion int, conn *gofastly.Client) error {
 	v, ok := d.Get(h.Key()).(*schema.Set)
 	if !ok {
 		return fmt.Errorf("failed to convert ACL state structure to *schema.Set")
@@ -82,7 +82,7 @@ func (h *ACLServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceD
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing ACLs for (%s)", d.Id())
-		remoteState, err := conn.ListACLs(&gofastly.ListACLsInput{
+		remoteState, err := conn.ListACLs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListACLsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
 		})
@@ -120,9 +120,9 @@ func (h *ACLServiceAttributeHandler) Update(context.Context, *schema.ResourceDat
 }
 
 // Delete deletes the resource.
-func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, latestVersion int, conn *gofastly.Client) error {
+func (h *ACLServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, latestVersion int, conn *gofastly.Client) error {
 	if !resource["force_destroy"].(bool) {
-		mayDelete, err := isACLEmpty(d.Id(), resource["acl_id"].(string), conn)
+		mayDelete, err := isACLEmpty(ctx, d.Id(), resource["acl_id"].(string), conn)
 		if err != nil {
 			return err
 		}
@@ -139,7 +139,7 @@ func (h *ACLServiceAttributeHandler) Delete(_ context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Fastly ACL removal opts: %#v", opts)
-	err := conn.DeleteACL(&opts)
+	err := conn.DeleteACL(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
@@ -178,8 +178,8 @@ func flattenACLs(remoteState []*gofastly.ACL) []map[string]any {
 	return result
 }
 
-func isACLEmpty(serviceID, aclID string, conn *gofastly.Client) (bool, error) {
-	entries, err := conn.ListACLEntries(&gofastly.ListACLEntriesInput{
+func isACLEmpty(ctx context.Context, serviceID, aclID string, conn *gofastly.Client) (bool, error) {
+	entries, err := conn.ListACLEntries(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.ListACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})

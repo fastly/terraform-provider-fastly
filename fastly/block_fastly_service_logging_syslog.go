@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // SyslogServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -141,7 +141,7 @@ func (h *SyslogServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSyslogInput{
 		ServiceID:        d.Id(),
@@ -172,7 +172,7 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Create Syslog Opts: %#v", opts)
-	_, err := conn.CreateSyslog(&opts)
+	_, err := conn.CreateSyslog(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -180,12 +180,12 @@ func (h *SyslogServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Syslog for (%s)", d.Id())
-		remoteState, err := conn.ListSyslogs(&gofastly.ListSyslogsInput{
+		remoteState, err := conn.ListSyslogs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListSyslogsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -208,7 +208,7 @@ func (h *SyslogServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSyslogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -267,7 +267,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Update Syslog Opts: %#v", opts)
-	_, err := conn.UpdateSyslog(&opts)
+	_, err := conn.UpdateSyslog(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (h *SyslogServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SyslogServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSyslogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -283,7 +283,7 @@ func (h *SyslogServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Fastly Syslog removal opts: %#v", opts)
-	err := conn.DeleteSyslog(&opts)
+	err := conn.DeleteSyslog(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

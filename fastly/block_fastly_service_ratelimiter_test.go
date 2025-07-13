@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenRateLimiter(t *testing.T) {
@@ -408,7 +409,7 @@ resource "fastly_service_vcl" "example" {
 func testAccCheckFastlyServiceVCLRateLimiterAttributes(service *gofastly.ServiceDetail, want []*gofastly.ERL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		have, err := conn.ListERLs(&gofastly.ListERLsInput{
+		have, err := conn.ListERLs(context.TODO(), &gofastly.ListERLsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

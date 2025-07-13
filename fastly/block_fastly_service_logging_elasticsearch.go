@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // ElasticSearchServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -147,21 +147,22 @@ func (h *ElasticSearchServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ElasticSearchServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging addition opts: %#v", opts)
 
-	return createElasticsearch(conn, opts)
+	_, err := conn.CreateElasticsearch(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Elasticsearch logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
+		remoteState, err := conn.ListElasticsearch(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListElasticsearchInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -184,7 +185,7 @@ func (h *ElasticSearchServiceAttributeHandler) Read(_ context.Context, d *schema
 }
 
 // Update updates the resource.
-func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateElasticsearchInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -243,7 +244,7 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 	}
 
 	log.Printf("[DEBUG] Update Elasticsearch Opts: %#v", opts)
-	_, err := conn.UpdateElasticsearch(&opts)
+	_, err := conn.UpdateElasticsearch(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -251,21 +252,12 @@ func (h *ElasticSearchServiceAttributeHandler) Update(_ context.Context, d *sche
 }
 
 // Delete deletes the resource.
-func (h *ElasticSearchServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ElasticSearchServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Elasticsearch logging endpoint removal opts: %#v", opts)
 
-	return deleteElasticsearch(conn, opts)
-}
-
-func createElasticsearch(conn *gofastly.Client, i *gofastly.CreateElasticsearchInput) error {
-	_, err := conn.CreateElasticsearch(i)
-	return err
-}
-
-func deleteElasticsearch(conn *gofastly.Client, i *gofastly.DeleteElasticsearchInput) error {
-	err := conn.DeleteElasticsearch(i)
+	err := conn.DeleteElasticsearch(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {

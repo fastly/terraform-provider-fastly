@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // BackendServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -220,11 +220,11 @@ func (h *BackendServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreateBackendInput(d.Id(), serviceVersion, resource)
 
 	log.Printf("[DEBUG] Create Backend Opts: %#v", opts)
-	_, err := conn.CreateBackend(&opts)
+	_, err := conn.CreateBackend(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -233,12 +233,12 @@ func (h *BackendServiceAttributeHandler) Create(_ context.Context, d *schema.Res
 }
 
 // Read refreshes the resource.
-func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Backends for (%s)", d.Id())
-		remoteState, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		remoteState, err := conn.ListBackends(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListBackendsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -256,11 +256,11 @@ func (h *BackendServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 }
 
 // Update updates the resource.
-func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildUpdateBackendInput(d.Id(), serviceVersion, resource, modified)
 
 	log.Printf("[DEBUG] Update Backend Opts: %#v", opts)
-	_, err := conn.UpdateBackend(&opts)
+	_, err := conn.UpdateBackend(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -268,11 +268,11 @@ func (h *BackendServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 }
 
 // Delete deletes the resource.
-func (h *BackendServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BackendServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.createDeleteBackendInput(d.Id(), serviceVersion, resource)
 
 	log.Printf("[DEBUG] Fastly Backend removal opts: %#v", opts)
-	err := conn.DeleteBackend(&opts)
+	err := conn.DeleteBackend(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

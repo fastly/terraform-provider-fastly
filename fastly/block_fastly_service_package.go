@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // PackageServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -60,7 +60,7 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 }
 
 // Process creates or updates the attribute against the Fastly API.
-func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	if v, ok := d.GetOk(h.GetKey()); ok {
 		input := &gofastly.UpdatePackageInput{
 			ServiceID:      d.Id(),
@@ -81,7 +81,7 @@ func (h *PackageServiceAttributeHandler) Process(_ context.Context, d *schema.Re
 			input.PackagePath = gofastly.ToPointer(v)
 		}
 
-		_, err := conn.UpdatePackage(input)
+		_, err := conn.UpdatePackage(gofastly.NewContextForResourceID(ctx, d.Id()), input)
 		if err != nil {
 			return fmt.Errorf("error modifying package %s: %s", d.Id(), err)
 		}
@@ -99,7 +99,7 @@ const (
 )
 
 // Read refreshes the attribute state against the Fastly API.
-func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	localState := d.Get(h.key).([]any)
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
@@ -109,7 +109,7 @@ func (h *PackageServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 		serviceVersionNumber := gofastly.ToValue(s.ActiveVersion.Number)
 
 		log.Printf("[DEBUG] Refreshing package for (%s)", d.Id())
-		remoteState, err := conn.GetPackage(&gofastly.GetPackageInput{
+		remoteState, err := conn.GetPackage(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetPackageInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersionNumber,
 		})

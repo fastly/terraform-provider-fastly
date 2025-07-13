@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // CloudfilesServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -151,22 +151,23 @@ func (h *CloudfilesServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *CloudfilesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging addition opts: %#v", opts)
 
-	return createCloudfiles(conn, opts)
+	_, err := conn.CreateCloudfiles(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		// Refresh Cloud Files.
 		log.Printf("[DEBUG] Refreshing Cloud Files logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
+		remoteState, err := conn.ListCloudfiles(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListCloudfilesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -189,7 +190,7 @@ func (h *CloudfilesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCloudfilesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -245,7 +246,7 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Update Cloud Files Opts: %#v", opts)
-	_, err := conn.UpdateCloudfiles(&opts)
+	_, err := conn.UpdateCloudfiles(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -253,21 +254,12 @@ func (h *CloudfilesServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *CloudfilesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CloudfilesServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Cloud Files logging endpoint removal opts: %#v", opts)
 
-	return deleteCloudfiles(conn, opts)
-}
-
-func createCloudfiles(conn *gofastly.Client, i *gofastly.CreateCloudfilesInput) error {
-	_, err := conn.CreateCloudfiles(i)
-	return err
-}
-
-func deleteCloudfiles(conn *gofastly.Client, i *gofastly.DeleteCloudfilesInput) error {
-	err := conn.DeleteCloudfiles(i)
+	err := conn.DeleteCloudfiles(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

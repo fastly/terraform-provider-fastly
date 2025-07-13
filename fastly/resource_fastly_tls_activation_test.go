@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func init() {
@@ -198,7 +199,7 @@ func testAccFastlyTLSActivationCheckExists(resourceName string) resource.TestChe
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-		_, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{
+		_, err := conn.GetTLSActivation(context.TODO(), &fastly.GetTLSActivationInput{
 			ID: r.Primary.ID,
 		})
 		return err
@@ -212,7 +213,7 @@ func testAccFastlyTLSActivationCheckDestroy(state *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		activations, err := conn.ListTLSActivations(&fastly.ListTLSActivationsInput{})
+		activations, err := conn.ListTLSActivations(context.TODO(), &fastly.ListTLSActivationsInput{})
 		if err != nil {
 			return fmt.Errorf(
 				"[WARN] Error listing TLS activations when deleting activation %s: %w",
@@ -239,7 +240,7 @@ func testSweepTLSActivation(region string) error {
 		return diagToErr(diagnostics)
 	}
 
-	activations, err := client.ListTLSActivations(&fastly.ListTLSActivationsInput{PageSize: 1000})
+	activations, err := client.ListTLSActivations(context.TODO(), &fastly.ListTLSActivationsInput{PageSize: 1000})
 	if err != nil {
 		return err
 	}
@@ -249,7 +250,7 @@ func testSweepTLSActivation(region string) error {
 			continue
 		}
 
-		err = client.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{ID: activation.ID})
+		err = client.DeleteTLSActivation(context.TODO(), &fastly.DeleteTLSActivationInput{ID: activation.ID})
 		if err != nil {
 			return err
 		}

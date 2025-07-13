@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // NewRelicOTLPServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -98,22 +98,22 @@ func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *NewRelicOTLPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicOTLPServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly New Relic OTLP logging addition opts: %#v", opts)
 
-	_, err := conn.CreateNewRelicOTLP(opts)
+	_, err := conn.CreateNewRelicOTLP(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 	return err
 }
 
 // Read refreshes the resource.
-func (h *NewRelicOTLPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicOTLPServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing New Relic OTLP logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListNewRelicOTLP(&gofastly.ListNewRelicOTLPInput{
+		remoteState, err := conn.ListNewRelicOTLP(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListNewRelicOTLPInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -132,7 +132,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *NewRelicOTLPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicOTLPServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateNewRelicOTLPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -167,7 +167,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) Update(_ context.Context, d *schem
 	}
 
 	log.Printf("[DEBUG] Update New Relic OTLP Opts: %#v", opts)
-	_, err := conn.UpdateNewRelicOTLP(&opts)
+	_, err := conn.UpdateNewRelicOTLP(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *NewRelicOTLPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *NewRelicOTLPServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := &gofastly.DeleteNewRelicOTLPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -184,7 +184,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) Delete(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] Fastly New Relic OTLP logging endpoint removal opts: %#v", opts)
 
-	err := conn.DeleteNewRelicOTLP(opts)
+	err := conn.DeleteNewRelicOTLP(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // SettingsServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -19,7 +19,7 @@ func NewServiceSettings() ServiceAttributeDefinition {
 }
 
 // Process creates or updates the attribute against the Fastly API.
-func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
+func (h *SettingsServiceAttributeHandler) Process(ctx context.Context, d *schema.ResourceData, latestVersion int, conn *gofastly.Client) error {
 	// NOTE: DefaultTTL uses the same default value as provided by the Fastly API.
 	opts := gofastly.UpdateSettingsInput{
 		ServiceID:       d.Id(),
@@ -39,7 +39,7 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Update Settings opts: %#v", opts)
-	_, err := conn.UpdateSettings(&opts)
+	_, err := conn.UpdateSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 
 	if attr, ok := d.GetOk("http3"); ok {
 		if attr.(bool) {
@@ -49,11 +49,11 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 			// The API returns a 404 if HTTP3 is not enabled.
 			// The API client returns an error for non-2xx responses.
 			// So if there is no error, then HTTP3 is enabled.
-			if _, err = conn.GetHTTP3(&gofastly.GetHTTP3Input{
+			if _, err = conn.GetHTTP3(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetHTTP3Input{
 				ServiceID:      d.Id(),
 				ServiceVersion: latestVersion,
 			}); err != nil {
-				_, err = conn.EnableHTTP3(&gofastly.EnableHTTP3Input{
+				_, err = conn.EnableHTTP3(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.EnableHTTP3Input{
 					FeatureRevision: gofastly.ToPointer(1),
 					ServiceID:       d.Id(),
 					ServiceVersion:  latestVersion,
@@ -61,7 +61,7 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 			}
 		}
 	} else {
-		err = conn.DisableHTTP3(&gofastly.DisableHTTP3Input{
+		err = conn.DisableHTTP3(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.DisableHTTP3Input{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
 		})
@@ -70,7 +70,7 @@ func (h *SettingsServiceAttributeHandler) Process(_ context.Context, d *schema.R
 	return err
 }
 
-func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
+func (h *SettingsServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, s *gofastly.ServiceDetail, conn *gofastly.Client) error {
 	if s.ActiveVersion == nil {
 		return fmt.Errorf("error: no service ActiveVersion object")
 	}
@@ -81,7 +81,7 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 		ServiceVersion: serviceVersionNumber,
 	}
 
-	settings, err := conn.GetSettings(&settingsOpts)
+	settings, err := conn.GetSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &settingsOpts)
 	if err != nil {
 		return fmt.Errorf("error looking up Version settings for (%s), version (%v): %s", d.Id(), serviceVersionNumber, err)
 	}
@@ -118,7 +118,7 @@ func (h *SettingsServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 	// The API returns a 404 if HTTP3 is not enabled.
 	// The API client returns an error for non-2xx responses.
 	// So if there is no error, then HTTP3 is enabled.
-	if _, err = conn.GetHTTP3(&gofastly.GetHTTP3Input{
+	if _, err = conn.GetHTTP3(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetHTTP3Input{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersionNumber,
 	}); err == nil {

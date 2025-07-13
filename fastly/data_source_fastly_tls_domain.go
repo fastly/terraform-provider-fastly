@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func dataSourceFastlyTLSDomain() *schema.Resource {
@@ -42,10 +42,10 @@ func dataSourceFastlyTLSDomain() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSDomainsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSDomainsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	domain, err := findTLSDomain(conn, d)
+	domain, err := findTLSDomain(ctx, conn, d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -77,13 +77,13 @@ func dataSourceFastlyTLSDomainsRead(_ context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func findTLSDomain(conn *fastly.Client, d *schema.ResourceData) (*fastly.TLSDomain, error) {
+func findTLSDomain(ctx context.Context, conn *fastly.Client, d *schema.ResourceData) (*fastly.TLSDomain, error) {
 	domain := d.Get("domain").(string)
 	filter := func(d *fastly.TLSDomain) bool {
 		return d.ID == domain
 	}
 
-	domains, err := listTLSDomains(conn, filter)
+	domains, err := listTLSDomains(ctx, conn, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +102,12 @@ func findTLSDomain(conn *fastly.Client, d *schema.ResourceData) (*fastly.TLSDoma
 // TLSDomainPredicate determines if a domain should be filtered.
 type TLSDomainPredicate func(domain *fastly.TLSDomain) bool
 
-func listTLSDomains(conn *fastly.Client, filters ...TLSDomainPredicate) ([]*fastly.TLSDomain, error) {
+func listTLSDomains(ctx context.Context, conn *fastly.Client, filters ...TLSDomainPredicate) ([]*fastly.TLSDomain, error) {
 	var domains []*fastly.TLSDomain
 	pageNumber := 1
 
 	for {
-		list, err := conn.ListTLSDomains(&fastly.ListTLSDomainsInput{
+		list, err := conn.ListTLSDomains(ctx, &fastly.ListTLSDomainsInput{
 			PageNumber: pageNumber,
 		})
 		if err != nil {

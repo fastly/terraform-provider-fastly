@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenScalyr(t *testing.T) {
@@ -165,7 +166,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLScalyrAttributes(service *gofastly.ServiceDetail, scalyr []*gofastly.Scalyr, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		scalyrList, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
+		scalyrList, err := conn.ListScalyrs(context.TODO(), &gofastly.ListScalyrsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

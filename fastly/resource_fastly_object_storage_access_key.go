@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
-	"github.com/fastly/go-fastly/v10/fastly/objectstorage/accesskeys"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/objectstorage/accesskeys"
 )
 
 func resourceObjectStorageAccessKey() *schema.Resource {
@@ -54,7 +54,7 @@ func resourceObjectStorageAccessKey() *schema.Resource {
 	}
 }
 
-func resourceObjectStorageAccessKeyCreate(_ context.Context, resourceData *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceObjectStorageAccessKeyCreate(ctx context.Context, resourceData *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	opts := accesskeys.CreateInput{
@@ -69,7 +69,7 @@ func resourceObjectStorageAccessKeyCreate(_ context.Context, resourceData *schem
 		}
 		opts.Buckets = gofastly.ToPointer(buckets)
 	}
-	createdAK, err := accesskeys.Create(conn, &opts)
+	createdAK, err := accesskeys.Create(ctx, conn, &opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -94,7 +94,7 @@ func resourceObjectStorageAccessKeyCreate(_ context.Context, resourceData *schem
 	return nil
 }
 
-func resourceObjectStorageAccessKeyRead(_ context.Context, resourceData *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceObjectStorageAccessKeyRead(ctx context.Context, resourceData *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Object Storage Access Key Configuration for (%s)", resourceData.Get("access_key_id"))
 	conn := meta.(*APIClient).conn
 
@@ -102,7 +102,7 @@ func resourceObjectStorageAccessKeyRead(_ context.Context, resourceData *schema.
 		AccessKeyID: gofastly.ToPointer(resourceData.Id()),
 	}
 
-	readAK, err := accesskeys.Get(conn, &opts)
+	readAK, err := accesskeys.Get(ctx, conn, &opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -140,14 +140,14 @@ func resourceObjectStorageAccessKeyRead(_ context.Context, resourceData *schema.
 	return nil
 }
 
-func resourceObjectStorageAccessKeyDelete(_ context.Context, resourceData *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceObjectStorageAccessKeyDelete(ctx context.Context, resourceData *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	opts := accesskeys.DeleteInput{
 		AccessKeyID: gofastly.ToPointer(resourceData.Id()),
 	}
 
-	err := accesskeys.Delete(conn, &opts)
+	err := accesskeys.Delete(ctx, conn, &opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}

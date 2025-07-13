@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenHealthChecks(t *testing.T) {
@@ -135,7 +136,7 @@ func TestAccFastlyServiceVCL_healthcheck_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLHealthCheckAttributes(service *gofastly.ServiceDetail, healthchecks []*gofastly.HealthCheck) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		healthcheckList, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
+		healthcheckList, err := conn.ListHealthChecks(context.TODO(), &gofastly.ListHealthChecksInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

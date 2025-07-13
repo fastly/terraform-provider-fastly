@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyIntegration() *schema.Resource {
@@ -65,7 +65,7 @@ func resourceFastlyIntegrationCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = gofastly.ToPointer(v.(string))
 	}
 
-	i, err := conn.CreateIntegration(&input)
+	i, err := conn.CreateIntegration(ctx, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -75,11 +75,11 @@ func resourceFastlyIntegrationCreate(ctx context.Context, d *schema.ResourceData
 	return resourceFastlyIntegrationRead(ctx, d, meta)
 }
 
-func resourceFastlyIntegrationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Integration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
-	i, err := conn.GetIntegration(&gofastly.GetIntegrationInput{
+	i, err := conn.GetIntegration(ctx, &gofastly.GetIntegrationInput{
 		ID: d.Id(),
 	})
 	if err != nil {
@@ -134,7 +134,7 @@ func resourceFastlyIntegrationUpdate(ctx context.Context, d *schema.ResourceData
 		input.Description = gofastly.ToPointer(v.(string))
 	}
 
-	err := conn.UpdateIntegration(&input)
+	err := conn.UpdateIntegration(ctx, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -142,10 +142,10 @@ func resourceFastlyIntegrationUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceFastlyIntegrationRead(ctx, d, meta)
 }
 
-func resourceFastlyIntegrationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteIntegration(&gofastly.DeleteIntegrationInput{
+	err := conn.DeleteIntegration(ctx, &gofastly.DeleteIntegrationInput{
 		ID: d.Id(),
 	})
 	if err != nil {

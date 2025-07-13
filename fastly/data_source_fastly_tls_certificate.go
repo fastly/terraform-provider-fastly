@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func dataSourceFastlyTLSCertificate() *schema.Resource {
@@ -81,7 +81,7 @@ func dataSourceFastlyTLSCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
@@ -89,7 +89,7 @@ func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceDat
 	var certificate *fastly.CustomTLSCertificate
 
 	if v, ok := d.GetOk("id"); ok {
-		cert, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
+		cert, err := conn.GetCustomTLSCertificate(ctx, &fastly.GetCustomTLSCertificateInput{
 			ID: v.(string),
 		})
 		if err != nil {
@@ -100,7 +100,7 @@ func dataSourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceDat
 	} else {
 		filters := getTLSCertificateFilters(d)
 
-		certificates, err := listTLSCertificates(conn, filters...)
+		certificates, err := listTLSCertificates(ctx, conn, filters...)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -167,11 +167,11 @@ func getTLSCertificateFilters(d *schema.ResourceData) []TLSCertificatePredicate 
 	return filters
 }
 
-func listTLSCertificates(conn *fastly.Client, filters ...TLSCertificatePredicate) ([]*fastly.CustomTLSCertificate, error) {
+func listTLSCertificates(ctx context.Context, conn *fastly.Client, filters ...TLSCertificatePredicate) ([]*fastly.CustomTLSCertificate, error) {
 	var certificates []*fastly.CustomTLSCertificate
 	pageNumber := 1
 	for {
-		list, err := conn.ListCustomTLSCertificates(&fastly.ListCustomTLSCertificatesInput{
+		list, err := conn.ListCustomTLSCertificates(ctx, &fastly.ListCustomTLSCertificatesInput{
 			PageNumber: pageNumber,
 			PageSize:   10,
 		})

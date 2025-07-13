@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceServiceACLEntries() *schema.Resource {
@@ -101,7 +101,7 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Process the batch operations
-	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
+	err := executeBatchACLOperations(gofastly.NewContextForResourceID(ctx, serviceID), conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
 		return diag.Errorf("error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
@@ -110,7 +110,7 @@ func resourceServiceACLEntriesCreate(ctx context.Context, d *schema.ResourceData
 	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceACLEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing ACL Entries Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -118,7 +118,7 @@ func resourceServiceACLEntriesRead(_ context.Context, d *schema.ResourceData, me
 	serviceID := d.Get("service_id").(string)
 	aclID := d.Get("acl_id").(string)
 
-	remoteState, err := getAllACLEntriesViaPaginator(conn, &gofastly.GetACLEntriesInput{
+	remoteState, err := getAllACLEntriesViaPaginator(gofastly.NewContextForResourceID(ctx, serviceID), conn, &gofastly.GetACLEntriesInput{
 		ServiceID: serviceID,
 		ACLID:     aclID,
 	})
@@ -196,7 +196,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Process the batch operations
-	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
+	err := executeBatchACLOperations(gofastly.NewContextForResourceID(ctx, serviceID), conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
 		return diag.Errorf("error updating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
@@ -204,7 +204,7 @@ func resourceServiceACLEntriesUpdate(ctx context.Context, d *schema.ResourceData
 	return resourceServiceACLEntriesRead(ctx, d, meta)
 }
 
-func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceACLEntriesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -223,7 +223,7 @@ func resourceServiceACLEntriesDelete(_ context.Context, d *schema.ResourceData, 
 	}
 
 	// Process the batch operations
-	err := executeBatchACLOperations(conn, serviceID, aclID, batchACLEntries)
+	err := executeBatchACLOperations(gofastly.NewContextForResourceID(ctx, serviceID), conn, serviceID, aclID, batchACLEntries)
 	if err != nil {
 		return diag.Errorf("error creating ACL entries: service %s, ACL %s, %s", serviceID, aclID, err)
 	}
@@ -290,7 +290,7 @@ func resourceServiceACLEntriesImport(_ context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, batchACLEntries []*gofastly.BatchACLEntry) error {
+func executeBatchACLOperations(ctx context.Context, conn *gofastly.Client, serviceID, aclID string, batchACLEntries []*gofastly.BatchACLEntry) error {
 	batchSize := gofastly.BatchModifyMaximumOperations
 
 	for i := 0; i < len(batchACLEntries); i += batchSize {
@@ -299,7 +299,7 @@ func executeBatchACLOperations(conn *gofastly.Client, serviceID, aclID string, b
 			j = len(batchACLEntries)
 		}
 
-		err := conn.BatchModifyACLEntries(&gofastly.BatchModifyACLEntriesInput{
+		err := conn.BatchModifyACLEntries(ctx, &gofastly.BatchModifyACLEntriesInput{
 			ServiceID: serviceID,
 			ACLID:     aclID,
 			Entries:   batchACLEntries[i:j],
@@ -335,8 +335,8 @@ func convertSubnetToInt(s string) int {
 	return subnet
 }
 
-func getAllACLEntriesViaPaginator(conn *gofastly.Client, input *gofastly.GetACLEntriesInput) ([]*gofastly.ACLEntry, error) {
-	paginator := conn.GetACLEntries(input)
+func getAllACLEntriesViaPaginator(ctx context.Context, conn *gofastly.Client, input *gofastly.GetACLEntriesInput) ([]*gofastly.ACLEntry, error) {
+	paginator := conn.GetACLEntries(ctx, input)
 
 	var entries []*gofastly.ACLEntry
 	for paginator.HasNext() {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // ResponseObjectServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -84,7 +84,7 @@ func (h *ResponseObjectServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResponseObjectServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateResponseObjectInput{
 		ServiceID:        d.Id(),
 		ServiceVersion:   serviceVersion,
@@ -98,7 +98,7 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Create Response Object Opts: %#v", opts)
-	_, err := conn.CreateResponseObject(&opts)
+	_, err := conn.CreateResponseObject(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -106,12 +106,12 @@ func (h *ResponseObjectServiceAttributeHandler) Create(_ context.Context, d *sch
 }
 
 // Read refreshes the resource.
-func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResponseObjectServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Response Object for (%s)", d.Id())
-		remoteState, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
+		remoteState, err := conn.ListResponseObjects(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListResponseObjectsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -130,7 +130,7 @@ func (h *ResponseObjectServiceAttributeHandler) Read(_ context.Context, d *schem
 }
 
 // Update updates the resource.
-func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResponseObjectServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateResponseObjectInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -159,7 +159,7 @@ func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Update Response Object Opts: %#v", opts)
-	_, err := conn.UpdateResponseObject(&opts)
+	_, err := conn.UpdateResponseObject(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (h *ResponseObjectServiceAttributeHandler) Update(_ context.Context, d *sch
 }
 
 // Delete deletes the resource.
-func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResponseObjectServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteResponseObjectInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -175,7 +175,7 @@ func (h *ResponseObjectServiceAttributeHandler) Delete(_ context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Fastly Response Object removal opts: %#v", opts)
-	err := conn.DeleteResponseObject(&opts)
+	err := conn.DeleteResponseObject(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

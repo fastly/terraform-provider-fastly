@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -51,7 +52,7 @@ func testAccFastlyDataSourceDatacentersState(n string) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		datacenters, err := conn.AllDatacenters()
+		datacenters, err := conn.AllDatacenters(context.TODO())
 		if err != nil {
 			return fmt.Errorf("error fetching datacenters: %s", err)
 		}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // DynamicSnippetServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -73,14 +73,14 @@ func (h *DynamicSnippetServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := buildDynamicSnippet(resource)
 
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Addition opts: %#v", opts)
-	_, err := conn.CreateSnippet(opts)
+	_, err := conn.CreateSnippet(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 	if err != nil {
 		return err
 	}
@@ -88,12 +88,12 @@ func (h *DynamicSnippetServiceAttributeHandler) Create(_ context.Context, d *sch
 }
 
 // Read refreshes the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing VCL Snippets for (%s)", d.Id())
-		remoteState, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+		remoteState, err := conn.ListSnippets(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListSnippetsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -111,7 +111,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Read(_ context.Context, d *schem
 }
 
 // Update updates the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSnippetInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -131,7 +131,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Update Dynamic Snippet Opts: %#v", opts)
-	_, err := conn.UpdateSnippet(&opts)
+	_, err := conn.UpdateSnippet(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Update(_ context.Context, d *sch
 }
 
 // Delete deletes the resource.
-func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DynamicSnippetServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSnippetInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -147,7 +147,7 @@ func (h *DynamicSnippetServiceAttributeHandler) Delete(_ context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Fastly VCL Dynamic Snippet Removal opts: %#v", opts)
-	err := conn.DeleteSnippet(&opts)
+	err := conn.DeleteSnippet(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

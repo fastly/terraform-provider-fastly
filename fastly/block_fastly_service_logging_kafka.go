@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // KafkaServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -161,21 +161,22 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *KafkaServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kafka logging addition opts: %#v", opts)
 
-	return createKafka(conn, opts)
+	_, err := conn.CreateKafka(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Kafka logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListKafkas(&gofastly.ListKafkasInput{
+		remoteState, err := conn.ListKafkas(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListKafkasInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -198,7 +199,7 @@ func (h *KafkaServiceAttributeHandler) Read(_ context.Context, d *schema.Resourc
 }
 
 // Update updates the resource.
-func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateKafkaInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -266,7 +267,7 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 	}
 
 	log.Printf("[DEBUG] Update Kafka Opts: %#v", opts)
-	_, err := conn.UpdateKafka(&opts)
+	_, err := conn.UpdateKafka(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -274,21 +275,12 @@ func (h *KafkaServiceAttributeHandler) Update(_ context.Context, d *schema.Resou
 }
 
 // Delete deletes the resource.
-func (h *KafkaServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KafkaServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kafka logging endpoint removal opts: %#v", opts)
 
-	return deleteKafka(conn, opts)
-}
-
-func createKafka(conn *gofastly.Client, i *gofastly.CreateKafkaInput) error {
-	_, err := conn.CreateKafka(i)
-	return err
-}
-
-func deleteKafka(conn *gofastly.Client, i *gofastly.DeleteKafkaInput) error {
-	err := conn.DeleteKafka(i)
+	err := conn.DeleteKafka(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {

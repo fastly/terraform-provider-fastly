@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenDictionaryItems(t *testing.T) {
@@ -375,7 +376,7 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
+		dict, err := conn.GetDictionary(context.TODO(), &gofastly.GetDictionaryInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 			Name:           dictName,
@@ -384,7 +385,7 @@ func testAccCheckFastlyServiceDictionaryItemsRemoteState(service *gofastly.Servi
 			return fmt.Errorf("error looking up Dictionary records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
-		dictItems, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
+		dictItems, err := conn.ListDictionaryItems(context.TODO(), &gofastly.ListDictionaryItemsInput{
 			ServiceID:    gofastly.ToValue(service.ServiceID),
 			DictionaryID: gofastly.ToValue(dict.DictionaryID),
 		})
@@ -410,7 +411,7 @@ func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 		t.Fatalf("[ERR] Error looking up Dictionary records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 	}
 
-	_, err = conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
+	_, err = conn.CreateDictionaryItem(context.TODO(), &gofastly.CreateDictionaryItemInput{
 		ServiceID:    gofastly.ToValue(service.ServiceID),
 		DictionaryID: gofastly.ToValue(dict.DictionaryID),
 
@@ -425,7 +426,7 @@ func createDictionaryItemThroughAPI(t *testing.T, service *gofastly.ServiceDetai
 func getDictionaryByName(service *gofastly.ServiceDetail, dictName string) (*gofastly.Dictionary, error) {
 	conn := testAccProvider.Meta().(*APIClient).conn
 
-	dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
+	dict, err := conn.GetDictionary(context.TODO(), &gofastly.GetDictionaryInput{
 		ServiceID:      gofastly.ToValue(service.ServiceID),
 		ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		Name:           dictName,

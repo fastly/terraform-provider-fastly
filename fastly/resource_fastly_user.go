@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceUser() *schema.Resource {
@@ -45,10 +45,10 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	u, err := conn.CreateUser(&gofastly.CreateUserInput{
+	u, err := conn.CreateUser(ctx, &gofastly.CreateUserInput{
 		Login: gofastly.ToPointer(d.Get("login").(string)),
 		Name:  gofastly.ToPointer(d.Get("name").(string)),
 		Role:  gofastly.ToPointer(d.Get("role").(string)),
@@ -65,11 +65,11 @@ func resourceUserCreate(_ context.Context, d *schema.ResourceData, meta any) dia
 	return nil
 }
 
-func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing User Configuration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
-	u, err := conn.GetUser(&gofastly.GetUserInput{
+	u, err := conn.GetUser(ctx, &gofastly.GetUserInput{
 		UserID: d.Id(),
 	})
 	if err != nil {
@@ -103,7 +103,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// Update Name and/or Role.
 	if d.HasChanges("name", "role") {
-		_, err := conn.UpdateUser(&gofastly.UpdateUserInput{
+		_, err := conn.UpdateUser(ctx, &gofastly.UpdateUserInput{
 			UserID: d.Id(),
 			Name:   gofastly.ToPointer(d.Get("name").(string)),
 			Role:   gofastly.ToPointer(d.Get("role").(string)),
@@ -116,10 +116,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	return resourceUserRead(ctx, d, meta)
 }
 
-func resourceUserDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteUser(&gofastly.DeleteUserInput{
+	err := conn.DeleteUser(ctx, &gofastly.DeleteUserInput{
 		UserID: d.Id(),
 	})
 	if err != nil {

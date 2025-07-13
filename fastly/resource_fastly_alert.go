@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 const (
@@ -125,7 +125,7 @@ func resourceFastlyAlert() *schema.Resource {
 	}
 }
 
-func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyAlertCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	err := validateSourceWithServiceID(d.Get("source").(string), d.Get("service_id").(string))
@@ -169,7 +169,7 @@ func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta a
 		input.IntegrationIDs = []string{}
 	}
 
-	ad, err := conn.CreateAlertDefinition(&input)
+	ad, err := conn.CreateAlertDefinition(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -179,11 +179,11 @@ func resourceFastlyAlertCreate(_ context.Context, d *schema.ResourceData, meta a
 	return nil
 }
 
-func resourceFastlyAlertRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyAlertRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Alert Configuration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
-	ad, err := conn.GetAlertDefinition(&gofastly.GetAlertDefinitionInput{
+	ad, err := conn.GetAlertDefinition(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), &gofastly.GetAlertDefinitionInput{
 		ID: gofastly.ToPointer(d.Id()),
 	})
 	if err != nil {
@@ -278,7 +278,7 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.IntegrationIDs = []string{}
 	}
 
-	_, err = conn.UpdateAlertDefinition(&input)
+	_, err = conn.UpdateAlertDefinition(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -286,10 +286,10 @@ func resourceFastlyAlertUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return resourceFastlyAlertRead(ctx, d, meta)
 }
 
-func resourceFastlyAlertDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyAlertDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteAlertDefinition(&gofastly.DeleteAlertDefinitionInput{
+	err := conn.DeleteAlertDefinition(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), &gofastly.DeleteAlertDefinitionInput{
 		ID: gofastly.ToPointer(d.Id()),
 	})
 	if err != nil {

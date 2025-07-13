@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlySecretStore_validate(t *testing.T) {
@@ -62,7 +63,7 @@ func testAccCheckFastlySecretStoreRemoteState(service *gofastly.ServiceDetail, s
 		var cursor string
 
 		for {
-			stores, err := conn.ListSecretStores(&gofastly.ListSecretStoresInput{
+			stores, err := conn.ListSecretStores(context.TODO(), &gofastly.ListSecretStoresInput{
 				Cursor: cursor,
 			})
 			if err != nil {
@@ -88,7 +89,7 @@ func testAccCheckFastlySecretStoreRemoteState(service *gofastly.ServiceDetail, s
 			return fmt.Errorf("error looking up the Secret Store")
 		}
 
-		links, err := conn.ListResources(&gofastly.ListResourcesInput{
+		links, err := conn.ListResources(context.TODO(), &gofastly.ListResourcesInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})

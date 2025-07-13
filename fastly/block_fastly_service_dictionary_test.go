@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenDictionary(t *testing.T) {
@@ -165,7 +166,7 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		dict, err := conn.GetDictionary(&gofastly.GetDictionaryInput{
+		dict, err := conn.GetDictionary(context.TODO(), &gofastly.GetDictionaryInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           dictName,
@@ -193,7 +194,7 @@ func testAccCheckFastlyServiceVCLAttributesDictionary(service *gofastly.ServiceD
 func testAccAddDictionaryItems(dictionary *gofastly.Dictionary) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		_, err := conn.CreateDictionaryItem(&gofastly.CreateDictionaryItemInput{
+		_, err := conn.CreateDictionaryItem(context.TODO(), &gofastly.CreateDictionaryItemInput{
 			ServiceID:    gofastly.ToValue(dictionary.ServiceID),
 			DictionaryID: gofastly.ToValue(dictionary.DictionaryID),
 			ItemKey:      gofastly.ToPointer("testKey"),

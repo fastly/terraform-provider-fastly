@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // ConditionServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -66,7 +66,7 @@ func (h *ConditionServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -79,7 +79,7 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Create Conditions Opts: %#v", opts)
-	_, err := conn.CreateCondition(&opts)
+	_, err := conn.CreateCondition(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -87,12 +87,12 @@ func (h *ConditionServiceAttributeHandler) Create(_ context.Context, d *schema.R
 }
 
 // Read refreshes the resource.
-func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Conditions for (%s)", d.Id())
-		remoteState, err := conn.ListConditions(&gofastly.ListConditionsInput{
+		remoteState, err := conn.ListConditions(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListConditionsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -111,7 +111,7 @@ func (h *ConditionServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	optsCreate := gofastly.CreateConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -145,7 +145,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	if v, ok := modified["type"]; ok {
 		optsCreate.Type = gofastly.ToPointer(v.(string))
 		log.Printf("[DEBUG] Delete Condition: %s (type changed)", resource["name"].(string))
-		err := conn.DeleteCondition(&gofastly.DeleteConditionInput{
+		err := conn.DeleteCondition(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.DeleteConditionInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 			Name:           resource["name"].(string),
@@ -155,7 +155,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 		}
 
 		log.Printf("[DEBUG] Create Condition Opts: %#v", optsCreate)
-		_, err = conn.CreateCondition(&optsCreate)
+		_, err = conn.CreateCondition(gofastly.NewContextForResourceID(ctx, d.Id()), &optsCreate)
 		if err != nil {
 			return err
 		}
@@ -163,7 +163,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Update Condition Opts: %#v", optsUpdate)
-	_, err := conn.UpdateCondition(&optsUpdate)
+	_, err := conn.UpdateCondition(gofastly.NewContextForResourceID(ctx, d.Id()), &optsUpdate)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (h *ConditionServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ConditionServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteConditionInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -179,7 +179,7 @@ func (h *ConditionServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Fastly Conditions Removal opts: %#v", opts)
-	err := conn.DeleteCondition(&opts)
+	err := conn.DeleteCondition(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

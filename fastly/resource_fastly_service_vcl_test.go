@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func init() {
@@ -144,7 +145,7 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 
 	activateNewVersion := func(*terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		version, err := conn.CloneVersion(&gofastly.CloneVersionInput{
+		version, err := conn.CloneVersion(context.TODO(), &gofastly.CloneVersionInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
@@ -152,7 +153,7 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 			return err
 		}
 
-		err = conn.DeleteBackend(&gofastly.DeleteBackendInput{
+		err = conn.DeleteBackend(context.TODO(), &gofastly.DeleteBackendInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(version.Number),
 			Name:           "tf-test-backend",
@@ -161,7 +162,7 @@ func TestAccFastlyServiceVCL_activateNewVersionExternally(t *testing.T) {
 			return err
 		}
 
-		_, err = conn.ActivateVersion(&gofastly.ActivateVersionInput{
+		_, err = conn.ActivateVersion(context.TODO(), &gofastly.ActivateVersionInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(version.Number),
 		})
@@ -370,7 +371,7 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 		// reach out and DELETE the service
 		conn := testAccProvider.Meta().(*APIClient).conn
 		// deactivate active version to destroy
-		_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
+		_, err := conn.DeactivateVersion(context.TODO(), &gofastly.DeactivateVersionInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
@@ -379,7 +380,7 @@ func TestAccFastlyServiceVCL_disappears(t *testing.T) {
 		}
 
 		// delete service
-		return conn.DeleteService(&gofastly.DeleteServiceInput{
+		return conn.DeleteService(context.TODO(), &gofastly.DeleteServiceInput{
 			ServiceID: gofastly.ToValue(service.ServiceID),
 		})
 	}
@@ -519,7 +520,7 @@ func testAccCheckServiceExists(n string, service *gofastly.ServiceDetail) resour
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		latest, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
+		latest, err := conn.GetServiceDetails(context.TODO(), &gofastly.GetServiceInput{
 			ServiceID: rs.Primary.ID,
 		})
 		if err != nil {
@@ -539,7 +540,7 @@ func testAccCheckFastlyServiceVCLAttributes(service *gofastly.ServiceDetail, nam
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		domainList, err := conn.ListDomains(&gofastly.ListDomainsInput{
+		domainList, err := conn.ListDomains(context.TODO(), &gofastly.ListDomainsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
@@ -735,7 +736,7 @@ func testAccCheckServiceVCLDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		l, err := conn.ListServices(&gofastly.ListServicesInput{})
+		l, err := conn.ListServices(context.TODO(), &gofastly.ListServicesInput{})
 		if err != nil {
 			return fmt.Errorf("error listing services when deleting Fastly Service (%s): %s", rs.Primary.ID, err)
 		}
@@ -1069,14 +1070,14 @@ func testSweepServices(region string) error {
 		return diagToErr(diagnostics)
 	}
 
-	services, err := client.ListServices(&gofastly.ListServicesInput{})
+	services, err := client.ListServices(context.TODO(), &gofastly.ListServicesInput{})
 	if err != nil {
 		return err
 	}
 
 	for _, service := range services {
 		if strings.HasPrefix(gofastly.ToValue(service.Name), testResourcePrefix) {
-			s, err := client.GetServiceDetails(&gofastly.GetServiceInput{
+			s, err := client.GetServiceDetails(context.TODO(), &gofastly.GetServiceInput{
 				ServiceID: gofastly.ToValue(service.ServiceID),
 			})
 			if err != nil {
@@ -1085,7 +1086,7 @@ func testSweepServices(region string) error {
 
 			if s.ActiveVersion != nil {
 				if gofastly.ToValue(s.ActiveVersion.Number) != 0 {
-					_, err := client.DeactivateVersion(&gofastly.DeactivateVersionInput{
+					_, err := client.DeactivateVersion(context.TODO(), &gofastly.DeactivateVersionInput{
 						ServiceID:      gofastly.ToValue(service.ServiceID),
 						ServiceVersion: gofastly.ToValue(s.ActiveVersion.Number),
 					})
@@ -1095,7 +1096,7 @@ func testSweepServices(region string) error {
 				}
 			}
 
-			err = client.DeleteService(&gofastly.DeleteServiceInput{
+			err = client.DeleteService(context.TODO(), &gofastly.DeleteServiceInput{
 				ServiceID: gofastly.ToValue(service.ServiceID),
 			})
 			if err != nil {

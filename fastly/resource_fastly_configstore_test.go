@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyConfigStore_validate(t *testing.T) {
@@ -65,7 +66,7 @@ func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, c
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		stores, err := conn.ListConfigStores(&gofastly.ListConfigStoresInput{})
+		stores, err := conn.ListConfigStores(context.TODO(), &gofastly.ListConfigStoresInput{})
 		if err != nil {
 			return fmt.Errorf("error listing all Config Stores: %s", err)
 		}
@@ -82,7 +83,7 @@ func testAccCheckFastlyConfigStoreRemoteState(service *gofastly.ServiceDetail, c
 			return fmt.Errorf("error looking up the Config Store")
 		}
 
-		links, err := conn.ListResources(&gofastly.ListResourcesInput{
+		links, err := conn.ListResources(context.TODO(), &gofastly.ListResourcesInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
@@ -200,7 +201,7 @@ data "fastly_package_hash" "example" {
 func testAccAddConfigStoreItems(configStore *gofastly.ConfigStore) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		_, err := conn.CreateConfigStoreItem(&gofastly.CreateConfigStoreItemInput{
+		_, err := conn.CreateConfigStoreItem(context.TODO(), &gofastly.CreateConfigStoreItemInput{
 			StoreID: configStore.StoreID,
 			Key:     "test_key",
 			Value:   "test_value",

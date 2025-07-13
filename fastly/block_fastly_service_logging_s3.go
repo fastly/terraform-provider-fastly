@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // S3LoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -231,23 +231,20 @@ func (h *S3LoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *S3LoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
-	err := createS3(conn, opts)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := conn.CreateS3(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing S3 Logging for (%s)", d.Id())
-		remoteState, err := conn.ListS3s(&gofastly.ListS3sInput{
+		remoteState, err := conn.ListS3s(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListS3sInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -270,7 +267,7 @@ func (h *S3LoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateS3Input{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -347,7 +344,7 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Update S3 Opts: %#v", opts)
-	_, err := conn.UpdateS3(&opts)
+	_, err := conn.UpdateS3(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -355,24 +352,12 @@ func (h *S3LoggingServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *S3LoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *S3LoggingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
-	err := deleteS3(conn, opts)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-func createS3(conn *gofastly.Client, i *gofastly.CreateS3Input) error {
-	_, err := conn.CreateS3(i)
-	return err
-}
+	log.Printf("[DEBUG] Fastly S3 Logging removal opts: %#v", opts)
 
-func deleteS3(conn *gofastly.Client, i *gofastly.DeleteS3Input) error {
-	log.Printf("[DEBUG] Fastly S3 Logging removal opts: %#v", i)
-
-	err := conn.DeleteS3(i)
+	err := conn.DeleteS3(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

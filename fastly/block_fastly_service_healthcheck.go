@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // HealthCheckServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -124,7 +124,7 @@ func (h *HealthCheckServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	hi := resource["headers"].(*schema.Set).List()
 	var hs []string
 	for _, v := range hi {
@@ -149,7 +149,7 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 	}
 
 	log.Printf("[DEBUG] Create Healthcheck Opts: %#v", opts)
-	_, err := conn.CreateHealthCheck(&opts)
+	_, err := conn.CreateHealthCheck(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -157,12 +157,12 @@ func (h *HealthCheckServiceAttributeHandler) Create(_ context.Context, d *schema
 }
 
 // Read refreshes the resource.
-func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Healthcheck for (%s)", d.Id())
-		remoteState, err := conn.ListHealthChecks(&gofastly.ListHealthChecksInput{
+		remoteState, err := conn.ListHealthChecks(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListHealthChecksInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -181,7 +181,7 @@ func (h *HealthCheckServiceAttributeHandler) Read(_ context.Context, d *schema.R
 }
 
 // Update updates the resource.
-func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHealthCheckInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -236,7 +236,7 @@ func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema
 	}
 
 	log.Printf("[DEBUG] Update Healthcheck Opts: %#v", opts)
-	_, err := conn.UpdateHealthCheck(&opts)
+	_, err := conn.UpdateHealthCheck(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -244,7 +244,7 @@ func (h *HealthCheckServiceAttributeHandler) Update(_ context.Context, d *schema
 }
 
 // Delete deletes the resource.
-func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HealthCheckServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteHealthCheckInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -252,7 +252,7 @@ func (h *HealthCheckServiceAttributeHandler) Delete(_ context.Context, d *schema
 	}
 
 	log.Printf("[DEBUG] Fastly Healthcheck removal opts: %#v", opts)
-	err := conn.DeleteHealthCheck(&opts)
+	err := conn.DeleteHealthCheck(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

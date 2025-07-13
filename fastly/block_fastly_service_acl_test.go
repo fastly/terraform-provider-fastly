@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenAcl(t *testing.T) {
@@ -122,7 +123,7 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		remoteACL, err := conn.GetACL(&gofastly.GetACLInput{
+		remoteACL, err := conn.GetACL(context.TODO(), &gofastly.GetACLInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 			Name:           aclName,
@@ -146,7 +147,7 @@ func testAccCheckFastlyServiceVCLAttributesACL(service *gofastly.ServiceDetail, 
 func testAccAddACLEntries(acl *gofastly.ACL) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		_, err := conn.CreateACLEntry(&gofastly.CreateACLEntryInput{
+		_, err := conn.CreateACLEntry(context.TODO(), &gofastly.CreateACLEntryInput{
 			ServiceID: gofastly.ToValue(acl.ServiceID),
 			ACLID:     gofastly.ToValue(acl.ACLID),
 			IP:        gofastly.ToPointer("192.168.0.1"),

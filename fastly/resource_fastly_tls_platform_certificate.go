@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyTLSPlatformCertificate() *schema.Resource {
@@ -94,7 +94,7 @@ func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.R
 		AllowUntrusted: d.Get("allow_untrusted_root").(bool),
 	}
 
-	certificate, err := conn.CreateBulkCertificate(input)
+	certificate, err := conn.CreateBulkCertificate(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -104,14 +104,14 @@ func resourceFastlyTLSPlatformCertificateCreate(ctx context.Context, d *schema.R
 	return resourceFastlyTLSPlatformCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSPlatformCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Platform Certificate Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
-	certificate, err := conn.GetBulkCertificate(&fastly.GetBulkCertificateInput{
+	certificate, err := conn.GetBulkCertificate(ctx, &fastly.GetBulkCertificateInput{
 		ID: d.Id(),
 	})
 	if err != nil {
@@ -158,7 +158,7 @@ func resourceFastlyTLSPlatformCertificateRead(_ context.Context, d *schema.Resou
 func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	_, err := conn.UpdateBulkCertificate(&fastly.UpdateBulkCertificateInput{
+	_, err := conn.UpdateBulkCertificate(ctx, &fastly.UpdateBulkCertificateInput{
 		ID:                d.Id(),
 		CertBlob:          d.Get("certificate_body").(string),
 		IntermediatesBlob: d.Get("intermediates_blob").(string),
@@ -171,10 +171,10 @@ func resourceFastlyTLSPlatformCertificateUpdate(ctx context.Context, d *schema.R
 	return resourceFastlyTLSPlatformCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSPlatformCertificateDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSPlatformCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	if err := conn.DeleteBulkCertificate(&fastly.DeleteBulkCertificateInput{
+	if err := conn.DeleteBulkCertificate(ctx, &fastly.DeleteBulkCertificateInput{
 		ID: d.Id(),
 	}); err != nil {
 		return diag.FromErr(err)

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 const fastlyUser = "fastly_user.foo"
@@ -106,7 +107,7 @@ func testAccCheckFastlyUserExists(user *gofastly.User) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		latest, err := conn.GetUser(&gofastly.GetUserInput{
+		latest, err := conn.GetUser(context.TODO(), &gofastly.GetUserInput{
 			UserID: rs.Primary.ID,
 		})
 		if err != nil {
@@ -126,12 +127,12 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		u, err := conn.GetCurrentUser()
+		u, err := conn.GetCurrentUser(context.TODO())
 		if err != nil {
 			return fmt.Errorf("error getting current user when deleting Fastly User (%s): %s", rs.Primary.ID, err)
 		}
 
-		l, err := conn.ListCustomerUsers(&gofastly.ListCustomerUsersInput{
+		l, err := conn.ListCustomerUsers(context.TODO(), &gofastly.ListCustomerUsersInput{
 			CustomerID: gofastly.ToValue(u.CustomerID),
 		})
 		if err != nil {

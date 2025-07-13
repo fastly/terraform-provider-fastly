@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyKVStore() *schema.Resource {
@@ -49,7 +49,7 @@ func resourceFastlyKVStore() *schema.Resource {
 	}
 }
 
-func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyKVStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.CreateKVStoreInput{
@@ -62,7 +62,7 @@ func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] CREATE: KV Store input: %#v", input)
 
-	store, err := conn.CreateKVStore(input)
+	store, err := conn.CreateKVStore(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -73,7 +73,7 @@ func resourceFastlyKVStoreCreate(_ context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceFastlyKVStoreRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyKVStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.GetKVStoreInput{
@@ -82,7 +82,7 @@ func resourceFastlyKVStoreRead(_ context.Context, d *schema.ResourceData, meta a
 
 	log.Printf("[DEBUG] REFRESH: KV Store input: %#v", input)
 
-	store, err := conn.GetKVStore(input)
+	store, err := conn.GetKVStore(ctx, input)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] No KV Store found '%s'", d.Id())
@@ -105,11 +105,11 @@ func resourceFastlyKVStoreUpdate(_ context.Context, _ *schema.ResourceData, _ an
 	return nil
 }
 
-func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyKVStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	if !d.Get("force_destroy").(bool) {
-		mayDelete, err := isKVStoreEmpty(d.Id(), conn)
+		mayDelete, err := isKVStoreEmpty(ctx, d.Id(), conn)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -120,14 +120,14 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 	}
 
 	// IMPORTANT: We must delete all keys first before we can delete the store.
-	p := conn.NewListKVStoreKeysPaginator(&gofastly.ListKVStoreKeysInput{
+	p := conn.NewListKVStoreKeysPaginator(ctx, &gofastly.ListKVStoreKeysInput{
 		StoreID: d.Id(),
 	})
 	for p.Next() {
 		keys := p.Keys()
 		sort.Strings(keys)
 		for _, key := range keys {
-			err := conn.DeleteKVStoreKey(&gofastly.DeleteKVStoreKeyInput{
+			err := conn.DeleteKVStoreKey(ctx, &gofastly.DeleteKVStoreKeyInput{
 				StoreID: d.Id(),
 				Key:     key,
 			})
@@ -146,15 +146,15 @@ func resourceFastlyKVStoreDelete(_ context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] DELETE: KV Store input: %#v", input)
 
-	err := conn.DeleteKVStore(&input)
+	err := conn.DeleteKVStore(ctx, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	return nil
 }
 
-func isKVStoreEmpty(storeID string, conn *gofastly.Client) (bool, error) {
-	keys, err := conn.ListKVStoreKeys(&gofastly.ListKVStoreKeysInput{
+func isKVStoreEmpty(ctx context.Context, storeID string, conn *gofastly.Client) (bool, error) {
+	keys, err := conn.ListKVStoreKeys(ctx, &gofastly.ListKVStoreKeysInput{
 		StoreID: storeID,
 	})
 	if err != nil {

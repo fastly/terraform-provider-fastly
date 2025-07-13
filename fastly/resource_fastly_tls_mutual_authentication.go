@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyTLSMutualAuthentication() *schema.Resource {
@@ -91,7 +91,7 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 
 	log.Printf("[DEBUG] CREATE: TLS Mutual Authentication input: %#v", inputCreate)
 
-	mTLS, err := conn.CreateTLSMutualAuthentication(inputCreate)
+	mTLS, err := conn.CreateTLSMutualAuthentication(ctx, inputCreate)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -106,7 +106,7 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: mTLS.ID},
 			}
 			log.Printf("[DEBUG] CREATE: Update TLS Activation input: %#v", inputUpdate)
-			_, err = conn.UpdateTLSActivation(inputUpdate)
+			_, err = conn.UpdateTLSActivation(ctx, inputUpdate)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -116,7 +116,7 @@ func resourceFastlyTLSMutualAuthenticationCreate(ctx context.Context, d *schema.
 	return resourceFastlyTLSMutualAuthenticationRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSMutualAuthenticationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.GetTLSMutualAuthenticationInput{
@@ -129,7 +129,7 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] REFRESH: TLS Mutual Authentication input: %#v", input)
 
-	tma, err := conn.GetTLSMutualAuthentication(input)
+	tma, err := conn.GetTLSMutualAuthentication(ctx, input)
 	if err != nil {
 		if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {
 			id := d.Id()
@@ -172,7 +172,7 @@ func resourceFastlyTLSMutualAuthenticationRead(_ context.Context, d *schema.Reso
 	return nil
 }
 
-func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSMutualAuthenticationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.UpdateTLSMutualAuthenticationInput{
@@ -191,7 +191,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 
 	log.Printf("[DEBUG] UPDATE: TLS Mutual Authentication input: %#v", input)
 
-	_, err := conn.UpdateTLSMutualAuthentication(input)
+	_, err := conn.UpdateTLSMutualAuthentication(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -205,7 +205,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: ""},
 			}
 			log.Printf("[DEBUG] UPDATE: TLS Activation input: %#v", input)
-			_, _ = conn.UpdateTLSActivation(input)
+			_, _ = conn.UpdateTLSActivation(ctx, input)
 		}
 
 		// Once old Activations have mTLS unset, set mTLS on the new Activations.
@@ -215,7 +215,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 				MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: d.Id()},
 			}
 			log.Printf("[DEBUG] UPDATE: Update TLS Activation input: %#v", inputUpdate)
-			_, err = conn.UpdateTLSActivation(inputUpdate)
+			_, err = conn.UpdateTLSActivation(ctx, inputUpdate)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -225,7 +225,7 @@ func resourceFastlyTLSMutualAuthenticationUpdate(_ context.Context, d *schema.Re
 	return nil
 }
 
-func resourceFastlyTLSMutualAuthenticationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSMutualAuthenticationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	// IMPORTANT: You can't delete mTLS with active domains.
@@ -238,7 +238,7 @@ func resourceFastlyTLSMutualAuthenticationDelete(_ context.Context, d *schema.Re
 			MutualAuthentication: &gofastly.TLSMutualAuthentication{ID: ""},
 		}
 		log.Printf("[DEBUG] DELETE: TLS Activation input: %#v", input)
-		_, err := conn.UpdateTLSActivation(input)
+		_, err := conn.UpdateTLSActivation(ctx, input)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -250,7 +250,7 @@ func resourceFastlyTLSMutualAuthenticationDelete(_ context.Context, d *schema.Re
 
 	log.Printf("[DEBUG] DELETE: TLS Mutual Authentication input: %#v", input)
 
-	err := conn.DeleteTLSMutualAuthentication(input)
+	err := conn.DeleteTLSMutualAuthentication(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}

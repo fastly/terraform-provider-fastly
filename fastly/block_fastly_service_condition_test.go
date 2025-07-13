@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenConditions(t *testing.T) {
@@ -103,7 +104,7 @@ func testAccCheckFastlyServiceVCLConditionalAttributes(service *gofastly.Service
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		conditionList, err := conn.ListConditions(&gofastly.ListConditionsInput{
+		conditionList, err := conn.ListConditions(context.TODO(), &gofastly.ListConditionsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: serviceVersionNumber,
 		})

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -15,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // pgpPublicKey returns a PEM encoded PGP public key suitable for testing.
@@ -149,7 +150,7 @@ func testAccCheckFastlyServiceAttributesBackends(service *gofastly.ServiceDetail
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		backendList, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		backendList, err := conn.ListBackends(context.TODO(), &gofastly.ListBackendsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: version,
 		})

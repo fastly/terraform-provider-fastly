@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func init() {
@@ -60,7 +61,7 @@ func testAccCheckPrivateKeyDestroy(state *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		keys, err := conn.ListPrivateKeys(&fastly.ListPrivateKeysInput{})
+		keys, err := conn.ListPrivateKeys(context.TODO(), &fastly.ListPrivateKeysInput{})
 		if err != nil {
 			return fmt.Errorf(
 				"[WARN] Error listing private keys when deleting private key %s: %w",
@@ -102,7 +103,7 @@ func testAccCheckPrivateKeyExists(resourceName string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		_, err := conn.GetPrivateKey(&fastly.GetPrivateKeyInput{
+		_, err := conn.GetPrivateKey(context.TODO(), &fastly.GetPrivateKeyInput{
 			ID: res.Primary.ID,
 		})
 		if err != nil {
@@ -119,7 +120,7 @@ func testSweepTLSPrivateKeys(region string) error {
 		return diagToErr(diagnostics)
 	}
 
-	keys, err := client.ListPrivateKeys(&fastly.ListPrivateKeysInput{PageSize: 1000})
+	keys, err := client.ListPrivateKeys(context.TODO(), &fastly.ListPrivateKeysInput{PageSize: 1000})
 	if err != nil {
 		return err
 	}
@@ -129,7 +130,7 @@ func testSweepTLSPrivateKeys(region string) error {
 			continue
 		}
 
-		err := client.DeletePrivateKey(&fastly.DeletePrivateKeyInput{ID: key.ID})
+		err := client.DeletePrivateKey(context.TODO(), &fastly.DeletePrivateKeyInput{ID: key.ID})
 		if err != nil {
 			return err
 		}

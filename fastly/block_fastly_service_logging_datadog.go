@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // DatadogServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -96,21 +96,22 @@ func (h *DatadogServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DatadogServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Datadog logging addition opts: %#v", opts)
 
-	return createDatadog(conn, opts)
+	_, err := conn.CreateDatadog(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Datadog logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListDatadog(&gofastly.ListDatadogInput{
+		remoteState, err := conn.ListDatadog(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListDatadogInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -133,7 +134,7 @@ func (h *DatadogServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 }
 
 // Update updates the resource.
-func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDatadogInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -163,7 +164,7 @@ func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	}
 
 	log.Printf("[DEBUG] Update Datadog Opts: %#v", opts)
-	_, err := conn.UpdateDatadog(&opts)
+	_, err := conn.UpdateDatadog(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -171,21 +172,12 @@ func (h *DatadogServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 }
 
 // Delete deletes the resource.
-func (h *DatadogServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DatadogServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Datadog logging endpoint removal opts: %#v", opts)
 
-	return deleteDatadog(conn, opts)
-}
-
-func createDatadog(conn *gofastly.Client, i *gofastly.CreateDatadogInput) error {
-	_, err := conn.CreateDatadog(i)
-	return err
-}
-
-func deleteDatadog(conn *gofastly.Client, i *gofastly.DeleteDatadogInput) error {
-	err := conn.DeleteDatadog(i)
+	err := conn.DeleteDatadog(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

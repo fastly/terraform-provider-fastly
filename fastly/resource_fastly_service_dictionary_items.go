@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceServiceDictionaryItems() *schema.Resource {
@@ -72,7 +72,7 @@ func resourceServiceDictionaryItemsCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	// Process the batch operations
-	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
+	err := executeBatchDictionaryOperations(ctx, conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
 		return diag.Errorf("error creating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
@@ -126,7 +126,7 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 		}
 
 		// Process the batch operations
-		err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
+		err := executeBatchDictionaryOperations(ctx, conn, serviceID, dictionaryID, batchDictionaryItems)
 		if err != nil {
 			return diag.Errorf("error updating dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 		}
@@ -135,7 +135,7 @@ func resourceServiceDictionaryItemsUpdate(ctx context.Context, d *schema.Resourc
 	return resourceServiceDictionaryItemsRead(ctx, d, meta)
 }
 
-func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceDictionaryItemsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing Dictionary Items Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -143,7 +143,7 @@ func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceDat
 	serviceID := d.Get("service_id").(string)
 	dictionaryID := d.Get("dictionary_id").(string)
 
-	remoteState, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
+	remoteState, err := conn.ListDictionaryItems(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.ListDictionaryItemsInput{
 		ServiceID:    serviceID,
 		DictionaryID: dictionaryID,
 	})
@@ -155,7 +155,7 @@ func resourceServiceDictionaryItemsRead(_ context.Context, d *schema.ResourceDat
 	return diag.FromErr(err)
 }
 
-func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceDictionaryItemsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	serviceID := d.Get("service_id").(string)
@@ -172,7 +172,7 @@ func resourceServiceDictionaryItemsDelete(_ context.Context, d *schema.ResourceD
 	}
 
 	// Process the batch operations
-	err := executeBatchDictionaryOperations(conn, serviceID, dictionaryID, batchDictionaryItems)
+	err := executeBatchDictionaryOperations(ctx, conn, serviceID, dictionaryID, batchDictionaryItems)
 	if err != nil {
 		return diag.Errorf("error deleting dictionary items: service %s, dictionary %s, %s", serviceID, dictionaryID, err)
 	}
@@ -215,7 +215,7 @@ func flattenDictionaryItems(remoteState []*gofastly.DictionaryItem) map[string]s
 	return result
 }
 
-func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictionaryID string, batchDictionaryItems []*gofastly.BatchDictionaryItem) error {
+func executeBatchDictionaryOperations(ctx context.Context, conn *gofastly.Client, serviceID, dictionaryID string, batchDictionaryItems []*gofastly.BatchDictionaryItem) error {
 	batchSize := gofastly.BatchModifyMaximumOperations
 
 	for i := 0; i < len(batchDictionaryItems); i += batchSize {
@@ -224,7 +224,7 @@ func executeBatchDictionaryOperations(conn *gofastly.Client, serviceID, dictiona
 			j = len(batchDictionaryItems)
 		}
 
-		err := conn.BatchModifyDictionaryItems(&gofastly.BatchModifyDictionaryItemsInput{
+		err := conn.BatchModifyDictionaryItems(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.BatchModifyDictionaryItemsInput{
 			ServiceID:    serviceID,
 			DictionaryID: dictionaryID,
 			Items:        batchDictionaryItems[i:j],

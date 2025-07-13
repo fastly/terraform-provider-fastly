@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
@@ -41,7 +41,7 @@ func dataSourceFastlyKVStores() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyKVStoresRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyKVStoresRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading KV Stores")
@@ -52,7 +52,7 @@ func dataSourceFastlyKVStoresRead(_ context.Context, d *schema.ResourceData, met
 	)
 
 	for {
-		remoteState, err := conn.ListKVStores(&gofastly.ListKVStoresInput{
+		remoteState, err := conn.ListKVStores(ctx, &gofastly.ListKVStoresInput{
 			Cursor: cursor,
 		})
 		if err != nil {

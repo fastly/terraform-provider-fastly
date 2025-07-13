@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func dataSourceFastlyTLSPrivateKey() *schema.Resource {
@@ -67,7 +67,7 @@ func dataSourceFastlyTLSPrivateKey() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSPrivateKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
@@ -75,14 +75,14 @@ func dataSourceFastlyTLSPrivateKeyRead(_ context.Context, d *schema.ResourceData
 	var privateKey *fastly.PrivateKey
 	if v, ok := d.GetOk("id"); ok {
 		var err error
-		privateKey, err = conn.GetPrivateKey(&fastly.GetPrivateKeyInput{ID: v.(string)})
+		privateKey, err = conn.GetPrivateKey(ctx, &fastly.GetPrivateKeyInput{ID: v.(string)})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	} else {
 		filters := getTLSPrivateKeyFilters(d)
 
-		privateKeys, err := listTLSPrivateKeys(conn, filters...)
+		privateKeys, err := listTLSPrivateKeys(ctx, conn, filters...)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -148,11 +148,11 @@ func getTLSPrivateKeyFilters(d *schema.ResourceData) []TLSPrivateKeyPredicate {
 	return filters
 }
 
-func listTLSPrivateKeys(conn *fastly.Client, filters ...TLSPrivateKeyPredicate) ([]*fastly.PrivateKey, error) {
+func listTLSPrivateKeys(ctx context.Context, conn *fastly.Client, filters ...TLSPrivateKeyPredicate) ([]*fastly.PrivateKey, error) {
 	var privateKeys []*fastly.PrivateKey
 	pageNumber := 1
 	for {
-		list, err := conn.ListPrivateKeys(&fastly.ListPrivateKeysInput{
+		list, err := conn.ListPrivateKeys(ctx, &fastly.ListPrivateKeysInput{
 			PageNumber: pageNumber,
 		})
 		if err != nil {

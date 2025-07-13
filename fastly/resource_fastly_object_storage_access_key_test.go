@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
-	"github.com/fastly/go-fastly/v10/fastly/objectstorage/accesskeys"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/objectstorage/accesskeys"
 )
 
 func TestAccFastlyObjectStorageAccessKey_basic(t *testing.T) {
@@ -82,7 +83,7 @@ func testAccCheckObjectStorageAccessKeyExists(n string, accessKey *accesskeys.Ac
 		opts := accesskeys.GetInput{
 			AccessKeyID: gofastly.ToPointer(rs.Primary.ID),
 		}
-		ak, err := accesskeys.Get(conn, &opts)
+		ak, err := accesskeys.Get(context.TODO(), conn, &opts)
 		if err != nil {
 			return err
 		}
@@ -100,7 +101,7 @@ func testAccCheckObjectStorageAccessKeyDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		akl, err := accesskeys.ListAccessKeys(conn)
+		akl, err := accesskeys.ListAccessKeys(context.TODO(), conn)
 		if err != nil {
 			return fmt.Errorf("error getting current accessKeys when deleting Fastly Object Storage AccessKey (%s): %s", rs.Primary.ID, err)
 		}

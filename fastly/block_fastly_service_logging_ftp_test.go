@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenFTP(t *testing.T) {
@@ -212,7 +213,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLFTPAttributes(service *gofastly.ServiceDetail, ftps []*gofastly.FTP, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		ftpList, err := conn.ListFTPs(&gofastly.ListFTPsInput{
+		ftpList, err := conn.ListFTPs(context.TODO(), &gofastly.ListFTPsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func dataSourceFastlyTLSActivation() *schema.Resource {
@@ -51,13 +51,13 @@ func dataSourceFastlyTLSActivation() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSActivationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var activation *fastly.TLSActivation
 
 	if v, ok := d.GetOk("id"); ok {
-		foundActivation, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{
+		foundActivation, err := conn.GetTLSActivation(ctx, &fastly.GetTLSActivationInput{
 			ID: v.(string),
 		})
 		if err != nil {
@@ -67,7 +67,7 @@ func dataSourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData
 	} else {
 		filters := getTLSActivationFilters(d)
 
-		activations, err := listTLSActivations(conn, filters...)
+		activations, err := listTLSActivations(ctx, conn, filters...)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -116,11 +116,11 @@ func getTLSActivationFilters(d *schema.ResourceData) []TLSActivationPredicate {
 	return filters
 }
 
-func listTLSActivations(conn *fastly.Client, filters ...TLSActivationPredicate) ([]*fastly.TLSActivation, error) {
+func listTLSActivations(ctx context.Context, conn *fastly.Client, filters ...TLSActivationPredicate) ([]*fastly.TLSActivation, error) {
 	var activations []*fastly.TLSActivation
 	pageNumber := 1
 	for {
-		list, err := conn.ListTLSActivations(&fastly.ListTLSActivationsInput{
+		list, err := conn.ListTLSActivations(ctx, &fastly.ListTLSActivationsInput{
 			PageNumber: pageNumber,
 			PageSize:   10,
 		})

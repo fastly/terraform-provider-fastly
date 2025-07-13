@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // KinesisServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -113,21 +113,22 @@ func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *KinesisServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging addition opts: %#v", opts)
 
-	return createKinesis(conn, opts)
+	_, err := conn.CreateKinesis(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Kinesis logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListKinesis(&gofastly.ListKinesisInput{
+		remoteState, err := conn.ListKinesis(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListKinesisInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -150,7 +151,7 @@ func (h *KinesisServiceAttributeHandler) Read(_ context.Context, d *schema.Resou
 }
 
 // Update updates the resource.
-func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateKinesisInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -191,7 +192,7 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 	}
 
 	log.Printf("[DEBUG] Update Kinesis Opts: %#v", opts)
-	_, err := conn.UpdateKinesis(&opts)
+	_, err := conn.UpdateKinesis(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -199,21 +200,12 @@ func (h *KinesisServiceAttributeHandler) Update(_ context.Context, d *schema.Res
 }
 
 // Delete deletes the resource.
-func (h *KinesisServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *KinesisServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Kinesis logging endpoint removal opts: %#v", opts)
 
-	return deleteKinesis(conn, opts)
-}
-
-func createKinesis(conn *gofastly.Client, i *gofastly.CreateKinesisInput) error {
-	_, err := conn.CreateKinesis(i)
-	return err
-}
-
-func deleteKinesis(conn *gofastly.Client, i *gofastly.DeleteKinesisInput) error {
-	err := conn.DeleteKinesis(i)
+	err := conn.DeleteKinesis(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

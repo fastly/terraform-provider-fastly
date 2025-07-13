@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // DigitalOceanServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -151,21 +151,22 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DigitalOceanServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging addition opts: %#v", opts)
 
-	return createDigitalOcean(conn, opts)
+	_, err := conn.CreateDigitalOcean(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing DigitalOcean Spaces logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
+		remoteState, err := conn.ListDigitalOceans(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListDigitalOceansInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -188,7 +189,7 @@ func (h *DigitalOceanServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDigitalOceanInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -244,7 +245,7 @@ func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schem
 	}
 
 	log.Printf("[DEBUG] Update DigitalOcean Opts: %#v", opts)
-	_, err := conn.UpdateDigitalOcean(&opts)
+	_, err := conn.UpdateDigitalOcean(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -252,21 +253,12 @@ func (h *DigitalOceanServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *DigitalOceanServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DigitalOceanServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly DigitalOcean Spaces logging endpoint removal opts: %#v", opts)
 
-	return deleteDigitalOcean(conn, opts)
-}
-
-func createDigitalOcean(conn *gofastly.Client, i *gofastly.CreateDigitalOceanInput) error {
-	_, err := conn.CreateDigitalOcean(i)
-	return err
-}
-
-func deleteDigitalOcean(conn *gofastly.Client, i *gofastly.DeleteDigitalOceanInput) error {
-	err := conn.DeleteDigitalOcean(i)
+	err := conn.DeleteDigitalOcean(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

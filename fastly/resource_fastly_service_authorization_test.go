@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyServiceAuthorization_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func testAccCheckServiceAuthorizationExists(n string, sa *gofastly.ServiceAuthor
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		latest, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
+		latest, err := conn.GetServiceAuthorization(context.TODO(), &gofastly.GetServiceAuthorizationInput{
 			ID: rs.Primary.ID,
 		})
 		if err != nil {
@@ -76,7 +77,7 @@ func testAccCheckServiceAuthorizationDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		_, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
+		_, err := conn.GetServiceAuthorization(context.TODO(), &gofastly.GetServiceAuthorizationInput{
 			ID: rs.Primary.ID,
 		})
 		if err == nil {

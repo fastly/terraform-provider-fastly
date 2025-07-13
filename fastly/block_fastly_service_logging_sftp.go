@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // SFTPServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -165,7 +165,7 @@ func (h *SFTPServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	if *opts.Password == "" && *opts.SecretKey == "" {
@@ -174,16 +174,17 @@ func (h *SFTPServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 
 	log.Printf("[DEBUG] Fastly SFTP logging addition opts: %#v", opts)
 
-	return createSFTP(conn, opts)
+	_, err := conn.CreateSFTP(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing SFTP logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListSFTPs(&gofastly.ListSFTPsInput{
+		remoteState, err := conn.ListSFTPs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListSFTPsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -206,7 +207,7 @@ func (h *SFTPServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 }
 
 // Update updates the resource.
-func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSFTPInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -271,7 +272,7 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Update SFTP Opts: %#v", opts)
-	_, err := conn.UpdateSFTP(&opts)
+	_, err := conn.UpdateSFTP(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -279,21 +280,12 @@ func (h *SFTPServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 }
 
 // Delete deletes the resource.
-func (h *SFTPServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SFTPServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly SFTP logging endpoint removal opts: %#v", opts)
 
-	return deleteSFTP(conn, opts)
-}
-
-func createSFTP(conn *gofastly.Client, i *gofastly.CreateSFTPInput) error {
-	_, err := conn.CreateSFTP(i)
-	return err
-}
-
-func deleteSFTP(conn *gofastly.Client, i *gofastly.DeleteSFTPInput) error {
-	err := conn.DeleteSFTP(i)
+	err := conn.DeleteSFTP(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

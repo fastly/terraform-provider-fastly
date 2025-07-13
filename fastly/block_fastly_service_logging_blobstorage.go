@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // BlobStorageLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -153,7 +153,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBlobStorageInput{
 		AccountName:      gofastly.ToPointer(resource["account_name"].(string)),
@@ -193,7 +193,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 	}
 
 	log.Printf("[DEBUG] Blob Storage logging create opts: %#v", opts)
-	_, err := conn.CreateBlobStorage(&opts)
+	_, err := conn.CreateBlobStorage(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -201,12 +201,12 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Create(_ context.Context, d 
 }
 
 // Read refreshes the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Blob Storages for (%s)", d.Id())
-		remoteState, err := conn.ListBlobStorages(&gofastly.ListBlobStoragesInput{
+		remoteState, err := conn.ListBlobStorages(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListBlobStoragesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -229,7 +229,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Read(_ context.Context, d *s
 }
 
 // Update updates the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -288,7 +288,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 	}
 
 	log.Printf("[DEBUG] Update Blob Storage Opts: %#v", opts)
-	_, err := conn.UpdateBlobStorage(&opts)
+	_, err := conn.UpdateBlobStorage(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(_ context.Context, d 
 }
 
 // Delete deletes the resource.
-func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BlobStorageLoggingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteBlobStorageInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -304,7 +304,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(_ context.Context, d 
 	}
 
 	log.Printf("[DEBUG] Blob Storage logging removal opts: %#v", opts)
-	err := conn.DeleteBlobStorage(&opts)
+	err := conn.DeleteBlobStorage(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

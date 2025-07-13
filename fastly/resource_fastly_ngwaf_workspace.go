@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
-	ws "github.com/fastly/go-fastly/v10/fastly/ngwaf/v1/workspaces"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	ws "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces"
 )
 
 func resourceFastlyNGWAFWorkspace() *schema.Resource {
@@ -98,7 +98,7 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 	}
 }
 
-func resourceFastlyNGWAFWorkspaceCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	i := ws.CreateInput{
@@ -134,7 +134,7 @@ func resourceFastlyNGWAFWorkspaceCreate(_ context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] CREATE: NGWAF workspace input: %#v", i)
 
-	workspace, err := ws.Create(conn, &i)
+	workspace, err := ws.Create(ctx, conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -144,7 +144,7 @@ func resourceFastlyNGWAFWorkspaceCreate(_ context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceFastlyNGWAFWorkspaceRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	i := ws.GetInput{
@@ -153,7 +153,7 @@ func resourceFastlyNGWAFWorkspaceRead(_ context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] REFRESH: NGWAF workspace input: %#v", i)
 
-	workspace, err := ws.Get(conn, &i)
+	workspace, err := ws.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] workspace not found '%s'", d.Id())
@@ -234,7 +234,7 @@ func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] UPDATE: NGWAF workspace input: %#v", i)
 
-	_, err := ws.Update(conn, &i)
+	_, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -242,7 +242,7 @@ func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceFastlyNGWAFWorkspaceRead(ctx, d, meta)
 }
 
-func resourceFastlyNGWAFWorkspaceDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	i := ws.DeleteInput{
@@ -251,7 +251,7 @@ func resourceFastlyNGWAFWorkspaceDelete(_ context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] DELETE: NGWAF workspace input: %#v", i)
 
-	if err := ws.Delete(conn, &i); err != nil {
+	if err := ws.Delete(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i); err != nil {
 		return diag.FromErr(err)
 	}
 

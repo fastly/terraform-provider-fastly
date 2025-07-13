@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
@@ -31,7 +31,7 @@ func dataSourceFastlyTLSActivationIDs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSActivationIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSActivationIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var certificateID string
@@ -43,7 +43,7 @@ func dataSourceFastlyTLSActivationIDsRead(_ context.Context, d *schema.ResourceD
 	var activations []*fastly.TLSActivation
 	pageNumber := 1
 	for {
-		list, err := conn.ListTLSActivations(&fastly.ListTLSActivationsInput{
+		list, err := conn.ListTLSActivations(ctx, &fastly.ListTLSActivationsInput{
 			FilterTLSCertificateID: certificateID,
 			PageNumber:             pageNumber,
 			PageSize:               10,

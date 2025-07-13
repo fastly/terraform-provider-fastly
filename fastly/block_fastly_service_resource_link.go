@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // ResourceLinkServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -58,7 +58,7 @@ func (h *ResourceLinkServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ResourceLinkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResourceLinkServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.CreateResourceInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -68,7 +68,7 @@ func (h *ResourceLinkServiceAttributeHandler) Create(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] CREATE: Resource Links input: %#v", input)
 
-	_, err := conn.CreateResource(input)
+	_, err := conn.CreateResource(gofastly.NewContextForResourceID(ctx, d.Id()), input)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (h *ResourceLinkServiceAttributeHandler) Create(_ context.Context, d *schem
 }
 
 // Read refreshes the resource.
-func (h *ResourceLinkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResourceLinkServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
@@ -88,7 +88,7 @@ func (h *ResourceLinkServiceAttributeHandler) Read(_ context.Context, d *schema.
 
 		log.Printf("[DEBUG] REFRESH: Resource Links input: %#v", input)
 
-		remoteState, err := conn.ListResources(input)
+		remoteState, err := conn.ListResources(gofastly.NewContextForResourceID(ctx, d.Id()), input)
 		if err != nil {
 			return err
 		}
@@ -103,7 +103,7 @@ func (h *ResourceLinkServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResourceLinkServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.UpdateResourceInput{
 		ResourceID:     resource["link_id"].(string),
 		Name:           gofastly.ToPointer(resource["name"].(string)),
@@ -113,7 +113,7 @@ func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] UPDATE: Resource Links input: %#v", input)
 
-	_, err := conn.UpdateResource(input)
+	_, err := conn.UpdateResource(gofastly.NewContextForResourceID(ctx, d.Id()), input)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (h *ResourceLinkServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *ResourceLinkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ResourceLinkServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	input := &gofastly.DeleteResourceInput{
 		ResourceID:     resource["link_id"].(string),
 		ServiceID:      d.Id(),
@@ -131,7 +131,7 @@ func (h *ResourceLinkServiceAttributeHandler) Delete(_ context.Context, d *schem
 
 	log.Printf("[DEBUG] DELETE: Resource Links input: %#v", input)
 
-	err := conn.DeleteResource(input)
+	err := conn.DeleteResource(gofastly.NewContextForResourceID(ctx, d.Id()), input)
 	if err != nil {
 		if errRes, ok := err.(*gofastly.HTTPError); ok {
 			// If error is because the resource looks to already be deleted (i.e. 404),

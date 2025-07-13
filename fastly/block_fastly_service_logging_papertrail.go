@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // PaperTrailServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -96,7 +96,7 @@ func (h *PaperTrailServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 
 	opts := gofastly.CreatePapertrailInput{
@@ -121,7 +121,7 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Create Papertrail Opts: %#v", opts)
-	_, err := conn.CreatePapertrail(&opts)
+	_, err := conn.CreatePapertrail(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -129,12 +129,12 @@ func (h *PaperTrailServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Papertrail for (%s)", d.Id())
-		remoteState, err := conn.ListPapertrails(&gofastly.ListPapertrailsInput{
+		remoteState, err := conn.ListPapertrails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListPapertrailsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -157,7 +157,7 @@ func (h *PaperTrailServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdatePapertrailInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -189,7 +189,7 @@ func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Update Papertrail Opts: %#v", opts)
-	_, err := conn.UpdatePapertrail(&opts)
+	_, err := conn.UpdatePapertrail(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (h *PaperTrailServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *PaperTrailServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeletePapertrailInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -205,7 +205,7 @@ func (h *PaperTrailServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Fastly Papertrail removal opts: %#v", opts)
-	err := conn.DeletePapertrail(&opts)
+	err := conn.DeletePapertrail(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

@@ -32,12 +32,12 @@ func dataSourceFastlyIPRanges() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyIPRangesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyIPRangesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading IP ranges")
 
-	ipv4addresses, ipv6addresses, err := conn.AllIPs()
+	ipv4addresses, ipv6addresses, err := conn.AllIPs(ctx)
 	if err != nil {
 		return diag.Errorf("error listing IP ranges: %s", err)
 	}

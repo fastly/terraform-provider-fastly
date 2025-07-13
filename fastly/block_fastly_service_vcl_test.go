@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenVCLs(t *testing.T) {
@@ -90,7 +91,7 @@ func testAccCheckFastlyServiceVCLVCLAttributes(service *gofastly.ServiceDetail, 
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		vclList, err := conn.ListVCLs(&gofastly.ListVCLsInput{
+		vclList, err := conn.ListVCLs(context.TODO(), &gofastly.ListVCLsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

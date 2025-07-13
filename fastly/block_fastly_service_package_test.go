@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyServiceCompute_package_basic(t *testing.T) {
@@ -184,7 +185,7 @@ func TestAccFastlyServiceCompute_package_optional(t *testing.T) {
 func testAccCheckFastlyServiceComputePackageAttributes(service *gofastly.ServiceDetail, want *gofastly.Package) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		got, err := conn.GetPackage(&gofastly.GetPackageInput{
+		got, err := conn.GetPackage(context.TODO(), &gofastly.GetPackageInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // GzipServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -67,7 +67,7 @@ func (h *GzipServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GzipServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateGzipInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -84,7 +84,7 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Fastly Gzip Addition opts: %#v", opts)
-	_, err := conn.CreateGzip(&opts)
+	_, err := conn.CreateGzip(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -92,12 +92,12 @@ func (h *GzipServiceAttributeHandler) Create(_ context.Context, d *schema.Resour
 }
 
 // Read refreshes the resource.
-func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GzipServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Gzips for (%s)", d.Id())
-		remoteState, err := conn.ListGzips(&gofastly.ListGzipsInput{
+		remoteState, err := conn.ListGzips(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListGzipsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -146,7 +146,7 @@ func (h *GzipServiceAttributeHandler) Read(_ context.Context, d *schema.Resource
 }
 
 // Update updates the resource.
-func (h *GzipServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GzipServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateGzipInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -179,7 +179,7 @@ func (h *GzipServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Update Gzip Opts: %#v", opts)
-	_, err := conn.UpdateGzip(&opts)
+	_, err := conn.UpdateGzip(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (h *GzipServiceAttributeHandler) Update(_ context.Context, d *schema.Resour
 }
 
 // Delete deletes the resource.
-func (h *GzipServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GzipServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteGzipInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -195,7 +195,7 @@ func (h *GzipServiceAttributeHandler) Delete(_ context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Fastly Gzip removal opts: %#v", opts)
-	err := conn.DeleteGzip(&opts)
+	err := conn.DeleteGzip(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

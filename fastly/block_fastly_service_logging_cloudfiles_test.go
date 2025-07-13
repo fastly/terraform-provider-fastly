@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
@@ -217,7 +218,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLCloudfilesAttributes(service *gofastly.ServiceDetail, cloudfiles []*gofastly.Cloudfiles, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		cloudfilesList, err := conn.ListCloudfiles(&gofastly.ListCloudfilesInput{
+		cloudfilesList, err := conn.ListCloudfiles(context.TODO(), &gofastly.ListCloudfilesInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

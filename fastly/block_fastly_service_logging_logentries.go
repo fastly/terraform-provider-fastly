@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // LogentriesServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -103,7 +103,7 @@ func (h *LogentriesServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateLogentriesInput{
 		ServiceID:        d.Id(),
@@ -128,7 +128,7 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Create Logentries Opts: %#v", opts)
-	_, err := conn.CreateLogentries(&opts)
+	_, err := conn.CreateLogentries(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -136,12 +136,12 @@ func (h *LogentriesServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Logentries for (%s)", d.Id())
-		remoteState, err := conn.ListLogentries(&gofastly.ListLogentriesInput{
+		remoteState, err := conn.ListLogentries(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListLogentriesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -164,7 +164,7 @@ func (h *LogentriesServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogentriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -202,7 +202,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Update Logentries Opts: %#v", opts)
-	_, err := conn.UpdateLogentries(&opts)
+	_, err := conn.UpdateLogentries(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (h *LogentriesServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogentriesServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteLogentriesInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -218,7 +218,7 @@ func (h *LogentriesServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Fastly Logentries removal opts: %#v", opts)
-	err := conn.DeleteLogentries(&opts)
+	err := conn.DeleteLogentries(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

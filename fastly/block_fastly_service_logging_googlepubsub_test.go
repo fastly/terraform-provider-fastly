@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
@@ -280,7 +281,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLGooglePubSubAttributes(service *gofastly.ServiceDetail, googlepubsub []*gofastly.Pubsub, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		googlepubsubList, err := conn.ListPubsubs(&gofastly.ListPubsubsInput{
+		googlepubsubList, err := conn.ListPubsubs(context.TODO(), &gofastly.ListPubsubsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

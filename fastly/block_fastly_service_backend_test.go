@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenBackend(t *testing.T) {
@@ -395,7 +396,7 @@ resource "fastly_service_vcl" "foo" {
 func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDetail, want []*gofastly.Backend) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		have, err := conn.ListBackends(&gofastly.ListBackendsInput{
+		have, err := conn.ListBackends(context.TODO(), &gofastly.ListBackendsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

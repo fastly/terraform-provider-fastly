@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
@@ -52,12 +52,12 @@ func dataSourceFastlyDatacenters() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyDatacentersRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyDatacentersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading datacenters")
 
-	remoteState, err := conn.AllDatacenters()
+	remoteState, err := conn.AllDatacenters(ctx)
 	if err != nil {
 		return diag.Errorf("error fetching datacenters: %s", err)
 	}

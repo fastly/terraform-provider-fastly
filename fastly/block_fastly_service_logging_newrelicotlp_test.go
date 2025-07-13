@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
@@ -148,7 +149,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLNewRelicOTLPAttributes(service *gofastly.ServiceDetail, newrelicotlp []*gofastly.NewRelicOTLP) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		newrelicotlpList, err := conn.ListNewRelicOTLP(&gofastly.ListNewRelicOTLPInput{
+		newrelicotlpList, err := conn.ListNewRelicOTLP(context.TODO(), &gofastly.ListNewRelicOTLPInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -11,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func generateDashboardParams(t *testing.T) (name, description string, items []gofastly.DashboardItem) {
@@ -193,7 +194,7 @@ func testAccCustomDashboardRemoteState(dashboardName string) resource.TestCheckF
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		dashboards, err := conn.ListObservabilityCustomDashboards(&gofastly.ListObservabilityCustomDashboardsInput{})
+		dashboards, err := conn.ListObservabilityCustomDashboards(context.TODO(), &gofastly.ListObservabilityCustomDashboardsInput{})
 		if err != nil {
 			return fmt.Errorf("error listing all Custom Dashboards: %s", err)
 		}
@@ -275,7 +276,7 @@ func testAccCheckCustomDashboardDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		dashResp, err := conn.ListObservabilityCustomDashboards(&gofastly.ListObservabilityCustomDashboardsInput{})
+		dashResp, err := conn.ListObservabilityCustomDashboards(context.TODO(), &gofastly.ListObservabilityCustomDashboardsInput{})
 		if err != nil {
 			return fmt.Errorf("error listing custom dashboards when checking dashboard destroy (%s): %s", rs.Primary, err)
 		}

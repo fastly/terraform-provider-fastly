@@ -24,10 +24,10 @@ func dataSourceFastlyTLSConfigurationIDs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSConfigurationIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSConfigurationIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	configurations, err := listTLSConfigurations(conn)
+	configurations, err := listTLSConfigurations(ctx, conn)
 	if err != nil {
 		return diag.FromErr(err)
 	}

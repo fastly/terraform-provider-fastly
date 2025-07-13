@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // SplunkServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -127,7 +127,7 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSplunkInput{
 		Format:           gofastly.ToPointer(vla.format),
@@ -156,7 +156,7 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Splunk create opts: %#v", opts)
-	_, err := conn.CreateSplunk(&opts)
+	_, err := conn.CreateSplunk(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -164,12 +164,12 @@ func (h *SplunkServiceAttributeHandler) Create(_ context.Context, d *schema.Reso
 }
 
 // Read refreshes the resource.
-func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Splunks for (%s)", d.Id())
-		remoteState, err := conn.ListSplunks(&gofastly.ListSplunksInput{
+		remoteState, err := conn.ListSplunks(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListSplunksInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -192,7 +192,7 @@ func (h *SplunkServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSplunkInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -245,7 +245,7 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Update Splunk Opts: %#v", opts)
-	_, err := conn.UpdateSplunk(&opts)
+	_, err := conn.UpdateSplunk(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func (h *SplunkServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SplunkServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSplunkInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -261,7 +261,7 @@ func (h *SplunkServiceAttributeHandler) Delete(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Splunk removal opts: %#v", opts)
-	err := conn.DeleteSplunk(&opts)
+	err := conn.DeleteSplunk(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

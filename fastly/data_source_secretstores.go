@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
@@ -41,7 +41,7 @@ func dataSourceFastlySecretStores() *schema.Resource {
 	}
 }
 
-func dataSourceFastlySecretStoresRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlySecretStoresRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading Secrets Stores")
@@ -52,7 +52,7 @@ func dataSourceFastlySecretStoresRead(_ context.Context, d *schema.ResourceData,
 	)
 
 	for {
-		remoteState, err := conn.ListSecretStores(&gofastly.ListSecretStoresInput{
+		remoteState, err := conn.ListSecretStores(ctx, &gofastly.ListSecretStoresInput{
 			Cursor: cursor,
 		})
 		if err != nil {

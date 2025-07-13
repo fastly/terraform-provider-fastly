@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyTLSSubscription() *schema.Resource {
@@ -177,7 +177,7 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 		commonName = &gofastly.TLSDomain{ID: v.(string)}
 	}
 
-	subscription, err := conn.CreateTLSSubscription(&gofastly.CreateTLSSubscriptionInput{
+	subscription, err := conn.CreateTLSSubscription(ctx, &gofastly.CreateTLSSubscriptionInput{
 		CertificateAuthority: d.Get("certificate_authority").(string),
 		Configuration:        configuration,
 		Domains:              domains,
@@ -192,13 +192,13 @@ func resourceFastlyTLSSubscriptionCreate(ctx context.Context, d *schema.Resource
 	return resourceFastlyTLSSubscriptionRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Subscription Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
 
 	include := "tls_authorizations"
-	subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
+	subscription, err := conn.GetTLSSubscription(ctx, &gofastly.GetTLSSubscriptionInput{
 		ID:      d.Id(),
 		Include: &include,
 	})
@@ -306,7 +306,7 @@ func resourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	var tlsDomains []*gofastly.TLSDomain
-	tlsDomains, _ = conn.ListTLSDomains(&gofastly.ListTLSDomainsInput{
+	tlsDomains, _ = conn.ListTLSDomains(ctx, &gofastly.ListTLSDomainsInput{
 		FilterTLSCertificateID: certificateID,
 		Include:                "tls_activations",
 		Sort:                   "tls_activations.created_at",
@@ -385,7 +385,7 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		conn := meta.(*APIClient).conn
-		_, err := conn.UpdateTLSSubscription(updates)
+		_, err := conn.UpdateTLSSubscription(ctx, updates)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -395,10 +395,10 @@ func resourceFastlyTLSSubscriptionUpdate(ctx context.Context, d *schema.Resource
 	return resourceFastlyTLSSubscriptionRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSSubscriptionDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteTLSSubscription(&gofastly.DeleteTLSSubscriptionInput{
+	err := conn.DeleteTLSSubscription(ctx, &gofastly.DeleteTLSSubscriptionInput{
 		ID:    d.Id(),
 		Force: d.Get("force_destroy").(bool),
 	})

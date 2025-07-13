@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenElasticsearch(t *testing.T) {
@@ -222,7 +223,7 @@ func TestAccFastlyServiceVCL_logging_elasticsearch_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLElasticsearchAttributes(service *gofastly.ServiceDetail, elasticsearch []*gofastly.Elasticsearch, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		elasticsearchList, err := conn.ListElasticsearch(&gofastly.ListElasticsearchInput{
+		elasticsearchList, err := conn.ListElasticsearch(context.TODO(), &gofastly.ListElasticsearchInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

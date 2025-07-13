@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlySecretStore() *schema.Resource {
@@ -29,7 +29,7 @@ func resourceFastlySecretStore() *schema.Resource {
 	}
 }
 
-func resourceFastlySecretStoreCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlySecretStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.CreateSecretStoreInput{
@@ -38,7 +38,7 @@ func resourceFastlySecretStoreCreate(_ context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] CREATE: Secret Store input: %#v", input)
 
-	store, err := conn.CreateSecretStore(input)
+	store, err := conn.CreateSecretStore(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -49,7 +49,7 @@ func resourceFastlySecretStoreCreate(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceFastlySecretStoreRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlySecretStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.GetSecretStoreInput{
@@ -58,7 +58,7 @@ func resourceFastlySecretStoreRead(_ context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] REFRESH: Secret Store input: %#v", input)
 
-	store, err := conn.GetSecretStore(input)
+	store, err := conn.GetSecretStore(ctx, input)
 	if err != nil {
 		log.Printf("[WARN] No Secret Store found '%s'", d.Id())
 		d.SetId("")
@@ -73,7 +73,7 @@ func resourceFastlySecretStoreRead(_ context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func resourceFastlySecretStoreDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlySecretStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := gofastly.DeleteSecretStoreInput{
@@ -82,7 +82,7 @@ func resourceFastlySecretStoreDelete(_ context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] DELETE: Secret Store input: %#v", input)
 
-	err := conn.DeleteSecretStore(&input)
+	err := conn.DeleteSecretStore(ctx, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}

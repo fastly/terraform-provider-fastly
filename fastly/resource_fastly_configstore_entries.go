@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyConfigStoreEntries() *schema.Resource {
@@ -47,7 +47,7 @@ func resourceFastlyConfigStoreEntries() *schema.Resource {
 	}
 }
 
-func resourceFastlyConfigStoreEntriesCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreEntriesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	entries := d.Get("entries").(map[string]any)
@@ -65,7 +65,7 @@ func resourceFastlyConfigStoreEntriesCreate(_ context.Context, d *schema.Resourc
 
 	log.Printf("[DEBUG] CREATE: Config Store Entries")
 
-	err := executeBatchConfigStoreOperations(conn, storeID, batchEntries)
+	err := executeBatchConfigStoreOperations(ctx, conn, storeID, batchEntries)
 	if err != nil {
 		return diag.Errorf("error creating Config Store (%s) entries: %s", storeID, err)
 	}
@@ -76,14 +76,14 @@ func resourceFastlyConfigStoreEntriesCreate(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceFastlyConfigStoreEntriesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] REFRESH: Config Store Entries")
 
 	storeID := d.Get("store_id").(string)
 
-	remoteState, err := conn.ListConfigStoreItems(&gofastly.ListConfigStoreItemsInput{
+	remoteState, err := conn.ListConfigStoreItems(ctx, &gofastly.ListConfigStoreItemsInput{
 		StoreID: storeID,
 	})
 	if err != nil {
@@ -103,7 +103,7 @@ func resourceFastlyConfigStoreEntriesRead(_ context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreEntriesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	storeID := d.Get("store_id").(string)
@@ -148,7 +148,7 @@ func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.Resourc
 			}
 		}
 
-		err := executeBatchConfigStoreOperations(conn, storeID, batchEntries)
+		err := executeBatchConfigStoreOperations(ctx, conn, storeID, batchEntries)
 		if err != nil {
 			return diag.Errorf("error updating Config Store (%s) elements: %s", storeID, err)
 		}
@@ -157,7 +157,7 @@ func resourceFastlyConfigStoreEntriesUpdate(_ context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceFastlyConfigStoreEntriesDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreEntriesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	entries := d.Get("entries").(map[string]any)
@@ -174,7 +174,7 @@ func resourceFastlyConfigStoreEntriesDelete(_ context.Context, d *schema.Resourc
 		})
 	}
 
-	err := executeBatchConfigStoreOperations(conn, storeID, batchEntries)
+	err := executeBatchConfigStoreOperations(ctx, conn, storeID, batchEntries)
 	if err != nil {
 		return diag.Errorf("error deleting Config Store (%s) entries: %s", storeID, err)
 	}
@@ -196,7 +196,7 @@ func flattenConfigStoreEntries(remoteState []*gofastly.ConfigStoreItem) map[stri
 
 // executeBatchConfigStoreOperations is called from with the Create, Update and
 // Delete methods.
-func executeBatchConfigStoreOperations(conn *gofastly.Client, storeID string, batchEntries []*gofastly.BatchConfigStoreItem) error {
+func executeBatchConfigStoreOperations(ctx context.Context, conn *gofastly.Client, storeID string, batchEntries []*gofastly.BatchConfigStoreItem) error {
 	batchSize := gofastly.BatchModifyMaximumOperations
 
 	for i := 0; i < len(batchEntries); i += batchSize {
@@ -205,7 +205,7 @@ func executeBatchConfigStoreOperations(conn *gofastly.Client, storeID string, ba
 			j = len(batchEntries)
 		}
 
-		err := conn.BatchModifyConfigStoreItems(&gofastly.BatchModifyConfigStoreItemsInput{
+		err := conn.BatchModifyConfigStoreItems(ctx, &gofastly.BatchModifyConfigStoreItemsInput{
 			StoreID: storeID,
 			Items:   batchEntries[i:j],
 		})

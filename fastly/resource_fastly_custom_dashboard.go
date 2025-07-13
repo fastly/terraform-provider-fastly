@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 var (
@@ -197,7 +197,7 @@ func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.Resource
 	}
 	input.Items = items
 
-	dash, err := conn.CreateObservabilityCustomDashboard(&input)
+	dash, err := conn.CreateObservabilityCustomDashboard(ctx, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -207,11 +207,11 @@ func resourceFastlyCustomDashboardCreate(ctx context.Context, d *schema.Resource
 	return resourceFastlyCustomDashboardRead(ctx, d, meta)
 }
 
-func resourceFastlyCustomDashboardRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyCustomDashboardRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Custom Dashboard for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
-	dash, err := conn.GetObservabilityCustomDashboard(&gofastly.GetObservabilityCustomDashboardInput{
+	dash, err := conn.GetObservabilityCustomDashboard(ctx, &gofastly.GetObservabilityCustomDashboardInput{
 		ID: gofastly.ToPointer(d.Id()),
 	})
 	if err != nil {
@@ -256,7 +256,7 @@ func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.Resource
 	}
 	input.Items = &items
 
-	_, err = conn.UpdateObservabilityCustomDashboard(&input)
+	_, err = conn.UpdateObservabilityCustomDashboard(ctx, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -264,10 +264,10 @@ func resourceFastlyCustomDashboardUpdate(ctx context.Context, d *schema.Resource
 	return resourceFastlyCustomDashboardRead(ctx, d, meta)
 }
 
-func resourceFastlyCustomDashboardDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyCustomDashboardDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteObservabilityCustomDashboard(&gofastly.DeleteObservabilityCustomDashboardInput{
+	err := conn.DeleteObservabilityCustomDashboard(ctx, &gofastly.DeleteObservabilityCustomDashboardInput{
 		ID: gofastly.ToPointer(d.Id()),
 	})
 	if err != nil {

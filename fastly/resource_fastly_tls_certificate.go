@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyTLSCertificate() *schema.Resource {
@@ -91,7 +91,7 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 		input.Name = v.(string)
 	}
 
-	output, err := conn.CreateCustomTLSCertificate(input)
+	output, err := conn.CreateCustomTLSCertificate(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -101,14 +101,14 @@ func resourceFastlyTLSCertificateCreate(ctx context.Context, d *schema.ResourceD
 	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Certificate Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
 
 	var diags diag.Diagnostics
 
-	cert, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
+	cert, err := conn.GetCustomTLSCertificate(ctx, &fastly.GetCustomTLSCertificateInput{
 		ID: d.Id(),
 	})
 	if err != nil {
@@ -170,7 +170,7 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 		input.Name = v.(string)
 	}
 
-	_, err := conn.UpdateCustomTLSCertificate(input)
+	_, err := conn.UpdateCustomTLSCertificate(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -178,10 +178,10 @@ func resourceFastlyTLSCertificateUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceFastlyTLSCertificateRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSCertificateDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{
+	err := conn.DeleteCustomTLSCertificate(ctx, &fastly.DeleteCustomTLSCertificateInput{
 		ID: d.Id(),
 	})
 	if err != nil {

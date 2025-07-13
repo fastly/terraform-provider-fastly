@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -11,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
@@ -142,7 +143,7 @@ func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, n
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		bqList, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
+		bqList, err := conn.ListBigQueries(context.TODO(), &gofastly.ListBigQueriesInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

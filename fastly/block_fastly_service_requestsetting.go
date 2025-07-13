@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // RequestSettingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -101,13 +101,13 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := buildRequestSetting(resource)
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Create Request Setting Opts: %#v", opts)
-	_, err := conn.CreateRequestSetting(opts)
+	_, err := conn.CreateRequestSetting(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 	if err != nil {
 		return err
 	}
@@ -115,12 +115,12 @@ func (h *RequestSettingServiceAttributeHandler) Create(_ context.Context, d *sch
 }
 
 // Read refreshes the resource.
-func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Request Settings for (%s)", d.Id())
-		remoteState, err := conn.ListRequestSettings(&gofastly.ListRequestSettingsInput{
+		remoteState, err := conn.ListRequestSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListRequestSettingsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -139,7 +139,7 @@ func (h *RequestSettingServiceAttributeHandler) Read(_ context.Context, d *schem
 }
 
 // Update updates the resource.
-func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -196,7 +196,7 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Update Request Settings Opts: %#v", opts)
-	_, err := conn.UpdateRequestSetting(&opts)
+	_, err := conn.UpdateRequestSetting(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (h *RequestSettingServiceAttributeHandler) Update(_ context.Context, d *sch
 }
 
 // Delete deletes the resource.
-func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RequestSettingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteRequestSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -212,7 +212,7 @@ func (h *RequestSettingServiceAttributeHandler) Delete(_ context.Context, d *sch
 	}
 
 	log.Printf("[DEBUG] Fastly Request Setting removal opts: %#v", opts)
-	err := conn.DeleteRequestSetting(&opts)
+	err := conn.DeleteRequestSetting(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

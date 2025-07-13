@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func dataSourceFastlyTLSSubscription() *schema.Resource {
@@ -73,13 +73,13 @@ func dataSourceFastlyTLSSubscription() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var subscription *fastly.TLSSubscription
 
 	if v, ok := d.GetOk("id"); ok {
-		foundSubscription, err := conn.GetTLSSubscription(&fastly.GetTLSSubscriptionInput{
+		foundSubscription, err := conn.GetTLSSubscription(ctx, &fastly.GetTLSSubscriptionInput{
 			ID: v.(string),
 		})
 		if err != nil {
@@ -88,7 +88,7 @@ func dataSourceFastlyTLSSubscriptionRead(_ context.Context, d *schema.ResourceDa
 		subscription = foundSubscription
 	} else {
 		filters := getTLSSubscriptionFilters(d)
-		subscriptions, err := listTLSSubscriptions(conn, filters...)
+		subscriptions, err := listTLSSubscriptions(ctx, conn, filters...)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -144,11 +144,11 @@ func getTLSSubscriptionFilters(d *schema.ResourceData) []TLSSubscriptionPredicat
 	return filters
 }
 
-func listTLSSubscriptions(conn *fastly.Client, filters ...TLSSubscriptionPredicate) ([]*fastly.TLSSubscription, error) {
+func listTLSSubscriptions(ctx context.Context, conn *fastly.Client, filters ...TLSSubscriptionPredicate) ([]*fastly.TLSSubscription, error) {
 	var subscriptions []*fastly.TLSSubscription
 	pageNumber := 1
 	for {
-		list, err := conn.ListTLSSubscriptions(&fastly.ListTLSSubscriptionsInput{
+		list, err := conn.ListTLSSubscriptions(ctx, &fastly.ListTLSSubscriptionsInput{
 			PageNumber: pageNumber,
 			PageSize:   10,
 		})

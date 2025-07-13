@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // GCSLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -155,7 +155,7 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateGCSInput{
 		Bucket:           gofastly.ToPointer(resource["bucket_name"].(string)),
@@ -196,7 +196,7 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Create GCS Opts: %#v", opts)
-	_, err := conn.CreateGCS(&opts)
+	_, err := conn.CreateGCS(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -204,12 +204,12 @@ func (h *GCSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing GCS for (%s)", d.Id())
-		remoteState, err := conn.ListGCSs(&gofastly.ListGCSsInput{
+		remoteState, err := conn.ListGCSs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListGCSsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -232,7 +232,7 @@ func (h *GCSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.Re
 }
 
 // Update updates the resource.
-func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateGCSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -288,7 +288,7 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Update GCS Opts: %#v", opts)
-	_, err := conn.UpdateGCS(&opts)
+	_, err := conn.UpdateGCS(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (h *GCSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.
 }
 
 // Delete deletes the resource.
-func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GCSLoggingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteGCSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -304,7 +304,7 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Fastly GCS removal opts: %#v", opts)
-	err := conn.DeleteGCS(&opts)
+	err := conn.DeleteGCS(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 const (
@@ -457,7 +458,7 @@ func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 func testAccCheckFastlyServiceVCLS3LoggingAttributes(service *gofastly.ServiceDetail, s3s []*gofastly.S3, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		s3List, err := conn.ListS3s(&gofastly.ListS3sInput{
+		s3List, err := conn.ListS3s(context.TODO(), &gofastly.ListS3sInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

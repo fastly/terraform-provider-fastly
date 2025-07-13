@@ -24,10 +24,10 @@ func dataSourceFastlyTLSPlatformCertificateIDs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSPlatformCertificateIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSPlatformCertificateIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	certificates, err := listPlatformTLSCertificates(conn)
+	certificates, err := listPlatformTLSCertificates(ctx, conn)
 	if err != nil {
 		return diag.FromErr(err)
 	}

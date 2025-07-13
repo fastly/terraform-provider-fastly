@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // RateLimiterAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -178,11 +178,11 @@ func (h *RateLimiterAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *RateLimiterAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RateLimiterAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreateERLInput(d.Id(), serviceVersion, resource)
 
 	log.Printf("[DEBUG] Create Rate Limiter: %#v", opts)
-	_, err := conn.CreateERL(&opts)
+	_, err := conn.CreateERL(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -191,12 +191,12 @@ func (h *RateLimiterAttributeHandler) Create(_ context.Context, d *schema.Resour
 }
 
 // Read refreshes the resource.
-func (h *RateLimiterAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RateLimiterAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Rate Limiters for (%s)", d.Id())
-		remoteState, err := conn.ListERLs(&gofastly.ListERLsInput{
+		remoteState, err := conn.ListERLs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListERLsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -214,7 +214,7 @@ func (h *RateLimiterAttributeHandler) Read(_ context.Context, d *schema.Resource
 }
 
 // Update updates the resource.
-func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RateLimiterAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	var rateLimiterID string
 
 	// IMPORTANT: Cloning a Service will result in new Rate Limiter IDs.
@@ -226,7 +226,7 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 	// we enforce that the name must be unique otherwise we can't safely determine
 	// the Rate Limiter ID).
 
-	erls, err := conn.ListERLs(&gofastly.ListERLsInput{
+	erls, err := conn.ListERLs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListERLsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
@@ -244,7 +244,7 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 	input := h.buildUpdateERLInput(rateLimiterID, modified)
 
 	log.Printf("[DEBUG] Update Rate Limiter: %#v", input)
-	_, err = conn.UpdateERL(&input)
+	_, err = conn.UpdateERL(gofastly.NewContextForResourceID(ctx, d.Id()), &input)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func (h *RateLimiterAttributeHandler) Update(_ context.Context, d *schema.Resour
 }
 
 // Delete deletes the resource.
-func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *RateLimiterAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	var rateLimiterID string
 
 	// IMPORTANT: Cloning a Service will result in new Rate Limiter IDs.
@@ -264,7 +264,7 @@ func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.Resour
 	// we enforce that the name must be unique otherwise we can't safely determine
 	// the Rate Limiter ID).
 
-	erls, err := conn.ListERLs(&gofastly.ListERLsInput{
+	erls, err := conn.ListERLs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListERLsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
 	})
@@ -281,7 +281,7 @@ func (h *RateLimiterAttributeHandler) Delete(_ context.Context, d *schema.Resour
 	input := h.createDeleteERLInput(rateLimiterID)
 
 	log.Printf("[DEBUG] Delete Rate Limiter: %#v", input)
-	err = conn.DeleteERL(&input)
+	err = conn.DeleteERL(gofastly.NewContextForResourceID(ctx, d.Id()), &input)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

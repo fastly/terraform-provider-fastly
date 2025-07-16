@@ -120,7 +120,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 				"mode": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "Operation mode",
+					Description: "Operation mode. Can be either `off`, `log`, or `block`.",
 					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
 						[]string{"off", "log", "block"},
 						false,

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
@@ -160,7 +161,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLLogshuttleAttributes(service *gofastly.ServiceDetail, logshuttle []*gofastly.Logshuttle, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		logshuttleList, err := conn.ListLogshuttles(&gofastly.ListLogshuttlesInput{
+		logshuttleList, err := conn.ListLogshuttles(context.TODO(), &gofastly.ListLogshuttlesInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func dataSourceFastlyTLSConfiguration() *schema.Resource {
@@ -105,13 +105,13 @@ const (
 	tlsCustomService   = "CUSTOM"
 )
 
-func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	var configuration *fastly.CustomTLSConfiguration
 
 	if v, ok := d.GetOk("id"); ok {
-		config, err := conn.GetCustomTLSConfiguration(&fastly.GetCustomTLSConfigurationInput{
+		config, err := conn.GetCustomTLSConfiguration(ctx, &fastly.GetCustomTLSConfigurationInput{
 			ID:      v.(string),
 			Include: "dns_records",
 		})
@@ -123,7 +123,7 @@ func dataSourceFastlyTLSConfigurationRead(_ context.Context, d *schema.ResourceD
 	} else {
 		filters := getTLSConfigurationFilters(d)
 
-		configurations, err := listTLSConfigurations(conn, filters...)
+		configurations, err := listTLSConfigurations(ctx, conn, filters...)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -183,11 +183,11 @@ func getTLSConfigurationFilters(d *schema.ResourceData) []func(*fastly.CustomTLS
 	return filters
 }
 
-func listTLSConfigurations(conn *fastly.Client, filters ...func(*fastly.CustomTLSConfiguration) bool) ([]*fastly.CustomTLSConfiguration, error) {
+func listTLSConfigurations(ctx context.Context, conn *fastly.Client, filters ...func(*fastly.CustomTLSConfiguration) bool) ([]*fastly.CustomTLSConfiguration, error) {
 	var configurations []*fastly.CustomTLSConfiguration
 	cursor := 1
 	for {
-		list, err := conn.ListCustomTLSConfigurations(&fastly.ListCustomTLSConfigurationsInput{
+		list, err := conn.ListCustomTLSConfigurations(ctx, &fastly.ListCustomTLSConfigurationsInput{
 			PageNumber: cursor,
 			Include:    "dns_records",
 		})

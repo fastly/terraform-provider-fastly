@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 var errFastlyNoServiceFound = errors.New("no matching Fastly service found")
@@ -184,7 +184,7 @@ func resourceService(serviceDef ServiceDefinition) *schema.Resource {
 // contains a unique 'name' attribute. This is called for blocks where
 // overlapping of the same name can cause unexpected behaviour and is typically
 // because of an issue with the Fastly API's design.
-func validateUniqueNames(block string) func(_ context.Context, rd *schema.ResourceDiff, _ any) error {
+func validateUniqueNames(block string) func(ctx context.Context, rd *schema.ResourceDiff, _ any) error {
 	return func(_ context.Context, rd *schema.ResourceDiff, _ any) error {
 		names := make(map[string]int)
 
@@ -288,7 +288,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	conn := meta.(*APIClient).conn
-	service, err := conn.CreateService(&gofastly.CreateServiceInput{
+	service, err := conn.CreateService(ctx, &gofastly.CreateServiceInput{
 		Name:    gofastly.ToPointer(d.Get("name").(string)),
 		Comment: gofastly.ToPointer(d.Get("comment").(string)),
 		Type:    gofastly.ToPointer(serviceDef.GetType()),
@@ -323,7 +323,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	shouldActivate := d.Get("activate").(bool)
 	// Update Name and/or Comment. No new version is required for this.
 	if d.HasChanges("name", "comment") && shouldActivate {
-		_, err := conn.UpdateService(&gofastly.UpdateServiceInput{
+		_, err := conn.UpdateService(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.UpdateServiceInput{
 			ServiceID: d.Id(),
 			Name:      gofastly.ToPointer(d.Get("name").(string)),
 			Comment:   gofastly.ToPointer(d.Get("comment").(string)),
@@ -355,7 +355,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		log.Printf("[DEBUG] Update Version opts: %#v", opts)
-		_, err := conn.UpdateVersion(&opts)
+		_, err := conn.UpdateVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -376,7 +376,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			latestVersion = d.Get("cloned_version").(int)
 
 			log.Printf("[DEBUG] Getting current state of version (%d)", latestVersion)
-			existingVersion, err := conn.GetVersion(&gofastly.GetVersionInput{
+			existingVersion, err := conn.GetVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetVersionInput{
 				ServiceID:      d.Id(),
 				ServiceVersion: latestVersion,
 			})
@@ -399,7 +399,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if !shouldStage || *existingVersion.Locked {
 				// Clone the latest version, giving us an unlocked version we can modify.
 				log.Printf("[DEBUG] Creating clone of version (%d) for updates", latestVersion)
-				newVersion, err := conn.CloneVersion(&gofastly.CloneVersionInput{
+				newVersion, err := conn.CloneVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.CloneVersionInput{
 					ServiceID:      d.Id(),
 					ServiceVersion: latestVersion,
 				})
@@ -431,7 +431,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					}
 
 					log.Printf("[DEBUG] Update Version opts: %#v", opts)
-					_, err := conn.UpdateVersion(&opts)
+					_, err := conn.UpdateVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 					if err != nil {
 						return diag.FromErr(err)
 					}
@@ -472,7 +472,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		if (serviceDef.GetType() == ServiceTypeVCL) || d.Get("activate").(bool) || d.Get("stage").(bool) {
 			// Validate version.
 			log.Printf("[DEBUG] Validating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-			valid, msg, err := conn.ValidateVersion(&gofastly.ValidateVersionInput{
+			valid, msg, err := conn.ValidateVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ValidateVersionInput{
 				ServiceID:      d.Id(),
 				ServiceVersion: latestVersion,
 			})
@@ -493,7 +493,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		// If staging has been requested, then stage the latest version.
 		if shouldStage {
 			log.Printf("[DEBUG] Staging Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-			_, err := conn.ActivateVersion(&gofastly.ActivateVersionInput{
+			_, err := conn.ActivateVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ActivateVersionInput{
 				ServiceID:      d.Id(),
 				ServiceVersion: latestVersion,
 				Environment:    "staging",
@@ -514,7 +514,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	latestVersion := d.Get("cloned_version").(int)
 	if shouldActivate && versionNotYetActivated {
 		log.Printf("[DEBUG] Activating Fastly Service (%s), Version (%v)", d.Id(), latestVersion)
-		_, err := conn.ActivateVersion(&gofastly.ActivateVersionInput{
+		_, err := conn.ActivateVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ActivateVersionInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: latestVersion,
 		})
@@ -546,7 +546,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 
 	var diags diag.Diagnostics
 
-	s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
+	s, err := conn.GetServiceDetails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetServiceInput{
 		ServiceID: d.Id(),
 	})
 	if err != nil {
@@ -734,14 +734,14 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any, 
 }
 
 // resourceServiceDelete provides service resource Delete functionality.
-func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, _ ServiceDefinition) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any, _ ServiceDefinition) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	// Fastly will fail to delete any service with an Active Version.
 	// If `force_destroy` is given, we deactivate the active version and then send
 	// the DELETE call.
 	if d.Get("force_destroy").(bool) || d.Get("reuse").(bool) {
-		s, err := conn.GetServiceDetails(&gofastly.GetServiceInput{
+		s, err := conn.GetServiceDetails(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetServiceInput{
 			ServiceID: d.Id(),
 		})
 		if err != nil {
@@ -749,7 +749,7 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, 
 		}
 
 		if s.ActiveVersion != nil && s.ActiveVersion.Number != nil && *s.ActiveVersion.Number != 0 {
-			_, err := conn.DeactivateVersion(&gofastly.DeactivateVersionInput{
+			_, err := conn.DeactivateVersion(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.DeactivateVersionInput{
 				ServiceID:      d.Id(),
 				ServiceVersion: *s.ActiveVersion.Number,
 			})
@@ -760,7 +760,7 @@ func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any, 
 	}
 
 	if !d.Get("reuse").(bool) {
-		err := conn.DeleteService(&gofastly.DeleteServiceInput{
+		err := conn.DeleteService(ctx, &gofastly.DeleteServiceInput{
 			ServiceID: d.Id(),
 		})
 		if err != nil {

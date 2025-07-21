@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyTLSSubscriptionValidation() *schema.Resource {
@@ -41,7 +41,7 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 	conn := meta.(*APIClient).conn
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
+		subscription, err := conn.GetTLSSubscription(ctx, &gofastly.GetTLSSubscriptionInput{
 			ID: d.Get("subscription_id").(string),
 		})
 		if err != nil {
@@ -66,13 +66,13 @@ func resourceFastlyTLSSubscriptionValidationCreate(ctx context.Context, d *schem
 	return nil
 }
 
-func resourceFastlyTLSSubscriptionValidationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSSubscriptionValidationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Subscription Validation Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
 
 	subscriptionID := d.Get("subscription_id").(string)
-	subscription, err := conn.GetTLSSubscription(&gofastly.GetTLSSubscriptionInput{
+	subscription, err := conn.GetTLSSubscription(ctx, &gofastly.GetTLSSubscriptionInput{
 		ID: subscriptionID,
 	})
 	if err, ok := err.(*gofastly.HTTPError); ok && err.IsNotFound() {

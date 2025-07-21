@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
@@ -56,12 +56,12 @@ func dataSourceFastlyDictionaries() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyDictionariesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyDictionariesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading dictionaries")
 
-	remoteState, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+	remoteState, err := conn.ListDictionaries(ctx, &gofastly.ListDictionariesInput{
 		ServiceID:      d.Get("service_id").(string),
 		ServiceVersion: d.Get("service_version").(int),
 	})

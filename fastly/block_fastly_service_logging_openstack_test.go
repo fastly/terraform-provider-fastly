@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenOpenstack(t *testing.T) {
@@ -214,7 +215,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLOpenstackAttributes(service *gofastly.ServiceDetail, openstack []*gofastly.Openstack, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		openstackList, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
+		openstackList, err := conn.ListOpenstack(context.TODO(), &gofastly.ListOpenstackInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

@@ -15,6 +15,7 @@
 ### DEPENDENCIES:
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.4.0 to 10.5.0 ([#1019](https://github.com/fastly/terraform-provider-fastly/pull/1019))
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.5.0 to 10.5.1 ([#1023](https://github.com/fastly/terraform-provider-fastly/pull/1023))
+- feat(deps): Upgrade to go-fastly version 11. ([#1028](https://github.com/fastly/terraform-provider-fastly/pull/1028))
 - build(deps): `github.com/fastly/go-fastly/v10` from 10.4.0 to 10.5.0 ([#1019](https://github.com/fastly/terraform-provider-fastly/pull/1019))
 - build(deps): `golang.org/x/net` from 0.41.0 to 0.42.0 ([#1030](https://github.com/fastly/terraform-provider-fastly/pull/1030))
 

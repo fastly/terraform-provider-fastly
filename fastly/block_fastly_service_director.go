@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // DirectorServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -87,7 +87,7 @@ func (h *DirectorServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates a new resource instance.
-func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.CreateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -110,7 +110,7 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Director Create opts: %#v", opts)
-	_, err := conn.CreateDirector(&opts)
+	_, err := conn.CreateDirector(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 				}
 
 				log.Printf("[DEBUG] Director Backend Create opts: %#v", opts)
-				_, err := conn.CreateDirectorBackend(&opts)
+				_, err := conn.CreateDirectorBackend(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 				if err != nil {
 					return err
 				}
@@ -138,12 +138,12 @@ func (h *DirectorServiceAttributeHandler) Create(_ context.Context, d *schema.Re
 }
 
 // Read refreshes the resource state.
-func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Directors for (%s)", d.Id())
-		remoteState, err := conn.ListDirectors(&gofastly.ListDirectorsInput{
+		remoteState, err := conn.ListDirectors(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListDirectorsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -162,7 +162,7 @@ func (h *DirectorServiceAttributeHandler) Read(_ context.Context, d *schema.Reso
 }
 
 // Update updates the resource instance.
-func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -197,7 +197,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Update Director Opts: %#v", opts)
-	_, err := conn.UpdateDirector(&opts)
+	_, err := conn.UpdateDirector(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 				Backend:        b.(string),
 			}
 			log.Printf("[DEBUG] Director Backend Update opts: %#v", opts)
-			err := conn.DeleteDirectorBackend(&opts)
+			err := conn.DeleteDirectorBackend(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 			if err != nil {
 				// If we end up trying to remove a backend that no longer exists, then the
 				// API will return a '404 Not Found'. We don't want to return those errors
@@ -234,7 +234,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 				Backend:        b.(string),
 			}
 			log.Printf("[DEBUG] Director Backend Update opts: %#v", opts)
-			_, err := conn.CreateDirectorBackend(&opts)
+			_, err := conn.CreateDirectorBackend(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 			if err != nil {
 				return err
 			}
@@ -244,7 +244,7 @@ func (h *DirectorServiceAttributeHandler) Update(_ context.Context, d *schema.Re
 }
 
 // Delete deletes the resource instance.
-func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DirectorServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteDirectorInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -252,7 +252,7 @@ func (h *DirectorServiceAttributeHandler) Delete(_ context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Director Removal opts: %#v", opts)
-	err := conn.DeleteDirector(&opts)
+	err := conn.DeleteDirector(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

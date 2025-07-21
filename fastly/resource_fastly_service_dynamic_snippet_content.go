@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceServiceDynamicSnippetContent() *schema.Resource {
@@ -57,7 +57,7 @@ func resourceServiceDynamicSnippetCreate(ctx context.Context, d *schema.Resource
 	snippetID := d.Get("snippet_id").(string)
 	content := d.Get("content").(string)
 
-	_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
+	_, err := conn.UpdateDynamicSnippet(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.UpdateDynamicSnippetInput{
 		ServiceID: serviceID,
 		SnippetID: snippetID,
 		Content:   gofastly.ToPointer(content),
@@ -84,7 +84,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChange("content") {
 		content := d.Get("content").(string)
 
-		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
+		_, err := conn.UpdateDynamicSnippet(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.UpdateDynamicSnippetInput{
 			ServiceID: serviceID,
 			SnippetID: snippetID,
 			Content:   gofastly.ToPointer(content),
@@ -97,7 +97,7 @@ func resourceServiceDynamicSnippetUpdate(ctx context.Context, d *schema.Resource
 	return resourceServiceDynamicSnippetRead(ctx, d, meta)
 }
 
-func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceDynamicSnippetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Print("[DEBUG] Refreshing Dynamic Snippet Configuration")
 
 	conn := meta.(*APIClient).conn
@@ -105,7 +105,7 @@ func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData
 	serviceID := d.Get("service_id").(string)
 	snippetID := d.Get("snippet_id").(string)
 
-	dynamicSnippet, err := conn.GetDynamicSnippet(&gofastly.GetDynamicSnippetInput{
+	dynamicSnippet, err := conn.GetDynamicSnippet(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.GetDynamicSnippetInput{
 		ServiceID: serviceID,
 		SnippetID: snippetID,
 	})
@@ -121,7 +121,7 @@ func resourceServiceDynamicSnippetRead(_ context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceDynamicSnippetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Dynamic snippet content should be set to empty if manage_snippets=true.
 	// Otherwise remove it from state only.
 	if d.Get("manage_snippets").(bool) {
@@ -130,7 +130,7 @@ func resourceServiceDynamicSnippetDelete(_ context.Context, d *schema.ResourceDa
 		serviceID := d.Get("service_id").(string)
 		snippetID := d.Get("snippet_id").(string)
 
-		_, err := conn.UpdateDynamicSnippet(&gofastly.UpdateDynamicSnippetInput{
+		_, err := conn.UpdateDynamicSnippet(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.UpdateDynamicSnippetInput{
 			ServiceID: serviceID,
 			SnippetID: snippetID,
 			Content:   gofastly.ToPointer(""),

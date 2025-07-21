@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // SumologicServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -98,7 +98,7 @@ func (h *SumologicServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateSumologicInput{
 		Format:           gofastly.ToPointer(vla.format),
@@ -122,7 +122,7 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Create Sumologic Opts: %#v", opts)
-	_, err := conn.CreateSumologic(&opts)
+	_, err := conn.CreateSumologic(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -130,12 +130,12 @@ func (h *SumologicServiceAttributeHandler) Create(_ context.Context, d *schema.R
 }
 
 // Read refreshes the resource.
-func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Sumologic for (%s)", d.Id())
-		remoteState, err := conn.ListSumologics(&gofastly.ListSumologicsInput{
+		remoteState, err := conn.ListSumologics(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListSumologicsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -158,7 +158,7 @@ func (h *SumologicServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateSumologicInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -193,7 +193,7 @@ func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Update Sumologic Opts: %#v", opts)
-	_, err := conn.UpdateSumologic(&opts)
+	_, err := conn.UpdateSumologic(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (h *SumologicServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *SumologicServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteSumologicInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -209,7 +209,7 @@ func (h *SumologicServiceAttributeHandler) Delete(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Fastly Sumologic removal opts: %#v", opts)
-	err := conn.DeleteSumologic(&opts)
+	err := conn.DeleteSumologic(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

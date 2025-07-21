@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyKVStore_validate(t *testing.T) {
@@ -113,7 +114,7 @@ func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, kvSto
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		stores, err := conn.ListKVStores(&gofastly.ListKVStoresInput{})
+		stores, err := conn.ListKVStores(context.TODO(), &gofastly.ListKVStoresInput{})
 		if err != nil {
 			return fmt.Errorf("error listing all KV Stores: %s", err)
 		}
@@ -130,7 +131,7 @@ func testAccCheckFastlyKVStoreRemoteState(service *gofastly.ServiceDetail, kvSto
 			return fmt.Errorf("error looking up the KV Store")
 		}
 
-		links, err := conn.ListResources(&gofastly.ListResourcesInput{
+		links, err := conn.ListResources(context.TODO(), &gofastly.ListResourcesInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})
@@ -339,7 +340,7 @@ data "fastly_package_hash" "example" {
 func testAccAddKVStoreItems(kvStore *gofastly.KVStore) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		err := conn.InsertKVStoreKey(&gofastly.InsertKVStoreKeyInput{
+		err := conn.InsertKVStoreKey(context.TODO(), &gofastly.InsertKVStoreKeyInput{
 			StoreID: kvStore.StoreID,
 			Key:     "test_key",
 			Value:   "test_value",

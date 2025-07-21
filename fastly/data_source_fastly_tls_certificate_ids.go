@@ -24,10 +24,10 @@ func dataSourceFastlyTLSCertificateIDs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSCertificateIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSCertificateIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	certificates, err := listTLSCertificates(conn)
+	certificates, err := listTLSCertificates(ctx, conn)
 	if err != nil {
 		return diag.FromErr(err)
 	}

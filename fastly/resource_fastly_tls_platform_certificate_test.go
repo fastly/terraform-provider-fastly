@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func init() {
@@ -65,7 +66,7 @@ func testAccCheckTLSPlatformCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		certificates, err := conn.ListBulkCertificates(&fastly.ListBulkCertificatesInput{})
+		certificates, err := conn.ListBulkCertificates(context.TODO(), &fastly.ListBulkCertificatesInput{})
 		if err != nil {
 			return err
 		}
@@ -89,7 +90,7 @@ func testAccTLSPlatformCertificateExists(resourceName string) resource.TestCheck
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		_, err := conn.GetBulkCertificate(&fastly.GetBulkCertificateInput{
+		_, err := conn.GetBulkCertificate(context.TODO(), &fastly.GetBulkCertificateInput{
 			ID: r.Primary.ID,
 		})
 		if err != nil {
@@ -132,7 +133,7 @@ func testSweepTLSPlatformCertificates(region string) error {
 		return diagToErr(diagnostics)
 	}
 
-	certificates, err := client.ListBulkCertificates(&fastly.ListBulkCertificatesInput{PageSize: 1000})
+	certificates, err := client.ListBulkCertificates(context.TODO(), &fastly.ListBulkCertificatesInput{PageSize: 1000})
 	if err != nil {
 		return err
 	}
@@ -146,7 +147,7 @@ func testSweepTLSPlatformCertificates(region string) error {
 			}
 		}
 
-		err := client.DeleteBulkCertificate(&fastly.DeleteBulkCertificateInput{ID: certificate.ID})
+		err := client.DeleteBulkCertificate(context.TODO(), &fastly.DeleteBulkCertificateInput{ID: certificate.ID})
 		if err != nil {
 			return err
 		}

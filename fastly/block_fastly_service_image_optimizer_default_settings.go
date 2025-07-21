@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // ProductEnablementServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -118,7 +118,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Create(c context.
 }
 
 // Read refreshes the resource.
-func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.Key()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
@@ -126,7 +126,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(_ context.Co
 
 		log.Printf("[DEBUG] Refreshing Image Optimizer default settings for (%s)", serviceID)
 
-		remoteState, err := conn.GetImageOptimizerDefaultSettings(&gofastly.GetImageOptimizerDefaultSettingsInput{
+		remoteState, err := conn.GetImageOptimizerDefaultSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.GetImageOptimizerDefaultSettingsInput{
 			ServiceID:      serviceID,
 			ServiceVersion: serviceVersion,
 		})
@@ -178,7 +178,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Read(_ context.Co
 }
 
 // Update updates the resource.
-func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, _, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, _, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	log.Println("[DEBUG] Update Image Optimizer default settings")
 
@@ -242,7 +242,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 
 	log.Printf("[DEBUG] Calling Image Optimizer default settings update API with parameters: %+v", apiInput)
 
-	if _, err := conn.UpdateImageOptimizerDefaultSettings(&apiInput); err != nil {
+	if _, err := conn.UpdateImageOptimizerDefaultSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &apiInput); err != nil {
 		return err
 	}
 
@@ -255,7 +255,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Update(_ context.
 //
 // This assumes the service wasn't modified with the UI or any other non-terraform method. Given terraform's regular mode of operating within the world is to
 // assume its in control of everything, I think that's quite a reasonable assumption.
-func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	serviceID := d.Id()
 	log.Println("[DEBUG] Update Image Optimizer default settings")
 
@@ -315,7 +315,7 @@ func (h *ImageOptimizerDefaultSettingsServiceAttributeHandler) Delete(_ context.
 
 	log.Printf("[DEBUG] Calling Image Optimizer default settings update API with parameters: %+v", apiInput)
 
-	if _, err := conn.UpdateImageOptimizerDefaultSettings(&apiInput); err != nil {
+	if _, err := conn.UpdateImageOptimizerDefaultSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &apiInput); err != nil {
 		// inspect the error type for a title that has a message indicating the user cannot call the API because they do not have Image Optimizer
 		// enabled. For these users we want to skip the error so that we can allow them to clean up their Terraform state. (also, because the Image Optimizer
 		// default settings for services with Image Optimizer are effectively cleared by disabling Image Optimizer.)

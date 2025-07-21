@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // GrafanaCloudLogsServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -105,21 +105,22 @@ func (h *GrafanaCloudLogsServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *GrafanaCloudLogsServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GrafanaCloudLogsServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly GrafanaCloudLogs logging addition opts: %#v", opts)
 
-	return createGrafanaCloudLogs(conn, opts)
+	_, err := conn.CreateGrafanaCloudLogs(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *GrafanaCloudLogsServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GrafanaCloudLogsServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing GrafanaCloudLogs logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListGrafanaCloudLogs(&gofastly.ListGrafanaCloudLogsInput{
+		remoteState, err := conn.ListGrafanaCloudLogs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListGrafanaCloudLogsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -142,7 +143,7 @@ func (h *GrafanaCloudLogsServiceAttributeHandler) Read(_ context.Context, d *sch
 }
 
 // Update updates the resource.
-func (h *GrafanaCloudLogsServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GrafanaCloudLogsServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateGrafanaCloudLogsInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -180,7 +181,7 @@ func (h *GrafanaCloudLogsServiceAttributeHandler) Update(_ context.Context, d *s
 	}
 
 	log.Printf("[DEBUG] Update GrafanaCloudLogs Opts: %#v", opts)
-	_, err := conn.UpdateGrafanaCloudLogs(&opts)
+	_, err := conn.UpdateGrafanaCloudLogs(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -188,21 +189,12 @@ func (h *GrafanaCloudLogsServiceAttributeHandler) Update(_ context.Context, d *s
 }
 
 // Delete deletes the resource.
-func (h *GrafanaCloudLogsServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *GrafanaCloudLogsServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly GrafanaCloudLogs logging endpoint removal opts: %#v", opts)
 
-	return deleteGrafanaCloudLogs(conn, opts)
-}
-
-func createGrafanaCloudLogs(conn *gofastly.Client, i *gofastly.CreateGrafanaCloudLogsInput) error {
-	_, err := conn.CreateGrafanaCloudLogs(i)
-	return err
-}
-
-func deleteGrafanaCloudLogs(conn *gofastly.Client, i *gofastly.DeleteGrafanaCloudLogsInput) error {
-	err := conn.DeleteGrafanaCloudLogs(i)
+	err := conn.DeleteGrafanaCloudLogs(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

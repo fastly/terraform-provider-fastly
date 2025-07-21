@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // OpenstackServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -151,21 +151,22 @@ func (h *OpenstackServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *OpenstackServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging addition opts: %#v", opts)
 
-	return createOpenstack(conn, opts)
+	_, err := conn.CreateOpenstack(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing OpenStack logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListOpenstack(&gofastly.ListOpenstackInput{
+		remoteState, err := conn.ListOpenstack(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListOpenstackInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -188,7 +189,7 @@ func (h *OpenstackServiceAttributeHandler) Read(_ context.Context, d *schema.Res
 }
 
 // Update updates the resource.
-func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateOpenstackInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -247,7 +248,7 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Update OpenStack Opts: %#v", opts)
-	_, err := conn.UpdateOpenstack(&opts)
+	_, err := conn.UpdateOpenstack(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -255,21 +256,12 @@ func (h *OpenstackServiceAttributeHandler) Update(_ context.Context, d *schema.R
 }
 
 // Delete deletes the resource.
-func (h *OpenstackServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *OpenstackServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly OpenStack logging endpoint removal opts: %#v", opts)
 
-	return deleteOpenstack(conn, opts)
-}
-
-func createOpenstack(conn *gofastly.Client, i *gofastly.CreateOpenstackInput) error {
-	_, err := conn.CreateOpenstack(i)
-	return err
-}
-
-func deleteOpenstack(conn *gofastly.Client, i *gofastly.DeleteOpenstackInput) error {
-	err := conn.DeleteOpenstack(i)
+	err := conn.DeleteOpenstack(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

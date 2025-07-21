@@ -26,10 +26,10 @@ func dataSourceFastlyTLSPrivateKeyIDs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSPrivateKeyIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSPrivateKeyIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	keys, err := listTLSPrivateKeys(conn)
+	keys, err := listTLSPrivateKeys(ctx, conn)
 	if err != nil {
 		return diag.FromErr(err)
 	}

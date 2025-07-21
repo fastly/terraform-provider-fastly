@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceServiceAuthorization() *schema.Resource {
@@ -49,10 +49,10 @@ func resourceServiceAuthorization() *schema.Resource {
 	}
 }
 
-func resourceServiceAuthorizationCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	sa, err := conn.CreateServiceAuthorization(&gofastly.CreateServiceAuthorizationInput{
+	sa, err := conn.CreateServiceAuthorization(ctx, &gofastly.CreateServiceAuthorizationInput{
 		Service:    &gofastly.SAService{ID: d.Get("service_id").(string)},
 		User:       &gofastly.SAUser{ID: d.Get("user_id").(string)},
 		Permission: d.Get("permission").(string),
@@ -66,12 +66,12 @@ func resourceServiceAuthorizationCreate(_ context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceServiceAuthorizationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing Service Authorization Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
 
-	sa, err := conn.GetServiceAuthorization(&gofastly.GetServiceAuthorizationInput{
+	sa, err := conn.GetServiceAuthorization(ctx, &gofastly.GetServiceAuthorizationInput{
 		ID: d.Id(),
 	})
 	if err != nil {
@@ -98,7 +98,7 @@ func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*APIClient).conn
 
 	if d.HasChanges("permission") {
-		_, err := conn.UpdateServiceAuthorization(&gofastly.UpdateServiceAuthorizationInput{
+		_, err := conn.UpdateServiceAuthorization(ctx, &gofastly.UpdateServiceAuthorizationInput{
 			ID:         d.Id(),
 			Permission: d.Get("permission").(string),
 		})
@@ -110,10 +110,10 @@ func resourceServiceAuthorizationUpdate(ctx context.Context, d *schema.ResourceD
 	return resourceServiceAuthorizationRead(ctx, d, meta)
 }
 
-func resourceServiceAuthorizationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteServiceAuthorization(&gofastly.DeleteServiceAuthorizationInput{
+	err := conn.DeleteServiceAuthorization(ctx, &gofastly.DeleteServiceAuthorizationInput{
 		ID: d.Id(),
 	})
 	if err != nil {

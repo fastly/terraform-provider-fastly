@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // LogglyServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -91,21 +91,22 @@ func (h *LogglyServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *LogglyServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Loggly logging addition opts: %#v", opts)
 
-	return createLoggly(conn, opts)
+	_, err := conn.CreateLoggly(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Loggly logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListLoggly(&gofastly.ListLogglyInput{
+		remoteState, err := conn.ListLoggly(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListLogglyInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -128,7 +129,7 @@ func (h *LogglyServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateLogglyInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -157,7 +158,7 @@ func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Update Loggly Opts: %#v", opts)
-	_, err := conn.UpdateLoggly(&opts)
+	_, err := conn.UpdateLoggly(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -165,21 +166,12 @@ func (h *LogglyServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *LogglyServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *LogglyServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Loggly logging endpoint removal opts: %#v", opts)
 
-	return deleteLoggly(conn, opts)
-}
-
-func createLoggly(conn *gofastly.Client, i *gofastly.CreateLogglyInput) error {
-	_, err := conn.CreateLoggly(i)
-	return err
-}
-
-func deleteLoggly(conn *gofastly.Client, i *gofastly.DeleteLogglyInput) error {
-	err := conn.DeleteLoggly(i)
+	err := conn.DeleteLoggly(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

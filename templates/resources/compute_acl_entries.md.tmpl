@@ -1,0 +1,35 @@
+---
+layout: "fastly"
+page_title: "Fastly: compute_acl_entries"
+sidebar_current: "docs-fastly-resource-compute-acl-entries"
+description: |-
+  Manage CIDR entries within a Fastly Compute ACL.
+---
+
+# fastly_compute_acl_entries
+
+The `fastly_compute_acl_entries` resource allows you to manage CIDR-based allow/block rules (ACL entries) inside a Fastly Compute ACL.
+
+By default, Terraform does not continue to manage the entries after the initial `terraform apply`. This allows you to make changes to ACL entries outside of Terraform using the [Fastly API](https://developer.fastly.com/reference/api/) or [Fastly CLI](https://developer.fastly.com/learning/tools/cli/)) without Terraform resetting them.
+
+To have Terraform continue managing the entries after creation (e.g., deleting any entries not defined in the config), set `manage_entries = true`.
+
+~> **Note:** Use `manage_entries = true` cautiously. Terraform will overwrite external changes and delete any unmanaged entries.
+
+## Example Usage
+
+Basic usage (with seeded values, unmanaged after initial apply):
+
+{{ tffile "examples/resources/compute_acl_entries_basic_usage_with_seeded_values.tf" }}
+
+Terraform-managed usage (where Terraform controls entries long-term):
+
+{{ tffile "examples/resources/compute_acl_entries_basic_usage_managed_entries.tf" }}
+
+## Import
+
+Fastly Compute ACL entries can be imported using the format `<compute_acl_id>/entries`, e.g.
+
+{{ codefile "sh" "examples/resources/components/compute_acl_entries_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

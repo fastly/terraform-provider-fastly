@@ -1173,7 +1173,7 @@ Optional:
 Required:
 
 - `enabled` (Boolean) Enable DDoS Protection support
-- `mode` (String) Operation mode
+- `mode` (String) Operation mode. Can be either `off`, `log`, or `block`.
 
 
 <a id="nestedblock--product_enablement--ngwaf"></a>

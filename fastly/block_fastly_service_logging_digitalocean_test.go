@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
@@ -215,7 +216,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLDigitalOceanAttributes(service *gofastly.ServiceDetail, digitalocean []*gofastly.DigitalOcean, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		digitaloceanList, err := conn.ListDigitalOceans(&gofastly.ListDigitalOceansInput{
+		digitaloceanList, err := conn.ListDigitalOceans(context.TODO(), &gofastly.ListDigitalOceansInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

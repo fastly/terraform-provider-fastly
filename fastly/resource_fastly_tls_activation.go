@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyTLSActivation() *schema.Resource {
@@ -64,7 +64,7 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 		configuration = &fastly.TLSConfiguration{ID: v.(string)}
 	}
 
-	activation, err := conn.CreateTLSActivation(&fastly.CreateTLSActivationInput{
+	activation, err := conn.CreateTLSActivation(ctx, &fastly.CreateTLSActivationInput{
 		Certificate:   &fastly.CustomTLSCertificate{ID: d.Get("certificate_id").(string)},
 		Configuration: configuration,
 		Domain:        &fastly.TLSDomain{ID: d.Get("domain").(string)},
@@ -85,12 +85,12 @@ func resourceFastlyTLSActivationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceFastlyTLSActivationRead(ctx, d, meta)...)
 }
 
-func resourceFastlyTLSActivationRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSActivationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	log.Printf("[DEBUG] Refreshing TLS Activation Configuration for (%s)", d.Id())
 
 	conn := meta.(*APIClient).conn
 
-	activation, err := conn.GetTLSActivation(&fastly.GetTLSActivationInput{
+	activation, err := conn.GetTLSActivation(ctx, &fastly.GetTLSActivationInput{
 		ID: d.Id(),
 	})
 	if err != nil {
@@ -150,7 +150,7 @@ func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	_, err := conn.UpdateTLSActivation(input)
+	_, err := conn.UpdateTLSActivation(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -158,10 +158,10 @@ func resourceFastlyTLSActivationUpdate(ctx context.Context, d *schema.ResourceDa
 	return resourceFastlyTLSActivationRead(ctx, d, meta)
 }
 
-func resourceFastlyTLSActivationDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyTLSActivationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	err := conn.DeleteTLSActivation(&fastly.DeleteTLSActivationInput{
+	err := conn.DeleteTLSActivation(ctx, &fastly.DeleteTLSActivationInput{
 		ID: d.Id(),
 	})
 	if err != nil {

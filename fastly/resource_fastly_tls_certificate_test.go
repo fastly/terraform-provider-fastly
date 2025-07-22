@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v10/fastly"
+	"github.com/fastly/go-fastly/v11/fastly"
 )
 
 func init() {
@@ -109,7 +110,7 @@ func testAccTLSCertificateExists(resourceName string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*APIClient).conn
 
-		_, err := conn.GetCustomTLSCertificate(&fastly.GetCustomTLSCertificateInput{
+		_, err := conn.GetCustomTLSCertificate(context.TODO(), &fastly.GetCustomTLSCertificateInput{
 			ID: r.Primary.ID,
 		})
 		if err != nil {
@@ -164,7 +165,7 @@ func testAccCheckTLSCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		certificates, err := conn.ListCustomTLSCertificates(&fastly.ListCustomTLSCertificatesInput{})
+		certificates, err := conn.ListCustomTLSCertificates(context.TODO(), &fastly.ListCustomTLSCertificatesInput{})
 		if err != nil {
 			return err
 		}
@@ -185,7 +186,7 @@ func testSweepTLSCertificates(region string) error {
 		return diagToErr(diagnostics)
 	}
 
-	certificates, err := client.ListCustomTLSCertificates(&fastly.ListCustomTLSCertificatesInput{PageSize: 1000})
+	certificates, err := client.ListCustomTLSCertificates(context.TODO(), &fastly.ListCustomTLSCertificatesInput{PageSize: 1000})
 	if err != nil {
 		return err
 	}
@@ -195,7 +196,7 @@ func testSweepTLSCertificates(region string) error {
 			continue
 		}
 
-		err := client.DeleteCustomTLSCertificate(&fastly.DeleteCustomTLSCertificateInput{ID: certificate.ID})
+		err := client.DeleteCustomTLSCertificate(context.TODO(), &fastly.DeleteCustomTLSCertificateInput{ID: certificate.ID})
 		if err != nil {
 			return err
 		}

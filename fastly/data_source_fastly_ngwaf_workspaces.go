@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	ws "github.com/fastly/go-fastly/v10/fastly/ngwaf/v1/workspaces"
+	ws "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces"
 )
 
 func dataSourceFastlyNGWAFWorkspaces() *schema.Resource {
@@ -41,12 +41,12 @@ func dataSourceFastlyNGWAFWorkspaces() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyNGWAFWorkspacesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyNGWAFWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading NGWAF workspaces")
 
-	remoteState, err := ws.List(conn, &ws.ListInput{})
+	remoteState, err := ws.List(ctx, conn, &ws.ListInput{})
 	if err != nil {
 		return diag.Errorf("error fetching workspaces: %s", err)
 	}

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenResponseObjects(t *testing.T) {
@@ -116,7 +117,7 @@ func TestAccFastlyServiceVCL_response_object_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLResponseObjectAttributes(service *gofastly.ServiceDetail, responseObjects []*gofastly.ResponseObject) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		responseObjectList, err := conn.ListResponseObjects(&gofastly.ListResponseObjectsInput{
+		responseObjectList, err := conn.ListResponseObjects(context.TODO(), &gofastly.ListResponseObjectsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

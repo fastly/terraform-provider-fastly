@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestResourceFastlyFlattenDynamicSnippets(t *testing.T) {
@@ -134,7 +135,7 @@ func TestAccFastlyServiceVCLDynamicSnippet_basic(t *testing.T) {
 func testAccCheckFastlyServiceVCLDynamicSnippetAttributes(service *gofastly.ServiceDetail, snippets []*gofastly.Snippet) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		sList, err := conn.ListSnippets(&gofastly.ListSnippetsInput{
+		sList, err := conn.ListSnippets(context.TODO(), &gofastly.ListSnippetsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

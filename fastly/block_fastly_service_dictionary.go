@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // DictionaryServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -65,13 +65,13 @@ func (h *DictionaryServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := buildDictionary(resource)
 	opts.ServiceID = d.Id()
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly Dictionary Addition opts: %#v", opts)
-	_, err := conn.CreateDictionary(opts)
+	_, err := conn.CreateDictionary(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 	if err != nil {
 		return err
 	}
@@ -79,12 +79,12 @@ func (h *DictionaryServiceAttributeHandler) Create(_ context.Context, d *schema.
 }
 
 // Read refreshes the resource.
-func (h *DictionaryServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Dictionaries for (%s)", d.Id())
-		remoteState, err := conn.ListDictionaries(&gofastly.ListDictionariesInput{
+		remoteState, err := conn.ListDictionaries(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListDictionariesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -120,13 +120,13 @@ func (h *DictionaryServiceAttributeHandler) Update(_ context.Context, _ *schema.
 }
 
 // Delete deletes the resource.
-func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *DictionaryServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	if !resource["force_destroy"].(bool) {
 		if resource["write_only"].(bool) {
 			return fmt.Errorf("cannot delete dictionary (%s), it is write_only, so it may contain data. Set force_destroy to true and apply it before making this change", resource["dictionary_id"].(string))
 		}
 
-		mayDelete, err := isDictionaryEmpty(d.Id(), resource["dictionary_id"].(string), conn)
+		mayDelete, err := isDictionaryEmpty(ctx, d.Id(), resource["dictionary_id"].(string), conn)
 		if err != nil {
 			return err
 		}
@@ -143,7 +143,7 @@ func (h *DictionaryServiceAttributeHandler) Delete(_ context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Fastly Dictionary Removal opts: %#v", opts)
-	err := conn.DeleteDictionary(&opts)
+	err := conn.DeleteDictionary(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err
@@ -193,8 +193,8 @@ func buildDictionary(dictMap any) *gofastly.CreateDictionaryInput {
 	return &opts
 }
 
-func isDictionaryEmpty(serviceID, dictID string, conn *gofastly.Client) (bool, error) {
-	items, err := conn.ListDictionaryItems(&gofastly.ListDictionaryItemsInput{
+func isDictionaryEmpty(ctx context.Context, serviceID, dictID string, conn *gofastly.Client) (bool, error) {
+	items, err := conn.ListDictionaryItems(gofastly.NewContextForResourceID(ctx, serviceID), &gofastly.ListDictionaryItemsInput{
 		ServiceID:    serviceID,
 		DictionaryID: dictID,
 	})

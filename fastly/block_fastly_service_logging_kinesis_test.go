@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 const testKinesisIAMRole = "arn:aws:iam::123456789012:role/KinesisAccess"
@@ -204,7 +205,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic_compute(t *testing.T) {
 func testAccCheckFastlyServiceVCLKinesisAttributes(service *gofastly.ServiceDetail, ks []*gofastly.Kinesis, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
-		ksl, err := conn.ListKinesis(&gofastly.ListKinesisInput{
+		ksl, err := conn.ListKinesis(context.TODO(), &gofastly.ListKinesisInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})

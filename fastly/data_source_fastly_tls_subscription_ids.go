@@ -25,10 +25,10 @@ func dataSourceFastlyTLSSubscriptionIDs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyTLSSubscriptionIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyTLSSubscriptionIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	subscriptions, err := listTLSSubscriptions(conn)
+	subscriptions, err := listTLSSubscriptions(ctx, conn)
 	if err != nil {
 		return diag.FromErr(err)
 	}

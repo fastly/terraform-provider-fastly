@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // CacheSettingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -70,7 +70,7 @@ func (h *CacheSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := &gofastly.CreateCacheSettingInput{
 		Name:           gofastly.ToPointer(resource["name"].(string)),
 		StaleTTL:       gofastly.ToPointer(resource["stale_ttl"].(int)),
@@ -94,19 +94,19 @@ func (h *CacheSettingServiceAttributeHandler) Create(_ context.Context, d *schem
 	opts.ServiceVersion = serviceVersion
 
 	log.Printf("[DEBUG] Fastly Cache Settings Addition opts: %#v", opts)
-	if _, err := conn.CreateCacheSetting(opts); err != nil {
+	if _, err := conn.CreateCacheSetting(gofastly.NewContextForResourceID(ctx, d.Id()), opts); err != nil {
 		return err
 	}
 	return nil
 }
 
 // Read refreshes the resource.
-func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Cache Settings for (%s)", d.Id())
-		remoteState, err := conn.ListCacheSettings(&gofastly.ListCacheSettingsInput{
+		remoteState, err := conn.ListCacheSettings(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListCacheSettingsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -125,7 +125,7 @@ func (h *CacheSettingServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateCacheSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -148,7 +148,7 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 	}
 
 	log.Printf("[DEBUG] Update Cache Setting Opts: %#v", opts)
-	_, err := conn.UpdateCacheSetting(&opts)
+	_, err := conn.UpdateCacheSetting(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (h *CacheSettingServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *CacheSettingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteCacheSettingInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -164,7 +164,7 @@ func (h *CacheSettingServiceAttributeHandler) Delete(_ context.Context, d *schem
 	}
 
 	log.Printf("[DEBUG] Fastly Cache Settings removal opts: %#v", opts)
-	err := conn.DeleteCacheSetting(&opts)
+	err := conn.DeleteCacheSetting(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

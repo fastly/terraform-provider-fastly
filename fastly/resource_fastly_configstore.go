@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func resourceFastlyConfigStore() *schema.Resource {
@@ -37,7 +37,7 @@ func resourceFastlyConfigStore() *schema.Resource {
 	}
 }
 
-func resourceFastlyConfigStoreCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.CreateConfigStoreInput{
@@ -46,7 +46,7 @@ func resourceFastlyConfigStoreCreate(_ context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] CREATE: Config Store input: %#v", input)
 
-	store, err := conn.CreateConfigStore(input)
+	store, err := conn.CreateConfigStore(ctx, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -57,7 +57,7 @@ func resourceFastlyConfigStoreCreate(_ context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func resourceFastlyConfigStoreRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	input := &gofastly.GetConfigStoreInput{
@@ -66,7 +66,7 @@ func resourceFastlyConfigStoreRead(_ context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] REFRESH: Config Store input: %#v", input)
 
-	store, err := conn.GetConfigStore(input)
+	store, err := conn.GetConfigStore(ctx, input)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] No Config Store found '%s'", d.Id())
@@ -90,11 +90,11 @@ func resourceFastlyConfigStoreUpdate(_ context.Context, _ *schema.ResourceData, 
 	return nil
 }
 
-func resourceFastlyConfigStoreDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyConfigStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	if !d.Get("force_destroy").(bool) {
-		mayDelete, err := isConfigStoreEmpty(d.Id(), conn)
+		mayDelete, err := isConfigStoreEmpty(ctx, d.Id(), conn)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -104,7 +104,7 @@ func resourceFastlyConfigStoreDelete(_ context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	items, err := conn.ListConfigStoreItems(&gofastly.ListConfigStoreItemsInput{
+	items, err := conn.ListConfigStoreItems(ctx, &gofastly.ListConfigStoreItemsInput{
 		StoreID: d.Id(),
 	})
 	if err != nil {
@@ -113,7 +113,7 @@ func resourceFastlyConfigStoreDelete(_ context.Context, d *schema.ResourceData, 
 
 	// IMPORTANT: We must delete all keys first before we can delete the store.
 	for _, item := range items {
-		err := conn.DeleteConfigStoreItem(&gofastly.DeleteConfigStoreItemInput{
+		err := conn.DeleteConfigStoreItem(ctx, &gofastly.DeleteConfigStoreItemInput{
 			StoreID: item.StoreID,
 			Key:     item.Key,
 		})
@@ -128,15 +128,15 @@ func resourceFastlyConfigStoreDelete(_ context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] DELETE: Config Store input: %#v", input)
 
-	err = conn.DeleteConfigStore(&input)
+	err = conn.DeleteConfigStore(ctx, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	return nil
 }
 
-func isConfigStoreEmpty(storeID string, conn *gofastly.Client) (bool, error) {
-	items, err := conn.ListConfigStoreItems(&gofastly.ListConfigStoreItemsInput{
+func isConfigStoreEmpty(ctx context.Context, storeID string, conn *gofastly.Client) (bool, error) {
+	items, err := conn.ListConfigStoreItems(ctx, &gofastly.ListConfigStoreItemsInput{
 		StoreID: storeID,
 	})
 	if err != nil {

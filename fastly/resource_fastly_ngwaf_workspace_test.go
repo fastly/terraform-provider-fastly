@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	ws "github.com/fastly/go-fastly/v10/fastly/ngwaf/v1/workspaces"
+	ws "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces"
 )
 
 func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
@@ -70,7 +71,7 @@ func testAccNGWAFWorkspaceExists(n string) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		workspace, err := ws.Get(conn, &ws.GetInput{
+		workspace, err := ws.Get(context.TODO(), conn, &ws.GetInput{
 			WorkspaceID: &rs.Primary.ID,
 		})
 		if err != nil {
@@ -92,7 +93,7 @@ func testAccCheckNGWAFWorkspaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := ws.Get(conn, &ws.GetInput{
+		_, err := ws.Get(context.TODO(), conn, &ws.GetInput{
 			WorkspaceID: &rs.Primary.ID,
 		})
 		if err == nil {

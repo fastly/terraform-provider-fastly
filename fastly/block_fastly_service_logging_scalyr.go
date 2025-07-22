@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // ScalyrServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -101,21 +101,22 @@ func (h *ScalyrServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *ScalyrServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging addition opts: %#v", opts)
 
-	return createScalyr(conn, opts)
+	_, err := conn.CreateScalyr(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	return err
 }
 
 // Read refreshes the resource.
-func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing Scalyr logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListScalyrs(&gofastly.ListScalyrsInput{
+		remoteState, err := conn.ListScalyrs(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListScalyrsInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -138,7 +139,7 @@ func (h *ScalyrServiceAttributeHandler) Read(_ context.Context, d *schema.Resour
 }
 
 // Update updates the resource.
-func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateScalyrInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -173,7 +174,7 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Update Scalyr Opts: %#v", opts)
-	_, err := conn.UpdateScalyr(&opts)
+	_, err := conn.UpdateScalyr(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -181,21 +182,12 @@ func (h *ScalyrServiceAttributeHandler) Update(_ context.Context, d *schema.Reso
 }
 
 // Delete deletes the resource.
-func (h *ScalyrServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *ScalyrServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly Scalyr logging endpoint removal opts: %#v", opts)
 
-	return deleteScalyr(conn, opts)
-}
-
-func createScalyr(conn *gofastly.Client, i *gofastly.CreateScalyrInput) error {
-	_, err := conn.CreateScalyr(i)
-	return err
-}
-
-func deleteScalyr(conn *gofastly.Client, i *gofastly.DeleteScalyrInput) error {
-	err := conn.DeleteScalyr(i)
+	err := conn.DeleteScalyr(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	errRes, ok := err.(*gofastly.HTTPError)
 	if !ok {

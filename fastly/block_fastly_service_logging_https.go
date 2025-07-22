@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // HTTPSLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -161,21 +161,25 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildCreate(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging addition opts: %#v", opts)
 
-	return createHTTPS(conn, opts)
+	_, err := conn.CreateHTTPS(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Read refreshes the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing HTTPS logging endpoints for (%s)", d.Id())
-		remoteState, err := conn.ListHTTPS(&gofastly.ListHTTPSInput{
+		remoteState, err := conn.ListHTTPS(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListHTTPSInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -198,7 +202,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.
 }
 
 // Update updates the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateHTTPSInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -260,7 +264,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 	}
 
 	log.Printf("[DEBUG] Update HTTPS Opts: %#v", opts)
-	_, err := conn.UpdateHTTPS(&opts)
+	_, err := conn.UpdateHTTPS(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -268,24 +272,12 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(_ context.Context, d *schem
 }
 
 // Delete deletes the resource.
-func (h *HTTPSLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *HTTPSLoggingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
 
 	log.Printf("[DEBUG] Fastly HTTPS logging endpoint removal opts: %#v", opts)
 
-	return deleteHTTPS(conn, opts)
-}
-
-func createHTTPS(conn *gofastly.Client, i *gofastly.CreateHTTPSInput) error {
-	_, err := conn.CreateHTTPS(i)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func deleteHTTPS(conn *gofastly.Client, i *gofastly.DeleteHTTPSInput) error {
-	err := conn.DeleteHTTPS(i)
+	err := conn.DeleteHTTPS(gofastly.NewContextForResourceID(ctx, d.Id()), opts)
 
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {

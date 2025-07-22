@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyAlert_Basic(t *testing.T) {
@@ -319,7 +320,7 @@ func testAccCheckFastlyAlertsRemoteState(service *gofastly.ServiceDetail, servic
 		var cursor string
 
 		for {
-			adr, err := conn.ListAlertDefinitions(&gofastly.ListAlertDefinitionsInput{
+			adr, err := conn.ListAlertDefinitions(context.TODO(), &gofastly.ListAlertDefinitionsInput{
 				Cursor: gofastly.ToPointer(cursor),
 			})
 			if err != nil {
@@ -376,7 +377,7 @@ func testAccCheckAlertDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		adr, err := conn.ListAlertDefinitions(&gofastly.ListAlertDefinitionsInput{})
+		adr, err := conn.ListAlertDefinitions(context.TODO(), &gofastly.ListAlertDefinitionsInput{})
 		if err != nil {
 			return fmt.Errorf("error listing alert definitions when checking alert destroy (%s): %s", rs.Primary.ID, err)
 		}

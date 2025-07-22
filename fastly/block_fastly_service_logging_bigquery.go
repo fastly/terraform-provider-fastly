@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 // BigQueryLoggingServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.
@@ -121,7 +121,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 }
 
 // Create creates the resource.
-func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
 	opts := gofastly.CreateBigQueryInput{
 		ServiceID:        d.Id(),
@@ -153,7 +153,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 	}
 
 	log.Printf("[DEBUG] Create BigQuery opts: %#v", opts)
-	_, err := conn.CreateBigQuery(&opts)
+	_, err := conn.CreateBigQuery(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -162,12 +162,12 @@ func (h *BigQueryLoggingServiceAttributeHandler) Create(_ context.Context, d *sc
 }
 
 // Read refreshes the resource.
-func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, _ map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	localState := d.Get(h.GetKey()).(*schema.Set).List()
 
 	if len(localState) > 0 || d.Get("imported").(bool) || d.Get("force_refresh").(bool) {
 		log.Printf("[DEBUG] Refreshing BigQuery for (%s)", d.Id())
-		remoteState, err := conn.ListBigQueries(&gofastly.ListBigQueriesInput{
+		remoteState, err := conn.ListBigQueries(gofastly.NewContextForResourceID(ctx, d.Id()), &gofastly.ListBigQueriesInput{
 			ServiceID:      d.Id(),
 			ServiceVersion: serviceVersion,
 		})
@@ -190,7 +190,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Read(_ context.Context, d *sche
 }
 
 // Update updates the resource.
-func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Update(ctx context.Context, d *schema.ResourceData, resource, modified map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.UpdateBigQueryInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -237,7 +237,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 	}
 
 	log.Printf("[DEBUG] Update BigQuery Opts: %#v", opts)
-	_, err := conn.UpdateBigQuery(&opts)
+	_, err := conn.UpdateBigQuery(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(_ context.Context, d *sc
 }
 
 // Delete deletes the resource.
-func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
+func (h *BigQueryLoggingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := gofastly.DeleteBigQueryInput{
 		ServiceID:      d.Id(),
 		ServiceVersion: serviceVersion,
@@ -254,7 +254,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Delete(_ context.Context, d *sc
 	}
 
 	log.Printf("[DEBUG] Fastly BigQuery removal opts: %#v", opts)
-	err := conn.DeleteBigQuery(&opts)
+	err := conn.DeleteBigQuery(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)
 	if errRes, ok := err.(*gofastly.HTTPError); ok {
 		if errRes.StatusCode != 404 {
 			return err

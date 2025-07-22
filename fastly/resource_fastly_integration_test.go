@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyIntegration_mailinglist(t *testing.T) {
@@ -167,7 +168,7 @@ func testAccCheckFastlyIntegrationsRemoteState(expected gofastly.Integration) re
 		var cursor *string
 
 		for {
-			sir, err := conn.SearchIntegrations(&gofastly.SearchIntegrationsInput{
+			sir, err := conn.SearchIntegrations(context.TODO(), &gofastly.SearchIntegrationsInput{
 				Cursor: cursor,
 			})
 			if err != nil {
@@ -214,7 +215,7 @@ func testAccCheckIntegrationDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		sir, err := conn.SearchIntegrations(&gofastly.SearchIntegrationsInput{})
+		sir, err := conn.SearchIntegrations(context.TODO(), &gofastly.SearchIntegrationsInput{})
 		if err != nil {
 			return fmt.Errorf("error searching integrations when checking integration destroy (%s): %s", rs.Primary.ID, err)
 		}

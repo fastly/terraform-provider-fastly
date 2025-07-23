@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	ws "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces"
+	ws "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/virtualpatches"
 )
 
 func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
@@ -39,11 +39,11 @@ func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
 func dataSourceFastlyNGWAFVirtualPatchesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	log.Printf("[DEBUG] Reading NGWAF workspaces")
+	log.Printf("[DEBUG] Reading NGWAF virtual patches")
 
-	remoteState, err := ws.List(ctx, conn, &ws.{})
+	remoteState, err := ws.List(ctx, conn, &ws.ListInput{})
 	if err != nil {
-		return diag.Errorf("error fetching workspaces: %s", err)
+		return diag.Errorf("error fetching virtual patches: %s", err)
 	}
 
 	parsed, _ := json.Marshal(remoteState)
@@ -51,25 +51,27 @@ func dataSourceFastlyNGWAFVirtualPatchesRead(ctx context.Context, d *schema.Reso
 	d.SetId(hash)
 
 	// Convert []workspaces.Workspace to []*workspaces.Workspace
-	var workspacePtrs []*ws.Workspace
+	// ** To-Do: Review Logic **
+	var virtualpatchPtrs []*ws.VirtualPatch
 	for i := range remoteState.Data {
-		workspacePtrs = append(workspacePtrs, &remoteState.Data[i])
+		virtualpatchPtrs = append(virtualpatchPtrs, &remoteState.Data[i])
 	}
 
-	if err := d.Set("workspaces", flattenNGWAFVirtualPatches(workspacePtrs)); err != nil {
-		return diag.Errorf("error setting workspaces: %s", err)
+	if err := d.Set("virtualpatches", flattenNGWAFVirtualPatches(virtualpatchPtrs)); err != nil {
+		return diag.Errorf("error setting virtualpatches: %s", err)
 	}
 
 	return nil
 }
 
-func flattenNGWAFVirtualPatches(remoteState []*ws.Workspace) []map[string]any {
+func flattenNGWAFVirtualPatches(remoteState []*ws.VirtualPatch) []map[string]any {
 	result := make([]map[string]any, len(remoteState))
 
 	for i, w := range remoteState {
 		result[i] = map[string]any{
-			"id":   w.WorkspaceID,
-			"name": w.Name,
+			"id":      w.ID,
+			"enabled": w.Enabled,
+			"mode":    w.Mode,
 		}
 	}
 

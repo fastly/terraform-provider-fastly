@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,7 +21,7 @@ func resourceFastlyNGWAFVirtualPatch() *schema.Resource {
 		ReadContext:   resourceFastlyNGWAFVirtualPatchRead,
 		UpdateContext: resourceFastlyNGWAFVirtualPatchUpdate,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceFastlyNGWAFVirtualPatchImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -125,5 +126,31 @@ func resourceFastlyNGWAFVirtualPatchDelete(ctx context.Context, d *schema.Resour
 
 	_, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
 	return diag.FromErr(err)
+}
 
+func resourceFastlyNGWAFVirtualPatchImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	// The import ID should be in format: workspaceID/virtualPatchID
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid import ID format, expected workspaceID/virtualPatchID, got: %s", d.Id())
+	}
+
+	workspaceID := parts[0]
+	virtualPatchID := parts[1]
+
+	// Set the individual attributes
+	if err := d.Set("workspace_id", workspaceID); err != nil {
+		return nil, fmt.Errorf("error setting workspace_id: %w", err)
+	}
+	if err := d.Set("virtual_patch_id", virtualPatchID); err != nil {
+		return nil, fmt.Errorf("error setting virtual_patch_id: %w", err)
+	}
+
+	// Call the read function to populate the rest of the attributes
+	diags := resourceFastlyNGWAFVirtualPatchRead(ctx, d, meta)
+	if diags.HasError() {
+		return nil, fmt.Errorf("error reading virtual patch during import: %v", diags)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }

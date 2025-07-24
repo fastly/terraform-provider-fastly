@@ -8,8 +8,7 @@ description: |-
 
 # ngwaf_redaction
 
-Provides a Fastly Next-Gen WAF Redaction, which can automatically redact known patterns of sensitive information. 
-In addition to automatic redactions, the redactions API allows you to specify additional fields to redact from requests.
+Provides a Fastly Next-Gen WAF Redaction, which can automatically redact known patterns of sensitive information.
 
 ## Example Usage
 

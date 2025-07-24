@@ -138,6 +138,8 @@ func resourceFastlyNGWAFVirtualPatchImport(ctx context.Context, d *schema.Resour
 	workspaceID := parts[0]
 	virtualPatchID := parts[1]
 
+	log.Printf("[DEBUG] IMPORT: workspaceID = %s, virtualPatchID = %s", workspaceID, virtualPatchID)
+
 	// Set the individual attributes
 	if err := d.Set("workspace_id", workspaceID); err != nil {
 		return nil, fmt.Errorf("error setting workspace_id: %w", err)

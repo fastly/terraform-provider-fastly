@@ -50,8 +50,6 @@ func dataSourceFastlyNGWAFVirtualPatchesRead(ctx context.Context, d *schema.Reso
 	hash := strconv.Itoa(hashcode.String(string(parsed)))
 	d.SetId(hash)
 
-	// Convert []workspaces.Workspace to []*workspaces.Workspace
-	// ** To-Do: Review Logic **
 	var virtualpatchPtrs []*ws.VirtualPatch
 	for i := range remoteState.Data {
 		virtualpatchPtrs = append(virtualpatchPtrs, &remoteState.Data[i])

@@ -42,21 +42,21 @@ func TestAccFastlyNGWAFVirtualPatch_validate(t *testing.T) {
 			{
 				Config: testAccNGWAFVirtualPatchConfig(virtualPatchID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patch.sample", "action", "block"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patch.sample", "enabled", "true"),
-					resource.TestCheckResourceAttrPair("fastly_ngwaf_virtual_patch.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patch.sample", "virtual_patch_id", virtualPatchID),
-					testAccNGWAFVirtualPatchExists("fastly_ngwaf_virtual_patch.sample"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "action", "block"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "enabled", "true"),
+					resource.TestCheckResourceAttrPair("fastly_ngwaf_virtual_patches.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "virtual_patch_id", virtualPatchID),
+					testAccNGWAFVirtualPatchExists("fastly_ngwaf_virtual_patches.sample"),
 				),
 			},
 			{
 				Config: testAccNGWAFVirtualPatchConfigUpdate(virtualPatchID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patch.sample", "action", "log"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patch.sample", "enabled", "false"),
-					resource.TestCheckResourceAttrPair("fastly_ngwaf_virtual_patch.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patch.sample", "virtual_patch_id", virtualPatchID),
-					testAccNGWAFVirtualPatchExists("fastly_ngwaf_virtual_patch.sample"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "action", "log"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "enabled", "false"),
+					resource.TestCheckResourceAttrPair("fastly_ngwaf_virtual_patches.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "virtual_patch_id", virtualPatchID),
+					testAccNGWAFVirtualPatchExists("fastly_ngwaf_virtual_patches.sample"),
 				),
 			},
 			{
@@ -65,7 +65,7 @@ func TestAccFastlyNGWAFVirtualPatch_validate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "fastly_ngwaf_virtual_patch.sample",
+				ResourceName:      "fastly_ngwaf_virtual_patches.sample",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -114,7 +114,7 @@ resource "fastly_ngwaf_workspace" "example" {
     }
   }
 
-  resource "fastly_ngwaf_virtual_patch" "sample" {
+  resource "fastly_ngwaf_virtual_patches" "sample" {
     action            = "block"
     enabled           = true
     virtual_patch_id  = "%s"
@@ -141,7 +141,7 @@ resource "fastly_ngwaf_workspace" "example" {
     }
   }
 
-  resource "fastly_ngwaf_virtual_patch" "sample" {
+  resource "fastly_ngwaf_virtual_patches" "sample" {
     action            = "log"
     enabled           = false
     virtual_patch_id  = "%s"

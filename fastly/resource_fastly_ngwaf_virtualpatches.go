@@ -103,10 +103,7 @@ func resourceFastlyNGWAFVirtualPatchUpdate(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	// Set ID for the create operation
-	if d.Id() == "" {
-		d.SetId(fmt.Sprintf("%s/%s", d.Get("workspace_id").(string), d.Get("virtual_patch_id").(string)))
-	}
+	d.SetId(fmt.Sprintf("%s/%s", d.Get("workspace_id").(string), d.Get("virtual_patch_id").(string)))
 
 	return resourceFastlyNGWAFVirtualPatchRead(ctx, d, meta)
 }
@@ -147,6 +144,8 @@ func resourceFastlyNGWAFVirtualPatchImport(ctx context.Context, d *schema.Resour
 	if err := d.Set("virtual_patch_id", virtualPatchID); err != nil {
 		return nil, fmt.Errorf("error setting virtual_patch_id: %w", err)
 	}
+
+	d.SetId(fmt.Sprintf("%s/%s", workspaceID, virtualPatchID))
 
 	// Call the read function to populate the rest of the attributes
 	diags := resourceFastlyNGWAFVirtualPatchRead(ctx, d, meta)

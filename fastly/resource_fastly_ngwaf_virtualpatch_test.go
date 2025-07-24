@@ -3,6 +3,7 @@ package fastly
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -80,10 +81,15 @@ func testAccNGWAFVirtualPatchExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		workspaceID, virtualPatchID, isInCorrectForm := strings.Cut(rs.Primary.ID, "/")
+		if !isInCorrectForm {
+			return fmt.Errorf("invalid ID format: %s. Expected format: <workspaceID>/<virtualPatchID>", rs.Primary.ID)
+		}
+
 		conn := testAccProvider.Meta().(*APIClient).conn
 		virtualpatch, err := ws.Get(context.TODO(), conn, &ws.GetInput{
-			WorkspaceID:    gofastly.ToPointer(rs.Primary.Attributes["workspace_id"]),
-			VirtualPatchID: gofastly.ToPointer(rs.Primary.Attributes["virtual_patch_id"]),
+			WorkspaceID:    gofastly.ToPointer(workspaceID),
+			VirtualPatchID: gofastly.ToPointer(virtualPatchID),
 		})
 		if err != nil {
 			return fmt.Errorf("Unable to retrieve NGWAF Virtual Patch %s: %v", rs.Primary.ID, err)

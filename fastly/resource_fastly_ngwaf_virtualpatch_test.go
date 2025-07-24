@@ -3,7 +3,6 @@ package fastly
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -69,9 +68,20 @@ func TestAccFastlyNGWAFVirtualPatch_validate(t *testing.T) {
 				ResourceName:      "fastly_ngwaf_virtual_patches.sample",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateIdFunc: testAccNGWAFVirtualPatchImportID("fastly_ngwaf_virtual_patches.sample"),
 			},
 		},
 	})
+}
+
+func testAccNGWAFVirtualPatchImportID(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["workspace_id"], rs.Primary.Attributes["virtual_patch_id"]), nil
+	}
 }
 
 func testAccNGWAFVirtualPatchExists(n string) resource.TestCheckFunc {
@@ -81,15 +91,10 @@ func testAccNGWAFVirtualPatchExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		workspaceID, virtualPatchID, isInCorrectForm := strings.Cut(rs.Primary.ID, "/")
-		if !isInCorrectForm {
-			return fmt.Errorf("invalid ID format: %s. Expected format: <workspaceID>/<virtualPatchID>", rs.Primary.ID)
-		}
-
 		conn := testAccProvider.Meta().(*APIClient).conn
 		virtualpatch, err := ws.Get(context.TODO(), conn, &ws.GetInput{
-			WorkspaceID:    gofastly.ToPointer(workspaceID),
-			VirtualPatchID: gofastly.ToPointer(virtualPatchID),
+			WorkspaceID:    gofastly.ToPointer(rs.Primary.Attributes["workspace_id"]),
+			VirtualPatchID: gofastly.ToPointer(rs.Primary.Attributes["virtual_patch_id"]),
 		})
 		if err != nil {
 			return fmt.Errorf("Unable to retrieve NGWAF Virtual Patch %s: %v", rs.Primary.ID, err)

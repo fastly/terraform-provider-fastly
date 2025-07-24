@@ -98,12 +98,12 @@ func resourceFastlyNGWAFVirtualPatchUpdate(ctx context.Context, d *schema.Resour
 
 	log.Printf("[DEBUG] UPDATE: NGWAF virtualpatch input: %#v", i)
 
-	_, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	virtualPatch, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", d.Get("workspace_id").(string), d.Get("virtual_patch_id").(string)))
+	d.SetId(virtualPatch.ID)
 
 	return resourceFastlyNGWAFVirtualPatchRead(ctx, d, meta)
 }
@@ -145,7 +145,7 @@ func resourceFastlyNGWAFVirtualPatchImport(ctx context.Context, d *schema.Resour
 		return nil, fmt.Errorf("error setting virtual_patch_id: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", workspaceID, virtualPatchID))
+	d.SetId(virtualPatchID)
 
 	// Call the read function to populate the rest of the attributes
 	diags := resourceFastlyNGWAFVirtualPatchRead(ctx, d, meta)

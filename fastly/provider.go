@@ -85,7 +85,7 @@ func Provider() *schema.Provider {
 			"fastly_integration":                     resourceFastlyIntegration(),
 			"fastly_kvstore":                         resourceFastlyKVStore(),
 			"fastly_ngwaf_workspace":                 resourceFastlyNGWAFWorkspace(),
-			"fastly_ngwaf_virtual_patch":             resourceFastlyNGWAFVirtualPatch(),
+			"fastly_ngwaf_virtual_patches":           resourceFastlyNGWAFVirtualPatches(),
 			"fastly_object_storage_access_keys":      resourceObjectStorageAccessKey(),
 			"fastly_secretstore":                     resourceFastlySecretStore(),
 			"fastly_service_acl_entries":             resourceServiceACLEntries(),

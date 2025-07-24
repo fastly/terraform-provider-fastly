@@ -14,7 +14,7 @@ import (
 	ws "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/virtualpatches"
 )
 
-func resourceFastlyNGWAFVirtualPatch() *schema.Resource {
+func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceFastlyNGWAFVirtualPatchUpdate,
 		DeleteContext: resourceFastlyNGWAFVirtualPatchDelete,

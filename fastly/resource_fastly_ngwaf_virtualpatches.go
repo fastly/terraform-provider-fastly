@@ -54,7 +54,7 @@ func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 	}
 }
 
-func resourceFastlyNGWAFVirtualPatchCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFVirtualPatchCreate(_ context.Context, d *schema.ResourceData, _ any) diag.Diagnostics {
 	return diag.Errorf("Virtual Patches cannot be created. Use this resource to configure existing Virtual Patches. Ensure the virtual_patch_id '%s' exists in workspace '%s' before applying.",
 		d.Get("virtual_patch_id").(string),
 		d.Get("workspace_id").(string))

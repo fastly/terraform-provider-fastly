@@ -1,0 +1,1 @@
+$ terraform import fastly_ngwaf_virtual_patches.demo  <workspace_id>/<virtual_patch_id>

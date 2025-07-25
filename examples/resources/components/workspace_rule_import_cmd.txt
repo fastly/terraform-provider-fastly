@@ -1,0 +1,1 @@
+$ terraform import fastly_ngwaf_workspace_rule.demo <workspaceID>/<ruleID>

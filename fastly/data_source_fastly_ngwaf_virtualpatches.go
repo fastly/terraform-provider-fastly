@@ -18,26 +18,21 @@ func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyNGWAFVirtualPatchesRead,
 		Schema: map[string]*schema.Schema{
-			"workspace_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The ID of the workspace.",
-			},
 			"virtual_patches": {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "List of all virtual patches for a given workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The ID of the virtual patch.",
-						},
 						"enabled": {
 							Type:        schema.TypeBool,
 							Computed:    true,
 							Description: "Control for enabling and disabling a virtual patch. One of `true` or `false`.",
+						},
+						"id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The ID of the virtual patch.",
 						},
 						"mode": {
 							Type:        schema.TypeString,
@@ -46,6 +41,11 @@ func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
 						},
 					},
 				},
+			},
+			"workspace_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The ID of the workspace.",
 			},
 		},
 	}

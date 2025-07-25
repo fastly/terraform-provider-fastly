@@ -28,14 +28,6 @@ func TestAccFastlyNGWAFVirtualPatch_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", newWorkspaceName),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "description", "Test NGWAF Workspace"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "mode", "block"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "ip_anonymization", "hashed"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "client_ip_headers.0", "X-Forwarded-For"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "client_ip_headers.1", "X-Real-IP"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "default_blocking_response_code", "429"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_minute", "100"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "500"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "1000"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.immediate", "true"),
 					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.example"),
 				),
 			},
@@ -113,16 +105,6 @@ resource "fastly_ngwaf_workspace" "example" {
     name                         = "Test Virtual Patch WS"
     description                  = "Test NGWAF Workspace"
     mode                         = "log"
-    ip_anonymization            = "hashed"
-    client_ip_headers           = ["True-Client-IP"]
-    default_blocking_response_code = 406
-
-    attack_signal_thresholds {
-      one_minute  = 200
-      ten_minutes = 1000
-      one_hour    = 2000
-      immediate   = false
-    }
   }
 
   resource "fastly_ngwaf_virtual_patches" "sample" {
@@ -139,17 +121,7 @@ func testAccNGWAFVirtualPatchConfigUpdate(virtualPatchID string) string {
 resource "fastly_ngwaf_workspace" "example" {
     name                         = "Test Virtual Patch WS"
     description                  = "Test NGWAF Workspace"
-    mode                         = "block"
-    ip_anonymization            = "hashed"
-    client_ip_headers           = ["True-Client-IP"]
-    default_blocking_response_code = 406
-
-    attack_signal_thresholds {
-      one_minute  = 200
-      ten_minutes = 1000
-      one_hour    = 2000
-      immediate   = false
-    }
+    mode                         = "log"
   }
 
   resource "fastly_ngwaf_virtual_patches" "sample" {

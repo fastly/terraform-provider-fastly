@@ -16,7 +16,7 @@ import (
 
 func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFastlyNGWAFVirtualPatchUpdate,
+		CreateContext: resourceFastlyNGWAFVirtualPatchCreate,
 		DeleteContext: resourceFastlyNGWAFVirtualPatchDelete,
 		ReadContext:   resourceFastlyNGWAFVirtualPatchRead,
 		UpdateContext: resourceFastlyNGWAFVirtualPatchUpdate,
@@ -27,7 +27,7 @@ func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 			"action": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "User-configured action of the virtual patch. Accepted values are [`block`, `log`]",
+				Description: "Action to take when a signal for virtual patch is detected. One of `log` or `block`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
 					[]string{"log", "block"},
 					false,
@@ -36,22 +36,28 @@ func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 			"enabled": {
 				Type:        schema.TypeBool,
 				Required:    true,
-				Description: "User-configured control for enabling or disabling virtual patches",
+				Description: "Control for enabling and disabling a virtual patch. One of `true` or `false`.",
 			},
 			"virtual_patch_id": {
 				Type:             schema.TypeString,
 				Required:         true,
-				Description:      "User-submitted identifier (ID) of the virtual patch",
+				Description:      "The ID of the virtual patch.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotWhiteSpace),
 			},
 			"workspace_id": {
 				Type:             schema.TypeString,
 				Required:         true,
-				Description:      "User-submitted identifier (ID) of the workspace",
+				Description:      "The ID of the workspace.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringIsNotWhiteSpace),
 			},
 		},
 	}
+}
+
+func resourceFastlyNGWAFVirtualPatchCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return diag.Errorf("New Virtual patches cannot be created. Virtual patches must already exist in your Fastly NGWAF workspace. Use this resource to configure existing virtual patches only. Ensure the virtual_patch_id '%s' exists in workspace '%s' before applying.",
+		d.Get("virtual_patch_id").(string),
+		d.Get("workspace_id").(string))
 }
 
 func resourceFastlyNGWAFVirtualPatchRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -64,7 +70,7 @@ func resourceFastlyNGWAFVirtualPatchRead(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] REFRESH: NGWAF virtual patch input: %#v", i)
 
-	virtualpatch, err := ws.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	virtualpatch, err := ws.Get(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] virtual patch not found '%s'", d.Id())

@@ -18,16 +18,31 @@ func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyNGWAFVirtualPatchesRead,
 		Schema: map[string]*schema.Schema{
-			"virtualpatches": {
+			"workspace_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The ID of the workspace.",
+			},
+			"virtual_patches": {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "List of all virtual patches for a given workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"workspace_id": {
+						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Base62-encoded representation of a UUID used to uniquely identify the workspace",
+							Description: "The ID of the virtual patch.",
+						},
+						"enabled": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Control for enabling and disabling a virtual patch. One of `true` or `false`.",
+						},
+						"mode": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Action to take when a signal for virtual patch is detected. One of `log` or `block`.",
 						},
 					},
 				},
@@ -39,9 +54,12 @@ func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
 func dataSourceFastlyNGWAFVirtualPatchesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	log.Printf("[DEBUG] Reading NGWAF virtual patches")
+	workspaceID := d.Get("workspace_id").(string)
+	log.Printf("[DEBUG] Reading NGWAF virtual patches for workspace: %s", workspaceID)
 
-	remoteState, err := ws.List(ctx, conn, &ws.ListInput{})
+	remoteState, err := ws.List(ctx, conn, &ws.ListInput{
+		WorkspaceID: &workspaceID,
+	})
 	if err != nil {
 		return diag.Errorf("error fetching virtual patches: %s", err)
 	}
@@ -55,7 +73,7 @@ func dataSourceFastlyNGWAFVirtualPatchesRead(ctx context.Context, d *schema.Reso
 		virtualpatchPtrs = append(virtualpatchPtrs, &remoteState.Data[i])
 	}
 
-	if err := d.Set("virtualpatches", flattenNGWAFVirtualPatches(virtualpatchPtrs)); err != nil {
+	if err := d.Set("virtual_patches", flattenNGWAFVirtualPatches(virtualpatchPtrs)); err != nil {
 		return diag.Errorf("error setting virtualpatches: %s", err)
 	}
 

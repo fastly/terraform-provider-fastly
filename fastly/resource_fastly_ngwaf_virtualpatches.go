@@ -55,7 +55,7 @@ func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 }
 
 func resourceFastlyNGWAFVirtualPatchCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	return diag.Errorf("New Virtual patches cannot be created. Virtual patches must already exist in your Fastly NGWAF workspace. Use this resource to configure existing virtual patches only. Ensure the virtual_patch_id '%s' exists in workspace '%s' before applying.",
+	return diag.Errorf("Virtual Patches cannot be created. Use this resource to configure existing Virtual Patches. Ensure the virtual_patch_id '%s' exists in workspace '%s' before applying.",
 		d.Get("virtual_patch_id").(string),
 		d.Get("workspace_id").(string))
 }
@@ -104,7 +104,7 @@ func resourceFastlyNGWAFVirtualPatchUpdate(ctx context.Context, d *schema.Resour
 
 	log.Printf("[DEBUG] UPDATE: NGWAF virtualpatch input: %#v", i)
 
-	virtualPatch, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	virtualPatch, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -127,7 +127,7 @@ func resourceFastlyNGWAFVirtualPatchDelete(ctx context.Context, d *schema.Resour
 
 	log.Printf("[DEBUG] DELETE: NGWAF virtual patch input: %#v", i)
 
-	_, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	_, err := ws.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	return diag.FromErr(err)
 }
 

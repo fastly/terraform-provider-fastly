@@ -1,0 +1,25 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_datadog_alert"
+sidebar_current: "docs-fastly-resource-ngwaf-datadog-alert"
+description: |-
+  Provides a Fastly Next-Gen WAF Redaction for a Workspace
+---
+
+# ngwaf_datadog_alert
+
+Provides a Fastly Next-Gen WAF Datadog Alert, which provides a connection to Datadog.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_datadog_alert_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF Datadog Alerts can be imported using their ID and the ID of the workspace they belong to.
+
+{{ codefile "sh" "examples/resources/components/ngwaf_datadog_alert_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

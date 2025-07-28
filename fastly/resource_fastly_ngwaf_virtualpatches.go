@@ -64,7 +64,7 @@ func resourceFastlyNGWAFVirtualPatchCreate(ctx context.Context, d *schema.Resour
 
 	log.Printf("[DEBUG] CREATE: NGWAF virtual patch input: %#v", i)
 
-	// Check if the virtual patch exists
+	// Check if the virtual patch exists prior to throwing an error for any resource statement
 	_, err := ws.Get(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {

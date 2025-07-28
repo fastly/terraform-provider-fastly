@@ -2,6 +2,7 @@ package fastly
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -25,29 +26,45 @@ func TestAccFastlyNGWAFThresholdsData_Config(t *testing.T) {
 						r := s.RootModule().Resources["data.fastly_ngwaf_thresholds.sample"]
 						a := r.Primary.Attributes
 
-						// Check that we have at least one threshold
-						var thresholdCount int
-						for k := range a {
-							if strings.HasPrefix(k, "thresholds.") && strings.HasSuffix(k, ".id") {
-								thresholdCount++
-							}
-						}
+						expectedName := fmt.Sprintf("test-threshold-%s", h)
+						var (
+							found      int
+							gotNames   []string
+							gotSignals []string
+							gotActions []string
+						)
 
-						if thresholdCount == 0 {
-							return fmt.Errorf("expected at least one threshold, got %d", thresholdCount)
-						}
-
-						// Check that threshold attributes are properly set
+						// Check for threshold attributes like:
+						// "thresholds.0.name": "test-threshold-abc123"
+						// "thresholds.0.signal": "SQLI"
+						// "thresholds.0.action": "log"
 						for k, v := range a {
-							if strings.HasSuffix(k, ".name") && v == "" {
-								return fmt.Errorf("threshold name should not be empty")
+							if strings.HasSuffix(k, ".name") {
+								gotNames = append(gotNames, v)
+								if v == expectedName {
+									found++
+								}
 							}
-							if strings.HasSuffix(k, ".signal") && v == "" {
-								return fmt.Errorf("threshold signal should not be empty")
+							if strings.HasSuffix(k, ".signal") {
+								gotSignals = append(gotSignals, v)
 							}
-							if strings.HasSuffix(k, ".action") && v != "log" && v != "block" {
-								return fmt.Errorf("threshold action should be 'log' or 'block', got: %s", v)
+							if strings.HasSuffix(k, ".action") {
+								gotActions = append(gotActions, v)
 							}
+						}
+
+						if found == 0 {
+							return fmt.Errorf("expected threshold with name %s, got names: %v", expectedName, gotNames)
+						}
+
+						// Validate we have the expected signal
+						if !slices.Contains(gotSignals, "SQLI") {
+							return fmt.Errorf("expected signal 'SQLI', got signals: %v", gotSignals)
+						}
+
+						// Validate we have the expected action
+						if !slices.Contains(gotActions, "log") {
+							return fmt.Errorf("expected action 'log', got actions: %v", gotActions)
 						}
 
 						return nil
@@ -60,7 +77,21 @@ func TestAccFastlyNGWAFThresholdsData_Config(t *testing.T) {
 
 func testAccFastlyDataSourceNGWAFThresholdsConfig(h string) string {
 	tf := `
-resource "fastly_ngwaf_thresholds" "test_thesholds_workspace" {
+resource "fastly_ngwaf_workspace" "example" {
+  name = "tf_%s"
+  description = "Test NGWAF Workspace %s"
+  mode = "block"
+  ip_anonymization = "hashed"
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
+  }
+}
+
+resource "fastly_ngwaf_thresholds" "test_thresholds_workspace" {
   workspace_id = fastly_ngwaf_workspace.example.id
   name         = "test-threshold-%s"
   signal       = "SQLI"

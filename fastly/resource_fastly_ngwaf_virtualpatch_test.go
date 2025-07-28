@@ -23,16 +23,7 @@ func TestAccFastlyNGWAFVirtualPatch_validate(t *testing.T) {
 		CheckDestroy:      testAccCheckNGWAFWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNGWAFWorkspaceConfig(newWorkspaceName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", newWorkspaceName),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "description", "Test NGWAF Workspace"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "mode", "block"),
-					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.example"),
-				),
-			},
-			{
-				Config: testAccNGWAFVirtualPatchConfig(virtualPatchID),
+				Config: testAccNGWAFVirtualPatchConfig(newWorkspaceName, virtualPatchID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "action", "block"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "enabled", "true"),
@@ -42,7 +33,7 @@ func TestAccFastlyNGWAFVirtualPatch_validate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNGWAFVirtualPatchConfigUpdate(virtualPatchID),
+				Config: testAccNGWAFVirtualPatchConfigUpdate(newWorkspaceName, virtualPatchID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "action", "log"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_virtual_patches.sample", "enabled", "false"),
@@ -99,13 +90,23 @@ func testAccNGWAFVirtualPatchExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccNGWAFVirtualPatchConfig(virtualPatchID string) string {
+func testAccNGWAFVirtualPatchConfig(workspaceName, virtualPatchID string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "example" {
-    name                         = "Test Virtual Patch WS"
-    description                  = "Test NGWAF Workspace"
-    mode                         = "log"
+  name                         = "%s"
+  description                  = "Test VP Workspace"
+  mode                         = "block"
+  ip_anonymization            = "hashed"
+  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
   }
+}
 
   resource "fastly_ngwaf_virtual_patches" "sample" {
     action            = "block"
@@ -113,16 +114,26 @@ resource "fastly_ngwaf_workspace" "example" {
     virtual_patch_id  = "%s"
     workspace_id      = fastly_ngwaf_workspace.example.id
   }
-  `, virtualPatchID)
+  `, workspaceName, virtualPatchID)
 }
 
-func testAccNGWAFVirtualPatchConfigUpdate(virtualPatchID string) string {
+func testAccNGWAFVirtualPatchConfigUpdate(workspaceName, virtualPatchID string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "example" {
-    name                         = "Test Virtual Patch WS"
-    description                  = "Test NGWAF Workspace"
-    mode                         = "log"
+  name                         = "%s"
+  description                  = "Test VP Workspace"
+  mode                         = "block"
+  ip_anonymization            = "hashed"
+  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
   }
+}
 
   resource "fastly_ngwaf_virtual_patches" "sample" {
     action            = "log"
@@ -130,5 +141,5 @@ resource "fastly_ngwaf_workspace" "example" {
     virtual_patch_id  = "%s"
     workspace_id      = fastly_ngwaf_workspace.example.id
   }
-  `, virtualPatchID)
+  `, workspaceName, virtualPatchID)
 }

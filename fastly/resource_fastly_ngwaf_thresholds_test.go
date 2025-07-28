@@ -25,10 +25,10 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 			{
 				Config: testAccNGWAFWorkspaceConfig(newWorkspaceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", newWorkspaceName),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "description", "Test NGWAF Workspace"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "mode", "block"),
-					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.example"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.test", "name", newWorkspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.test", "description", "Test NGWAF Workspace"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.test", "mode", "block"),
+					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.test"),
 				),
 			},
 			{
@@ -62,7 +62,7 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "fastly_ngwaf_workspace.example",
+				ResourceName:      "fastly_ngwaf_workspace.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -111,7 +111,7 @@ func testAccNGWAFThresholdsExists(n string) resource.TestCheckFunc {
 
 func testAccNGWAFThresholdsConfig(thresholdName string) string {
 	return fmt.Sprintf(`
-resource "fastly_ngwaf_workspace" "example" {
+resource "fastly_ngwaf_workspace" "test" {
     name                         = "Test Thresholds WS"
     description                  = "Test NGWAF Workspace"
     mode                         = "log"

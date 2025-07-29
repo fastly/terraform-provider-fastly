@@ -156,7 +156,7 @@ func resourceFastlyNGWAFAlertDatadogIntegrationDelete(ctx context.Context, d *sc
 func resourceFastlyNGWAFAlertDatadogIntegrationImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	log.Printf("[DEBUG] IMPORT: NGWAF Datadog alert ID: %s", d.Id())
 
-	workspaceID, AlertDatadogIntegrationID, isInCorrectForm := strings.Cut(d.Id(), "/")
+	workspaceID, alertDatadogIntegrationID, isInCorrectForm := strings.Cut(d.Id(), "/")
 	if !isInCorrectForm {
 		return nil, fmt.Errorf("invalid ID format: %s. Expected format: <workspaceID>/<alertID>", d.Id())
 	}
@@ -165,7 +165,7 @@ func resourceFastlyNGWAFAlertDatadogIntegrationImport(_ context.Context, d *sche
 		return nil, fmt.Errorf("error setting workspace_id (%s): %w", workspaceID, err)
 	}
 
-	d.SetId(AlertDatadogIntegrationID)
+	d.SetId(alertDatadogIntegrationID)
 
 	return []*schema.ResourceData{d}, nil
 }

@@ -23,7 +23,7 @@ const (
 
 func TestAccFastlyNGWAFAlertDatadogIntegration_validate(t *testing.T) {
 	var (
-		AlertDatadogIntegrationID string
+		alertDatadogIntegrationID string
 		workspaceID               string
 	)
 	workspaceName := fmt.Sprintf("NGWAF Workspace %s", acctest.RandString(10))
@@ -39,7 +39,7 @@ func TestAccFastlyNGWAFAlertDatadogIntegration_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "description", AlertDatadogIntegrationDescription),
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "key", AlertDatadogIntegrationKey),
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "site", AlertDatadogIntegrationSite),
-					testAccNGWAFAlertDatadogIntegrationExists("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &AlertDatadogIntegrationID, &workspaceID),
+					testAccNGWAFAlertDatadogIntegrationExists("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &alertDatadogIntegrationID, &workspaceID),
 				),
 			},
 			{
@@ -48,15 +48,15 @@ func TestAccFastlyNGWAFAlertDatadogIntegration_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "description", AlertDatadogIntegrationDescription),
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "key", AlertDatadogIntegrationKeyUpdated),
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "site", AlertDatadogIntegrationSiteUpdated),
-					testAccNGWAFAlertDatadogIntegrationExists("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &AlertDatadogIntegrationID, &workspaceID),
+					testAccNGWAFAlertDatadogIntegrationExists("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &alertDatadogIntegrationID, &workspaceID),
 				),
 			},
 			{
 				ResourceName: "fastly_ngwaf_alert_datadog_integration.test_datadog_alert",
 				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
-					log.Printf("[DEBUG] IMPORT TEST: NGWAF datadog alert ID: %s", AlertDatadogIntegrationID)
+					log.Printf("[DEBUG] IMPORT TEST: NGWAF datadog alert ID: %s", alertDatadogIntegrationID)
 					log.Printf("[DEBUG] IMPORT TEST: NGWAF workspace ID: %s", workspaceID)
-					return fmt.Sprintf("%s/%s", workspaceID, AlertDatadogIntegrationID), nil
+					return fmt.Sprintf("%s/%s", workspaceID, alertDatadogIntegrationID), nil
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -65,11 +65,11 @@ func TestAccFastlyNGWAFAlertDatadogIntegration_validate(t *testing.T) {
 	})
 }
 
-func testAccNGWAFAlertDatadogIntegrationExists(AlertDatadogIntegrationName, workspaceName string, AlertDatadogIntegrationID, workspaceID *string) resource.TestCheckFunc {
+func testAccNGWAFAlertDatadogIntegrationExists(alertDatadogIntegrationName, workspaceName string, alertDatadogIntegrationID, workspaceID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[AlertDatadogIntegrationName]
+		rs, ok := s.RootModule().Resources[alertDatadogIntegrationName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", AlertDatadogIntegrationName)
+			return fmt.Errorf("Not found: %s", alertDatadogIntegrationName)
 		}
 		ws, ok := s.RootModule().Resources[workspaceName]
 		if !ok {
@@ -91,9 +91,9 @@ func testAccNGWAFAlertDatadogIntegrationExists(AlertDatadogIntegrationName, work
 			return fmt.Errorf("NGWAF Datadog Alert %s not found in API", wID)
 		}
 
-		*AlertDatadogIntegrationID = rID
+		*alertDatadogIntegrationID = rID
 		*workspaceID = wID
-		log.Printf("[DEBUG] EXISTS IMPORT: NGWAF datadog alert ID: %s", *AlertDatadogIntegrationID)
+		log.Printf("[DEBUG] EXISTS IMPORT: NGWAF datadog alert ID: %s", *alertDatadogIntegrationID)
 		log.Printf("[DEBUG] EXISTS IMPORT: NGWAF workspace ID: %s", *workspaceID)
 
 		return nil

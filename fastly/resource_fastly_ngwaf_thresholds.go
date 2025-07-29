@@ -65,7 +65,8 @@ func resourceFastlyNGWAFThresholds() *schema.Resource {
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(3, 50)),
 			},
 			"signal": {
-				Type:        schema.TypeString,
+				Type: schema.TypeString,
+				// Update to ref custom / system signals.
 				Description: "The name of the signal this threshold is acting on",
 				Required:    true,
 			},

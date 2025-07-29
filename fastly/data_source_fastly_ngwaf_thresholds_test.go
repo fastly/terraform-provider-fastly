@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyNGWAFThresholdsData_Config(t *testing.T) {
+func TestAccFastlyNGWAFThresholds_Config(t *testing.T) {
 	h := generateHex()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,7 +26,10 @@ func TestAccFastlyNGWAFThresholdsData_Config(t *testing.T) {
 						r := s.RootModule().Resources["data.fastly_ngwaf_thresholds.sample"]
 						a := r.Primary.Attributes
 
-						expectedName := fmt.Sprintf("test-threshold-%s", h)
+						// Debug: print all attributes
+						fmt.Printf("All attributes: %+v\n", a)
+
+						expectedName := "Threshold TF Test"
 						var (
 							found      int
 							gotNames   []string
@@ -35,7 +38,7 @@ func TestAccFastlyNGWAFThresholdsData_Config(t *testing.T) {
 						)
 
 						// Check for threshold attributes like:
-						// "thresholds.0.name": "test-threshold-abc123"
+						// "thresholds.0.name": "Threshold TF Test"
 						// "thresholds.0.signal": "SQLI"
 						// "thresholds.0.action": "log"
 						for k, v := range a {
@@ -54,7 +57,7 @@ func TestAccFastlyNGWAFThresholdsData_Config(t *testing.T) {
 						}
 
 						if found == 0 {
-							return fmt.Errorf("expected threshold with name %s, got names: %v", expectedName, gotNames)
+							return fmt.Errorf("expected threshold with name %s, got names: %v, all attributes: %v", expectedName, gotNames, a)
 						}
 
 						// Validate we have the expected signal
@@ -76,24 +79,12 @@ func TestAccFastlyNGWAFThresholdsData_Config(t *testing.T) {
 }
 
 func testAccFastlyDataSourceNGWAFThresholdsConfig(h string) string {
-	tf := `
-resource "fastly_ngwaf_workspace" "example" {
-  name = "tf_%s"
-  description = "Test NGWAF Workspace %s"
-  mode = "block"
-  ip_anonymization = "hashed"
+	return fmt.Sprintf(`
+%s
 
-  attack_signal_thresholds {
-    one_minute  = 100
-    ten_minutes = 500
-    one_hour    = 1000
-    immediate   = true
-  }
-}
-
-resource "fastly_ngwaf_thresholds" "test_thresholds_workspace" {
+resource "fastly_ngwaf_thresholds" "test_threshold" {
   workspace_id = fastly_ngwaf_workspace.example.id
-  name         = "test-threshold-%s"
+  name         = "Threshold TF Test"
   signal       = "SQLI"
   action       = "log"
   enabled      = true
@@ -104,8 +95,10 @@ resource "fastly_ngwaf_thresholds" "test_thresholds_workspace" {
 }
 
 data "fastly_ngwaf_thresholds" "sample" {
+  depends_on = [
+    fastly_ngwaf_thresholds.test_threshold
+  ]
   workspace_id = fastly_ngwaf_workspace.example.id
 }
-`
-	return fmt.Sprintf(tf, h, h, h)
+`, testAccNGWAFWorkspaceConfig(fmt.Sprintf("tf_%s", h)))
 }

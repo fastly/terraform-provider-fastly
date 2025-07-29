@@ -6,6 +6,6 @@
     interval     = 3600
     limit        = 10
     name         = "%s"
-    signal       = "sqli"
+    signal       = "SQLI"
     workspace_id = fastly_ngwaf_workspace.example.id
   }

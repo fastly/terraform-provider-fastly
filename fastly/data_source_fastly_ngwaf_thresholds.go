@@ -67,7 +67,7 @@ func dataSourceFastlyNGWAFThresholds() *schema.Resource {
 						"signal": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The name of the signal this threshold is acting on.",
+							Description: "The name of the Signal this threshold is acting on. For custom Signals, append signal with `site.<name>`. For System Signals, input the <name> field only.",
 						},
 					},
 				},

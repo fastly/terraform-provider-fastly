@@ -25,10 +25,10 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 			{
 				Config: testAccNGWAFWorkspaceConfig(newWorkspaceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.test", "name", newWorkspaceName),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.test", "description", "Test NGWAF Workspace"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.test", "mode", "block"),
-					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.test"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", newWorkspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "description", "Test NGWAF Workspace"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "mode", "block"),
+					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.example"),
 				),
 			},
 			{
@@ -41,7 +41,7 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "interval", "3600"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "limit", "10"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "name", thresholdName),
-					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "signal", "sqli"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "signal", "SQLI"),
 					resource.TestCheckResourceAttrPair("fastly_ngwaf_thresholds.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
 					testAccNGWAFThresholdsExists("fastly_ngwaf_thresholds.sample"),
 				),
@@ -56,13 +56,13 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "interval", "600"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "limit", "50"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "name", thresholdName),
-					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "signal", "xss"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_thresholds.sample", "signal", "BHH"),
 					resource.TestCheckResourceAttrPair("fastly_ngwaf_thresholds.sample", "workspace_id", "fastly_ngwaf_workspace.example", "id"),
 					testAccNGWAFThresholdsExists("fastly_ngwaf_thresholds.sample"),
 				),
 			},
 			{
-				ResourceName:      "fastly_ngwaf_workspace.test",
+				ResourceName:      "fastly_ngwaf_workspace.example",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -111,13 +111,9 @@ func testAccNGWAFThresholdsExists(n string) resource.TestCheckFunc {
 
 func testAccNGWAFThresholdsConfig(thresholdName string) string {
 	return fmt.Sprintf(`
-resource "fastly_ngwaf_workspace" "test" {
-    name                         = "Test Thresholds WS"
-    description                  = "Test NGWAF Workspace"
-    mode                         = "log"
-  }
+%s
 
-  resource "fastly_ngwaf_thresholds" "sample" {
+resource "fastly_ngwaf_thresholds" "sample" {
     action       = "block"
     dont_notify  = false
     duration     = 86400
@@ -125,21 +121,17 @@ resource "fastly_ngwaf_workspace" "test" {
     interval     = 3600
     limit        = 10
     name         = "%s"
-    signal       = "sqli"
+    signal       = "SQLI"
     workspace_id = fastly_ngwaf_workspace.example.id
   }
-  `, thresholdName)
+  `, testAccNGWAFWorkspaceConfig("Test Thresholds WS"), thresholdName)
 }
 
 func testAccNGWAFThresholdsConfigUpdate(thresholdName string) string {
 	return fmt.Sprintf(`
-resource "fastly_ngwaf_workspace" "example" {
-    name                         = "Test Thresholds WS"
-    description                  = "Test NGWAF Workspace"
-    mode                         = "log"
-  }
+%s
 
-  resource "fastly_ngwaf_thresholds" "sample" {
+resource "fastly_ngwaf_thresholds" "sample" {
     action       = "log"
     dont_notify  = true
     duration     = 43200
@@ -147,8 +139,8 @@ resource "fastly_ngwaf_workspace" "example" {
     interval     = 600
     limit        = 50
     name         = "%s"
-    signal       = "xss"
+    signal       = "BHH"
     workspace_id = fastly_ngwaf_workspace.example.id
   }
-  `, thresholdName)
+  `, testAccNGWAFWorkspaceConfig("Test Thresholds WS"), thresholdName)
 }

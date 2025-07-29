@@ -25,17 +25,17 @@ func resourceFastlyNGWAFDatadogAlert() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
-				Description: "User-submitted description of the integration",
+				Description: "User-submitted description of the alert",
 				Optional:    true,
 				Type:        schema.TypeString,
 			},
-			"integration_key": {
-				Description:  "The Datadog integration key.",
+			"key": {
+				Description:  "The Datadog key.",
 				Required:     true,
 				Type:         schema.TypeString,
 				ValidateFunc: validation.StringLenBetween(9, 9),
 			},
-			"integration_site": {
+			"site": {
 				Description:  "The Datadog site.",
 				Required:     true,
 				Type:         schema.TypeString,
@@ -57,8 +57,8 @@ func resourceFastlyNGWAFDatadogAlertCreate(ctx context.Context, d *schema.Resour
 
 	i := ddalerts.CreateInput{
 		Config: &ddalerts.CreateConfig{
-			Key:  gofastly.ToPointer(d.Get("integration_key").(string)),
-			Site: gofastly.ToPointer(d.Get("integration_site").(string)),
+			Key:  gofastly.ToPointer(d.Get("key").(string)),
+			Site: gofastly.ToPointer(d.Get("site").(string)),
 		},
 		Description: gofastly.ToPointer(d.Get("description").(string)),
 		Events:      gofastly.ToPointer([]string{"flag"}),
@@ -102,10 +102,10 @@ func resourceFastlyNGWAFDatadogAlertRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("description", alert.Description); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("integration_key", alert.Config.Key); err != nil {
+	if err := d.Set("key", alert.Config.Key); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("integration_site", alert.Config.Site); err != nil {
+	if err := d.Set("site", alert.Config.Site); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -118,8 +118,8 @@ func resourceFastlyNGWAFDatadogAlertUpdate(ctx context.Context, d *schema.Resour
 	i := ddalerts.UpdateInput{
 		AlertID: gofastly.ToPointer(d.Id()),
 		Config: &ddalerts.UpdateConfig{
-			Key:  gofastly.ToPointer(d.Get("integration_key").(string)),
-			Site: gofastly.ToPointer(d.Get("integration_site").(string)),
+			Key:  gofastly.ToPointer(d.Get("key").(string)),
+			Site: gofastly.ToPointer(d.Get("site").(string)),
 		},
 		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
 	}

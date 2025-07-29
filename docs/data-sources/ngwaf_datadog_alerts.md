@@ -27,11 +27,11 @@ output "ngwaf_datadog_alerts_all" {
 
 ### Required
 
-- `workspace_id` (String) The id of the workspace that is being queried for datadog alerts.
+- `workspace_id` (String) The id of the workspace that is being queried for Datadog alerts.
 
 ### Read-Only
 
-- `datadog_alerts` (Set of Object) List of all datadog alerts for a workspace. (see [below for nested schema](#nestedatt--datadog_alerts))
+- `datadog_alerts` (Set of Object) List of all Datadog alerts for a workspace. (see [below for nested schema](#nestedatt--datadog_alerts))
 - `id` (String) The ID of this resource.
 
 <a id="nestedatt--datadog_alerts"></a>
@@ -41,5 +41,5 @@ Read-Only:
 
 - `description` (String)
 - `id` (String)
-- `integration_key` (String)
-- `integration_site` (String)
+- `key` (String)
+- `site` (String)

@@ -52,12 +52,12 @@ func TestAccFastlyDataSourceNGWAFDatadogAlert_Config(t *testing.T) {
 func testAccFastlyDataSourceNGWAFDatadogAlertConfig(h string) string {
 	tf := `
 resource "fastly_ngwaf_workspace" "test_datadog_alerts_workspace" {
-  name                         = "%s"
-  description                  = "Test NGWAF Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
+  name                             = "%s"
+  description                      = "Test NGWAF Workspace"
+  mode                             = "block"
+  ip_anonymization                 = "hashed"
+  client_ip_headers                = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code   = 429
 
   attack_signal_thresholds {
     one_minute  = 100
@@ -68,10 +68,10 @@ resource "fastly_ngwaf_workspace" "test_datadog_alerts_workspace" {
 }
 
 resource "fastly_ngwaf_datadog_alert" "example_1" {
-  description                  = "%s 1"
-  integration_key              = "123456789"
-  integration_site             = "us1"
-  workspace_id                 = fastly_ngwaf_workspace.test_datadog_alerts_workspace.id
+  description      = "%s 1"
+  key              = "123456789"
+  site             = "us1"
+  workspace_id     = fastly_ngwaf_workspace.test_datadog_alerts_workspace.id
 }
 
 data "fastly_ngwaf_datadog_alerts" "example" {

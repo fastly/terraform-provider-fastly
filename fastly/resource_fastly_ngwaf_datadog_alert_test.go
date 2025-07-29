@@ -37,8 +37,8 @@ func TestAccFastlyNGWAFDatadogAlert_validate(t *testing.T) {
 				Config: testAccNGWAFDatadogAlertConfig(workspaceName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "description", datadogAlertDescription),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "integration_key", datadogAlertKey),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "integration_site", datadogAlertSite),
+					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "key", datadogAlertKey),
+					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "site", datadogAlertSite),
 					testAccNGWAFDatadogAlertExists("fastly_ngwaf_datadog_alert.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &datadogAlertID, &workspaceID),
 				),
 			},
@@ -46,8 +46,8 @@ func TestAccFastlyNGWAFDatadogAlert_validate(t *testing.T) {
 				Config: testAccNGWAFDatadogAlertConfigUpdate(workspaceName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "description", datadogAlertDescription),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "integration_key", datadogAlertKeyUpdated),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "integration_site", datadogAlertSiteUpdated),
+					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "key", datadogAlertKeyUpdated),
+					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "site", datadogAlertSiteUpdated),
 					testAccNGWAFDatadogAlertExists("fastly_ngwaf_datadog_alert.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &datadogAlertID, &workspaceID),
 				),
 			},
@@ -129,11 +129,11 @@ func testAccCheckNGWAFDatadogAlertDestroy(s *terraform.State) error {
 func testAccNGWAFDatadogAlertConfig(workspaceName string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
-  name                         = "%s"
-  description                  = "Test NGWAF Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
+  name                           = "%s"
+  description                    = "Test NGWAF Workspace"
+  mode                           = "block"
+  ip_anonymization               = "hashed"
+  client_ip_headers              = ["X-Forwarded-For", "X-Real-IP"]
   default_blocking_response_code = 429
 
   attack_signal_thresholds {
@@ -145,10 +145,10 @@ resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
 }
 
 resource "fastly_ngwaf_datadog_alert" "test_datadog_alert" {
-  description                  = "%s"
-  integration_key              = "%s"
-  integration_site             = "%s"
-  workspace_id                 = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
+  description      = "%s"
+  key              = "%s"
+  site             = "%s"
+  workspace_id     = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
 }
 `, workspaceName, datadogAlertDescription, datadogAlertKey, datadogAlertSite)
 }
@@ -156,11 +156,11 @@ resource "fastly_ngwaf_datadog_alert" "test_datadog_alert" {
 func testAccNGWAFDatadogAlertConfigUpdate(workspaceName string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
-  name                         = "%s"
-  description                  = "Test NGWAF Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
   default_blocking_response_code = 429
 
   attack_signal_thresholds {
@@ -172,10 +172,10 @@ resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
 }
 
 resource "fastly_ngwaf_datadog_alert" "test_datadog_alert" {
-  description                  = "%s"
-  integration_key              = "%s"
-  integration_site             = "%s"
-  workspace_id                 = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
+  description      = "%s"
+  key              = "%s"
+  site             = "%s"
+  workspace_id     = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
 }
 `, workspaceName, datadogAlertDescription, datadogAlertKeyUpdated, datadogAlertSiteUpdated)
 }

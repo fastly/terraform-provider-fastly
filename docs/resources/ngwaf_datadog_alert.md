@@ -3,7 +3,7 @@ layout: "fastly"
 page_title: "Fastly: ngwaf_datadog_alert"
 sidebar_current: "docs-fastly-resource-ngwaf-datadog-alert"
 description: |-
-  Provides a Fastly Next-Gen WAF Redaction for a Workspace
+  Provides a Fastly Next-Gen WAF Datadog alert for a Workspace
 ---
 
 # ngwaf_datadog_alert
@@ -16,10 +16,10 @@ Basic usage:
 
 ```terraform
 resource "fastly_ngwaf_datadog_alert" "demo_datadog_alert" {
-  description                  = "Some Description"
-  integration_key              = "123456789"
-  integration_site             = "us1"
-  workspace_id                 = fastly_ngwaf_workspace.demo.id
+  description    = "Some Description"
+  key            = "123456789"
+  site           = "us1"
+  workspace_id   = fastly_ngwaf_workspace.demo.id
 }
 ```
 
@@ -36,13 +36,13 @@ $ terraform import fastly_ngwaf_datadog_alert.example <workspace_id>/<alert_id>
 
 ### Required
 
-- `integration_key` (String) The Datadog integration key.
-- `integration_site` (String) The Datadog site.
+- `key` (String) The Datadog key.
+- `site` (String) The Datadog site.
 - `workspace_id` (String) The id of the workspace this alert belongs to.
 
 ### Optional
 
-- `description` (String) User-submitted description of the integration
+- `description` (String) User-submitted description of the alert
 
 ### Read-Only
 

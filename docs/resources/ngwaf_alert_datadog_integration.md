@@ -3,12 +3,12 @@ layout: "fastly"
 page_title: "Fastly: ngwaf_alert_datadog_integration"
 sidebar_current: "docs-fastly-resource-ngwaf-datadog-alert"
 description: |-
-  Provides a Fastly Next-Gen WAF Datadog alert for a Workspace
+  Provides a Fastly Next-Gen WAF Alert Datadog integration for a Workspace
 ---
 
 # ngwaf_datadog_alert
 
-Provides a Fastly Next-Gen WAF Datadog Alert, which provides a connection to Datadog.
+Provides a Fastly Next-Gen WAF Alert Datadog integration, which provides a connection to Datadog.
 
 ## Example Usage
 
@@ -25,7 +25,7 @@ resource "fastly_ngwaf_alert_datadog_integration" "demo_datadog_alert" {
 
 ## Import
 
-Fastly Next-Gen WAF Datadog Alerts can be imported using their ID and the ID of the workspace they belong to.
+Fastly Next-Gen WAF Alert Datadog integrations can be imported using their ID and the ID of the workspace they belong to.
 
 ```sh
 $ terraform import fastly_ngwaf_alert_datadog_integration.example <workspace_id>/<alert_id>

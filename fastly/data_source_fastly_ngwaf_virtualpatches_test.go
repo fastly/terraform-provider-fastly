@@ -23,7 +23,7 @@ func TestAccFastlyDataSourceNGWAFVirtualPatches_Config(t *testing.T) {
 				Config: testAccFastlyDataSourceNGWAFVirtualPatchesConfig(h),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						r := s.RootModule().Resources["data.fastly_ngwaf_virtualpatches.sample"]
+						r := s.RootModule().Resources["data.fastly_ngwaf_virtual_patches.sample"]
 						a := r.Primary.Attributes
 
 						want := []string{"CVE-2017-5638", "CVE-2019-0193", "CVE-2021-44228"} // Expected virtual patch IDs
@@ -59,11 +59,10 @@ func TestAccFastlyDataSourceNGWAFVirtualPatches_Config(t *testing.T) {
 
 func testAccFastlyDataSourceNGWAFVirtualPatchesConfig(h string) string {
 	tf := `
-resource "fastly_ngwaf_workspace" "example_1" {
+resource "fastly_ngwaf_workspace" "example" {
   name = "tf_%s_1"
   description = "Test NGWAF Workspace %s_1"
-  mode = "block"
-  ip_anonymization = "hashed"
+  mode                            = "block"
 
   attack_signal_thresholds {
     one_minute  = 100
@@ -72,7 +71,8 @@ resource "fastly_ngwaf_workspace" "example_1" {
     immediate   = true
   }
 }
-data "fastly_ngwaf_virtualpatches" "sample" {
+
+data "fastly_ngwaf_virtual_patches" "sample" {
 	workspace_id = fastly_ngwaf_workspace.example.id
 }
 `

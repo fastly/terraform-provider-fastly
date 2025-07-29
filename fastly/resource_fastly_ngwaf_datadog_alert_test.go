@@ -18,7 +18,7 @@ const (
 	datadogAlertKey         = "123456789"
 	datadogAlertKeyUpdated  = "987654321"
 	datadogAlertSite        = "us1"
-	datadogAlertSiteUpdated = "us2"
+	datadogAlertSiteUpdated = "us3"
 )
 
 func TestAccFastlyNGWAFDatadogAlert_validate(t *testing.T) {
@@ -131,10 +131,7 @@ func testAccNGWAFDatadogAlertConfig(workspaceName string) string {
 resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
   name                           = "%s"
   description                    = "Test NGWAF Workspace"
-  mode                           = "block"
-  ip_anonymization               = "hashed"
-  client_ip_headers              = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
+  mode                            = "block"
 
   attack_signal_thresholds {
     one_minute  = 100
@@ -159,9 +156,6 @@ resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
   name                            = "%s"
   description                     = "Test NGWAF Workspace"
   mode                            = "block"
-  ip_anonymization                = "hashed"
-  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
 
   attack_signal_thresholds {
     one_minute  = 100

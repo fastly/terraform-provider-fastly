@@ -53,11 +53,8 @@ func testAccFastlyDataSourceNGWAFDatadogAlertConfig(h string) string {
 	tf := `
 resource "fastly_ngwaf_workspace" "test_datadog_alerts_workspace" {
   name                             = "%s"
-  description                      = "Test NGWAF Workspace"
-  mode                             = "block"
-  ip_anonymization                 = "hashed"
-  client_ip_headers                = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code   = 429
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
 
   attack_signal_thresholds {
     one_minute  = 100

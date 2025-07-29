@@ -1,0 +1,25 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_redaction"
+sidebar_current: "docs-fastly-resource-ngwaf-redaction"
+description: |-
+  Provides a Fastly Next-Gen WAF Redaction for a Workspace
+---
+
+# ngwaf_redaction
+
+Provides a Fastly Next-Gen WAF Redaction, which can automatically redact known patterns of sensitive information.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_redaction_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF Redactions can be imported using their ID and the ID of the workspace they belong to.
+
+{{ codefile "sh" "examples/resources/components/ngwaf_redaction_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

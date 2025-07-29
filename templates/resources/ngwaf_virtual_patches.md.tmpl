@@ -1,0 +1,26 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_virtual_patches"
+sidebar_current: "docs-fastly-resource-ngwaf-virtual-patches"
+description: |-
+  Provides a Fastly Next-Gen WAF Virtual Patches
+---
+
+# ngwaf_virtual_patches
+
+Provides a Fastly Next-Gen WAF Virtual Patch.  Virtual patching 
+rules block or log requests matching specific vulnerabilities.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_virtual_patches_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF Virtual Patches can be imported using their workspace and Virtual Patch ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/virtual_patches_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

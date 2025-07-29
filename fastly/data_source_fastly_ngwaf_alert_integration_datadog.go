@@ -11,12 +11,12 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	datadogAlerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
+	AlertDatadogIntegrations "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
 )
 
-func dataSourceFastlyNGWAFDatadogAlert() *schema.Resource {
+func dataSourceFastlyNGWAFAlertIntegrationDatadog() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFastlyNGWAFDatadogAlertRead,
+		ReadContext: dataSourceFastlyNGWAFAlertDatadogIntegrationRead,
 		Schema: map[string]*schema.Schema{
 			"datadog_alerts": {
 				Type:        schema.TypeSet,
@@ -56,14 +56,14 @@ func dataSourceFastlyNGWAFDatadogAlert() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyNGWAFDatadogAlertRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyNGWAFAlertDatadogIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	workspaceID := d.Get("workspace_id").(string)
 
 	log.Printf("[DEBUG] Reading NGWAF Datadog alerts from workspace %s", workspaceID)
 
-	remoteState, err := datadogAlerts.List(ctx, conn, &datadogAlerts.ListInput{
+	remoteState, err := AlertDatadogIntegrations.List(ctx, conn, &AlertDatadogIntegrations.ListInput{
 		WorkspaceID: &workspaceID,
 	})
 	if err != nil {
@@ -74,20 +74,20 @@ func dataSourceFastlyNGWAFDatadogAlertRead(ctx context.Context, d *schema.Resour
 	hash := strconv.Itoa(hashcode.String(string(parsed)))
 	d.SetId(hash)
 
-	// Convert []datadogAlerts.Alert to []*datadogAlerts.Alerts
-	var datadogAlertsPtrs []*datadogAlerts.Alert
+	// Convert []AlertDatadogIntegrations.Alert to []*AlertDatadogIntegrations.Alerts
+	var AlertDatadogIntegrationsPtrs []*AlertDatadogIntegrations.Alert
 	for i := range remoteState.Data {
-		datadogAlertsPtrs = append(datadogAlertsPtrs, &remoteState.Data[i])
+		AlertDatadogIntegrationsPtrs = append(AlertDatadogIntegrationsPtrs, &remoteState.Data[i])
 	}
 
-	if err := d.Set("datadog_alerts", flattenNGWAFDatadogAlert(datadogAlertsPtrs)); err != nil {
+	if err := d.Set("datadog_alerts", flattenNGWAFAlertDatadogIntegration(AlertDatadogIntegrationsPtrs)); err != nil {
 		return diag.Errorf("error setting Datadog alerts: %s", err)
 	}
 
 	return nil
 }
 
-func flattenNGWAFDatadogAlert(remoteState []*datadogAlerts.Alert) []map[string]any {
+func flattenNGWAFAlertDatadogIntegration(remoteState []*AlertDatadogIntegrations.Alert) []map[string]any {
 	result := make([]map[string]any, len(remoteState))
 
 	for i, r := range remoteState {

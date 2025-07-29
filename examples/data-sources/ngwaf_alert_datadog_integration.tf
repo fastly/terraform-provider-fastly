@@ -1,4 +1,4 @@
-data "fastly_ngwaf_datadog_alerts" "ngwaf_datadog_alerts" {
+data "fastly_ngwaf_alert_datadog_integration" "ngwaf_datadog_alerts" {
     workspace_id = fastly_ngwaf_workspace.test_redactions_workspace.id
 }
 

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyDataSourceNGWAFDatadogAlert_Config(t *testing.T) {
+func TestAccFastlyDataSourceNGWAFAlertDatadogIntegration_Config(t *testing.T) {
 	h := generateHex()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -19,10 +19,10 @@ func TestAccFastlyDataSourceNGWAFDatadogAlert_Config(t *testing.T) {
 		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFastlyDataSourceNGWAFDatadogAlertConfig(h),
+				Config: testAccFastlyDataSourceNGWAFAlertDatadogIntegrationConfig(h),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						r := s.RootModule().Resources["data.fastly_ngwaf_datadog_alerts.example"]
+						r := s.RootModule().Resources["data.fastly_ngwaf_alert_datadog_integration.example"]
 						a := r.Primary.Attributes
 						var (
 							found int
@@ -49,7 +49,7 @@ func TestAccFastlyDataSourceNGWAFDatadogAlert_Config(t *testing.T) {
 	})
 }
 
-func testAccFastlyDataSourceNGWAFDatadogAlertConfig(h string) string {
+func testAccFastlyDataSourceNGWAFAlertDatadogIntegrationConfig(h string) string {
 	tf := `
 resource "fastly_ngwaf_workspace" "test_datadog_alerts_workspace" {
   name                             = "%s"
@@ -64,17 +64,17 @@ resource "fastly_ngwaf_workspace" "test_datadog_alerts_workspace" {
   }
 }
 
-resource "fastly_ngwaf_datadog_alert" "example_1" {
+resource "fastly_ngwaf_alert_datadog_integration" "example_1" {
   description      = "%s 1"
   key              = "123456789"
   site             = "us1"
   workspace_id     = fastly_ngwaf_workspace.test_datadog_alerts_workspace.id
 }
 
-data "fastly_ngwaf_datadog_alerts" "example" {
+data "fastly_ngwaf_alert_datadog_integration" "example" {
   depends_on = [
     fastly_ngwaf_workspace.test_datadog_alerts_workspace,
-    fastly_ngwaf_datadog_alert.example_1
+    fastly_ngwaf_alert_datadog_integration.example_1
   ]
   workspace_id = fastly_ngwaf_workspace.test_datadog_alerts_workspace.id
 }

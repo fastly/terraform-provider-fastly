@@ -1,4 +1,4 @@
-resource "fastly_ngwaf_datadog_alert" "demo_datadog_alert" {
+resource "fastly_ngwaf_alert_datadog_integration" "demo_datadog_alert" {
   description    = "Some Description"
   key            = "123456789"
   site           = "us1"

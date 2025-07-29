@@ -14,49 +14,49 @@ import (
 )
 
 const (
-	datadogAlertDescription = "Test NGWAF Datadog Alert"
-	datadogAlertKey         = "123456789"
-	datadogAlertKeyUpdated  = "987654321"
-	datadogAlertSite        = "us1"
-	datadogAlertSiteUpdated = "us3"
+	AlertDatadogIntegrationDescription = "Test NGWAF Datadog Alert"
+	AlertDatadogIntegrationKey         = "123456789"
+	AlertDatadogIntegrationKeyUpdated  = "987654321"
+	AlertDatadogIntegrationSite        = "us1"
+	AlertDatadogIntegrationSiteUpdated = "us3"
 )
 
-func TestAccFastlyNGWAFDatadogAlert_validate(t *testing.T) {
+func TestAccFastlyNGWAFAlertDatadogIntegration_validate(t *testing.T) {
 	var (
-		datadogAlertID string
-		workspaceID    string
+		AlertDatadogIntegrationID string
+		workspaceID               string
 	)
 	workspaceName := fmt.Sprintf("NGWAF Workspace %s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckNGWAFDatadogAlertDestroy,
+		CheckDestroy:      testAccCheckNGWAFAlertDatadogIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNGWAFDatadogAlertConfig(workspaceName),
+				Config: testAccNGWAFAlertDatadogIntegrationConfig(workspaceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "description", datadogAlertDescription),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "key", datadogAlertKey),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "site", datadogAlertSite),
-					testAccNGWAFDatadogAlertExists("fastly_ngwaf_datadog_alert.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &datadogAlertID, &workspaceID),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "description", AlertDatadogIntegrationDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "key", AlertDatadogIntegrationKey),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "site", AlertDatadogIntegrationSite),
+					testAccNGWAFAlertDatadogIntegrationExists("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &AlertDatadogIntegrationID, &workspaceID),
 				),
 			},
 			{
-				Config: testAccNGWAFDatadogAlertConfigUpdate(workspaceName),
+				Config: testAccNGWAFAlertDatadogIntegrationConfigUpdate(workspaceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "description", datadogAlertDescription),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "key", datadogAlertKeyUpdated),
-					resource.TestCheckResourceAttr("fastly_ngwaf_datadog_alert.test_datadog_alert", "site", datadogAlertSiteUpdated),
-					testAccNGWAFDatadogAlertExists("fastly_ngwaf_datadog_alert.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &datadogAlertID, &workspaceID),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "description", AlertDatadogIntegrationDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "key", AlertDatadogIntegrationKeyUpdated),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "site", AlertDatadogIntegrationSiteUpdated),
+					testAccNGWAFAlertDatadogIntegrationExists("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "fastly_ngwaf_workspace.test_datadog_alert_workspace", &AlertDatadogIntegrationID, &workspaceID),
 				),
 			},
 			{
-				ResourceName: "fastly_ngwaf_datadog_alert.test_datadog_alert",
+				ResourceName: "fastly_ngwaf_alert_datadog_integration.test_datadog_alert",
 				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
-					log.Printf("[DEBUG] IMPORT TEST: NGWAF datadog alert ID: %s", datadogAlertID)
+					log.Printf("[DEBUG] IMPORT TEST: NGWAF datadog alert ID: %s", AlertDatadogIntegrationID)
 					log.Printf("[DEBUG] IMPORT TEST: NGWAF workspace ID: %s", workspaceID)
-					return fmt.Sprintf("%s/%s", workspaceID, datadogAlertID), nil
+					return fmt.Sprintf("%s/%s", workspaceID, AlertDatadogIntegrationID), nil
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -65,11 +65,11 @@ func TestAccFastlyNGWAFDatadogAlert_validate(t *testing.T) {
 	})
 }
 
-func testAccNGWAFDatadogAlertExists(datadogAlertName, workspaceName string, datadogAlertID, workspaceID *string) resource.TestCheckFunc {
+func testAccNGWAFAlertDatadogIntegrationExists(AlertDatadogIntegrationName, workspaceName string, AlertDatadogIntegrationID, workspaceID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[datadogAlertName]
+		rs, ok := s.RootModule().Resources[AlertDatadogIntegrationName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", datadogAlertName)
+			return fmt.Errorf("Not found: %s", AlertDatadogIntegrationName)
 		}
 		ws, ok := s.RootModule().Resources[workspaceName]
 		if !ok {
@@ -91,16 +91,16 @@ func testAccNGWAFDatadogAlertExists(datadogAlertName, workspaceName string, data
 			return fmt.Errorf("NGWAF Datadog Alert %s not found in API", wID)
 		}
 
-		*datadogAlertID = rID
+		*AlertDatadogIntegrationID = rID
 		*workspaceID = wID
-		log.Printf("[DEBUG] EXISTS IMPORT: NGWAF datadog alert ID: %s", *datadogAlertID)
+		log.Printf("[DEBUG] EXISTS IMPORT: NGWAF datadog alert ID: %s", *AlertDatadogIntegrationID)
 		log.Printf("[DEBUG] EXISTS IMPORT: NGWAF workspace ID: %s", *workspaceID)
 
 		return nil
 	}
 }
 
-func testAccCheckNGWAFDatadogAlertDestroy(s *terraform.State) error {
+func testAccCheckNGWAFAlertDatadogIntegrationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*APIClient).conn
 	var wsID string
 	for _, rs := range s.RootModule().Resources {
@@ -111,7 +111,7 @@ func testAccCheckNGWAFDatadogAlertDestroy(s *terraform.State) error {
 		wsID = rs.Primary.ID
 	}
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_ngwaf_datadog_alert" {
+		if rs.Type != "fastly_ngwaf_alert_datadog_integration" {
 			continue
 		}
 
@@ -126,7 +126,7 @@ func testAccCheckNGWAFDatadogAlertDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNGWAFDatadogAlertConfig(workspaceName string) string {
+func testAccNGWAFAlertDatadogIntegrationConfig(workspaceName string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
   name                           = "%s"
@@ -141,16 +141,16 @@ resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
   }
 }
 
-resource "fastly_ngwaf_datadog_alert" "test_datadog_alert" {
+resource "fastly_ngwaf_alert_datadog_integration" "test_datadog_alert" {
   description      = "%s"
   key              = "%s"
   site             = "%s"
   workspace_id     = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
 }
-`, workspaceName, datadogAlertDescription, datadogAlertKey, datadogAlertSite)
+`, workspaceName, AlertDatadogIntegrationDescription, AlertDatadogIntegrationKey, AlertDatadogIntegrationSite)
 }
 
-func testAccNGWAFDatadogAlertConfigUpdate(workspaceName string) string {
+func testAccNGWAFAlertDatadogIntegrationConfigUpdate(workspaceName string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
   name                            = "%s"
@@ -165,11 +165,11 @@ resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
   }
 }
 
-resource "fastly_ngwaf_datadog_alert" "test_datadog_alert" {
+resource "fastly_ngwaf_alert_datadog_integration" "test_datadog_alert" {
   description      = "%s"
   key              = "%s"
   site             = "%s"
   workspace_id     = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
 }
-`, workspaceName, datadogAlertDescription, datadogAlertKeyUpdated, datadogAlertSiteUpdated)
+`, workspaceName, AlertDatadogIntegrationDescription, AlertDatadogIntegrationKeyUpdated, AlertDatadogIntegrationSiteUpdated)
 }

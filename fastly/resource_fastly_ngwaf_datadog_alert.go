@@ -14,14 +14,14 @@ import (
 	ddalerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
 )
 
-func resourceFastlyNGWAFDatadogAlert() *schema.Resource {
+func resourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFastlyNGWAFDatadogAlertCreate,
-		ReadContext:   resourceFastlyNGWAFDatadogAlertRead,
-		UpdateContext: resourceFastlyNGWAFDatadogAlertUpdate,
-		DeleteContext: resourceFastlyNGWAFDatadogAlertDelete,
+		CreateContext: resourceFastlyNGWAFAlertDatadogIntegrationCreate,
+		ReadContext:   resourceFastlyNGWAFAlertDatadogIntegrationRead,
+		UpdateContext: resourceFastlyNGWAFAlertDatadogIntegrationUpdate,
+		DeleteContext: resourceFastlyNGWAFAlertDatadogIntegrationDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceFastlyNGWAFDatadogAlertImport,
+			StateContext: resourceFastlyNGWAFAlertDatadogIntegrationImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
@@ -50,7 +50,7 @@ func resourceFastlyNGWAFDatadogAlert() *schema.Resource {
 	}
 }
 
-func resourceFastlyNGWAFDatadogAlertCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFAlertDatadogIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	workspaceID := d.Get("workspace_id").(string)
@@ -75,10 +75,10 @@ func resourceFastlyNGWAFDatadogAlertCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(alert.ID)
 
-	return resourceFastlyNGWAFDatadogAlertRead(ctx, d, meta)
+	return resourceFastlyNGWAFAlertDatadogIntegrationRead(ctx, d, meta)
 }
 
-func resourceFastlyNGWAFDatadogAlertRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFAlertDatadogIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	workspaceID := d.Get("workspace_id").(string)
@@ -112,7 +112,7 @@ func resourceFastlyNGWAFDatadogAlertRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceFastlyNGWAFDatadogAlertUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFAlertDatadogIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	i := ddalerts.UpdateInput{
@@ -131,10 +131,10 @@ func resourceFastlyNGWAFDatadogAlertUpdate(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	return resourceFastlyNGWAFDatadogAlertRead(ctx, d, meta)
+	return resourceFastlyNGWAFAlertDatadogIntegrationRead(ctx, d, meta)
 }
 
-func resourceFastlyNGWAFDatadogAlertDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyNGWAFAlertDatadogIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	workspaceID := d.Get("workspace_id").(string)
@@ -153,10 +153,10 @@ func resourceFastlyNGWAFDatadogAlertDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceFastlyNGWAFDatadogAlertImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
+func resourceFastlyNGWAFAlertDatadogIntegrationImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
 	log.Printf("[DEBUG] IMPORT: NGWAF Datadog alert ID: %s", d.Id())
 
-	workspaceID, datadogAlertID, isInCorrectForm := strings.Cut(d.Id(), "/")
+	workspaceID, AlertDatadogIntegrationID, isInCorrectForm := strings.Cut(d.Id(), "/")
 	if !isInCorrectForm {
 		return nil, fmt.Errorf("invalid ID format: %s. Expected format: <workspaceID>/<alertID>", d.Id())
 	}
@@ -165,7 +165,7 @@ func resourceFastlyNGWAFDatadogAlertImport(_ context.Context, d *schema.Resource
 		return nil, fmt.Errorf("error setting workspace_id (%s): %w", workspaceID, err)
 	}
 
-	d.SetId(datadogAlertID)
+	d.SetId(AlertDatadogIntegrationID)
 
 	return []*schema.ResourceData{d}, nil
 }

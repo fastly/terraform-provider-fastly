@@ -1,18 +1,18 @@
 ---
-page_title: "Fastly: fastly_ngwaf_datadog_alerts"
-sidebar_current: "docs-fastly-datasource-fastly_ngwaf_datadog_alerts"
+page_title: "Fastly: fastly_ngwaf_alert_datadog_integration"
+sidebar_current: "docs-fastly-datasource-fastly_ngwaf_alert_datadog_integration"
 description: |-
-  Get information about Fastly Next-Gen WAF Datadog Alerts for a workspace.
+  Get information about a Fastly Next-Gen WAF Alert Datadog integration for a workspace.
 ---
 
-# fastly_ngwaf_datadog_alerts
+# fastly_ngwaf_alert_datadog_integration
 
-Use this data source to get a list of Fastly Next-Gen WAF Datadog Alerts.
+Use this data source to get a Fastly Next-Gen WAF Alert Datadog integration.
 
 ## Example Usage
 
 ```terraform
-data "fastly_ngwaf_datadog_alerts" "ngwaf_datadog_alerts" {
+data "fastly_ngwaf_alert_datadog_integration" "ngwaf_datadog_alerts" {
     workspace_id = fastly_ngwaf_workspace.test_redactions_workspace.id
 }
 

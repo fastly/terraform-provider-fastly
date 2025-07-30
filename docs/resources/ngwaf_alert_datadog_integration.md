@@ -1,12 +1,12 @@
 ---
 layout: "fastly"
 page_title: "Fastly: ngwaf_alert_datadog_integration"
-sidebar_current: "docs-fastly-resource-ngwaf-datadog-alert"
+sidebar_current: "docs-fastly-resource-ngwaf-alert-datadog-integration"
 description: |-
   Provides a Fastly Next-Gen WAF Alert Datadog integration for a Workspace
 ---
 
-# ngwaf_datadog_alert
+# ngwaf_alert_datadog_integration
 
 Provides Fastly Next-Gen WAF Alert Datadog integrations, which provide a connection to Datadog.
 

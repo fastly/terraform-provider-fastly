@@ -1,0 +1,25 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_thresholds"
+sidebar_current: "docs-fastly-resource-ngwaf_thresholds"
+description: |-
+  Provides a Fastly Next-Gen WAF Threshold
+---
+
+# ngwaf_thresholds
+
+Provides a Fastly Next-Gen WAF Threshold.  Operations related to managing workspace thresholds.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_thesholds_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF Thresholds can be imported using their workspace and Threshold ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/ngwaf_threshold_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

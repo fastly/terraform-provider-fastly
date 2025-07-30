@@ -18,22 +18,12 @@ func dataSourceFastlyNGWAFAlertMailingListIntegration() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyNGWAFAlertMailingListIntegrationRead,
 		Schema: map[string]*schema.Schema{
-			"mailinglist_alerts": {
+			"mailing_list_alerts": {
 				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "List of all Mailing List alerts for a workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
-							Description: "Email address that the alert will use",
-							Required:    true,
-							Type:        schema.TypeString,
-						},
-						"description": {
-							Description: "An optional description for the alert",
-							Optional:    true,
-							Type:        schema.TypeString,
-						},
 						"id": {
 							Computed:    true,
 							Description: "Base62-encoded representation of a UUID used to uniquely identify the alert",
@@ -75,7 +65,7 @@ func dataSourceFastlyNGWAFAlertMailingListIntegrationRead(ctx context.Context, d
 		AlertMailingListIntegrationsPtrs = append(AlertMailingListIntegrationsPtrs, &remoteState.Data[i])
 	}
 
-	if err := d.Set("mailinglist_alerts", flattenNGWAFAlertMailingListIntegration(AlertMailingListIntegrationsPtrs)); err != nil {
+	if err := d.Set("mailing_list_alerts", flattenNGWAFAlertMailingListIntegration(AlertMailingListIntegrationsPtrs)); err != nil {
 		return diag.Errorf("error setting Mailing List alerts: %s", err)
 	}
 
@@ -87,9 +77,7 @@ func flattenNGWAFAlertMailingListIntegration(remoteState []*AlertMailingListInte
 
 	for i, r := range remoteState {
 		result[i] = map[string]any{
-			"address":     r.Config.Address,
-			"id":          r.ID,
-			"description": r.Description,
+			"id": r.ID,
 		}
 	}
 

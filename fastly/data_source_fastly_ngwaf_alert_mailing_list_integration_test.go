@@ -2,7 +2,7 @@ package fastly
 
 import (
 	"fmt"
-	"strings"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -24,21 +24,13 @@ func TestAccFastlyDataSourceNGWAFAlertMailingListIntegration_Config(t *testing.T
 					func(s *terraform.State) error {
 						r := s.RootModule().Resources["data.fastly_ngwaf_alert_mailing_list_integration.example"]
 						a := r.Primary.Attributes
-						var (
-							found int
-							got   []string
-						)
-						for k, v := range a {
-							if strings.HasSuffix(k, ".description") {
-								got = append(got, v)
-								if strings.Contains(v, h) {
-									found++
-								}
-							}
+						mailingListAlerts, err := strconv.Atoi(a["mailing_list_alerts.#"])
+						if err != nil {
+							return err
 						}
 
-						if found != 1 {
-							return fmt.Errorf("want: %v, got: %v", h, got)
+						if mailingListAlerts != 1 {
+							return fmt.Errorf("want: %v, got: %v", h, mailingListAlerts)
 						}
 
 						return nil
@@ -66,7 +58,7 @@ resource "fastly_ngwaf_workspace" "test_mailing_list_alerts_workspace" {
 
 resource "fastly_ngwaf_alert_mailing_list_integration" "example_1" {
   address          = "test@fastly.com"
-  description      = "%s 1"
+  description      = "some integration"
   workspace_id     = fastly_ngwaf_workspace.test_mailing_list_alerts_workspace.id
 }
 
@@ -78,5 +70,5 @@ data "fastly_ngwaf_alert_mailing_list_integration" "example" {
   workspace_id = fastly_ngwaf_workspace.test_mailing_list_alerts_workspace.id
 }
 `
-	return fmt.Sprintf(tf, h, h)
+	return fmt.Sprintf(tf, h)
 }

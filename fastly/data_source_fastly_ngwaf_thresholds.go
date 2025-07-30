@@ -25,25 +25,10 @@ func dataSourceFastlyNGWAFThresholds() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 
-						"enabled": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "Whether this threshold is active.",
-						},
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The ID of the threshold.",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Threshold name.",
-						},
-						"signal": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The name of the Signal this threshold is acting on. For custom Signals, append signal with `site.<name>`. For System Signals, input the <name> field only.",
 						},
 					},
 				},
@@ -91,10 +76,7 @@ func flattenNGWAFThresholds(remoteState []*Threshold.Threshold) []map[string]any
 
 	for i, t := range remoteState {
 		result[i] = map[string]any{
-			"id":      t.ThresholdID,
-			"enabled": t.Enabled,
-			"name":    t.Name,
-			"signal":  t.Signal,
+			"id": t.ThresholdID,
 		}
 	}
 

@@ -1,0 +1,26 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_account_rule"
+sidebar_current: "docs-fastly-resource-ngwaf-account-rule"
+description: |-
+  Provides a Fastly Next-Gen WAF Account Rule
+---
+
+# ngwaf_account_rule
+
+Provides a Fastly Next-Gen WAF Account Rule.  
+Account-level rules apply across one or more workspaces and are useful for defining shared or global WAF logic.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_account_rule_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF account rules can be imported using just the rule ID, e.g.:
+
+{{ codefile "sh" "examples/resources/components/account_rule_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

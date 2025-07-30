@@ -1,0 +1,26 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_workspace_rule"
+sidebar_current: "docs-fastly-resource-ngwaf-workspace-rule"
+description: |-
+  Provides a Fastly Next-Gen WAF Workspace Rule
+---
+
+# ngwaf_workspace_rule
+
+Provides a Fastly Next-Gen WAF Workspace Rule, scoped to a specific NGWAF workspace.  
+These rules define conditions and actions that trigger WAF enforcement at the workspace level.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_workspace_rule_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF workspace rules can be imported using the format `<workspaceID>/<ruleID>`, e.g.:
+
+{{ codefile "sh" "examples/resources/components/workspace_rule_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

@@ -32,13 +32,11 @@ output "ngwaf_jira_alerts_all" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `mailinglist_alerts` (Set of Object) List of all Mailing List alerts for a workspace. (see [below for nested schema](#nestedatt--mailinglist_alerts))
+- `mailing_list_alerts` (Set of Object) List of all Mailing List alerts for a workspace. (see [below for nested schema](#nestedatt--mailing_list_alerts))
 
-<a id="nestedatt--mailinglist_alerts"></a>
-### Nested Schema for `mailinglist_alerts`
+<a id="nestedatt--mailing_list_alerts"></a>
+### Nested Schema for `mailing_list_alerts`
 
 Read-Only:
 
-- `address` (String)
-- `description` (String)
 - `id` (String)

@@ -24,24 +24,9 @@ func dataSourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {
 				Description: "List of all Datadog alerts for a workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
-							Description: "An optional description for the alert",
-							Optional:    true,
-							Type:        schema.TypeString,
-						},
 						"id": {
 							Computed:    true,
 							Description: "Base62-encoded representation of a UUID used to uniquely identify the alert",
-							Type:        schema.TypeString,
-						},
-						"key": {
-							Description: "The Datadog key.",
-							Required:    true,
-							Type:        schema.TypeString,
-						},
-						"site": {
-							Description: "The Datadog site.",
-							Required:    true,
 							Type:        schema.TypeString,
 						},
 					},
@@ -92,10 +77,7 @@ func flattenNGWAFAlertDatadogIntegration(remoteState []*AlertDatadogIntegrations
 
 	for i, r := range remoteState {
 		result[i] = map[string]any{
-			"id":          r.ID,
-			"description": r.Description,
-			"key":         r.Config.Key,
-			"site":        r.Config.Site,
+			"id": r.ID,
 		}
 	}
 

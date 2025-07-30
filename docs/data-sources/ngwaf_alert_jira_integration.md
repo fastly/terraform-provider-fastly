@@ -39,7 +39,4 @@ output "ngwaf_jira_alerts_all" {
 
 Read-Only:
 
-- `description` (String)
 - `id` (String)
-- `key` (String)
-- `site` (String)

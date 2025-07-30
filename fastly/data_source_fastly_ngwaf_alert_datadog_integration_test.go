@@ -2,7 +2,7 @@ package fastly
 
 import (
 	"fmt"
-	"strings"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -24,21 +24,13 @@ func TestAccFastlyDataSourceNGWAFAlertDatadogIntegration_Config(t *testing.T) {
 					func(s *terraform.State) error {
 						r := s.RootModule().Resources["data.fastly_ngwaf_alert_datadog_integration.example"]
 						a := r.Primary.Attributes
-						var (
-							found int
-							got   []string
-						)
-						for k, v := range a {
-							if strings.HasSuffix(k, ".description") {
-								got = append(got, v)
-								if strings.Contains(v, h) {
-									found++
-								}
-							}
+						datadogAlerts, err := strconv.Atoi(a["datadog_alerts.#"])
+						if err != nil {
+							return err
 						}
 
-						if found != 1 {
-							return fmt.Errorf("want: %v, got: %v", h, got)
+						if datadogAlerts != 1 {
+							return fmt.Errorf("want: %v, got: %v", h, datadogAlerts)
 						}
 
 						return nil

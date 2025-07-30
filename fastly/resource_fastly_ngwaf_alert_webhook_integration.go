@@ -60,7 +60,7 @@ func resourceFastlyNGWAFAlertWebhookIntegrationCreate(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] CREATE: NGWAF Webhook alert input: %#v", i)
 
-	alert, err := webhookAlerts.Create(ctx, conn, &i)
+	alert, err := webhookAlerts.Create(gofastly.NewContextForResourceID(ctx, workspaceID), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}

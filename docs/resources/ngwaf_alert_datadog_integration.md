@@ -8,7 +8,7 @@ description: |-
 
 # ngwaf_datadog_alert
 
-Provides a Fastly Next-Gen WAF Alert Datadog integration, which provides a connection to Datadog.
+Provides Fastly Next-Gen WAF Alert Datadog integrations, which provide a connection to Datadog.
 
 ## Example Usage
 

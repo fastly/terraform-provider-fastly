@@ -121,7 +121,7 @@ func resourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[DEBUG] REFRESH: NGWAF threshold input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	threshold, err := wsr.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	threshold, err := wsr.Get(gofastly.NewContextForResourceID(ctx, workspaceID), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] threshold not found '%s'", d.Id())
@@ -177,7 +177,7 @@ func resourceFastlyNGWAFThresholdsUpdate(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] UPDATE: NGWAF threshold input: %#v", i)
 
-	_, err := wsr.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	_, err := wsr.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -197,7 +197,7 @@ func resourceFastlyNGWAFThresholdsDelete(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] DELETE: NGWAF threshold input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	if err := wsr.Delete(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i); err != nil {
+	if err := wsr.Delete(gofastly.NewContextForResourceID(ctx, workspaceID), conn, &i); err != nil {
 		return diag.FromErr(err)
 	}
 

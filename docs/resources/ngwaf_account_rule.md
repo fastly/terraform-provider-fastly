@@ -48,7 +48,7 @@ resource "fastly_ngwaf_account_rule" "example" {
 
 ## Import
 
-Fastly NGWAF account rules can be imported using just the rule ID, e.g.:
+Fastly Next-Gen WAF account rules can be imported using just the rule ID, e.g.:
 
 ```sh
 $ terraform import fastly_ngwaf_account_rule.demo <ruleID>

@@ -104,7 +104,7 @@ resource "fastly_ngwaf_workspace_rule" "example" {
 
 ## Import
 
-Fastly NGWAF workspace rules can be imported using the format `<workspaceID>/<ruleID>`, e.g.:
+Fastly Next-Gen WAF workspace rules can be imported using the format `<workspaceID>/<ruleID>`, e.g.:
 
 ```sh
 $ terraform import fastly_ngwaf_workspace_rule.demo <workspaceID>/<ruleID>
@@ -119,7 +119,7 @@ $ terraform import fastly_ngwaf_workspace_rule.demo <workspaceID>/<ruleID>
 - `description` (String) A human-readable description of the rule.
 - `enabled` (Boolean) Whether the rule is currently enabled.
 - `type` (String) The type of the rule (`request` or `signal`).
-- `workspace_id` (String) The ID of the NGWAF workspace this rule belongs to.
+- `workspace_id` (String) The ID of the Next-Gen WAF workspace this rule belongs to.
 
 ### Optional
 

@@ -7,9 +7,33 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
 	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/rules"
 )
+
+type resolvedScope struct {
+	scope  *common.Scope
+	ctx    context.Context
+}
+
+func resolveScopeAndContext(ctx context.Context, d *schema.ResourceData) (*resolvedScope, error) {
+	scope := buildNGWAFRuleScope(d)
+	if scope == nil {
+		return nil, fmt.Errorf("could not determine rule scope: missing workspace_id or applies_to")
+	}
+
+	if scope.Type == common.ScopeTypeWorkspace && len(scope.AppliesTo) > 0 {
+		if wsID := scope.AppliesTo[0]; wsID != "" {
+			ctx = gofastly.NewContextForResourceID(ctx, wsID)
+		}
+	}
+
+	return &resolvedScope{
+		scope: scope,
+		ctx:   ctx,
+	}, nil
+}
 
 func buildNGWAFRuleScope(d *schema.ResourceData) *common.Scope {
 	if v, ok := d.GetOk("workspace_id"); ok {
@@ -29,7 +53,7 @@ func buildNGWAFRuleScope(d *schema.ResourceData) *common.Scope {
 		}
 		ids := make([]string, len(rawList))
 		for i, id := range rawList {
-			ids[i] = id.(string)
+			ids[i] = strings.TrimSpace(id.(string))
 		}
 		return &common.Scope{
 			Type:      common.ScopeTypeAccount,

@@ -1,20 +1,14 @@
 package fastly
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
 	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/rules"
 )
 
-func expandNGWAFRuleCreateInput(d *schema.ResourceData) (*rules.CreateInput, error) {
-	scope := buildNGWAFRuleScope(d)
-	if scope == nil {
-		return nil, fmt.Errorf("could not determine rule scope: missing workspace_id or applies_to")
-	}
-
+func expandNGWAFRuleCreateInput(d *schema.ResourceData, scope *common.Scope) (*rules.CreateInput, error) {
 	var actionRaw []any
 	if v, ok := d.GetOk("action"); ok {
 		actionRaw = v.([]any)
@@ -43,12 +37,7 @@ func expandNGWAFRuleCreateInput(d *schema.ResourceData) (*rules.CreateInput, err
 	}, nil
 }
 
-func expandNGWAFRuleUpdateInput(d *schema.ResourceData) (*rules.UpdateInput, error) {
-	scope := buildNGWAFRuleScope(d)
-	if scope == nil {
-		return nil, fmt.Errorf("could not determine rule scope: missing workspace_id or applies_to")
-	}
-
+func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) (*rules.UpdateInput, error) {
 	var actionRaw []any
 	if v, ok := d.GetOk("action"); ok {
 		actionRaw = v.([]any)
@@ -75,18 +64,6 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData) (*rules.UpdateInput, err
 		Actions:         expandNGWAFRuleUpdateActions(actionRaw, string(scope.Type)),
 		Conditions:      expandNGWAFRuleUpdateConditions(conditionRaw),
 		GroupConditions: expandNGWAFRuleGroupUpdateConditions(groupRaw),
-	}, nil
-}
-
-func expandNGWAFRuleReadInput(d *schema.ResourceData) (*rules.GetInput, error) {
-	scope := buildNGWAFRuleScope(d)
-	if scope == nil {
-		return nil, fmt.Errorf("could not determine rule scope: missing workspace_id or applies_to")
-	}
-
-	return &rules.GetInput{
-		RuleID: gofastly.ToPointer(d.Id()),
-		Scope:  scope,
 	}, nil
 }
 

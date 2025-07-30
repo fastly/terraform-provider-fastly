@@ -1,0 +1,1 @@
+$ terraform import fastly_ngwaf_threshold.example <workspace_id>/<threshold_id>

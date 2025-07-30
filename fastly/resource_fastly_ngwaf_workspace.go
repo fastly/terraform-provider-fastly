@@ -141,7 +141,7 @@ func resourceFastlyNGWAFWorkspaceCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(workspace.WorkspaceID)
 
-	return nil
+	return resourceFastlyNGWAFWorkspaceRead(ctx, d, meta)
 }
 
 func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -181,6 +181,8 @@ func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("default_blocking_response_code", workspace.DefaultBlockingResponseCode); err != nil {
 		return diag.FromErr(err)
 	}
+
+	log.Printf("[DEBUG] UPDATE: NGWAF workspace attack thresholds get: %#v", workspace.AttackSignalThresholds)
 
 	thresholds := []map[string]any{
 		{

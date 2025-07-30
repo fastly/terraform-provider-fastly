@@ -122,11 +122,8 @@ func testAccNGWAFRedactionConfig(workspaceName, redactionField string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "test_redactions_workspace" {
   name                         = "%s"
-  description                  = "Test NGWAF Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
 
   attack_signal_thresholds {
     one_minute  = 100
@@ -148,11 +145,8 @@ func testAccNGWAFRedactionConfigUpdate(workspaceName, redactionField string) str
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "test_redactions_workspace" {
   name                         = "%s"
-  description                  = "Test NGWAF Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
 
   attack_signal_thresholds {
     one_minute  = 100

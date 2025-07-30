@@ -57,7 +57,7 @@ func resourceFastlyNGWAFRedactionCreate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] CREATE: NGWAF redaction input: %#v", i)
 
-	redaction, err := wsr.Create(ctx, conn, &i)
+	redaction, err := wsr.Create(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -80,7 +80,7 @@ func resourceFastlyNGWAFRedactionRead(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] REFRESH: NGWAF redaction input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	redaction, err := wsr.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	redaction, err := wsr.Get(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] redaction not found '%s'", d.Id())
@@ -112,7 +112,7 @@ func resourceFastlyNGWAFRedactionUpdate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] UPDATE: NGWAF redaction input: %#v", i)
 
-	_, err := wsr.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	_, err := wsr.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -132,7 +132,7 @@ func resourceFastlyNGWAFRedactionDelete(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] DELETE: NGWAF redaction input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	if err := wsr.Delete(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i); err != nil {
+	if err := wsr.Delete(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -1,0 +1,25 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_alert_microsoft_teams_integration"
+sidebar_current: "docs-fastly-resource-ngwaf-alert-microsoft-teams-integration"
+description: |-
+  Provides a Fastly Next-Gen WAF Alert Microsoft Teams integration for a Workspace
+---
+
+# ngwaf_alert_microsoft_teams_integration
+
+Provides Fastly Next-Gen WAF Alert Microsoft Teams integrations, which provide a connection to Microsoft Teams.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_alert_microsoft_teams_integration_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF Alert Microsoft Teams integrations can be imported using their ID and the ID of the workspace they belong to.
+
+{{ codefile "sh" "examples/resources/components/ngwaf_alert_microsoft_teams_integration_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

@@ -14,7 +14,7 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	r.Schema["workspace_id"] = &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The ID of the NGWAF workspace this rule belongs to.",
+		Description: "The ID of the Next-Gen WAF workspace this rule belongs to.",
 	}
 
 	return r

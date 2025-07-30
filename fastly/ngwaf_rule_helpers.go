@@ -13,8 +13,8 @@ import (
 )
 
 type resolvedScope struct {
-	scope  *common.Scope
-	ctx    context.Context
+	scope *common.Scope
+	ctx   context.Context
 }
 
 func resolveScopeAndContext(ctx context.Context, d *schema.ResourceData) (*resolvedScope, error) {

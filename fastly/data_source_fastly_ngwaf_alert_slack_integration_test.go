@@ -59,7 +59,7 @@ resource "fastly_ngwaf_workspace" "test_slack_alerts_workspace" {
   }
 }
 
-resource "fastly_ngwaf_alert_webhook_integration" "sample" {
+resource "fastly_ngwaf_alert_slack_integration" "sample" {
   description      = "%s 1"
   webhook          = "https://example.com/webhooks/my-service"
   workspace_id     = fastly_ngwaf_workspace.test_slack_alerts_workspace.id
@@ -68,7 +68,7 @@ resource "fastly_ngwaf_alert_webhook_integration" "sample" {
 data "fastly_ngwaf_alert_slack_integration" "example" {
   depends_on = [
     fastly_ngwaf_workspace.test_slack_alerts_workspace,
-    fastly_ngwaf_alert_webhook_integration.sample
+    fastly_ngwaf_alert_slack_integration.sample
   ]
   workspace_id = fastly_ngwaf_workspace.test_slack_alerts_workspace.id
 }

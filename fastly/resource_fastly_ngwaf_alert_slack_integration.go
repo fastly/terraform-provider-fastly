@@ -93,7 +93,7 @@ func resourceFastlyNGWAFAlertSlackIntegrationRead(ctx context.Context, d *schema
 	if err := d.Set("description", alert.Description); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("slack", alert.Config.Webhook); err != nil {
+	if err := d.Set("webhook", alert.Config.Webhook); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -106,7 +106,7 @@ func resourceFastlyNGWAFAlertSlackIntegrationUpdate(ctx context.Context, d *sche
 	i := slackAlerts.UpdateInput{
 		AlertID: gofastly.ToPointer(d.Id()),
 		Config: &slackAlerts.UpdateConfig{
-			Webhook: gofastly.ToPointer(d.Get("slack").(string)),
+			Webhook: gofastly.ToPointer(d.Get("webhook").(string)),
 		},
 		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
 	}

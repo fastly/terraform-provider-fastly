@@ -5,22 +5,19 @@ description: |-
   Get information about Fastly Next-Gen WAF Redactions for a workspace.
 ---
 
-# fastly_ngwaf_workspaces
+# fastly_ngwaf_redactions
 
 Use this data source to get a list of [Fastly Next-Gen WAF Redactions][1].
 
 ## Example Usage
 
 ```terraform
-data "fastly_ngwaf_workspaces" "ngwaf_workspaces" {}
-
-output "fastly_ngwaf_workspaces_all" {
-  value = data.fastly_ngwaf_workspaces.workspaces
+data "fastly_ngwaf_redactions" "ngwaf_redactions" {
+    workspace_id = fastly_ngwaf_workspace.test_redactions_workspace.id
 }
 
-output "fastly_ngwaf_workspaces_filtered" {
-  # get the workspace with the name "Example Workspace"
-  value = one([for workspace in data.fastly_ngwaf_workspaces.workspaces.details : workspace.id if workspace.name == "Example Workspace"])
+output "fastly_ngwaf_redactions_all" {
+  value = data.fastly_ngwaf_redactions.redactions
 }
 ```
 

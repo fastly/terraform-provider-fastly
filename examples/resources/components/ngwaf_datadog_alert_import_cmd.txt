@@ -1,0 +1,1 @@
+$ terraform import fastly_ngwaf_alert_datadog_integration.example <workspace_id>/<alert_id>

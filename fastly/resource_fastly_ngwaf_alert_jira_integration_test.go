@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	ddalerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/jira"
+	jiraAlerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/jira"
 )
 
 const (
@@ -91,7 +91,7 @@ func testAccNGWAFAlertJiraIntegrationExists(alertJiraIntegrationName, workspaceN
 		wID := ws.Primary.ID
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		latest, err := ddalerts.Get(context.TODO(), conn, &ddalerts.GetInput{
+		latest, err := jiraAlerts.Get(context.TODO(), conn, &jiraAlerts.GetInput{
 			AlertID:     &rID,
 			WorkspaceID: &wID,
 		})
@@ -127,7 +127,7 @@ func testAccCheckNGWAFAlertJiraIntegrationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := ddalerts.Get(context.TODO(), conn, &ddalerts.GetInput{
+		_, err := jiraAlerts.Get(context.TODO(), conn, &jiraAlerts.GetInput{
 			AlertID:     &rs.Primary.ID,
 			WorkspaceID: &wsID,
 		})

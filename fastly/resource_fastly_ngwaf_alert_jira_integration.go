@@ -42,7 +42,6 @@ func resourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {
 				Description: "The Jira key.",
 				Required:    true,
 				Type:        schema.TypeString,
-				// ValidateFunc: validation.StringLenBetween(9, 9),
 			},
 			"project": {
 				Description: "The Jira project where the issue will be created",

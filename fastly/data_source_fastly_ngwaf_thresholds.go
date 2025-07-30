@@ -24,7 +24,6 @@ func dataSourceFastlyNGWAFThresholds() *schema.Resource {
 				Description: "List of all thresholds for a given workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,

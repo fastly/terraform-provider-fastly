@@ -83,7 +83,7 @@ func resourceFastlyNGWAFAlertJiraIntegrationCreate(ctx context.Context, d *schem
 
 	log.Printf("[DEBUG] CREATE: NGWAF Jira alert input: %#v", i)
 
-	alert, err := jiraAlerts.Create(ctx, conn, &i)
+	alert, err := jiraAlerts.Create(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -106,7 +106,7 @@ func resourceFastlyNGWAFAlertJiraIntegrationRead(ctx context.Context, d *schema.
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Jira alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	alert, err := jiraAlerts.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	alert, err := jiraAlerts.Get(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] Jira alert not found '%s'", d.Id())
@@ -154,7 +154,7 @@ func resourceFastlyNGWAFAlertJiraIntegrationUpdate(ctx context.Context, d *schem
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Jira alert input: %#v", i)
 
-	_, err := jiraAlerts.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	_, err := jiraAlerts.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -174,7 +174,7 @@ func resourceFastlyNGWAFAlertJiraIntegrationDelete(ctx context.Context, d *schem
 
 	log.Printf("[DEBUG] DELETE: NGWAF Jira alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	if err := jiraAlerts.Delete(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i); err != nil {
+	if err := jiraAlerts.Delete(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i); err != nil {
 		return diag.FromErr(err)
 	}
 

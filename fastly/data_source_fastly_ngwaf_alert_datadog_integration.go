@@ -14,7 +14,7 @@ import (
 	AlertDatadogIntegrations "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
 )
 
-func dataSourceFastlyNGWAFAlertIntegrationDatadog() *schema.Resource {
+func dataSourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFastlyNGWAFAlertDatadogIntegrationRead,
 		Schema: map[string]*schema.Schema{

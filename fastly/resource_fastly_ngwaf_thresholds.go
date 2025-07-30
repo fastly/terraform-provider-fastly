@@ -162,6 +162,8 @@ func resourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.ResourceDa
 func resourceFastlyNGWAFThresholdsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
+	workspaceID := d.Get("workspace_id").(string)
+
 	i := wsr.UpdateInput{
 		Action:      gofastly.ToPointer(d.Get("action").(string)),
 		DontNotify:  gofastly.ToPointer(d.Get("dont_notify").(bool)),
@@ -172,12 +174,12 @@ func resourceFastlyNGWAFThresholdsUpdate(ctx context.Context, d *schema.Resource
 		Name:        gofastly.ToPointer(d.Get("name").(string)),
 		Signal:      gofastly.ToPointer(d.Get("signal").(string)),
 		ThresholdID: gofastly.ToPointer(d.Id()),
-		WorkspaceID: gofastly.ToPointer(d.Get("workspace_id").(string)),
+		WorkspaceID: gofastly.ToPointer(workspaceID),
 	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF threshold input: %#v", i)
 
-	_, err := wsr.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
+	_, err := wsr.Update(gofastly.NewContextForResourceID(ctx, workspaceID), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}

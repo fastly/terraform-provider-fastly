@@ -95,10 +95,7 @@ func testAccNGWAFVirtualPatchConfig(workspaceName, virtualPatchID string) string
 resource "fastly_ngwaf_workspace" "example" {
   name                         = "%s"
   description                  = "Test VP Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
+  mode                            = "block"
 
   attack_signal_thresholds {
     one_minute  = 100
@@ -122,10 +119,7 @@ func testAccNGWAFVirtualPatchConfigUpdate(workspaceName, virtualPatchID string) 
 resource "fastly_ngwaf_workspace" "example" {
   name                         = "%s"
   description                  = "Test VP Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
-  default_blocking_response_code = 429
+  mode                            = "block"
 
   attack_signal_thresholds {
     one_minute  = 100

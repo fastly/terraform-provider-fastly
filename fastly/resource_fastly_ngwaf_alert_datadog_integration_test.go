@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	AlertDatadogIntegrations "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
+	datadogAlerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
 )
 
 const (
@@ -79,7 +79,7 @@ func testAccNGWAFAlertDatadogIntegrationExists(alertDatadogIntegrationName, work
 		wID := ws.Primary.ID
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		latest, err := AlertDatadogIntegrations.Get(context.TODO(), conn, &AlertDatadogIntegrations.GetInput{
+		latest, err := datadogAlerts.Get(context.TODO(), conn, &datadogAlerts.GetInput{
 			AlertID:     &rID,
 			WorkspaceID: &wID,
 		})
@@ -115,7 +115,7 @@ func testAccCheckNGWAFAlertDatadogIntegrationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := AlertDatadogIntegrations.Get(context.TODO(), conn, &AlertDatadogIntegrations.GetInput{
+		_, err := datadogAlerts.Get(context.TODO(), conn, &datadogAlerts.GetInput{
 			AlertID:     &rs.Primary.ID,
 			WorkspaceID: &wsID,
 		})

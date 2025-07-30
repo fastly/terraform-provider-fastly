@@ -3,7 +3,7 @@
 page_title: "fastly_ngwaf_thresholds Data Source - terraform-provider-fastly"
 subcategory: ""
 description: |-
-  
+  Get information about Fastly Next-Gen WAF Thresholds.
 ---
 
 # fastly_ngwaf_thresholds (Data Source)

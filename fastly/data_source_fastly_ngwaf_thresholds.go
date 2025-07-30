@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	wsr "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/thresholds"
+	Threshold "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/thresholds"
 )
 
 func dataSourceFastlyNGWAFThresholds() *schema.Resource {
@@ -24,21 +24,7 @@ func dataSourceFastlyNGWAFThresholds() *schema.Resource {
 				Description: "List of all thresholds for a given workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Action to take when threshold is exceeded.",
-						},
-						"dont_notify": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "Whether to silence notifications when action is taken.",
-						},
-						"duration": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Duration the action is in place.",
-						},
+
 						"enabled": {
 							Type:        schema.TypeBool,
 							Computed:    true,
@@ -48,16 +34,6 @@ func dataSourceFastlyNGWAFThresholds() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The ID of the threshold.",
-						},
-						"interval": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Threshold interval in seconds.",
-						},
-						"limit": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Threshold limit.",
 						},
 						"name": {
 							Type:        schema.TypeString,
@@ -87,7 +63,7 @@ func dataSourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.Resource
 	workspaceID := d.Get("workspace_id").(string)
 	log.Printf("[DEBUG] Reading NGWAF thresholds for workspace: %s", workspaceID)
 
-	remoteState, err := wsr.List(ctx, conn, &wsr.ListInput{
+	remoteState, err := Threshold.List(ctx, conn, &Threshold.ListInput{
 		WorkspaceID: &workspaceID,
 	})
 	if err != nil {
@@ -98,7 +74,7 @@ func dataSourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.Resource
 	hash := strconv.Itoa(hashcode.String(string(parsed)))
 	d.SetId(hash)
 
-	var thresholdPtrs []*wsr.Threshold
+	var thresholdPtrs []*Threshold.Threshold
 	for i := range remoteState.Data {
 		thresholdPtrs = append(thresholdPtrs, &remoteState.Data[i])
 	}
@@ -110,20 +86,15 @@ func dataSourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func flattenNGWAFThresholds(remoteState []*wsr.Threshold) []map[string]any {
+func flattenNGWAFThresholds(remoteState []*Threshold.Threshold) []map[string]any {
 	result := make([]map[string]any, len(remoteState))
 
 	for i, t := range remoteState {
 		result[i] = map[string]any{
-			"id":          t.ThresholdID,
-			"action":      t.Action,
-			"dont_notify": t.DontNotify,
-			"duration":    t.Duration,
-			"enabled":     t.Enabled,
-			"interval":    t.Interval,
-			"limit":       t.Limit,
-			"name":        t.Name,
-			"signal":      t.Signal,
+			"id":      t.ThresholdID,
+			"enabled": t.Enabled,
+			"name":    t.Name,
+			"signal":  t.Signal,
 		}
 	}
 

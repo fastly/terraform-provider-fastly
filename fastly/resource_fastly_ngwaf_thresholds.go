@@ -98,7 +98,7 @@ func resourceFastlyNGWAFThresholdsCreate(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] CREATE: NGWAF threshold input: %#v", i)
 
-	threshold, err := wsr.Create(ctx, conn, &i)
+	threshold, err := wsr.Create(gofastly.NewContextForResourceID(ctx, workspaceID), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}

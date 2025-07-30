@@ -7,7 +7,7 @@ description: |-
 
 # fastly_ngwaf_virtual_patches
 
-Use this data source to get a list of [Fastly Next-Gen WAF Virtual Patches][1] for a given Workspace.
+Use this data source to get a list of [Fastly Next-Gen WAF Virtual Patches][1] for a given workspace.
 
 ## Example Usage
 

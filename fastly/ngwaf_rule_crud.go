@@ -19,10 +19,7 @@ func resourceFastlyNGWAFRuleCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	i, err := expandNGWAFRuleCreateInput(d, rsc.scope)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	i := expandNGWAFRuleCreateInput(d, rsc.scope)
 
 	log.Printf("[DEBUG] CREATE: NGWAF %s rule input: %#v", rsc.scope.Type, i)
 
@@ -71,10 +68,7 @@ func resourceFastlyNGWAFRuleUpdate(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	i, err := expandNGWAFRuleUpdateInput(d, rsc.scope)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	i := expandNGWAFRuleUpdateInput(d, rsc.scope)
 
 	log.Printf("[DEBUG] UPDATE: NGWAF %s rule input: %#v", rsc.scope.Type, i)
 

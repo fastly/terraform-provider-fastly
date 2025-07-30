@@ -8,7 +8,7 @@ import (
 	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/rules"
 )
 
-func expandNGWAFRuleCreateInput(d *schema.ResourceData, scope *common.Scope) (*rules.CreateInput, error) {
+func expandNGWAFRuleCreateInput(d *schema.ResourceData, scope *common.Scope) *rules.CreateInput {
 	var actionRaw []any
 	if v, ok := d.GetOk("action"); ok {
 		actionRaw = v.([]any)
@@ -34,10 +34,10 @@ func expandNGWAFRuleCreateInput(d *schema.ResourceData, scope *common.Scope) (*r
 		Actions:         expandNGWAFRuleCreateActions(actionRaw, string(scope.Type)),
 		Conditions:      expandNGWAFRuleCreateConditions(conditionRaw),
 		GroupConditions: expandNGWAFRuleGroupCreateConditions(groupRaw),
-	}, nil
+	}
 }
 
-func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) (*rules.UpdateInput, error) {
+func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) *rules.UpdateInput {
 	var actionRaw []any
 	if v, ok := d.GetOk("action"); ok {
 		actionRaw = v.([]any)
@@ -64,7 +64,7 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) (*r
 		Actions:         expandNGWAFRuleUpdateActions(actionRaw, string(scope.Type)),
 		Conditions:      expandNGWAFRuleUpdateConditions(conditionRaw),
 		GroupConditions: expandNGWAFRuleGroupUpdateConditions(groupRaw),
-	}, nil
+	}
 }
 
 func expandNGWAFRuleCreateActions(raw []any, scopeType string) []*rules.CreateAction {

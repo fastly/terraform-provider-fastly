@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	ddalerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
+	AlertDatadogIntegrations "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/datadog"
 )
 
 const (
@@ -34,7 +34,7 @@ func TestAccFastlyNGWAFAlertDatadogIntegration_validate(t *testing.T) {
 		CheckDestroy:      testAccCheckNGWAFAlertDatadogIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNGWAFAlertDatadogIntegrationConfig(workspaceName),
+				Config: testAccNGWAFAlertDatadogIntegrationConfig(workspaceName, AlertDatadogIntegrationDescription, AlertDatadogIntegrationKey, AlertDatadogIntegrationSite),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "description", AlertDatadogIntegrationDescription),
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "key", AlertDatadogIntegrationKey),
@@ -43,7 +43,7 @@ func TestAccFastlyNGWAFAlertDatadogIntegration_validate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNGWAFAlertDatadogIntegrationConfigUpdate(workspaceName),
+				Config: testAccNGWAFAlertDatadogIntegrationConfig(workspaceName, AlertDatadogIntegrationDescription, AlertDatadogIntegrationKeyUpdated, AlertDatadogIntegrationSiteUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "description", AlertDatadogIntegrationDescription),
 					resource.TestCheckResourceAttr("fastly_ngwaf_alert_datadog_integration.test_datadog_alert", "key", AlertDatadogIntegrationKeyUpdated),
@@ -79,7 +79,7 @@ func testAccNGWAFAlertDatadogIntegrationExists(alertDatadogIntegrationName, work
 		wID := ws.Primary.ID
 
 		conn := testAccProvider.Meta().(*APIClient).conn
-		latest, err := ddalerts.Get(context.TODO(), conn, &ddalerts.GetInput{
+		latest, err := AlertDatadogIntegrations.Get(context.TODO(), conn, &AlertDatadogIntegrations.GetInput{
 			AlertID:     &rID,
 			WorkspaceID: &wID,
 		})
@@ -115,7 +115,7 @@ func testAccCheckNGWAFAlertDatadogIntegrationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := ddalerts.Get(context.TODO(), conn, &ddalerts.GetInput{
+		_, err := AlertDatadogIntegrations.Get(context.TODO(), conn, &AlertDatadogIntegrations.GetInput{
 			AlertID:     &rs.Primary.ID,
 			WorkspaceID: &wsID,
 		})
@@ -126,7 +126,7 @@ func testAccCheckNGWAFAlertDatadogIntegrationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNGWAFAlertDatadogIntegrationConfig(workspaceName string) string {
+func testAccNGWAFAlertDatadogIntegrationConfig(workspaceName, description, key, site string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
   name                           = "%s"
@@ -147,29 +147,5 @@ resource "fastly_ngwaf_alert_datadog_integration" "test_datadog_alert" {
   site             = "%s"
   workspace_id     = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
 }
-`, workspaceName, AlertDatadogIntegrationDescription, AlertDatadogIntegrationKey, AlertDatadogIntegrationSite)
-}
-
-func testAccNGWAFAlertDatadogIntegrationConfigUpdate(workspaceName string) string {
-	return fmt.Sprintf(`
-resource "fastly_ngwaf_workspace" "test_datadog_alert_workspace" {
-  name                            = "%s"
-  description                     = "Test NGWAF Workspace"
-  mode                            = "block"
-
-  attack_signal_thresholds {
-    one_minute  = 100
-    ten_minutes = 500
-    one_hour    = 1000
-    immediate   = true
-  }
-}
-
-resource "fastly_ngwaf_alert_datadog_integration" "test_datadog_alert" {
-  description      = "%s"
-  key              = "%s"
-  site             = "%s"
-  workspace_id     = fastly_ngwaf_workspace.test_datadog_alert_workspace.id
-}
-`, workspaceName, AlertDatadogIntegrationDescription, AlertDatadogIntegrationKeyUpdated, AlertDatadogIntegrationSiteUpdated)
+`, workspaceName, description, key, site)
 }

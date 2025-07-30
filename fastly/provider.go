@@ -56,7 +56,7 @@ func Provider() *schema.Provider {
 			"fastly_dictionaries":                    dataSourceFastlyDictionaries(),
 			"fastly_ip_ranges":                       dataSourceFastlyIPRanges(),
 			"fastly_kvstores":                        dataSourceFastlyKVStores(),
-			"fastly_ngwaf_alert_datadog_integration": dataSourceFastlyNGWAFAlertIntegrationDatadog(),
+			"fastly_ngwaf_alert_datadog_integration": dataSourceFastlyNGWAFAlertDatadogIntegration(),
 			"fastly_ngwaf_redactions":                dataSourceFastlyNGWAFRedactions(),
 			"fastly_ngwaf_virtual_patches":           dataSourceFastlyNGWAFVirtualPatches(),
 			"fastly_ngwaf_workspaces":                dataSourceFastlyNGWAFWorkspaces(),

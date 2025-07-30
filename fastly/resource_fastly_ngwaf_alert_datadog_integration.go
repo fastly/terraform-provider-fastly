@@ -67,7 +67,7 @@ func resourceFastlyNGWAFAlertDatadogIntegrationCreate(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] CREATE: NGWAF Datadog alert input: %#v", i)
 
-	alert, err := ddalerts.Create(ctx, conn, &i)
+	alert, err := ddalerts.Create(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -90,7 +90,7 @@ func resourceFastlyNGWAFAlertDatadogIntegrationRead(ctx context.Context, d *sche
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Datadog alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	alert, err := ddalerts.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	alert, err := ddalerts.Get(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] Datadog alert not found '%s'", d.Id())
@@ -126,7 +126,7 @@ func resourceFastlyNGWAFAlertDatadogIntegrationUpdate(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Datadog alert input: %#v", i)
 
-	_, err := ddalerts.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	_, err := ddalerts.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -146,7 +146,7 @@ func resourceFastlyNGWAFAlertDatadogIntegrationDelete(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] DELETE: NGWAF Datadog alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	if err := ddalerts.Delete(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i); err != nil {
+	if err := ddalerts.Delete(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i); err != nil {
 		return diag.FromErr(err)
 	}
 

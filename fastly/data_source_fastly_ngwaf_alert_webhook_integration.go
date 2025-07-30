@@ -16,7 +16,7 @@ import (
 
 func dataSourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFastlyNGWAFAlertWebookInterationRead,
+		ReadContext: dataSourceFastlyNGWAFAlertWebhookIntegrationRead,
 		Schema: map[string]*schema.Schema{
 			"webhook_alerts": {
 				Type:        schema.TypeSet,
@@ -24,19 +24,9 @@ func dataSourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 				Description: "List of all Webhook alerts for a workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
-							Description: "An optional description for the alert",
-							Optional:    true,
-							Type:        schema.TypeString,
-						},
 						"id": {
 							Computed:    true,
 							Description: "Base62-encoded representation of a UUID used to uniquely identify the alert",
-							Type:        schema.TypeString,
-						},
-						"webhook": {
-							Description: "The Webhook URL.",
-							Required:    true,
 							Type:        schema.TypeString,
 						},
 					},
@@ -51,7 +41,7 @@ func dataSourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyNGWAFAlertWebookInterationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyNGWAFAlertWebhookIntegrationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	workspaceID := d.Get("workspace_id").(string)
@@ -87,9 +77,7 @@ func flattenNGWAFAlertWebhookIntegration(remoteState []*AlertWebhookIntegrations
 
 	for i, r := range remoteState {
 		result[i] = map[string]any{
-			"id":          r.ID,
-			"description": r.Description,
-			"webhook":     r.Config.Webhook,
+			"id": r.ID,
 		}
 	}
 

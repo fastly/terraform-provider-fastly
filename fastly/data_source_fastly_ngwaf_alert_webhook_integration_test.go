@@ -2,14 +2,13 @@ package fastly
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFastlyDataSourceNGWAFAlertWebhookIntegration_Config(t *testing.T) {
+func TestAccFastlyNGWAFAlertWebhookIntegration_Config(t *testing.T) {
 	h := generateHex()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,23 +21,19 @@ func TestAccFastlyDataSourceNGWAFAlertWebhookIntegration_Config(t *testing.T) {
 				Config: testAccFastlyDataSourceNGWAFAlertWebhookIntegrationConfig(h),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						r := s.RootModule().Resources["data.fastly_ngwaf_alert_datadog_integration.example"]
+						r := s.RootModule().Resources["data.fastly_ngwaf_alert_webhook_integration.example"]
 						a := r.Primary.Attributes
-						var (
-							found int
-							got   []string
-						)
-						for k, v := range a {
-							if strings.HasSuffix(k, ".description") {
-								got = append(got, v)
-								if strings.Contains(v, h) {
-									found++
-								}
-							}
+
+						// Check that we have at least one webhook alert with an ID
+						webhookCount := a["webhook_alerts.#"]
+						if webhookCount == "0" {
+							return fmt.Errorf("expected at least one webhook alert, got %s", webhookCount)
 						}
 
-						if found != 1 {
-							return fmt.Errorf("want: %v, got: %v", h, got)
+						// Check that the first webhook alert has an ID
+						webhookID := a["webhook_alerts.0.id"]
+						if webhookID == "" {
+							return fmt.Errorf("expected webhook alert to have an ID, got empty string")
 						}
 
 						return nil
@@ -51,7 +46,7 @@ func TestAccFastlyDataSourceNGWAFAlertWebhookIntegration_Config(t *testing.T) {
 
 func testAccFastlyDataSourceNGWAFAlertWebhookIntegrationConfig(h string) string {
 	tf := `
-resource "fastly_ngwaf_workspace" "test_datadog_alerts_workspace" {
+resource "fastly_ngwaf_workspace" "test_webhook_alerts_workspace" {
   name                             = "%s"
   description                     = "Test NGWAF Workspace"
   mode                            = "block"
@@ -64,18 +59,18 @@ resource "fastly_ngwaf_workspace" "test_datadog_alerts_workspace" {
   }
 }
 
-resource "fastly_ngwaf_alert_datadog_integration" "example_1" {
+resource "fastly_ngwaf_alert_webhook_integration" "sample" {
   description      = "%s 1"
   webhook          = "https://example.com/webhooks/my-service"
-  workspace_id     = fastly_ngwaf_workspace.test_datadog_alerts_workspace.id
+  workspace_id     = fastly_ngwaf_workspace.test_webhook_alerts_workspace.id
 }
 
-data "fastly_ngwaf_alert_datadog_integration" "example" {
+data "fastly_ngwaf_alert_webhook_integration" "example" {
   depends_on = [
-    fastly_ngwaf_workspace.test_datadog_alerts_workspace,
-    fastly_ngwaf_alert_datadog_integration.example_1
+    fastly_ngwaf_workspace.test_webhook_alerts_workspace,
+    fastly_ngwaf_alert_webhook_integration.sample
   ]
-  workspace_id = fastly_ngwaf_workspace.test_datadog_alerts_workspace.id
+  workspace_id = fastly_ngwaf_workspace.test_webhook_alerts_workspace.id
 }
 `
 	return fmt.Sprintf(tf, h, h)

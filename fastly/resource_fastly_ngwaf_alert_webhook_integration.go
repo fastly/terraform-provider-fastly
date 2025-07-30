@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 	webhookAlerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/webhook"
@@ -30,10 +29,9 @@ func resourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 				Type:        schema.TypeString,
 			},
 			"webhook": {
-				Description:  "The Webhook URL.",
-				Required:     true,
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringLenBetween(9, 9),
+				Description: "The Webhook URL.",
+				Required:    true,
+				Type:        schema.TypeString,
 			},
 			"workspace_id": {
 				Description: "The id of the workspace this alert belongs to.",
@@ -83,7 +81,7 @@ func resourceFastlyNGWAFAlertWebhookIntegrationRead(ctx context.Context, d *sche
 
 	log.Printf("[DEBUG] REFRESH: NGWAF Webhook alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	alert, err := webhookAlerts.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	alert, err := webhookAlerts.Get(gofastly.NewContextForResourceID(ctx, workspaceID), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] Webhook alert not found '%s'", d.Id())
@@ -115,7 +113,7 @@ func resourceFastlyNGWAFAlertWebhookIntegrationUpdate(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] UPDATE: NGWAF Webhook alert input: %#v", i)
 
-	_, err := webhookAlerts.Update(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
+	_, err := webhookAlerts.Update(gofastly.NewContextForResourceID(ctx, d.Get("workspace_id").(string)), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -135,7 +133,7 @@ func resourceFastlyNGWAFAlertWebhookIntegrationDelete(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] DELETE: NGWAF Webhook alert input: id=%s, workspaceID=%s", d.Id(), workspaceID)
 
-	if err := webhookAlerts.Delete(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i); err != nil {
+	if err := webhookAlerts.Delete(gofastly.NewContextForResourceID(ctx, workspaceID), conn, &i); err != nil {
 		return diag.FromErr(err)
 	}
 

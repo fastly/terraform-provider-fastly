@@ -15,8 +15,8 @@ import (
 
 const (
 	AlertWebhookIntegrationDescription = "Test NGWAF Webhook Alert"
-	AlertWebhookIntegrationUrl         = "https://example.com/webhooks/my-service"
-	AlertWebhookIntegrationUrlUpdated  = "https://example.com/webhooks/my-service-2"
+	AlertWebhookIntegrationURL         = "https://example.com/webhooks/my-service"
+	AlertWebhookIntegrationURLUpdated  = "https://example.com/webhooks/my-service-2"
 )
 
 func TestAccFastlyNGWAFAlertWebhookIntegration_validate(t *testing.T) {
@@ -34,21 +34,21 @@ func TestAccFastlyNGWAFAlertWebhookIntegration_validate(t *testing.T) {
 			{
 				Config: testAccNGWAFAlertWebhookIntegrationConfig(workspaceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration   .test_webhook_alert", "description", AlertWebhookIntegrationDescription),
-					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration   .test_webhook_alert", "webhook", AlertWebhookIntegrationUrl),
-					testAccNGWAFAlertWebhookIntegrationExists("fastly_ngwaf_alert_webhook_integration   .test_webhook_alert", "fastly_ngwaf_workspace.test_webhook_alert_workspace", &alertWebhookIntegrationID, &workspaceID),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration.test_webhook_alert", "description", AlertWebhookIntegrationDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration.test_webhook_alert", "webhook", AlertWebhookIntegrationURL),
+					testAccNGWAFAlertWebhookIntegrationExists("fastly_ngwaf_alert_webhook_integration.test_webhook_alert", "fastly_ngwaf_workspace.test_webhook_alert_workspace", &alertWebhookIntegrationID, &workspaceID),
 				),
 			},
 			{
 				Config: testAccNGWAFAlertWebhookIntegrationConfigUpdate(workspaceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration   .test_webhook_alert", "description", AlertWebhookIntegrationDescription),
-					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration   .test_webhook_alert", "webhook", AlertWebhookIntegrationUrlUpdated),
-					testAccNGWAFAlertWebhookIntegrationExists("fastly_ngwaf_alert_webhook_integration   .test_webhook_alert", "fastly_ngwaf_workspace.test_webhook_alert_workspace", &alertWebhookIntegrationID, &workspaceID),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration.test_webhook_alert", "description", AlertWebhookIntegrationDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_alert_webhook_integration.test_webhook_alert", "webhook", AlertWebhookIntegrationURLUpdated),
+					testAccNGWAFAlertWebhookIntegrationExists("fastly_ngwaf_alert_webhook_integration.test_webhook_alert", "fastly_ngwaf_workspace.test_webhook_alert_workspace", &alertWebhookIntegrationID, &workspaceID),
 				),
 			},
 			{
-				ResourceName: "fastly_ngwaf_alert_webhook_integration   .test_webhook_alert",
+				ResourceName: "fastly_ngwaf_alert_webhook_integration.test_webhook_alert",
 				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
 					log.Printf("[DEBUG] IMPORT TEST: NGWAF webhook alert ID: %s", alertWebhookIntegrationID)
 					log.Printf("[DEBUG] IMPORT TEST: NGWAF workspace ID: %s", workspaceID)
@@ -107,7 +107,7 @@ func testAccCheckNGWAFAlertWebhookIntegrationDestroy(s *terraform.State) error {
 		wsID = rs.Primary.ID
 	}
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "fastly_ngwaf_alert_webhook_integration   " {
+		if rs.Type != "fastly_ngwaf_alert_webhook_integration" {
 			continue
 		}
 
@@ -137,12 +137,12 @@ resource "fastly_ngwaf_workspace" "test_webhook_alert_workspace" {
   }
 }
 
-resource "fastly_ngwaf_alert_webhook_integration   " "test_webhook_alert" {
+resource "fastly_ngwaf_alert_webhook_integration" "test_webhook_alert" {
   description      = "%s"
   webhook          = "%s"
   workspace_id     = fastly_ngwaf_workspace.test_webhook_alert_workspace.id
 }
-`, workspaceName, AlertWebhookIntegrationDescription, AlertWebhookIntegrationUrl)
+`, workspaceName, AlertWebhookIntegrationDescription, AlertWebhookIntegrationURL)
 }
 
 func testAccNGWAFAlertWebhookIntegrationConfigUpdate(workspaceName string) string {
@@ -160,10 +160,10 @@ resource "fastly_ngwaf_workspace" "test_webhook_alert_workspace" {
   }
 }
 
-resource "fastly_ngwaf_alert_webhook_integration   " "test_webhook_alert" {
+resource "fastly_ngwaf_alert_webhook_integration" "test_webhook_alert" {
   description      = "%s"
   webhook          = "%s"
   workspace_id     = fastly_ngwaf_workspace.test_webhook_alert_workspace.id
 }
-`, workspaceName, AlertWebhookIntegrationDescription, AlertWebhookIntegrationUrlUpdated)
+`, workspaceName, AlertWebhookIntegrationDescription, AlertWebhookIntegrationURLUpdated)
 }

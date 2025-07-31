@@ -9,7 +9,7 @@ import (
 func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	r := resourceFastlyNGWAFRuleBase()
 
-	r.Importer = customNGWAFRuleImporter(common.ScopeTypeWorkspace)
+	r.Importer = customNGWAFScopeImporter(common.ScopeTypeWorkspace, "rule")
 
 	r.Schema["workspace_id"] = &schema.Schema{
 		Type:        schema.TypeString,
@@ -23,7 +23,7 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 func resourceFastlyNGWAFAccountRule() *schema.Resource {
 	r := resourceFastlyNGWAFRuleBase()
 
-	r.Importer = customNGWAFRuleImporter(common.ScopeTypeAccount)
+	r.Importer = customNGWAFScopeImporter(common.ScopeTypeAccount, "rule")
 
 	r.Schema["applies_to"] = &schema.Schema{
 		Type:        schema.TypeList,

@@ -25,6 +25,7 @@ cd - || exit
 
 echo RUNNING PLAN USING TERRAFORM VERSION BUILT FROM THIS BRANCH
 plan_output=$(terraform plan -no-color 2>&1)
+echo ""
 
 if [[ "$plan_output" == *"No changes. Your infrastructure matches the configuration."* ]]; then
 	echo ""

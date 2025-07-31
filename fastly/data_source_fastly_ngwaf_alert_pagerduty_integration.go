@@ -59,7 +59,7 @@ func dataSourceFastlyNGWAFAlertPagerDutyIntegrationRead(ctx context.Context, d *
 	hash := strconv.Itoa(hashcode.String(string(parsed)))
 	d.SetId(hash)
 
-	// Convert []AlertPagerDutyIntegrations.Alert to []*AlertPagerDutyIntegrations.Alerts
+	// Convert []AlertPagerDutyIntegrations.Alert to []*AlertPagerDutyIntegrations.Alerts.
 	var AlertPagerDutyIntegrationsPtrs []*AlertPagerDutyIntegrations.Alert
 	for i := range remoteState.Data {
 		AlertPagerDutyIntegrationsPtrs = append(AlertPagerDutyIntegrationsPtrs, &remoteState.Data[i])

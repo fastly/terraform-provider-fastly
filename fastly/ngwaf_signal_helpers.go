@@ -22,9 +22,10 @@ func resourceFastlyNGWAFSignalBase() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "A human-readable description of the signal.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "A human-readable description of the signal.",
+				ValidateFunc: validation.StringLenBetween(0, 140),
 			},
 			"name": {
 				Type:         schema.TypeString,

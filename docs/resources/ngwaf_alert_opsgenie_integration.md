@@ -35,7 +35,7 @@ $ terraform import fastly_ngwaf_alert_opsgenie_integration.example <workspace_id
 
 ### Required
 
-- `key` (String) The Opsgenie key.
+- `key` (String, Sensitive) The Opsgenie key.
 - `workspace_id` (String) The id of the workspace this alert belongs to.
 
 ### Optional

@@ -36,7 +36,7 @@ $ terraform import fastly_ngwaf_alert_datadog_integration.example <workspace_id>
 
 ### Required
 
-- `key` (String) The Datadog key.
+- `key` (String, Sensitive) The Datadog key.
 - `site` (String) The Datadog site.
 - `workspace_id` (String) The id of the workspace this alert belongs to.
 

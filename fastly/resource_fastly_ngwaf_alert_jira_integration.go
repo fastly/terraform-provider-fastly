@@ -42,6 +42,7 @@ func resourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {
 				Description: "The Jira key.",
 				Required:    true,
 				Type:        schema.TypeString,
+				Sensitive:   true,
 			},
 			"project": {
 				Description: "The Jira project where the issue will be created",

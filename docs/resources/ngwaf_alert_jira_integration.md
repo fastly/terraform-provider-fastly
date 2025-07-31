@@ -40,7 +40,7 @@ $ terraform import fastly_ngwaf_alert_jira_integration.example <workspace_id>/<a
 ### Required
 
 - `host` (String) The name of the Jira instance
-- `key` (String) The Jira key.
+- `key` (String, Sensitive) The Jira key.
 - `project` (String) The Jira project where the issue will be created
 - `username` (String) The Jira username of the user who created the ticket
 - `workspace_id` (String) The id of the workspace this alert belongs to.

@@ -2,9 +2,9 @@
 
 cd ./tests/interface/ || exit
 
-# echo DEPLOYING USING LATEST TERRAFORM VERSION
-# terraform init -upgrade
-# terraform apply -auto-approve
+echo DEPLOYING USING LATEST TERRAFORM VERSION
+terraform init -upgrade
+terraform apply -auto-approve
 
 # cleanup() {
 # 	# reset back to the installed provider so we can destroy the service

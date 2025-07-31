@@ -9,18 +9,23 @@ cd ./tests/interface/ || exit
 # cleanup() {
 # 	# reset back to the installed provider so we can destroy the service
 # 	unset TF_CLI_CONFIG_FILE
-	terraform init
-	echo ""
-	echo "Running terraform destroy..."
-	terraform destroy -auto-approve
+	# terraform init
+	# echo ""
+	# echo "Running terraform destroy..."
+	# terraform destroy -auto-approve
 # }
 # trap cleanup EXIT
 
-# cd - || exit
-# make build
-# BIN_DIR=$PWD/bin
-# OVERRIDES_FILENAME=developer_overrides.tfrc
-# export TF_CLI_CONFIG_FILE="$BIN_DIR/$OVERRIDES_FILENAME"
+cd - || exit
+make build
+BIN_DIR=$PWD/bin
+OVERRIDES_FILENAME=developer_overrides.tfrc
+export TF_CLI_CONFIG_FILE="$BIN_DIR/$OVERRIDES_FILENAME"
+unset TF_CLI_CONFIG_FILE
+terraform init
+echo ""
+echo "Running terraform destroy..."
+terraform destroy -auto-approve
 # cd - || exit
 
 # echo RUNNING PLAN USING TERRAFORM VERSION BUILT FROM THIS BRANCH

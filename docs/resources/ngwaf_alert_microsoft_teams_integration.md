@@ -35,7 +35,7 @@ $ terraform import fastly_ngwaf_alert_microsoft_teams_integration.example <works
 
 ### Required
 
-- `webhook` (String) The Microsoft Teams webhook URL.
+- `webhook` (String, Sensitive) The Microsoft Teams webhook URL.
 - `workspace_id` (String) The id of the workspace this alert belongs to.
 
 ### Optional

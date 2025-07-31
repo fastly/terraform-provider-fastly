@@ -35,7 +35,7 @@ $ terraform import fastly_ngwaf_alert_pagerduty_integration.example <workspace_i
 
 ### Required
 
-- `key` (String) The PagerDuty integration key.
+- `key` (String, Sensitive) The PagerDuty integration key.
 - `workspace_id` (String) The id of the workspace this alert belongs to.
 
 ### Optional

@@ -35,7 +35,7 @@ $ terraform import fastly_ngwaf_alert_webhook_integration.example <workspace_id>
 
 ### Required
 
-- `webhook` (String) The Webhook URL.
+- `webhook` (String, Sensitive) The Webhook URL.
 - `workspace_id` (String) The id of the workspace this alert belongs to.
 
 ### Optional

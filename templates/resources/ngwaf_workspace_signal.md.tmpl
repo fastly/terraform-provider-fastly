@@ -1,0 +1,26 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_workspace_signal"
+sidebar_current: "docs-fastly-resource-ngwaf-workspace-signal"
+description: |-
+  Provides a Fastly Next-Gen WAF Workspace Signal
+---
+
+# ngwaf_workspace_signal
+
+Provides a Fastly Next-Gen WAF Workspace Signal, scoped to a specific NGWAF workspace.  
+These signals define conditions and actions that trigger WAF enforcement at the workspace level.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_workspace_signal_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF workspace signals can be imported using the format `<workspaceID>/<signalID>`, e.g.:
+
+{{ codefile "sh" "examples/resources/components/workspace_signal_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

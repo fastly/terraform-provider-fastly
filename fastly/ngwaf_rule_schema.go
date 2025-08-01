@@ -137,6 +137,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 			},
 			"type": {
 				Type:             schema.TypeString,
+				ForceNew:         true,
 				Required:         true,
 				Description:      "The type of the rule (`request` or `signal`).",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"request", "signal"}, false)),

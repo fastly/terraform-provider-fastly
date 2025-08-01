@@ -392,3 +392,163 @@ resource "fastly_ngwaf_workspace_rule" "example" {
 }
 `, workspaceName, ruleName)
 }
+
+func TestAccFastlyNGWAFWorkspaceRule_templatedSignal(t *testing.T) {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	// the description must be an empty string for templated_signal rules
+	ruleDescription := ""
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil, // Rule is deleted implicitly when workspace is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNGWAFWorkspaceRuleTemplatedSignalConfig(workspaceName, ruleDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "description", ruleDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "type", "templated_signal"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "group_operator", "all"),
+
+					// Action for templated_signal
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "action.0.type", "templated_signal"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "action.0.signal", "2FA-CHANGED"),
+
+					// Conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.0.field", "ip"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.0.value", "127.0.0.1"),
+
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.1.field", "path"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.1.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.1.value", "/login"),
+				),
+			},
+			{
+				Config: testAccNGWAFWorkspaceRuleTemplatedSignalConfigUpdate(workspaceName, ruleDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "description", ruleDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "type", "templated_signal"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "group_operator", "all"),
+
+					// Action should remain the same
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "action.0.type", "templated_signal"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "action.0.signal", "2FA-CHANGED"),
+
+					// Condition should be updated (this tests ForceNew behavior)
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.0.field", "ip"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.0.value", "10.0.0.1"),
+
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.1.field", "path"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.1.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.templated_signal", "condition.1.value", "/admin"),
+				),
+			},
+			{
+				ResourceName:      "fastly_ngwaf_workspace_rule.templated_signal",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rule := s.RootModule().Resources["fastly_ngwaf_workspace_rule.templated_signal"]
+					workspace := s.RootModule().Resources["fastly_ngwaf_workspace.example"]
+					return fmt.Sprintf("%s/%s", workspace.Primary.ID, rule.Primary.ID), nil
+				},
+			},
+		},
+	})
+}
+
+func testAccNGWAFWorkspaceRuleTemplatedSignalConfig(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
+  }
+}
+
+resource "fastly_ngwaf_workspace_rule" "templated_signal" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  type             = "templated_signal"
+  description      = "%s"
+  enabled          = true
+  group_operator   = "all"
+
+  action {
+    type   = "templated_signal"
+    signal = "2FA-CHANGED"
+  }
+
+  condition {
+    field    = "ip"
+    operator = "equals"
+    value    = "127.0.0.1"
+  }
+
+  condition {
+    field    = "path"
+    operator = "equals"
+    value    = "/login"
+  }
+}
+`, workspaceName, ruleName)
+}
+
+func testAccNGWAFWorkspaceRuleTemplatedSignalConfigUpdate(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
+  }
+}
+
+resource "fastly_ngwaf_workspace_rule" "templated_signal" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  type             = "templated_signal"
+  description      = "%s"
+  enabled          = true
+  group_operator   = "all"
+
+  action {
+    type   = "templated_signal"
+    signal = "2FA-CHANGED"
+  }
+
+  condition {
+    field    = "ip"
+    operator = "equals"
+    value    = "10.0.0.1"
+  }
+
+  condition {
+    field    = "path"
+    operator = "equals"
+    value    = "/admin"
+  }
+}
+`, workspaceName, ruleName)
+}

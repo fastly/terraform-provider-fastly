@@ -53,7 +53,7 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) *ru
 		groupRaw = v.([]any)
 	}
 
-	return &rules.UpdateInput{
+	updateInput := &rules.UpdateInput{
 		RuleID:          gofastly.ToPointer(d.Id()),
 		Scope:           scope,
 		Type:            gofastly.ToPointer(d.Get("type").(string)),
@@ -61,10 +61,17 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) *ru
 		Enabled:         gofastly.ToPointer(d.Get("enabled").(bool)),
 		GroupOperator:   gofastly.ToPointer(d.Get("group_operator").(string)),
 		RequestLogging:  gofastly.ToPointer(d.Get("request_logging").(string)),
-		Actions:         expandNGWAFRuleUpdateActions(actionRaw, string(scope.Type)),
 		Conditions:      expandNGWAFRuleUpdateConditions(conditionRaw),
 		GroupConditions: expandNGWAFRuleGroupUpdateConditions(groupRaw),
 	}
+
+	// templated_signal rules don't allow actions in update requests
+	// (actions are only set during creation for this rule type)
+	if d.Get("type").(string) != "templated_signal" {
+		updateInput.Actions = expandNGWAFRuleUpdateActions(actionRaw, string(scope.Type))
+	}
+
+	return updateInput
 }
 
 func expandNGWAFRuleCreateActions(raw []any, scopeType string) []*rules.CreateAction {

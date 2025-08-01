@@ -118,7 +118,7 @@ $ terraform import fastly_ngwaf_workspace_rule.demo <workspaceID>/<ruleID>
 - `action` (Block List, Min: 1) List of actions to perform when the rule matches. (see [below for nested schema](#nestedblock--action))
 - `description` (String) A human-readable description of the rule.
 - `enabled` (Boolean) Whether the rule is currently enabled.
-- `type` (String) The type of the rule (`request` or `signal`).
+- `type` (String) The type of the rule (`request`, `signal`, or `templated_signal`).
 - `workspace_id` (String) The ID of the Next-Gen WAF workspace this rule belongs to.
 
 ### Optional

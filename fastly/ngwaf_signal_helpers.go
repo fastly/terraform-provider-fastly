@@ -29,6 +29,7 @@ func resourceFastlyNGWAFSignalBase() *schema.Resource {
 			},
 			"name": {
 				Type:         schema.TypeString,
+				ForceNew:     true,
 				Required:     true,
 				Description:  "The name of the signal. Special characters and periods are not accepted.",
 				ValidateFunc: validation.StringLenBetween(3, 25),

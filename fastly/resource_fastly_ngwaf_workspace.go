@@ -24,7 +24,7 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"attack_signal_thresholds": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"immediate": {

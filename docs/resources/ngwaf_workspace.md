@@ -37,13 +37,13 @@ $ terraform import fastly_ngwaf_workspace.demo xxxxxxxxxxxxxxxxxxxx
 
 ### Required
 
+- `attack_signal_thresholds` (Block List, Min: 1, Max: 1) Attack threshold parameters for system site alerts. Each threshold value is the number of attack signals per IP address that must be detected during the interval before the related IP address is flagged. If no values are set then the default value for each field will be applied (see [below for nested schema](#nestedblock--attack_signal_thresholds))
 - `description` (String) User-submitted description of the workspace
 - `mode` (String) User-configured mode of the workspace. Accepted values are [`off`, `block`, `log`]
 - `name` (String) User-submitted display name of the workspace
 
 ### Optional
 
-- `attack_signal_thresholds` (Block List, Max: 1) Attack threshold parameters for system site alerts. Each threshold value is the number of attack signals per IP address that must be detected during the interval before the related IP address is flagged. If no values are set then the default value for each field will be applied (see [below for nested schema](#nestedblock--attack_signal_thresholds))
 - `client_ip_headers` (List of String) Specifies the request headers containing the client IP address. Maximum of 10 header names
 - `default_blocking_response_code` (Number) The status code returned when a request is blocked. This configuration is applied at the workspace but can be overwritten in rules. Accepted values are [`301`, `302`, `400..599`]. Default value `406`
 - `ip_anonymization` (String) Agents will anonymize IP addresses according to the option selected. Accepted value is `hashed`

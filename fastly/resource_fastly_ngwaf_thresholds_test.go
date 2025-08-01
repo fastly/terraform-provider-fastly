@@ -28,7 +28,7 @@ func TestAccFastlyNGWAFThresholds_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", newWorkspaceName),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "description", "Test NGWAF Workspace"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "mode", "block"),
-					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.example"),
+					testAccNGWAFWorkspaceExists(),
 				),
 			},
 			{

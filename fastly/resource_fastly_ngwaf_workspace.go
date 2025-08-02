@@ -24,36 +24,40 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"attack_signal_thresholds": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"immediate": {
 							Type:        schema.TypeBool,
-							Description: "Ignore thresholds and block immediately when at least one attack signal is detected",
+							Description: "Ignore thresholds and block immediately when at least one attack signal is detected. Default value false",
 							Optional:    true,
+							Default:     false,
 						},
 						"one_hour": {
 							Type:             schema.TypeInt,
-							Description:      "The one-hour interval threshold. Minimum 1 and maximum 10,000",
+							Description:      "The one-hour interval threshold. Minimum 1 and maximum 10,000. Default value 100",
 							Optional:         true,
+							Default:          100,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
 						},
 						"one_minute": {
 							Type:             schema.TypeInt,
-							Description:      "The one-minute interval threshold. Minimum 1 and maximum 10,000",
+							Description:      "The one-minute interval threshold. Minimum 1 and maximum 10,000. Default value 1",
 							Optional:         true,
+							Default:          1,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
 						},
 						"ten_minutes": {
 							Type:             schema.TypeInt,
-							Description:      "The ten-minute interval threshold. Minimum 1 and maximum 10,000",
+							Description:      "The ten-minute interval threshold. Minimum 1 and maximum 10,000. Default value 60",
 							Optional:         true,
+							Default:          60,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
 						},
 					},
 				},
 				MaxItems:    1,
-				Description: "Attack threshold parameters for system site alerts. Each threshold value is the number of attack signals per IP address that must be detected during the interval before the related IP address is flagged",
+				Description: "Attack threshold parameters for system site alerts. Each threshold value is the number of attack signals per IP address that must be detected during the interval before the related IP address is flagged. If no values are set then the default value for each field will be applied",
 			},
 			"client_ip_headers": {
 				Type:        schema.TypeList,

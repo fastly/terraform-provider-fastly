@@ -64,12 +64,7 @@ resource "fastly_ngwaf_workspace" "example" {
   description = "Test NGWAF Workspace %s_1"
   mode                            = "block"
 
-  attack_signal_thresholds {
-    one_minute  = 100
-    ten_minutes = 500
-    one_hour    = 1000
-    immediate   = true
-  }
+  attack_signal_thresholds {}
 }
 
 data "fastly_ngwaf_virtual_patches" "sample" {

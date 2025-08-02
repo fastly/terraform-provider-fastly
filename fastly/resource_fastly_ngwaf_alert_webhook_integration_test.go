@@ -129,12 +129,7 @@ resource "fastly_ngwaf_workspace" "test_webhook_alert_workspace" {
   description                    = "Test NGWAF Workspace"
   mode                            = "block"
 
-  attack_signal_thresholds {
-    one_minute  = 100
-    ten_minutes = 500
-    one_hour    = 1000
-    immediate   = true
-  }
+  attack_signal_thresholds {}
 }
 
 resource "fastly_ngwaf_alert_webhook_integration" "test_webhook_alert" {
@@ -152,12 +147,7 @@ resource "fastly_ngwaf_workspace" "test_webhook_alert_workspace" {
   description                     = "Test NGWAF Workspace"
   mode                            = "block"
 
-  attack_signal_thresholds {
-    one_minute  = 100
-    ten_minutes = 500
-    one_hour    = 1000
-    immediate   = true
-  }
+  attack_signal_thresholds {}
 }
 
 resource "fastly_ngwaf_alert_webhook_integration" "test_webhook_alert" {

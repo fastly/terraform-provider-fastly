@@ -120,12 +120,7 @@ resource "fastly_ngwaf_workspace" "example" {
   client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
   default_blocking_response_code = 429
 
-  attack_signal_thresholds {
-    one_minute  = 100
-    ten_minutes = 500
-    one_hour    = 1000
-    immediate   = true
-  }
+  attack_signal_thresholds {}
 }
 
 resource "fastly_ngwaf_workspace_signal" "example" {

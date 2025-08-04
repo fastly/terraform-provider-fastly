@@ -22,6 +22,23 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 		CheckDestroy:      testAccCheckNGWAFWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccNGWAFWorkspaceConfigDefaults(workspaceName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "description", "Test NGWAF Workspace"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "mode", "block"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "ip_anonymization", "hashed"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "client_ip_headers.0", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "client_ip_headers.1", "X-Real-IP"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "default_blocking_response_code", "429"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_minute", "1"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "60"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "100"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.immediate", "false"),
+					testAccNGWAFWorkspaceExists(),
+				),
+			},
+			{
 				Config: testAccNGWAFWorkspaceConfig(workspaceName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
@@ -35,7 +52,7 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "500"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "1000"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.immediate", "true"),
-					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.example"),
+					testAccNGWAFWorkspaceExists(),
 				),
 			},
 			{
@@ -51,7 +68,7 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "1000"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "2000"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.immediate", "false"),
-					testAccNGWAFWorkspaceExists("fastly_ngwaf_workspace.example"),
+					testAccNGWAFWorkspaceExists(),
 				),
 			},
 			{
@@ -63,11 +80,11 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 	})
 }
 
-func testAccNGWAFWorkspaceExists(n string) resource.TestCheckFunc {
+func testAccNGWAFWorkspaceExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources["fastly_ngwaf_workspace.example"]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", "fastly_ngwaf_workspace.example")
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
@@ -106,11 +123,11 @@ func testAccCheckNGWAFWorkspaceDestroy(s *terraform.State) error {
 func testAccNGWAFWorkspaceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "example" {
-  name                         = "%s"
-  description                  = "Test NGWAF Workspace"
-  mode                         = "block"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["X-Forwarded-For", "X-Real-IP"]
+  name                           = "%s"
+  description                    = "Test NGWAF Workspace"
+  mode                           = "block"
+  ip_anonymization               = "hashed"
+  client_ip_headers              = ["X-Forwarded-For", "X-Real-IP"]
   default_blocking_response_code = 429
 
   attack_signal_thresholds {
@@ -126,11 +143,11 @@ resource "fastly_ngwaf_workspace" "example" {
 func testAccNGWAFWorkspaceConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "fastly_ngwaf_workspace" "example" {
-  name                         = "%s"
-  description                  = "Test NGWAF Workspace Updated"
-  mode                         = "log"
-  ip_anonymization            = "hashed"
-  client_ip_headers           = ["True-Client-IP"]
+  name                           = "%s"
+  description                    = "Test NGWAF Workspace Updated"
+  mode                           = "log"
+  ip_anonymization               = "hashed"
+  client_ip_headers              = ["True-Client-IP"]
   default_blocking_response_code = 406
 
   attack_signal_thresholds {
@@ -139,6 +156,21 @@ resource "fastly_ngwaf_workspace" "example" {
     one_hour    = 2000
     immediate   = false
   }
+}
+`, name)
+}
+
+func testAccNGWAFWorkspaceConfigDefaults(name string) string {
+	return fmt.Sprintf(`
+resource "fastly_ngwaf_workspace" "example" {
+  name                           = "%s"
+  description                    = "Test NGWAF Workspace"
+  mode                           = "block"
+  ip_anonymization               = "hashed"
+  client_ip_headers              = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+  
+  attack_signal_thresholds {}
 }
 `, name)
 }

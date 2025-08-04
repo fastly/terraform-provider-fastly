@@ -12,6 +12,7 @@
 
 - fix(snippets): delete dynamic snippet contents when the resource is deleted if `manage_snippets` is `true`. ([#1021](https://github.com/fastly/terraform-provider-fastly/pull/1021))
 - fix(examples): Replace http-me.glitch.me with http-me.fastly.dev ([#1026](https://github.com/fastly/terraform-provider-fastly/pull/1026))
+- fix(product_enablement/ngwaf): Allow traffic_ramp to be set to zero ([#10XX](https://github.com/fastly/terraform-provider-fastly/pull/10XX))
 
 ### DEPENDENCIES:
 - feat(deps): Upgrade to go-fastly version 11. ([#1028](https://github.com/fastly/terraform-provider-fastly/pull/1028))

@@ -4,7 +4,7 @@
 
 ### ENHANCEMENTS:
 
-- feat(ngwaf_workspace): Add support for Next-Gen WAF Workspaces. ([#1018](https://github.com/fastly/terraform-provider-fastly/pull/1018))
+- feat(ngwaf): Add support for Next-Gen WAF (many PRs).
 - doc(guides): Add guide for Fastly Object Storage. ([#1024](https://github.com/fastly/terraform-provider-fastly/pull/1024))
 - doc(resources): Improve DDoS protection configuration documentation. ([#1029](https://https://github.com/fastly/terraform-provider-fastly/pull/1029))
 
@@ -12,12 +12,10 @@
 
 - fix(snippets): delete dynamic snippet contents when the resource is deleted if `manage_snippets` is `true`. ([#1021](https://github.com/fastly/terraform-provider-fastly/pull/1021))
 - fix(examples): Replace http-me.glitch.me with http-me.fastly.dev ([#1026](https://github.com/fastly/terraform-provider-fastly/pull/1026))
+- fix(product_enablement/ngwaf): Allow traffic_ramp to be set to zero ([#1057](https://github.com/fastly/terraform-provider-fastly/pull/1057))
 
 ### DEPENDENCIES:
-- build(deps): `github.com/fastly/go-fastly/v10` from 10.4.0 to 10.5.0 ([#1019](https://github.com/fastly/terraform-provider-fastly/pull/1019))
-- build(deps): `github.com/fastly/go-fastly/v10` from 10.5.0 to 10.5.1 ([#1023](https://github.com/fastly/terraform-provider-fastly/pull/1023))
 - feat(deps): Upgrade to go-fastly version 11. ([#1028](https://github.com/fastly/terraform-provider-fastly/pull/1028))
-- build(deps): `github.com/fastly/go-fastly/v10` from 10.4.0 to 10.5.0 ([#1019](https://github.com/fastly/terraform-provider-fastly/pull/1019))
 - build(deps): `golang.org/x/net` from 0.41.0 to 0.42.0 ([#1030](https://github.com/fastly/terraform-provider-fastly/pull/1030))
 
 ## 7.1.0 (June 20, 2025)

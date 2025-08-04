@@ -49,7 +49,7 @@ func resourceFastlyNGWAFAccountList() *schema.Resource {
 
 func resourceFastlyNGWAFListBase() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Manages a Fastly Next-Gen WAF rule.",
+		Description:   "Manages a Fastly Next-Gen WAF list.",
 		CreateContext: resourceFastlyNGWAFListCreate,
 		ReadContext:   resourceFastlyNGWAFListRead,
 		UpdateContext: resourceFastlyNGWAFListUpdate,

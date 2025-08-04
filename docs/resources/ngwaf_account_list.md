@@ -3,15 +3,14 @@ layout: "fastly"
 page_title: "Fastly: ngwaf_account_list"
 sidebar_current: "docs-fastly-resource-ngwaf-account-list"
 description: |-
-  Provides a Fastly Next-Gen WAF Account List
+  Provides a Fastly Next-Gen WAF Account-scoped List
 ---
 
-# ngwaf_account_list
+# fastly_ngwaf_account_list
 
-Provides a Fastly Next-Gen WAF Account List.
+Provides a Fastly Next-Gen WAF **List** resource scoped to an **account**.
 
-Account-scoped lists can be referenced by multiple workspaces.  
-They are useful for managing shared list data, such as IPs or signals, across workspaces.
+Account-scoped lists are reusable across all workspaces in the account and can be referenced in account-level or workspace-level rules.
 
 ## Example Usage
 
@@ -32,7 +31,7 @@ resource "fastly_ngwaf_account_list" "example" {
 
 ## Import
 
-Fastly Next-Gen WAF account lists can be imported using just the list ID, e.g.:
+Fastly Next-Gen WAF account-scoped lists can be imported using just the list ID, e.g.:
 
 ```sh
 $ terraform import fastly_ngwaf_account_list.demo <listID>

@@ -147,7 +147,7 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 					Optional:     true,
 					Default:      100,
 					Description:  "The percentage of traffic to inspect",
-					ValidateFunc: validation.IntBetween(1, 100),
+					ValidateFunc: validation.IntBetween(0, 100),
 				},
 				"workspace_id": {
 					Type:        schema.TypeString,

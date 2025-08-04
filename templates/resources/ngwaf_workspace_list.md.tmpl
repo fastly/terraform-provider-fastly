@@ -1,0 +1,27 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_workspace_list"
+sidebar_current: "docs-fastly-resource-ngwaf-workspace-list"
+description: |-
+  Provides a Fastly Next-Gen WAF Workspace-scoped List
+---
+
+# fastly_ngwaf_workspace_list
+
+Provides a Fastly Next-Gen WAF **List** resource scoped to a specific **workspace**.
+
+Workspace-scoped lists are local to a workspace and typically used within workspace-specific rules.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_workspace_list_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF workspace-scoped lists can be imported using the format `<workspaceID>/<listID>`, e.g.:
+
+{{ codefile "sh" "examples/resources/components/workspace_list_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

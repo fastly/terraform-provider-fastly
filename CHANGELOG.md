@@ -18,6 +18,7 @@
 - feat(deps): Upgrade to go-fastly version 11. ([#1028](https://github.com/fastly/terraform-provider-fastly/pull/1028))
 - build(deps): `golang.org/x/net` from 0.41.0 to 0.42.0 ([#1030](https://github.com/fastly/terraform-provider-fastly/pull/1030))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.0.0 to 11.1.0 ([#1059](https://github.com/fastly/terraform-provider-fastly/pull/1059))
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.1.0 to 11.1.1 ([#1060](https://github.com/fastly/terraform-provider-fastly/pull/1060))
 
 ## 7.1.0 (June 20, 2025)
 

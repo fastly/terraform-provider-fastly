@@ -1,0 +1,28 @@
+---
+layout: "fastly"
+page_title: "Fastly: ngwaf_account_list"
+sidebar_current: "docs-fastly-resource-ngwaf-account-list"
+description: |-
+  Provides a Fastly Next-Gen WAF Account List
+---
+
+# ngwaf_account_list
+
+Provides a Fastly Next-Gen WAF Account List.
+
+Account-scoped lists can be referenced by multiple workspaces.  
+They are useful for managing shared list data, such as IPs or signals, across workspaces.
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/ngwaf_account_list_basic_usage.tf" }}
+
+## Import
+
+Fastly Next-Gen WAF account lists can be imported using just the list ID, e.g.:
+
+{{ codefile "sh" "examples/resources/components/account_list_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

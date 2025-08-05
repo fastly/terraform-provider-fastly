@@ -19,8 +19,8 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	r.Schema["type"] = &schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The type of the rule (`request`, `signal`, or `templated_signal`).",
-		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"request", "signal", "templated_signal"}, false)),
+		Description:      "The type of the rule (`request`, `signal`, `rate_limit`, or `templated_signal`).",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"request", "signal", "templated_signal", "rate_limit"}, false)),
 	}
 
 	// Force recreation for templated_signal rules to avoid "templateSignal rules expect no actions"

@@ -129,6 +129,62 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 				Description:      "Logical operator to apply to group conditions (`any` or `all`).",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"any", "all"}, false)),
 			},
+			"rate_limit": {
+				Description: "Block specifically for rate_limit rules.",
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_identifiers": {
+							Description: "List of client identifiers used for rate limiting. Can only be length 1 or 2.",
+							Type:        schema.TypeSet,
+							Required:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Key for the Client Identifier",
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Name for the Client Identifier",
+									},
+									"type": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Type for the Client Identifier",
+									},
+								},
+							},
+						},
+						"duration": {
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "Duration in seconds for the rate limit.",
+						},
+						"interval": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Time interval for the rate limit in seconds (60, 600, or 3600 minutes).",
+							ValidateFunc: validation.IntInSlice([]int{60, 600, 3600}),
+						},
+						"signal": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Reference ID of the custom singal this rule uses.",
+						},
+						"threshold": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							Description:  "Rate limit threshold (between 1 and 10000).",
+							ValidateFunc: validation.IntBetween(1, 10000),
+						},
+					},
+				},
+			},
 			"request_logging": {
 				Type:             schema.TypeString,
 				Optional:         true,

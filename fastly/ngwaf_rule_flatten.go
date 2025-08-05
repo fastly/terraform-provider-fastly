@@ -75,5 +75,12 @@ func flattenNGWAFRuleResponse(d *schema.ResourceData, rule *rules.Rule) error {
 		return fmt.Errorf("error setting group_condition: %w", err)
 	}
 
+	// Flatten rate limit
+	if isWorkspace {
+		if err := d.Set("rate_limit", flattenNGWAFRuleRateLimitGeneric(rule.RateLimit)); err != nil {
+			return fmt.Errorf("error setting rate_limit: %w", err)
+		}
+	}
+
 	return nil
 }

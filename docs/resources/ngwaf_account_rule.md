@@ -70,6 +70,7 @@ $ terraform import fastly_ngwaf_account_rule.demo <ruleID>
 - `condition` (Block List) Flat list of individual conditions. Each must include `field`, `operator`, and `value`. (see [below for nested schema](#nestedblock--condition))
 - `group_condition` (Block List) List of grouped conditions with nested logic. Each group must define a `group_operator` and at least one condition. (see [below for nested schema](#nestedblock--group_condition))
 - `group_operator` (String) Logical operator to apply to group conditions (`any` or `all`).
+- `rate_limit` (Block List, Max: 1) Block specifically for rate_limit rules. (see [below for nested schema](#nestedblock--rate_limit))
 - `request_logging` (String) Logging behavior for matching requests (`sampled` or `none`).
 
 ### Read-Only
@@ -114,3 +115,28 @@ Required:
 - `field` (String) Field to inspect (e.g., `ip`, `path`).
 - `operator` (String) Operator to apply (e.g., `equals`, `contains`).
 - `value` (String) The value to test the field against.
+
+
+
+<a id="nestedblock--rate_limit"></a>
+### Nested Schema for `rate_limit`
+
+Required:
+
+- `client_identifiers` (Block Set, Min: 1) List of client identifiers used for rate limiting. Can only be length 1 or 2. (see [below for nested schema](#nestedblock--rate_limit--client_identifiers))
+- `duration` (Number) Duration in seconds for the rate limit.
+- `interval` (Number) Time interval for the rate limit in seconds (60, 600, or 3600 minutes).
+- `signal` (String) Reference ID of the custom singal this rule uses.
+- `threshold` (Number) Rate limit threshold (between 1 and 10000).
+
+<a id="nestedblock--rate_limit--client_identifiers"></a>
+### Nested Schema for `rate_limit.client_identifiers`
+
+Required:
+
+- `type` (String) Type for the Client Identifier
+
+Optional:
+
+- `key` (String) Key for the Client Identifier
+- `name` (String) Name for the Client Identifier

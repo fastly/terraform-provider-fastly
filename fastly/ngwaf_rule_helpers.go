@@ -130,3 +130,34 @@ func flattenNGWAFRuleActionsGeneric(actions []rules.Action, isWorkspace bool) []
 
 	return result
 }
+
+func flattenNGWAFRuleRateLimitGeneric(rateLimit *rules.RateLimit) []map[string]any {
+	clientIdentifiers := []map[string]any{}
+
+	if rateLimit == nil {
+		return clientIdentifiers
+	}
+
+	for _, ci := range rateLimit.ClientIdentifiers {
+		m := map[string]any{}
+		if ci.Key != "" {
+			m["key"] = ci.Key
+		}
+		if ci.Name != "" {
+			m["name"] = ci.Name
+		}
+		m["type"] = ci.Type
+
+		clientIdentifiers = append(clientIdentifiers, m)
+	}
+
+	return []map[string]any{
+		{
+			"client_identifiers": clientIdentifiers,
+			"duration":           rateLimit.Duration,
+			"interval":           rateLimit.Interval,
+			"signal":             rateLimit.Signal,
+			"threshold":          rateLimit.Threshold,
+		},
+	}
+}

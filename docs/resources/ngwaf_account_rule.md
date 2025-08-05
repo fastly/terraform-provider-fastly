@@ -124,9 +124,6 @@ Required:
 Required:
 
 - `client_identifiers` (Block Set, Min: 1) List of client identifiers used for rate limiting. Can only be length 1 or 2. (see [below for nested schema](#nestedblock--rate_limit--client_identifiers))
-
-Optional:
-
 - `duration` (Number) Duration in seconds for the rate limit.
 - `interval` (Number) Time interval for the rate limit in seconds (60, 600, or 3600 minutes).
 - `signal` (String) Reference ID of the custom singal this rule uses.
@@ -135,8 +132,11 @@ Optional:
 <a id="nestedblock--rate_limit--client_identifiers"></a>
 ### Nested Schema for `rate_limit.client_identifiers`
 
+Required:
+
+- `type` (String) typ for the Client Identifier
+
 Optional:
 
 - `key` (String) Key for the Client Identifier
 - `name` (String) Name for the Client Identifier
-- `type` (String) typ for the Client Identifier

@@ -154,7 +154,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 									},
 									"type": {
 										Type:        schema.TypeString,
-										Optional:    true,
+										Required:    true,
 										Description: "typ for the Client Identifier",
 									},
 								},
@@ -162,23 +162,23 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 						},
 						"duration": {
 							Type:        schema.TypeInt,
-							Optional:    true,
+							Required:    true,
 							Description: "Duration in seconds for the rate limit.",
 						},
 						"interval": {
 							Type:         schema.TypeInt,
-							Optional:     true,
+							Required:     true,
 							Description:  "Time interval for the rate limit in seconds (60, 600, or 3600 minutes).",
 							ValidateFunc: validation.IntInSlice([]int{60, 600, 3600}),
 						},
 						"signal": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Reference ID of the custom singal this rule uses.",
 						},
 						"threshold": {
 							Type:         schema.TypeInt,
-							Optional:     true,
+							Required:     true,
 							Description:  "Rate limit threshold (between 1 and 10000).",
 							ValidateFunc: validation.IntBetween(1, 10000),
 						},

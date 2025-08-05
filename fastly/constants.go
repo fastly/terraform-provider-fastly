@@ -14,7 +14,7 @@ const SnippetTypeDescription = "The location in generated VCL where the snippet 
 
 // LoggingBigQueryDefaultFormat - Default format for BigQuery logging.
 const LoggingBigQueryDefaultFormat = `{
-    "timestamp": "%{strftime({\"%%Y-%%m-%%dT%%H:%%M:%%S\"}, time.start)}V",
+    "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
     "geo_country": "%{client.geo.country_name}V",
     "geo_city": "%{client.geo.city}V",

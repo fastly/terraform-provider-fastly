@@ -4,6 +4,14 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+## 8.0.0-beta (August 5, 2025)
+
+### ENHANCEMENTS:
+
 - feat(ngwaf): Add support for Next-Gen WAF (many PRs).
 - doc(guides): Add guide for Fastly Object Storage. ([#1024](https://github.com/fastly/terraform-provider-fastly/pull/1024))
 - doc(resources): Improve DDoS protection configuration documentation. ([#1029](https://https://github.com/fastly/terraform-provider-fastly/pull/1029))
@@ -15,6 +23,7 @@
 - fix(product_enablement/ngwaf): Allow traffic_ramp to be set to zero ([#1057](https://github.com/fastly/terraform-provider-fastly/pull/1057))
 
 ### DEPENDENCIES:
+
 - feat(deps): Upgrade to go-fastly version 11. ([#1028](https://github.com/fastly/terraform-provider-fastly/pull/1028))
 - build(deps): `golang.org/x/net` from 0.41.0 to 0.42.0 ([#1030](https://github.com/fastly/terraform-provider-fastly/pull/1030))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.0.0 to 11.1.0 ([#1059](https://github.com/fastly/terraform-provider-fastly/pull/1059))

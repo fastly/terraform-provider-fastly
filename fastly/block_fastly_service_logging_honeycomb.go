@@ -63,6 +63,7 @@ func (h *HoneycombServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingHoneycombDefaultFormat,
 			Description: "Apache style log formatting. Your log must produce valid JSON that Honeycomb can ingest.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

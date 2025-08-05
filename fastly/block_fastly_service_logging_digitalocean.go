@@ -119,6 +119,7 @@ func (h *DigitalOceanServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingDigitalOceanDefaultFormat,
 			Description: "Apache style log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

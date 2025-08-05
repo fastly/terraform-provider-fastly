@@ -95,7 +95,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The logging format desired.",
-			Default:     "%h %l %u %t \"%r\" %>s %b",
+			Default:     LoggingBigQueryDefaultFormat,
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,

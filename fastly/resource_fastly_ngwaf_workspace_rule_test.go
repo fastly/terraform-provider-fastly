@@ -383,6 +383,183 @@ resource "fastly_ngwaf_workspace_rule" "example" {
 `, workspaceName, ruleName)
 }
 
+func TestAccFastlyNGWAFWorkspaceRule_rateLimit(t *testing.T) {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	ruleDescription := "some description"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil, // Rule is deleted implicitly when workspace is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNGWAFWorkspaceRuleRateLimitConfig(workspaceName, ruleDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "description", ruleDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "type", "rate_limit"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "group_operator", "all"),
+
+					// Conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "condition.0.field", "path"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "condition.0.value", "/login"),
+
+					// Rate limit
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.client_identifiers.0.type", "ip"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.duration", "500"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.interval", "60"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.signal", "site.test-signal"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.threshold", "100"),
+				),
+			},
+			{
+				Config: testAccNGWAFWorkspaceRuleRateLimitConfigUpdate(workspaceName, ruleDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "description", ruleDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "type", "rate_limit"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "enabled", "true"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "group_operator", "all"),
+
+					// Conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "condition.0.field", "path"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "condition.0.value", "admin"),
+
+					// Rate limit
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.client_identifiers.0.type", "ip"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.duration", "5000"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.interval", "600"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.signal", "site.test-signal"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.threshold", "1000"),
+				),
+			},
+			{
+				ResourceName:      "fastly_ngwaf_workspace_rule.rate_limit",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rule := s.RootModule().Resources["fastly_ngwaf_workspace_rule.rate_limit"]
+					workspace := s.RootModule().Resources["fastly_ngwaf_workspace.example"]
+					return fmt.Sprintf("%s/%s", workspace.Primary.ID, rule.Primary.ID), nil
+				},
+			},
+		},
+	})
+}
+
+func testAccNGWAFWorkspaceRuleRateLimitConfig(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
+  }
+}
+
+resource "fastly_ngwaf_workspace_signal" "example" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  description      = "test signal"
+  name             = "test signal"
+}
+
+resource "fastly_ngwaf_workspace_rule" "rate_limit" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  type             = "rate_limit"
+  description      = "%s"
+  enabled          = true
+  group_operator   = "all"
+
+  action {
+    type   = "block_signal"
+	signal = fastly_ngwaf_workspace_signal.example.reference_id
+  }
+
+  condition {
+    field    = "path"
+    operator = "equals"
+    value    = "/login"
+  }
+
+  rate_limit {
+	client_identifiers {
+		type = "ip" 
+	}
+	duration  = 500
+	interval  = 60
+	signal    = fastly_ngwaf_workspace_signal.example.reference_id
+	threshold = 100
+  }
+}
+`, workspaceName, ruleName)
+}
+
+func testAccNGWAFWorkspaceRuleRateLimitConfigUpdate(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
+  }
+}
+
+resource "fastly_ngwaf_workspace_signal" "example" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  description      = "test signal"
+  name             = "test signal"
+}
+
+resource "fastly_ngwaf_workspace_rule" "rate_limit" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  type             = "rate_limit"
+  description      = "%s"
+  enabled          = true
+  group_operator   = "all"
+
+  action {
+    type   = "block_signal"
+	signal = fastly_ngwaf_workspace_signal.example.reference_id
+  }
+
+  condition {
+    field    = "path"
+    operator = "equals"
+    value    = "admin"
+  }
+
+  rate_limit {
+	client_identifiers {
+		type = "ip" 
+	}
+	duration  = 5000
+	interval  = 600
+	signal    = fastly_ngwaf_workspace_signal.example.reference_id
+	threshold = 1000
+  }
+}
+`, workspaceName, ruleName)
+}
+
 func TestAccFastlyNGWAFWorkspaceRule_templatedSignal(t *testing.T) {
 	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
 	// the description must be an empty string for templated_signal rules

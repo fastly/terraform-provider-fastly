@@ -21,12 +21,12 @@ func dataSourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 			"webhook_alerts": {
 				Type:        schema.TypeSet,
 				Computed:    true,
-				Description: "List of all Webhook alerts for a workspace.",
+				Description: "List of all webhook alerts for a workspace.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Computed:    true,
-							Description: "Base62-encoded representation of a UUID used to uniquely identify the alert",
+							Description: "The ID of the workspace alert.",
 							Type:        schema.TypeString,
 						},
 					},
@@ -34,7 +34,7 @@ func dataSourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 			},
 			"workspace_id": {
 				Type:        schema.TypeString,
-				Description: "The id of the workspace that is being queried for Webhook alerts.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 			},
 		},
@@ -46,13 +46,13 @@ func dataSourceFastlyNGWAFAlertWebhookIntegrationRead(ctx context.Context, d *sc
 
 	workspaceID := d.Get("workspace_id").(string)
 
-	log.Printf("[DEBUG] Reading NGWAF Webhook alerts from workspace %s", workspaceID)
+	log.Printf("[DEBUG] Reading NGWAF webhook alerts from workspace %s", workspaceID)
 
 	remoteState, err := AlertWebhookIntegrations.List(ctx, conn, &AlertWebhookIntegrations.ListInput{
 		WorkspaceID: &workspaceID,
 	})
 	if err != nil {
-		return diag.Errorf("error fetching Webhook alerts: %s", err)
+		return diag.Errorf("error fetching webhook alerts: %s", err)
 	}
 
 	parsed, _ := json.Marshal(remoteState)
@@ -66,7 +66,7 @@ func dataSourceFastlyNGWAFAlertWebhookIntegrationRead(ctx context.Context, d *sc
 	}
 
 	if err := d.Set("webhook_alerts", flattenNGWAFAlertWebhookIntegration(AlertWebhookIntegrationsPtrs)); err != nil {
-		return diag.Errorf("error setting Webhook alerts: %s", err)
+		return diag.Errorf("error setting webhook alerts: %s", err)
 	}
 
 	return nil

@@ -29,27 +29,27 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"immediate": {
 							Type:        schema.TypeBool,
-							Description: "Ignore thresholds and block immediately when at least one attack signal is detected. Default value false",
+							Description: "Ignore thresholds and block immediately when at least one attack signal is detected. Default value `false`.",
 							Optional:    true,
 							Default:     false,
 						},
 						"one_hour": {
 							Type:             schema.TypeInt,
-							Description:      "The one-hour interval threshold. Minimum 1 and maximum 10,000. Default value 100",
+							Description:      "The one-hour interval threshold. Minimum 1 and maximum 10,000. Default value 100.",
 							Optional:         true,
 							Default:          100,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
 						},
 						"one_minute": {
 							Type:             schema.TypeInt,
-							Description:      "The one-minute interval threshold. Minimum 1 and maximum 10,000. Default value 1",
+							Description:      "The one-minute interval threshold. Minimum 1 and maximum 10,000. Default value 1.",
 							Optional:         true,
 							Default:          1,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
 						},
 						"ten_minutes": {
 							Type:             schema.TypeInt,
-							Description:      "The ten-minute interval threshold. Minimum 1 and maximum 10,000. Default value 60",
+							Description:      "The ten-minute interval threshold. Minimum 1 and maximum 10,000. Default value 60.",
 							Optional:         true,
 							Default:          60,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
@@ -62,7 +62,7 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 			"client_ip_headers": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Specifies the request headers containing the client IP address. Maximum of 10 header names",
+				Description: "Specifies the request headers containing the client IP address. Maximum of 10 header names.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				MaxItems:    10,
 			},
@@ -70,24 +70,24 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 				Type:             schema.TypeInt,
 				Optional:         true,
 				Default:          406,
-				Description:      "The status code returned when a request is blocked. This configuration is applied at the workspace but can be overwritten in rules. Accepted values are [`301`, `302`, `400..599`]. Default value `406`",
+				Description:      "The status code returned when a request is blocked. This configuration is applied at the workspace but can be overwritten in rules. Accepted values are [`301`, `302`, `400..599`]. Default value `406`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IntBetween(400, 599), validation.IntInSlice([]int{301, 302}))),
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "User-submitted description of the workspace",
+				Description: "The description of the workspace",
 			},
 			"ip_anonymization": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Description:      "Agents will anonymize IP addresses according to the option selected. Accepted value is `hashed`",
+				Description:      "Agents will anonymize IP addresses according to the option selected. Accepted value is `hashed`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"hashed"}, false)),
 			},
 			"mode": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "User-configured mode of the workspace. Accepted values are [`off`, `block`, `log`]",
+				Description: "The operation mode of the workspace. Accepted values are `off`, `block`, and `log`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
 					[]string{"off", "log", "block"},
 					false,
@@ -96,7 +96,7 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "User-submitted display name of the workspace",
+				Description: "The display name of the workspace.",
 			},
 		},
 	}

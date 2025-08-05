@@ -27,12 +27,12 @@ output "ngwaf_webhook_alerts_all" {
 
 ### Required
 
-- `workspace_id` (String) The id of the workspace that is being queried for Webhook alerts.
+- `workspace_id` (String) The ID of the workspace.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `webhook_alerts` (Set of Object) List of all Webhook alerts for a workspace. (see [below for nested schema](#nestedatt--webhook_alerts))
+- `webhook_alerts` (Set of Object) List of all webhook alerts for a workspace. (see [below for nested schema](#nestedatt--webhook_alerts))
 
 <a id="nestedatt--webhook_alerts"></a>
 ### Nested Schema for `webhook_alerts`

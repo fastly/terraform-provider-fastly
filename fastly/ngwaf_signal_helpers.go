@@ -24,7 +24,7 @@ func resourceFastlyNGWAFSignalBase() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "A human-readable description of the signal.",
+				Description:  "The description of the signal.",
 				ValidateFunc: validation.StringLenBetween(0, 140),
 			},
 			"name": {
@@ -37,7 +37,7 @@ func resourceFastlyNGWAFSignalBase() *schema.Resource {
 			"reference_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The generated reference ID of the signal",
+				Description: "The generated reference ID of the signal.",
 			},
 		},
 	}

@@ -111,18 +111,18 @@ $ terraform import fastly_ngwaf_workspace_rule.demo <workspaceID>/<ruleID>
 ### Required
 
 - `action` (Block List, Min: 1) List of actions to perform when the rule matches. (see [below for nested schema](#nestedblock--action))
-- `description` (String) A human-readable description of the rule.
+- `description` (String) The description of the rule.
 - `enabled` (Boolean) Whether the rule is currently enabled.
-- `type` (String) The type of the rule (`request`, `signal`, `rate_limit`, or `templated_signal`).
-- `workspace_id` (String) The ID of the Next-Gen WAF workspace this rule belongs to.
+- `type` (String) The type of the rule. Accepted values are `request`, `signal`, `rate_limit`, and `templated_signal`.
+- `workspace_id` (String) The ID of the workspace.
 
 ### Optional
 
 - `condition` (Block List) Flat list of individual conditions. Each must include `field`, `operator`, and `value`. (see [below for nested schema](#nestedblock--condition))
 - `group_condition` (Block List) List of grouped conditions with nested logic. Each group must define a `group_operator` and at least one condition. (see [below for nested schema](#nestedblock--group_condition))
-- `group_operator` (String) Logical operator to apply to group conditions (`any` or `all`).
+- `group_operator` (String) Logical operator to apply to group conditions. Accepted values are `any` and `all`.
 - `rate_limit` (Block List, Max: 1) Block specifically for rate_limit rules. (see [below for nested schema](#nestedblock--rate_limit))
-- `request_logging` (String) Logging behavior for matching requests (`sampled` or `none`).
+- `request_logging` (String) Logging behavior for matching requests. Accepted values are `sampled` and `none`.
 
 ### Read-Only
 
@@ -158,7 +158,7 @@ Required:
 Required:
 
 - `condition` (Block List, Min: 1) A list of nested conditions in this group. (see [below for nested schema](#nestedblock--group_condition--condition))
-- `group_operator` (String) Logical operator for the group (`any` or `all`).
+- `group_operator` (String) Logical operator for the group. Accepted values are `any` and `all`.
 
 <a id="nestedblock--group_condition--condition"></a>
 ### Nested Schema for `group_condition.condition`
@@ -178,18 +178,18 @@ Required:
 
 - `client_identifiers` (Block Set, Min: 1) List of client identifiers used for rate limiting. Can only be length 1 or 2. (see [below for nested schema](#nestedblock--rate_limit--client_identifiers))
 - `duration` (Number) Duration in seconds for the rate limit.
-- `interval` (Number) Time interval for the rate limit in seconds (60, 600, or 3600 minutes).
-- `signal` (String) Reference ID of the custom singal this rule uses.
-- `threshold` (Number) Rate limit threshold (between 1 and 10000).
+- `interval` (Number) Time interval for the rate limit in seconds. Accepted values are 60, 600, and 3600 (seconds).
+- `signal` (String) Reference ID of the custom signal this rule uses to count requests.
+- `threshold` (Number) Rate limit threshold. Minimum 1 and maximum 10,000.
 
 <a id="nestedblock--rate_limit--client_identifiers"></a>
 ### Nested Schema for `rate_limit.client_identifiers`
 
 Required:
 
-- `type` (String) Type for the Client Identifier
+- `type` (String) Type of the Client Identifier.
 
 Optional:
 
-- `key` (String) Key for the Client Identifier
-- `name` (String) Name for the Client Identifier
+- `key` (String) Key for the Client Identifier.
+- `name` (String) Name for the Client Identifier.

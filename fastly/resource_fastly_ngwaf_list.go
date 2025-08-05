@@ -78,7 +78,7 @@ func resourceFastlyNGWAFListBase() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				Description:      "The type of list. Must be one of `string`, `wildcard`, `ip`, `country`, or `signal`.",
+				Description:      "The type of list. Accepted values are `string`, `wildcard`, `ip`, `country`, and `signal`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"string", "wildcard", "ip", "country", "signal"}, false)),
 			},
 		},

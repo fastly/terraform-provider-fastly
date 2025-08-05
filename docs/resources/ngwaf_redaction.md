@@ -36,8 +36,8 @@ $ terraform import fastly_ngwaf_redaction.example <workspace_id>/<redaction_id>
 ### Required
 
 - `field` (String) The name of the field that should be redacted.
-- `type` (String) The type of field that is being redacted. One of `request_parameter`, `request_header`, or `response_header`.
-- `workspace_id` (String) The id of the workspace this redaction belongs to.
+- `type` (String) The type of field that is being redacted. Accepted values are `request_parameter`, `request_header`, and `response_header`.
+- `workspace_id` (String) The ID of the workspace.
 
 ### Read-Only
 

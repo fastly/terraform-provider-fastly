@@ -27,12 +27,12 @@ func dataSourceFastlyNGWAFWorkspaces() *schema.Resource {
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Base62-encoded representation of a UUID used to uniquely identify the workspace",
+							Description: "The ID of the workspace.",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "User-submitted display name of the workspace",
+							Description: "The name of the workspace.",
 						},
 					},
 				},

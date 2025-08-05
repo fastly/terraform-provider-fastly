@@ -24,17 +24,17 @@ func resourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
-				Description: "User-submitted description of the alert",
+				Description: "The description of the alert.",
 				Optional:    true,
 				Type:        schema.TypeString,
 			},
 			"host": {
-				Description: "The name of the Jira instance",
+				Description: "The name of the Jira instance.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},
 			"issue_type": {
-				Description: "The Jira issue type associated with the ticket",
+				Description: "The Jira issue type associated with the ticket.",
 				Optional:    true,
 				Type:        schema.TypeString,
 			},
@@ -45,17 +45,17 @@ func resourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {
 				Sensitive:   true,
 			},
 			"project": {
-				Description: "The Jira project where the issue will be created",
+				Description: "The Jira project where the issue will be created.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},
 			"username": {
-				Description: "The Jira username of the user who created the ticket",
+				Description: "The Jira username of the user who created the ticket.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},
 			"workspace_id": {
-				Description: "The id of the workspace this alert belongs to.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},

@@ -27,7 +27,7 @@ func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 			"action": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Action to take when a signal for virtual patch is detected. One of `log` or `block`.",
+				Description: "Action to take when a signal for virtual patch is detected. Accepted values are `log` and `block`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(
 					[]string{"log", "block"},
 					false,
@@ -36,7 +36,7 @@ func resourceFastlyNGWAFVirtualPatches() *schema.Resource {
 			"enabled": {
 				Type:        schema.TypeBool,
 				Required:    true,
-				Description: "Control for enabling and disabling a virtual patch. One of `true` or `false`.",
+				Description: "Control for enabling and disabling a virtual patch.",
 			},
 			"virtual_patch_id": {
 				Type:             schema.TypeString,

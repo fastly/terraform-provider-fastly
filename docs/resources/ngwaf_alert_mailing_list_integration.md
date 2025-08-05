@@ -39,12 +39,12 @@ $ terraform import fastly_ngwaf_alert_jira_integration.example <workspace_id>/<a
 
 ### Required
 
-- `address` (String) Email address that the alert will use
-- `workspace_id` (String) The id of the workspace this alert belongs to.
+- `address` (String) Email address that the alert will use.
+- `workspace_id` (String) The ID of the workspace.
 
 ### Optional
 
-- `description` (String) User-submitted description of the alert
+- `description` (String) The description of the alert.
 
 ### Read-Only
 

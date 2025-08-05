@@ -27,7 +27,7 @@ output "ngwaf_opsgenie_alerts_all" {
 
 ### Required
 
-- `workspace_id` (String) The id of the workspace that is being queried for Opsgenie alerts.
+- `workspace_id` (String) The ID of the workspace.
 
 ### Read-Only
 

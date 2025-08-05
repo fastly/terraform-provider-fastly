@@ -19,7 +19,7 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	r.Schema["type"] = &schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The type of the rule (`request`, `signal`, `rate_limit`, or `templated_signal`).",
+		Description:      "The type of the rule. Accepted values are `request`, `signal`, `rate_limit`, and `templated_signal`.",
 		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"request", "signal", "templated_signal", "rate_limit"}, false)),
 	}
 
@@ -42,7 +42,7 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	r.Schema["workspace_id"] = &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The ID of the Next-Gen WAF workspace this rule belongs to.",
+		Description: "The ID of the workspace.",
 	}
 
 	return r
@@ -57,7 +57,7 @@ func resourceFastlyNGWAFAccountRule() *schema.Resource {
 		Type:        schema.TypeList,
 		Required:    true,
 		MinItems:    1,
-		Description: "The list of workspace IDs or wildcard `*` this account-level rule applies to.",
+		Description: "The list of workspace IDs this signal applies to, or the wildcard `*` if it applies to all workspaces.",
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},

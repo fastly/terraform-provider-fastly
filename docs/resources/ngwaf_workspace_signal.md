@@ -48,13 +48,13 @@ $ terraform import fastly_ngwaf_workspace_signal.demo <workspaceID>/<signalID>
 ### Required
 
 - `name` (String) The name of the signal. Special characters and periods are not accepted.
-- `workspace_id` (String) The ID of the Next-Gen WAF workspace this signal belongs to.
+- `workspace_id` (String) The ID of the workspace.
 
 ### Optional
 
-- `description` (String) A human-readable description of the signal.
+- `description` (String) The description of the signal.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `reference_id` (String) The generated reference ID of the signal
+- `reference_id` (String) The generated reference ID of the signal.

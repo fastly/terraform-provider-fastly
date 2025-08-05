@@ -60,7 +60,7 @@ $ terraform import fastly_ngwaf_workspace_list.demo <workspaceID>/<listID>
 
 - `entries` (List of String) The values in the list.
 - `name` (String) The name of the list.
-- `type` (String) The type of list. Must be one of `string`, `wildcard`, `ip`, `country`, or `signal`.
+- `type` (String) The type of list. Accepted values are `string`, `wildcard`, `ip`, `country`, and `signal`.
 - `workspace_id` (String)
 
 ### Optional

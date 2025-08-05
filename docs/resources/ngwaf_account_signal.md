@@ -36,14 +36,14 @@ $ terraform import fastly_ngwaf_account_signal.demo <signalID>
 
 ### Required
 
-- `applies_to` (List of String) The list of workspace IDs or wildcard `*` this account-level signal applies to.
+- `applies_to` (List of String) The list of workspace IDs this signal applies to, or the wildcard `*` if it applies to all workspaces.
 - `name` (String) The name of the signal. Special characters and periods are not accepted.
 
 ### Optional
 
-- `description` (String) A human-readable description of the signal.
+- `description` (String) The description of the signal.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `reference_id` (String) The generated reference ID of the signal
+- `reference_id` (String) The generated reference ID of the signal.

@@ -24,18 +24,18 @@ func resourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
-				Description: "User-submitted description of the alert",
+				Description: "The description of the alert.",
 				Optional:    true,
 				Type:        schema.TypeString,
 			},
 			"webhook": {
-				Description: "The Webhook URL.",
+				Description: "The webhook URL.",
 				Required:    true,
 				Type:        schema.TypeString,
 				Sensitive:   true,
 			},
 			"workspace_id": {
-				Description: "The id of the workspace this alert belongs to.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},

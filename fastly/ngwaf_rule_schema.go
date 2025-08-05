@@ -155,7 +155,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 									"type": {
 										Type:        schema.TypeString,
 										Required:    true,
-										Description: "typ for the Client Identifier",
+										Description: "Type for the Client Identifier",
 									},
 								},
 							},

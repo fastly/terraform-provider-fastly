@@ -134,7 +134,7 @@ Required:
 
 Required:
 
-- `type` (String) typ for the Client Identifier
+- `type` (String) Type for the Client Identifier
 
 Optional:
 

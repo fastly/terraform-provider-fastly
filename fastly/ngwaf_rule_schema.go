@@ -169,7 +169,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 						"interval": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							Description:  "Time interval for the rate limit in seconds. Accepted values are 60, 600, and 3600 (seconds).",
+							Description:  "Time interval for the rate limit in seconds. Accepted values are 60, 600, and 3600.",
 							ValidateFunc: validation.IntInSlice([]int{60, 600, 3600}),
 						},
 						"signal": {

@@ -128,7 +128,7 @@ resource "fastly_service_vcl" "interface-test-project" {
     template     = "test_logging_bigquery_template"
     format       = <<-EOT
 {
-    "timestamp": "%%{strftime({"%Y-%m-%dT%H:%M:%S"}, time.start)}V",
+    "timestamp": "%%{strftime(\{"%Y-%m-%dT%H:%M:%S"\}, time.start)}V",
     "client_ip": "%%{req.http.Fastly-Client-IP}V",
     "geo_country": "%%{client.geo.country_name}V",
     "geo_city": "%%{client.geo.city}V",

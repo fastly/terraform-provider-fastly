@@ -27,7 +27,7 @@ func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
 						"enabled": {
 							Type:        schema.TypeBool,
 							Computed:    true,
-							Description: "Control for enabling and disabling a virtual patch. One of `true` or `false`.",
+							Description: "Whether the virtual patch is enabled or disabled.",
 						},
 						"id": {
 							Type:        schema.TypeString,
@@ -37,7 +37,7 @@ func dataSourceFastlyNGWAFVirtualPatches() *schema.Resource {
 						"mode": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Action to take when a signal for virtual patch is detected. One of `log` or `block`.",
+							Description: "Action to take when a signal for the virtual patch is detected. One of `log` or `block`.",
 						},
 					},
 				},

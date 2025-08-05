@@ -20,7 +20,7 @@ func resourceFastlyNGWAFWorkspaceSignal() *schema.Resource {
 	r.Schema["workspace_id"] = &schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "The ID of the Next-Gen WAF workspace this signal belongs to.",
+		Description: "The ID of the workspace.",
 	}
 
 	return r
@@ -35,7 +35,7 @@ func resourceFastlyNGWAFAccountSignal() *schema.Resource {
 		Type:        schema.TypeList,
 		Required:    true,
 		MinItems:    1,
-		Description: "The list of workspace IDs or wildcard `*` this account-level signal applies to.",
+		Description: "The list of workspace IDs this signal applies to, or the wildcard `*` if it applies to all workspaces.",
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},

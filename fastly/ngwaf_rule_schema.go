@@ -75,7 +75,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "A human-readable description of the rule.",
+				Description: "The description of the rule.",
 			},
 			"enabled": {
 				Type:        schema.TypeBool,
@@ -116,9 +116,10 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 							},
 						},
 						"group_operator": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Logical operator for the group (`any` or `all`).",
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Logical operator for the group. Accepted values are `any` and `all`.",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"any", "all"}, false)),
 						},
 					},
 				},
@@ -126,7 +127,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 			"group_operator": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Description:      "Logical operator to apply to group conditions (`any` or `all`).",
+				Description:      "Logical operator to apply to group conditions. Accepted values are `any` and `all`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"any", "all"}, false)),
 			},
 			"rate_limit": {
@@ -145,17 +146,17 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 									"key": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Key for the Client Identifier",
+										Description: "Key for the Client Identifier.",
 									},
 									"name": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Name for the Client Identifier",
+										Description: "Name for the Client Identifier.",
 									},
 									"type": {
 										Type:        schema.TypeString,
 										Required:    true,
-										Description: "Type for the Client Identifier",
+										Description: "Type of the Client Identifier.",
 									},
 								},
 							},
@@ -168,18 +169,18 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 						"interval": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							Description:  "Time interval for the rate limit in seconds (60, 600, or 3600 minutes).",
+							Description:  "Time interval for the rate limit in seconds. Accepted values are 60, 600, and 3600.",
 							ValidateFunc: validation.IntInSlice([]int{60, 600, 3600}),
 						},
 						"signal": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Reference ID of the custom singal this rule uses.",
+							Description: "Reference ID of the custom signal this rule uses to count requests.",
 						},
 						"threshold": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							Description:  "Rate limit threshold (between 1 and 10000).",
+							Description:  "Rate limit threshold. Minimum 1 and maximum 10,000.",
 							ValidateFunc: validation.IntBetween(1, 10000),
 						},
 					},
@@ -188,14 +189,14 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 			"request_logging": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Description:      "Logging behavior for matching requests (`sampled` or `none`).",
+				Description:      "Logging behavior for matching requests. Accepted values are `sampled` and `none`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"sampled", "none"}, false)),
 			},
 			"type": {
 				Type:             schema.TypeString,
 				ForceNew:         true,
 				Required:         true,
-				Description:      "The type of the rule (`request` or `signal`).",
+				Description:      "The type of the rule. Accepted values are `request` and `signal`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"request", "signal"}, false)),
 			},
 		},

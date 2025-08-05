@@ -27,12 +27,12 @@ func dataSourceFastlyNGWAFRedactions() *schema.Resource {
 						"field": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The field the redaction affects",
+							Description: "The name of the field that is being redacted.",
 						},
 						"id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Base62-encoded representation of a UUID used to uniquely identify the redaction",
+							Description: "The ID of the redaction.",
 						},
 						"type": {
 							Type:        schema.TypeString,
@@ -44,7 +44,7 @@ func dataSourceFastlyNGWAFRedactions() *schema.Resource {
 			},
 			"workspace_id": {
 				Type:        schema.TypeString,
-				Description: "The id of the workspace that is being queried for redactions.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 			},
 		},

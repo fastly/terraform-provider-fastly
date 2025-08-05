@@ -31,13 +31,13 @@ func resourceFastlyNGWAFRedaction() *schema.Resource {
 			},
 			"type": {
 				Type:             schema.TypeString,
-				Description:      "The type of field that is being redacted. One of `request_parameter`, `request_header`, or `response_header`.",
+				Description:      "The type of field that is being redacted. Accepted values are `request_parameter`, `request_header`, and `response_header`.",
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"request_parameter", "request_header", "response_header"}, false)),
 			},
 			"workspace_id": {
 				Type:        schema.TypeString,
-				Description: "The id of the workspace this redaction belongs to.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 			},
 		},

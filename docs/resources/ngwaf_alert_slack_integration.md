@@ -36,11 +36,11 @@ $ terraform import fastly_ngwaf_alert_slack_integration.example <workspace_id>/<
 ### Required
 
 - `webhook` (String, Sensitive) The Slack webhook URL.
-- `workspace_id` (String) The id of the workspace this alert belongs to.
+- `workspace_id` (String) The ID of the workspace.
 
 ### Optional
 
-- `description` (String) User-submitted description of the alert
+- `description` (String) The description of the alert.
 
 ### Read-Only
 

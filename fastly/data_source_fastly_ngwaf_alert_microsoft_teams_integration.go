@@ -26,7 +26,7 @@ func dataSourceFastlyNGWAFAlertMicrosoftTeamsIntegration() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Computed:    true,
-							Description: "Base62-encoded representation of a UUID used to uniquely identify the alert",
+							Description: "The ID of the workspace alert.",
 							Type:        schema.TypeString,
 						},
 					},
@@ -34,7 +34,7 @@ func dataSourceFastlyNGWAFAlertMicrosoftTeamsIntegration() *schema.Resource {
 			},
 			"workspace_id": {
 				Type:        schema.TypeString,
-				Description: "The id of the workspace that is being queried for Microsoft Teams alerts.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 			},
 		},

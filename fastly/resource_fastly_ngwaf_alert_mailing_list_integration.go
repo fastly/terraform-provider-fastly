@@ -24,17 +24,17 @@ func resourceFastlyNGWAFAlertMailingListIntegration() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"address": {
-				Description: "Email address that the alert will use",
+				Description: "Email address that the alert will use.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},
 			"description": {
-				Description: "User-submitted description of the alert",
+				Description: "The description of the alert.",
 				Optional:    true,
 				Type:        schema.TypeString,
 			},
 			"workspace_id": {
-				Description: "The id of the workspace this alert belongs to.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},

@@ -26,53 +26,53 @@ func resourceFastlyNGWAFThresholds() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"action": {
 				Type:             schema.TypeString,
-				Description:      "Action to take when threshold is exceeded",
+				Description:      "Action to take when threshold is exceeded.",
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"block", "log"}, false)),
 			},
 			"dont_notify": {
 				Type:        schema.TypeBool,
-				Description: "Whether to silence notifications when action is taken",
+				Description: "Whether to silence notifications when action is taken.",
 				Required:    true,
 			},
 			"duration": {
 				Type:             schema.TypeInt,
-				Description:      "Duration the action is in place. Default duration is 86,400 seconds (1 day)",
+				Description:      "Duration the action is in place, in seconds. Minimum 1 and maximum 31,556,900.",
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 31556900)),
 			},
 			"enabled": {
 				Type:        schema.TypeBool,
-				Description: "Whether this threshold is active",
+				Description: "Whether this threshold is active.",
 				Required:    true,
 			},
 			"interval": {
 				Type:             schema.TypeInt,
-				Description:      "Threshold interval in seconds. Default interval is 3600 seconds (1 hour)",
+				Description:      "Threshold interval in seconds. Accepted values are `60`, `600`, and `3600`.",
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntInSlice([]int{60, 600, 3600})),
 			},
 			"limit": {
 				Type:             schema.TypeInt,
-				Description:      "Threshold limit. Default limit is 10",
+				Description:      "Threshold limit. Minimum 1 and maximum 10,000.",
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10000)),
 			},
 			"name": {
 				Type:             schema.TypeString,
-				Description:      "Threshold name",
+				Description:      "The name of the threshold.",
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(3, 50)),
 			},
 			"signal": {
 				Type: schema.TypeString,
 				// Update to ref custom / system signals.
-				Description: "The name of the signal this threshold is acting on",
+				Description: "The name of the signal this threshold is acting on.",
 				Required:    true,
 			},
 			"workspace_id": {
 				Type:        schema.TypeString,
-				Description: "The unique identifier of the workspace.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 			},
 		},

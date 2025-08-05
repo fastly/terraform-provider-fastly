@@ -92,7 +92,9 @@ To write consistent and helpful attribute descriptions, follow these steps:
 
 1. If the attribute allows only a limited set of values (an
    enumeration), include a sentence such as "Accepted values are
-   `value 1`, `value 2`, and `value 3`".
+   `value 1`, `value 2`, and `value 3`". If the attribute is read-only
+   (as it would be in a data source, use "One of/or" instead of "Accepted
+   values are/and").
 
 1. If the attribute allows only a range of values (numeric), include a
    sentence such as "Minimum 1 and maximum 10,000".

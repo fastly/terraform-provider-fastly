@@ -37,8 +37,8 @@ $ terraform import fastly_ngwaf_virtual_patches.demo  <workspace_id>/<virtual_pa
 
 ### Required
 
-- `action` (String) Action to take when a signal for virtual patch is detected. One of `log` or `block`.
-- `enabled` (Boolean) Control for enabling and disabling a virtual patch. One of `true` or `false`.
+- `action` (String) Action to take when a signal for virtual patch is detected. Accepted values are `log` and `block`.
+- `enabled` (Boolean) Control for enabling and disabling a virtual patch.
 - `virtual_patch_id` (String) The ID of the virtual patch.
 - `workspace_id` (String) The ID of the workspace.
 

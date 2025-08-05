@@ -25,7 +25,7 @@ func resourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
-				Description: "User-submitted description of the alert",
+				Description: "The description of the alert.",
 				Optional:    true,
 				Type:        schema.TypeString,
 			},
@@ -43,7 +43,7 @@ func resourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(3, 3),
 			},
 			"workspace_id": {
-				Description: "The id of the workspace this alert belongs to.",
+				Description: "The ID of the workspace.",
 				Required:    true,
 				Type:        schema.TypeString,
 			},

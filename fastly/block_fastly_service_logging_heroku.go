@@ -65,6 +65,7 @@ func (h *HerokuServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingHerokuDefaultFormat,
 			Description: "Apache-style string or VCL variables to use for log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

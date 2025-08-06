@@ -129,6 +129,7 @@ func (h *KafkaServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingKafkaDefaultFormat,
 			Description: "Apache style log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

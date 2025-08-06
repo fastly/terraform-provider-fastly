@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -14,6 +15,12 @@ import (
 
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
+
+// Specifies the default logging format for BigQuery from constants.go.
+var expectedFormat = LoggingBigQueryDefaultFormat
+
+// Specifies an additional format to use for an update test (API format).
+var formatUpdate = "%h %l %u %t \"%r\" %>s %b"
 
 func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 	var service gofastly.ServiceDetail
@@ -39,14 +46,14 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email, expectedFormat),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, emailUpdate),
+				Config: testAccServiceVCLConfigBigQueryUpdate(name, bqName, secretKey, emailUpdate, formatUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate),
+					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate, formatUpdate),
 				),
 			},
 		},
@@ -77,14 +84,14 @@ func TestAccFastlyServiceVCL_bigquerylogging_compute(t *testing.T) {
 				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email),
+					testAccCheckFastlyServiceComputeAttributesBQ(&service, name, bqName, email),
 				),
 			},
 			{
 				Config: testAccServiceVCLConfigBigQueryCompute(name, bqName, secretKey, emailUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate),
+					testAccCheckFastlyServiceComputeAttributesBQ(&service, name, bqName, emailUpdate),
 				),
 			},
 		},
@@ -134,9 +141,17 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 	if result2 != secretKey {
 		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", secretKey, result2)
 	}
+
+	formatSchema := loggingResourceSchema["format"]
+	if formatSchema == nil {
+		t.Fatalf("Expected format field to exist in schema")
+	}
+	if formatSchema.Default != expectedFormat {
+		t.Fatalf("Error matching format default:\nexpected: %#v\ngot: %#v", expectedFormat, formatSchema.Default)
+	}
 }
 
-func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName, email string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, name, bqName, email, expectedFormat string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		if gofastly.ToValue(service.Name) != name {
 			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
@@ -163,6 +178,41 @@ func testAccCheckFastlyServiceVCLAttributesBQ(service *gofastly.ServiceDetail, n
 			return fmt.Errorf("bigQuery logging endpoint user/email mismatch, expected: %s, got: %#v", email, gofastly.ToValue(bqList[0].User))
 		}
 
+		if gofastly.ToValue(bqList[0].Format) != expectedFormat {
+			return fmt.Errorf("bigQuery logging endpoint format mismatch, expected: %s, got: %#v", expectedFormat, gofastly.ToValue(bqList[0].Format))
+		}
+		return nil
+	}
+}
+
+func testAccCheckFastlyServiceComputeAttributesBQ(service *gofastly.ServiceDetail, name, bqName, email string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		if gofastly.ToValue(service.Name) != name {
+			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
+		}
+
+		conn := testAccProvider.Meta().(*APIClient).conn
+		bqList, err := conn.ListBigQueries(context.TODO(), &gofastly.ListBigQueriesInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up BigQuery records for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+
+		if len(bqList) != 1 {
+			return fmt.Errorf("bigQuery logging endpoint missing, expected: 1, got: %d", len(bqList))
+		}
+
+		if gofastly.ToValue(bqList[0].Name) != bqName {
+			return fmt.Errorf("bigQuery logging endpoint name mismatch, expected: %s, got: %#v", bqName, gofastly.ToValue(bqList[0].Name))
+		}
+
+		if gofastly.ToValue(bqList[0].User) != email {
+			return fmt.Errorf("bigQuery logging endpoint user/email mismatch, expected: %s, got: %#v", email, gofastly.ToValue(bqList[0].User))
+		}
+
+		// Compute does not support the format attribute, so we won't include that here.
 		return nil
 	}
 }
@@ -191,12 +241,43 @@ resource "fastly_service_vcl" "foo" {
     project_id = "example-gcp-project"
     dataset    = "example_bq_dataset"
     table      = "example_bq_table"
-    format     = "%%h %%l %%u %%t %%r %%>s"
     processing_region = "us"
   }
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName, secretKey, email)
+}
+
+func testAccServiceVCLConfigBigQueryUpdate(name, gcsName, secretKey, email, formatUpdate string) string {
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+	}
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  logging_bigquery {
+    name       = "%s"
+    secret_key = trimspace(%q)
+    email      = "%s"
+    project_id = "example-gcp-project"
+    dataset    = "example_bq_dataset"
+    table      = "example_bq_table"
+    format     = "%s"
+    processing_region = "us"
+  }
+
+  force_destroy = true
+}`, name, domainName, backendName, gcsName, secretKey, email, strings.ReplaceAll(formatUpdate, `"`, `\"`))
 }
 
 func testAccServiceVCLConfigBigQueryCompute(name, gcsName, secretKey, email string) string {
@@ -293,6 +374,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					ProjectID: gofastly.ToPointer("example-gcp-project"),
 					Dataset:   gofastly.ToPointer("example_bq_dataset"),
 					Table:     gofastly.ToPointer("example_bq_table"),
+					Format:    gofastly.ToPointer(expectedFormat),
 					SecretKey: gofastly.ToPointer(secretKey),
 				},
 			},
@@ -303,6 +385,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					"project_id": "example-gcp-project",
 					"dataset":    "example_bq_dataset",
 					"table":      "example_bq_table",
+					"format":     expectedFormat,
 					"secret_key": secretKey,
 				},
 			},
@@ -315,7 +398,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					ProjectID:         gofastly.ToPointer("example-gcp-project"),
 					Dataset:           gofastly.ToPointer("example_bq_dataset"),
 					Table:             gofastly.ToPointer("example_bq_table"),
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+					Format:            gofastly.ToPointer(formatUpdate),
 					Placement:         gofastly.ToPointer("none"),
 					ResponseCondition: gofastly.ToPointer("error_response"),
 					SecretKey:         gofastly.ToPointer(secretKey),
@@ -330,7 +413,7 @@ func TestResourceFastlyFlattenBigQuery(t *testing.T) {
 					"dataset":            "example_bq_dataset",
 					"table":              "example_bq_table",
 					"secret_key":         secretKey,
-					"format":             "%h %l %u %t \"%r\" %>s %b",
+					"format":             formatUpdate,
 					"placement":          "none",
 					"response_condition": "error_response",
 					"processing_region":  "eu",

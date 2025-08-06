@@ -81,6 +81,7 @@ func (h *KinesisServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingKinesisDefaultFormat,
 			Description: "Apache style log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

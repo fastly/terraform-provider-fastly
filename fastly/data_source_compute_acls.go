@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly/computeacls"
+	"github.com/fastly/go-fastly/v11/fastly/computeacls"
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 )
 
@@ -40,12 +40,12 @@ func dataSourceFastlyComputeACLs() *schema.Resource {
 	}
 }
 
-func dataSourceFastlyComputeACLsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceFastlyComputeACLsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] Reading Compute ACLs")
 
-	acls, err := computeacls.ListACLs(conn)
+	acls, err := computeacls.ListACLs(ctx, conn)
 	if err != nil {
 		return diag.Errorf("error fetching Compute ACLs: %s", err)
 	}

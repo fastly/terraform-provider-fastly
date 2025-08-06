@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(ngwaf/workspace): add default_redirect_url to workspaces. ([#1068](https://github.com/fastly/terraform-provider-fastly/pull/1068))
+
 ### BUG FIXES:
 
 - fix(ngwaf/rules): removes the rate limit block from the account level rules schema.  ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))

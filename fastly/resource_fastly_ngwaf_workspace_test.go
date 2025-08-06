@@ -63,7 +63,8 @@ func TestAccFastlyNGWAFWorkspace_validate(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "mode", "log"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "ip_anonymization", "hashed"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "client_ip_headers.0", "True-Client-IP"),
-					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "default_blocking_response_code", "406"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "default_blocking_response_code", "301"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "default_redirect_url", "www.test.com"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_minute", "200"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.ten_minutes", "1000"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "attack_signal_thresholds.0.one_hour", "2000"),
@@ -148,7 +149,8 @@ resource "fastly_ngwaf_workspace" "example" {
   mode                           = "log"
   ip_anonymization               = "hashed"
   client_ip_headers              = ["True-Client-IP"]
-  default_blocking_response_code = 406
+  default_blocking_response_code = 301
+  default_redirect_url           = "www.test.com"
 
   attack_signal_thresholds {
     one_minute  = 200

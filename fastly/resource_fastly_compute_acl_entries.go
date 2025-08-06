@@ -32,7 +32,7 @@ func resourceFastlyComputeACLEntries() *schema.Resource {
 			"entries": {
 				Type:        schema.TypeMap,
 				Required:    true,
-				Description: "A map representing an entry in the Compute ACL, where the key is the prefix and the value is the action (ALLOW or BLOCK).",
+				Description: "A map representing the entries in the Compute ACL, where the keys are the prefixes and the values are the actions (ALLOW or BLOCK).",
 				Elem:        schema.TypeString,
 				DiffSuppressFunc: func(_, _, _ string, d *schema.ResourceData) bool {
 					return !d.HasChange("compute_acl_id") && !d.Get("manage_entries").(bool)
@@ -42,7 +42,7 @@ func resourceFastlyComputeACLEntries() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Have Terraform manage the entries (default: false). If true, Terraform will remove entries not defined in the HCL.",
+				Description: "Manage the ACL entries in Terraform (default: false). If true, Terraform will ensure that the ACL's entries match the entries in the Terraform configuration.",
 			},
 		},
 	}

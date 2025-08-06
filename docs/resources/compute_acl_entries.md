@@ -117,11 +117,11 @@ $ terraform import fastly_compute_acl_entries.example <compute_acl_id>/entries
 ### Required
 
 - `compute_acl_id` (String) Manages entries for a Fastly Compute Access Control List (ACL). To import, use the format <compute_acl_id>/entries.
-- `entries` (Map of String) A map representing an entry in the Compute ACL, where the key is the prefix and the value is the action (ALLOW or BLOCK).
+- `entries` (Map of String) A map representing the entries in the Compute ACL, where the keys are the prefixes and the values are the actions (ALLOW or BLOCK).
 
 ### Optional
 
-- `manage_entries` (Boolean) Have Terraform manage the entries (default: false). If true, Terraform will remove entries not defined in the HCL.
+- `manage_entries` (Boolean) Manage the ACL entries in Terraform (default: false). If true, Terraform will ensure that the ACL's entries match the entries in the Terraform configuration.
 
 ### Read-Only
 

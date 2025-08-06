@@ -3,14 +3,14 @@ layout: "fastly"
 page_title: "Fastly: compute_acl"
 sidebar_current: "docs-fastly-resource-compute_acl"
 description: |-
-  Provides a Compute Access Control List (ACL) that you can attach to a Compute service.
+  Provides a Compute Access Control List (ACL) that defines CIDR-based access rules and is accessible to Compute services during request processing.
 ---
 
 # fastly_compute_acl
 
-Provides a Compute Access Control List (ACL) that can be linked to a Fastly Compute service. ACLs define CIDR-based access rules (e.g., allow/block IP ranges).
+Provides a Compute Access Control List (ACL) that defines CIDR-based access rules (e.g., allow/block IP ranges) and is accessible to Compute services during request processing.
 
-To make a `fastly_compute_acl` available to a [Compute](https://developer.fastly.com/learning/compute/) service, you must create a `fastly_service_compute` resource and attach the ACL using a `resource_link` block, as shown below.
+In order for a Compute ACL (`fastly_compute_acl`) to be accessible to a [Compute](https://developer.fastly.com/learning/compute/) service you'll first need to define a Compute service (`fastly_service_compute`) in your configuration, and then create a link to the ACL from within the service using the `resource_link` block (shown in the below examples).
 
 ## Example Usage
 

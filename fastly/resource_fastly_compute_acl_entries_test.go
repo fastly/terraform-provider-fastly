@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -10,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
-	"github.com/fastly/go-fastly/v10/fastly/computeacls"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/computeacls"
 )
 
 func TestResourceFastlyFlattenComputeACLEntries(t *testing.T) {
@@ -124,7 +125,7 @@ func testAccCheckFastlyComputeACLEntriesRemoteState(n string, want map[string]st
 
 		id := r.Primary.Attributes["compute_acl_id"]
 		conn := testAccProvider.Meta().(*APIClient).conn
-		resp, err := computeacls.ListEntries(conn, &computeacls.ListEntriesInput{
+		resp, err := computeacls.ListEntries(context.TODO(), conn, &computeacls.ListEntriesInput{
 			ComputeACLID: &id,
 		})
 		if err != nil {
@@ -150,7 +151,7 @@ func testAccCheckFastlyComputeACLEntriesDestroy(s *terraform.State) error {
 		}
 		id := r.Primary.Attributes["compute_acl_id"]
 		conn := testAccProvider.Meta().(*APIClient).conn
-		resp, err := computeacls.ListEntries(conn, &computeacls.ListEntriesInput{
+		resp, err := computeacls.ListEntries(context.TODO(), conn, &computeacls.ListEntriesInput{
 			ComputeACLID: &id,
 		})
 		if err != nil {

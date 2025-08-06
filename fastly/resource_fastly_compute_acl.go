@@ -7,9 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly/computeacls"
-
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/computeacls"
 )
 
 func resourceFastlyComputeACL() *schema.Resource {
@@ -31,7 +30,7 @@ func resourceFastlyComputeACL() *schema.Resource {
 	}
 }
 
-func resourceFastlyComputeACLCreate(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyComputeACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	i := computeacls.CreateInput{
@@ -40,7 +39,7 @@ func resourceFastlyComputeACLCreate(_ context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] CREATE: Compute ACL input: %#v", i)
 
-	acl, err := computeacls.Create(conn, &i)
+	acl, err := computeacls.Create(ctx, conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -50,7 +49,7 @@ func resourceFastlyComputeACLCreate(_ context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceFastlyComputeACLRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyComputeACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	i := computeacls.DescribeInput{
@@ -59,7 +58,7 @@ func resourceFastlyComputeACLRead(_ context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] REFRESH: Compute ACL input: %#v", i)
 
-	acl, err := computeacls.Describe(conn, &i)
+	acl, err := computeacls.Describe(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
 	if err != nil {
 		if e, ok := err.(*gofastly.HTTPError); ok && e.IsNotFound() {
 			log.Printf("[WARN] No Compute ACL found '%s'", d.Id())
@@ -76,7 +75,7 @@ func resourceFastlyComputeACLRead(_ context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func resourceFastlyComputeACLDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFastlyComputeACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	i := computeacls.DeleteInput{
@@ -85,7 +84,7 @@ func resourceFastlyComputeACLDelete(_ context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] DELETE: Compute ACL input: %#v", i)
 
-	err := computeacls.Delete(conn, &i)
+	err := computeacls.Delete(gofastly.NewContextForResourceID(ctx, d.Id()), conn, &i)
 	if err != nil {
 		return diag.FromErr(err)
 	}

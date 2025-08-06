@@ -9,9 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v10/fastly/computeacls"
-
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/computeacls"
 )
 
 func resourceFastlyComputeACLEntries() *schema.Resource {
@@ -53,13 +52,13 @@ func resourceFastlyComputeACLEntriesCreate(ctx context.Context, d *schema.Resour
 	return resourceFastlyComputeACLEntriesUpdate(ctx, d, meta)
 }
 
-func resourceFastlyComputeACLEntriesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLEntriesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
 	log.Printf("[DEBUG] REFRESH: Compute ACL Entries")
 
 	id := d.Get("compute_acl_id").(string)
-	remoteState, err := computeacls.ListEntries(conn, &computeacls.ListEntriesInput{
+	remoteState, err := computeacls.ListEntries(ctx, conn, &computeacls.ListEntriesInput{
 		ComputeACLID: &id,
 	})
 	if err != nil {
@@ -120,19 +119,18 @@ func resourceFastlyComputeACLEntriesUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Batch updating Compute ACL entries: %+v", batch)
-	if err := batchUpdateComputeACLEntries(conn, id, batch); err != nil {
+	if err := batchUpdateComputeACLEntries(ctx, conn, id, batch); err != nil {
 		return diag.FromErr(err)
 	}
 
 	if d.Id() == "" {
-		id := d.Get("compute_acl_id").(string)
 		d.SetId(fmt.Sprintf("%s/entries", id))
 	}
 
 	return resourceFastlyComputeACLEntriesRead(ctx, d, meta)
 }
 
-func resourceFastlyComputeACLEntriesDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceFastlyComputeACLEntriesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 	id := d.Get("compute_acl_id").(string)
 	entries := d.Get("entries").(map[string]any)
@@ -148,7 +146,7 @@ func resourceFastlyComputeACLEntriesDelete(_ context.Context, d *schema.Resource
 		})
 	}
 
-	if err := batchUpdateComputeACLEntries(conn, id, batch); err != nil {
+	if err := batchUpdateComputeACLEntries(ctx, conn, id, batch); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -168,13 +166,13 @@ func flattenComputeACLEntries(entries []computeacls.ComputeACLEntry) map[string]
 }
 
 // batchUpdateComputeACLEntries sends the given batch of operations to the Fastly API.
-func batchUpdateComputeACLEntries(conn *gofastly.Client, computeACLID string, entries []*computeacls.BatchComputeACLEntry) error {
+func batchUpdateComputeACLEntries(ctx context.Context, conn *gofastly.Client, computeACLID string, entries []*computeacls.BatchComputeACLEntry) error {
 	// No known documented limit yet, so no batching logic — unlike config store.
 	if len(entries) == 0 {
 		return nil
 	}
 
-	return computeacls.Update(conn, &computeacls.UpdateInput{
+	return computeacls.Update(ctx, conn, &computeacls.UpdateInput{
 		ComputeACLID: &computeACLID,
 		Entries:      entries,
 	})

@@ -1,6 +1,7 @@
 package fastly
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -8,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v10/fastly/computeacls"
+	"github.com/fastly/go-fastly/v11/fastly/computeacls"
 
-	gofastly "github.com/fastly/go-fastly/v10/fastly"
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
 func TestAccFastlyComputeACL_validate(t *testing.T) {
@@ -61,8 +62,9 @@ func testAccCheckFastlyComputeACLRemoteState(service *gofastly.ServiceDetail, co
 		}
 
 		conn := testAccProvider.Meta().(*APIClient).conn
+		ctx := context.TODO()
 
-		acls, err := computeacls.ListACLs(conn)
+		acls, err := computeacls.ListACLs(ctx, conn)
 		if err != nil {
 			return fmt.Errorf("error listing all Compute ACLs: %s", err)
 		}
@@ -79,7 +81,7 @@ func testAccCheckFastlyComputeACLRemoteState(service *gofastly.ServiceDetail, co
 			return fmt.Errorf("error looking up the Compute ACL")
 		}
 
-		links, err := conn.ListResources(&gofastly.ListResourcesInput{
+		links, err := conn.ListResources(ctx, &gofastly.ListResourcesInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.Version.Number),
 		})

@@ -181,19 +181,17 @@ func batchUpdateComputeACLEntries(conn *gofastly.Client, computeACLID string, en
 }
 
 func resourceFastlyComputeACLEntriesImport(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-	split := strings.Split(d.Id(), "/")
-
-	if len(split) != 2 || split[1] != "entries" {
+	computeACLID, suffix, ok := strings.Cut(d.Id(), "/")
+	if !ok || suffix != "entries" {
 		return nil, fmt.Errorf("invalid ID format: %s. Expected format: <compute_acl_id>/entries", d.Id())
 	}
-
-	computeACLID := split[0]
 
 	if err := d.Set("compute_acl_id", computeACLID); err != nil {
 		return nil, fmt.Errorf("error setting compute_acl_id (%s): %w", computeACLID, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/entries", computeACLID)) // Ensure normalized form
+	// Normalize the ID in case the original had redundant slashes, etc.
+	d.SetId(fmt.Sprintf("%s/entries", computeACLID))
 
 	return []*schema.ResourceData{d}, nil
 }

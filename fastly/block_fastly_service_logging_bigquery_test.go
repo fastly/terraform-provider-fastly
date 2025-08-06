@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -18,7 +19,7 @@ import (
 // Specifies the default logging format for BigQuery from constants.go.
 var expectedFormat = LoggingBigQueryDefaultFormat
 
-// Specifies an additional format to use for an update test.
+// Specifies an additional format to use for an update test (API format).
 var formatUpdate = "%h %l %u %t \"%r\" %>s %b"
 
 func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
@@ -42,14 +43,14 @@ func TestAccFastlyServiceVCL_bigquerylogging(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, email, expectedFormat),
+				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, email, expectedFormat),
 				),
 			},
 			{
-				Config: testAccServiceVCLConfigBigQuery(name, bqName, secretKey, emailUpdate, formatUpdate),
+				Config: testAccServiceVCLConfigBigQueryUpdate(name, bqName, secretKey, emailUpdate, formatUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
 					testAccCheckFastlyServiceVCLAttributesBQ(&service, name, bqName, emailUpdate, formatUpdate),
@@ -141,12 +142,12 @@ func TestBigqueryloggingEnvDefaultFuncAttributes(t *testing.T) {
 		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", secretKey, result2)
 	}
 
-	result3, err3 := loggingResourceSchema["format"].DefaultFunc()
-	if err3 != nil {
-		t.Fatalf("Unexpected err %#v when calling format DefaultFunc", result3)
+	formatSchema := loggingResourceSchema["format"]
+	if formatSchema == nil {
+		t.Fatalf("Expected format field to exist in schema")
 	}
-	if result3 != expectedFormat {
-		t.Fatalf("Error matching format default:\nexpected: %#v\ngot: %#v", expectedFormat, result3)
+	if formatSchema.Default != expectedFormat {
+		t.Fatalf("Error matching format default:\nexpected: %#v\ngot: %#v", expectedFormat, formatSchema.Default)
 	}
 }
 
@@ -216,7 +217,7 @@ func testAccCheckFastlyServiceComputeAttributesBQ(service *gofastly.ServiceDetai
 	}
 }
 
-func testAccServiceVCLConfigBigQuery(name, gcsName, secretKey, email, expectedFormat string) string {
+func testAccServiceVCLConfigBigQuery(name, gcsName, secretKey, email string) string {
 	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 	return fmt.Sprintf(`
@@ -245,6 +246,38 @@ resource "fastly_service_vcl" "foo" {
 
   force_destroy = true
 }`, name, domainName, backendName, gcsName, secretKey, email)
+}
+
+func testAccServiceVCLConfigBigQueryUpdate(name, gcsName, secretKey, email, formatUpdate string) string {
+	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "%s"
+    comment = "tf-testing-domain"
+	}
+
+  backend {
+    address = "%s"
+    name    = "tf -test backend"
+  }
+
+  logging_bigquery {
+    name       = "%s"
+    secret_key = trimspace(%q)
+    email      = "%s"
+    project_id = "example-gcp-project"
+    dataset    = "example_bq_dataset"
+    table      = "example_bq_table"
+    format     = "%s"
+    processing_region = "us"
+  }
+
+  force_destroy = true
+}`, name, domainName, backendName, gcsName, secretKey, email, strings.ReplaceAll(formatUpdate, `"`, `\"`))
 }
 
 func testAccServiceVCLConfigBigQueryCompute(name, gcsName, secretKey, email string) string {

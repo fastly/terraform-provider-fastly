@@ -133,7 +133,7 @@ $ terraform import fastly_ngwaf_workspace_rule.demo <workspaceID>/<ruleID>
 
 Required:
 
-- `type` (String) The action type. One of: addSignal, allow, block, browserChallenge, dynamicChallenge, excludeSignal, verifyToken or for rate limit rule valid values: logRequest, blockSignal, browserChallenge, verifyToken
+- `type` (String) The action type. One of: `addSignal`, `allow`, `block`, `browserChallenge`, `dynamicChallenge`, `excludeSignal`, `verifyToken` or for rate limit rule valid values: `logRequest`, `blockSignal`, `browserChallenge`, `verifyToken`
 
 Optional:
 

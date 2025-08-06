@@ -76,7 +76,7 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 			"default_redirect_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "URL to redirect to when blocking with a '301' or '302' HTTP status code",
+				Description: "The redirect URL used if default_blocking_response_code is `301` or `302`.",
 			},
 			"description": {
 				Type:        schema.TypeString,

@@ -1,0 +1,27 @@
+---
+layout: "fastly"
+page_title: "Fastly: compute_acl"
+sidebar_current: "docs-fastly-resource-compute_acl"
+description: |-
+  Provides a Compute Access Control List (ACL) that defines CIDR-based access rules and is accessible to Compute services during request processing.
+---
+
+# fastly_compute_acl
+
+Provides a Compute Access Control List (ACL) that defines CIDR-based access rules (e.g., allow/block IP ranges) and is accessible to Compute services during request processing.
+
+In order for a Compute ACL (`fastly_compute_acl`) to be accessible to a [Compute](https://developer.fastly.com/learning/compute/) service you'll first need to define a Compute service (`fastly_service_compute`) in your configuration, and then create a link to the ACL from within the service using the `resource_link` block (shown in the below examples).
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/compute_acl_basic_usage.tf" }}
+
+## Import
+
+Fastly Compute ACLs can be imported using their ACL ID, e.g.
+
+{{ codefile "sh" "examples/resources/components/compute_acl_import_cmd.txt" }}
+
+{{ .SchemaMarkdown | trimspace }}

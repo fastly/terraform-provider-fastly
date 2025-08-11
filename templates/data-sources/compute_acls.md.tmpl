@@ -1,0 +1,24 @@
+---
+page_title: "Fastly: fastly_compute_acls"
+sidebar_current: "docs-fastly-datasource-fastly_compute_acls"
+description: |-
+  Get a list of Fastly Compute ACLs.
+---
+
+# fastly_compute_acls
+
+Use this data source to retrieve a list of [Fastly Compute ACLs][1].
+
+## Example Usage
+
+{{ tffile "examples/data-sources/compute_acls.tf" }}
+
+## Outputs
+
+- `acls` — a list of objects with:
+  - `id` — the ACL ID.
+  - `name` — the name of the ACL.
+
+[1]: https://www.fastly.com/documentation/reference/api/compute-acls/
+
+{{ .SchemaMarkdown | trimspace }}

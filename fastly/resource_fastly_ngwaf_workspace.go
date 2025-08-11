@@ -73,6 +73,11 @@ func resourceFastlyNGWAFWorkspace() *schema.Resource {
 				Description:      "The status code returned when a request is blocked. This configuration is applied at the workspace but can be overwritten in rules. Accepted values are [`301`, `302`, `400..599`]. Default value `406`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.Any(validation.IntBetween(400, 599), validation.IntInSlice([]int{301, 302}))),
 			},
+			"default_redirect_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The redirect URL used if default_blocking_response_code is `301` or `302`.",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -124,6 +129,11 @@ func resourceFastlyNGWAFWorkspaceCreate(ctx context.Context, d *schema.ResourceD
 	if d.HasChange("default_blocking_response_code") || d.Get("default_blocking_response_code") != 406 {
 		code := d.Get("default_blocking_response_code").(int)
 		i.DefaultBlockingResponseCode = &code
+	}
+
+	if d.HasChange("default_redirect_url") || d.Get("default_redirect_url") != "" {
+		url := d.Get("default_redirect_url").(string)
+		i.DefaultRedirectURL = &url
 	}
 
 	if v, ok := d.GetOk("attack_signal_thresholds"); ok && len(v.([]any)) > 0 {
@@ -185,6 +195,9 @@ func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("default_blocking_response_code", workspace.DefaultBlockingResponseCode); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("default_redirect_url", workspace.DefaultRedirectURL); err != nil {
+		return diag.FromErr(err)
+	}
 
 	log.Printf("[DEBUG] UPDATE: NGWAF workspace attack thresholds get: %#v", workspace.AttackSignalThresholds)
 
@@ -226,6 +239,11 @@ func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChange("default_blocking_response_code") || d.Get("default_blocking_response_code") != 406 {
 		code := d.Get("default_blocking_response_code").(int)
 		i.DefaultBlockingResponseCode = &code
+	}
+
+	if d.HasChange("default_redirect_url") || d.Get("default_redirect_url") != "" {
+		url := d.Get("default_redirect_url").(string)
+		i.DefaultRedirectURL = &url
 	}
 
 	if v, ok := d.GetOk("attack_signal_thresholds"); ok && len(v.([]any)) > 0 {

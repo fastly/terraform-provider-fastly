@@ -4,11 +4,20 @@
 
 ### ENHANCEMENTS:
 
+- feat(ngwaf/workspace): add default_redirect_url to workspaces. ([#1068](https://github.com/fastly/terraform-provider-fastly/pull/1068))
+- feat(compute acls): add support for compute ACLs ([#1031](https://github.com/fastly/terraform-provider-fastly/pull/1031))
+
 ### BUG FIXES:
 
-- fix(ngwaf/rules): removes the rate limit block from the account level rules schema.  ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
+- fix(ngwaf/rules): removes the rate limit block from the account level rules schema. ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
 
 ### DEPENDENCIES:
+
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))
+
+### DOCUMENTATION:
+
+- docs(ngwaf/rules): add rule action types documentation ([#1069](https://github.com/fastly/terraform-provider-fastly/pull/1069))
 
 ## 8.0.0 (August 5, 2025)
 
@@ -20,7 +29,7 @@
 
 ### BUG FIXES:
 
-- fix(snippets): delete dynamic snippet contents when the resource is deleted if `manage_snippets` is `true`. ([#1021](https://github.com/fastly/terraform-provider-fastly/pull/1021))
+- fix(snippets): delete dynamic snippet contents when the resource is deleted if `manage_snippets` is `true` ([#1021](https://github.com/fastly/terraform-provider-fastly/pull/1021))
 - fix(examples): Replace http-me.glitch.me with http-me.fastly.dev ([#1026](https://github.com/fastly/terraform-provider-fastly/pull/1026))
 - fix(product_enablement/ngwaf): Allow traffic_ramp to be set to zero ([#1057](https://github.com/fastly/terraform-provider-fastly/pull/1057))
 
@@ -57,13 +66,13 @@
 ### ENHANCEMENTS:
 
 - feat(domains/v1): add `description` field ([#1002](https://github.com/fastly/terraform-provider-fastly/pull/1002))
-- feat(backend): Add support for 'prefer IPv6' attribute. ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1003))
-- feat(logging): Add support for 'processing region' attribute. ([#1011](https://github.com/fastly/terraform-provider-fastly/pull/1011))
+- feat(backend): add support for 'prefer IPv6' attribute ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1003))
+- feat(logging): add support for 'processing region' attribute ([#1011](https://github.com/fastly/terraform-provider-fastly/pull/1011))
 
 ### BUG FIXES:
 
 - fix(block_fastly_service_settings): fix detection of falsey value for stale_if_error field ([#1003](https://github.com/fastly/terraform-provider-fastly/pull/1009))
-- fix(backend): Set default 'prefer IPv6' attribute differently for Delivery and Compute services. ([#1010](https://github.com/fastly/terraform-provider-fastly/pull/1010))
+- fix(backend): set default 'prefer IPv6' attribute differently for Delivery and Compute services ([#1010](https://github.com/fastly/terraform-provider-fastly/pull/1010))
 
 ### DEPENDENCIES:
 

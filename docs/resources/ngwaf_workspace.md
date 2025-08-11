@@ -46,6 +46,7 @@ $ terraform import fastly_ngwaf_workspace.demo xxxxxxxxxxxxxxxxxxxx
 
 - `client_ip_headers` (List of String) Specifies the request headers containing the client IP address. Maximum of 10 header names.
 - `default_blocking_response_code` (Number) The status code returned when a request is blocked. This configuration is applied at the workspace but can be overwritten in rules. Accepted values are [`301`, `302`, `400..599`]. Default value `406`.
+- `default_redirect_url` (String) The redirect URL used if default_blocking_response_code is `301` or `302`.
 - `ip_anonymization` (String) Agents will anonymize IP addresses according to the option selected. Accepted value is `hashed`.
 
 ### Read-Only

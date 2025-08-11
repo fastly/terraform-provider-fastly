@@ -51,6 +51,7 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
+			"fastly_compute_acls":                            dataSourceFastlyComputeACLs(),
 			"fastly_configstores":                            dataSourceFastlyConfigStores(),
 			"fastly_datacenters":                             dataSourceFastlyDatacenters(),
 			"fastly_dictionaries":                            dataSourceFastlyDictionaries(),
@@ -88,6 +89,8 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"fastly_alert":                                   resourceFastlyAlert(),
+			"fastly_compute_acl_entries":                     resourceFastlyComputeACLEntries(),
+			"fastly_compute_acl":                             resourceFastlyComputeACL(),
 			"fastly_configstore":                             resourceFastlyConfigStore(),
 			"fastly_configstore_entries":                     resourceFastlyConfigStoreEntries(),
 			"fastly_custom_dashboard":                        resourceFastlyCustomDashboard(),

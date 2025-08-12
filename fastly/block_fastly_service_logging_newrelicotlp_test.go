@@ -215,15 +215,15 @@ func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
 			},
 			local: []map[string]any{
 				{
-					"format":             LoggingNewRelicOLTPDefaultFormat,
-					"format_version":     2,
-					"name":               "newrelicotlp-endpoint",
+					"format":             gofastly.ToPointer(LoggingNewRelicOLTPDefaultFormat),
+					"format_version":     gofastly.ToPointer(2),
+					"name":               gofastly.ToPointer("newrelicotlp-endpoint"),
 					"placement":          placement, // implies nil
-					"region":             "US",
+					"region":             gofastly.ToPointer("US"),
 					"response_condition": responseCondition, // implies nil
-					"token":              "token",
+					"token":              gofastly.ToPointer("token"),
 					"url":                loggingURL, // implies nil
-					"processing_region":  "eu",
+					"processing_region":  gofastly.ToPointer("eu"),
 				},
 			},
 		},

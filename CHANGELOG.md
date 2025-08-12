@@ -9,6 +9,7 @@
 
 ### BUG FIXES:
 
+- fix(service_vcl/logging_gcs): resolves an issue where project_id was not being updated for logging_gcs. ([#1073](https://github.com/fastly/terraform-provider-fastly/pull/1073))
 - fix(ngwaf/rules): removes the rate limit block from the account level rules schema. ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
 
 ### DEPENDENCIES:

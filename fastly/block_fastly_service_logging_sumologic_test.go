@@ -13,45 +13,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenSumologic(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Sumologic
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Sumologic{
-				{
-					Name:              gofastly.ToPointer("sumo collector"),
-					URL:               gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
-					Format:            gofastly.ToPointer("log format"),
-					FormatVersion:     gofastly.ToPointer(2),
-					MessageType:       gofastly.ToPointer("classic"),
-					ResponseCondition: gofastly.ToPointer("condition 1"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "sumo collector",
-					"url":                "https://collectors.sumologic.com/receiver/1",
-					"format":             "log format",
-					"format_version":     2,
-					"message_type":       "classic",
-					"response_condition": "condition 1",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenSumologics(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -62,7 +23,7 @@ func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 		Name:             gofastly.ToPointer("sumologger"),
 		URL:              gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
 		FormatVersion:    gofastly.ToPointer(2),
-		Format:           gofastly.ToPointer("my format"),
+		Format:           gofastly.ToPointer(LoggingSumologicDefaultFormat),
 		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
@@ -70,7 +31,7 @@ func TestAccFastlyServiceVCL_sumologic(t *testing.T) {
 		Name:             gofastly.ToPointer("sumologger"),
 		URL:              gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
 		FormatVersion:    gofastly.ToPointer(2),
-		Format:           gofastly.ToPointer("my format new"),
+		Format:           gofastly.ToPointer(LoggingFormatUpdate),
 		ProcessingRegion: gofastly.ToPointer("none"),
 	}
 
@@ -225,10 +186,48 @@ resource "fastly_service_vcl" "foo" {
     name = "%s"
     url = "%s"
     format_version = %d
-    format = "%s"
     processing_region = "us"
   }
 
   force_destroy = true
-}`, name, domainName, backendName, gofastly.ToValue(sumologic.Name), gofastly.ToValue(sumologic.URL), gofastly.ToValue(sumologic.FormatVersion), gofastly.ToValue(sumologic.Format))
+}`, name, domainName, backendName, gofastly.ToValue(sumologic.Name), gofastly.ToValue(sumologic.URL), gofastly.ToValue(sumologic.FormatVersion))
+}
+
+func TestResourceFastlyFlattenSumologic(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Sumologic
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Sumologic{
+				{
+					Name:              gofastly.ToPointer("sumo collector"),
+					URL:               gofastly.ToPointer("https://collectors.sumologic.com/receiver/1"),
+					Format:            gofastly.ToPointer("log format"),
+					FormatVersion:     gofastly.ToPointer(2),
+					MessageType:       gofastly.ToPointer("classic"),
+					ResponseCondition: gofastly.ToPointer("condition 1"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "sumo collector",
+					"url":                "https://collectors.sumologic.com/receiver/1",
+					"format":             "log format",
+					"format_version":     2,
+					"message_type":       "classic",
+					"response_condition": "condition 1",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenSumologics(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
+		}
+	}
 }

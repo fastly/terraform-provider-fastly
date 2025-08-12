@@ -33,7 +33,7 @@ func TestResourceFastlyFlattenSyslog(t *testing.T) {
 					Address:           gofastly.ToPointer("127.0.0.1"),
 					IPV4:              gofastly.ToPointer("127.0.0.1"),
 					Port:              gofastly.ToPointer(8080),
-					Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+					Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
 					FormatVersion:     gofastly.ToPointer(1),
 					ResponseCondition: gofastly.ToPointer("response_condition_test"),
 					MessageType:       gofastly.ToPointer("classic"),
@@ -88,7 +88,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	// Hence we set some of the non-config attributes to have their defaults.
 	log1 := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.1"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		IPV4:              gofastly.ToPointer("127.0.0.1"),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -103,7 +103,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	}
 	log1AfterUpdate := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.1"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		IPV4:              gofastly.ToPointer("127.0.0.1"),
 		MessageType:       gofastly.ToPointer("blank"),
@@ -118,7 +118,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	}
 	log2 := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.2"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		IPV4:              gofastly.ToPointer("127.0.0.2"),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -277,7 +277,7 @@ func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
 	// refreshing the TF state the Fastly API will consequently return the same.
 	log1 := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.1"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		IPV4:              gofastly.ToPointer("127.0.0.1"),
 		MessageType:       gofastly.ToPointer("classic"),

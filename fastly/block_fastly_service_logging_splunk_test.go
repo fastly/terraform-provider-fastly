@@ -15,69 +15,12 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenSplunk(t *testing.T) {
-	key, cert, err := generateKeyAndCert()
-	if err != nil {
-		t.Errorf("failed to generate key and cert: %s", err)
-	}
-
-	cases := []struct {
-		remote []*gofastly.Splunk
-		local  []map[string]any
-	}{
-		// The same certificate is used here for TLSCACert and TLSClientCert,
-		// but this is strictly for testing. In practice the same value should
-		// not be used for these two fields.
-		{
-			remote: []*gofastly.Splunk{
-				{
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
-					FormatVersion:     gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("test-splunk"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("error_response"),
-					TLSCACert:         gofastly.ToPointer(cert),
-					TLSClientCert:     gofastly.ToPointer(cert),
-					TLSClientKey:      gofastly.ToPointer(key),
-					TLSHostname:       gofastly.ToPointer("example.com"),
-					Token:             gofastly.ToPointer("test-token"),
-					URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     1,
-					"name":               "test-splunk",
-					"placement":          "none",
-					"response_condition": "error_response",
-					"tls_ca_cert":        cert,
-					"tls_client_cert":    cert,
-					"tls_client_key":     key,
-					"tls_hostname":       "example.com",
-					"token":              "test-token",
-					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenSplunks(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_splunk_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	splunkLogOne := gofastly.Splunk{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingSplunkDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(1),
 		Name:              gofastly.ToPointer("test-splunk-1"),
 		Placement:         gofastly.ToPointer("none"),
@@ -191,7 +134,7 @@ func TestAccFastlyServiceVCL_splunk_default(t *testing.T) {
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 
 	splunkLog := gofastly.Splunk{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingSplunkDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("test-splunk"),
 		RequestMaxBytes:   gofastly.ToPointer(0),
@@ -237,7 +180,7 @@ func TestAccFastlyServiceVCL_splunk_complete(t *testing.T) {
 	// these two fields.
 
 	splunkLogOne := gofastly.Splunk{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingSplunkDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(1),
 		Name:              gofastly.ToPointer("test-splunk-1"),
 		Placement:         gofastly.ToPointer("none"),
@@ -724,5 +667,62 @@ func getSplunkEnv() *currentSplunkEnv {
 	return &currentSplunkEnv{
 		Token:  os.Getenv("FASTLY_SPLUNK_TOKEN"),
 		CaCert: os.Getenv("FASTLY_SPLUNK_CA_CERT"),
+	}
+}
+
+func TestResourceFastlyFlattenSplunk(t *testing.T) {
+	key, cert, err := generateKeyAndCert()
+	if err != nil {
+		t.Errorf("failed to generate key and cert: %s", err)
+	}
+
+	cases := []struct {
+		remote []*gofastly.Splunk
+		local  []map[string]any
+	}{
+		// The same certificate is used here for TLSCACert and TLSClientCert,
+		// but this is strictly for testing. In practice the same value should
+		// not be used for these two fields.
+		{
+			remote: []*gofastly.Splunk{
+				{
+					Format:            gofastly.ToPointer(LoggingSplunkDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("test-splunk"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("error_response"),
+					TLSCACert:         gofastly.ToPointer(cert),
+					TLSClientCert:     gofastly.ToPointer(cert),
+					TLSClientKey:      gofastly.ToPointer(key),
+					TLSHostname:       gofastly.ToPointer("example.com"),
+					Token:             gofastly.ToPointer("test-token"),
+					URL:               gofastly.ToPointer("https://mysplunkendpoint.example.com/services/collector/event"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"format":             "%h %l %u %t \"%r\" %>s %b",
+					"format_version":     1,
+					"name":               "test-splunk",
+					"placement":          "none",
+					"response_condition": "error_response",
+					"tls_ca_cert":        cert,
+					"tls_client_cert":    cert,
+					"tls_client_key":     key,
+					"tls_hostname":       "example.com",
+					"token":              "test-token",
+					"url":                "https://mysplunkendpoint.example.com/services/collector/event",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenSplunks(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
+		}
 	}
 }

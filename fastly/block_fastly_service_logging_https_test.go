@@ -14,48 +14,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenHTTPS(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.HTTPS
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.HTTPS{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("https-endpoint"),
-					URL:               gofastly.ToPointer("https://example.com/logs"),
-					RequestMaxEntries: gofastly.ToPointer(10),
-					RequestMaxBytes:   gofastly.ToPointer(10),
-					ContentType:       gofastly.ToPointer("application/json"),
-					MessageType:       gofastly.ToPointer("blank"),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":                "https-endpoint",
-					"url":                 "https://example.com/logs",
-					"request_max_entries": 10,
-					"request_max_bytes":   10,
-					"content_type":        "application/json",
-					"message_type":        "blank",
-					"format_version":      2,
-					"processing_region":   "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenHTTPS(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -63,7 +21,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 
 	log1 := gofastly.HTTPS{
 		ContentType:       gofastly.ToPointer(""),
-		Format:            gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingHTTPSDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
@@ -82,7 +40,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 
 	log1AfterUpdate := gofastly.HTTPS{
 		ContentType:       gofastly.ToPointer(""),
-		Format:            gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
@@ -101,7 +59,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 
 	log2 := gofastly.HTTPS{
 		ContentType:       gofastly.ToPointer(""),
-		Format:            gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
@@ -258,7 +216,6 @@ resource "fastly_service_vcl" "foo" {
 
 	logging_https {
 		name               = "httpslogger"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
     processing_region = "us"
@@ -305,6 +262,7 @@ resource "fastly_service_compute" "foo" {
 }
 
 func testAccServiceVCLHTTPSConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"
@@ -319,18 +277,62 @@ resource "fastly_service_vcl" "foo" {
 
 	logging_https {
 		name               = "httpslogger"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b"
+		format             = %q
 		method             = "POST"
 		url                = "https://example.com/logs/1"
 	}
 
 	logging_https {
 		name               = "httpslogger2"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = %q
 		method             = "POST"
 		url                = "https://example.com/logs/2"
 		request_max_bytes  = 1000
 	}
 	force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenHTTPS(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.HTTPS
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.HTTPS{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("https-endpoint"),
+					URL:               gofastly.ToPointer("https://example.com/logs"),
+					RequestMaxEntries: gofastly.ToPointer(10),
+					RequestMaxBytes:   gofastly.ToPointer(10),
+					ContentType:       gofastly.ToPointer("application/json"),
+					MessageType:       gofastly.ToPointer("blank"),
+					Format:            gofastly.ToPointer(LoggingHTTPSDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":                "https-endpoint",
+					"url":                 "https://example.com/logs",
+					"request_max_entries": 10,
+					"request_max_bytes":   10,
+					"content_type":        "application/json",
+					"message_type":        "blank",
+					"format":              LoggingHTTPSDefaultFormat,
+					"format_version":      2,
+					"processing_region":   "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenHTTPS(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
 }

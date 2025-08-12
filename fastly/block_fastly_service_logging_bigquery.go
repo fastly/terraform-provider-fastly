@@ -208,7 +208,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(ctx context.Context, d *
 	if v, ok := modified["table"]; ok {
 		opts.Table = gofastly.ToPointer(v.(string))
 	}
-	if v, ok := modified["template_suffix"]; ok {
+	if v, ok := modified["template"]; ok {
 		opts.Template = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["email"]; ok {

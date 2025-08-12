@@ -14,72 +14,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenKafka(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Kafka
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Kafka{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("kafka-endpoint"),
-					Topic:             gofastly.ToPointer("topic"),
-					Brokers:           gofastly.ToPointer("127.0.0.1,127.0.0.2"),
-					CompressionCodec:  gofastly.ToPointer("snappy"),
-					RequiredACKs:      gofastly.ToPointer("-1"),
-					UseTLS:            gofastly.ToPointer(true),
-					TLSCACert:         gofastly.ToPointer(caCert(t)),
-					TLSClientCert:     gofastly.ToPointer(certificate(t)),
-					TLSClientKey:      gofastly.ToPointer(privateKey(t)),
-					TLSHostname:       gofastly.ToPointer("example.com"),
-					ResponseCondition: gofastly.ToPointer("response_condition"),
-					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
-					FormatVersion:     gofastly.ToPointer(2),
-					Placement:         gofastly.ToPointer("none"),
-					ParseLogKeyvals:   gofastly.ToPointer(true),
-					RequestMaxBytes:   gofastly.ToPointer(12345),
-					AuthMethod:        gofastly.ToPointer("scram-sha-512"),
-					User:              gofastly.ToPointer("user"),
-					Password:          gofastly.ToPointer("password"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "kafka-endpoint",
-					"topic":              "topic",
-					"brokers":            "127.0.0.1,127.0.0.2",
-					"compression_codec":  "snappy",
-					"required_acks":      "-1",
-					"use_tls":            true,
-					"tls_ca_cert":        caCert(t),
-					"tls_client_cert":    certificate(t),
-					"tls_client_key":     privateKey(t),
-					"tls_hostname":       "example.com",
-					"response_condition": "response_condition",
-					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
-					"placement":          "none",
-					"format_version":     2,
-					"parse_log_keyvals":  true,
-					"request_max_bytes":  12345,
-					"auth_method":        "scram-sha-512",
-					"user":               "user",
-					"password":           "password",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenKafka(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -98,7 +32,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
 		TLSHostname:       gofastly.ToPointer("example.com"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingKafkaDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
 		ParseLogKeyvals:   gofastly.ToPointer(true),
@@ -122,7 +56,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
 		TLSHostname:       gofastly.ToPointer("example2.com"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
 		ParseLogKeyvals:   gofastly.ToPointer(true),
@@ -146,7 +80,7 @@ func TestAccFastlyServiceVCL_kafkalogging_basic(t *testing.T) {
 		TLSClientKey:      gofastly.ToPointer(privateKey(t)),
 		TLSHostname:       gofastly.ToPointer("example.com"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
 		ParseLogKeyvals:   gofastly.ToPointer(true),
@@ -310,7 +244,7 @@ resource "fastly_service_compute" "foo" {
 
 	logging_kafka {
 		name               = "kafkalogger"
-	  topic  						 = "topic"
+	  	topic  			   = "topic"
 		brokers            = "127.0.0.1,127.0.0.2"
 		compression_codec  = "snappy"
 		required_acks      = "-1"
@@ -366,7 +300,6 @@ resource "fastly_service_vcl" "foo" {
 		tls_client_key     = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
 		placement          = "none"
 		parse_log_keyvals  = true
@@ -383,6 +316,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLKafkaConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"
@@ -416,7 +350,7 @@ resource "fastly_service_vcl" "foo" {
 		tls_client_key     = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example2.com"
 		response_condition = "response_condition_test"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = %q
 		format_version     = 2
 		placement          = "none"
 		parse_log_keyvals  = true
@@ -438,7 +372,7 @@ resource "fastly_service_vcl" "foo" {
 		tls_client_key     = file("test_fixtures/fastly_test_privatekey")
 		tls_hostname       = "example.com"
 		response_condition = "response_condition_test"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = %q
 		format_version     = 2
 		placement          = "none"
 		parse_log_keyvals  = true
@@ -449,5 +383,71 @@ resource "fastly_service_vcl" "foo" {
 	}
 
 	force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenKafka(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Kafka
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Kafka{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("kafka-endpoint"),
+					Topic:             gofastly.ToPointer("topic"),
+					Brokers:           gofastly.ToPointer("127.0.0.1,127.0.0.2"),
+					CompressionCodec:  gofastly.ToPointer("snappy"),
+					RequiredACKs:      gofastly.ToPointer("-1"),
+					UseTLS:            gofastly.ToPointer(true),
+					TLSCACert:         gofastly.ToPointer(caCert(t)),
+					TLSClientCert:     gofastly.ToPointer(certificate(t)),
+					TLSClientKey:      gofastly.ToPointer(privateKey(t)),
+					TLSHostname:       gofastly.ToPointer("example.com"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					Format:            gofastly.ToPointer(LoggingKafkaDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					Placement:         gofastly.ToPointer("none"),
+					ParseLogKeyvals:   gofastly.ToPointer(true),
+					RequestMaxBytes:   gofastly.ToPointer(12345),
+					AuthMethod:        gofastly.ToPointer("scram-sha-512"),
+					User:              gofastly.ToPointer("user"),
+					Password:          gofastly.ToPointer("password"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "kafka-endpoint",
+					"topic":              "topic",
+					"brokers":            "127.0.0.1,127.0.0.2",
+					"compression_codec":  "snappy",
+					"required_acks":      "-1",
+					"use_tls":            true,
+					"tls_ca_cert":        caCert(t),
+					"tls_client_cert":    certificate(t),
+					"tls_client_key":     privateKey(t),
+					"tls_hostname":       "example.com",
+					"response_condition": "response_condition",
+					"format":             LoggingKafkaDefaultFormat,
+					"placement":          "none",
+					"format_version":     2,
+					"parse_log_keyvals":  true,
+					"request_max_bytes":  12345,
+					"auth_method":        "scram-sha-512",
+					"user":               "user",
+					"password":           "password",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenKafka(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

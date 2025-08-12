@@ -55,7 +55,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 		Path:              gofastly.ToPointer("/5XX/"),
 		Period:            gofastly.ToPointer(12),
 		Placement:         gofastly.ToPointer("none"),
-		ProjectID:         gofastly.ToPointer("project-id"),
+		ProjectID:         gofastly.ToPointer("project-id1"),
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		SecretKey:         gofastly.ToPointer(secretKey),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
@@ -75,7 +75,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 		Path:              gofastly.ToPointer("/2XX/"),
 		Period:            gofastly.ToPointer(12),
 		Placement:         gofastly.ToPointer("none"),
-		ProjectID:         gofastly.ToPointer("project-id"),
+		ProjectID:         gofastly.ToPointer("project-id2"),
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
 		SecretKey:         gofastly.ToPointer(secretKey),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
@@ -374,7 +374,7 @@ resource "fastly_service_vcl" "foo" {
     user = "email@example.com"
     bucket_name = "bucketname"
     account_name = "service-account"
-    project_id = "project-id"
+    project_id = "project-id1"
     secret_key = %q
     path = "/5XX/"
     period = 12
@@ -392,7 +392,7 @@ resource "fastly_service_vcl" "foo" {
     user = "email@example.com"
     bucket_name = "bucketname"
     account_name = "service-account"
-    project_id = "project-id"
+    project_id = "project-id2"
     secret_key = %q
     path = "/2XX/"
     period = 12

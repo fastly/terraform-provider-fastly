@@ -286,6 +286,9 @@ func (h *GCSLoggingServiceAttributeHandler) Update(ctx context.Context, d *schem
 	if v, ok := modified["processing_region"]; ok {
 		opts.ProcessingRegion = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["project_id"]; ok {
+		opts.ProjectID = gofastly.ToPointer(v.(string))
+	}
 
 	log.Printf("[DEBUG] Update GCS Opts: %#v", opts)
 	_, err := conn.UpdateGCS(gofastly.NewContextForResourceID(ctx, d.Id()), &opts)

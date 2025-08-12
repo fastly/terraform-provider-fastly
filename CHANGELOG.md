@@ -12,7 +12,8 @@
 - fix(ngwaf/rules): removes the rate limit block from the account level rules schema. ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
 
 ### DEPENDENCIES:
-
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))
+- build(deps): `golang.org/x/net` from 0.42.0 to 0.43.0 ([#1072](https://github.com/fastly/terraform-provider-fastly/pull/1072))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))
 
 ### DOCUMENTATION:

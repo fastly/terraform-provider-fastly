@@ -228,8 +228,6 @@ func TestAccFastlyServiceVCL_s3logging_domain_default(t *testing.T) {
 	})
 }
 
-
-
 func TestS3loggingEnvDefaultFuncAttributes(t *testing.T) {
 	serviceAttributes := ServiceMetadata{ServiceTypeVCL}
 	v := NewServiceLoggingS3(serviceAttributes)
@@ -487,8 +485,6 @@ resource "fastly_service_vcl" "foo" {
   force_destroy = true
 }`, name, domain, testS3IAMRole, format, testS3IAMRole, format)
 }
-
-
 
 // struct to preserve the current environment.
 type currentEnv struct {

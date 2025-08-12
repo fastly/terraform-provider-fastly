@@ -290,7 +290,7 @@ func TestResourceFastlyFlattenDatadog(t *testing.T) {
 					"token":             "token",
 					"region":            "US",
 					"format_version":    2,
-					"format":            LoggingBigQueryDefaultFormat,
+					"format":            LoggingDatadogDefaultFormat,
 					"processing_region": "eu",
 				},
 			},

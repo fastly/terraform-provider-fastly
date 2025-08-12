@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,77 +15,17 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenSyslog(t *testing.T) {
-	key, cert, err := generateKeyAndCert()
-	if err != nil {
-		t.Errorf("failed to generate key and cert: %s", err)
-	}
-
-	cases := []struct {
-		remote []*gofastly.Syslog
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Syslog{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("somesyslogname"),
-					Address:           gofastly.ToPointer("127.0.0.1"),
-					IPV4:              gofastly.ToPointer("127.0.0.1"),
-					Port:              gofastly.ToPointer(8080),
-					Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(1),
-					ResponseCondition: gofastly.ToPointer("response_condition_test"),
-					MessageType:       gofastly.ToPointer("classic"),
-					Token:             gofastly.ToPointer("abcd1234"),
-					UseTLS:            gofastly.ToPointer(true),
-					TLSCACert:         gofastly.ToPointer(cert),
-					TLSHostname:       gofastly.ToPointer("example.com"),
-					TLSClientCert:     gofastly.ToPointer(cert),
-					TLSClientKey:      gofastly.ToPointer(key),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "somesyslogname",
-					"address":            "127.0.0.1",
-					"port":               8080,
-					"format":             `%h %l %u %t "%r" %>s %b`,
-					"format_version":     1,
-					"response_condition": "response_condition_test",
-					"message_type":       "classic",
-					"token":              "abcd1234",
-					"use_tls":            true,
-					"tls_hostname":       "example.com",
-					"tls_ca_cert":        cert,
-					"tls_client_cert":    cert,
-					"tls_client_key":     key,
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenSyslogs(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
-}
-
-func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_syslog_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
-	// We don't set all the available attributes in our TF config.
 	// Those not set will have the default value for their type sent to the API.
 	// The API will (typically) respond with those default values.
 	// There are API endpoints that will ignore a zero value (e.g. "").
 	// In those cases either `null` will be returned or the field will be omitted.
 	// Hence we set some of the non-config attributes to have their defaults.
+	// *This does not include Format.
 	log1 := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.1"),
 		Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
@@ -103,7 +43,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	}
 	log1AfterUpdate := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.1"),
-		Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		IPV4:              gofastly.ToPointer("127.0.0.1"),
 		MessageType:       gofastly.ToPointer("blank"),
@@ -118,7 +58,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	}
 	log2 := gofastly.Syslog{
 		Address:           gofastly.ToPointer("127.0.0.2"),
-		Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		IPV4:              gofastly.ToPointer("127.0.0.2"),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -166,7 +106,7 @@ func TestAccFastlyServiceVCL_syslog_basic(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_syslog_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
@@ -206,58 +146,9 @@ func TestAccFastlyServiceVCL_syslog_basic_compute(t *testing.T) {
 	})
 }
 
-func TestAccFastlyServiceVCL_syslog_formatVersion(t *testing.T) {
-	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
-	log1 := gofastly.Syslog{
-		ServiceVersion: gofastly.ToPointer(1),
-		Name:           gofastly.ToPointer("somesyslogname"),
-		Address:        gofastly.ToPointer("127.0.0.1"),
-		IPV4:           gofastly.ToPointer("127.0.0.1"),
-		Port:           gofastly.ToPointer(514),
-		Format:         gofastly.ToPointer("%a %l %u %t %m %U%q %H %>s %b %T"),
-		FormatVersion:  gofastly.ToPointer(2),
-		MessageType:    gofastly.ToPointer("classic"),
-
-		// We don't set all the available attributes in our TF config.
-		// Those not set will have the default value for their type sent to the API.
-		// The API will (typically) respond with those default values.
-		// There are API endpoints that will ignore a zero value (e.g. "").
-		// In those cases either `null` will be returned or the field will be omitted.
-		// Hence we set some of the non-config attributes to have their defaults.
-		ResponseCondition: gofastly.ToPointer(""),
-		TLSHostname:       gofastly.ToPointer(""),
-		Token:             gofastly.ToPointer(""),
-		UseTLS:            gofastly.ToPointer(false),
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		ProviderFactories: testAccProviders,
-		CheckDestroy:      testAccCheckServiceVCLDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceVCLSyslogConfigFormatVersion(name, domainName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLSyslogAttributes(&service, []*gofastly.Syslog{&log1}, ServiceTypeVCL),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "name", name),
-					resource.TestCheckResourceAttr(
-						"fastly_service_vcl.foo", "logging_syslog.#", "1"),
-				),
-			},
-		},
-	})
-}
-
 // This test should not be run in parallel due to its use of schema.EnvDefaultFunc to set/reset environment variables,
 // which conflicts with other running tests.
-func TestAccFastlyServiceVCL_syslog_useTLS(t *testing.T) {
+func TestAccFastlyServiceVCL_logging_syslog_useTLS(t *testing.T) {
 	key, cert, err := generateKeyAndCert()
 	if err != nil {
 		t.Errorf("failed to generate key and cert: %s", err)
@@ -350,8 +241,8 @@ func testAccCheckFastlyServiceVCLSyslogAttributes(service *gofastly.ServiceDetai
 						ls.Placement = s.Placement
 					}
 
-					if !reflect.DeepEqual(s, ls) {
-						return fmt.Errorf("bad match Syslog logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", s, ls)
+					if diff := cmp.Diff(s, ls); diff != "" {
+						return fmt.Errorf("bad match Syslog logging match: %s", diff)
 					}
 					found++
 				}
@@ -424,6 +315,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLSyslogConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -447,37 +339,16 @@ resource "fastly_service_vcl" "foo" {
     port               = 514
     response_condition = "response_condition_test"
     message_type       = "blank"
+	format			   = %q
   }
   logging_syslog {
     name    = "somesyslogname2"
     address = "127.0.0.2"
     port    = 10514
+	format  = %q
   }
   force_destroy = true
-}`, name, domain)
-}
-
-func testAccServiceVCLSyslogConfigFormatVersion(name, domain string) string {
-	return fmt.Sprintf(`
-resource "fastly_service_vcl" "foo" {
-  name = "%s"
-  domain {
-    name    = "%s"
-    comment = "tf-testing-domain"
-  }
-  backend {
-    address = "aws.amazon.com"
-    name    = "amazon docs"
-  }
-  logging_syslog {
-    name           = "somesyslogname"
-    address        = "127.0.0.1"
-    port           = 514
-    format         = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
-    format_version = 2
-  }
-  force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
 }
 
 func testAccServiceVCLSyslogConfigUseTLS(name, domain string) string {
@@ -542,5 +413,65 @@ func getSyslogEnv() *currentSyslogEnv {
 		CaCert:     os.Getenv("FASTLY_SYSLOG_CA_CERT"),
 		ClientCert: os.Getenv("FASTLY_SYSLOG_CLIENT_CERT"),
 		ClientKey:  os.Getenv("FASTLY_SYSLOG_CLIENT_KEY"),
+	}
+}
+
+func TestResourceFastlyFlattenSyslog(t *testing.T) {
+	key, cert, err := generateKeyAndCert()
+	if err != nil {
+		t.Errorf("failed to generate key and cert: %s", err)
+	}
+
+	cases := []struct {
+		remote []*gofastly.Syslog
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Syslog{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("somesyslogname"),
+					Address:           gofastly.ToPointer("127.0.0.1"),
+					IPV4:              gofastly.ToPointer("127.0.0.1"),
+					Port:              gofastly.ToPointer(8080),
+					Format:            gofastly.ToPointer(LoggingSyslogDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(1),
+					ResponseCondition: gofastly.ToPointer("response_condition_test"),
+					MessageType:       gofastly.ToPointer("classic"),
+					Token:             gofastly.ToPointer("abcd1234"),
+					UseTLS:            gofastly.ToPointer(true),
+					TLSCACert:         gofastly.ToPointer(cert),
+					TLSHostname:       gofastly.ToPointer("example.com"),
+					TLSClientCert:     gofastly.ToPointer(cert),
+					TLSClientKey:      gofastly.ToPointer(key),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "somesyslogname",
+					"address":            "127.0.0.1",
+					"port":               8080,
+					"format":             LoggingSyslogDefaultFormat,
+					"format_version":     1,
+					"response_condition": "response_condition_test",
+					"message_type":       "classic",
+					"token":              "abcd1234",
+					"use_tls":            true,
+					"tls_hostname":       "example.com",
+					"tls_ca_cert":        cert,
+					"tls_client_cert":    cert,
+					"tls_client_key":     key,
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenSyslogs(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
 	}
 }

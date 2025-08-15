@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	"github.com/fastly/go-fastly/v11/fastly/domainmanagement/v1/domains"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	v1 "github.com/fastly/go-fastly/v11/fastly/domains/v1"
 )
 
 func TestAccFastlyDomainV1_Basic(t *testing.T) {
@@ -74,10 +73,10 @@ func testAccCheckDomainV1Destroy(s *terraform.State) error {
 		a := rs.Primary.Attributes
 		fqdn := a["fqdn"]
 		conn := testAccProvider.Meta().(*APIClient).conn
-		input := &v1.ListInput{
+		input := &domains.ListInput{
 			FQDN: gofastly.ToPointer(fqdn),
 		}
-		cl, err := v1.List(context.TODO(), conn, input)
+		cl, err := domains.List(context.TODO(), conn, input)
 		if err != nil {
 			return fmt.Errorf("failed to list domains for fastly_domain_v1 resource: %w", err)
 		}

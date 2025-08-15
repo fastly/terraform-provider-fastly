@@ -15,7 +15,7 @@ const SnippetTypeDescription = "The location in generated VCL where the snippet 
 // LoggingFormatUpdate is the generic logging format used for tests.
 const LoggingFormatUpdate = "%h %l %u %t \"%r\" %>s %b"
 
-// LoggingBigQueryDefaultFormat - Default format for BigQuery logging.
+// LoggingBigQueryDefaultFormat is the default format for BigQuery logging.
 const LoggingBigQueryDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -35,7 +35,7 @@ const LoggingBigQueryDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingBlobStorageDefaultFormat - Default format for Blob Storage logging.
+// LoggingBlobStorageDefaultFormat is the default format for Blob Storage logging.
 const LoggingBlobStorageDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -55,7 +55,7 @@ const LoggingBlobStorageDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingCloudFilesDefaultFormat - Default format for CloudFiles logging.
+// LoggingCloudFilesDefaultFormat is the default format for CloudFiles logging.
 const LoggingCloudFilesDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -75,7 +75,7 @@ const LoggingCloudFilesDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingDatadogDefaultFormat - Default format for Datadog logging.
+// LoggingDatadogDefaultFormat is the default format for Datadog logging.
 const LoggingDatadogDefaultFormat = `{
     "ddsource": "fastly",
     "service": "%{req.service_id}V",
@@ -158,13 +158,47 @@ const LoggingDatadogDefaultFormat = `{
     "socket_ploss": %{client.socket.ploss}V
   }`
 
-// LoggingDigitalOceanDefaultFormat - Default format for DigitalOcean logging.
-const LoggingDigitalOceanDefaultFormat = `%h %l %u %t "%r" %>s %b`
+// LoggingDigitalOceanDefaultFormat is the default format for DigitalOcean logging.
+const LoggingDigitalOceanDefaultFormat = `{
+    "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
+    "client_ip": "%{req.http.Fastly-Client-IP}V",
+    "geo_country": "%{client.geo.country_name}V",
+    "geo_city": "%{client.geo.city}V",
+    "host": "%{if(req.http.Fastly-Orig-Host, req.http.Fastly-Orig-Host, req.http.Host)}V",
+    "url": "%{json.escape(req.url)}V",
+    "request_method": "%{json.escape(req.method)}V",
+    "request_protocol": "%{json.escape(req.proto)}V",
+    "request_referer": "%{json.escape(req.http.referer)}V",
+    "request_user_agent": "%{json.escape(req.http.User-Agent)}V",
+    "response_state": "%{json.escape(fastly_info.state)}V",
+    "response_status": %{resp.status}V,
+    "response_reason": %{if(resp.response, "%22"+json.escape(resp.response)+"%22", "null")}V,
+    "response_body_size": %{resp.body_bytes_written}V,
+    "fastly_server": "%{json.escape(server.identity)}V",
+    "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
+  }`
 
-// LoggingElasticsearchDefaultFormat - Default format for Elasticsearch logging.
-const LoggingElasticsearchDefaultFormat = `%h %l %u %t "%r" %>s %b`
+// LoggingElasticsearchDefaultFormat Default format for Elasticsearch logging.
+const LoggingElasticsearchDefaultFormat = `{
+    "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
+    "client_ip": "%{req.http.Fastly-Client-IP}V",
+    "geo_country": "%{client.geo.country_name}V",
+    "geo_city": "%{client.geo.city}V",
+    "host": "%{if(req.http.Fastly-Orig-Host, req.http.Fastly-Orig-Host, req.http.Host)}V",
+    "url": "%{json.escape(req.url)}V",
+    "request_method": "%{json.escape(req.method)}V",
+    "request_protocol": "%{json.escape(req.proto)}V",
+    "request_referer": "%{json.escape(req.http.referer)}V",
+    "request_user_agent": "%{json.escape(req.http.User-Agent)}V",
+    "response_state": "%{json.escape(fastly_info.state)}V",
+    "response_status": %{resp.status}V,
+    "response_reason": %{if(resp.response, "%22"+json.escape(resp.response)+"%22", "null")}V,
+    "response_body_size": %{resp.body_bytes_written}V,
+    "fastly_server": "%{json.escape(server.identity)}V",
+    "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
+  }`
 
-// LoggingFTPDefaultFormat - Default format for FTP logging.
+// LoggingFTPDefaultFormat is the default format for FTP logging.
 const LoggingFTPDefaultFormat = `{
   "timestamp":"%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
   "client_ip":"%{req.http.Fastly-Client-IP}V",
@@ -184,7 +218,7 @@ const LoggingFTPDefaultFormat = `{
   "fastly_is_edge":%{if(fastly.ff.visits_this_service == 0, "true", "false")}V
 }`
 
-// LoggingGCSDefaultFormat - Default format for Google Cloud Storage logging.
+// LoggingGCSDefaultFormat is the default format for Google Cloud Storage logging.
 const LoggingGCSDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -204,7 +238,7 @@ const LoggingGCSDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingGooglePubSubDefaultFormat - Default format for Google Pub/Sub logging.
+// LoggingGooglePubSubDefaultFormat is the default format for Google Pub/Sub logging.
 const LoggingGooglePubSubDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -224,7 +258,7 @@ const LoggingGooglePubSubDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingGrafanaCloudLogsDefaultFormat - Default format for Grafana Cloud Logs logging.
+// LoggingGrafanaCloudLogsDefaultFormat is the default format for Grafana Cloud Logs logging.
 const LoggingGrafanaCloudLogsDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -244,7 +278,7 @@ const LoggingGrafanaCloudLogsDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingHerokuDefaultFormat - Default format for Heroku logging.
+// LoggingHerokuDefaultFormat is the default format for Heroku logging.
 const LoggingHerokuDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -264,7 +298,7 @@ const LoggingHerokuDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingHoneycombDefaultFormat - Default format for Honeycomb logging.
+// LoggingHoneycombDefaultFormat is the default format for Honeycomb logging.
 const LoggingHoneycombDefaultFormat = `{
     "time":"%{begin:%Y-%m-%dT%H:%M:%SZ}t",
     "data":  {
@@ -296,7 +330,7 @@ const LoggingHoneycombDefaultFormat = `{
     }
   }`
 
-// LoggingHTTPSDefaultFormat - Default format for HTTPS logging.
+// LoggingHTTPSDefaultFormat is the default format for HTTPS logging.
 const LoggingHTTPSDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -316,7 +350,7 @@ const LoggingHTTPSDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingKafkaDefaultFormat - Default format for Kafka logging.
+// LoggingKafkaDefaultFormat is the default format for Kafka logging.
 const LoggingKafkaDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -336,7 +370,7 @@ const LoggingKafkaDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingKinesisDefaultFormat - Default format for Kinesis logging.
+// LoggingKinesisDefaultFormat is the default format for Kinesis logging.
 const LoggingKinesisDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -356,11 +390,11 @@ const LoggingKinesisDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingLogentriesDefaultFormat - Default format for Logentries logging
-// ** This seems to be depricated **
+// LoggingLogentriesDefaultFormat is the default format for Logentries logging
+// ** This seems to be deprecated **
 // const LoggingLogentriesDefaultFormat = ``
 
-// LoggingLogglyDefaultFormat - Default format for Loggly logging.
+// LoggingLogglyDefaultFormat is the default format for Loggly logging.
 const LoggingLogglyDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -380,7 +414,7 @@ const LoggingLogglyDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingLogshuttleDefaultFormat - Default format for Logshuttle logging.
+// LoggingLogshuttleDefaultFormat is the default format for Logshuttle logging.
 const LoggingLogshuttleDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -400,7 +434,7 @@ const LoggingLogshuttleDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingNewRelicDefaultFormat - Default format for New Relic logging.
+// LoggingNewRelicDefaultFormat is the default format for New Relic logging.
 const LoggingNewRelicDefaultFormat = `{
     "timestamp": %{time.start.msec}V,
     "logtype": "accesslogs",
@@ -456,7 +490,7 @@ const LoggingNewRelicDefaultFormat = `{
     "user_region":"%{client.geo.region}V"
   }`
 
-// LoggingNewRelicOLTPDefaultFormat - Default format for New Relic logging.
+// LoggingNewRelicOLTPDefaultFormat is the default format for New Relic logging.
 const LoggingNewRelicOLTPDefaultFormat = `{
      "timestamp":"%{strftime({"%Y-%m-%dT%H:%M:%S%z"}, time.start)}V",
      "client_ip":"%{req.http.Fastly-Client-IP}V",
@@ -476,7 +510,7 @@ const LoggingNewRelicOLTPDefaultFormat = `{
      "fastly_is_edge":%{if(fastly.ff.visits_this_service == 0, "true", "false")}V
    }`
 
-// LoggingOpenStackDefaultFormat - Default format for OpenStack logging.
+// LoggingOpenStackDefaultFormat is the default format for OpenStack logging.
 const LoggingOpenStackDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -496,7 +530,7 @@ const LoggingOpenStackDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingPapertrailDefaultFormat - Default format for Papertrail logging.
+// LoggingPapertrailDefaultFormat is the default format for Papertrail logging.
 const LoggingPapertrailDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -516,7 +550,7 @@ const LoggingPapertrailDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingS3DefaultFormat - Default format for S3 logging.
+// LoggingS3DefaultFormat is the default format for S3 logging.
 const LoggingS3DefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -536,7 +570,7 @@ const LoggingS3DefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingScalyrDefaultFormat - Default format for Scalyr logging.
+// LoggingScalyrDefaultFormat is the default format for Scalyr logging.
 const LoggingScalyrDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -556,7 +590,7 @@ const LoggingScalyrDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingSFTPDefaultFormat - Default format for SFTP logging.
+// LoggingSFTPDefaultFormat is the default format for SFTP logging.
 const LoggingSFTPDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -576,7 +610,7 @@ const LoggingSFTPDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingSplunkDefaultFormat - Default format for Splunk logging.
+// LoggingSplunkDefaultFormat is the default format for Splunk logging.
 const LoggingSplunkDefaultFormat = `{
     "time":%{time.start.sec}V,
     "host":"%{Fastly-Orig-Host}i",
@@ -651,7 +685,7 @@ const LoggingSplunkDefaultFormat = `{
     }
   }`
 
-// LoggingSumologicDefaultFormat - Default format for Sumologic logging.
+// LoggingSumologicDefaultFormat is the default format for Sumologic logging.
 const LoggingSumologicDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -671,7 +705,7 @@ const LoggingSumologicDefaultFormat = `{
     "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
   }`
 
-// LoggingSyslogDefaultFormat - Default format for Syslog logging.
+// LoggingSyslogDefaultFormat is the default format for Syslog logging.
 const LoggingSyslogDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S%z"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",

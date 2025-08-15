@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	v1 "github.com/fastly/go-fastly/v11/fastly/domains/v1"
+	"github.com/fastly/go-fastly/v11/fastly/domainmanagement/v1/domains"
 )
 
 func resourceFastlyDomainV1() *schema.Resource {
@@ -50,7 +50,7 @@ func resourceFastlyDomainV1() *schema.Resource {
 func resourceFastlyDomainV1Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	var input v1.CreateInput
+	var input domains.CreateInput
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = gofastly.ToPointer(v.(string))
 	}
@@ -61,7 +61,7 @@ func resourceFastlyDomainV1Create(ctx context.Context, d *schema.ResourceData, m
 		input.ServiceID = gofastly.ToPointer(v.(string))
 	}
 
-	data, err := v1.Create(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, &input)
+	data, err := domains.Create(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, &input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -78,11 +78,11 @@ func resourceFastlyDomainV1Read(ctx context.Context, d *schema.ResourceData, met
 	log.Printf("[DEBUG] Refreshing Domain V1 Configuration for (%s)", d.Id())
 	conn := meta.(*APIClient).conn
 
-	input := &v1.GetInput{
+	input := &domains.GetInput{
 		DomainID: gofastly.ToPointer(d.Id()),
 	}
 
-	data, err := v1.Get(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
+	data, err := domains.Get(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -106,7 +106,7 @@ func resourceFastlyDomainV1Read(ctx context.Context, d *schema.ResourceData, met
 func resourceFastlyDomainV1Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
 
-	input := &v1.UpdateInput{
+	input := &domains.UpdateInput{
 		DomainID: gofastly.ToPointer(d.Id()),
 	}
 	if v, ok := d.GetOk("description"); ok {
@@ -116,7 +116,7 @@ func resourceFastlyDomainV1Update(ctx context.Context, d *schema.ResourceData, m
 		input.ServiceID = gofastly.ToPointer(v.(string))
 	}
 
-	_, err := v1.Update(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
+	_, err := domains.Update(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -126,10 +126,10 @@ func resourceFastlyDomainV1Update(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFastlyDomainV1Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*APIClient).conn
-	input := &v1.DeleteInput{
+	input := &domains.DeleteInput{
 		DomainID: gofastly.ToPointer(d.Id()),
 	}
-	err := v1.Delete(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
+	err := domains.Delete(gofastly.NewContextForResourceID(ctx, d.Get("service_id").(string)), conn, input)
 	if err != nil {
 		return diag.FromErr(err)
 	}

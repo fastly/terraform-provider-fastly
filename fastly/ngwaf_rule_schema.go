@@ -24,6 +24,16 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 				Elem: &schema.Resource{
 					Description: "Configuration block for each action.",
 					Schema: map[string]*schema.Schema{
+						"allow_interactive": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Specifies if interaction is allowed (used when `type = browser_challenge`).",
+						},
+						"deception_type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "specifies the type of deception (used when `type = deception`).",
+						},
 						"redirect_url": {
 							Type:        schema.TypeString,
 							Optional:    true,

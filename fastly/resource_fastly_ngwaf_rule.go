@@ -122,6 +122,8 @@ func resourceFastlyNGWAFAccountRule() *schema.Resource {
 
 	// Remove fields that are invalid for account-scoped actions
 	actions := r.Schema["action"].Elem.(*schema.Resource)
+	delete(actions.Schema, "allow_interaction")
+	delete(actions.Schema, "deception_type")
 	delete(actions.Schema, "redirect_url")
 	delete(actions.Schema, "response_code")
 

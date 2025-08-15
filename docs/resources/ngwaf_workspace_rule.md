@@ -137,6 +137,8 @@ Required:
 
 Optional:
 
+- `allow_interactive` (Boolean) Specifies if interaction is allowed (used when `type = browser_challenge`).
+- `deception_type` (String) specifies the type of deception (used when `type = deception`).
 - `redirect_url` (String) Redirect target (used when `type = redirect`).
 - `response_code` (Number) Response code used with redirect.
 - `signal` (String) Signal name to exclude (used when `type = exclude_signal`).

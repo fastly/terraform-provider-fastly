@@ -15,7 +15,7 @@ const SnippetTypeDescription = "The location in generated VCL where the snippet 
 // LoggingFormatUpdate is the generic logging format used for tests.
 const LoggingFormatUpdate = "%h %l %u %t \"%r\" %>s %b"
 
-// LoggingBigQueryDefaultFormat - Default format for BigQuery logging.
+// LoggingBigQueryDefaultFormat - is the default format for BigQuery logging.
 const LoggingBigQueryDefaultFormat = `{
     "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S"\}, time.start)}V",
     "client_ip": "%{req.http.Fastly-Client-IP}V",
@@ -357,7 +357,7 @@ const LoggingKinesisDefaultFormat = `{
   }`
 
 // LoggingLogentriesDefaultFormat - Default format for Logentries logging
-// ** This seems to be depricated **
+// ** This seems to be deprecated **
 // const LoggingLogentriesDefaultFormat = ``
 
 // LoggingLogglyDefaultFormat - Default format for Loggly logging.

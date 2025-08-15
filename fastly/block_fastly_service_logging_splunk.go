@@ -94,7 +94,7 @@ func (h *SplunkServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "%h %l %u %t \"%r\" %>s %b",
+			Default:     LoggingSplunkDefaultFormat,
 			Description: "Apache-style string or VCL variables to use for log formatting (default: `%h %l %u %t \"%r\" %>s %b`)",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

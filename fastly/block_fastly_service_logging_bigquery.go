@@ -95,7 +95,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The logging format desired.",
-			Default:     "%h %l %u %t \"%r\" %>s %b",
+			Default:     LoggingBigQueryDefaultFormat,
 		}
 		blockAttributes["response_condition"] = &schema.Schema{
 			Type:        schema.TypeString,
@@ -208,7 +208,7 @@ func (h *BigQueryLoggingServiceAttributeHandler) Update(ctx context.Context, d *
 	if v, ok := modified["table"]; ok {
 		opts.Table = gofastly.ToPointer(v.(string))
 	}
-	if v, ok := modified["template_suffix"]; ok {
+	if v, ok := modified["template"]; ok {
 		opts.Template = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["email"]; ok {

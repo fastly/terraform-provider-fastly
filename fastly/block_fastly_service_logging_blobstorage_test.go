@@ -15,65 +15,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.BlobStorage
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.BlobStorage{
-				{
-					Name:              gofastly.ToPointer("test-blobstorage"),
-					Path:              gofastly.ToPointer("/logs/"),
-					AccountName:       gofastly.ToPointer("test"),
-					Container:         gofastly.ToPointer("fastly"),
-					SASToken:          gofastly.ToPointer("test-sas-token"),
-					Period:            gofastly.ToPointer(12),
-					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-					GzipLevel:         gofastly.ToPointer(0),
-					PublicKey:         gofastly.ToPointer("test-public-key"),
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
-					FormatVersion:     gofastly.ToPointer(2),
-					MessageType:       gofastly.ToPointer("classic"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("error_response"),
-					FileMaxBytes:      gofastly.ToPointer(1048576),
-					CompressionCodec:  gofastly.ToPointer("zstd"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "test-blobstorage",
-					"path":               "/logs/",
-					"account_name":       "test",
-					"container":          "fastly",
-					"sas_token":          "test-sas-token",
-					"period":             12,
-					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"public_key":         "test-public-key",
-					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     2,
-					"gzip_level":         0,
-					"message_type":       "classic",
-					"placement":          "none",
-					"response_condition": "error_response",
-					"file_max_bytes":     1048576,
-					"compression_codec":  "zstd",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenBlobStorages(c.remote, nil)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -83,7 +24,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		CompressionCodec:  gofastly.ToPointer("zstd"),
 		Container:         gofastly.ToPointer("fastly"),
 		FileMaxBytes:      gofastly.ToPointer(1048576),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingBlobStorageDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(1),
 		GzipLevel:         gofastly.ToPointer(0), // API defaults to zero
 		MessageType:       gofastly.ToPointer("blank"),
@@ -102,7 +43,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		AccountName:       gofastly.ToPointer("test"),
 		Container:         gofastly.ToPointer("fastly"),
 		FileMaxBytes:      gofastly.ToPointer(1048576),
-		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(1),
 		MessageType:       gofastly.ToPointer("blank"),
@@ -122,7 +63,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		CompressionCodec:  gofastly.ToPointer("zstd"),
 		Container:         gofastly.ToPointer("fastly"),
 		FileMaxBytes:      gofastly.ToPointer(2097152),
-		Format:            gofastly.ToPointer("%h %l %u %{now}V %{req.method}V %{req.url}V %>s %{resp.http.Content-Length}V"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0), // API defaults to zero
 		MessageType:       gofastly.ToPointer("blank"),
@@ -215,7 +156,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_default(t *testing.T) {
 		AccountName:       gofastly.ToPointer("test"),
 		Container:         gofastly.ToPointer("fastly"),
 		FileMaxBytes:      gofastly.ToPointer(0),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingBlobStorageDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0), // API defaults to zero
 		MessageType:       gofastly.ToPointer("classic"),
@@ -274,12 +215,20 @@ func TestBlobstorageloggingEnvDefaultFuncAttributes(t *testing.T) {
 	resetEnv := setBlobStorageEnv(token, t)
 	defer resetEnv()
 
-	result1, err1 := loggingResourceSchema["sas_token"].DefaultFunc()
-	if err1 != nil {
-		t.Fatalf("Unexpected err %#v when calling sas_token DefaultFunc", err1)
+	sasTokenResult, err := loggingResourceSchema["sas_token"].DefaultFunc()
+	if err != nil {
+		t.Fatalf("Unexpected err %#v when calling sas_token DefaultFunc", err)
 	}
-	if result1 != token {
-		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, result1)
+	if sasTokenResult != token {
+		t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", token, sasTokenResult)
+	}
+
+	formatSchema := loggingResourceSchema["format"]
+	if formatSchema == nil {
+		t.Fatalf("Expected format field to exist in schema")
+	}
+	if formatSchema.Default != LoggingBlobStorageDefaultFormat {
+		t.Fatalf("Error matching format default:\nexpected: %#v\ngot: %#v", LoggingBlobStorageDefaultFormat, formatSchema.Default)
 	}
 }
 
@@ -336,7 +285,6 @@ func testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(service *gofastly.
 
 func testAccServiceVCLBlobStorageLoggingConfigComplete(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-	format := "%h %l %u %t \"%r\" %>s %b"
 
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
@@ -368,7 +316,6 @@ resource "fastly_service_vcl" "foo" {
     period = 12
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     public_key = file("test_fixtures/fastly_test_publickey")
-    format = %q
     format_version = 1
     message_type = "blank"
     placement = "none"
@@ -379,7 +326,7 @@ resource "fastly_service_vcl" "foo" {
   }
 
   force_destroy = true
-}`, serviceName, domainName, format)
+}`, serviceName, domainName)
 }
 
 func testAccServiceVCLBlobStorageLoggingConfigCompleteCompute(serviceName string) string {
@@ -429,8 +376,7 @@ resource "fastly_service_compute" "foo" {
 
 func testAccServiceVCLBlobStorageLoggingConfigUpdate(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-	format := "%h %l %u %%{now}V %%{req.method}V %%{req.url}V %>s %%{resp.http.Content-Length}V"
-
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -501,7 +447,6 @@ resource "fastly_service_vcl" "foo" {
 
 func testAccServiceVCLBlobStorageLoggingConfigDefault(serviceName string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
-
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -552,5 +497,64 @@ func getBlobStorageEnv() *currentBlobStorageEnv {
 	// they're actually set in the environment
 	return &currentBlobStorageEnv{
 		SASToken: os.Getenv("FASTLY_AZURE_SHARED_ACCESS_SIGNATURE"),
+	}
+}
+
+func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.BlobStorage
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.BlobStorage{
+				{
+					Name:              gofastly.ToPointer("test-blobstorage"),
+					Path:              gofastly.ToPointer("/logs/"),
+					AccountName:       gofastly.ToPointer("test"),
+					Container:         gofastly.ToPointer("fastly"),
+					SASToken:          gofastly.ToPointer("test-sas-token"),
+					Period:            gofastly.ToPointer(12),
+					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					GzipLevel:         gofastly.ToPointer(0),
+					PublicKey:         gofastly.ToPointer("test-public-key"),
+					Format:            gofastly.ToPointer(LoggingBlobStorageDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					MessageType:       gofastly.ToPointer("classic"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("error_response"),
+					FileMaxBytes:      gofastly.ToPointer(1048576),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "test-blobstorage",
+					"path":               "/logs/",
+					"account_name":       "test",
+					"container":          "fastly",
+					"sas_token":          "test-sas-token",
+					"period":             12,
+					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
+					"public_key":         "test-public-key",
+					"format":             LoggingBlobStorageDefaultFormat,
+					"format_version":     2,
+					"gzip_level":         0,
+					"message_type":       "classic",
+					"placement":          "none",
+					"response_condition": "error_response",
+					"file_max_bytes":     1048576,
+					"compression_codec":  "zstd",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenBlobStorages(c.remote, nil)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
 	}
 }

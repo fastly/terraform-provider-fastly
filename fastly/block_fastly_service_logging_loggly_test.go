@@ -14,47 +14,13 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenLoggly(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Loggly
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Loggly{
-				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("loggly-endpoint"),
-					Token:            gofastly.ToPointer("token"),
-					FormatVersion:    gofastly.ToPointer(2),
-					ProcessingRegion: gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":              "loggly-endpoint",
-					"token":             "token",
-					"format_version":    2,
-					"processing_region": "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenLoggly(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Loggly{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingLogglyDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("loggly-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -64,7 +30,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 	}
 
 	log1AfterUpdate := gofastly.Loggly{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("loggly-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -74,7 +40,7 @@ func TestAccFastlyServiceVCL_logging_loggly_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Loggly{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("another-loggly-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -251,7 +217,6 @@ resource "fastly_service_vcl" "foo" {
   logging_loggly {
     name   = "loggly-endpoint"
     token  = "s3cr3t"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     processing_region = "us"
   }
 
@@ -261,6 +226,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLLogglyConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -278,16 +244,52 @@ resource "fastly_service_vcl" "foo" {
   logging_loggly {
     name   = "loggly-endpoint"
     token  = "secret"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format = %q
   }
 
   logging_loggly {
     name   = "another-loggly-endpoint"
     token  = "another-token"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format = %q
   }
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenLoggly(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Loggly
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Loggly{
+				{
+					ServiceVersion:   gofastly.ToPointer(1),
+					Name:             gofastly.ToPointer("loggly-endpoint"),
+					Token:            gofastly.ToPointer("token"),
+					Format:           gofastly.ToPointer(LoggingLogglyDefaultFormat),
+					FormatVersion:    gofastly.ToPointer(2),
+					ProcessingRegion: gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":              "loggly-endpoint",
+					"token":             "token",
+					"format":            LoggingLogglyDefaultFormat,
+					"format_version":    2,
+					"processing_region": "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenLoggly(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

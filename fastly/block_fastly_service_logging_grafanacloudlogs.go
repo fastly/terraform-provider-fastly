@@ -73,6 +73,7 @@ func (h *GrafanaCloudLogsServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingGrafanaCloudLogsDefaultFormat,
 			Description: "Apache-style string or VCL variables to use for log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

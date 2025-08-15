@@ -64,6 +64,7 @@ func (h *LogshuttleServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingLogshuttleDefaultFormat,
 			Description: "Apache style log formatting.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

@@ -14,63 +14,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
-	var format, placement, responseCondition, loggingURL *string
-	cases := []struct {
-		remote []*gofastly.NewRelicOTLP
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.NewRelicOTLP{
-				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("newrelicotlp-endpoint"),
-					Token:            gofastly.ToPointer("token"),
-					Region:           gofastly.ToPointer("US"),
-					FormatVersion:    gofastly.ToPointer(2),
-					ProcessingRegion: gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"format":             format, // implies nil
-					"format_version":     gofastly.ToPointer(2),
-					"name":               gofastly.ToPointer("newrelicotlp-endpoint"),
-					"placement":          placement, // implies nil
-					"region":             gofastly.ToPointer("US"),
-					"response_condition": responseCondition, // implies nil
-					"token":              gofastly.ToPointer("token"),
-					"url":                loggingURL, // implies nil
-					"processing_region":  gofastly.ToPointer("eu"),
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenNewRelicOTLP(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
-var newrelicotlpDefaultFormat = `{
-  "time_elapsed":%{time.elapsed.usec}V,
-  "is_tls":%{if(req.is_ssl, "true", "false")}V,
-  "client_ip":"%{req.http.Fastly-Client-IP}V",
-  "geo_city":"%{client.geo.city}V",
-  "geo_country_code":"%{client.geo.country_code}V",
-  "request":"%{req.request}V",
-  "host":"%{req.http.Fastly-Orig-Host}V",
-  "url":"%{json.escape(req.url)}V",
-  "request_referer":"%{json.escape(req.http.Referer)}V",
-  "request_user_agent":"%{json.escape(req.http.User-Agent)}V",
-  "request_accept_language":"%{json.escape(req.http.Accept-Language)}V",
-  "request_accept_charset":"%{json.escape(req.http.Accept-Charset)}V",
-  "cache_status":"%{regsub(fastly_info.state, "^(HIT-(SYNTH)|(HITPASS|HIT|MISS|PASS|ERROR|PIPE)).*", "\2\3") }V"
-}`
-
 func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -82,7 +25,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		Token:          gofastly.ToPointer("token"),
 		Region:         gofastly.ToPointer("US"),
 		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:         gofastly.ToPointer(LoggingNewRelicOLTPDefaultFormat),
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
 		ResponseCondition: gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer(""),
@@ -95,7 +38,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		Token:          gofastly.ToPointer("t0k3n"),
 		Region:         gofastly.ToPointer("EU"),
 		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:         gofastly.ToPointer(LoggingFormatUpdate),
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
 		ResponseCondition: gofastly.ToPointer(""),
 		URL:               gofastly.ToPointer(""),
@@ -109,7 +52,7 @@ func TestAccFastlyServiceVCL_logging_newrelicotlp_basic(t *testing.T) {
 		Region:         gofastly.ToPointer("US"),
 		URL:            gofastly.ToPointer("https://example.nr-data.net"),
 		FormatVersion:  gofastly.ToPointer(2),
-		Format:         gofastly.ToPointer(appendNewLine(newrelicotlpDefaultFormat)),
+		Format:         gofastly.ToPointer(LoggingFormatUpdate),
 		// The Fastly API returns an empty string if nothing set by the user (it should probably set null)
 		ResponseCondition: gofastly.ToPointer(""),
 		ProcessingRegion:  gofastly.ToPointer("none"),
@@ -209,7 +152,6 @@ resource "fastly_service_vcl" "foo" {
   logging_newrelicotlp {
     name   = "newrelicotlp-endpoint"
     token  = "token"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     processing_region = "us"
   }
 
@@ -219,6 +161,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLNewRelicOTLPConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -236,7 +179,7 @@ resource "fastly_service_vcl" "foo" {
   logging_newrelicotlp {
     name   = "newrelicotlp-endpoint"
     token  = "t0k3n"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format = %q
     region = "EU"
 }
 
@@ -244,12 +187,52 @@ resource "fastly_service_vcl" "foo" {
     name   = "another-newrelicotlp-endpoint"
     token  = "another-token"
 	url    = "https://example.nr-data.net"
-	format = <<EOF
-`+escapePercentSign(newrelicotlpDefaultFormat)+`
-EOF
+	format = %q
   }
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenNewRelicOTLP(t *testing.T) {
+	var placement, responseCondition, loggingURL *string
+	cases := []struct {
+		remote []*gofastly.NewRelicOTLP
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.NewRelicOTLP{
+				{
+					ServiceVersion:   gofastly.ToPointer(1),
+					Name:             gofastly.ToPointer("newrelicotlp-endpoint"),
+					Token:            gofastly.ToPointer("token"),
+					Region:           gofastly.ToPointer("US"),
+					FormatVersion:    gofastly.ToPointer(2),
+					Format:           gofastly.ToPointer(LoggingNewRelicOLTPDefaultFormat),
+					ProcessingRegion: gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"format":             gofastly.ToPointer(LoggingNewRelicOLTPDefaultFormat),
+					"format_version":     gofastly.ToPointer(2),
+					"name":               gofastly.ToPointer("newrelicotlp-endpoint"),
+					"placement":          placement, // implies nil
+					"region":             gofastly.ToPointer("US"),
+					"response_condition": responseCondition, // implies nil
+					"token":              gofastly.ToPointer("token"),
+					"url":                loggingURL, // implies nil
+					"processing_region":  gofastly.ToPointer("eu"),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenNewRelicOTLP(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

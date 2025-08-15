@@ -64,6 +64,7 @@ func (h *NewRelicServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["format"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     LoggingNewRelicDefaultFormat,
 			Description: "Apache style log formatting. Your log must produce valid JSON that New Relic Logs can ingest.",
 		}
 		blockAttributes["format_version"] = &schema.Schema{

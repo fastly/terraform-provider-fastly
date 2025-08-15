@@ -14,55 +14,13 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Logshuttle
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Logshuttle{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("logshuttle-endpoint"),
-					Token:             gofastly.ToPointer("token"),
-					URL:               gofastly.ToPointer("https://example.com"),
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "logshuttle-endpoint",
-					"token":              "token",
-					"url":                "https://example.com",
-					"format":             "%h %l %u %t \"%r\" %>s %b %T",
-					"placement":          "none",
-					"response_condition": "always",
-					"format_version":     2,
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenLogshuttle(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Logshuttle{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingLogshuttleDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("logshuttle-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -73,7 +31,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 	}
 
 	log1AfterUpdate := gofastly.Logshuttle{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("logshuttle-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -84,7 +42,7 @@ func TestAccFastlyServiceVCL_logging_logshuttle_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Logshuttle{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("another-logshuttle-endpoint"),
 		Placement:         gofastly.ToPointer("none"),
@@ -223,8 +181,7 @@ resource "fastly_service_vcl" "foo" {
   logging_logshuttle {
     name   = "logshuttle-endpoint"
     token  = "s3cr3t"
-		url    = "https://example.com"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+	url    = "https://example.com"
     processing_region = "us"
   }
 
@@ -234,6 +191,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLLogshuttleConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -259,21 +217,21 @@ resource "fastly_service_vcl" "foo" {
     name   = "logshuttle-endpoint"
     token  = "secret"
     url    = "https://new.example.com"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format = %q
   }
 
   logging_logshuttle {
     name   = "another-logshuttle-endpoint"
     token  = "another-token"
-		url    = "https://another.example.com"
+	url    = "https://another.example.com"
     placement = "none"
-		response_condition = "response_condition_test"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+	response_condition = "response_condition_test"
+    format = %q
   }
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, format, format)
 }
 
 func testAccServiceVCLLogshuttleComputeConfig(name string, domain string) string {
@@ -310,4 +268,46 @@ resource "fastly_service_compute" "foo" {
   force_destroy = true
 }
 `, name, domain)
+}
+
+func TestResourceFastlyFlattenLogshuttle(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Logshuttle
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Logshuttle{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("logshuttle-endpoint"),
+					Token:             gofastly.ToPointer("token"),
+					URL:               gofastly.ToPointer("https://example.com"),
+					Format:            gofastly.ToPointer(LoggingLogshuttleDefaultFormat),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "logshuttle-endpoint",
+					"token":              "token",
+					"url":                "https://example.com",
+					"format":             LoggingLogshuttleDefaultFormat,
+					"placement":          "none",
+					"response_condition": "always",
+					"format_version":     2,
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenLogshuttle(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

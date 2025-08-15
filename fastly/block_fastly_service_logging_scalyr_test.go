@@ -14,57 +14,13 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenScalyr(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Scalyr
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Scalyr{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("scalyr-endpoint"),
-					Region:            gofastly.ToPointer("US"),
-					Token:             gofastly.ToPointer("tkn"),
-					ResponseCondition: gofastly.ToPointer("response_condition"),
-					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
-					FormatVersion:     gofastly.ToPointer(2),
-					Placement:         gofastly.ToPointer("none"),
-					ProjectID:         gofastly.ToPointer("example-project"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "scalyr-endpoint",
-					"region":             "US",
-					"token":              "tkn",
-					"response_condition": "response_condition",
-					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
-					"placement":          "none",
-					"format_version":     2,
-					"project_id":         "example-project",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenScalyr(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Scalyr{
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingScalyrDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("scalyrlogger"),
 		Placement:         gofastly.ToPointer("none"),
@@ -76,7 +32,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 	}
 
 	log1AfterUpdate := gofastly.Scalyr{
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("scalyrlogger"),
 		Placement:         gofastly.ToPointer("none"),
@@ -89,7 +45,7 @@ func TestAccFastlyServiceVCL_scalyrlogging_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Scalyr{
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("another-scalyrlogger"),
 		Placement:         gofastly.ToPointer("none"),
@@ -279,10 +235,9 @@ resource "fastly_service_vcl" "foo" {
 		region             = "US"
 		token              = "tkn"
 		response_condition = "response_condition_test"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version 		 = 2
 		placement 				 = "none"
-    processing_region = "us"
+    	processing_region = "us"
 	}
 
 	force_destroy = true
@@ -291,6 +246,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLScalyrConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"
@@ -316,7 +272,7 @@ resource "fastly_service_vcl" "foo" {
 		name               = "scalyrlogger"
 		region             = "EU"
 		token              = "newtkn"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = %q
 		format_version     = 2
 		response_condition = "response_condition_test"
 		placement          = "none"
@@ -325,7 +281,7 @@ resource "fastly_service_vcl" "foo" {
 
 	logging_scalyr {
 		name               = "another-scalyrlogger"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = %q
 		region             = "US"
 		token              = "tknb"
 		format_version     = 2
@@ -333,5 +289,49 @@ resource "fastly_service_vcl" "foo" {
 	}
 
 	force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenScalyr(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Scalyr
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Scalyr{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("scalyr-endpoint"),
+					Region:            gofastly.ToPointer("US"),
+					Token:             gofastly.ToPointer("tkn"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					Format:            gofastly.ToPointer(LoggingScalyrDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					Placement:         gofastly.ToPointer("none"),
+					ProjectID:         gofastly.ToPointer("example-project"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "scalyr-endpoint",
+					"region":             "US",
+					"token":              "tkn",
+					"response_condition": "response_condition",
+					"format":             LoggingScalyrDefaultFormat,
+					"placement":          "none",
+					"format_version":     2,
+					"project_id":         "example-project",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenScalyr(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

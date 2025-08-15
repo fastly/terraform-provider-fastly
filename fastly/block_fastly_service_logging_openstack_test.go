@@ -14,65 +14,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenOpenstack(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Openstack
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Openstack{
-				{
-					Name:              gofastly.ToPointer("openstack-logging"),
-					URL:               gofastly.ToPointer("https://auth.example.com"),
-					User:              gofastly.ToPointer("user"),
-					BucketName:        gofastly.ToPointer("bucket"),
-					AccessKey:         gofastly.ToPointer("secret"),
-					PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
-					Format:            gofastly.ToPointer("log format"),
-					FormatVersion:     gofastly.ToPointer(2),
-					MessageType:       gofastly.ToPointer("classic"),
-					Path:              gofastly.ToPointer("/"),
-					Placement:         gofastly.ToPointer("none"),
-					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					Period:            gofastly.ToPointer(3600),
-					GzipLevel:         gofastly.ToPointer(0),
-					CompressionCodec:  gofastly.ToPointer("zstd"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "openstack-logging",
-					"url":                "https://auth.example.com",
-					"user":               "user",
-					"bucket_name":        "bucket",
-					"access_key":         "secret",
-					"public_key":         pgpPublicKey(t),
-					"format":             "log format",
-					"format_version":     2,
-					"message_type":       "classic",
-					"path":               "/",
-					"placement":          "none",
-					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"response_condition": "always",
-					"period":             3600,
-					"gzip_level":         0,
-					"compression_codec":  "zstd",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenOpenstack(c.remote, nil)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -82,7 +23,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		AccessKey:         gofastly.ToPointer("s3cr3t"),
 		BucketName:        gofastly.ToPointer("bucket"),
 		CompressionCodec:  gofastly.ToPointer("zstd"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingOpenStackDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -102,7 +43,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 	log1AfterUpdate := gofastly.Openstack{
 		AccessKey:         gofastly.ToPointer("s3cr3tupdate"),
 		BucketName:        gofastly.ToPointer("bucketupdate"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(1),
 		MessageType:       gofastly.ToPointer("blank"),
@@ -123,7 +64,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		AccessKey:         gofastly.ToPointer("s3cr3t2"),
 		BucketName:        gofastly.ToPointer("bucket2"),
 		CompressionCodec:  gofastly.ToPointer("zstd"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -283,15 +224,14 @@ resource "fastly_service_vcl" "foo" {
 
   logging_openstack {
     name   = "openstack-endpoint"
-		url    = "https://auth.example.com/v1"
+	url    = "https://auth.example.com/v1"
     user   = "user"
     bucket_name = "bucket"
     access_key = "s3cr3t"
     public_key = file("test_fixtures/fastly_test_publickey")
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     path = "/"
     placement = "none"
-		timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+	timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
     compression_codec = "zstd"
     processing_region = "us"
@@ -302,6 +242,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLOpenstackConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -330,7 +271,7 @@ resource "fastly_service_vcl" "foo" {
     bucket_name = "bucketupdate"
     access_key = "s3cr3tupdate"
     public_key = file("test_fixtures/fastly_test_publickey")
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format = %q
     path = "new/"
     placement = "none"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
@@ -347,7 +288,7 @@ resource "fastly_service_vcl" "foo" {
     bucket_name = "bucket2"
     access_key = "s3cr3t2"
     public_key = file("test_fixtures/fastly_test_publickey")
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format = %q
     path = "two/"
     placement = "none"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
@@ -356,7 +297,7 @@ resource "fastly_service_vcl" "foo" {
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
 }
 
 func testAccServiceVCLOpenstackComputeConfig(name string, domain string) string {
@@ -398,4 +339,63 @@ resource "fastly_service_compute" "foo" {
 
   force_destroy = true
 }`, name, domain)
+}
+
+func TestResourceFastlyFlattenOpenstack(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Openstack
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Openstack{
+				{
+					Name:              gofastly.ToPointer("openstack-logging"),
+					URL:               gofastly.ToPointer("https://auth.example.com"),
+					User:              gofastly.ToPointer("user"),
+					BucketName:        gofastly.ToPointer("bucket"),
+					AccessKey:         gofastly.ToPointer("secret"),
+					PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+					Format:            gofastly.ToPointer(LoggingOpenStackDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					MessageType:       gofastly.ToPointer("classic"),
+					Path:              gofastly.ToPointer("/"),
+					Placement:         gofastly.ToPointer("none"),
+					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					Period:            gofastly.ToPointer(3600),
+					GzipLevel:         gofastly.ToPointer(0),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "openstack-logging",
+					"url":                "https://auth.example.com",
+					"user":               "user",
+					"bucket_name":        "bucket",
+					"access_key":         "secret",
+					"public_key":         pgpPublicKey(t),
+					"format":             LoggingOpenStackDefaultFormat,
+					"format_version":     2,
+					"message_type":       "classic",
+					"path":               "/",
+					"placement":          "none",
+					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
+					"response_condition": "always",
+					"period":             3600,
+					"gzip_level":         0,
+					"compression_codec":  "zstd",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenOpenstack(c.remote, nil)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

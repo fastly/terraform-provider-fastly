@@ -14,73 +14,13 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenGrafanaCloudLogs(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.GrafanaCloudLogs
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.GrafanaCloudLogs{
-				{
-					ServiceVersion: gofastly.ToPointer(1),
-					Name:           gofastly.ToPointer("grafanacloudlogs-endpoint"),
-					User:           gofastly.ToPointer("123456"),
-					Token:          gofastly.ToPointer("token"),
-					URL:            gofastly.ToPointer("https://test123.grafana.net"),
-					Index:          gofastly.ToPointer("{\"label\": \"value\"}"),
-
-					FormatVersion:    gofastly.ToPointer(2),
-					ProcessingRegion: gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":              "grafanacloudlogs-endpoint",
-					"user":              "123456",
-					"token":             "token",
-					"url":               "https://test123.grafana.net",
-					"index":             "{\"label\": \"value\"}",
-					"format_version":    2,
-					"processing_region": "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenGrafanaCloudLogs(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
-var grafanacloudlogsDefaultFormat = `{
-  "timestamp": "%{strftime(\{"%Y-%m-%dT%H:%M:%S"\}, time.start)}V",
-  "client_ip": "%{req.http.Fastly-Client-IP}V",
-  "geo_country": "%{client.geo.country_name}V",
-  "geo_city": "%{client.geo.city}V",
-  "host": "%{if(req.http.Fastly-Orig-Host, req.http.Fastly-Orig-Host, req.http.Host)}V",
-  "url": "%{json.escape(req.url)}V",
-  "request_method": "%{json.escape(req.method)}V",
-  "request_protocol": "%{json.escape(req.proto)}V",
-  "request_referer": "%{json.escape(req.http.referer)}V",
-  "request_user_agent": "%{json.escape(req.http.User-Agent)}V",
-  "response_state": "%{json.escape(fastly_info.state)}V",
-  "response_status": %{resp.status}V,
-  "response_reason": %{if(resp.response, "%22"+json.escape(resp.response)+"%22", "null")}V,
-  "response_body_size": %{resp.body_bytes_written}V,
-  "fastly_server": "%{json.escape(server.identity)}V",
-  "fastly_is_edge": %{if(fastly.ff.visits_this_service == 0, "true", "false")}V
-}`
-
 func TestAccFastlyServiceVCL_logging_grafanacloudlogs_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.GrafanaCloudLogs{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingGrafanaCloudLogsDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("grafanacloudlogs-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -93,7 +33,7 @@ func TestAccFastlyServiceVCL_logging_grafanacloudlogs_basic(t *testing.T) {
 	}
 
 	log1AfterUpdate := gofastly.GrafanaCloudLogs{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("grafanacloudlogs-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -106,7 +46,7 @@ func TestAccFastlyServiceVCL_logging_grafanacloudlogs_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.GrafanaCloudLogs{
-		Format:            gofastly.ToPointer(grafanacloudlogsDefaultFormat + "\n"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("another-grafanacloudlogs-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -259,7 +199,6 @@ resource "fastly_service_vcl" "foo" {
 	token  = "token"
 	url    = "https://test123.grafana.net"
 	index  = "{\"label\": \"value\"}"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     processing_region = "us"
   }
 
@@ -269,6 +208,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLGrafanaCloudLogsConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -289,7 +229,7 @@ resource "fastly_service_vcl" "foo" {
 	token  = "t0k3n"
 	url    = "https://test456.grafana.net"
 	index  = "{\"label2\": \"value2\"}"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format = %q
   }
 
   logging_grafanacloudlogs {
@@ -298,14 +238,12 @@ resource "fastly_service_vcl" "foo" {
 	user   = "123456"
 	url    = "https://test789.grafana.net"
 	index  = "{\"label3\": \"value3\"}"
-		format = <<EOF
-`+escapePercentSign(grafanacloudlogsDefaultFormat)+`
-EOF
+		format = %q
   }
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, format, format)
 }
 
 func testAccServiceVCLGrafanaCloudLogsComputeConfig(name string, domain string) string {
@@ -344,4 +282,46 @@ resource "fastly_service_compute" "foo" {
   force_destroy = true
 }
 `, name, domain)
+}
+
+func TestResourceFastlyFlattenGrafanaCloudLogs(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.GrafanaCloudLogs
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.GrafanaCloudLogs{
+				{
+					ServiceVersion:   gofastly.ToPointer(1),
+					Name:             gofastly.ToPointer("grafanacloudlogs-endpoint"),
+					User:             gofastly.ToPointer("123456"),
+					Token:            gofastly.ToPointer("token"),
+					URL:              gofastly.ToPointer("https://test123.grafana.net"),
+					Index:            gofastly.ToPointer("{\"label\": \"value\"}"),
+					Format:           gofastly.ToPointer(LoggingGrafanaCloudLogsDefaultFormat),
+					FormatVersion:    gofastly.ToPointer(2),
+					ProcessingRegion: gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":              "grafanacloudlogs-endpoint",
+					"user":              "123456",
+					"token":             "token",
+					"url":               "https://test123.grafana.net",
+					"index":             "{\"label\": \"value\"}",
+					"format":            LoggingGrafanaCloudLogsDefaultFormat,
+					"format_version":    2,
+					"processing_region": "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenGrafanaCloudLogs(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

@@ -14,59 +14,18 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenLogentries(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Logentries
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Logentries{
-				{
-					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
-					FormatVersion:     gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("somelogentriesname"),
-					Placement:         gofastly.ToPointer("placement"),
-					Port:              gofastly.ToPointer(8080),
-					ResponseCondition: gofastly.ToPointer("response_condition_test"),
-					ServiceVersion:    gofastly.ToPointer(1), // expect this not to be persisted to tf state as it's tracked by the parent 'service' resource
-					Token:             gofastly.ToPointer("mytoken"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"format":             "%h %l %u %t %r %>s",
-					"format_version":     1,
-					"name":               "somelogentriesname",
-					"placement":          "placement",
-					"port":               8080,
-					"response_condition": "response_condition_test",
-					"token":              "mytoken",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenLogentries(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domainName1 := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	log1 := gofastly.Logentries{
-		ServiceVersion:    gofastly.ToPointer(1),
-		Name:              gofastly.ToPointer("somelogentriesname"),
-		Port:              gofastly.ToPointer(20000),
-		UseTLS:            gofastly.ToPointer(true),
-		Token:             gofastly.ToPointer("token"),
+		ServiceVersion: gofastly.ToPointer(1),
+		Name:           gofastly.ToPointer("somelogentriesname"),
+		Port:           gofastly.ToPointer(20000),
+		UseTLS:         gofastly.ToPointer(true),
+		Token:          gofastly.ToPointer("token"),
+		// This log endpoint seems to be depreciated, so we aren't setting the default here.
 		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
 		FormatVersion:     gofastly.ToPointer(2),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
@@ -79,7 +38,7 @@ func TestAccFastlyServiceVCL_logentries_basic(t *testing.T) {
 		Port:              gofastly.ToPointer(10000),
 		UseTLS:            gofastly.ToPointer(false),
 		Token:             gofastly.ToPointer("newtoken"),
-		Format:            gofastly.ToPointer("%h %u %t %r %>s"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
 		ProcessingRegion:  gofastly.ToPointer("none"),
@@ -369,4 +328,46 @@ resource "fastly_service_vcl" "foo" {
   }
   force_destroy = true
 }`, name, domain)
+}
+
+func TestResourceFastlyFlattenLogentries(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Logentries
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Logentries{
+				{
+					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
+					FormatVersion:     gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("somelogentriesname"),
+					Placement:         gofastly.ToPointer("placement"),
+					Port:              gofastly.ToPointer(8080),
+					ResponseCondition: gofastly.ToPointer("response_condition_test"),
+					ServiceVersion:    gofastly.ToPointer(1), // expect this not to be persisted to tf state as it's tracked by the parent 'service' resource
+					Token:             gofastly.ToPointer("mytoken"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"format":             "%h %l %u %t %r %>s",
+					"format_version":     1,
+					"name":               "somelogentriesname",
+					"placement":          "placement",
+					"port":               8080,
+					"response_condition": "response_condition_test",
+					"token":              "mytoken",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenLogentries(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
 }

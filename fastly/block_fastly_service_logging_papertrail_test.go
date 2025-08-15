@@ -13,46 +13,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenPapertrail(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Papertrail
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Papertrail{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("papertrailtesting"),
-					Address:           gofastly.ToPointer("test1.papertrailapp.com"),
-					Port:              gofastly.ToPointer(3600),
-					Format:            gofastly.ToPointer("%h %l %u %t %r %>s"),
-					FormatVersion:     gofastly.ToPointer(2),
-					ResponseCondition: gofastly.ToPointer("test_response_condition"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "papertrailtesting",
-					"address":            "test1.papertrailapp.com",
-					"port":               3600,
-					"format":             "%h %l %u %t %r %>s",
-					"format_version":     2,
-					"response_condition": "test_response_condition",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenPapertrails(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -60,7 +20,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 
 	log1 := gofastly.Papertrail{
 		Address:           gofastly.ToPointer("test1.papertrailapp.com"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		Format:            gofastly.ToPointer(LoggingPapertrailDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("papertrailtesting"),
 		Port:              gofastly.ToPointer(3600),
@@ -69,9 +29,20 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
+	log1AfterUpdate := gofastly.Papertrail{
+		Address:           gofastly.ToPointer("test1.papertrailapp.com"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:     gofastly.ToPointer(2),
+		Name:              gofastly.ToPointer("papertrailtesting"),
+		Port:              gofastly.ToPointer(3600),
+		ResponseCondition: gofastly.ToPointer("test_response_condition"),
+		ServiceVersion:    gofastly.ToPointer(1),
+		ProcessingRegion:  gofastly.ToPointer("eu"),
+	}
+
 	log2 := gofastly.Papertrail{
 		Address:           gofastly.ToPointer("test2.papertrailapp.com"),
-		Format:            gofastly.ToPointer(`%h %l %u %t "%r" %>s %b`),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("papertrailtesting2"),
 		Port:              gofastly.ToPointer(8080),
@@ -101,7 +72,7 @@ func TestAccFastlyServiceVCL_papertrail_basic(t *testing.T) {
 				Config: testAccServiceVCLPapertrailConfigUpdate(name, domainName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1, &log2}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLPapertrailAttributes(&service, []*gofastly.Papertrail{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_papertrail.#", "2"),
 				),
@@ -255,7 +226,7 @@ resource "fastly_service_vcl" "foo" {
     name               = "papertrailtesting"
     address            = "test1.papertrailapp.com"
     port               = 3600
-		response_condition = "test_response_condition"
+	response_condition = "test_response_condition"
     processing_region = "us"
   }
 
@@ -264,6 +235,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLPapertrailConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -289,15 +261,59 @@ resource "fastly_service_vcl" "foo" {
     name               = "papertrailtesting"
     address            = "test1.papertrailapp.com"
     port               = 3600
-		response_condition = "test_response_condition"
+	response_condition = "test_response_condition"
+	format = %q
+	processing_region = "eu"
   }
 
 	logging_papertrail {
     name               = "papertrailtesting2"
     address            = "test2.papertrailapp.com"
     port               = 8080
+	format = %q
+	processing_region = "none"
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenPapertrail(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Papertrail
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Papertrail{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("papertrailtesting"),
+					Address:           gofastly.ToPointer("test1.papertrailapp.com"),
+					Port:              gofastly.ToPointer(3600),
+					Format:            gofastly.ToPointer(LoggingPapertrailDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					ResponseCondition: gofastly.ToPointer("test_response_condition"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "papertrailtesting",
+					"address":            "test1.papertrailapp.com",
+					"port":               3600,
+					"format":             LoggingPapertrailDefaultFormat,
+					"format_version":     2,
+					"response_condition": "test_response_condition",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenPapertrails(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching: expected: %#v got: %#v", c.local, out)
+		}
+	}
 }

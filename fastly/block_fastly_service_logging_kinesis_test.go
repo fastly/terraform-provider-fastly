@@ -16,79 +16,6 @@ import (
 
 const testKinesisIAMRole = "arn:aws:iam::123456789012:role/KinesisAccess"
 
-func TestResourceFastlyFlattenKinesis(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Kinesis
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Kinesis{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("kinesis-endpoint"),
-					StreamName:        gofastly.ToPointer("stream-name"),
-					Region:            gofastly.ToPointer("us-east-1"),
-					AccessKey:         gofastly.ToPointer("whywouldyoucheckthis"),
-					SecretKey:         gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "kinesis-endpoint",
-					"topic":              "stream-name",
-					"region":             "us-east-1",
-					"access_key":         "whywouldyoucheckthis",
-					"secret_key":         "thisisthesecretthatneedstobe40characters",
-					"format":             "%h %l %u %t \"%r\" %>s %b %T",
-					"placement":          "none",
-					"response_condition": "always",
-					"format_version":     2,
-					"processing_region":  "eu",
-				},
-			},
-		},
-		{
-			remote: []*gofastly.Kinesis{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("kinesis-endpoint"),
-					StreamName:        gofastly.ToPointer("stream-name"),
-					Region:            gofastly.ToPointer("us-east-1"),
-					IAMRole:           gofastly.ToPointer(testKinesisIAMRole),
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					FormatVersion:     gofastly.ToPointer(2),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "kinesis-endpoint",
-					"topic":              "stream-name",
-					"region":             "us-east-1",
-					"iam_role":           testKinesisIAMRole,
-					"format":             "%h %l %u %t \"%r\" %>s %b %T",
-					"placement":          "none",
-					"response_condition": "always",
-					"format_version":     2,
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenKinesis(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -96,7 +23,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 
 	log1 := gofastly.Kinesis{
 		AccessKey:         gofastly.ToPointer("whywouldyoucheckthis"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingKinesisDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		IAMRole:           gofastly.ToPointer(""),
 		Name:              gofastly.ToPointer("kinesis-endpoint"),
@@ -110,7 +37,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 
 	log1AfterUpdate := gofastly.Kinesis{
 		AccessKey:         gofastly.ToPointer(""),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		IAMRole:           gofastly.ToPointer(testKinesisIAMRole),
 		Name:              gofastly.ToPointer("kinesis-endpoint"),
@@ -124,7 +51,7 @@ func TestAccFastlyServiceVCL_logging_kinesis_basic(t *testing.T) {
 
 	log2 := gofastly.Kinesis{
 		AccessKey:         gofastly.ToPointer(""),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		IAMRole:           gofastly.ToPointer(testKinesisIAMRole),
 		Name:              gofastly.ToPointer("another-kinesis-endpoint"),
@@ -270,7 +197,6 @@ resource "fastly_service_vcl" "foo" {
     region      = "us-east-1"
     access_key  = "whywouldyoucheckthis"
     secret_key  = "thisisthesecretthatneedstobe40characters"
-    format      = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     processing_region = "us"
   }
 
@@ -280,6 +206,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLKinesisConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -306,7 +233,7 @@ resource "fastly_service_vcl" "foo" {
     topic       = "new-stream-name"
     region      = "us-east-1"
     iam_role    = "%s"
-    format      = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format      = %q
   }
 
   logging_kinesis {
@@ -314,12 +241,12 @@ resource "fastly_service_vcl" "foo" {
     topic       = "another-stream-name"
     region      = "us-east-1"
     iam_role    = "%s"
-    format      = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format      = %q
   }
 
   force_destroy = true
 }
-`, name, domain, testKinesisIAMRole, testKinesisIAMRole)
+`, name, domain, testKinesisIAMRole, format, testKinesisIAMRole, format)
 }
 
 func testAccServiceVCLKinesisComputeConfig(name string, domain string) string {
@@ -358,4 +285,77 @@ resource "fastly_service_compute" "foo" {
   force_destroy = true
 }
 `, name, domain)
+}
+
+func TestResourceFastlyFlattenKinesis(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Kinesis
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Kinesis{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("kinesis-endpoint"),
+					StreamName:        gofastly.ToPointer("stream-name"),
+					Region:            gofastly.ToPointer("us-east-1"),
+					AccessKey:         gofastly.ToPointer("whywouldyoucheckthis"),
+					SecretKey:         gofastly.ToPointer("thisisthesecretthatneedstobe40characters"),
+					Format:            gofastly.ToPointer(LoggingKinesisDefaultFormat),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "kinesis-endpoint",
+					"topic":              "stream-name",
+					"region":             "us-east-1",
+					"access_key":         "whywouldyoucheckthis",
+					"secret_key":         "thisisthesecretthatneedstobe40characters",
+					"format":             LoggingKinesisDefaultFormat,
+					"placement":          "none",
+					"response_condition": "always",
+					"format_version":     2,
+					"processing_region":  "eu",
+				},
+			},
+		},
+		{
+			remote: []*gofastly.Kinesis{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("kinesis-endpoint"),
+					StreamName:        gofastly.ToPointer("stream-name"),
+					Region:            gofastly.ToPointer("us-east-1"),
+					IAMRole:           gofastly.ToPointer(testKinesisIAMRole),
+					Format:            gofastly.ToPointer(LoggingFormatUpdate),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					FormatVersion:     gofastly.ToPointer(2),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "kinesis-endpoint",
+					"topic":              "stream-name",
+					"region":             "us-east-1",
+					"iam_role":           testKinesisIAMRole,
+					"format":             LoggingFormatUpdate,
+					"placement":          "none",
+					"response_condition": "always",
+					"format_version":     2,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenKinesis(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

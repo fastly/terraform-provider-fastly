@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,67 +16,71 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenGCS(t *testing.T) {
-	secretKey, err := generateKey()
-	if err != nil {
-		t.Errorf("failed to generate key: %s", err)
-	}
-
-	cases := []struct {
-		remote []*gofastly.GCS
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.GCS{
-				{
-					Name:             gofastly.ToPointer("GCS collector"),
-					User:             gofastly.ToPointer("email@example.com"),
-					Bucket:           gofastly.ToPointer("bucketname"),
-					SecretKey:        gofastly.ToPointer(secretKey),
-					Format:           gofastly.ToPointer("log format"),
-					FormatVersion:    gofastly.ToPointer(2),
-					Period:           gofastly.ToPointer(3600),
-					GzipLevel:        gofastly.ToPointer(0),
-					CompressionCodec: gofastly.ToPointer("zstd"),
-					AccountName:      gofastly.ToPointer("service-account"),
-					ProjectID:        gofastly.ToPointer("project-id"),
-					ProcessingRegion: gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":              "GCS collector",
-					"user":              "email@example.com",
-					"bucket_name":       "bucketname",
-					"secret_key":        secretKey,
-					"format":            "log format",
-					"format_version":    2,
-					"period":            3600,
-					"gzip_level":        0,
-					"compression_codec": "zstd",
-					"account_name":      "service-account",
-					"project_id":        "project-id",
-					"processing_region": "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenGCS(c.remote, nil)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
-		}
-	}
-}
-
-func TestAccFastlyServiceVCL_gcslogging(t *testing.T) {
+func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	secretKey, err := generateKey()
 	if err != nil {
 		t.Errorf("failed to generate key: %s", err)
+	}
+
+	gcsLogOne := gofastly.GCS{
+		AccountName:       gofastly.ToPointer("service-account"),
+		Bucket:            gofastly.ToPointer("bucketname"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
+		Format:            gofastly.ToPointer(LoggingGCSDefaultFormat),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("test-gcs-1"),
+		Path:              gofastly.ToPointer("/5XX/"),
+		Period:            gofastly.ToPointer(12),
+		Placement:         gofastly.ToPointer("none"),
+		ProjectID:         gofastly.ToPointer("project-id"),
+		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		SecretKey:         gofastly.ToPointer(secretKey),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:              gofastly.ToPointer("email@example.com"),
+		ProcessingRegion:  gofastly.ToPointer("us"),
+	}
+
+	gcsLogOneUpdated := gofastly.GCS{
+		AccountName:       gofastly.ToPointer("service-account"),
+		Bucket:            gofastly.ToPointer("bucketname"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(1),
+		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("test-gcs-1"),
+		Path:              gofastly.ToPointer("/5XX/"),
+		Period:            gofastly.ToPointer(12),
+		Placement:         gofastly.ToPointer("none"),
+		ProjectID:         gofastly.ToPointer("project-id"),
+		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
+		SecretKey:         gofastly.ToPointer(secretKey),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:              gofastly.ToPointer("email@example.com"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
+	}
+
+	gcsLogTwo := gofastly.GCS{
+		AccountName:       gofastly.ToPointer("service-account"),
+		Bucket:            gofastly.ToPointer("bucketname"),
+		CompressionCodec:  gofastly.ToPointer("zstd"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		MessageType:       gofastly.ToPointer("classic"),
+		Name:              gofastly.ToPointer("test-gcs-2"),
+		Path:              gofastly.ToPointer("/2XX/"),
+		Period:            gofastly.ToPointer(12),
+		Placement:         gofastly.ToPointer("none"),
+		ProjectID:         gofastly.ToPointer("project-id"),
+		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
+		SecretKey:         gofastly.ToPointer(secretKey),
+		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:              gofastly.ToPointer("email@example.com"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,23 +91,50 @@ func TestAccFastlyServiceVCL_gcslogging(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfigGCS(name, gcsName, secretKey),
+				Config: testAccServiceVCLGCSLoggingConfigComplete(serviceName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
+					testAccCheckFastlyServiceVCLGCSLoggingAttributes(&service, []*gofastly.GCS{&gcsLogOne}, ServiceTypeVCL),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_gcs.#", "1"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLGCSLoggingConfigUpdate(serviceName, secretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLGCSLoggingAttributes(&service, []*gofastly.GCS{&gcsLogOneUpdated, &gcsLogTwo}, ServiceTypeVCL),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_gcs.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
+func TestAccFastlyServiceVCL_gcslogging_basic_compute(t *testing.T) {
 	var service gofastly.ServiceDetail
-	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
-	gcsName := fmt.Sprintf("gcs %s", acctest.RandString(10))
+	serviceName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	secretKey, err := generateKey()
 	if err != nil {
 		t.Errorf("failed to generate key: %s", err)
+	}
+
+	gcsLogOne := gofastly.GCS{
+		AccountName:      gofastly.ToPointer("service-account"),
+		Bucket:           gofastly.ToPointer("bucketname"),
+		CompressionCodec: gofastly.ToPointer("zstd"),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("test-gcs-1"),
+		Path:             gofastly.ToPointer("/5XX/"),
+		Period:           gofastly.ToPointer(12),
+		ProjectID:        gofastly.ToPointer("project-id"),
+		SecretKey:        gofastly.ToPointer(secretKey),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:             gofastly.ToPointer("email@example.com"),
+		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,10 +145,12 @@ func TestAccFastlyServiceVCL_gcslogging_compute(t *testing.T) {
 		CheckDestroy:      testAccCheckServiceVCLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey),
+				Config: testAccServiceVCLGCSLoggingConfigCompleteCompute(serviceName, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
-					testAccCheckFastlyServiceVCLAttributesGCS(&service, name, gcsName),
+					testAccCheckFastlyServiceVCLGCSLoggingAttributes(&service, []*gofastly.GCS{&gcsLogOne}, ServiceTypeCompute),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "logging_gcs.#", "1"),
 				),
 			},
 		},
@@ -164,35 +198,58 @@ func TestGcsloggingEnvDefaultFuncAttributes(t *testing.T) {
 	}
 }
 
-func testAccCheckFastlyServiceVCLAttributesGCS(service *gofastly.ServiceDetail, name, gcsName string) resource.TestCheckFunc {
+func testAccCheckFastlyServiceVCLGCSLoggingAttributes(service *gofastly.ServiceDetail, localGCSList []*gofastly.GCS, serviceType string) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		if gofastly.ToValue(service.Name) != name {
-			return fmt.Errorf("bad name, expected (%s), got (%s)", name, gofastly.ToValue(service.Name))
-		}
-
 		conn := testAccProvider.Meta().(*APIClient).conn
-		gcsList, err := conn.ListGCSs(context.TODO(), &gofastly.ListGCSsInput{
+		remoteGCSList, err := conn.ListGCSs(context.TODO(), &gofastly.ListGCSsInput{
 			ServiceID:      gofastly.ToValue(service.ServiceID),
 			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
 		})
 		if err != nil {
-			return fmt.Errorf("error looking up GCSs for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+			return fmt.Errorf("error looking up GCS Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
 		}
 
-		if len(gcsList) != 1 {
-			return fmt.Errorf("gcs missing, expected: 1, got: %d", len(gcsList))
+		if len(remoteGCSList) != len(localGCSList) {
+			return fmt.Errorf("GCS List count mismatch, expected (%d), got (%d)", len(localGCSList), len(remoteGCSList))
 		}
 
-		if gofastly.ToValue(gcsList[0].Name) != gcsName {
-			return fmt.Errorf("gcs name mismatch, expected: %s, got: %#v", gcsName, gofastly.ToValue(gcsList[0].Name))
+		var found int
+		for _, lgcs := range localGCSList {
+			for _, rgcs := range remoteGCSList {
+				if gofastly.ToValue(lgcs.Name) == gofastly.ToValue(rgcs.Name) {
+					// we don't know these things ahead of time, so populate them now
+					lgcs.ServiceID = service.ServiceID
+					lgcs.ServiceVersion = service.ActiveVersion.Number
+
+					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+					if serviceType == ServiceTypeCompute {
+						lgcs.FormatVersion = rgcs.FormatVersion
+						lgcs.Format = rgcs.Format
+						lgcs.ResponseCondition = rgcs.ResponseCondition
+						lgcs.Placement = rgcs.Placement
+					}
+
+					// We don't track these, so clear them out because we also won't know
+					// these ahead of time
+					rgcs.CreatedAt = nil
+					rgcs.UpdatedAt = nil
+					if diff := cmp.Diff(lgcs, rgcs); diff != "" {
+						return fmt.Errorf("bad match GCS logging match: %s", diff)
+					}
+					found++
+				}
+			}
+		}
+
+		if found != len(localGCSList) {
+			return fmt.Errorf("error matching GCS Logging rules")
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceVCLConfigGCS(name, gcsName, secretKey string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+func testAccServiceVCLGCSLoggingConfigComplete(serviceName, secretKey string) string {
 	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
@@ -205,30 +262,40 @@ resource "fastly_service_vcl" "foo" {
   }
 
   backend {
-    address = "%s"
-    name = "tf -test backend"
+    address = "aws.amazon.com"
+    name = "tf-test-backend"
+  }
+
+  condition {
+    name = "error_response_5XX"
+    statement = "resp.status >= 500 && resp.status < 600"
+    priority = 10
+    type = "RESPONSE"
   }
 
   logging_gcs {
-    name = "%s"
+    name = "test-gcs-1"
     user = "email@example.com"
     bucket_name = "bucketname"
     account_name = "service-account"
-	project_id = "project-id"
+    project_id = "project-id"
     secret_key = %q
-    format = "log format"
-    response_condition = ""
+    path = "/5XX/"
+    period = 12
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    format_version = 2
+    placement = "none"
+    response_condition = "error_response_5XX"
     compression_codec = "zstd"
     processing_region = "us"
   }
 
   force_destroy = true
-}`, name, domainName, backendName, gcsName, secretKey)
+}`, serviceName, domainName, secretKey)
 }
 
-func testAccServiceVCLConfigComputeGCS(name, gcsName, secretKey string) string {
-	backendName := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
-	domainName := fmt.Sprintf("fastly-test-compute.tf-%s.com", acctest.RandString(10))
+func testAccServiceVCLGCSLoggingConfigCompleteCompute(serviceName, secretKey string) string {
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
 
 	return fmt.Sprintf(`
 data "fastly_package_hash" "example" {
@@ -244,28 +311,102 @@ resource "fastly_service_compute" "foo" {
   }
 
   backend {
-    address = "%s"
-    name = "tf -test backend"
+    address = "aws.amazon.com"
+    name = "tf-test-backend"
   }
 
   logging_gcs {
-    name = "%s"
-    user = "email@example.com"
     account_name = "service-account"
-    project_id = "project-id"
     bucket_name = "bucketname"
-    secret_key = %q
     compression_codec = "zstd"
+    name = "test-gcs-1"
+    path = "/5XX/"
+    period = 12
+    project_id = "project-id"
+    secret_key = %q
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    user = "email@example.com"
     processing_region = "us"
   }
 
- package {
+  package {
     filename = "test_fixtures/package/valid.tar.gz"
     source_code_hash = data.fastly_package_hash.example.hash
   }
 
   force_destroy = true
-}`, name, domainName, backendName, gcsName, secretKey)
+}`, serviceName, domainName, secretKey)
+}
+
+func testAccServiceVCLGCSLoggingConfigUpdate(serviceName, secretKey string) string {
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	format := LoggingFormatUpdate
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name = "tf-test-backend"
+  }
+
+  condition {
+    name = "error_response_5XX"
+    statement = "resp.status >= 500 && resp.status < 600"
+    priority = 10
+    type = "RESPONSE"
+  }
+
+  condition {
+    name = "ok_response_2XX"
+    statement = "resp.status >= 200 && resp.status < 300"
+    priority = 10
+    type = "RESPONSE"
+  }
+
+  logging_gcs {
+    name = "test-gcs-1"
+    user = "email@example.com"
+    bucket_name = "bucketname"
+    account_name = "service-account"
+    project_id = "project-id"
+    secret_key = %q
+    path = "/5XX/"
+    period = 12
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    format = %q
+    gzip_level = 1
+    format_version = 2
+    placement = "none"
+    response_condition = "error_response_5XX"
+    processing_region = "none"
+  }
+
+  logging_gcs {
+    name = "test-gcs-2"
+    user = "email@example.com"
+    bucket_name = "bucketname"
+    account_name = "service-account"
+    project_id = "project-id"
+    secret_key = %q
+    path = "/2XX/"
+    period = 12
+    timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
+    format = %q
+    format_version = 2
+    placement = "none"
+    response_condition = "ok_response_2XX"
+    compression_codec = "zstd"
+    processing_region = "none"
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, secretKey, format, secretKey, format)
 }
 
 func setGcsEnv(email, secretKey string, t *testing.T) func() {
@@ -300,5 +441,61 @@ func getGcsEnv() *currentGcsEnv {
 	return &currentGcsEnv{
 		Key:    os.Getenv("FASTLY_GCS_EMAIL"),
 		Secret: os.Getenv("FASTLY_GCS_SECRET_KEY"),
+	}
+}
+
+func TestResourceFastlyFlattenGCS(t *testing.T) {
+	secretKey, err := generateKey()
+	if err != nil {
+		t.Errorf("failed to generate key: %s", err)
+	}
+
+	cases := []struct {
+		remote []*gofastly.GCS
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.GCS{
+				{
+					Name:             gofastly.ToPointer("GCS collector"),
+					User:             gofastly.ToPointer("email@example.com"),
+					Bucket:           gofastly.ToPointer("bucketname"),
+					SecretKey:        gofastly.ToPointer(secretKey),
+					Format:           gofastly.ToPointer(LoggingGCSDefaultFormat),
+					FormatVersion:    gofastly.ToPointer(2),
+					Period:           gofastly.ToPointer(3600),
+					GzipLevel:        gofastly.ToPointer(0),
+					MessageType:      gofastly.ToPointer("classic"),
+					CompressionCodec: gofastly.ToPointer("zstd"),
+					AccountName:      gofastly.ToPointer("service-account"),
+					ProjectID:        gofastly.ToPointer("project-id"),
+					ProcessingRegion: gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":              "GCS collector",
+					"user":              "email@example.com",
+					"bucket_name":       "bucketname",
+					"secret_key":        secretKey,
+					"message_type":      "classic",
+					"format":            LoggingGCSDefaultFormat,
+					"format_version":    2,
+					"period":            3600,
+					"gzip_level":        0,
+					"compression_codec": "zstd",
+					"account_name":      "service-account",
+					"project_id":        "project-id",
+					"processing_region": "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenGCS(c.remote, nil)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
+		}
 	}
 }

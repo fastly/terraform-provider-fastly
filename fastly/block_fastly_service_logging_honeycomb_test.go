@@ -14,79 +14,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-var honeycombDefaultFormat = `{
-  "time":"%{begin:%Y-%m-%dT%H:%M:%SZ}t",
-  "data":  {
-    "service_id":"%{req.service_id}V",
-    "time_elapsed":%D,
-    "request":"%m",
-    "host":"%{Fastly-Orig-Host}i",
-    "url":"%{cstr_escape(req.url)}V",
-    "protocol":"%H",
-    "is_ipv6":%{if(req.is_ipv6, "true", "false")}V,
-    "is_tls":%{if(req.is_ssl, "true", "false")}V,
-    "is_h2":%{if(fastly_info.is_h2, "true", "false")}V,
-    "client_ip":"%h",
-    "geo_city":"%{client.geo.city.utf8}V",
-    "geo_country_code":"%{client.geo.country_code}V",
-    "server_datacenter":"%{server.datacenter}V",
-    "request_referer":"%{Referer}i",
-    "request_user_agent":"%{User-Agent}i",
-    "request_accept_content":"%{Accept}i",
-    "request_accept_language":"%{Accept-Language}i",
-    "request_accept_charset":"%{Accept-Charset}i",
-    "cache_status":"%{regsub(fastly_info.state, "^(HIT-(SYNTH)|(HITPASS|HIT|MISS|PASS|ERROR|PIPE)).*", "\\2\\3") }V",
-    "status":"%s",
-    "content_type":"%{Content-Type}o",
-    "req_header_size":%{req.header_bytes_read}V,
-    "req_body_size":%{req.body_bytes_read}V,
-    "resp_header_size":%{resp.header_bytes_written}V,
-    "resp_body_size":%{resp.body_bytes_written}V
-  }
-}`
-
-func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Honeycomb
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Honeycomb{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("honeycomb-endpoint"),
-					Token:             gofastly.ToPointer("token"),
-					Dataset:           gofastly.ToPointer("dataset"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					Format:            gofastly.ToPointer(honeycombDefaultFormat),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "honeycomb-endpoint",
-					"token":              "token",
-					"dataset":            "dataset",
-					"placement":          "none",
-					"response_condition": "always",
-					"format":             honeycombDefaultFormat,
-					"format_version":     2,
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenHoneycomb(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -94,7 +21,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 
 	log1 := gofastly.Honeycomb{
 		Dataset:           gofastly.ToPointer("dataset"),
-		Format:            gofastly.ToPointer(appendNewLine(honeycombDefaultFormat)),
+		Format:            gofastly.ToPointer(LoggingHoneycombDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("honeycomb-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -105,7 +32,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 
 	log1AfterUpdate := gofastly.Honeycomb{
 		Dataset:           gofastly.ToPointer("new-dataset"),
-		Format:            gofastly.ToPointer(appendNewLine(honeycombDefaultFormat)),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("honeycomb-endpoint"),
 		Placement:         gofastly.ToPointer("none"),
@@ -117,7 +44,7 @@ func TestAccFastlyServiceVCL_logging_honeycomb_basic(t *testing.T) {
 
 	log2 := gofastly.Honeycomb{
 		Dataset:           gofastly.ToPointer("another-dataset"),
-		Format:            gofastly.ToPointer(appendNewLine(honeycombDefaultFormat)),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("another-honeycomb-endpoint"),
 		Placement:         gofastly.ToPointer("none"),
@@ -255,10 +182,7 @@ resource "fastly_service_vcl" "foo" {
   logging_honeycomb {
     name   = "honeycomb-endpoint"
     token  = "s3cr3t"
-		dataset = "dataset"
-    format = <<EOF
-`+escapePercentSign(honeycombDefaultFormat)+`
-EOF
+	dataset = "dataset"
     processing_region = "us"
   }
 
@@ -268,6 +192,7 @@ EOF
 }
 
 func testAccServiceVCLHoneycombConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -292,28 +217,24 @@ resource "fastly_service_vcl" "foo" {
   logging_honeycomb {
     name   = "honeycomb-endpoint"
     token  = "secret"
-		dataset = "new-dataset"
-    format = <<EOF
-`+escapePercentSign(honeycombDefaultFormat)+`
-EOF
+	dataset = "new-dataset"
+    format = %q
     response_condition = "response_condition_test"
-		placement = "none"
+	placement = "none"
   }
 
   logging_honeycomb {
     name   = "another-honeycomb-endpoint"
     token  = "another-token"
-		dataset = "another-dataset"
-    format = <<EOF
-`+escapePercentSign(honeycombDefaultFormat)+`
-EOF
+	dataset = "another-dataset"
+    format = %q
     response_condition = "response_condition_test"
-		placement = "none"
+	placement = "none"
   }
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, format, format)
 }
 
 func testAccServiceVCLHoneycombComputeConfig(name string, domain string) string {
@@ -350,4 +271,46 @@ resource "fastly_service_compute" "foo" {
   force_destroy = true
 }
 `, name, domain)
+}
+
+func TestResourceFastlyFlattenHoneycomb(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Honeycomb
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Honeycomb{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("honeycomb-endpoint"),
+					Token:             gofastly.ToPointer("token"),
+					Dataset:           gofastly.ToPointer("dataset"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					Format:            gofastly.ToPointer(LoggingHoneycombDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "honeycomb-endpoint",
+					"token":              "token",
+					"dataset":            "dataset",
+					"placement":          "none",
+					"response_condition": "always",
+					"format":             LoggingHoneycombDefaultFormat,
+					"format_version":     2,
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenHoneycomb(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -14,66 +15,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Cloudfiles
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Cloudfiles{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("cloudfiles-endpoint"),
-					BucketName:        gofastly.ToPointer("bucket"),
-					User:              gofastly.ToPointer("user"),
-					AccessKey:         gofastly.ToPointer("secret"),
-					PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
-					FormatVersion:     gofastly.ToPointer(2),
-					GzipLevel:         gofastly.ToPointer(0),
-					MessageType:       gofastly.ToPointer("classic"),
-					Path:              gofastly.ToPointer("/"),
-					Region:            gofastly.ToPointer("ORD"),
-					Period:            gofastly.ToPointer(3600),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("response_condition"),
-					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-					CompressionCodec:  gofastly.ToPointer("zstd"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "cloudfiles-endpoint",
-					"bucket_name":        "bucket",
-					"user":               "user",
-					"access_key":         "secret",
-					"public_key":         pgpPublicKey(t),
-					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"format_version":     2,
-					"gzip_level":         0,
-					"message_type":       "classic",
-					"path":               "/",
-					"region":             "ORD",
-					"period":             3600,
-					"placement":          "none",
-					"response_condition": "response_condition",
-					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"compression_codec":  "zstd",
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenCloudfiles(c.remote, nil)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -83,7 +24,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		AccessKey:         gofastly.ToPointer("secret"),
 		BucketName:        gofastly.ToPointer("bucket"),
 		CompressionCodec:  gofastly.ToPointer("zstd"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingCloudFilesDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -103,7 +44,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 	log1AfterUpdate := gofastly.Cloudfiles{
 		AccessKey:         gofastly.ToPointer("secretupdate"),
 		BucketName:        gofastly.ToPointer("bucketupdate"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(1),
 		MessageType:       gofastly.ToPointer("blank"),
@@ -124,7 +65,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		AccessKey:         gofastly.ToPointer("secret2"),
 		BucketName:        gofastly.ToPointer("bucket2"),
 		CompressionCodec:  gofastly.ToPointer("zstd"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -332,7 +273,6 @@ resource "fastly_service_vcl" "none" {
     access_key = "secret"
     bucket_name = "bucket"
     compression_codec = "zstd"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     format_version = 2
     message_type = "classic"
     name = "cloudfiles-endpoint"
@@ -353,6 +293,7 @@ resource "fastly_service_vcl" "none" {
 }
 
 func testAccServiceVCLCloudfilesConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "none" {
   name = "%s"
@@ -377,7 +318,7 @@ resource "fastly_service_vcl" "none" {
   logging_cloudfiles {
     access_key = "secretupdate"
     bucket_name = "bucketupdate"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format = %q
     format_version = 2
     gzip_level = 1
     message_type = "blank"
@@ -396,7 +337,7 @@ resource "fastly_service_vcl" "none" {
     access_key = "secret2"
     bucket_name = "bucket2"
     compression_codec = "zstd"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format = %q
     format_version = 2
     message_type = "classic"
     name = "another-cloudfiles-endpoint"
@@ -412,5 +353,65 @@ resource "fastly_service_vcl" "none" {
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, strings.ReplaceAll(format, "%{", "%%{"), strings.ReplaceAll(format, "%{", "%%{"))
+}
+
+func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Cloudfiles
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Cloudfiles{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("cloudfiles-endpoint"),
+					BucketName:        gofastly.ToPointer("bucket"),
+					User:              gofastly.ToPointer("user"),
+					AccessKey:         gofastly.ToPointer("secret"),
+					PublicKey:         gofastly.ToPointer(pgpPublicKey(t)),
+					Format:            gofastly.ToPointer(LoggingCloudFilesDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					GzipLevel:         gofastly.ToPointer(0),
+					MessageType:       gofastly.ToPointer("classic"),
+					Path:              gofastly.ToPointer("/"),
+					Region:            gofastly.ToPointer("ORD"),
+					Period:            gofastly.ToPointer(3600),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "cloudfiles-endpoint",
+					"bucket_name":        "bucket",
+					"user":               "user",
+					"access_key":         "secret",
+					"public_key":         pgpPublicKey(t),
+					"format":             LoggingCloudFilesDefaultFormat,
+					"format_version":     2,
+					"gzip_level":         0,
+					"message_type":       "classic",
+					"path":               "/",
+					"region":             "ORD",
+					"period":             3600,
+					"placement":          "none",
+					"response_condition": "response_condition",
+					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
+					"compression_codec":  "zstd",
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenCloudfiles(c.remote, nil)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

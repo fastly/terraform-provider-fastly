@@ -17,52 +17,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Pubsub
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Pubsub{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("googlepubsub-endpoint"),
-					User:              gofastly.ToPointer("user"),
-					SecretKey:         gofastly.ToPointer(privateKey(t)),
-					ProjectID:         gofastly.ToPointer("project-id"),
-					Topic:             gofastly.ToPointer("topic"),
-					ResponseCondition: gofastly.ToPointer("response_condition"),
-					Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
-					FormatVersion:     gofastly.ToPointer(2),
-					Placement:         gofastly.ToPointer("none"),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "googlepubsub-endpoint",
-					"user":               "user",
-					"secret_key":         privateKey(t),
-					"project_id":         "project-id",
-					"topic":              "topic",
-					"response_condition": "response_condition",
-					"format":             `%a %l %u %t %m %U%q %H %>s %b %T`,
-					"placement":          "none",
-					"format_version":     2,
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenGooglePubSub(c.remote)
-		if !reflect.DeepEqual(out, c.local) {
-			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
-		}
-	}
-}
-
 func TestUserEmailSchemaDefaultFunc(t *testing.T) {
 	computeAttributes := ServiceMetadata{ServiceTypeCompute}
 	v := NewServiceLoggingGooglePubSub(computeAttributes)
@@ -173,7 +127,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		ProjectID:         gofastly.ToPointer("project-id"),
 		Topic:             gofastly.ToPointer("topic"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingGooglePubSubDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
 		ProcessingRegion:  gofastly.ToPointer("us"),
@@ -187,7 +141,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		ProjectID:         gofastly.ToPointer("new-project-id"),
 		Topic:             gofastly.ToPointer("newtopic"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
 		ProcessingRegion:  gofastly.ToPointer("none"),
@@ -201,7 +155,7 @@ func TestAccFastlyServiceVCL_googlepubsublogging_basic(t *testing.T) {
 		ProjectID:         gofastly.ToPointer("project-id"),
 		Topic:             gofastly.ToPointer("topicb"),
 		ResponseCondition: gofastly.ToPointer("response_condition_test"),
-		Format:            gofastly.ToPointer(`%a %l %u %t %m %U%q %H %>s %b %T`),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Placement:         gofastly.ToPointer("none"),
 		ProcessingRegion:  gofastly.ToPointer("none"),
@@ -398,7 +352,6 @@ resource "fastly_service_vcl" "foo" {
 		project_id         = "project-id"
 	  topic  						 = "topic"
 		response_condition = "response_condition_test"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
 		format_version     = 2
 		placement          = "none"
     processing_region = "us"
@@ -410,6 +363,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLGooglePubSubConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
 	name = "%s"
@@ -438,7 +392,7 @@ resource "fastly_service_vcl" "foo" {
 		project_id         = "new-project-id"
 	  topic  						 = "newtopic"
 		response_condition = "response_condition_test"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = %q
 		format_version     = 2
 		placement          = "none"
 	}
@@ -450,11 +404,57 @@ resource "fastly_service_vcl" "foo" {
 		project_id         = "project-id"
 	  topic  						 = "topicb"
 		response_condition = "response_condition_test"
-		format             = "%%a %%l %%u %%t %%m %%U%%q %%H %%>s %%b %%T"
+		format             = %q
 		format_version     = 2
 		placement          = "none"
 	}
 
 	force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenGooglePubSub(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Pubsub
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Pubsub{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("googlepubsub-endpoint"),
+					User:              gofastly.ToPointer("user"),
+					SecretKey:         gofastly.ToPointer(privateKey(t)),
+					ProjectID:         gofastly.ToPointer("project-id"),
+					Topic:             gofastly.ToPointer("topic"),
+					ResponseCondition: gofastly.ToPointer("response_condition"),
+					Format:            gofastly.ToPointer(LoggingGooglePubSubDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					Placement:         gofastly.ToPointer("none"),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "googlepubsub-endpoint",
+					"user":               "user",
+					"secret_key":         privateKey(t),
+					"project_id":         "project-id",
+					"topic":              "topic",
+					"response_condition": "response_condition",
+					"format":             LoggingGooglePubSubDefaultFormat,
+					"placement":          "none",
+					"format_version":     2,
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenGooglePubSub(c.remote)
+		if !reflect.DeepEqual(out, c.local) {
+			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
+		}
+	}
 }

@@ -105,10 +105,6 @@ func TestEscapePercentSign(t *testing.T) {
 	}
 }
 
-func appendNewLine(s string) string {
-	return s + "\n"
-}
-
 // generateHex produces a slice of 16 random bytes.
 // This is useful for dynamically generating resource names.
 func generateHex() string {

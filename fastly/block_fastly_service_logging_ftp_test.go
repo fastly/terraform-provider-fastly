@@ -14,64 +14,6 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenFTP(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.FTP
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.FTP{
-				{
-					ServiceVersion:   gofastly.ToPointer(1),
-					Name:             gofastly.ToPointer("ftp-endpoint"),
-					Address:          gofastly.ToPointer("ftp.example.com"),
-					Username:         gofastly.ToPointer("username"),
-					Password:         gofastly.ToPointer("password"),
-					PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
-					Path:             gofastly.ToPointer("/path"),
-					Port:             gofastly.ToPointer(21),
-					Period:           gofastly.ToPointer(3600),
-					GzipLevel:        gofastly.ToPointer(0),
-					Format:           gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
-					FormatVersion:    gofastly.ToPointer(2),
-					TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-					Placement:        gofastly.ToPointer("none"),
-					MessageType:      gofastly.ToPointer("classic"),
-					CompressionCodec: gofastly.ToPointer("zstd"),
-					ProcessingRegion: gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":              "ftp-endpoint",
-					"address":           "ftp.example.com",
-					"user":              "username",
-					"password":          "password",
-					"public_key":        pgpPublicKey(t),
-					"path":              "/path",
-					"period":            3600,
-					"port":              21,
-					"gzip_level":        0,
-					"format_version":    2,
-					"format":            "%h %l %u %t \"%r\" %>s %b",
-					"timestamp_format":  "%Y-%m-%dT%H:%M:%S.000",
-					"placement":         "none",
-					"message_type":      "classic",
-					"compression_codec": "zstd",
-					"processing_region": "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenFTP(c.remote, nil)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -80,7 +22,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 	log1 := gofastly.FTP{
 		Address:           gofastly.ToPointer("ftp.example.com"),
 		CompressionCodec:  gofastly.ToPointer("zstd"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFTPDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -100,7 +42,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 
 	log1AfterUpdate := gofastly.FTP{
 		Address:           gofastly.ToPointer("ftp2.example.com"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(4),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -121,7 +63,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 	log2 := gofastly.FTP{
 		Address:           gofastly.ToPointer("ftp.example.com"),
 		CompressionCodec:  gofastly.ToPointer("zstd"),
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(0),
 		MessageType:       gofastly.ToPointer("classic"),
@@ -329,7 +271,6 @@ resource "fastly_service_vcl" "foo" {
     password = "p@ssw0rd"
     path = "/path"
     port = 27
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     placement = "none"
     compression_codec = "zstd"
@@ -341,6 +282,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLFTPConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -362,7 +304,7 @@ resource "fastly_service_vcl" "foo" {
     password = "p@ssw0rd2"
     public_key = file("test_fixtures/fastly_test_publickey")
     path = "/path"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
+    format = %q
     gzip_level = 4
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     placement = "none"
@@ -376,12 +318,70 @@ resource "fastly_service_vcl" "foo" {
     public_key = file("test_fixtures/fastly_test_publickey")
     path = "/"
     period = 360
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format = %q
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     placement = "none"
     compression_codec = "zstd"
   }
 
   force_destroy = true
-}`, name, domain)
+}`, name, domain, format, format)
+}
+
+func TestResourceFastlyFlattenFTP(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.FTP
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.FTP{
+				{
+					ServiceVersion:   gofastly.ToPointer(1),
+					Name:             gofastly.ToPointer("ftp-endpoint"),
+					Address:          gofastly.ToPointer("ftp.example.com"),
+					Username:         gofastly.ToPointer("username"),
+					Password:         gofastly.ToPointer("password"),
+					PublicKey:        gofastly.ToPointer(pgpPublicKey(t)),
+					Path:             gofastly.ToPointer("/path"),
+					Port:             gofastly.ToPointer(21),
+					Period:           gofastly.ToPointer(3600),
+					GzipLevel:        gofastly.ToPointer(0),
+					Format:           gofastly.ToPointer(LoggingFTPDefaultFormat),
+					FormatVersion:    gofastly.ToPointer(2),
+					TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+					Placement:        gofastly.ToPointer("none"),
+					MessageType:      gofastly.ToPointer("classic"),
+					CompressionCodec: gofastly.ToPointer("zstd"),
+					ProcessingRegion: gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":              "ftp-endpoint",
+					"address":           "ftp.example.com",
+					"user":              "username",
+					"password":          "password",
+					"public_key":        pgpPublicKey(t),
+					"path":              "/path",
+					"period":            3600,
+					"port":              21,
+					"gzip_level":        0,
+					"format_version":    2,
+					"format":            LoggingFTPDefaultFormat,
+					"timestamp_format":  "%Y-%m-%dT%H:%M:%S.000",
+					"placement":         "none",
+					"message_type":      "classic",
+					"compression_codec": "zstd",
+					"processing_region": "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenFTP(c.remote, nil)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

@@ -14,55 +14,13 @@ import (
 	gofastly "github.com/fastly/go-fastly/v11/fastly"
 )
 
-func TestResourceFastlyFlattenHeroku(t *testing.T) {
-	cases := []struct {
-		remote []*gofastly.Heroku
-		local  []map[string]any
-	}{
-		{
-			remote: []*gofastly.Heroku{
-				{
-					ServiceVersion:    gofastly.ToPointer(1),
-					Name:              gofastly.ToPointer("heroku-endpoint"),
-					URL:               gofastly.ToPointer("https://example.com"),
-					Token:             gofastly.ToPointer("token"),
-					Placement:         gofastly.ToPointer("none"),
-					ResponseCondition: gofastly.ToPointer("always"),
-					Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
-					FormatVersion:     gofastly.ToPointer(2),
-					ProcessingRegion:  gofastly.ToPointer("eu"),
-				},
-			},
-			local: []map[string]any{
-				{
-					"name":               "heroku-endpoint",
-					"token":              "token",
-					"url":                "https://example.com",
-					"placement":          "none",
-					"format":             "%h %l %u %t \"%r\" %>s %b",
-					"response_condition": "always",
-					"format_version":     2,
-					"processing_region":  "eu",
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		out := flattenHeroku(c.remote)
-		if diff := cmp.Diff(out, c.local); diff != "" {
-			t.Fatalf("Error matching: %s", diff)
-		}
-	}
-}
-
 func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 	var service gofastly.ServiceDetail
 	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.Heroku{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingHerokuDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("heroku-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -73,7 +31,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 	}
 
 	log1AfterUpdate := gofastly.Heroku{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b %T"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("heroku-endpoint"),
 		Placement:         gofastly.ToPointer("none"),
@@ -85,7 +43,7 @@ func TestAccFastlyServiceVCL_logging_heroku_basic(t *testing.T) {
 	}
 
 	log2 := gofastly.Heroku{
-		Format:            gofastly.ToPointer("%h %l %u %t \"%r\" %>s %b"),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		Name:              gofastly.ToPointer("another-heroku-endpoint"),
 		ResponseCondition: gofastly.ToPointer(""),
@@ -223,8 +181,7 @@ resource "fastly_service_vcl" "foo" {
   logging_heroku {
     name   = "heroku-endpoint"
     token  = "s3cr3t"
-		url    = "https://example.com"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+	url    = "https://example.com"
     processing_region = "us"
   }
 
@@ -234,6 +191,7 @@ resource "fastly_service_vcl" "foo" {
 }
 
 func testAccServiceVCLHerokuConfigUpdate(name, domain string) string {
+	format := LoggingFormatUpdate
 	return fmt.Sprintf(`
 resource "fastly_service_vcl" "foo" {
   name = "%s"
@@ -260,20 +218,20 @@ resource "fastly_service_vcl" "foo" {
     url                = "https://example.com"
     placement          = "none"
     token              = "secret"
-    format             = "%%h %%l %%u %%t \"%%r\" %%>s %%b %%T"
-		response_condition = "response_condition_test"
+    format             = %q
+	response_condition = "response_condition_test"
   }
 
   logging_heroku {
     name   = "another-heroku-endpoint"
     token  = "another-token"
     url    = "https://new.example.com"
-    format = "%%h %%l %%u %%t \"%%r\" %%>s %%b"
+    format = %q
   }
 
   force_destroy = true
 }
-`, name, domain)
+`, name, domain, format, format)
 }
 
 func testAccServiceVCLHerokuComputeConfig(name string, domain string) string {
@@ -310,4 +268,46 @@ resource "fastly_service_compute" "foo" {
   force_destroy = true
 }
 `, name, domain)
+}
+
+func TestResourceFastlyFlattenHeroku(t *testing.T) {
+	cases := []struct {
+		remote []*gofastly.Heroku
+		local  []map[string]any
+	}{
+		{
+			remote: []*gofastly.Heroku{
+				{
+					ServiceVersion:    gofastly.ToPointer(1),
+					Name:              gofastly.ToPointer("heroku-endpoint"),
+					URL:               gofastly.ToPointer("https://example.com"),
+					Token:             gofastly.ToPointer("token"),
+					Placement:         gofastly.ToPointer("none"),
+					ResponseCondition: gofastly.ToPointer("always"),
+					Format:            gofastly.ToPointer(LoggingHerokuDefaultFormat),
+					FormatVersion:     gofastly.ToPointer(2),
+					ProcessingRegion:  gofastly.ToPointer("eu"),
+				},
+			},
+			local: []map[string]any{
+				{
+					"name":               "heroku-endpoint",
+					"token":              "token",
+					"url":                "https://example.com",
+					"placement":          "none",
+					"format":             LoggingHerokuDefaultFormat,
+					"response_condition": "always",
+					"format_version":     2,
+					"processing_region":  "eu",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		out := flattenHeroku(c.remote)
+		if diff := cmp.Diff(out, c.local); diff != "" {
+			t.Fatalf("Error matching: %s", diff)
+		}
+	}
 }

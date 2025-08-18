@@ -85,7 +85,6 @@ Required:
 
 Optional:
 
-- `allow_interactive` (Boolean) Specifies if interaction is allowed (used when `type = browser_challenge`).
 - `signal` (String) Signal name to exclude (used when `type = exclude_signal`).
 
 

@@ -101,6 +101,16 @@ func expandNGWAFRuleCreateActions(raw []any, scopeType string) []*rules.CreateAc
 			action.Signal = gofastly.ToPointer(v.(string))
 		}
 		if scopeType == "workspace" {
+			if v, ok := m["allow_interactive"]; ok {
+				if v.(bool) {
+					action.AllowInteractive = gofastly.ToPointer(v.(bool))
+				}
+			}
+			if v, ok := m["deception_type"]; ok {
+				if v != "" {
+					action.DeceptionType = gofastly.ToPointer(v.(string))
+				}
+			}
 			if v, ok := m["redirect_url"]; ok {
 				if v != "" {
 					action.RedirectURL = gofastly.ToPointer(v.(string))

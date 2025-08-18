@@ -118,6 +118,12 @@ func flattenNGWAFRuleActionsGeneric(actions []rules.Action, isWorkspace bool) []
 			action["signal"] = a.Signal
 		}
 		if isWorkspace {
+			if a.AllowInteractive != nil {
+				action["allow_interactive"] = a.AllowInteractive
+			}
+			if a.DeceptionType != "" {
+				action["deception_type"] = a.DeceptionType
+			}
 			if a.RedirectURL != "" {
 				action["redirect_url"] = a.RedirectURL
 			}

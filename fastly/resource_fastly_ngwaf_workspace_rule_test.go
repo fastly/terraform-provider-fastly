@@ -560,6 +560,82 @@ resource "fastly_ngwaf_workspace_rule" "rate_limit" {
 `, workspaceName, ruleName)
 }
 
+func TestAccFastlyNGWAFWorkspaceRule_deception(t *testing.T) {
+	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
+	ruleDescription := "some description"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      nil, // Rule is deleted implicitly when workspace is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNGWAFWorkspaceRuleDeceptionConfig(workspaceName, ruleDescription),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace.example", "name", workspaceName),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.a", "description", ruleDescription),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.action", "type", "deception"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.action", "deception_type", "invalid_login_response"),
+
+					// Conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.deception", "condition.0.field", "path"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.deception", "condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.deception", "condition.0.value", "/login"),
+				),
+			},
+			{
+				ResourceName:      "fastly_ngwaf_workspace_rule.deception",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rule := s.RootModule().Resources["fastly_ngwaf_workspace_rule.deception"]
+					workspace := s.RootModule().Resources["fastly_ngwaf_workspace.example"]
+					return fmt.Sprintf("%s/%s", workspace.Primary.ID, rule.Primary.ID), nil
+				},
+			},
+		},
+	})
+}
+
+func testAccNGWAFWorkspaceRuleDeceptionConfig(workspaceName, ruleName string) string {
+	return fmt.Sprintf(`
+resource "fastly_ngwaf_workspace" "example" {
+  name                            = "%s"
+  description                     = "Test NGWAF Workspace"
+  mode                            = "block"
+  ip_anonymization                = "hashed"
+  client_ip_headers               = ["X-Forwarded-For", "X-Real-IP"]
+  default_blocking_response_code = 429
+
+  attack_signal_thresholds {
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
+  }
+}
+
+resource "fastly_ngwaf_workspace_rule" "deception" {
+  workspace_id     = fastly_ngwaf_workspace.example.id
+  type             = "rate_limit"
+  description      = "%s"
+  enabled          = true
+  group_operator   = "all"
+
+  action {
+    type           = "deception"
+	deception_type = "invalid_login_response"
+  }
+
+  condition {
+    field    = "path"
+    operator = "equals"
+    value    = "/login"
+  }
+}
+`, workspaceName, ruleName)
+}
+
 func TestAccFastlyNGWAFWorkspaceRule_templatedSignal(t *testing.T) {
 	workspaceName := fmt.Sprintf("Test WAF Workspace %s", acctest.RandString(5))
 	// the description must be an empty string for templated_signal rules

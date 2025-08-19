@@ -1244,7 +1244,7 @@ Optional:
 - `max_stale_age` (Number) How old an object is allowed to be to serve `stale-if-error` or `stale-while-revalidate`, in seconds
 - `request_condition` (String) Name of already defined `condition` to determine if this request setting should be applied (should be unique across multiple instances of `request_setting`)
 - `timer_support` (Boolean) Injects the X-Timer info into the request for viewing origin fetch durations
-- `xff` (String) X-Forwarded-For, should be `clear`, `leave`, `append`, `append_all`, or `overwrite`. Default `append`
+- `xff` (String) X-Forwarded-For, should be `clear`, `leave`, `append`, `append_all`, or `overwrite`
 
 
 <a id="nestedblock--response_object"></a>

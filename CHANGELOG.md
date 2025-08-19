@@ -8,6 +8,7 @@
 - feat(compute acls): add support for compute ACLs ([#1031](https://github.com/fastly/terraform-provider-fastly/pull/1031))
 - refactor(resource_fastly_domain_v1) to use domainmanagement imports and types ([#1074](https://github.com/fastly/terraform-provider-fastly/pull/1074))
 - feat(ngwaf/rules): add support for deception and allow_interactive actions ([#1077](https://github.com/fastly/terraform-provider-fastly/pull/1077))
+- bug(ngwaf/rules): removed a incorrect default value for xff attribute in a request_setting block for a fastly_service_vcl resource  ([#1078](https://github.com/fastly/terraform-provider-fastly/pull/1078))
 
 ### BUG FIXES:
 

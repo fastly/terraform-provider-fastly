@@ -13,7 +13,7 @@
 
 - fix(ngwaf/rules): removes the rate limit block from the account level rules schema. ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
 - fix(service_vcl/logging_gcs): resolves an issue where project_id was not being updated for GCS logging_gcs. ([#1073](https://github.com/fastly/terraform-provider-fastly/pull/1073))
-- fix(service_vcl/requestsetting): removed a incorrect default value for xff attribute ([#1078](https://github.com/fastly/terraform-provider-fastly/pull/1078))
+- fix(service_vcl/requestsetting): removed a incorrect default value for the xff attribute. ([#1078](https://github.com/fastly/terraform-provider-fastly/pull/1078))
 
 ### DEPENDENCIES:
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))

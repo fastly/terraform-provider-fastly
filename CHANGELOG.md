@@ -8,12 +8,12 @@
 - feat(compute acls): add support for compute ACLs ([#1031](https://github.com/fastly/terraform-provider-fastly/pull/1031))
 - refactor(resource_fastly_domain_v1) to use domainmanagement imports and types ([#1074](https://github.com/fastly/terraform-provider-fastly/pull/1074))
 - feat(ngwaf/rules): add support for deception and allow_interactive actions ([#1077](https://github.com/fastly/terraform-provider-fastly/pull/1077))
-- bug(ngwaf/rules): removed a incorrect default value for xff attribute in a request_setting block for a fastly_service_vcl resource  ([#1078](https://github.com/fastly/terraform-provider-fastly/pull/1078))
 
 ### BUG FIXES:
 
 - fix(ngwaf/rules): removes the rate limit block from the account level rules schema. ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
 - fix(service_vcl/logging_gcs): resolves an issue where project_id was not being updated for GCS logging_gcs. ([#1073](https://github.com/fastly/terraform-provider-fastly/pull/1073))
+- fix(service_vcl/requestsetting): removed a incorrect default value for xff attribute ([#1078](https://github.com/fastly/terraform-provider-fastly/pull/1078))
 
 ### DEPENDENCIES:
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))

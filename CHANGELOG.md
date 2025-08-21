@@ -8,6 +8,7 @@
 - feat(compute acls): add support for compute ACLs ([#1031](https://github.com/fastly/terraform-provider-fastly/pull/1031))
 - refactor(resource_fastly_domain_v1) to use domainmanagement imports and types ([#1074](https://github.com/fastly/terraform-provider-fastly/pull/1074))
 - feat(ngwaf/rules): add support for deception and allow_interactive actions ([#1077](https://github.com/fastly/terraform-provider-fastly/pull/1077))
+- feat(compute/healthcheck): add support for healthchecks for Compute services ([#1079](https://github.com/fastly/terraform-provider-fastly/pull/1079))
 
 ### BUG FIXES:
 

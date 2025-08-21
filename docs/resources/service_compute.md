@@ -108,6 +108,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
+- `healthcheck` (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
 - `image_optimizer_default_settings` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
 - `logging_bigquery` (Block Set) (see [below for nested schema](#nestedblock--logging_bigquery))
 - `logging_blobstorage` (Block Set) (see [below for nested schema](#nestedblock--logging_blobstorage))
@@ -214,6 +215,28 @@ Optional:
 Read-Only:
 
 - `dictionary_id` (String) The ID of the dictionary
+
+
+<a id="nestedblock--healthcheck"></a>
+### Nested Schema for `healthcheck`
+
+Required:
+
+- `host` (String) The Host header to send for this Healthcheck
+- `name` (String) A unique name to identify this Healthcheck. It is important to note that changing this attribute will delete and recreate the resource
+- `path` (String) The path to check
+
+Optional:
+
+- `check_interval` (Number) How often to run the Healthcheck in milliseconds. Default `5000`
+- `expected_response` (Number) The status code expected from the host. Default `200`
+- `headers` (Set of String) Custom health check HTTP headers (e.g. if your health check requires an API key to be provided).
+- `http_version` (String) Whether to use version 1.0 or 1.1 HTTP. Default `1.1`
+- `initial` (Number) When loading a config, the initial number of probes to be seen as OK. Default `3`
+- `method` (String) Which HTTP method to use. Default `HEAD`
+- `threshold` (Number) How many Healthchecks must succeed to be considered healthy. Default `3`
+- `timeout` (Number) Timeout in milliseconds. Default `5000`
+- `window` (Number) The number of most recent Healthcheck queries to keep for this Healthcheck. Default `5`
 
 
 <a id="nestedblock--image_optimizer_default_settings"></a>

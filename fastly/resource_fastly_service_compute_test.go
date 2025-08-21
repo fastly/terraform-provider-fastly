@@ -34,6 +34,10 @@ func TestAccFastlyServiceCompute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "domain.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "backend.#", "1"),
 					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.name", "healthCheckTest"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.host", "example.com"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.path", "/health"),
 				),
 			},
 			{
@@ -54,12 +58,14 @@ func TestAccFastlyServiceCompute_stage(t *testing.T) {
 	backendName1 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	backendName2 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
 	backendName3 := fmt.Sprintf("%s.aws.amazon.com", acctest.RandString(3))
+	healthcheckName := "healthCheckTest"
 
 	type Config struct {
-		Name     string
-		Domain   string
-		Backends []string
-		Stage    bool
+		Name            string
+		Domain          string
+		Backends        []string
+		Stage           bool
+		HealthcheckName string
 	}
 
 	tmplText := `
@@ -87,6 +93,12 @@ resource "fastly_service_compute" "foo" {
   }
   {{ end }}
 
+  healthcheck {
+    name = "{{ .HealthcheckName }}"
+    host = "example.com"
+    path = "/health"
+  }
+  
   package {
     filename = "test_fixtures/package/valid.tar.gz"
     source_code_hash = data.fastly_package_hash.example.hash
@@ -109,22 +121,28 @@ resource "fastly_service_compute" "foo" {
 		Steps: []resource.TestStep{
 			{
 				Config: renderTestConfigTemplate(t, tmpl, Config{
-					Name:     name,
-					Domain:   domain,
-					Backends: []string{backendName1},
+					Name:            name,
+					Domain:          domain,
+					Backends:        []string{backendName1},
+					HealthcheckName: healthcheckName,
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
 					testAccCheckFastlyServiceAttributesBackends(&service, name, []string{backendName1}, 1),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.name", healthcheckName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.host", "example.com"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.path", "/health"),
 				),
 			},
 
 			{
 				Config: renderTestConfigTemplate(t, tmpl, Config{
-					Name:     name,
-					Domain:   domain,
-					Backends: []string{backendName1, backendName2},
-					Stage:    true,
+					Name:            name,
+					Domain:          domain,
+					Backends:        []string{backendName1, backendName2},
+					Stage:           true,
+					HealthcheckName: healthcheckName,
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
@@ -135,15 +153,21 @@ resource "fastly_service_compute" "foo" {
 						"fastly_service_compute.foo", "staged_version", "2"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "backend.#", "2"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "healthcheck.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.name", healthcheckName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.host", "example.com"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.path", "/health"),
 				),
 			},
 
 			{
 				Config: renderTestConfigTemplate(t, tmpl, Config{
-					Name:     name,
-					Domain:   domain,
-					Backends: []string{backendName1, backendName2, backendName3},
-					Stage:    true,
+					Name:            name,
+					Domain:          domain,
+					Backends:        []string{backendName1, backendName2, backendName3},
+					Stage:           true,
+					HealthcheckName: healthcheckName,
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_compute.foo", &service),
@@ -154,6 +178,11 @@ resource "fastly_service_compute" "foo" {
 						"fastly_service_compute.foo", "staged_version", "2"),
 					resource.TestCheckResourceAttr(
 						"fastly_service_compute.foo", "backend.#", "3"),
+					resource.TestCheckResourceAttr(
+						"fastly_service_compute.foo", "healthcheck.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.name", healthcheckName),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.host", "example.com"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "healthcheck.0.path", "/health"),
 				),
 			},
 		},
@@ -198,6 +227,11 @@ resource "fastly_service_compute" "foo" {
   backend {
     address = "aws.amazon.com"
     name    = "amazon docs"
+  }
+  healthcheck {
+    name = "healthCheckTest"
+    host = "example.com"
+    path = "/health"
   }
   package {
     filename = "test_fixtures/package/valid.tar.gz"

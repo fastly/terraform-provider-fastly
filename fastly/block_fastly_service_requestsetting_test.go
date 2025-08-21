@@ -67,8 +67,8 @@ func TestAccFastlyServiceVCLRequestSetting_basic(t *testing.T) {
 		XForwardedFor:    gofastly.ToPointer(gofastly.RequestSettingXFFAppend),
 
 		// We only set a few attributes in our TF config (see above).
-		// For all the other attributes (with the exception of `action` and `xff`,
-		// which are only sent to the API if they have a non-zero string value)
+		// For all the other attributes (with the exception of `action`),
+		// which is only sent to the API if they have a non-zero string value)
 		// the default value for their types are still sent to the API
 		// and so the API responds with those default values. Hence we have to set
 		// those defaults below...
@@ -253,6 +253,7 @@ resource "fastly_service_vcl" "foo" {
     name              = "alt_backend"
     request_condition = "serve_alt_backend"
     max_stale_age     = %s
+    xff               = "append"
   }
 
   default_host = "http-me.fastly.dev"

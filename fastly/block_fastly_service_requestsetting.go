@@ -92,8 +92,7 @@ func (h *RequestSettingServiceAttributeHandler) GetSchema() *schema.Schema {
 				"xff": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Default:     "append",
-					Description: "X-Forwarded-For, should be `clear`, `leave`, `append`, `append_all`, or `overwrite`. Default `append`",
+					Description: "X-Forwarded-For, should be `clear`, `leave`, `append`, `append_all`, or `overwrite`",
 				},
 			},
 		},

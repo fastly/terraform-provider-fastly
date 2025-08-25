@@ -174,7 +174,8 @@ func getTLSConfigurationFilters(d *schema.ResourceData) []func(*fastly.CustomTLS
 			return !c.Bulk
 		})
 	}
-	if v, ok := d.GetOk("default"); ok {
+	//nolint:staticcheck
+	if v, ok := d.GetOkExists("default"); ok {
 		filters = append(filters, func(c *fastly.CustomTLSConfiguration) bool {
 			return c.Default == v.(bool)
 		})

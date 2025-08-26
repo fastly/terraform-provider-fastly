@@ -21,6 +21,7 @@
 - build(deps): `golang.org/x/net` from 0.42.0 to 0.43.0 ([#1072](https://github.com/fastly/terraform-provider-fastly/pull/1072))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))
 - build(deps): `actions/checkout` from 4 to 5 ([#1071](https://github.com/fastly/terraform-provider-fastly/pull/1071))
+- build(deps): `github.com/stretchr/testify` from 1.10.0 to 1.11.0 ([#1081](https://github.com/fastly/terraform-provider-fastly/pull/1081))
 
 ### DOCUMENTATION:
 

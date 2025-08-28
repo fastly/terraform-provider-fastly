@@ -182,6 +182,7 @@ func TestAccFastlyServiceVCL_logging_syslog_useTLS(t *testing.T) {
 		TLSHostname:       gofastly.ToPointer("example.com"),
 		Token:             gofastly.ToPointer(""),
 		UseTLS:            gofastly.ToPointer(true),
+		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
 	resource.Test(t, resource.TestCase{

@@ -18,16 +18,16 @@ Basic usage:
 
 ```terraform
 resource "fastly_ngwaf_workspace" "demo" {
-  name = "demofastly"
+  name                         = "Demo"
+  description                  = "Testing"
+  mode                         = "block"
 
-  description = "A reference setup"
-  mode        = "block"
   attack_signal_thresholds {
-    immediate = true
+    one_minute  = 100
+    ten_minutes = 500
+    one_hour    = 1000
+    immediate   = true
   }
-  default_blocking_response_code = 406
-  ip_anonymization               = null
-  client_ip_headers              = []
 }
 ```
 

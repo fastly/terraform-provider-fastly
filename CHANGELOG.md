@@ -4,6 +4,7 @@
 
 ### ENHANCEMENTS:
 
+- feat(ngwaf/workspace): fix basic usage example
 - feat(ngwaf/workspace): add default_redirect_url to workspaces. ([#1068](https://github.com/fastly/terraform-provider-fastly/pull/1068))
 - feat(compute acls): add support for compute ACLs ([#1031](https://github.com/fastly/terraform-provider-fastly/pull/1031))
 - refactor(resource_fastly_domain_v1) to use domainmanagement imports and types ([#1074](https://github.com/fastly/terraform-provider-fastly/pull/1074))

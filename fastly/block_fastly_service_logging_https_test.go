@@ -20,9 +20,11 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	log1 := gofastly.HTTPS{
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 		ContentType:       gofastly.ToPointer(""),
 		Format:            gofastly.ToPointer(LoggingHTTPSDefaultFormat),
 		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
 		JSONFormat:        gofastly.ToPointer("0"),
@@ -39,9 +41,11 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 	}
 
 	log1AfterUpdate := gofastly.HTTPS{
+		CompressionCodec:  gofastly.ToPointer("snappy"),
 		ContentType:       gofastly.ToPointer(""),
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
 		JSONFormat:        gofastly.ToPointer("0"),
@@ -61,6 +65,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ContentType:       gofastly.ToPointer(""),
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(5),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
 		JSONFormat:        gofastly.ToPointer("0"),
@@ -112,7 +117,9 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 	domain := fmt.Sprintf("fastly-test.%s.com", name)
 
 	https := gofastly.HTTPS{
+		CompressionCodec:  gofastly.ToPointer("zstd"),
 		ContentType:       gofastly.ToPointer(""),
+		GzipLevel:         gofastly.ToPointer(0),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
 		JSONFormat:        gofastly.ToPointer("0"),
@@ -218,6 +225,7 @@ resource "fastly_service_vcl" "foo" {
 		name               = "httpslogger"
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
+		compression_codec = "zstd"
     processing_region = "us"
 	}
 
@@ -248,6 +256,7 @@ resource "fastly_service_compute" "foo" {
 		name               = "httpslogger"
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
+		compression_codec = "zstd"
     processing_region = "us"
 	}
 
@@ -280,6 +289,7 @@ resource "fastly_service_vcl" "foo" {
 		format             = %q
 		method             = "POST"
 		url                = "https://example.com/logs/1"
+		compression_codec = "snappy"
 	}
 
 	logging_https {
@@ -288,6 +298,7 @@ resource "fastly_service_vcl" "foo" {
 		method             = "POST"
 		url                = "https://example.com/logs/2"
 		request_max_bytes  = 1000
+		gzip_level				 = 5
 	}
 	force_destroy = true
 }`, name, domain, format, format)
@@ -306,8 +317,10 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					URL:               gofastly.ToPointer("https://example.com/logs"),
 					RequestMaxEntries: gofastly.ToPointer(10),
 					RequestMaxBytes:   gofastly.ToPointer(10),
+					CompressionCodec:  gofastly.ToPointer("zstd"),
 					ContentType:       gofastly.ToPointer("application/json"),
 					MessageType:       gofastly.ToPointer("blank"),
+					GzipLevel:         gofastly.ToPointer(0),
 					Format:            gofastly.ToPointer(LoggingHTTPSDefaultFormat),
 					FormatVersion:     gofastly.ToPointer(2),
 					ProcessingRegion:  gofastly.ToPointer("eu"),
@@ -319,10 +332,12 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					"url":                 "https://example.com/logs",
 					"request_max_entries": 10,
 					"request_max_bytes":   10,
+					"compression_codec":   "zstd",
 					"content_type":        "application/json",
 					"message_type":        "blank",
 					"format":              LoggingHTTPSDefaultFormat,
 					"format_version":      2,
+					"gzip_level":          0,
 					"processing_region":   "eu",
 				},
 			},
@@ -330,8 +345,9 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		out := flattenHTTPS(c.remote)
+		out := flattenHTTPS(c.remote, nil)
 		if !reflect.DeepEqual(out, c.local) {
+			fmt.Printf("")
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}

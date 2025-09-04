@@ -6,7 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/deckarep/golang-set/v2 v2.8.0
-	github.com/fastly/go-fastly/v11 v11.2.1-0.20250903132938-19c399d0fa28
+	github.com/fastly/go-fastly/v11 v11.3.1
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0

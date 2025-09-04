@@ -70,7 +70,7 @@ fmt:
 	golangci-lint fmt
 
 goreleaser-bin:
-	$(GO_BIN) get -modfile=tools.mod -tool github.com/goreleaser/goreleaser/v2@latest
+	$(GO_BIN) get -modfile=tools.mod -tool github.com/goreleaser/goreleaser/v2@v2.11.2
 
 # You can pass flags to goreleaser via GORELEASER_ARGS
 # --skip=validate will skip the checks

@@ -81,6 +81,26 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	log3 := gofastly.HTTPS{
+		ContentType:       gofastly.ToPointer(""),
+		Format:            gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:     gofastly.ToPointer(2),
+		GzipLevel:         gofastly.ToPointer(0),
+		HeaderName:        gofastly.ToPointer(""),
+		HeaderValue:       gofastly.ToPointer(""),
+		JSONFormat:        gofastly.ToPointer("0"),
+		MessageType:       gofastly.ToPointer("blank"),
+		Method:            gofastly.ToPointer("PUT"),
+		Name:              gofastly.ToPointer("httpslogger3"),
+		RequestMaxBytes:   gofastly.ToPointer(0),
+		RequestMaxEntries: gofastly.ToPointer(0),
+		ResponseCondition: gofastly.ToPointer(""),
+		ServiceVersion:    gofastly.ToPointer(1),
+		TLSHostname:       gofastly.ToPointer(""),
+		URL:               gofastly.ToPointer("https://example.com/logs/3"),
+		ProcessingRegion:  gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -105,6 +125,16 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLHTTPSAttributes(&service, []*gofastly.HTTPS{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_https.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLHTTPSConfigCompressionNotSpecified(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLHTTPSCompressionNotSpecified(&service, []*gofastly.HTTPS{&log3}, ServiceTypeVCL),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_https.#", "1"),
 				),
 			},
 		},
@@ -205,6 +235,82 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 
 		return nil
 	}
+}
+
+func testAccCheckFastlyServiceVCLHTTPSCompressionNotSpecified(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, serviceType string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		httpsList, err := conn.ListHTTPS(context.TODO(), &gofastly.ListHTTPSInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up HTTPS Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+
+		if len(httpsList) != len(https) {
+			return fmt.Errorf("https List count mismatch, expected (%d), got (%d)", len(https), len(httpsList))
+		}
+
+		log.Printf("[DEBUG] httpsList = %#v\n", httpsList)
+
+		var found int
+		for _, h := range https {
+			for _, hl := range httpsList {
+				if gofastly.ToValue(h.Name) == gofastly.ToValue(hl.Name) {
+					if gofastly.ToValue(hl.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(h.GzipLevel), gofastly.ToValue(hl.GzipLevel))
+					}
+					h.GzipLevel = hl.GzipLevel
+
+					// we don't know these things ahead of time, so populate them now
+					h.ServiceID = service.ServiceID
+					h.ServiceVersion = service.ActiveVersion.Number
+
+					// We don't track these, so clear them out because we also won't know
+					// these ahead of time
+					hl.CreatedAt = nil
+					hl.UpdatedAt = nil
+					if !reflect.DeepEqual(h, hl) {
+						return fmt.Errorf("bad match HTTPS logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", h, hl)
+					}
+					found++
+				}
+			}
+		}
+
+		if found != len(https) {
+			return fmt.Errorf("error matching HTTPS Logging rules")
+		}
+
+		return nil
+	}
+}
+
+func testAccServiceVCLHTTPSConfigCompressionNotSpecified(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+	name = "%s"
+	domain {
+		name    = "%s"
+		comment = "tf-https-logging"
+	}
+
+	backend {
+		address = "aws.amazon.com"
+		name    = "amazon docs"
+	}
+
+	logging_https {
+		name               = "httpslogger3"
+		method             = "PUT"
+		format             = %q
+		url                = "https://example.com/logs/3"
+	}
+
+	force_destroy = true
+}
+`, name, domain, LoggingFormatUpdate)
 }
 
 func testAccServiceVCLHTTPSConfig(name string, domain string) string {

@@ -132,7 +132,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 				Config: testAccServiceVCLHTTPSConfigCompressionNotSpecified(name, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
-					testAccCheckFastlyServiceVCLHTTPSCompressionNotSpecified(&service, []*gofastly.HTTPS{&log3}, ServiceTypeVCL),
+					testAccCheckFastlyServiceVCLHTTPSCompressionNotSpecified(&service, []*gofastly.HTTPS{&log3}),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_https.#", "1"),
 				),
@@ -184,7 +184,11 @@ func TestAccFastlyServiceVCL_httpslogging_basic_compute(t *testing.T) {
 	})
 }
 
-func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, serviceType string) resource.TestCheckFunc {
+// httpsCheckFunc defines a function signature for custom checks.
+type httpsCheckFunc func(h, hl *gofastly.HTTPS) error
+
+// testAccCheckFastlyServiceVCLHTTPSAttributesGeneric is a generic helper for checking HTTPS logging attributes.
+func testAccCheckFastlyServiceVCLHTTPSAttributesGeneric(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, check httpsCheckFunc) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
 		conn := testAccProvider.Meta().(*APIClient).conn
 		httpsList, err := conn.ListHTTPS(context.TODO(), &gofastly.ListHTTPSInput{
@@ -209,12 +213,11 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 					h.ServiceID = service.ServiceID
 					h.ServiceVersion = service.ActiveVersion.Number
 
-					// Ignore VCL attributes for Compute and set to whatever is returned from the API.
-					if serviceType == ServiceTypeCompute {
-						h.Placement = hl.Placement
-						h.Format = hl.Format
-						h.FormatVersion = hl.FormatVersion
-						h.ResponseCondition = hl.ResponseCondition
+					// Run custom checks if provided.
+					if check != nil {
+						if err := check(h, hl); err != nil {
+							return err
+						}
 					}
 
 					// We don't track these, so clear them out because we also won't know
@@ -237,54 +240,27 @@ func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail
 	}
 }
 
-func testAccCheckFastlyServiceVCLHTTPSCompressionNotSpecified(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, serviceType string) resource.TestCheckFunc {
-	return func(_ *terraform.State) error {
-		conn := testAccProvider.Meta().(*APIClient).conn
-		httpsList, err := conn.ListHTTPS(context.TODO(), &gofastly.ListHTTPSInput{
-			ServiceID:      gofastly.ToValue(service.ServiceID),
-			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
-		})
-		if err != nil {
-			return fmt.Errorf("error looking up HTTPS Logging for (%s), version (%d): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+func testAccCheckFastlyServiceVCLHTTPSAttributes(service *gofastly.ServiceDetail, https []*gofastly.HTTPS, serviceType string) resource.TestCheckFunc {
+	return testAccCheckFastlyServiceVCLHTTPSAttributesGeneric(service, https, func(h, hl *gofastly.HTTPS) error {
+		// Ignore VCL attributes for Compute and set to whatever is returned from the API.
+		if serviceType == ServiceTypeCompute {
+			h.Placement = hl.Placement
+			h.Format = hl.Format
+			h.FormatVersion = hl.FormatVersion
+			h.ResponseCondition = hl.ResponseCondition
 		}
-
-		if len(httpsList) != len(https) {
-			return fmt.Errorf("https List count mismatch, expected (%d), got (%d)", len(https), len(httpsList))
-		}
-
-		log.Printf("[DEBUG] httpsList = %#v\n", httpsList)
-
-		var found int
-		for _, h := range https {
-			for _, hl := range httpsList {
-				if gofastly.ToValue(h.Name) == gofastly.ToValue(hl.Name) {
-					if gofastly.ToValue(hl.GzipLevel) != 0 {
-						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(h.GzipLevel), gofastly.ToValue(hl.GzipLevel))
-					}
-					h.GzipLevel = hl.GzipLevel
-
-					// we don't know these things ahead of time, so populate them now
-					h.ServiceID = service.ServiceID
-					h.ServiceVersion = service.ActiveVersion.Number
-
-					// We don't track these, so clear them out because we also won't know
-					// these ahead of time
-					hl.CreatedAt = nil
-					hl.UpdatedAt = nil
-					if !reflect.DeepEqual(h, hl) {
-						return fmt.Errorf("bad match HTTPS logging match,\nexpected:\n(%#v),\ngot:\n(%#v)", h, hl)
-					}
-					found++
-				}
-			}
-		}
-
-		if found != len(https) {
-			return fmt.Errorf("error matching HTTPS Logging rules")
-		}
-
 		return nil
-	}
+	})
+}
+
+func testAccCheckFastlyServiceVCLHTTPSCompressionNotSpecified(service *gofastly.ServiceDetail, https []*gofastly.HTTPS) resource.TestCheckFunc {
+	return testAccCheckFastlyServiceVCLHTTPSAttributesGeneric(service, https, func(h, hl *gofastly.HTTPS) error {
+		if gofastly.ToValue(hl.GzipLevel) != 0 {
+			return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(h.GzipLevel), gofastly.ToValue(hl.GzipLevel))
+		}
+		h.GzipLevel = hl.GzipLevel
+		return nil
+	})
 }
 
 func testAccServiceVCLHTTPSConfigCompressionNotSpecified(name string, domain string) string {
@@ -453,7 +429,6 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 	for _, c := range cases {
 		out := flattenHTTPS(c.remote, nil)
 		if !reflect.DeepEqual(out, c.local) {
-			fmt.Printf("")
 			t.Fatalf("Error matching:\nexpected: %#v\n got: %#v", c.local, out)
 		}
 	}

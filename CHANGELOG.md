@@ -26,6 +26,8 @@
 - build(deps): `github.com/stretchr/testify` from 1.10.0 to 1.11.0 ([#1081](https://github.com/fastly/terraform-provider-fastly/pull/1081))
 - build(deps): `github.com/stretchr/testify` from 1.11.0 to 1.11.1 ([#1085](https://github.com/fastly/terraform-provider-fastly/pull/1085))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.3.0 to 11.3.1 ([#1087](https://github.com/fastly/terraform-provider-fastly/pull/1087))
+- build(deps): `actions/setup-go` from 5 to 6 ([#1092](https://github.com/fastly/terraform-provider-fastly/pull/1092))
+- build(deps): `actions/github-script` from 7 to 8 ([#1092](https://github.com/fastly/terraform-provider-fastly/pull/1092))
 
 ### DOCUMENTATION:
 

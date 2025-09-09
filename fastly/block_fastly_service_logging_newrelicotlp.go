@@ -96,6 +96,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 		blockAttributes["region"].Default = ""
 	} else {
 		// For VCL services
+		blockAttributes["format"].Default = LoggingNewRelicOLTPDefaultFormat
 		blockAttributes["region"].Default = "US"
 	}
 

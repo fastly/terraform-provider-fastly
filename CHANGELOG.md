@@ -11,6 +11,8 @@
 - feat(ngwaf/rules): add support for deception and allow_interactive actions ([#1077](https://github.com/fastly/terraform-provider-fastly/pull/1077))
 - feat(compute/healthcheck): add support for healthchecks for Compute services ([#1079](https://github.com/fastly/terraform-provider-fastly/pull/1079))
 - feat(compute/logging_newrelicotlp): add support for New Relic OLTP logging for Compute services ([#1095](https://github.com/fastly/terraform-provider-fastly/pull/1095))
+- feat(logging): add support for compression to HTTPS logging endpoint ([#1086](https://github.com/fastly/terraform-provider-fastly/pull/1086))
+
 
 ### BUG FIXES:
 
@@ -25,6 +27,9 @@
 - build(deps): `actions/checkout` from 4 to 5 ([#1071](https://github.com/fastly/terraform-provider-fastly/pull/1071))
 - build(deps): `github.com/stretchr/testify` from 1.10.0 to 1.11.0 ([#1081](https://github.com/fastly/terraform-provider-fastly/pull/1081))
 - build(deps): `github.com/stretchr/testify` from 1.11.0 to 1.11.1 ([#1085](https://github.com/fastly/terraform-provider-fastly/pull/1085))
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.3.0 to 11.3.1 ([#1087](https://github.com/fastly/terraform-provider-fastly/pull/1087))
+- build(deps): `actions/setup-go` from 5 to 6 ([#1092](https://github.com/fastly/terraform-provider-fastly/pull/1092))
+- build(deps): `actions/github-script` from 7 to 8 ([#1092](https://github.com/fastly/terraform-provider-fastly/pull/1092))
 
 ### DOCUMENTATION:
 

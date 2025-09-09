@@ -88,6 +88,17 @@ func (h *NewRelicOTLPServiceAttributeHandler) GetSchema() *schema.Schema {
 		},
 	}
 
+	// Set defaults based on service type
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		// For Compute services, placement is required and must be "none"
+		blockAttributes["placement"].Default = "none"
+		blockAttributes["processing_region"].Default = "none"
+		blockAttributes["region"].Default = ""
+	} else {
+		// For VCL services
+		blockAttributes["region"].Default = "US"
+	}
+
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -122,6 +133,14 @@ func (h *NewRelicOTLPServiceAttributeHandler) Read(ctx context.Context, d *schem
 		}
 
 		dll := flattenNewRelicOTLP(remoteState)
+
+		for _, element := range dll {
+			if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+				h.pruneVCLLoggingAttributesForOTLP(element)
+			} else {
+				h.pruneVCLLoggingAttributes(element)
+			}
+		}
 
 		if err := d.Set(h.GetKey(), dll); err != nil {
 			log.Printf("[WARN] Error setting New Relic OTLP logging endpoints for (%s): %s", d.Id(), err)
@@ -254,4 +273,9 @@ func (h *NewRelicOTLPServiceAttributeHandler) buildCreate(newrelicotlpMap any, s
 	}
 
 	return opts
+}
+
+func (h *NewRelicOTLPServiceAttributeHandler) pruneVCLLoggingAttributesForOTLP(data map[string]any) {
+	delete(data, "format")
+	delete(data, "response_condition")
 }

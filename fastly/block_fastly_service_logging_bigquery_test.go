@@ -154,7 +154,6 @@ func TestAccFastlyServiceVCL_bigquerylogging_default(t *testing.T) {
 		User:              gofastly.ToPointer(email),
 		Format:            gofastly.ToPointer(LoggingBigQueryDefaultFormat),
 		Name:              gofastly.ToPointer("test-bigquery"),
-		Placement:         gofastly.ToPointer(""),
 		ProjectID:         gofastly.ToPointer("example-gcp-project"),
 		ResponseCondition: gofastly.ToPointer(""),
 		SecretKey:         gofastly.ToPointer(secretKey),

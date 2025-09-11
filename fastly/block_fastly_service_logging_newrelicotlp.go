@@ -137,7 +137,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) Read(ctx context.Context, d *schem
 
 		for _, element := range dll {
 			if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
-				h.pruneVCLLoggingAttributesForOTLP(element)
+				h.pruneComputeLoggingAttributes(element)
 			} else {
 				h.pruneVCLLoggingAttributes(element)
 			}
@@ -276,7 +276,7 @@ func (h *NewRelicOTLPServiceAttributeHandler) buildCreate(newrelicotlpMap any, s
 	return opts
 }
 
-func (h *NewRelicOTLPServiceAttributeHandler) pruneVCLLoggingAttributesForOTLP(data map[string]any) {
+func (h *NewRelicOTLPServiceAttributeHandler) pruneComputeLoggingAttributes(data map[string]any) {
 	delete(data, "format")
 	delete(data, "response_condition")
 }

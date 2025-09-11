@@ -92,6 +92,12 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
+		"period": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3600,
+			Description: "How frequently the logs should be transferred, in seconds (Default 3600)",
+		},
 		"processing_region": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -261,6 +267,9 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 	if v, ok := modified["json_format"]; ok {
 		opts.JSONFormat = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["period"]; ok {
+		opts.Period = gofastly.ToPointer(v.(int))
+	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
@@ -381,6 +390,9 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, localState []any) []map[string]
 		if resource.JSONFormat != nil {
 			data["json_format"] = *resource.JSONFormat
 		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		}
 		if resource.Placement != nil {
 			data["placement"] = *resource.Placement
 		}
@@ -434,6 +446,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 		MessageType:       gofastly.ToPointer(resource["message_type"].(string)),
 		Method:            gofastly.ToPointer(resource["method"].(string)),
 		Name:              gofastly.ToPointer(resource["name"].(string)),
+		Period:            gofastly.ToPointer(resource["period"].(int)),
 		RequestMaxBytes:   gofastly.ToPointer(resource["request_max_bytes"].(int)),
 		RequestMaxEntries: gofastly.ToPointer(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,
@@ -454,6 +467,9 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 		opts.GzipLevel = gofastly.ToPointer(gl)
 	}
 
+	if p, ok := resource["period"].(int); ok && p != 0 {
+		opts.Period = gofastly.ToPointer(p)
+	}
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.

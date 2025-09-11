@@ -38,6 +38,7 @@ var computeService = &BaseServiceDefinition{
 		NewServiceLoggingGrafanaCloudLogs(computeAttributes),
 		NewServiceLoggingScalyr(computeAttributes),
 		NewServiceLoggingNewRelic(computeAttributes),
+		NewServiceLoggingNewRelicOTLP(computeAttributes),
 		NewServiceLoggingKafka(computeAttributes),
 		NewServiceLoggingHeroku(computeAttributes),
 		NewServiceLoggingHoneycomb(computeAttributes),

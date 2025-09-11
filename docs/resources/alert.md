@@ -16,7 +16,8 @@ Provides a Fastly Alert. Alerts send notifications to custom integrations (e.g.,
 resource "fastly_service_vcl" "example" {
   name = "demofastly"
   domain {
-    name = "demo.notexample.com"
+    name    = "demo.notexample.com"
+    comment = "demo"
   }
 }
 

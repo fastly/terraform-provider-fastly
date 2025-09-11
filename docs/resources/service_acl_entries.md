@@ -153,7 +153,8 @@ resource "fastly_service_vcl" "myservice" {
   name = "demofastly"
 
   domain {
-    name = "demo.notexample.com"
+    name    = "demo.notexample.com"
+    comment = "demo"
   }
 
   acl {

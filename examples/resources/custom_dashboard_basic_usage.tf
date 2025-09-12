@@ -9,7 +9,7 @@ resource "fastly_custom_dashboard" "example" {
 
     data_source {
       type = "stats.edge"
-      config = {
+      config {
         metrics = ["requests"]
       }
     }

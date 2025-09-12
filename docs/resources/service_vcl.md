@@ -99,12 +99,6 @@ resource "fastly_service_vcl" "demo" {
 
 resource "aws_s3_bucket" "website" {
   bucket = "demo.notexample.com"
-  acl    = "public-read"
-
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
-  }
 }
 ```
 

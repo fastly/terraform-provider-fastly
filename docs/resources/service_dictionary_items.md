@@ -178,16 +178,21 @@ variable "mydict_name" {
 }
 
 resource "fastly_service_vcl" "myservice" {
-  #...
+  name = "demofastly"
+
+  domain {
+    name    = "demo.notexample.com"
+    comment = "demo"
+  }
+
   dictionary {
     name = var.mydict_name
   }
-  #...
 }
 
 resource "fastly_service_dictionary_items" "items" {
   service_id    = fastly_service_vcl.myservice.id
-  dictionary_id = {for s in fastly_service_vcl.myservice.dictionary : s.name => s.dictionary_id}[var.mydict_name]
+  dictionary_id = { for s in fastly_service_vcl.myservice.dictionary : s.name => s.dictionary_id }[var.mydict_name]
 
   items = {
     key1 : "value1"

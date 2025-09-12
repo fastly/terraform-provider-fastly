@@ -81,7 +81,7 @@ $ terraform import fastly_ngwaf_account_rule.demo <ruleID>
 
 Required:
 
-- `type` (String) The action type. One of: `addSignal`, `allow`, `block`, `browserChallenge`, `dynamicChallenge`, `excludeSignal`, `verifyToken` or for rate limit rule valid values: `logRequest`, `blockSignal`, `browserChallenge`, `verifyToken`
+- `type` (String) The action type. One of: `add_signal`, `allow`, `block`, `browserChallenge`, `dynamicChallenge`, `excludeSignal`, `verifyToken` or for rate limit rule valid values: `logRequest`, `blockSignal`, `browserChallenge`, `verifyToken`
 
 Optional:
 

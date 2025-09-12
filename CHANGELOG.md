@@ -34,6 +34,7 @@
 ### DOCUMENTATION:
 
 - docs(ngwaf/rules): add rule action types documentation ([#1069](https://github.com/fastly/terraform-provider-fastly/pull/1069))
+- docs(ngwaf/rules): updated rule action type references ([#1098](https://github.com/fastly/terraform-provider-fastly/pull/1098))
 
 ## 8.0.0 (August 5, 2025)
 

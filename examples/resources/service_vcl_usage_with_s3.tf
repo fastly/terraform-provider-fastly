@@ -29,6 +29,18 @@ resource "fastly_service_vcl" "demo" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket" "website" {
-  bucket = "demo.notexample.com"
+resource "aws_s3_bucket" "website_bucket" {
+  bucket = "your-unique-website-bucket-name" # Replace with a globally unique name
+}
+
+resource "aws_s3_bucket_website_configuration" "website_config" {
+  bucket = aws_s3_bucket.website_bucket.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "error.html"
+  }
 }

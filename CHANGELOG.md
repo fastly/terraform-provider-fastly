@@ -30,10 +30,12 @@
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.3.0 to 11.3.1 ([#1087](https://github.com/fastly/terraform-provider-fastly/pull/1087))
 - build(deps): `actions/setup-go` from 5 to 6 ([#1092](https://github.com/fastly/terraform-provider-fastly/pull/1092))
 - build(deps): `actions/github-script` from 7 to 8 ([#1092](https://github.com/fastly/terraform-provider-fastly/pull/1092))
+- build(deps): `golang.org/x/net` from 0.43.0 to 0.44.0 ([#1099](https://github.com/fastly/terraform-provider-fastly/pull/1099))
 
 ### DOCUMENTATION:
 
 - docs(ngwaf/rules): add rule action types documentation ([#1069](https://github.com/fastly/terraform-provider-fastly/pull/1069))
+- docs(ngwaf/rules): updated rule action type references ([#1098](https://github.com/fastly/terraform-provider-fastly/pull/1098))
 
 ## 8.0.0 (August 5, 2025)
 

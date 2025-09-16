@@ -36,16 +36,17 @@ func (h *PackageServiceAttributeHandler) Register(s *schema.Resource) error {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"content": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`. Exactly one of these two arguments must be specified",
-					ExactlyOneOf: []string{"package.0.content", "package.0.filename"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					Description:   "The contents of the Wasm deployment package as a base64 encoded string (e.g. could be provided using an input variable or via external data source output variable). Conflicts with `filename`.",
+					ConflictsWith: []string{"package.0.filename"},
 				},
 				"filename": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Description:  "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Exactly one of these two arguments must be specified",
-					ExactlyOneOf: []string{"package.0.content", "package.0.filename"},
+					Type:          schema.TypeString,
+					Optional:      true,
+					Default:       "main.wasm",
+					Description:   "The path to the Wasm deployment package within your local filesystem. Conflicts with `content`. Defaults to 'main.wasm' if neither content nor filename is specified.",
+					ConflictsWith: []string{"package.0.content"},
 				},
 				"source_code_hash": {
 					Type:        schema.TypeString,
@@ -131,9 +132,12 @@ func (h *PackageServiceAttributeHandler) Read(ctx context.Context, d *schema.Res
 		if v := d.Get("package.0.content").(string); v != "" {
 			pkgData = v
 			pkgType = PkgContent
-		}
-		if v := d.Get("package.0.filename").(string); v != "" {
+		} else if v := d.Get("package.0.filename").(string); v != "" {
 			pkgData = v
+			pkgType = PkgFilename
+		} else {
+			// If neither content nor filename is explicitly set, use the default filename
+			pkgData = "main.wasm"
 			pkgType = PkgFilename
 		}
 

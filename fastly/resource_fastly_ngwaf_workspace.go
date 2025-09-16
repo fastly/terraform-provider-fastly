@@ -201,11 +201,25 @@ func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] UPDATE: NGWAF workspace attack thresholds get: %#v", workspace.AttackSignalThresholds)
 
+	// Use default values if API returns 0 to avoid validation errors during import/read
+	oneMinute := workspace.AttackSignalThresholds.OneMinute
+	if oneMinute == 0 {
+		oneMinute = 1 // Default from schema
+	}
+	tenMinutes := workspace.AttackSignalThresholds.TenMinutes
+	if tenMinutes == 0 {
+		tenMinutes = 60 // Default from schema
+	}
+	oneHour := workspace.AttackSignalThresholds.OneHour
+	if oneHour == 0 {
+		oneHour = 100 // Default from schema
+	}
+
 	thresholds := []map[string]any{
 		{
-			"one_minute":  workspace.AttackSignalThresholds.OneMinute,
-			"ten_minutes": workspace.AttackSignalThresholds.TenMinutes,
-			"one_hour":    workspace.AttackSignalThresholds.OneHour,
+			"one_minute":  oneMinute,
+			"ten_minutes": tenMinutes,
+			"one_hour":    oneHour,
 			"immediate":   workspace.AttackSignalThresholds.Immediate,
 		},
 	}

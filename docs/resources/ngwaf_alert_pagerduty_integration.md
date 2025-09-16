@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert PagerDuty integration for a Workspace
 ---
 
-# ngwaf_alert_pagerduty_integration
+# fastly_ngwaf_alert_pagerduty_integration
 
 Provides Fastly Next-Gen WAF Alert PagerDuty integrations, which provide a connection to PagerDuty.
 

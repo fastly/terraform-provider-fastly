@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert Slack integration for a Workspace
 ---
 
-# ngwaf_alert_slack_integration
+# fastly_ngwaf_alert_slack_integration
 
 Provides Fastly Next-Gen WAF Alert Slack integrations, which provide a connection to Slack.
 

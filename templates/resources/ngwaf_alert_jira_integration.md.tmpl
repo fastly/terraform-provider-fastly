@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert Jira integration for a Workspace
 ---
 
-# ngwaf_alert_jira_integration
+# fastly_ngwaf_alert_jira_integration
 
 Provides Fastly Next-Gen WAF Alert Jira integrations, which provide a connection to Jira.
 

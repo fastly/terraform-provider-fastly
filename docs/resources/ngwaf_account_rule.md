@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Account Rule
 ---
 
-# ngwaf_account_rule
+# fastly_ngwaf_account_rule
 
 Provides a Fastly Next-Gen WAF Account Rule.  
 Account-level rules apply across one or more workspaces and are useful for defining shared or global WAF logic.

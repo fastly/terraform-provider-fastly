@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Virtual Patches
 ---
 
-# ngwaf_virtual_patches
+# fastly_ngwaf_virtual_patches
 
 Provides a Fastly Next-Gen WAF Virtual Patch.  Virtual patching 
 rules block or log requests matching specific vulnerabilities.

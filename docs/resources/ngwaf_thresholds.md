@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Threshold
 ---
 
-# ngwaf_thresholds
+# fastly_ngwaf_thresholds
 
 Provides a Fastly Next-Gen WAF Threshold.  Operations related to managing workspace thresholds.
 

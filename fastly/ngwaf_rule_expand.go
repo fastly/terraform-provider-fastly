@@ -35,7 +35,6 @@ func expandNGWAFRuleCreateInput(d *schema.ResourceData, s *scope.Scope) *rules.C
 	}
 
 	return &rules.CreateInput{
-
 		Type:               gofastly.ToPointer(d.Get("type").(string)),
 		Description:        gofastly.ToPointer(d.Get("description").(string)),
 		Scope:              s,

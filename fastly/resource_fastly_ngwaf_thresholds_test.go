@@ -144,3 +144,21 @@ resource "fastly_ngwaf_thresholds" "sample" {
   }
   `, testAccNGWAFWorkspaceConfig("Test Thresholds WS"), thresholdName)
 }
+
+func testAccNGWAFThresholdsConfigZeroDuration(thresholdName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "fastly_ngwaf_thresholds" "sample" {
+    action       = "log"
+    dont_notify  = false
+    duration     = 1
+    enabled      = true
+    interval     = 600
+    limit        = 10
+    name         = "%s"
+    signal       = "site.rl-key-tracker"
+    workspace_id = fastly_ngwaf_workspace.example.id
+  }
+  `, testAccNGWAFWorkspaceConfig("Test Thresholds WS"), thresholdName)
+}

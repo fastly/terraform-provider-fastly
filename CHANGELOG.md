@@ -16,6 +16,7 @@
 
 ### BUG FIXES:
 
+- fix(ngwaf/thresholds): default duration to 86400 when value is 0 in generated HCL
 - fix(ngwaf/rules): removes the rate limit block from the account level rules schema. ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
 - fix(service_vcl/logging_gcs): resolves an issue where project_id was not being updated for GCS logging_gcs. ([#1073](https://github.com/fastly/terraform-provider-fastly/pull/1073))
 - fix(service_vcl/requestsetting): removed a incorrect default value for the xff attribute. ([#1078](https://github.com/fastly/terraform-provider-fastly/pull/1078))

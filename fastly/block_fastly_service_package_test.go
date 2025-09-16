@@ -313,3 +313,50 @@ resource "fastly_service_compute" "foo" {
 }
 `, name, domain)
 }
+
+func TestAccFastlyServiceCompute_package_default_filename(t *testing.T) {
+	var service gofastly.ServiceDetail
+	name := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
+	domain := fmt.Sprintf("fastly-test.%s.com", name)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckServiceComputeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceComputePackageDefaultFilename(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_compute.foo", &service),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.#", "1"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.0.filename", "main.wasm"),
+					resource.TestCheckResourceAttr("fastly_service_compute.foo", "package.0.content", ""),
+				),
+			},
+		},
+	})
+}
+
+func testAccServiceComputePackageDefaultFilename(name string, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_compute" "foo" {
+  name = "%s"
+  domain {
+    name    = "%s"
+    comment = "tf-package-test"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+  package {
+    # Neither content nor filename specified - should use default filename
+  }
+  force_destroy = true
+  activate = false
+}
+`, name, domain)
+}

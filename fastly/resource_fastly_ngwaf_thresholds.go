@@ -137,7 +137,12 @@ func resourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("dont_notify", threshold.DontNotify); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("duration", threshold.Duration); err != nil {
+	// If duration is 0, default it to 86400 for generated configuration
+	duration := threshold.Duration
+	if duration == 0 {
+		duration = 86400
+	}
+	if err := d.Set("duration", duration); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("enabled", threshold.Enabled); err != nil {

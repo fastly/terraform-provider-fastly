@@ -4,6 +4,18 @@
 
 ### ENHANCEMENTS:
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 8.1.0 (September 17, 2025)
+
+### BREAKING:
+
+### ENHANCEMENTS:
+
 - feat(ngwaf/workspace): fix basic usage example
 - feat(ngwaf/workspace): add default_redirect_url to workspaces. ([#1068](https://github.com/fastly/terraform-provider-fastly/pull/1068))
 - feat(compute acls): add support for compute ACLs ([#1031](https://github.com/fastly/terraform-provider-fastly/pull/1031))
@@ -12,7 +24,6 @@
 - feat(compute/healthcheck): add support for healthchecks for Compute services ([#1079](https://github.com/fastly/terraform-provider-fastly/pull/1079))
 - feat(logging): add support for compression to HTTPS logging endpoint ([#1086](https://github.com/fastly/terraform-provider-fastly/pull/1086))
 - feat(compute/logging_newrelicotlp): add support for New Relic OLTP logging for Compute services ([#1095](https://github.com/fastly/terraform-provider-fastly/pull/1095))
-
 
 ### BUG FIXES:
 

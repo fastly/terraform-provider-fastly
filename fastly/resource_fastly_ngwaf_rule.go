@@ -8,13 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
 )
 
 func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 	r := resourceFastlyNGWAFRuleBase()
 
-	r.Importer = customNGWAFScopeImporter(common.ScopeTypeWorkspace, "rule")
+	r.Importer = customNGWAFScopeImporter(scope.ScopeTypeWorkspace, "rule")
 
 	r.Schema["type"] = &schema.Schema{
 		Type:             schema.TypeString,
@@ -108,7 +108,7 @@ func resourceFastlyNGWAFWorkspaceRule() *schema.Resource {
 func resourceFastlyNGWAFAccountRule() *schema.Resource {
 	r := resourceFastlyNGWAFRuleBase()
 
-	r.Importer = customNGWAFScopeImporter(common.ScopeTypeAccount, "rule")
+	r.Importer = customNGWAFScopeImporter(scope.ScopeTypeAccount, "rule")
 
 	r.Schema["applies_to"] = &schema.Schema{
 		Type:        schema.TypeList,

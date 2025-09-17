@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/signals"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/signals"
 )
 
 func resourceFastlyNGWAFSignalBase() *schema.Resource {
@@ -51,24 +51,27 @@ func flattenNGWAFSignalResponse(d *schema.ResourceData, signal *signals.Signal) 
 		return fmt.Errorf("invalid signal scope: type or applies_to is missing")
 	}
 
-	scope := signal.Scope
+	s := signal.Scope
 
-	switch scope.Type {
-	case string(common.ScopeTypeWorkspace):
-		if len(scope.AppliesTo) == 0 {
+	// Convert the string type to scope.Type for comparison with scope constants.
+	t := scope.Type(s.Type)
+
+	switch t {
+	case scope.ScopeTypeWorkspace:
+		if len(s.AppliesTo) == 0 {
 			return fmt.Errorf("workspace scope is missing applies_to ID")
 		}
-		if err := d.Set("workspace_id", scope.AppliesTo[0]); err != nil {
+		if err := d.Set("workspace_id", s.AppliesTo[0]); err != nil {
 			return fmt.Errorf("error setting workspace_id: %w", err)
 		}
 
-	case string(common.ScopeTypeAccount):
-		if err := d.Set("applies_to", scope.AppliesTo); err != nil {
+	case scope.ScopeTypeAccount:
+		if err := d.Set("applies_to", s.AppliesTo); err != nil {
 			return fmt.Errorf("error setting applies_to: %w", err)
 		}
 
 	default:
-		return fmt.Errorf("unknown scope type: %q", scope.Type)
+		return fmt.Errorf("unknown scope type: %q", s.Type)
 	}
 
 	if err := d.Set("description", signal.Description); err != nil {
@@ -78,7 +81,7 @@ func flattenNGWAFSignalResponse(d *schema.ResourceData, signal *signals.Signal) 
 		return fmt.Errorf("error setting name: %w", err)
 	}
 	if err := d.Set("reference_id", signal.ReferenceID); err != nil {
-		return fmt.Errorf("error setting name: %w", err)
+		return fmt.Errorf("error setting reference_id: %w", err)
 	}
 
 	return nil

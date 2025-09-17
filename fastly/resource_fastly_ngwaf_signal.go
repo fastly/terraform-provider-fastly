@@ -7,15 +7,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v11/fastly"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/signals"
+	"github.com/fastly/go-fastly/v12/fastly"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/signals"
 )
 
 func resourceFastlyNGWAFWorkspaceSignal() *schema.Resource {
 	r := resourceFastlyNGWAFSignalBase()
 
-	r.Importer = customNGWAFScopeImporter(common.ScopeTypeWorkspace, "signal")
+	r.Importer = customNGWAFScopeImporter(scope.ScopeTypeWorkspace, "signal")
 
 	r.Schema["workspace_id"] = &schema.Schema{
 		Type:        schema.TypeString,
@@ -29,7 +29,7 @@ func resourceFastlyNGWAFWorkspaceSignal() *schema.Resource {
 func resourceFastlyNGWAFAccountSignal() *schema.Resource {
 	r := resourceFastlyNGWAFSignalBase()
 
-	r.Importer = customNGWAFScopeImporter(common.ScopeTypeAccount, "signal")
+	r.Importer = customNGWAFScopeImporter(scope.ScopeTypeAccount, "signal")
 
 	r.Schema["applies_to"] = &schema.Schema{
 		Type:        schema.TypeList,

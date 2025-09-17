@@ -5,8 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
 )
 
 func flattenNGWAFRuleResponse(d *schema.ResourceData, rule *rules.Rule) error {
@@ -17,24 +17,24 @@ func flattenNGWAFRuleResponse(d *schema.ResourceData, rule *rules.Rule) error {
 		return fmt.Errorf("invalid rule scope: type or applies_to is missing")
 	}
 
-	scope := rule.Scope
+	s := rule.Scope
 
-	switch scope.Type {
-	case string(common.ScopeTypeWorkspace):
-		if len(scope.AppliesTo) == 0 {
+	switch s.Type {
+	case string(scope.ScopeTypeWorkspace):
+		if len(s.AppliesTo) == 0 {
 			return fmt.Errorf("workspace scope is missing applies_to ID")
 		}
-		if err := d.Set("workspace_id", scope.AppliesTo[0]); err != nil {
+		if err := d.Set("workspace_id", s.AppliesTo[0]); err != nil {
 			return fmt.Errorf("error setting workspace_id: %w", err)
 		}
 
-	case string(common.ScopeTypeAccount):
-		if err := d.Set("applies_to", scope.AppliesTo); err != nil {
+	case string(scope.ScopeTypeAccount):
+		if err := d.Set("applies_to", s.AppliesTo); err != nil {
 			return fmt.Errorf("error setting applies_to: %w", err)
 		}
 
 	default:
-		return fmt.Errorf("unknown scope type: %q", scope.Type)
+		return fmt.Errorf("unknown scope type: %q", s.Type)
 	}
 
 	if err := d.Set("description", rule.Description); err != nil {
@@ -57,7 +57,7 @@ func flattenNGWAFRuleResponse(d *schema.ResourceData, rule *rules.Rule) error {
 		return fmt.Errorf("error setting request_logging: %w", err)
 	}
 
-	isWorkspace := scope.Type == string(common.ScopeTypeWorkspace)
+	isWorkspace := s.Type == string(scope.ScopeTypeWorkspace)
 
 	// Flatten actions
 	if err := d.Set("action", flattenNGWAFRuleActionsGeneric(rule.Actions, isWorkspace)); err != nil {

@@ -11,17 +11,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	"github.com/fastly/go-fastly/v11/fastly/products/botmanagement"
-	"github.com/fastly/go-fastly/v11/fastly/products/brotlicompression"
-	"github.com/fastly/go-fastly/v11/fastly/products/ddosprotection"
-	"github.com/fastly/go-fastly/v11/fastly/products/domaininspector"
-	"github.com/fastly/go-fastly/v11/fastly/products/fanout"
-	"github.com/fastly/go-fastly/v11/fastly/products/imageoptimizer"
-	"github.com/fastly/go-fastly/v11/fastly/products/logexplorerinsights"
-	"github.com/fastly/go-fastly/v11/fastly/products/ngwaf"
-	"github.com/fastly/go-fastly/v11/fastly/products/origininspector"
-	"github.com/fastly/go-fastly/v11/fastly/products/websockets"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	"github.com/fastly/go-fastly/v12/fastly/products/botmanagement"
+	"github.com/fastly/go-fastly/v12/fastly/products/brotlicompression"
+	"github.com/fastly/go-fastly/v12/fastly/products/ddosprotection"
+	"github.com/fastly/go-fastly/v12/fastly/products/domaininspector"
+	"github.com/fastly/go-fastly/v12/fastly/products/fanout"
+	"github.com/fastly/go-fastly/v12/fastly/products/imageoptimizer"
+	"github.com/fastly/go-fastly/v12/fastly/products/logexplorerinsights"
+	"github.com/fastly/go-fastly/v12/fastly/products/ngwaf"
+	"github.com/fastly/go-fastly/v12/fastly/products/origininspector"
+	"github.com/fastly/go-fastly/v12/fastly/products/websockets"
 )
 
 // ProductEnablementServiceAttributeHandler provides a base implementation for ServiceAttributeDefinition.

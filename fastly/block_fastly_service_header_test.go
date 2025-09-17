@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
 )
 
 func TestResourceFastlyFlattenHeaders(t *testing.T) {

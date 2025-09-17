@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
 )
 
 func TestAccFastlyNGWAFAccountRule_basic(t *testing.T) {
@@ -129,8 +129,8 @@ func testAccCheckNGWAFAccountRuleDestroy(s *terraform.State) error {
 
 		_, err := rules.Get(context.TODO(), conn, &rules.GetInput{
 			RuleID: &rs.Primary.ID,
-			Scope: &common.Scope{
-				Type:      common.ScopeTypeAccount,
+			Scope: &scope.Scope{
+				Type:      scope.ScopeTypeAccount,
 				AppliesTo: []string{"*"},
 			},
 		})

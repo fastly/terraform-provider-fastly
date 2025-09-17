@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert Webhook integration for a Workspace
 ---
 
-# ngwaf_alert_webhook_integration
+# fastly_ngwaf_alert_webhook_integration
 
 Provides Fastly Next-Gen WAF Alert Webhook integrations, which provide a connection to Webhooks.
 

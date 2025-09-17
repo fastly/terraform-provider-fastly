@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert Datadog integration for a Workspace
 ---
 
-# ngwaf_alert_datadog_integration
+# fastly_ngwaf_alert_datadog_integration
 
 Provides Fastly Next-Gen WAF Alert Datadog integrations, which provide a connection to Datadog.
 

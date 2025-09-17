@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert Opsgenie integration for a Workspace
 ---
 
-# ngwaf_alert_opsgenie_integration
+# fastly_ngwaf_alert_opsgenie_integration
 
 Provides Fastly Next-Gen WAF Alert Opsgenie integrations, which provide a connection to Opsgenie.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Redaction for a Workspace
 ---
 
-# ngwaf_redaction
+# fastly_ngwaf_redaction
 
 Provides a Fastly Next-Gen WAF Redaction, which can automatically redact known patterns of sensitive information.
 

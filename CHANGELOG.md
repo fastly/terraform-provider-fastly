@@ -3,6 +3,7 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+- feat(logging): add support for Period HTTPS logging endpoint ([#](https://github.com/fastly/terraform-provider-fastly/pull/))
 
 ### BUG FIXES:
 

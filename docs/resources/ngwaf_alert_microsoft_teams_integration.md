@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert Microsoft Teams integration for a Workspace
 ---
 
-# ngwaf_alert_microsoft_teams_integration
+# fastly_ngwaf_alert_microsoft_teams_integration
 
 Provides Fastly Next-Gen WAF Alert Microsoft Teams integrations, which provide a connection to Microsoft Teams.
 

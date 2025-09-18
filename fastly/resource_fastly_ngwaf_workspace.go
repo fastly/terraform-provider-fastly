@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	ws "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	ws "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces"
 )
 
 func resourceFastlyNGWAFWorkspace() *schema.Resource {
@@ -201,19 +201,39 @@ func resourceFastlyNGWAFWorkspaceRead(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] UPDATE: NGWAF workspace attack thresholds get: %#v", workspace.AttackSignalThresholds)
 
-	thresholds := []map[string]any{
-		{
-			"one_minute":  workspace.AttackSignalThresholds.OneMinute,
-			"ten_minutes": workspace.AttackSignalThresholds.TenMinutes,
-			"one_hour":    workspace.AttackSignalThresholds.OneHour,
-			"immediate":   workspace.AttackSignalThresholds.Immediate,
-		},
-	}
-	if err := d.Set("attack_signal_thresholds", thresholds); err != nil {
+	if err := d.Set("attack_signal_thresholds", flattenAttackSignalThresholds(&workspace.AttackSignalThresholds)); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
+}
+
+// Due to the API returning zero values for unset thresholds, we'll need override these with
+// the expected defaults values to avoid conflicts with imports.
+func flattenAttackSignalThresholds(thresholds *ws.AttackSignalThresholds) []map[string]any {
+	oneMinute := thresholds.OneMinute
+	if oneMinute == 0 {
+		oneMinute = 1 // Default from schema
+	}
+
+	tenMinutes := thresholds.TenMinutes
+	if tenMinutes == 0 {
+		tenMinutes = 60 // Default from schema
+	}
+
+	oneHour := thresholds.OneHour
+	if oneHour == 0 {
+		oneHour = 100 // Default from schema
+	}
+
+	return []map[string]any{
+		{
+			"one_minute":  oneMinute,
+			"ten_minutes": tenMinutes,
+			"one_hour":    oneHour,
+			"immediate":   thresholds.Immediate,
+		},
+	}
 }
 
 func resourceFastlyNGWAFWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

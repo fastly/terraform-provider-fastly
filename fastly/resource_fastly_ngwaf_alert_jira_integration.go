@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	jiraAlerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/jira"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	jiraAlerts "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/jira"
 )
 
 func resourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {
@@ -42,7 +42,7 @@ func resourceFastlyNGWAFAlertJiraIntegration() *schema.Resource {
 				Description: "The Jira key.",
 				Required:    true,
 				Type:        schema.TypeString,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 			},
 			"project": {
 				Description: "The Jira project where the issue will be created.",

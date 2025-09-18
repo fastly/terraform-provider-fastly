@@ -3,6 +3,23 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+- feat(logging): add support for Period HTTPS logging endpoint ([#](https://github.com/fastly/terraform-provider-fastly/pull/))
+
+### BUG FIXES:
+
+- fix(ngwaf/alerts): Ensure that FASTLY_TF_DISPLAY_SENSITIVE_FIELDS is respected ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))
+
+### DEPENDENCIES:
+
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
+
+### DOCUMENTATION:
+
+## 8.1.0 (September 17, 2025)
+
+### BREAKING:
+
+### ENHANCEMENTS:
 
 - feat(ngwaf/workspace): fix basic usage example
 - feat(ngwaf/workspace): add default_redirect_url to workspaces. ([#1068](https://github.com/fastly/terraform-provider-fastly/pull/1068))
@@ -12,15 +29,16 @@
 - feat(compute/healthcheck): add support for healthchecks for Compute services ([#1079](https://github.com/fastly/terraform-provider-fastly/pull/1079))
 - feat(logging): add support for compression to HTTPS logging endpoint ([#1086](https://github.com/fastly/terraform-provider-fastly/pull/1086))
 - feat(compute/logging_newrelicotlp): add support for New Relic OLTP logging for Compute services ([#1095](https://github.com/fastly/terraform-provider-fastly/pull/1095))
-- feat(logging): add support for Period HTTPS logging endpoint ([#](https://github.com/fastly/terraform-provider-fastly/pull/))
 
 ### BUG FIXES:
 
 - fix(ngwaf/rules): removes the rate limit block from the account level rules schema. ([#1065](https://github.com/fastly/terraform-provider-fastly/pull/1065))
 - fix(service_vcl/logging_gcs): resolves an issue where project_id was not being updated for GCS logging_gcs. ([#1073](https://github.com/fastly/terraform-provider-fastly/pull/1073))
 - fix(service_vcl/requestsetting): removed a incorrect default value for the xff attribute. ([#1078](https://github.com/fastly/terraform-provider-fastly/pull/1078))
+- fix(ngwaf/workspace): corrected zero values being set from workspace imports when attack thresholds are left as default ([#1103](https://github.com/fastly/terraform-provider-fastly/pull/1103))
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))
 - build(deps): `golang.org/x/net` from 0.42.0 to 0.43.0 ([#1072](https://github.com/fastly/terraform-provider-fastly/pull/1072))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	wsr "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/redactions"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	wsr "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/redactions"
 )
 
 func resourceFastlyNGWAFRedaction() *schema.Resource {

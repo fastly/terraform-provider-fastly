@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	opsgenieAlerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/opsgenie"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	opsgenieAlerts "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/opsgenie"
 )
 
 func resourceFastlyNGWAFAlertOpsgenieIntegration() *schema.Resource {
@@ -32,7 +32,7 @@ func resourceFastlyNGWAFAlertOpsgenieIntegration() *schema.Resource {
 				Description: "The Opsgenie key.",
 				Required:    true,
 				Type:        schema.TypeString,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 			},
 			"workspace_id": {
 				Description: "The ID of the workspace.",

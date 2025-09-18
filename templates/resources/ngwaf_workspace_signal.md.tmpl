@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Workspace Signal
 ---
 
-# ngwaf_workspace_signal
+# fastly_ngwaf_workspace_signal
 
 Provides a Fastly Next-Gen WAF Workspace Signal, scoped to a specific NGWAF workspace.  
 These signals define conditions and actions that trigger WAF enforcement at the workspace level.

@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Account Signal
 ---
 
-# ngwaf_account_signal
+# fastly_ngwaf_account_signal
 
 Provides a Fastly Next-Gen WAF Account Signal.  
 Account-level signals apply across one or more workspaces and are useful for defining shared or global WAF logic.

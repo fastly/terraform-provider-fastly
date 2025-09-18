@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Alert Mailing List integration for a Workspace
 ---
 
-# ngwaf_alert_mailing_list_integration
+# fastly_ngwaf_alert_mailing_list_integration
 
 Provides Fastly Next-Gen WAF Alert Mailing List integrations, which provide a connection to Mailing List.
 

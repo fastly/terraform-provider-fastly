@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Workspace Rule
 ---
 
-# ngwaf_workspace_rule
+# fastly_ngwaf_workspace_rule
 
 Provides a Fastly Next-Gen WAF Workspace Rule, scoped to a specific NGWAF workspace.  
 These rules define conditions and actions that trigger WAF enforcement at the workspace level.

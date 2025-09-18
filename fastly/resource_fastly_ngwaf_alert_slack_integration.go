@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	slackAlerts "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/slack"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	slackAlerts "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/slack"
 )
 
 func resourceFastlyNGWAFAlertSlackIntegration() *schema.Resource {
@@ -32,7 +32,7 @@ func resourceFastlyNGWAFAlertSlackIntegration() *schema.Resource {
 				Description: "The Slack webhook URL.",
 				Required:    true,
 				Type:        schema.TypeString,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 			},
 			"workspace_id": {
 				Description: "The ID of the workspace.",

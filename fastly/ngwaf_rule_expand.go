@@ -3,12 +3,12 @@ package fastly
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/rules"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
 )
 
-func expandNGWAFRuleCreateInput(d *schema.ResourceData, scope *common.Scope) *rules.CreateInput {
+func expandNGWAFRuleCreateInput(d *schema.ResourceData, s *scope.Scope) *rules.CreateInput {
 	var actionRaw []any
 	if v, ok := d.GetOk("action"); ok {
 		actionRaw = v.([]any)
@@ -32,18 +32,18 @@ func expandNGWAFRuleCreateInput(d *schema.ResourceData, scope *common.Scope) *ru
 	return &rules.CreateInput{
 		Type:            gofastly.ToPointer(d.Get("type").(string)),
 		Description:     gofastly.ToPointer(d.Get("description").(string)),
-		Scope:           scope,
+		Scope:           s,
 		Enabled:         gofastly.ToPointer(d.Get("enabled").(bool)),
 		GroupOperator:   gofastly.ToPointer(d.Get("group_operator").(string)),
 		RequestLogging:  gofastly.ToPointer(d.Get("request_logging").(string)),
-		Actions:         expandNGWAFRuleCreateActions(actionRaw, string(scope.Type)),
+		Actions:         expandNGWAFRuleCreateActions(actionRaw, string(s.Type)),
 		Conditions:      expandNGWAFRuleCreateConditions(conditionRaw),
 		GroupConditions: expandNGWAFRuleGroupCreateConditions(groupRaw),
 		RateLimit:       expandNGWAFRuleCreateRateLimit(rateLimitRaw),
 	}
 }
 
-func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) *rules.UpdateInput {
+func expandNGWAFRuleUpdateInput(d *schema.ResourceData, s *scope.Scope) *rules.UpdateInput {
 	var actionRaw []any
 	if v, ok := d.GetOk("action"); ok {
 		actionRaw = v.([]any)
@@ -66,7 +66,7 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) *ru
 
 	updateInput := &rules.UpdateInput{
 		RuleID:          gofastly.ToPointer(d.Id()),
-		Scope:           scope,
+		Scope:           s,
 		Type:            gofastly.ToPointer(d.Get("type").(string)),
 		Description:     gofastly.ToPointer(d.Get("description").(string)),
 		Enabled:         gofastly.ToPointer(d.Get("enabled").(bool)),
@@ -78,9 +78,8 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData, scope *common.Scope) *ru
 	}
 
 	// templated_signal rules don't allow actions in update requests
-	// (actions are only set during creation for this rule type)
 	if d.Get("type").(string) != "templated_signal" {
-		updateInput.Actions = expandNGWAFRuleUpdateActions(actionRaw, string(scope.Type))
+		updateInput.Actions = expandNGWAFRuleUpdateActions(actionRaw, string(s.Type))
 	}
 
 	return updateInput
@@ -101,26 +100,18 @@ func expandNGWAFRuleCreateActions(raw []any, scopeType string) []*rules.CreateAc
 			action.Signal = gofastly.ToPointer(v.(string))
 		}
 		if scopeType == "workspace" {
-			if v, ok := m["allow_interactive"]; ok {
-				if v.(bool) {
-					action.AllowInteractive = gofastly.ToPointer(v.(bool))
-				}
+			if v, ok := m["allow_interactive"]; ok && v.(bool) {
+				action.AllowInteractive = gofastly.ToPointer(v.(bool))
 			}
-			if v, ok := m["deception_type"]; ok {
-				if v != "" {
-					action.DeceptionType = gofastly.ToPointer(v.(string))
-				}
+			if v, ok := m["deception_type"]; ok && v != "" {
+				action.DeceptionType = gofastly.ToPointer(v.(string))
 			}
-			if v, ok := m["redirect_url"]; ok {
-				if v != "" {
-					action.RedirectURL = gofastly.ToPointer(v.(string))
-				}
+			if v, ok := m["redirect_url"]; ok && v != "" {
+				action.RedirectURL = gofastly.ToPointer(v.(string))
 			}
-			if v, ok := m["response_code"]; ok {
-				if v != 0 {
-					val := v.(int)
-					action.ResponseCode = &val
-				}
+			if v, ok := m["response_code"]; ok && v != 0 {
+				val := v.(int)
+				action.ResponseCode = &val
 			}
 		}
 		actions = append(actions, action)
@@ -165,7 +156,6 @@ func expandNGWAFRuleCreateConditions(raw []any) []*rules.CreateCondition {
 
 	conds := expandNGWAFRuleConditionsGeneric(raw, func(field, operator, value string) any {
 		return &rules.CreateCondition{
-			Type:     gofastly.ToPointer("single"),
 			Field:    gofastly.ToPointer(field),
 			Operator: gofastly.ToPointer(operator),
 			Value:    gofastly.ToPointer(value),
@@ -186,7 +176,6 @@ func expandNGWAFRuleUpdateConditions(raw []any) []*rules.UpdateCondition {
 
 	conds := expandNGWAFRuleConditionsGeneric(raw, func(field, operator, value string) any {
 		return &rules.UpdateCondition{
-			Type:     gofastly.ToPointer("single"),
 			Field:    gofastly.ToPointer(field),
 			Operator: gofastly.ToPointer(operator),
 			Value:    gofastly.ToPointer(value),
@@ -209,7 +198,6 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 		raw,
 		func(field, operator, value string) any {
 			return &rules.CreateCondition{
-				Type:     gofastly.ToPointer("single"),
 				Field:    gofastly.ToPointer(field),
 				Operator: gofastly.ToPointer(operator),
 				Value:    gofastly.ToPointer(value),
@@ -221,7 +209,6 @@ func expandNGWAFRuleGroupCreateConditions(raw []any) []*rules.CreateGroupConditi
 				c[i] = v.(*rules.CreateCondition)
 			}
 			return &rules.CreateGroupCondition{
-				Type:          gofastly.ToPointer("group"),
 				GroupOperator: gofastly.ToPointer(groupOp),
 				Conditions:    c,
 			}
@@ -244,7 +231,6 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 		raw,
 		func(field, operator, value string) any {
 			return &rules.UpdateCondition{
-				Type:     gofastly.ToPointer("single"),
 				Field:    gofastly.ToPointer(field),
 				Operator: gofastly.ToPointer(operator),
 				Value:    gofastly.ToPointer(value),
@@ -256,7 +242,6 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 				c[i] = v.(*rules.UpdateCondition)
 			}
 			return &rules.UpdateGroupCondition{
-				Type:          gofastly.ToPointer("group"),
 				GroupOperator: gofastly.ToPointer(groupOp),
 				Conditions:    c,
 			}

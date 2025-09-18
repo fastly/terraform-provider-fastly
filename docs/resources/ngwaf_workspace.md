@@ -6,7 +6,7 @@ description: |-
   Provides a Fastly Next-Gen WAF Workspace
 ---
 
-# ngwaf_workspace
+# fastly_ngwaf_workspace
 
 Provides a Fastly Next-Gen WAF Workspace, representing a container for
 rules, signals, and various other resources that are offered by the

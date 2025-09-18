@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(ngwaf/alerts): add support for the usage of displaying sensitive fields  ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

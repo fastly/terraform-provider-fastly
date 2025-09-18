@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	AlertMicrosoftTeamsIntegrations "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/microsoftteams"
+	AlertMicrosoftTeamsIntegrations "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/microsoftteams"
 )
 
 func dataSourceFastlyNGWAFAlertMicrosoftTeamsIntegration() *schema.Resource {

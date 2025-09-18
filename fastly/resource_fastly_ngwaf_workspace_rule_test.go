@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/rules"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/rules"
 )
 
 func TestFlattenNGWAFRuleResponse(t *testing.T) {

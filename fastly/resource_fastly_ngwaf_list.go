@@ -9,15 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/lists"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/lists"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
 )
 
 func resourceFastlyNGWAFWorkspaceList() *schema.Resource {
 	r := resourceFastlyNGWAFListBase()
 
-	r.Importer = customNGWAFScopeImporter(common.ScopeTypeWorkspace, "list")
+	r.Importer = customNGWAFScopeImporter(scope.ScopeTypeWorkspace, "list")
 
 	r.Schema["workspace_id"] = &schema.Schema{
 		Type:     schema.TypeString,
@@ -30,7 +30,7 @@ func resourceFastlyNGWAFWorkspaceList() *schema.Resource {
 func resourceFastlyNGWAFAccountList() *schema.Resource {
 	r := resourceFastlyNGWAFListBase()
 
-	r.Importer = customNGWAFScopeImporter(common.ScopeTypeAccount, "list")
+	r.Importer = customNGWAFScopeImporter(scope.ScopeTypeAccount, "list")
 
 	// Internal field for provider logic compatibility.
 	// Not exposed to users but required by shared scope helpers.
@@ -189,7 +189,7 @@ func resourceFastlyNGWAFListDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 // expandNGWAFListCreateInput builds the input for creating a list.
-func expandNGWAFListCreateInput(d *schema.ResourceData, scope *common.Scope) *lists.CreateInput {
+func expandNGWAFListCreateInput(d *schema.ResourceData, scope *scope.Scope) *lists.CreateInput {
 	name := d.Get("name").(string)
 	listType := d.Get("type").(string)
 	entries := expandStringList(d.Get("entries").([]any))
@@ -210,7 +210,7 @@ func expandNGWAFListCreateInput(d *schema.ResourceData, scope *common.Scope) *li
 }
 
 // expandNGWAFListUpdateInput builds the input for updating a list.
-func expandNGWAFListUpdateInput(d *schema.ResourceData, scope *common.Scope) *lists.UpdateInput {
+func expandNGWAFListUpdateInput(d *schema.ResourceData, scope *scope.Scope) *lists.UpdateInput {
 	input := &lists.UpdateInput{
 		ListID: gofastly.ToPointer(d.Id()),
 		Scope:  scope,
@@ -246,10 +246,10 @@ func flattenNGWAFListResponse(d *schema.ResourceData, list *lists.List) error {
 	}
 
 	switch list.Scope.Type {
-	case string(common.ScopeTypeWorkspace):
+	case string(scope.ScopeTypeWorkspace):
 		// For workspace scope, we rely on the original configuration or importer to set `workspace_id`.
 		// No need to set it here, as it is not returned in the list response.
-	case string(common.ScopeTypeAccount):
+	case string(scope.ScopeTypeAccount):
 		// Required for internal provider logic (resolveScopeAndContext), even if API doesn't return applies_to
 		if err := d.Set("applies_to", []string{"*"}); err != nil {
 			return fmt.Errorf("error setting applies_to for account scope: %w", err)

@@ -7,39 +7,39 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	gofastly "github.com/fastly/go-fastly/v11/fastly"
-	"github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/common"
+	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	"github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/scope"
 )
 
 type resolvedScope struct {
-	scope *common.Scope
+	scope *scope.Scope
 	ctx   context.Context
 }
 
 func resolveScopeAndContext(ctx context.Context, d *schema.ResourceData) (*resolvedScope, error) {
-	scope := buildNGWAFScope(d)
-	if scope == nil {
+	s := buildNGWAFScope(d) // renamed to s
+	if s == nil {
 		return nil, fmt.Errorf("could not determine rule scope: missing workspace_id or applies_to")
 	}
 
-	if scope.Type == common.ScopeTypeWorkspace && len(scope.AppliesTo) > 0 {
-		if wsID := scope.AppliesTo[0]; wsID != "" {
+	if s.Type == scope.ScopeTypeWorkspace && len(s.AppliesTo) > 0 {
+		if wsID := s.AppliesTo[0]; wsID != "" {
 			ctx = gofastly.NewContextForResourceID(ctx, wsID)
 		}
 	}
 
 	return &resolvedScope{
-		scope: scope,
+		scope: s,
 		ctx:   ctx,
 	}, nil
 }
 
-func buildNGWAFScope(d *schema.ResourceData) *common.Scope {
+func buildNGWAFScope(d *schema.ResourceData) *scope.Scope {
 	if v, ok := d.GetOk("workspace_id"); ok {
 		wsID := v.(string)
 		if wsID != "" {
-			return &common.Scope{
-				Type:      common.ScopeTypeWorkspace,
+			return &scope.Scope{
+				Type:      scope.ScopeTypeWorkspace,
 				AppliesTo: []string{wsID},
 			}
 		}
@@ -54,8 +54,8 @@ func buildNGWAFScope(d *schema.ResourceData) *common.Scope {
 		for i, id := range rawList {
 			ids[i] = strings.TrimSpace(id.(string))
 		}
-		return &common.Scope{
-			Type:      common.ScopeTypeAccount,
+		return &scope.Scope{
+			Type:      scope.ScopeTypeAccount,
 			AppliesTo: ids,
 		}
 	}
@@ -63,11 +63,11 @@ func buildNGWAFScope(d *schema.ResourceData) *common.Scope {
 	return nil
 }
 
-func customNGWAFScopeImporter(scope common.ScopeType, resourceType string) *schema.ResourceImporter {
+func customNGWAFScopeImporter(scopeType scope.Type, resourceType string) *schema.ResourceImporter {
 	return &schema.ResourceImporter{
 		StateContext: func(_ context.Context, d *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-			switch scope {
-			case common.ScopeTypeWorkspace:
+			switch scopeType {
+			case scope.ScopeTypeWorkspace:
 				// Expected format: "workspace_id/rule_id"
 				parts := strings.SplitN(d.Id(), "/", 2)
 				if len(parts) != 2 {
@@ -81,7 +81,7 @@ func customNGWAFScopeImporter(scope common.ScopeType, resourceType string) *sche
 				}
 				d.SetId(ruleID)
 
-			case common.ScopeTypeAccount:
+			case scope.ScopeTypeAccount:
 				// Only rule ID is needed for account-scoped rules
 				if err := d.Set("applies_to", []string{"*"}); err != nil {
 					return nil, fmt.Errorf("failed to set applies_to for account %s: %w", resourceType, err)
@@ -89,7 +89,7 @@ func customNGWAFScopeImporter(scope common.ScopeType, resourceType string) *sche
 				d.SetId(d.Id())
 
 			default:
-				return nil, fmt.Errorf("unsupported scope type %q", scope)
+				return nil, fmt.Errorf("unsupported scope type %q", scopeType)
 			}
 
 			return []*schema.ResourceData{d}, nil

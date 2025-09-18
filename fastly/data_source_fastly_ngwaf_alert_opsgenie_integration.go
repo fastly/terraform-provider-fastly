@@ -11,7 +11,7 @@ import (
 
 	"github.com/fastly/terraform-provider-fastly/fastly/hashcode"
 
-	AlertOpsgenieIntegrations "github.com/fastly/go-fastly/v11/fastly/ngwaf/v1/workspaces/alerts/opsgenie"
+	AlertOpsgenieIntegrations "github.com/fastly/go-fastly/v12/fastly/ngwaf/v1/workspaces/alerts/opsgenie"
 )
 
 func dataSourceFastlyNGWAFAlertOpsgenieIntegration() *schema.Resource {

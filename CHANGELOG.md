@@ -6,9 +6,11 @@
 
 ### BUG FIXES:
 
-- fix(ngwaf/alerts): Ensure that FASTLY_TF_DISPLAY_SENSITIVE_FIELDS is respected  ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))
+- fix(ngwaf/alerts): Ensure that FASTLY_TF_DISPLAY_SENSITIVE_FIELDS is respected ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))
 
 ### DEPENDENCIES:
+
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
 
 ### DOCUMENTATION:
 
@@ -35,6 +37,7 @@
 - fix(ngwaf/workspace): corrected zero values being set from workspace imports when attack thresholds are left as default ([#1103](https://github.com/fastly/terraform-provider-fastly/pull/1103))
 
 ### DEPENDENCIES:
+
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))
 - build(deps): `golang.org/x/net` from 0.42.0 to 0.43.0 ([#1072](https://github.com/fastly/terraform-provider-fastly/pull/1072))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.1.1 to 11.2.0 ([#1067](https://github.com/fastly/terraform-provider-fastly/pull/1067))

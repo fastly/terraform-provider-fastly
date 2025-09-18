@@ -32,7 +32,7 @@ func resourceFastlyNGWAFAlertWebhookIntegration() *schema.Resource {
 				Description: "The webhook URL.",
 				Required:    true,
 				Type:        schema.TypeString,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 			},
 			"workspace_id": {
 				Description: "The ID of the workspace.",

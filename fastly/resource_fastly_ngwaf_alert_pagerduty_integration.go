@@ -34,7 +34,7 @@ func resourceFastlyNGWAFAlertPagerDutyIntegration() *schema.Resource {
 				Required:     true,
 				Type:         schema.TypeString,
 				ValidateFunc: validation.StringLenBetween(32, 32),
-				Sensitive:    true,
+				Sensitive:    !DisplaySensitiveFields,
 			},
 			"workspace_id": {
 				Description: "The ID of the workspace.",

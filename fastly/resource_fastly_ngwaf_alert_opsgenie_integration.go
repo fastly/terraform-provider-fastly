@@ -32,7 +32,7 @@ func resourceFastlyNGWAFAlertOpsgenieIntegration() *schema.Resource {
 				Description: "The Opsgenie key.",
 				Required:    true,
 				Type:        schema.TypeString,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 			},
 			"workspace_id": {
 				Description: "The ID of the workspace.",

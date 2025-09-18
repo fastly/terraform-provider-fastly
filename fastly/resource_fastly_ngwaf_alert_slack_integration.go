@@ -32,7 +32,7 @@ func resourceFastlyNGWAFAlertSlackIntegration() *schema.Resource {
 				Description: "The Slack webhook URL.",
 				Required:    true,
 				Type:        schema.TypeString,
-				Sensitive:   true,
+				Sensitive:   !DisplaySensitiveFields,
 			},
 			"workspace_id": {
 				Description: "The ID of the workspace.",

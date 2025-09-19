@@ -33,7 +33,7 @@ func resourceFastlyNGWAFAlertDatadogIntegration() *schema.Resource {
 				Description:  "The Datadog key.",
 				Required:     true,
 				Type:         schema.TypeString,
-				ValidateFunc: validation.StringLenBetween(9, 9),
+				ValidateFunc: validation.StringLenBetween(9, 99),
 				Sensitive:    !DisplaySensitiveFields,
 			},
 			"site": {

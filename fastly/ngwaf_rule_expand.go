@@ -37,19 +37,11 @@ func expandNGWAFRuleCreateInput(d *schema.ResourceData, s *scope.Scope) *rules.C
 	return &rules.CreateInput{
 		Type:               gofastly.ToPointer(d.Get("type").(string)),
 		Description:        gofastly.ToPointer(d.Get("description").(string)),
-<<<<<<< HEAD
 		Scope:              s,
 		Enabled:            gofastly.ToPointer(d.Get("enabled").(bool)),
 		GroupOperator:      gofastly.ToPointer(d.Get("group_operator").(string)),
 		RequestLogging:     gofastly.ToPointer(d.Get("request_logging").(string)),
 		Actions:            expandNGWAFRuleCreateActions(actionRaw, string(s.Type)),
-=======
-		Scope:              scope,
-		Enabled:            gofastly.ToPointer(d.Get("enabled").(bool)),
-		GroupOperator:      gofastly.ToPointer(d.Get("group_operator").(string)),
-		RequestLogging:     gofastly.ToPointer(d.Get("request_logging").(string)),
-		Actions:            expandNGWAFRuleCreateActions(actionRaw, string(scope.Type)),
->>>>>>> a5d12edb (multival support)
 		Conditions:         expandNGWAFRuleCreateConditions(conditionRaw),
 		GroupConditions:    expandNGWAFRuleGroupCreateConditions(groupRaw),
 		MultivalConditions: expandNGWAFRuleMultiValCreateConditions(multivalRaw),

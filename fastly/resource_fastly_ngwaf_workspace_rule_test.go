@@ -66,6 +66,18 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 					},
 				},
 			},
+			{
+				Type: "multival",
+				Fields: rules.MultivalCondition{
+					Field:         "request_header",
+					Operator:      "exists",
+					GroupOperator: "any",
+					Conditions: []rules.ConditionMul{
+						{Field: "name", Operator: "contains", Value: "Header-Sample"},
+						{Field: "name", Operator: "equals", Value: "X-API-Key"},
+					},
+				},
+			},
 		},
 	}
 
@@ -90,6 +102,24 @@ func TestFlattenNGWAFRuleResponse(t *testing.T) {
 	// Group conditions
 	groups := d.Get("group_condition").([]any)
 	require.Len(t, groups, 2)
+
+	// Multival conditions
+	multivals := d.Get("multival_condition").([]any)
+	require.Len(t, multivals, 1)
+
+	multival := multivals[0].(map[string]any)
+	require.Equal(t, "request_header", multival["field"])
+	require.Equal(t, "exists", multival["operator"])
+	require.Equal(t, "any", multival["group_operator"])
+
+	multivalConds := multival["condition"].([]any)
+	require.Len(t, multivalConds, 2)
+	require.Equal(t, "name", multivalConds[0].(map[string]any)["field"])
+	require.Equal(t, "contains", multivalConds[0].(map[string]any)["operator"])
+	require.Equal(t, "Header-Sample", multivalConds[0].(map[string]any)["value"])
+	require.Equal(t, "name", multivalConds[1].(map[string]any)["field"])
+	require.Equal(t, "equals", multivalConds[1].(map[string]any)["operator"])
+	require.Equal(t, "X-API-Key", multivalConds[1].(map[string]any)["value"])
 }
 
 func TestAccFastlyNGWAFWorkspaceRule_basic(t *testing.T) {
@@ -150,6 +180,17 @@ func TestAccFastlyNGWAFWorkspaceRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.2.field", "domain"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.2.operator", "equals"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.2.value", "example.com"),
+
+					// Multival conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.field", "request_header"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.operator", "exists"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.group_operator", "any"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.0.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.0.operator", "contains"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.0.value", "Header-Sample"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.value", "X-API-Key"),
 				),
 			},
 			{
@@ -199,6 +240,17 @@ func TestAccFastlyNGWAFWorkspaceRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.2.field", "domain"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.2.operator", "does_not_equal"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "group_condition.1.condition.2.value", "internal.example"),
+
+					// Multival conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.field", "request_header"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.operator", "exists"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.group_operator", "any"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.0.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.0.value", "Header-Sample-Updated"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.operator", "contains"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.example", "multival_condition.0.condition.1.value", "X-API-Key-Updated"),
 				),
 			},
 			{
@@ -295,6 +347,24 @@ resource "fastly_ngwaf_workspace_rule" "example" {
       value    = "example.com"
     }
   }
+
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "Header-Sample"
+    }
+
+    condition {
+      field    = "name"
+      operator = "equals"
+      value    = "X-API-Key"
+    }
+  }
 }
 `, workspaceName, ruleName)
 }
@@ -379,6 +449,24 @@ resource "fastly_ngwaf_workspace_rule" "example" {
       value    = "internal.example"
     }
   }
+
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
+
+    condition {
+      field    = "name"
+      operator = "equals"
+      value    = "Header-Sample-Updated"
+    }
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "X-API-Key-Updated"
+    }
+  }
 }
 `, workspaceName, ruleName)
 }
@@ -412,6 +500,17 @@ func TestAccFastlyNGWAFWorkspaceRule_rateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.interval", "60"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.signal", "site.test-signal"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.threshold", "100"),
+
+					// Multival conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.field", "request_header"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.operator", "exists"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.group_operator", "any"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.0.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.0.operator", "contains"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.0.value", "Header-Sample"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.1.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.1.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.1.value", "X-API-Key"),
 				),
 			},
 			{
@@ -434,6 +533,17 @@ func TestAccFastlyNGWAFWorkspaceRule_rateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.interval", "600"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.signal", "site.test-signal"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "rate_limit.0.threshold", "1000"),
+
+					// Multival conditions
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.field", "request_header"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.operator", "exists"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.group_operator", "any"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.0.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.0.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.0.value", "Header-Sample-Updated"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.1.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.1.operator", "contains"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_workspace_rule.rate_limit", "multival_condition.0.condition.1.value", "X-API-Key-Updated"),
 				),
 			},
 			{
@@ -494,12 +604,30 @@ resource "fastly_ngwaf_workspace_rule" "rate_limit" {
 
   rate_limit {
 	client_identifiers {
-		type = "ip" 
+		type = "ip"
 	}
 	duration  = 500
 	interval  = 60
 	signal    = fastly_ngwaf_workspace_signal.example.reference_id
 	threshold = 100
+  }
+
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "Header-Sample"
+    }
+
+    condition {
+      field    = "name"
+      operator = "equals"
+      value    = "X-API-Key"
+    }
   }
 }
 `, workspaceName, ruleName)
@@ -549,12 +677,30 @@ resource "fastly_ngwaf_workspace_rule" "rate_limit" {
 
   rate_limit {
 	client_identifiers {
-		type = "ip" 
+		type = "ip"
 	}
 	duration  = 5000
 	interval  = 600
 	signal    = fastly_ngwaf_workspace_signal.example.reference_id
 	threshold = 1000
+  }
+
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
+
+    condition {
+      field    = "name"
+      operator = "equals"
+      value    = "Header-Sample-Updated"
+    }
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "X-API-Key-Updated"
+    }
   }
 }
 `, workspaceName, ruleName)

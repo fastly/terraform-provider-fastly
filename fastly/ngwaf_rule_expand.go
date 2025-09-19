@@ -24,22 +24,28 @@ func expandNGWAFRuleCreateInput(d *schema.ResourceData, s *scope.Scope) *rules.C
 		groupRaw = v.([]any)
 	}
 
+	var multivalRaw []any
+	if v, ok := d.GetOk("multival_condition"); ok {
+		multivalRaw = v.([]any)
+	}
+
 	var rateLimitRaw []any
 	if v, ok := d.GetOk("rate_limit"); ok {
 		rateLimitRaw = v.([]any)
 	}
 
 	return &rules.CreateInput{
-		Type:            gofastly.ToPointer(d.Get("type").(string)),
-		Description:     gofastly.ToPointer(d.Get("description").(string)),
-		Scope:           s,
-		Enabled:         gofastly.ToPointer(d.Get("enabled").(bool)),
-		GroupOperator:   gofastly.ToPointer(d.Get("group_operator").(string)),
-		RequestLogging:  gofastly.ToPointer(d.Get("request_logging").(string)),
-		Actions:         expandNGWAFRuleCreateActions(actionRaw, string(s.Type)),
-		Conditions:      expandNGWAFRuleCreateConditions(conditionRaw),
-		GroupConditions: expandNGWAFRuleGroupCreateConditions(groupRaw),
-		RateLimit:       expandNGWAFRuleCreateRateLimit(rateLimitRaw),
+		Type:               gofastly.ToPointer(d.Get("type").(string)),
+		Description:        gofastly.ToPointer(d.Get("description").(string)),
+		Scope:              s,
+		Enabled:            gofastly.ToPointer(d.Get("enabled").(bool)),
+		GroupOperator:      gofastly.ToPointer(d.Get("group_operator").(string)),
+		RequestLogging:     gofastly.ToPointer(d.Get("request_logging").(string)),
+		Actions:            expandNGWAFRuleCreateActions(actionRaw, string(s.Type)),
+		Conditions:         expandNGWAFRuleCreateConditions(conditionRaw),
+		GroupConditions:    expandNGWAFRuleGroupCreateConditions(groupRaw),
+		MultivalConditions: expandNGWAFRuleMultiValCreateConditions(multivalRaw),
+		RateLimit:          expandNGWAFRuleCreateRateLimit(rateLimitRaw),
 	}
 }
 
@@ -59,22 +65,28 @@ func expandNGWAFRuleUpdateInput(d *schema.ResourceData, s *scope.Scope) *rules.U
 		groupRaw = v.([]any)
 	}
 
+	var multivalRaw []any
+	if v, ok := d.GetOk("multival_condition"); ok {
+		multivalRaw = v.([]any)
+	}
+
 	var rateLimitRaw []any
 	if v, ok := d.GetOk("rate_limit"); ok {
 		rateLimitRaw = v.([]any)
 	}
 
 	updateInput := &rules.UpdateInput{
-		RuleID:          gofastly.ToPointer(d.Id()),
-		Scope:           s,
-		Type:            gofastly.ToPointer(d.Get("type").(string)),
-		Description:     gofastly.ToPointer(d.Get("description").(string)),
-		Enabled:         gofastly.ToPointer(d.Get("enabled").(bool)),
-		GroupOperator:   gofastly.ToPointer(d.Get("group_operator").(string)),
-		RequestLogging:  gofastly.ToPointer(d.Get("request_logging").(string)),
-		Conditions:      expandNGWAFRuleUpdateConditions(conditionRaw),
-		GroupConditions: expandNGWAFRuleGroupUpdateConditions(groupRaw),
-		RateLimit:       expandNGWAFRuleUpdateRateLimit(rateLimitRaw),
+		RuleID:             gofastly.ToPointer(d.Id()),
+		Scope:              s,
+		Type:               gofastly.ToPointer(d.Get("type").(string)),
+		Description:        gofastly.ToPointer(d.Get("description").(string)),
+		Enabled:            gofastly.ToPointer(d.Get("enabled").(bool)),
+		GroupOperator:      gofastly.ToPointer(d.Get("group_operator").(string)),
+		RequestLogging:     gofastly.ToPointer(d.Get("request_logging").(string)),
+		Conditions:         expandNGWAFRuleUpdateConditions(conditionRaw),
+		GroupConditions:    expandNGWAFRuleGroupUpdateConditions(groupRaw),
+		MultivalConditions: expandNGWAFRuleMultiValUpdateConditions(multivalRaw),
+		RateLimit:          expandNGWAFRuleUpdateRateLimit(rateLimitRaw),
 	}
 
 	// templated_signal rules don't allow actions in update requests
@@ -253,6 +265,96 @@ func expandNGWAFRuleGroupUpdateConditions(raw []any) []*rules.UpdateGroupConditi
 	}
 
 	return result
+}
+
+func expandNGWAFRuleMultiValCreateConditions(raw []any) []*rules.CreateMultivalCondition {
+	if raw == nil {
+		return nil
+	}
+
+	var MultivalConditions []*rules.CreateMultivalCondition
+	for _, item := range raw {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		// Extract top level fields.
+		field := m["field"].(string)
+		operator := m["operator"].(string)
+		groupOperator := m["group_operator"].(string)
+
+		// Extract nested conditions.
+		rawConditions, ok := m["condition"].([]any)
+		if !ok || len(rawConditions) == 0 {
+			continue
+		}
+
+		var conditions []*rules.CreateConditionMult
+		for _, c := range rawConditions {
+			cm, ok := c.(map[string]any)
+			if !ok {
+				continue
+			}
+			conditions = append(conditions, &rules.CreateConditionMult{
+				Field:    gofastly.ToPointer(cm["field"].(string)),
+				Operator: gofastly.ToPointer(cm["operator"].(string)),
+				Value:    gofastly.ToPointer(cm["value"].(string)),
+			})
+		}
+		MultivalConditions = append(MultivalConditions, &rules.CreateMultivalCondition{
+			Field:         gofastly.ToPointer(field),
+			Operator:      gofastly.ToPointer(operator),
+			GroupOperator: gofastly.ToPointer(groupOperator),
+			Conditions:    conditions,
+		})
+	}
+
+	return MultivalConditions
+}
+
+func expandNGWAFRuleMultiValUpdateConditions(raw []any) []*rules.UpdateMultivalCondition {
+	if raw == nil {
+		return nil
+	}
+
+	var MultivalConditions []*rules.UpdateMultivalCondition
+	for _, item := range raw {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		// Extract top level fields.
+		field := m["field"].(string)
+		operator := m["operator"].(string)
+		groupOperator := m["group_operator"].(string)
+
+		// Extract nested conditions.
+		rawConditions, ok := m["condition"].([]any)
+		if !ok || len(rawConditions) == 0 {
+			continue
+		}
+
+		var conditions []*rules.UpdateConditionMult
+		for _, c := range rawConditions {
+			cm, ok := c.(map[string]any)
+			if !ok {
+				continue
+			}
+			conditions = append(conditions, &rules.UpdateConditionMult{
+				Field:    gofastly.ToPointer(cm["field"].(string)),
+				Operator: gofastly.ToPointer(cm["operator"].(string)),
+				Value:    gofastly.ToPointer(cm["value"].(string)),
+			})
+		}
+		MultivalConditions = append(MultivalConditions, &rules.UpdateMultivalCondition{
+			Field:         gofastly.ToPointer(field),
+			Operator:      gofastly.ToPointer(operator),
+			GroupOperator: gofastly.ToPointer(groupOperator),
+			Conditions:    conditions,
+		})
+	}
+
+	return MultivalConditions
 }
 
 func expandNGWAFRuleCreateRateLimit(raw []any) *rules.CreateRateLimit {

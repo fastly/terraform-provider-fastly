@@ -65,7 +65,7 @@ func flattenNGWAFRuleResponse(d *schema.ResourceData, rule *rules.Rule) error {
 	}
 
 	// Flatten conditions
-	singles, groups := flattenNGWAFRuleConditionsGeneric(rule.Conditions)
+	singles, groups, multivals := flattenNGWAFRuleConditionsGeneric(rule.Conditions)
 
 	if err := d.Set("condition", singles); err != nil {
 		return fmt.Errorf("error setting condition: %w", err)
@@ -73,6 +73,10 @@ func flattenNGWAFRuleResponse(d *schema.ResourceData, rule *rules.Rule) error {
 
 	if err := d.Set("group_condition", groups); err != nil {
 		return fmt.Errorf("error setting group_condition: %w", err)
+	}
+
+	if err := d.Set("multival_condition", multivals); err != nil {
+		return fmt.Errorf("error setting multival_condition: %w", err)
 	}
 
 	// Flatten rate limit

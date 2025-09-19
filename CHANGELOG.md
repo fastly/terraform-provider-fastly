@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(ngwaf/rules): add support for multival type conditions ([#1100](https://github.com/fastly/terraform-provider-fastly/pull/1100))
+
 ### BUG FIXES:
 
 - fix(ngwaf/alerts): Ensure that FASTLY_TF_DISPLAY_SENSITIVE_FIELDS is respected ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))

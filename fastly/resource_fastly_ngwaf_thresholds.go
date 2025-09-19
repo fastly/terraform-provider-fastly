@@ -38,7 +38,6 @@ func resourceFastlyNGWAFThresholds() *schema.Resource {
 			"duration": {
 				Type:             schema.TypeInt,
 				Description:      "Duration the action is in place, in seconds. Minimum 1 and maximum 31,556,900.",
-				Required:         false,
 				Optional:         true,
 				Default:          86400,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 31556900)),

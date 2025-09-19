@@ -38,7 +38,9 @@ func resourceFastlyNGWAFThresholds() *schema.Resource {
 			"duration": {
 				Type:             schema.TypeInt,
 				Description:      "Duration the action is in place, in seconds. Minimum 1 and maximum 31,556,900.",
-				Required:         true,
+				Required:         false,
+				Optional:         true,
+				Default:          86400,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 31556900)),
 			},
 			"enabled": {
@@ -137,7 +139,11 @@ func resourceFastlyNGWAFThresholdsRead(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("dont_notify", threshold.DontNotify); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("duration", threshold.Duration); err != nil {
+	var durationVal any = threshold.Duration
+	if threshold.Duration == 0 {
+		durationVal = 86400
+	}
+	if err := d.Set("duration", durationVal); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("enabled", threshold.Enabled); err != nil {

@@ -177,7 +177,7 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 							Type:             schema.TypeString,
 							Required:         true,
 							Description:      "Enums for multival condition field.. Accepted values are `post_parameter`, `query_parameter`, `request_cookie`, `request_header`, `response_header`, and `signal`.",
-							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"post_parameter", "query_parameter", "request_cookie", "request_header", "response_header,", "signal"}, false)),
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"post_parameter", "query_parameter", "request_cookie", "request_header", "response_header", "signal"}, false)),
 						},
 						"group_operator": {
 							Type:             schema.TypeString,

@@ -43,13 +43,16 @@ $ terraform import fastly_ngwaf_threshold.example <workspace_id>/<threshold_id>
 
 - `action` (String) Action to take when threshold is exceeded.
 - `dont_notify` (Boolean) Whether to silence notifications when action is taken.
-- `duration` (Number) Duration the action is in place, in seconds. Minimum 1 and maximum 31,556,900.
 - `enabled` (Boolean) Whether this threshold is active.
 - `interval` (Number) Threshold interval in seconds. Accepted values are `60`, `600`, and `3600`.
 - `limit` (Number) Threshold limit. Minimum 1 and maximum 10,000.
 - `name` (String) The name of the threshold.
 - `signal` (String) The name of the signal this threshold is acting on.
 - `workspace_id` (String) The ID of the workspace.
+
+### Optional
+
+- `duration` (Number) Duration the action is in place, in seconds. Minimum 1 and maximum 31,556,900.
 
 ### Read-Only
 

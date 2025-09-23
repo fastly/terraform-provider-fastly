@@ -4,6 +4,9 @@
 
 ### ENHANCEMENTS:
 
+- Expands the allowed length for Datadog keys from exactly 9 to between 9 and 99 characters.
+- Makes the 'duration' field in NGWAF thresholds optional with a default of 86400 seconds, and ensures a default is set when reading if the value is zero. The NGWAF API does not return the field for duration when doing a read operation if the default value is used (1 day or 86400 seconds). This update allows the Terraform provider to gracefully set the default value to allow for a successful Terraform import when the default value is used for a site alert.
+
 ### BUG FIXES:
 
 - fix(ngwaf/alerts): Ensure that FASTLY_TF_DISPLAY_SENSITIVE_FIELDS is respected ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))

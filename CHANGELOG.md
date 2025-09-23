@@ -13,7 +13,8 @@
 - fix(ngwaf/alerts): Ensure that FASTLY_TF_DISPLAY_SENSITIVE_FIELDS is respected ([#1106](https://github.com/fastly/terraform-provider-fastly/pull/1106))
 
 ### DEPENDENCIES:
-
+- build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
+- build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.37.0 to 2.38.1 ([#1108](https://github.com/fastly/terraform-provider-fastly/pull/1108))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
 
 ### DOCUMENTATION:

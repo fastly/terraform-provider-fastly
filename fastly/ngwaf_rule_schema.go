@@ -140,6 +140,60 @@ func resourceFastlyNGWAFRuleBase() *schema.Resource {
 				Description:      "Logical operator to apply to group conditions. Accepted values are `any` and `all`.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"any", "all"}, false)),
 			},
+			"multival_condition": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of multival conditions with nested logic. Each multival list must define a `field, operator, group_operator` and at least one condition.",
+				Elem: &schema.Resource{
+					Description: "Group of conditions using logical operators.",
+					Schema: map[string]*schema.Schema{
+						"condition": {
+							Type:        schema.TypeList,
+							Required:    true,
+							MinItems:    1,
+							Description: "A list of nested conditions in this list.",
+							Elem: &schema.Resource{
+								Description: "Nested condition inside a group.",
+								Schema: map[string]*schema.Schema{
+									"field": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Field to inspect (e.g., `name`, `value`, `signal_id`).",
+									},
+									"operator": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Operator to apply (e.g., `equals`, `contains`).",
+									},
+									"value": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "The value to test the field against.",
+									},
+								},
+							},
+						},
+						"field": {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Enums for multival condition field.. Accepted values are `post_parameter`, `query_parameter`, `request_cookie`, `request_header`, `response_header`, and `signal`.",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"post_parameter", "query_parameter", "request_cookie", "request_header", "response_header", "signal"}, false)),
+						},
+						"group_operator": {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Logical operator for the group. Accepted values are `any` and `all`.",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"any", "all"}, false)),
+						},
+						"operator": {
+							Type:             schema.TypeString,
+							Required:         true,
+							Description:      "Indicates whether the supplied conditions will check for existence or non-existence of matching field values. Accepted values are `exists` and `does_not_exist`.",
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{"exists", "does_not_exist"}, false)),
+						},
+					},
+				},
+			},
 			"request_logging": {
 				Type:             schema.TypeString,
 				Optional:         true,

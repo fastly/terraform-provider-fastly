@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(ngwaf/rules): add support for multival type conditions ([#1100](https://github.com/fastly/terraform-provider-fastly/pull/1100))
+
 ### BUG FIXES:
 
 - fix(ngwaf/thresholds): Make duration optional and set default when missing ([#1107](https://github.com/fastly/terraform-provider-fastly/pull/1107))

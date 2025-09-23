@@ -68,9 +68,10 @@ func expandNGWAFRuleGroupConditionsGeneric(
 	return groupConditions
 }
 
-func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[string]any, []map[string]any) {
+func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[string]any, []map[string]any, []map[string]any) {
 	var singles []map[string]any
 	var groups []map[string]any
+	var multivals []map[string]any
 
 	for _, item := range items {
 		switch item.Type {
@@ -101,10 +102,31 @@ func flattenNGWAFRuleConditionsGeneric(items []rules.ConditionItem) ([]map[strin
 
 				groups = append(groups, group)
 			}
+
+		case "multival":
+			if mc, ok := item.Fields.(rules.MultivalCondition); ok {
+				conds := make([]any, len(mc.Conditions))
+				for i, c := range mc.Conditions {
+					conds[i] = map[string]any{
+						"field":    c.Field,
+						"operator": c.Operator,
+						"value":    c.Value,
+					}
+				}
+
+				multival := map[string]any{
+					"field":          mc.Field,
+					"operator":       mc.Operator,
+					"group_operator": mc.GroupOperator,
+					"condition":      conds,
+				}
+
+				multivals = append(multivals, multival)
+			}
 		}
 	}
 
-	return singles, groups
+	return singles, groups, multivals
 }
 
 func flattenNGWAFRuleActionsGeneric(actions []rules.Action, isWorkspace bool) []map[string]any {

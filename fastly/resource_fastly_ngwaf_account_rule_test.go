@@ -30,6 +30,15 @@ func TestAccFastlyNGWAFAccountRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "request_logging", "sampled"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "group_operator", "all"),
 					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "action.0.type", "block"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.field", "request_header"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.operator", "exists"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.group_operator", "any"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.condition.0.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.condition.0.operator", "contains"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.condition.0.value", "Header-Sample"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.condition.1.field", "name"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.condition.1.operator", "equals"),
+					resource.TestCheckResourceAttr("fastly_ngwaf_account_rule.example", "multival_condition.0.condition.1.value", "X-API-Key"),
 				),
 			},
 			{
@@ -82,6 +91,24 @@ resource "fastly_ngwaf_account_rule" "example" {
       value    = "POST"
     }
   }
+
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "Header-Sample"
+    }
+
+    condition {
+      field    = "name"
+      operator = "equals"
+      value    = "X-API-Key"
+    }
+  }
 }
 `, description)
 }
@@ -113,6 +140,24 @@ resource "fastly_ngwaf_account_rule" "example" {
       field    = "method"
       operator = "equals"
       value    = "GET"
+    }
+  }
+
+  multival_condition {
+    field          = "request_header"
+    operator       = "exists"
+    group_operator = "any"
+
+    condition {
+      field    = "name"
+      operator = "equals"
+      value    = "Header-Sample-Updated"
+    }
+
+    condition {
+      field    = "name"
+      operator = "contains"
+      value    = "X-API-Key-Updated"
     }
   }
 }

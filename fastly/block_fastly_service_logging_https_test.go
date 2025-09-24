@@ -74,7 +74,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		MessageType:       gofastly.ToPointer("blank"),
 		Method:            gofastly.ToPointer("POST"),
 		Name:              gofastly.ToPointer("httpslogger2"),
-		Period:            gofastly.ToPointer(0),
+		Period:            gofastly.ToPointer(3),
 		RequestMaxBytes:   gofastly.ToPointer(1000),
 		RequestMaxEntries: gofastly.ToPointer(0),
 		ResponseCondition: gofastly.ToPointer(""),

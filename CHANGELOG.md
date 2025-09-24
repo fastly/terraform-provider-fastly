@@ -3,7 +3,7 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
-- feat(logging): add support for Period HTTPS logging endpoint ([#](https://github.com/fastly/terraform-provider-fastly/pull/))
+- feat(logging/https): add support for Period HTTPS logging endpoint ([#1097](https://github.com/fastly/terraform-provider-fastly/pull/1097))
 
 - feat(ngwaf/rules): add support for multival type conditions ([#1100](https://github.com/fastly/terraform-provider-fastly/pull/1100))
 

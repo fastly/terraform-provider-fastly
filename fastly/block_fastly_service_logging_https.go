@@ -96,7 +96,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     5,
-			Description: "How frequently the logs should be transferred, in seconds (Default 5)",
+			Description: "How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.",
 		},
 		"processing_region": {
 			Type:         schema.TypeString,

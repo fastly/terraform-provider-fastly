@@ -513,7 +513,7 @@ Optional:
 - `json_format` (String) Formats log entries as JSON. Can be either disabled (`0`), array of json (`1`), or newline delimited json (`2`)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `method` (String) HTTP method used for request. Can be either `POST` or `PUT`. Default `POST`
-- `period` (Number)  How frequently the logs should be transferred, in seconds. Default `3600`
+- `period` (Number) How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.
 - `processing_region` (String) Region where logs will be processed before streaming to BigQuery. Valid values are 'none', 'us' and 'eu'.
 - `request_max_bytes` (Number) The maximum number of bytes sent in one request
 - `request_max_entries` (Number) The maximum number of logs sent in one request

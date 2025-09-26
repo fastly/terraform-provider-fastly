@@ -26,6 +26,23 @@ func validateLoggingMessageType() schema.SchemaValidateDiagFunc {
 	}, false))
 }
 
+func validateLoggingCompression() schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice([]string{
+		"zstd",
+		"snappy",
+		"gzip-0",
+		"gzip-1",
+		"gzip-2",
+		"gzip-3",
+		"gzip-4",
+		"gzip-5",
+		"gzip-6",
+		"gzip-7",
+		"gzip-8",
+		"gzip-9",
+	}, false))
+}
+
 func validateLoggingCompressionCodec() schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(validation.StringInSlice([]string{
 		"zstd",

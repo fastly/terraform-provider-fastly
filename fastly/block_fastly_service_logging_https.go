@@ -34,6 +34,12 @@ func (h *HTTPSLoggingServiceAttributeHandler) Key() string {
 // GetSchema returns the resource schema.
 func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 	blockAttributes := map[string]*schema.Schema{
+		"compression": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Description:      "Whether to compress the logs. Valid values include  zstd, snappy, gzip-0, gzip-1, gzip-2, gzip-3, gzip-4, gzip-5, gzip-6, gzip-7, gzip-8, gzip-9",
+			ValidateDiagFunc: validateLoggingCompression(),
+		},
 		"compression_codec": {
 			Type:             schema.TypeString,
 			Optional:         true,
@@ -503,4 +509,61 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildDelete(httpsMap any, serviceI
 	}
 
 	return &opts
+}
+
+// compressionToAPIFields converts the compression field value to the API fields
+func compressionToAPIFields(compression string) (compresssionCodec *string, gzipLevel *int) {
+	if compression == "" {
+		return nil, nil
+	}
+	switch compression {
+	case "zstd":
+		return gofastly.ToPointer("zstd"), nil
+	case "snappy":
+		return gofastly.ToPointer("snappy"), nil
+	case "gzip-0":
+		return gofastly.ToPointer("gzip"), gofastly.ToPointer(0)
+	case "gzip-1":
+		return nil, gofastly.ToPointer(1)
+	case "gzip-2":
+		return nil, gofastly.ToPointer(2)
+	case "gzip-3":
+		return nil, gofastly.ToPointer(3)
+	case "gzip-4":
+		return nil, gofastly.ToPointer(4)
+	case "gzip-5":
+		return nil, gofastly.ToPointer(5)
+	case "gzip-6":
+		return nil, gofastly.ToPointer(6)
+	case "gzip-7":
+		return nil, gofastly.ToPointer(7)
+	case "gzip-8":
+		return nil, gofastly.ToPointer(8)
+	case "gzip-9":
+		return nil, gofastly.ToPointer(9)
+	default:
+		return nil, nil
+	}
+}
+
+// apiFieldsToCompression converts the API fields to the compression field value
+func apiFieldsToCompression(compressionCodec *string, gzipLevel *int) string {
+	if compressionCodec != nil && *compressionCodec != "" {
+		switch *compressionCodec {
+		case "zstd":
+			return "zstd"
+		case "snappy":
+			return "snappy"
+		case "gzip":
+			if gzipLevel != nil {
+				return fmt.Sprintf("gzip-%d", *gzipLevel)
+			}
+			return "gzip-3" // Default gzip level wgen codec is gzip but not specified
+		}
+	}
+
+	if gzipLevel != nil && *gzipLevel >= 0 && *gzipLevel <= 9 {
+		return fmt.Sprintf("gzip-%d", *gzipLevel)
+	}
+	return ""
 }

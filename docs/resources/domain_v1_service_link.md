@@ -11,6 +11,7 @@ description: |-
 Domain service links are for managing domains for services that are externally created. The link associates an existing service
 with an existing domain, but doesn't create or delete either resource.
 
+If you are managing your UDM domain with a service link, you may not also use a `resource_fastly_domain_v1` block as well.
 
 ## Example Usage
 

@@ -1,0 +1,21 @@
+---
+layout: "fastly"
+page_title: "Fastly: fastly_domain_v1_service_link"
+sidebar_current: "docs-fastly-resource-domain-service-link"
+description: |-
+  A link between a UDM domain and a service
+---
+
+# fastly_domain_v1_service_link
+
+Domain service links are for managing domains for services that are externally created. The link associates an existing service
+with an existing domain, but doesn't create or delete either resource.
+
+
+## Example Usage
+
+Basic usage:
+
+{{ tffile "examples/resources/domain_v1_service_link_basic_usage.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}

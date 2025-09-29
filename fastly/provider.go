@@ -55,6 +55,7 @@ func Provider() *schema.Provider {
 			"fastly_configstores":                            dataSourceFastlyConfigStores(),
 			"fastly_datacenters":                             dataSourceFastlyDatacenters(),
 			"fastly_dictionaries":                            dataSourceFastlyDictionaries(),
+			"fastly_domains_v1":                              dataSourceFastlyDomainsV1(),
 			"fastly_ip_ranges":                               dataSourceFastlyIPRanges(),
 			"fastly_kvstores":                                dataSourceFastlyKVStores(),
 			"fastly_ngwaf_alert_datadog_integration":         dataSourceFastlyNGWAFAlertDatadogIntegration(),

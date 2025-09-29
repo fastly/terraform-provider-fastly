@@ -93,10 +93,11 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Description: "The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
 		"period": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     5,
-			Description: "How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.",
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      5,
+			Description:  "How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.",
+			ValidateFunc: validation.IntAtLeast(1),
 		},
 		"processing_region": {
 			Type:         schema.TypeString,
@@ -365,6 +366,12 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, localState []any) []map[string]
 		}
 		if resource.RequestMaxEntries != nil {
 			data["request_max_entries"] = *resource.RequestMaxEntries
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
+		} else {
+			// Ensure period is always set in state, using default if API doesn't return it
+			data["period"] = 5
 		}
 		if resource.RequestMaxBytes != nil {
 			data["request_max_bytes"] = *resource.RequestMaxBytes

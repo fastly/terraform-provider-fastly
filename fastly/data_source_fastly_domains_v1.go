@@ -27,7 +27,7 @@ func dataSourceFastlyDomainsV1() *schema.Resource {
 						"fqdn": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The fully-qualified domain name for your domain. Can be created, but not updated.",
+							Description: "The fully-qualified domain name for your domain.",
 						},
 						"id": {
 							Type:        schema.TypeString,

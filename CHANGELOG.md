@@ -4,10 +4,9 @@
 
 ### ENHANCEMENTS:
 
+- feat(product_enablement): Add enable/disable support for API Discovery ([#1111](https://github.com/fastly/terraform-provider-fastly/pull/1111))
 - feat(domainsv1/data source): add support for the v1 domains data source ([#1112](https://github.com/fastly/terraform-provider-fastly/pull/1112))
-- feat(domainsv1/data source): corrected terminology in docs to use 'versionless domain' ([#1114](https://github.com/fastly/terraform-provider-fastly/pull/1114))
 - feat(service): 'domain' blocks are now optional ([#1113](https://github.com/fastly/terraform-provider-fastly/pull/1113))
-
 
 ### BUG FIXES:
 

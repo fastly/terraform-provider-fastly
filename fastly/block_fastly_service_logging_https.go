@@ -304,6 +304,18 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For HTTPS logging, period is not VCL-only, so we preserve it.
+func (h *HTTPSLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is NOT deleted for HTTPS logging as it's available for both VCL and Compute
+	}
+}
+
 // Delete deletes the resource.
 func (h *HTTPSLoggingServiceAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	opts := h.buildDelete(resource, d.Id(), serviceVersion)
@@ -369,9 +381,6 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, localState []any) []map[string]
 		}
 		if resource.Period != nil {
 			data["period"] = *resource.Period
-		} else {
-			// Ensure period is always set in state, using default if API doesn't return it
-			data["period"] = 5
 		}
 		if resource.RequestMaxBytes != nil {
 			data["request_max_bytes"] = *resource.RequestMaxBytes
@@ -471,9 +480,6 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 		opts.GzipLevel = gofastly.ToPointer(gl)
 	}
 
-	if p, ok := resource["period"].(int); ok && p != 0 {
-		opts.Period = gofastly.ToPointer(p)
-	}
 	// WARNING: The following fields shouldn't have an empty string passed.
 	// As it will cause the Fastly API to return an error.
 	// This is because go-fastly v7+ will not 'omitempty' due to pointer type.

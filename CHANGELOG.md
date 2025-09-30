@@ -4,6 +4,8 @@
 
 ### ENHANCEMENTS:
 
+- feat(service): 'domain' blocks are now optional ([#XXX](https://github.com/fastly/terraform-provider-fastly/pull/XXX))
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

@@ -3,6 +3,7 @@
 ### BREAKING:
 
 ### ENHANCEMENTS:
+- feat(logging/https): add support for Period HTTPS logging endpoint ([#1097](https://github.com/fastly/terraform-provider-fastly/pull/1097))
 
 - feat(product_enablement): Add enable/disable support for API Discovery ([#1111](https://github.com/fastly/terraform-provider-fastly/pull/1111))
 - feat(domainsv1/data source): add support for the v1 domains data source ([#1112](https://github.com/fastly/terraform-provider-fastly/pull/1112))

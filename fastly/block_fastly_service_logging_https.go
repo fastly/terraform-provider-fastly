@@ -92,6 +92,13 @@ func (h *HTTPSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The unique name of the HTTPS logging endpoint. It is important to note that changing this attribute will delete and recreate the resource",
 		},
+		"period": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      5,
+			Description:  "How frequently, in seconds, batches of log data are sent to the HTTPS endpoint. A value of 0 sends logs at the same interval as the default, which is 5 seconds.",
+			ValidateFunc: validation.IntAtLeast(1),
+		},
 		"processing_region": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -261,6 +268,9 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 	if v, ok := modified["json_format"]; ok {
 		opts.JSONFormat = gofastly.ToPointer(v.(string))
 	}
+	if v, ok := modified["period"]; ok {
+		opts.Period = gofastly.ToPointer(v.(int))
+	}
 	if v, ok := modified["placement"]; ok {
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
@@ -292,6 +302,18 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 		return err
 	}
 	return nil
+}
+
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For HTTPS logging, period is not VCL-only, so we preserve it.
+func (h *HTTPSLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is NOT deleted for HTTPS logging as it's available for both VCL and Compute
+	}
 }
 
 // Delete deletes the resource.
@@ -356,6 +378,9 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, localState []any) []map[string]
 		}
 		if resource.RequestMaxEntries != nil {
 			data["request_max_entries"] = *resource.RequestMaxEntries
+		}
+		if resource.Period != nil {
+			data["period"] = *resource.Period
 		}
 		if resource.RequestMaxBytes != nil {
 			data["request_max_bytes"] = *resource.RequestMaxBytes
@@ -434,6 +459,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) buildCreate(httpsMap any, serviceI
 		MessageType:       gofastly.ToPointer(resource["message_type"].(string)),
 		Method:            gofastly.ToPointer(resource["method"].(string)),
 		Name:              gofastly.ToPointer(resource["name"].(string)),
+		Period:            gofastly.ToPointer(resource["period"].(int)),
 		RequestMaxBytes:   gofastly.ToPointer(resource["request_max_bytes"].(int)),
 		RequestMaxEntries: gofastly.ToPointer(resource["request_max_entries"].(int)),
 		ServiceID:         serviceID,

@@ -397,9 +397,6 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, localState []any) []map[string]
 		if resource.JSONFormat != nil {
 			data["json_format"] = *resource.JSONFormat
 		}
-		if resource.Period != nil {
-			data["period"] = *resource.Period
-		}
 		if resource.Placement != nil {
 			data["placement"] = *resource.Placement
 		}

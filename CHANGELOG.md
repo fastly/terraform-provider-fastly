@@ -5,6 +5,8 @@
 ### ENHANCEMENTS:
 - feat(logging/https): add support for Period HTTPS logging endpoint ([#1097](https://github.com/fastly/terraform-provider-fastly/pull/1097))
 
+- feat(service): 'domain' blocks are now optional ([#1113](https://github.com/fastly/terraform-provider-fastly/pull/1113))
+
 ### BUG FIXES:
 
 ### DEPENDENCIES:

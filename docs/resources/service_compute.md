@@ -98,7 +98,6 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Required
 
-- `domain` (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - `name` (String) The unique name for the Service to create
 
 ### Optional
@@ -107,6 +106,7 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `backend` (Block Set) (see [below for nested schema](#nestedblock--backend))
 - `comment` (String) Description field for the service. Default `Managed by Terraform`
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
+- `domain` (Block Set) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - `healthcheck` (Block Set) (see [below for nested schema](#nestedblock--healthcheck))
 - `image_optimizer_default_settings` (Block Set, Max: 1) (see [below for nested schema](#nestedblock--image_optimizer_default_settings))
@@ -153,18 +153,6 @@ $ terraform import fastly_service_compute.demo xxxxxxxxxxxxxxxxxxxx@2
 - `id` (String) The ID of this resource.
 - `imported` (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
 - `staged_version` (Number) The currently staged version of your Fastly Service
-
-<a id="nestedblock--domain"></a>
-### Nested Schema for `domain`
-
-Required:
-
-- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
-
-Optional:
-
-- `comment` (String) An optional comment about the Domain.
-
 
 <a id="nestedblock--backend"></a>
 ### Nested Schema for `backend`
@@ -216,6 +204,18 @@ Optional:
 Read-Only:
 
 - `dictionary_id` (String) The ID of the dictionary
+
+
+<a id="nestedblock--domain"></a>
+### Nested Schema for `domain`
+
+Required:
+
+- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `comment` (String) An optional comment about the Domain.
 
 
 <a id="nestedblock--healthcheck"></a>

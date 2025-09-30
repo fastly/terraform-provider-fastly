@@ -217,7 +217,6 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 
 ### Required
 
-- `domain` (Block Set, Min: 1) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - `name` (String) The unique name for the Service to create
 
 ### Optional
@@ -232,6 +231,7 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `default_ttl` (Number) The default Time-to-live (TTL) for requests
 - `dictionary` (Block Set) (see [below for nested schema](#nestedblock--dictionary))
 - `director` (Block Set) (see [below for nested schema](#nestedblock--director))
+- `domain` (Block Set) A set of Domain names to serve as entry points for your Service (see [below for nested schema](#nestedblock--domain))
 - `dynamicsnippet` (Block Set) (see [below for nested schema](#nestedblock--dynamicsnippet))
 - `force_destroy` (Boolean) Services that are active cannot be destroyed. In order to destroy the Service, set `force_destroy` to `true`. Default `false`
 - `gzip` (Block Set) (see [below for nested schema](#nestedblock--gzip))
@@ -287,18 +287,6 @@ $ terraform import fastly_service_vcl.demo xxxxxxxxxxxxxxxxxxxx@2
 - `id` (String) The ID of this resource.
 - `imported` (Boolean) Used internally by the provider to temporarily indicate if the service is being imported, and is reset to false once the import is finished
 - `staged_version` (Number) The currently staged version of your Fastly Service
-
-<a id="nestedblock--domain"></a>
-### Nested Schema for `domain`
-
-Required:
-
-- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
-
-Optional:
-
-- `comment` (String) An optional comment about the Domain.
-
 
 <a id="nestedblock--acl"></a>
 ### Nested Schema for `acl`
@@ -414,6 +402,18 @@ Optional:
 - `retries` (Number) How many backends to search if it fails. Default `5`
 - `shield` (String) Selected POP to serve as a "shield" for backends. Valid values for `shield` are included in the [`GET /datacenters`](https://developer.fastly.com/reference/api/utils/datacenter/) API response
 - `type` (Number) Type of load balance group to use. Integer, 1 to 4. Values: `1` (random), `3` (hash), `4` (client). Default `1`
+
+
+<a id="nestedblock--domain"></a>
+### Nested Schema for `domain`
+
+Required:
+
+- `name` (String) The domain that this Service will respond to. It is important to note that changing this attribute will delete and recreate the resource.
+
+Optional:
+
+- `comment` (String) An optional comment about the Domain.
 
 
 <a id="nestedblock--dynamicsnippet"></a>

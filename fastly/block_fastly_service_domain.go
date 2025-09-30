@@ -34,7 +34,7 @@ func (h *DomainServiceAttributeHandler) Key() string {
 func (h *DomainServiceAttributeHandler) GetSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
-		Required:    true,
+		Optional:    true,
 		Description: "A set of Domain names to serve as entry points for your Service",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{

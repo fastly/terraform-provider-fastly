@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	gofastly "github.com/fastly/go-fastly/v12/fastly"
+	"github.com/fastly/go-fastly/v12/fastly/products/apidiscovery"
 	"github.com/fastly/go-fastly/v12/fastly/products/botmanagement"
 	"github.com/fastly/go-fastly/v12/fastly/products/brotlicompression"
 	"github.com/fastly/go-fastly/v12/fastly/products/ddosprotection"
@@ -157,6 +158,11 @@ func (h *ProductEnablementServiceAttributeHandler) GetSchema() *schema.Schema {
 			},
 		},
 	}
+	blockAttributes["api_discovery"] = &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Enable API Discovery support",
+	}
 
 	// NOTE: Min/MaxItems: 1 (to enforce only one product_enablement per service).
 	// lintignore:S018
@@ -291,6 +297,14 @@ func (h *ProductEnablementServiceAttributeHandler) Create(ctx context.Context, d
 		}
 	}
 
+	if resource["api_discovery"].(bool) {
+		log.Println("[DEBUG] api_discovery set")
+		_, err := apidiscovery.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+		if err != nil {
+			return fmt.Errorf("failed to enable api_discovery: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -377,6 +391,10 @@ func (h *ProductEnablementServiceAttributeHandler) Read(ctx context.Context, d *
 			ddp := localState[0].(map[string]any)["ddos_protection"].([]any)
 			result["ddos_protection"] = ddp
 
+		}
+
+		if _, err := apidiscovery.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
+			result["api_discovery"] = true
 		}
 
 		if _, err := ngwaf.Get(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID); err == nil {
@@ -646,6 +664,24 @@ func (h *ProductEnablementServiceAttributeHandler) Update(ctx context.Context, d
 		}
 	}
 
+	if v, ok := modified["api_discovery"]; ok {
+		if v.(bool) {
+			log.Println("[DEBUG] api_discovery will be enabled")
+			_, err := apidiscovery.Enable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			if err != nil {
+				return fmt.Errorf("failed to enable api_discovery: %w", err)
+			}
+		} else {
+			log.Println("[DEBUG] api_discovery will be disabled")
+			err := apidiscovery.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+			if err != nil {
+				if e := h.checkAPIError(err); e != nil {
+					return e
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -767,6 +803,13 @@ func (h *ProductEnablementServiceAttributeHandler) Delete(ctx context.Context, d
 		}
 	}
 
+	log.Println("[DEBUG] disable api_discovery")
+	err = apidiscovery.Disable(gofastly.NewContextForResourceID(ctx, d.Id()), conn, serviceID)
+	if err != nil {
+		if e := h.checkAPIError(err); e != nil {
+			return e
+		}
+	}
 	return nil
 }
 

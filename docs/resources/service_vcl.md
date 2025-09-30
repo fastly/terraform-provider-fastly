@@ -1165,6 +1165,7 @@ Optional:
 
 Optional:
 
+- `api_discovery` (Boolean) Enable API Discovery support
 - `bot_management` (Boolean) Enable Bot Management support
 - `brotli_compression` (Boolean) Enable Brotli Compression support
 - `ddos_protection` (Block List, Max: 1) DDoS Protection product (see [below for nested schema](#nestedblock--product_enablement--ddos_protection))

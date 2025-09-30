@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -419,8 +420,8 @@ func testAccCheckFastlyServiceVCLBackendAttributes(service *gofastly.ServiceDeta
 					// these ahead of time
 					h.CreatedAt = nil
 					h.UpdatedAt = nil
-					if !reflect.DeepEqual(w, h) {
-						return fmt.Errorf("bad match Backend match, expected (%#v), got (%#v)", w, h)
+					if diff := cmp.Diff(w, h); diff != "" {
+						return fmt.Errorf("bad match Backend match: %s", diff)
 					}
 					found++
 				}

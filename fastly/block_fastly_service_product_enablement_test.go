@@ -34,6 +34,7 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
     }
 
     product_enablement {
+      api_discovery         = false
       bot_management        = false
       brotli_compression    = true
       domain_inspector      = false
@@ -78,6 +79,7 @@ func TestAccFastlyServiceVCLProductEnablement_basic(t *testing.T) {
 		HealthCheck:         gofastly.ToPointer(""),
 		Hostname:            gofastly.ToPointer(backendAddress),
 		MaxConn:             gofastly.ToPointer(200),
+		PreferIPv6:          gofastly.ToPointer(false),
 		RequestCondition:    gofastly.ToPointer(""),
 		SSLCheckCert:        gofastly.ToPointer(true),
 		Weight:              gofastly.ToPointer(100),

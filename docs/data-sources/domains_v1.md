@@ -3,12 +3,12 @@ layout: "fastly"
 page_title: "Fastly: fastly_domains_v1"
 sidebar_current: "docs-fastly-datasource-fastly_domains_v1"
 description: |-
-  Get information on Fastly domains.
+  Get information on versionless domains.
 ---
 
 # fastly_domains_v1
 
-Use this data source to get information about Fastly domains.
+Use this data source to get information about versionless domains.
 
 ## Example Usage
 
@@ -16,13 +16,12 @@ Use this data source to get information about Fastly domains.
 data "fastly_domains_v1" "example" {
 }
 
-  output "all_domains" {
+output "all_domains" {
   value = data.fastly_domains_v1.example.domains
 }
 
 output "total_domains" {
   value = data.fastly_domains_v1.example.total
-  
 }
 ```
 

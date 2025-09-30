@@ -5,7 +5,18 @@
 ### ENHANCEMENTS:
 - feat(logging/https): add support for Period HTTPS logging endpoint ([#1097](https://github.com/fastly/terraform-provider-fastly/pull/1097))
 
+### BUG FIXES:
+
+### DEPENDENCIES:
+
+### DOCUMENTATION:
+
+## 8.2.0 (September 24, 2025)
+
+### ENHANCEMENTS:
+
 - feat(ngwaf/rules): add support for multival type conditions ([#1100](https://github.com/fastly/terraform-provider-fastly/pull/1100))
+- feat(domainsv1/data source): add support for the v1 domains data source ([#1112](https://github.com/fastly/terraform-provider-fastly/pull/1112))
 
 ### BUG FIXES:
 
@@ -18,11 +29,7 @@
 - build(deps): `github.com/hashicorp/terraform-plugin-sdk/v2` from 2.37.0 to 2.38.1 ([#1108](https://github.com/fastly/terraform-provider-fastly/pull/1108))
 - build(deps): `github.com/fastly/go-fastly/v11` from 11.3.1 to 12.0.0 ([#1104](https://github.com/fastly/terraform-provider-fastly/pull/1104))
 
-### DOCUMENTATION:
-
 ## 8.1.0 (September 17, 2025)
-
-### BREAKING:
 
 ### ENHANCEMENTS:
 

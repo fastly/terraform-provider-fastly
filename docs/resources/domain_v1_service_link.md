@@ -3,15 +3,15 @@ layout: "fastly"
 page_title: "Fastly: fastly_domain_v1_service_link"
 sidebar_current: "docs-fastly-resource-domain-service-link"
 description: |-
-  A link between a UDM domain and a service
+  A link between a versionless domain and a service
 ---
 
 # fastly_domain_v1_service_link
 
-Domain service links are for managing domains for services that are externally created. The link associates an existing service
+Domain service links are for managing versionless domains for services. The link associates an existing service
 with an existing domain, but doesn't create or delete either resource.
 
-If you are managing your UDM domain with a service link, you may not also use a `resource_fastly_domain_v1` block as well.
+If you are managing your versionless domain with a service link, you may not also use a `resource_fastly_domain_v1` block as well.
 
 ## Example Usage
 
@@ -34,7 +34,7 @@ resource "fastly_domain_v1_service_link" "example" {
 
 ### Required
 
-- `domain_id` (String) The Domain Identifier of the UDM being linked (UUID).
+- `domain_id` (String) The Domain Identifier of the versionless domain being linked (UUID).
 - `service_id` (String) The service_id associated with your domain
 
 ### Read-Only

@@ -25,7 +25,7 @@ func resourceFastlyDomainV1ServiceLink() *schema.Resource {
 			"domain_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The Domain Identifier of the UDM being linked (UUID).",
+				Description: "The Domain Identifier of the versionless domain being linked (UUID).",
 			},
 			"service_id": {
 				Type:        schema.TypeString,

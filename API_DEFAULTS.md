@@ -24,6 +24,10 @@ modifying a resource in the provider.
   match the default value, that value *does appear* in the response
   bodies returned by `GET`, `PUT`, and `PATCH` operations.
 
+## Terraform results
+
+This scenario matches Terraform's expectations.
+
 # Scenario B
 
 * The attribute has a documented default.
@@ -41,6 +45,15 @@ modifying a resource in the provider.
   match the default value, that value *does not appear* in the
   response bodies returned by `GET`, `PUT`, and `PATCH` operations.
 
+## Terraform results
+
+The last item in this scenario does not match Terraform's
+expectations: when the resource is read from the API (during import,
+during planning, or after creation/modification), the attribute will
+be missing. When the user executes `terraform plan` after any of these
+operations, Terraform will propose to set the value again, as it
+believes the value was unset/removed in the resource being managed.
+
 # Scenario C
 
 * The attribute has a documented default.
@@ -52,6 +65,16 @@ modifying a resource in the provider.
 
 * The attribute *always appears* in the response bodies returned by
   `GET`, `PUT`, and `PATCH` operations.
+
+## Terraform results
+
+The last item in this scenario does not match Terraform's
+expectations: when the resource is read from the API (during import,
+during planning, or after creation/modification), the attribute will
+be present even if the user did not include it in their HCL. When the
+user executes `terraform plan` after any of these operations,
+Terraform will propose to remove the value, as it believes the value
+was set in the resource being managed.
 
 # Scenario D
 
@@ -71,6 +94,16 @@ modifying a resource in the provider.
   match the default value, that value *does appear* in the response
   bodies returned by `GET`, `PUT`, and `PATCH` operations.
 
+## Terraform results
+
+The second-to-last item in this scenario does not match Terraform's
+expectations: when the resource is read from the API (during import,
+during planning, or after creation/modification), the attribute will
+be present even if the user did not include it in their HCL. When the
+user executes `terraform plan` after any of these operations,
+Terraform will propose to remove the value, as it believes the value
+was set in the resource being managed.
+
 # Scenario E
 
 * The attribute has a documented default.
@@ -84,3 +117,7 @@ modifying a resource in the provider.
 
 * The attribute *always appears* in the response bodies returned by
   `GET`, `PUT`, and `PATCH` operations.
+
+## Terraform results
+
+This scenario matches Terraform's expectations.

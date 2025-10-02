@@ -15,6 +15,14 @@ don't understand why Terraform thinks additional changes are necessary
 when their previous `terraform apply` process completed successfully
 and they haven't made changes to the objects outside of Terraform.
 
+If you are building or modifying a resource or data source in this
+provider and encounter an object attribute with default behavior which
+does not match any of the types listed below, you'll need guidance
+from the Fastly Developer Tools team before proceeding. If you are a
+Fastlyan, ask the team for help in the #customer-dev-tools channel in
+Slack. If you are not a Fastlyan, open an issue in this repository and
+describe the situation you have encountered.
+
 # Type A
 
 * The attribute has a documented default.
@@ -34,6 +42,8 @@ and they haven't made changes to the objects outside of Terraform.
   bodies returned by `GET`, `PUT`, and `PATCH` operations.
 
 ## Examples
+
+TBD
 
 ## Terraform expectations
 
@@ -59,6 +69,8 @@ This type matches Terraform's expectations.
 
 ## Examples
 
+TBD
+
 ## Terraform expectations
 
 The last two items in this type does not match Terraform's
@@ -82,6 +94,8 @@ believes the value was unset/removed in the object being managed.
   `GET`, `PUT`, and `PATCH` operations.
 
 ## Examples
+
+TBD
 
 ## Terraform expectations
 
@@ -113,6 +127,8 @@ was set outside of Terraform in the object being managed.
   bodies returned by `GET`, `PUT`, and `PATCH` operations.
 
 ## Examples
+
+TBD
 
 ## Terraform expectations
 

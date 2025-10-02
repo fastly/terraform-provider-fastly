@@ -1,19 +1,19 @@
 # Handling API default values
 
 The Fastly control plane API is, unfortunately, inconsistent in its
-handling of default values for attributes of resources. Some of the
+handling of default values for attributes of objects. Some of the
 inconsistent behaviors generate unwelcome interactions with
-Terraform's expectations of resource states, so this document provides
+Terraform's expectations of object states, so this document provides
 guidance for how to handle various scenarios when creating or
-modifying a resource in the provider.
+modifying a object in the provider.
 
 The goal of this guide is to eliminate, wherever possible, situations
-where a user of the provider creates or modifies a resource and then
+where a user of the provider creates or modifies a object and then
 immediately sees 'intended changes' when executing `terraform
 plan`. Users are frustrated and confused when this occurs, as they
 don't understand why Terraform thinks additional changes are necessary
 when their previous `terraform apply` process completed successfully
-and they haven't made changes to the resources outside of Terraform.
+and they haven't made changes to the objects outside of Terraform.
 
 # Type A
 
@@ -21,9 +21,9 @@ and they haven't made changes to the resources outside of Terraform.
 
 * The default is applied when the user does not provide a value, or
   provides a value of `null`, for the attribute in a `POST` operation
-  (creating the resource), and when the user sets the attribute's
+  (creating the object), and when the user sets the attribute's
   value to `null` in a `PUT` or `PATCH` operation (updating the
-  resource).
+  object).
 
 * When the default is in effect, the attribute *does not appear* in
   the response bodies returned by `GET`, `PUT`, and `PATCH`
@@ -45,9 +45,9 @@ This type matches Terraform's expectations.
 
 * The default is applied when the user does not provide a value, or
   provides a value of `null`, for the attribute in a `POST` operation
-  (creating the resource), and when the user sets the attribute's
+  (creating the object), and when the user sets the attribute's
   value to `null` in a `PUT` or `PATCH` operation (updating the
-  resource).
+  object).
 
 * When the default is in effect, the attribute *does not appear* in
   the response bodies returned by `GET`, `PUT`, and `PATCH`
@@ -62,11 +62,11 @@ This type matches Terraform's expectations.
 ## Terraform expectations
 
 The last two items in this type does not match Terraform's
-expectations: when the resource is read from the API (during import,
+expectations: when the object is read from the API (during import,
 during planning, or after creation/modification), the attribute will
 be missing. When the user executes `terraform plan` after any of these
 operations, Terraform will propose to set the value again, as it
-believes the value was unset/removed in the resource being managed.
+believes the value was unset/removed in the object being managed.
 
 # Type C
 
@@ -74,9 +74,9 @@ believes the value was unset/removed in the resource being managed.
 
 * The default is applied when the user does not provide a value, or
   provides a value of `null`, for the attribute in a `POST` operation
-  (creating the resource), and when the user sets the attribute's
+  (creating the object), and when the user sets the attribute's
   value to `null` in a `PUT` or `PATCH` operation (updating the
-  resource).
+  object).
 
 * The attribute *always appears* in the response bodies returned by
   `GET`, `PUT`, and `PATCH` operations.
@@ -86,12 +86,12 @@ believes the value was unset/removed in the resource being managed.
 ## Terraform expectations
 
 The last item in this type does not match Terraform's
-expectations: when the resource is read from the API (during import,
+expectations: when the object is read from the API (during import,
 during planning, or after creation/modification), the attribute will
 be present even if the user did not include it in their HCL. When the
 user executes `terraform plan` after any of these operations,
 Terraform will propose to remove the value, as it believes the value
-was set outside of Terraform in the resource being managed.
+was set outside of Terraform in the object being managed.
 
 # Type D
 
@@ -99,9 +99,9 @@ was set outside of Terraform in the resource being managed.
 
 * The default is applied when the user does not provide a value, or
   provides a value of `null`, for the attribute in a `POST` operation
-  (creating the resource), and when the user sets the attribute's
+  (creating the object), and when the user sets the attribute's
   value to `null` in a `PUT` or `PATCH` operation (updating the
-  resource).
+  object).
 
 * When the default is in effect, the attribute *does appear* in the
   response bodies returned by `GET`, `PUT`, and `PATCH` operations,
@@ -117,20 +117,20 @@ was set outside of Terraform in the resource being managed.
 ## Terraform expectations
 
 The second-to-last item in this type does not match Terraform's
-expectations: when the resource is read from the API (during import,
+expectations: when the object is read from the API (during import,
 during planning, or after creation/modification), the attribute will
 be present even if the user did not include it in their HCL. When the
 user executes `terraform plan` after any of these operations,
 Terraform will propose to remove the value, as it believes the value
-was set outside of Terraform in the resource being managed.
+was set outside of Terraform in the object being managed.
 
 # Type E
 
 * The attribute has a documented default.
 
 * The attribute is not optional, it must always be included in the
-  request body in `POST` operations (creating the resource), and
-  `PUT`, and `PATCH` operations (updating the resource).
+  request body in `POST` operations (creating the object), and
+  `PUT`, and `PATCH` operations (updating the object).
 
 * The API accepts the 'base' value for the attribute's type (empty
   string for string attributes, zero for numeric attributes) but
@@ -158,11 +158,11 @@ This type matches Terraform's expectations.
   `PATCH` operation).
 
 * When a value for one attribute is provided in the request body of a
-  `POST` operation (creating the resource), the API may set the other
+  `POST` operation (creating the object), the API may set the other
   attribute to a default value derived from the provided value.
 
 * When a value for one attribute is provided in the request body of a
-  `PUT` or `PATCH` operation (updating the resource), the API may
+  `PUT` or `PATCH` operation (updating the object), the API may
   change the value of the other attribute to a value derived from the
   provided value.
 
@@ -177,11 +177,11 @@ This type matches Terraform's expectations.
 ## Terraform expectations
 
 The third and fourth items in this type do not match Terraform's
-expectations: when the resource is read from the API (during import,
+expectations: when the object is read from the API (during import,
 during planning, or after creation/modification), one or both of the
 attributes will be present even if the user did not include them in
 their HCL. In addition, the value of one of the attributes may have
 changed since the last time it was read. When the user executes
 `terraform plan` after any of these operations, Terraform will propose
 to change or remove the value, as it believes the value was modified
-(outside of Terraform) in the resource being managed.
+(outside of Terraform) in the object being managed.

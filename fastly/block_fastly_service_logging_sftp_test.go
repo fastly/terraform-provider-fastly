@@ -103,7 +103,6 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		Placement:        gofastly.ToPointer("none"),
 		Port:             gofastly.ToPointer(22),
 		SSHKnownHosts:    gofastly.ToPointer("sftp3.example.com"),
-		SecretKey:        gofastly.ToPointer(""),
 		ServiceVersion:   gofastly.ToPointer(1),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
 		User:             gofastly.ToPointer("user3"),

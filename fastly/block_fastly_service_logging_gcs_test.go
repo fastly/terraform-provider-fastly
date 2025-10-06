@@ -40,7 +40,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		SecretKey:         gofastly.ToPointer(secretKey),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		User:              gofastly.ToPointer("email@example.com"),
+		User:              gofastly.ToPointer("email@myTestDomain1.com"),
 		ProcessingRegion:  gofastly.ToPointer("us"),
 	}
 
@@ -60,7 +60,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("error_response_5XX"),
 		SecretKey:         gofastly.ToPointer(secretKey),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		User:              gofastly.ToPointer("email@example.com"),
+		User:              gofastly.ToPointer("email@myTestDomain1.com"),
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
@@ -80,7 +80,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 		ResponseCondition: gofastly.ToPointer("ok_response_2XX"),
 		SecretKey:         gofastly.ToPointer(secretKey),
 		TimestampFormat:   gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		User:              gofastly.ToPointer("email@example.com"),
+		User:              gofastly.ToPointer("email@myTestDomain1.com"),
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
@@ -99,7 +99,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 		ProjectID:        gofastly.ToPointer("project-id3"),
 		SecretKey:        gofastly.ToPointer(secretKey),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		User:             gofastly.ToPointer("email@example.com"),
+		User:             gofastly.ToPointer("email@myTestDomain1.com"),
 		ProcessingRegion: gofastly.ToPointer("none"),
 	}
 
@@ -163,7 +163,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic_compute(t *testing.T) {
 		ProjectID:        gofastly.ToPointer("project-id"),
 		SecretKey:        gofastly.ToPointer(secretKey),
 		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
-		User:             gofastly.ToPointer("email@example.com"),
+		User:             gofastly.ToPointer("email@myTestDomain1.com"),
 		ProcessingRegion: gofastly.ToPointer("us"),
 	}
 
@@ -305,7 +305,7 @@ resource "fastly_service_vcl" "foo" {
 
   logging_gcs {
     name = "test-gcs-1"
-    user = "email@example.com"
+    user = "email@myTestDomain1.com"
     bucket_name = "bucketname"
     account_name = "service-account"
     project_id = "project-id"
@@ -355,7 +355,7 @@ resource "fastly_service_compute" "foo" {
     project_id = "project-id"
     secret_key = %q
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    user = "email@example.com"
+    user = "email@myTestDomain1.com"
     processing_region = "us"
   }
 
@@ -401,7 +401,7 @@ resource "fastly_service_vcl" "foo" {
 
   logging_gcs {
     name = "test-gcs-1"
-    user = "email@example.com"
+    user = "email@myTestDomain1.com"
     bucket_name = "bucketname"
     account_name = "service-account"
     project_id = "project-id1"
@@ -419,7 +419,7 @@ resource "fastly_service_vcl" "foo" {
 
   logging_gcs {
     name = "test-gcs-2"
-    user = "email@example.com"
+    user = "email@myTestDomain1.com"
     bucket_name = "bucketname"
     account_name = "service-account"
     project_id = "project-id2"
@@ -488,7 +488,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 			remote: []*gofastly.GCS{
 				{
 					Name:             gofastly.ToPointer("GCS collector"),
-					User:             gofastly.ToPointer("email@example.com"),
+					User:             gofastly.ToPointer("email@myTestDomain1.com"),
 					Bucket:           gofastly.ToPointer("bucketname"),
 					SecretKey:        gofastly.ToPointer(secretKey),
 					Format:           gofastly.ToPointer(LoggingGCSDefaultFormat),
@@ -505,7 +505,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 			local: []map[string]any{
 				{
 					"name":              "GCS collector",
-					"user":              "email@example.com",
+					"user":              "email@myTestDomain1.com",
 					"bucket_name":       "bucketname",
 					"secret_key":        secretKey,
 					"message_type":      "classic",
@@ -562,7 +562,7 @@ resource "fastly_service_vcl" "foo" {
   name = "%s"
 
   domain {
-    name    = "fastly-test.example.com"
+    name    = "fastly-test.myTestDomain1.com"
     comment = "test"
   }
 
@@ -573,7 +573,7 @@ resource "fastly_service_vcl" "foo" {
 
   logging_gcs {
     name               = "test-gcs-3"
-    user               = "email@example.com"
+    user               = "email@myTestDomain1.com"
     bucket_name        = "bucketname"
     secret_key         = %q
     path               = "/3XX/"

@@ -1,6 +1,7 @@
 ## [UNRELEASED]
 
 ### BREAKING:
+- feat(logging/compression): merged the 'gzip_level' and 'compression' logging attributes into a single 'compression' attribute ([#1117](https://github.com/fastly/terraform-provider-fastly/pull/1117))
 
 ### ENHANCEMENTS:
 

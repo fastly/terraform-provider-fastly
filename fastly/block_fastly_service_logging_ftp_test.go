@@ -42,6 +42,7 @@ func TestAccFastlyServiceVCL_logging_ftp_basic(t *testing.T) {
 
 	log1AfterUpdate := gofastly.FTP{
 		Address:           gofastly.ToPointer("ftp2.example.com"),
+		CompressionCodec:  nil,
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(4),
@@ -235,7 +236,7 @@ resource "fastly_service_compute" "foo" {
     port = 27
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     message_type = "classic"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -273,7 +274,7 @@ resource "fastly_service_vcl" "foo" {
     port = 27
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     placement = "none"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -305,7 +306,7 @@ resource "fastly_service_vcl" "foo" {
     public_key = file("test_fixtures/fastly_test_publickey")
     path = "/path"
     format = %q
-    gzip_level = 4
+    compression = "gzip-4"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     placement = "none"
   }
@@ -321,7 +322,7 @@ resource "fastly_service_vcl" "foo" {
     format = %q
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     placement = "none"
-    compression_codec = "zstd"
+    compression = "zstd"
   }
 
   force_destroy = true
@@ -365,13 +366,12 @@ func TestResourceFastlyFlattenFTP(t *testing.T) {
 					"path":              "/path",
 					"period":            3600,
 					"port":              21,
-					"gzip_level":        0,
 					"format_version":    2,
 					"format":            LoggingFTPDefaultFormat,
 					"timestamp_format":  "%Y-%m-%dT%H:%M:%S.000",
 					"placement":         "none",
 					"message_type":      "classic",
-					"compression_codec": "zstd",
+					"compression":       "zstd",
 					"processing_region": "eu",
 				},
 			},

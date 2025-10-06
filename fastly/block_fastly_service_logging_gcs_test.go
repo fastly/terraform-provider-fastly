@@ -47,6 +47,7 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 	gcsLogOneUpdated := gofastly.GCS{
 		AccountName:       gofastly.ToPointer("service-account"),
 		Bucket:            gofastly.ToPointer("bucketname"),
+		CompressionCodec:  nil,
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(1),
@@ -286,7 +287,7 @@ resource "fastly_service_vcl" "foo" {
     format_version = 2
     placement = "none"
     response_condition = "error_response_5XX"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -318,7 +319,7 @@ resource "fastly_service_compute" "foo" {
   logging_gcs {
     account_name = "service-account"
     bucket_name = "bucketname"
-    compression_codec = "zstd"
+    compression = "zstd"
     name = "test-gcs-1"
     path = "/5XX/"
     period = 12
@@ -380,7 +381,7 @@ resource "fastly_service_vcl" "foo" {
     period = 12
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     format = %q
-    gzip_level = 1
+    compression = "gzip-1"
     format_version = 2
     placement = "none"
     response_condition = "error_response_5XX"
@@ -401,7 +402,7 @@ resource "fastly_service_vcl" "foo" {
     format_version = 2
     placement = "none"
     response_condition = "ok_response_2XX"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "none"
   }
 
@@ -482,8 +483,7 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 					"format":            LoggingGCSDefaultFormat,
 					"format_version":    2,
 					"period":            3600,
-					"gzip_level":        0,
-					"compression_codec": "zstd",
+					"compression":       "zstd",
 					"account_name":      "service-account",
 					"project_id":        "project-id",
 					"processing_region": "eu",

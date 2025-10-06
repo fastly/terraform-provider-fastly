@@ -41,6 +41,7 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 
 	blobStorageLogOneUpdated := gofastly.BlobStorage{
 		AccountName:       gofastly.ToPointer("test"),
+		CompressionCodec:  nil,
 		Container:         gofastly.ToPointer("fastly"),
 		FileMaxBytes:      gofastly.ToPointer(1048576),
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
@@ -321,7 +322,7 @@ resource "fastly_service_vcl" "foo" {
     placement = "none"
     response_condition = "error_response_5XX"
     file_max_bytes     = 1048576
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -352,7 +353,7 @@ resource "fastly_service_compute" "foo" {
 
   logging_blobstorage {
     account_name = "test"
-    compression_codec = "zstd"
+    compression = "zstd"
     container = "fastly"
     file_max_bytes     = 1048576
     message_type = "blank"
@@ -415,7 +416,7 @@ resource "fastly_service_vcl" "foo" {
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     public_key = file("test_fixtures/fastly_test_publickey")
     format = %q
-    gzip_level = 1
+    compression = "gzip-1"
     format_version = 2
     message_type = "blank"
     placement = "none"
@@ -438,7 +439,7 @@ resource "fastly_service_vcl" "foo" {
     placement = "none"
     response_condition = "ok_response_2XX"
     file_max_bytes     = 2097152
-    compression_codec  = "zstd"
+    compression  = "zstd"
   }
 
   force_destroy = true
@@ -539,12 +540,11 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 					"public_key":         "test-public-key",
 					"format":             LoggingBlobStorageDefaultFormat,
 					"format_version":     2,
-					"gzip_level":         0,
 					"message_type":       "classic",
 					"placement":          "none",
 					"response_condition": "error_response",
 					"file_max_bytes":     1048576,
-					"compression_codec":  "zstd",
+					"compression":        "zstd",
 					"processing_region":  "eu",
 				},
 			},

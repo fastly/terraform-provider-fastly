@@ -43,6 +43,7 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 	log1AfterUpdate := gofastly.Openstack{
 		AccessKey:         gofastly.ToPointer("s3cr3tupdate"),
 		BucketName:        gofastly.ToPointer("bucketupdate"),
+		CompressionCodec:  nil,
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(1),
@@ -233,7 +234,7 @@ resource "fastly_service_vcl" "foo" {
     placement = "none"
 	timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -277,7 +278,7 @@ resource "fastly_service_vcl" "foo" {
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
     message_type = "blank"
-    gzip_level = 1
+    compression = "gzip-1"
     period = 3601
   }
 
@@ -293,7 +294,7 @@ resource "fastly_service_vcl" "foo" {
     placement = "none"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     response_condition = "response_condition_test"
-    compression_codec = "zstd"
+    compression = "zstd"
   }
 
   force_destroy = true
@@ -328,7 +329,7 @@ resource "fastly_service_compute" "foo" {
     public_key = file("test_fixtures/fastly_test_publickey")
     path = "/"
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -384,8 +385,7 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"response_condition": "always",
 					"period":             3600,
-					"gzip_level":         0,
-					"compression_codec":  "zstd",
+					"compression":        "zstd",
 					"processing_region":  "eu",
 				},
 			},

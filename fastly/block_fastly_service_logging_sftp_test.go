@@ -45,6 +45,7 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 
 	log1AfterUpdate := gofastly.SFTP{
 		Address:           gofastly.ToPointer("sftp.example.com"),
+		CompressionCodec:  nil,
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(3),
@@ -262,7 +263,7 @@ resource "fastly_service_compute" "foo" {
     path = "/"
     ssh_known_hosts = "sftp.example.com"
     message_type = "classic"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -308,7 +309,7 @@ resource "fastly_service_vcl" "foo" {
     message_type = "classic"
     placement = "none"
     response_condition = "response_condition_test"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
   force_destroy = true
@@ -351,7 +352,7 @@ resource "fastly_service_vcl" "foo" {
     message_type = "blank"
     response_condition = "response_condition_test"
     placement = "none"
-    gzip_level = 3
+    compression = "gzip-3"
   }
 
   logging_sftp {
@@ -366,7 +367,7 @@ resource "fastly_service_vcl" "foo" {
     message_type = "loggly"
     response_condition = "response_condition_test"
     placement = "none"
-    compression_codec = "zstd"
+    compression = "zstd"
   }
   force_destroy = true
 }`, name, domain, format, format)
@@ -441,14 +442,13 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 					"format":             LoggingSFTPDefaultFormat,
 					"password":           "password",
 					"message_type":       "classic",
-					"gzip_level":         0,
 					"format_version":     2,
 					"period":             3600,
 					"port":               22,
 					"response_condition": "response_condition",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
 					"placement":          "none",
-					"compression_codec":  "zstd",
+					"compression":        "zstd",
 					"processing_region":  "eu",
 				},
 			},

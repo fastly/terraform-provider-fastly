@@ -43,6 +43,7 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 	log1AfterUpdate := gofastly.DigitalOcean{
 		AccessKey:         gofastly.ToPointer("accessupdate"),
 		BucketName:        gofastly.ToPointer("bucketupdate"),
+		CompressionCodec:  nil,
 		Domain:            gofastly.ToPointer("nyc4.digitaloceanspaces.com"),
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
@@ -235,7 +236,7 @@ resource "fastly_service_vcl" "foo" {
     message_type = "classic"
     placement = "none"
     response_condition = "response_condition_test"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -277,7 +278,7 @@ resource "fastly_service_vcl" "foo" {
     path = "new/"
     period = 3601
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    gzip_level = 2
+    compression = "gzip-2"
     format = %q
     message_type = "blank"
     placement = "none"
@@ -298,7 +299,7 @@ resource "fastly_service_vcl" "foo" {
     message_type = "classic"
     placement = "none"
     response_condition = "response_condition_test"
-    compression_codec = "zstd"
+    compression = "zstd"
   }
 
   force_destroy = true
@@ -336,7 +337,7 @@ resource "fastly_service_compute" "foo" {
     period = 3600
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
     message_type = "classic"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -389,13 +390,12 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 					"path":               "/",
 					"period":             3600,
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"gzip_level":         0,
 					"format":             LoggingDigitalOceanDefaultFormat,
 					"format_version":     2,
 					"message_type":       "classic",
 					"placement":          "none",
 					"response_condition": "always",
-					"compression_codec":  "zstd",
+					"compression":        "zstd",
 					"processing_region":  "eu",
 				},
 			},

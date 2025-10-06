@@ -45,21 +45,11 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 			Required:    true,
 			Description: "The name of the bucket in which to store the logs",
 		},
-		"compression_codec": {
+		"compression": {
 			Type:             schema.TypeString,
 			Optional:         true,
-			Description:      `The codec used for compression of your logs. Valid values are zstd, snappy, and gzip. If the specified codec is "gzip", gzip_level will default to 3. To specify a different level, leave compression_codec blank and explicitly set the level using gzip_level. Specifying both compression_codec and gzip_level in the same API request will result in an error.`,
-			ValidateDiagFunc: validateLoggingCompressionCodec(),
-		},
-		"gzip_level": {
-			Type:     schema.TypeInt,
-			Optional: true,
-			// NOTE: The default represents an unset value
-			// We use this instead of zero because the zero value for an int type is
-			// actually a valid value for the API. The API will attempt to default to
-			// zero if nothing is set by the user in their TF configuration.
-			Default:     -1,
-			Description: GzipLevelDescription,
+			Description:      CompressionDescription,
+			ValidateDiagFunc: validateLoggingCompression(),
 		},
 		"message_type": {
 			Type:             schema.TypeString,
@@ -157,10 +147,19 @@ func (h *GCSLoggingServiceAttributeHandler) GetSchema() *schema.Schema {
 // Create creates the resource.
 func (h *GCSLoggingServiceAttributeHandler) Create(ctx context.Context, d *schema.ResourceData, resource map[string]any, serviceVersion int, conn *gofastly.Client) error {
 	vla := h.getVCLLoggingAttributes(resource)
+
+	// Convert the compression field to API fields
+	var compressionCodec *string
+	var gzipLevel *int
+	if compression, ok := resource["compression"].(string); ok && compression != "" {
+		compressionCodec, gzipLevel = CompressionToAPIFields(compression)
+	}
+
 	opts := gofastly.CreateGCSInput{
 		Bucket:           gofastly.ToPointer(resource["bucket_name"].(string)),
-		CompressionCodec: gofastly.ToPointer(resource["compression_codec"].(string)),
+		CompressionCodec: compressionCodec,
 		Format:           gofastly.ToPointer(vla.format),
+		GzipLevel:        gzipLevel,
 		MessageType:      gofastly.ToPointer(resource["message_type"].(string)),
 		Name:             gofastly.ToPointer(resource["name"].(string)),
 		Path:             gofastly.ToPointer(resource["path"].(string)),
@@ -172,14 +171,6 @@ func (h *GCSLoggingServiceAttributeHandler) Create(ctx context.Context, d *schem
 		TimestampFormat:  gofastly.ToPointer(resource["timestamp_format"].(string)),
 		User:             gofastly.ToPointer(resource["user"].(string)),
 		ProcessingRegion: gofastly.ToPointer(resource["processing_region"].(string)),
-	}
-
-	// NOTE: go-fastly v7+ expects a pointer, so TF can't set the zero type value.
-	// If we set a default value for an attribute, then it will be sent to the API.
-	// In some scenarios this can cause the API to reject the request.
-	// For example, configuring compression_codec + gzip_level is invalid.
-	if gl, ok := resource["gzip_level"].(int); ok && gl != -1 {
-		opts.GzipLevel = gofastly.ToPointer(gl)
 	}
 
 	// WARNING: The following fields shouldn't have an empty string passed.
@@ -262,11 +253,10 @@ func (h *GCSLoggingServiceAttributeHandler) Update(ctx context.Context, d *schem
 	if v, ok := modified["format_version"]; ok {
 		opts.FormatVersion = gofastly.ToPointer(v.(int))
 	}
-	if v, ok := modified["compression_codec"]; ok {
-		opts.CompressionCodec = gofastly.ToPointer(v.(string))
-	}
-	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+	if v, ok := modified["compression"]; ok {
+		compressionCodec, gzipLevel := CompressionToAPIFields(v.(string))
+		opts.CompressionCodec = compressionCodec
+		opts.GzipLevel = gzipLevel
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.ToPointer(v.(string))
@@ -319,32 +309,9 @@ func (h *GCSLoggingServiceAttributeHandler) Delete(ctx context.Context, d *schem
 }
 
 // flattenGCS models data into format suitable for saving to Terraform state.
-func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
+func flattenGCS(remoteState []*gofastly.GCS, _ []any) []map[string]any {
 	var result []map[string]any
 	for _, resources := range remoteState {
-		// Avoid setting gzip_level to the API default of zero if originally unset.
-		// This avoids an unnecessary diff where the local state would have been
-		// updated to zero and so would be different from the -1 default set.
-		// As the user never set the attribute we don't want to show a diff to say
-		// it should be zero according to the API.
-		//
-		// NOTE: Ideally the local state would be updated when .Create() is called.
-		// e.g. we'd check if the value is -1 for gzip_level and set it in state as
-		// zero instead. This way we could avoid having to do this check here.
-		// The reason that's not possible (or not ideal at least) is because Create
-		// is called multiple times (once for each block defined in configuration)
-		// while the setting of the state must be done holistically, and so what
-		// that means is, if we did the above suggestion we would be resetting the
-		// entire state object multiple times, where as here we're only ever setting
-		// it once.
-		for _, s := range state {
-			v := s.(map[string]any)
-			if resources.Name != nil && v["name"].(string) == *resources.Name && v["gzip_level"].(int) == -1 {
-				resources.GzipLevel = gofastly.ToPointer(v["gzip_level"].(int))
-				break
-			}
-		}
-
 		data := map[string]any{}
 
 		if resources.Name != nil {
@@ -371,9 +338,6 @@ func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 		if resources.Period != nil {
 			data["period"] = *resources.Period
 		}
-		if resources.GzipLevel != nil {
-			data["gzip_level"] = *resources.GzipLevel
-		}
 		if resources.ResponseCondition != nil {
 			data["response_condition"] = *resources.ResponseCondition
 		}
@@ -392,9 +356,14 @@ func flattenGCS(remoteState []*gofastly.GCS, state []any) []map[string]any {
 		if resources.Placement != nil {
 			data["placement"] = *resources.Placement
 		}
-		if resources.CompressionCodec != nil {
-			data["compression_codec"] = *resources.CompressionCodec
+
+		// compression represents the combined value of the compression_codec and gzip_level
+		// attributes that we will need to parse to the API accordingly
+		compression := APIFieldsToCompression(resources.CompressionCodec, resources.GzipLevel)
+		if compression != "" {
+			data["compression"] = compression
 		}
+
 		if resources.ProcessingRegion != nil {
 			data["processing_region"] = *resources.ProcessingRegion
 		}

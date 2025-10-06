@@ -67,6 +67,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ContentType:       gofastly.ToPointer(""),
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
+		CompressionCodec:  nil,
 		GzipLevel:         gofastly.ToPointer(5),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
@@ -88,6 +89,7 @@ func TestAccFastlyServiceVCL_httpslogging_basic(t *testing.T) {
 		ContentType:       gofastly.ToPointer(""),
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
+		CompressionCodec:  nil,
 		GzipLevel:         gofastly.ToPointer(0),
 		HeaderName:        gofastly.ToPointer(""),
 		HeaderValue:       gofastly.ToPointer(""),
@@ -314,7 +316,7 @@ resource "fastly_service_vcl" "foo" {
 		method             = "PUT"
 		period			   = 10
 		url                = "https://example.com/logs/1"
-		compression_codec = "zstd"
+		compression = "zstd"
     processing_region = "us"
 	}
 
@@ -345,9 +347,9 @@ resource "fastly_service_compute" "foo" {
 		name               = "httpslogger"
 		method             = "PUT"
 		url                = "https://example.com/logs/1"
-		compression_codec = "zstd"
-		period  		  = 300
-        processing_region = "us"
+		compression        = "zstd"
+		period             = 300
+		processing_region  = "us"
 	}
 
   package {
@@ -380,7 +382,7 @@ resource "fastly_service_vcl" "foo" {
 		method             = "POST"
 		period			   = 30
 		url                = "https://example.com/logs/1"
-		compression_codec = "snappy"
+		compression = "snappy"
 	}
 
 	logging_https {
@@ -390,7 +392,7 @@ resource "fastly_service_vcl" "foo" {
 		url                = "https://example.com/logs/2"
 		period			   = 60
 		request_max_bytes  = 1000
-		gzip_level				 = 5
+		compression = "gzip-5"
 	}
 	force_destroy = true
 }`, name, domain, format, format)
@@ -425,12 +427,11 @@ func TestResourceFastlyFlattenHTTPS(t *testing.T) {
 					"url":                 "https://example.com/logs",
 					"request_max_entries": 10,
 					"request_max_bytes":   10,
-					"compression_codec":   "zstd",
+					"compression":         "zstd",
 					"content_type":        "application/json",
 					"message_type":        "blank",
 					"format":              LoggingHTTPSDefaultFormat,
 					"format_version":      2,
-					"gzip_level":          0,
 					"period":              5,
 					"processing_region":   "eu",
 				},

@@ -44,6 +44,7 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 	log1AfterUpdate := gofastly.Cloudfiles{
 		AccessKey:         gofastly.ToPointer("secretupdate"),
 		BucketName:        gofastly.ToPointer("bucketupdate"),
+		CompressionCodec:  nil,
 		Format:            gofastly.ToPointer(LoggingFormatUpdate),
 		FormatVersion:     gofastly.ToPointer(2),
 		GzipLevel:         gofastly.ToPointer(1),
@@ -233,7 +234,7 @@ resource "fastly_service_compute" "none" {
     region = "ORD"
     period = 3600
     timestamp_format = "%%Y-%%m-%%dT%%H:%%M:%%S.000"
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -272,7 +273,7 @@ resource "fastly_service_vcl" "none" {
   logging_cloudfiles {
     access_key = "secret"
     bucket_name = "bucket"
-    compression_codec = "zstd"
+    compression = "zstd"
     format_version = 2
     message_type = "classic"
     name = "cloudfiles-endpoint"
@@ -320,7 +321,7 @@ resource "fastly_service_vcl" "none" {
     bucket_name = "bucketupdate"
     format = %q
     format_version = 2
-    gzip_level = 1
+    compression = "gzip-1"
     message_type = "blank"
     name = "cloudfiles-endpoint"
     path = "new/"
@@ -336,7 +337,7 @@ resource "fastly_service_vcl" "none" {
   logging_cloudfiles {
     access_key = "secret2"
     bucket_name = "bucket2"
-    compression_codec = "zstd"
+    compression = "zstd"
     format = %q
     format_version = 2
     message_type = "classic"
@@ -393,7 +394,6 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					"public_key":         pgpPublicKey(t),
 					"format":             LoggingCloudFilesDefaultFormat,
 					"format_version":     2,
-					"gzip_level":         0,
 					"message_type":       "classic",
 					"path":               "/",
 					"region":             "ORD",
@@ -401,7 +401,7 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 					"placement":          "none",
 					"response_condition": "response_condition",
 					"timestamp_format":   "%Y-%m-%dT%H:%M:%S.000",
-					"compression_codec":  "zstd",
+					"compression":        "zstd",
 					"processing_region":  "eu",
 				},
 			},

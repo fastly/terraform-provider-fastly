@@ -57,6 +57,7 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		ACL:                          gofastly.ToPointer(gofastly.S3AccessControlListAWSExecRead),
 		AccessKey:                    gofastly.ToPointer(""),
 		BucketName:                   gofastly.ToPointer("fastlytestlogging"),
+		CompressionCodec:             nil,
 		Domain:                       gofastly.ToPointer("s3-us-west-2.amazonaws.com"),
 		FileMaxBytes:                 gofastly.ToPointer(0),
 		Format:                       gofastly.ToPointer(LoggingFormatUpdate),
@@ -384,7 +385,7 @@ resource "fastly_service_compute" "foo" {
     s3_access_key = "%s"
     s3_secret_key = "%s"
     public_key = file("test_fixtures/fastly_test_publickey")
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -427,7 +428,7 @@ resource "fastly_service_vcl" "foo" {
     s3_secret_key = "%s"
     response_condition = "response_condition_test"
     public_key = file("test_fixtures/fastly_test_publickey")
-    compression_codec = "zstd"
+    compression = "zstd"
     processing_region = "us"
   }
 
@@ -468,7 +469,7 @@ resource "fastly_service_vcl" "foo" {
     public_key = file("test_fixtures/fastly_test_publickey")
     redundancy = "reduced_redundancy"
 	acl = "aws-exec-read"
-    gzip_level = 3
+    compression = "gzip-3"
 	format = %q
   }
 
@@ -478,7 +479,7 @@ resource "fastly_service_vcl" "foo" {
     domain = "s3-us-west-2.amazonaws.com"
     s3_iam_role = "%s"
     period = 60
-    compression_codec = "zstd"
+    compression = "zstd"
 	format = %q
   }
 
@@ -555,11 +556,10 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 			local: []map[string]any{
 				{
 					"bucket_name":                       "bucket",
-					"compression_codec":                 "zstd",
+					"compression":                       "zstd",
 					"domain":                            "domain",
 					"format":                            LoggingS3DefaultFormat,
 					"format_version":                    2,
-					"gzip_level":                        -1, // we expect API default to be overridden to avoid diff.
 					"message_type":                      "classic",
 					"name":                              "s3-endpoint",
 					"path":                              "/",
@@ -576,7 +576,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"processing_region":                 "eu",
 				},
 			},
-			unset: true, // validating the user didn't set gzip_level
+			unset: true, // validating the user didn't set compression
 		},
 		{
 			remote: []*gofastly.S3{
@@ -587,6 +587,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					IAMRole:                      gofastly.ToPointer(testS3IAMRole),
 					Path:                         gofastly.ToPointer("/"),
 					Period:                       gofastly.ToPointer(3600),
+					CompressionCodec:             nil,
 					GzipLevel:                    gofastly.ToPointer(5),
 					Format:                       gofastly.ToPointer(LoggingFormatUpdate),
 					FormatVersion:                gofastly.ToPointer(2),
@@ -610,7 +611,7 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 					"s3_iam_role":                       testS3IAMRole,
 					"path":                              "/",
 					"period":                            3600,
-					"gzip_level":                        5,
+					"compression":                       "gzip-5",
 					"format":                            LoggingFormatUpdate,
 					"format_version":                    2,
 					"response_condition":                "response_condition_test",
@@ -630,21 +631,13 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			// This lets us validate that when gzip_level is set to -1 locally that we
-			// can avoid a diff caused by the remote state having a value of zero.
-			//
-			// The reason the remote state would be zero is because the default -1
-			// value causes the attribute to not be sent to the API and so the API
-			// will use zero as a default value and return that in its response.
-			//
-			// Because the attribute's default is -1, it is stored like that in the
-			// local state file.
+			// This lets us validate that when compression is not set locally that we
+			// can avoid a diff caused by the remote state.
 			var localState []any
 			if c.unset {
 				localState = []any{
 					map[string]any{
-						"gzip_level": -1,
-						"name":       "s3-endpoint",
+						"name": "s3-endpoint",
 					},
 				}
 			}

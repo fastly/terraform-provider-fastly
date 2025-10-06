@@ -61,7 +61,7 @@ func generateDashboardParams(t *testing.T) (name, description string, items []go
 		},
 	}
 
-	return name, description, items
+	return
 }
 
 func TestAccFastlyCustomDashboard_Basic(t *testing.T) {

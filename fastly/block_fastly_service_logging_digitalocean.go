@@ -267,8 +267,20 @@ func (h *DigitalOceanServiceAttributeHandler) Delete(ctx context.Context, d *sch
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For DigitalOcean logging, period is not VCL-only, so we preserve it.
+func (h *DigitalOceanServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for DigitalOcean logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenDigitalOcean models data into format suitable for saving to Terraform state.
-func flattenDigitalOcean(remoteState []*gofastly.DigitalOcean, _ []any) []map[string]any {
+func flattenDigitalOcean(remoteState []*gofastly.DigitalOcean, localState []any) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
 		data := map[string]any{}
@@ -316,11 +328,24 @@ func flattenDigitalOcean(remoteState []*gofastly.DigitalOcean, _ []any) []map[st
 			data["response_condition"] = *resource.ResponseCondition
 		}
 
+		// Check if compression was originally set in the config by looking at localState
+		var compressionSetInConfig bool
+		for _, s := range localState {
+			v := s.(map[string]any)
+			if resource.Name != nil && v["name"].(string) == *resource.Name {
+				_, compressionSetInConfig = v["compression"]
+				break
+			}
+		}
+
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-		if compression != "" {
-			data["compression"] = compression
+		// Only set it in state if it was originally specified in the config
+		if compressionSetInConfig {
+			compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
+			if compression != "" {
+				data["compression"] = compression
+			}
 		}
 
 		if resource.ProcessingRegion != nil {

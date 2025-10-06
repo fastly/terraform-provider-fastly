@@ -301,7 +301,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map
 		delete(data, "format_version")
 		delete(data, "placement")
 		delete(data, "response_condition")
-		// Note: period is NOT deleted for HTTPS logging as it's available for both VCL and Compute
+		// Note: period is not deleted for HTTPS logging as it's available for both VCL and Compute
 	}
 }
 
@@ -325,7 +325,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Delete(ctx context.Context, d *sch
 }
 
 // flattenHTTPS models data into format suitable for saving to Terraform state.
-func flattenHTTPS(remoteState []*gofastly.HTTPS, _ []any) []map[string]any {
+func flattenHTTPS(remoteState []*gofastly.HTTPS, localState []any) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
 		data := map[string]any{}
@@ -391,11 +391,24 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, _ []any) []map[string]any {
 			data["processing_region"] = *resource.ProcessingRegion
 		}
 
+		// Check if compression was originally set in the config by looking at localState
+		var compressionSetInConfig bool
+		for _, s := range localState {
+			v := s.(map[string]any)
+			if resource.Name != nil && v["name"].(string) == *resource.Name {
+				_, compressionSetInConfig = v["compression"]
+				break
+			}
+		}
+
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-		if compression != "" {
-			data["compression"] = compression
+		// Only set it in state if it was originally specified in the config
+		if compressionSetInConfig {
+			compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
+			if compression != "" {
+				data["compression"] = compression
+			}
 		}
 
 		// prune any empty values that come from the default string value in structs

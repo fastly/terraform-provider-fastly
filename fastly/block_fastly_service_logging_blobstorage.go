@@ -305,8 +305,20 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Delete(ctx context.Context, 
 	return nil
 }
 
+// pruneVCLLoggingAttributes removes VCL-only attributes from Compute service data.
+// For BlobStorage logging, period is not VCL-only, so we preserve it.
+func (h *BlobStorageLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]any) {
+	if h.GetServiceMetadata().serviceType == ServiceTypeCompute {
+		delete(data, "format")
+		delete(data, "format_version")
+		delete(data, "placement")
+		delete(data, "response_condition")
+		// Note: period is not deleted for BlobStorage logging as it's available for both VCL and Compute
+	}
+}
+
 // flattenBlobStorages models data into format suitable for saving to Terraform state.
-func flattenBlobStorages(remoteState []*gofastly.BlobStorage, _ []any) []map[string]any {
+func flattenBlobStorages(remoteState []*gofastly.BlobStorage, localState []any) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
 		data := map[string]any{}
@@ -315,11 +327,24 @@ func flattenBlobStorages(remoteState []*gofastly.BlobStorage, _ []any) []map[str
 			data["account_name"] = *resource.AccountName
 		}
 
+		// Check if compression was originally set in the config by looking at localState
+		var compressionSetInConfig bool
+		for _, s := range localState {
+			v := s.(map[string]any)
+			if resource.Name != nil && v["name"].(string) == *resource.Name {
+				_, compressionSetInConfig = v["compression"]
+				break
+			}
+		}
+
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-		if compression != "" {
-			data["compression"] = compression
+		// Only set it in state if it was originally specified in the config
+		if compressionSetInConfig {
+			compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
+			if compression != "" {
+				data["compression"] = compression
+			}
 		}
 
 		if resource.Container != nil {

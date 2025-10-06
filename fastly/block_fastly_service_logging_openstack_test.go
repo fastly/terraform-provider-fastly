@@ -82,6 +82,25 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	log3 := gofastly.Openstack{
+		AccessKey:        gofastly.ToPointer("s3cr3t3"),
+		BucketName:       gofastly.ToPointer("bucket3"),
+		CompressionCodec: nil,
+		Format:           gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:    gofastly.ToPointer(2),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("third-openstack-endpoint"),
+		Path:             gofastly.ToPointer("three/"),
+		Period:           gofastly.ToPointer(120),
+		Placement:        gofastly.ToPointer("none"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		TimestampFormat:  gofastly.ToPointer(`%Y-%m-%dT%H:%M:%S.000`),
+		URL:              gofastly.ToPointer("https://auth.example.com/v1"),
+		User:             gofastly.ToPointer("user3"),
+		ProcessingRegion: gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -106,6 +125,16 @@ func TestAccFastlyServiceVCL_logging_openstack_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLOpenstackAttributes(&service, []*gofastly.Openstack{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_openstack.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLOpenstackConfigCompressionNotSpecified(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLOpenstackCompressionNotSpecified(&service, []*gofastly.Openstack{&log3}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_openstack.#", "1"),
 				),
 			},
 		},
@@ -398,4 +427,59 @@ func TestResourceFastlyFlattenOpenstack(t *testing.T) {
 			t.Fatalf("Error matching: %s", diff)
 		}
 	}
+}
+
+func testAccCheckFastlyServiceVCLOpenstackCompressionNotSpecified(service *gofastly.ServiceDetail, openstacks []*gofastly.Openstack) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		openstackList, err := conn.ListOpenstack(context.TODO(), &gofastly.ListOpenstackInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Openstack Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+		if len(openstackList) != len(openstacks) {
+			return fmt.Errorf("Openstack List count mismatch, expected (%d), got (%d)", len(openstacks), len(openstackList))
+		}
+		for _, o := range openstacks {
+			for _, lo := range openstackList {
+				if gofastly.ToValue(o.Name) == gofastly.ToValue(lo.Name) {
+					if gofastly.ToValue(lo.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(o.GzipLevel), gofastly.ToValue(lo.GzipLevel))
+					}
+					o.GzipLevel = lo.GzipLevel
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func testAccServiceVCLOpenstackConfigCompressionNotSpecified(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+  domain {
+    name = "%s"
+    comment = "tf-openstack-logging"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
+  logging_openstack {
+    name = "third-openstack-endpoint"
+    bucket_name = "bucket3"
+    url = "https://auth.example.com/v1"
+    user = "user3"
+    access_key = "s3cr3t3"
+    path = "three/"
+    period = 120
+    format = %q
+    message_type = "classic"
+  }
+  force_destroy = true
+}
+`, name, domain, LoggingFormatUpdate)
 }

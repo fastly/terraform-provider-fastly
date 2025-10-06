@@ -82,6 +82,25 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	log3 := gofastly.DigitalOcean{
+		AccessKey:        gofastly.ToPointer("access3"),
+		BucketName:       gofastly.ToPointer("bucket3"),
+		CompressionCodec: nil,
+		Domain:           gofastly.ToPointer("nyc3.digitaloceanspaces.com"),
+		Format:           gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:    gofastly.ToPointer(2),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("third-digitalocean-endpoint"),
+		Path:             gofastly.ToPointer("three/"),
+		Period:           gofastly.ToPointer(120),
+		Placement:        gofastly.ToPointer("none"),
+		SecretKey:        gofastly.ToPointer("secret3"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion: gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -106,6 +125,16 @@ func TestAccFastlyServiceVCL_logging_digitalocean_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLDigitalOceanAttributes(&service, []*gofastly.DigitalOcean{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_digitalocean.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLDigitalOceanConfigCompressionNotSpecified(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLDigitalOceanCompressionNotSpecified(&service, []*gofastly.DigitalOcean{&log3}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_digitalocean.#", "1"),
 				),
 			},
 		},
@@ -408,4 +437,59 @@ func TestResourceFastlyFlattenDigitalOcean(t *testing.T) {
 			t.Fatalf("Error matching: %s", diff)
 		}
 	}
+}
+
+func testAccCheckFastlyServiceVCLDigitalOceanCompressionNotSpecified(service *gofastly.ServiceDetail, digitaloceans []*gofastly.DigitalOcean) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		digitaloceanList, err := conn.ListDigitalOceans(context.TODO(), &gofastly.ListDigitalOceansInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up DigitalOcean Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+		if len(digitaloceanList) != len(digitaloceans) {
+			return fmt.Errorf("DigitalOcean List count mismatch, expected (%d), got (%d)", len(digitaloceans), len(digitaloceanList))
+		}
+		for _, d := range digitaloceans {
+			for _, ld := range digitaloceanList {
+				if gofastly.ToValue(d.Name) == gofastly.ToValue(ld.Name) {
+					if gofastly.ToValue(ld.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(d.GzipLevel), gofastly.ToValue(ld.GzipLevel))
+					}
+					d.GzipLevel = ld.GzipLevel
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func testAccServiceVCLDigitalOceanConfigCompressionNotSpecified(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+  domain {
+    name = "%s"
+    comment = "tf-digitalocean-logging"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
+  logging_digitalocean {
+    name = "third-digitalocean-endpoint"
+    bucket_name = "bucket3"
+    access_key = "access3"
+    secret_key = "secret3"
+    domain = "nyc3.digitaloceanspaces.com"
+    path = "three/"
+    period = 120
+    format = %q
+    message_type = "classic"
+  }
+  force_destroy = true
+}
+`, name, domain, LoggingFormatUpdate)
 }

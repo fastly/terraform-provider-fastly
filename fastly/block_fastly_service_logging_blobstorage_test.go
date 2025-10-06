@@ -79,6 +79,24 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	blobStorageLogThree := gofastly.BlobStorage{
+		AccountName:      gofastly.ToPointer("test"),
+		CompressionCodec: nil,
+		Container:        gofastly.ToPointer("fastly"),
+		FileMaxBytes:     gofastly.ToPointer(1048576),
+		Format:           gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:    gofastly.ToPointer(2),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("test-blobstorage-3"),
+		Path:             gofastly.ToPointer("/3XX/"),
+		Period:           gofastly.ToPointer(120),
+		Placement:        gofastly.ToPointer("none"),
+		SASToken:         gofastly.ToPointer("sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%3A00%3A00Z&sig=3ABdLOJZosCp0o491T%2BqZGKIhafF1nlM3MzESDDD3Gg%3D"),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion: gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -103,6 +121,16 @@ func TestAccFastlyServiceVCL_blobstoragelogging_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLBlobStorageLoggingAttributes(&service, []*gofastly.BlobStorage{&blobStorageLogOneUpdated, &blobStorageLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_blobstorage.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLBlobStorageLoggingConfigCompressionNotSpecified(serviceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLBlobStorageLoggingCompressionNotSpecified(&service, []*gofastly.BlobStorage{&blobStorageLogThree}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_blobstorage.#", "1"),
 				),
 			},
 		},
@@ -557,4 +585,63 @@ func TestResourceFastlyFlattenBlobStorage(t *testing.T) {
 			t.Fatalf("Error matching: %s", diff)
 		}
 	}
+}
+
+func testAccCheckFastlyServiceVCLBlobStorageLoggingCompressionNotSpecified(service *gofastly.ServiceDetail, blobstorages []*gofastly.BlobStorage) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		blobstorageList, err := conn.ListBlobStorages(context.TODO(), &gofastly.ListBlobStoragesInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up BlobStorage Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+		if len(blobstorageList) != len(blobstorages) {
+			return fmt.Errorf("BlobStorage List count mismatch, expected (%d), got (%d)", len(blobstorages), len(blobstorageList))
+		}
+		for _, b := range blobstorages {
+			for _, lb := range blobstorageList {
+				if gofastly.ToValue(b.Name) == gofastly.ToValue(lb.Name) {
+					if gofastly.ToValue(lb.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(b.GzipLevel), gofastly.ToValue(lb.GzipLevel))
+					}
+					b.GzipLevel = lb.GzipLevel
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func testAccServiceVCLBlobStorageLoggingConfigCompressionNotSpecified(serviceName string) string {
+	domainName := fmt.Sprintf("fastly-test.tf-%s.com", acctest.RandString(10))
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name = "%s"
+    comment = "tf-testing-domain"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name = "tf-test-backend"
+  }
+
+  logging_blobstorage {
+    name = "test-blobstorage-3"
+    path = "/3XX/"
+    account_name = "test"
+    container = "fastly"
+    sas_token = "sv=2018-04-05&ss=b&srt=sco&sp=rw&se=2050-07-21T18%%3A00%%3A00Z&sig=3ABdLOJZosCp0o491T%%2BqZGKIhafF1nlM3MzESDDD3Gg%%3D"
+    period = 120
+    format = %q
+    message_type = "classic"
+    file_max_bytes = 1048576
+  }
+
+  force_destroy = true
+}`, serviceName, domainName, LoggingFormatUpdate)
 }

@@ -83,6 +83,25 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	log3 := gofastly.Cloudfiles{
+		AccessKey:        gofastly.ToPointer("secret3"),
+		BucketName:       gofastly.ToPointer("bucket3"),
+		CompressionCodec: nil,
+		Format:           gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:    gofastly.ToPointer(2),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("third-cloudfiles-endpoint"),
+		Path:             gofastly.ToPointer("three/"),
+		Period:           gofastly.ToPointer(120),
+		Placement:        gofastly.ToPointer("none"),
+		Region:           gofastly.ToPointer("DFW"),
+		ServiceVersion:   gofastly.ToPointer(1),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:             gofastly.ToPointer("user3"),
+		ProcessingRegion: gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -107,6 +126,16 @@ func TestAccFastlyServiceVCL_logging_cloudfiles_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLCloudfilesAttributes(&service, []*gofastly.Cloudfiles{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.none", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.none", "logging_cloudfiles.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLCloudfilesConfigCompressionNotSpecified(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.none", &service),
+					testAccCheckFastlyServiceVCLCloudfilesCompressionNotSpecified(&service, []*gofastly.Cloudfiles{&log3}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.none", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.none", "logging_cloudfiles.#", "1"),
 				),
 			},
 		},
@@ -414,4 +443,59 @@ func TestResourceFastlyFlattenCloudfiles(t *testing.T) {
 			t.Fatalf("Error matching: %s", diff)
 		}
 	}
+}
+
+func testAccCheckFastlyServiceVCLCloudfilesCompressionNotSpecified(service *gofastly.ServiceDetail, cloudfiles []*gofastly.Cloudfiles) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		cloudfilesList, err := conn.ListCloudfiles(context.TODO(), &gofastly.ListCloudfilesInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up Cloudfiles Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+		if len(cloudfilesList) != len(cloudfiles) {
+			return fmt.Errorf("Cloudfiles List count mismatch, expected (%d), got (%d)", len(cloudfiles), len(cloudfilesList))
+		}
+		for _, c := range cloudfiles {
+			for _, lc := range cloudfilesList {
+				if gofastly.ToValue(c.Name) == gofastly.ToValue(lc.Name) {
+					if gofastly.ToValue(lc.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(c.GzipLevel), gofastly.ToValue(lc.GzipLevel))
+					}
+					c.GzipLevel = lc.GzipLevel
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func testAccServiceVCLCloudfilesConfigCompressionNotSpecified(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "none" {
+  name = "%s"
+  domain {
+    name = "%s"
+    comment = "tf-cloudfiles-logging"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
+  logging_cloudfiles {
+    name = "third-cloudfiles-endpoint"
+    bucket_name = "bucket3"
+    user = "user3"
+    access_key = "secret3"
+    path = "three/"
+    region = "DFW"
+    period = 120
+    format = %q
+    message_type = "classic"
+  }
+  force_destroy = true
+}
+`, name, domain, LoggingFormatUpdate)
 }

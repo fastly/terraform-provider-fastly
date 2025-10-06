@@ -321,7 +321,7 @@ func (h *GCSLoggingServiceAttributeHandler) pruneVCLLoggingAttributes(data map[s
 }
 
 // flattenGCS models data into format suitable for saving to Terraform state.
-func flattenGCS(remoteState []*gofastly.GCS, localState []any) []map[string]any {
+func flattenGCS(remoteState []*gofastly.GCS, _ []any) []map[string]any {
 	var result []map[string]any
 	for _, resources := range remoteState {
 		data := map[string]any{}
@@ -369,24 +369,11 @@ func flattenGCS(remoteState []*gofastly.GCS, localState []any) []map[string]any 
 			data["placement"] = *resources.Placement
 		}
 
-		// Check if compression was originally set in the config by looking at localState
-		var compressionSetInConfig bool
-		for _, s := range localState {
-			v := s.(map[string]any)
-			if resources.Name != nil && v["name"].(string) == *resources.Name {
-				_, compressionSetInConfig = v["compression"]
-				break
-			}
-		}
-
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		// Only set it in state if it was originally specified in the config
-		if compressionSetInConfig {
-			compression := APIFieldsToCompression(resources.CompressionCodec, resources.GzipLevel)
-			if compression != "" {
-				data["compression"] = compression
-			}
+		compression := APIFieldsToCompression(resources.CompressionCodec, resources.GzipLevel)
+		if compression != "" {
+			data["compression"] = compression
 		}
 
 		if resources.ProcessingRegion != nil {

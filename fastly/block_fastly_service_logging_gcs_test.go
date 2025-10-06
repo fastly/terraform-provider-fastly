@@ -84,6 +84,25 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	gcsLogThree := gofastly.GCS{
+		AccountName:      gofastly.ToPointer("service-account"),
+		Bucket:           gofastly.ToPointer("bucketname"),
+		CompressionCodec: nil,
+		Format:           gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:    gofastly.ToPointer(2),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("test-gcs-3"),
+		Path:             gofastly.ToPointer("/3XX/"),
+		Period:           gofastly.ToPointer(120),
+		Placement:        gofastly.ToPointer("none"),
+		ProjectID:        gofastly.ToPointer("project-id3"),
+		SecretKey:        gofastly.ToPointer(secretKey),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:             gofastly.ToPointer("email@example.com"),
+		ProcessingRegion: gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -108,6 +127,16 @@ func TestAccFastlyServiceVCL_gcslogging_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLGCSLoggingAttributes(&service, []*gofastly.GCS{&gcsLogOneUpdated, &gcsLogTwo}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_gcs.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLGCSLoggingConfigCompressionNotSpecified(serviceName, secretKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLGCSLoggingCompressionNotSpecified(&service, []*gofastly.GCS{&gcsLogThree}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", serviceName),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_gcs.#", "1"),
 				),
 			},
 		},
@@ -498,4 +527,64 @@ func TestResourceFastlyFlattenGCS(t *testing.T) {
 			t.Fatalf("Error matching:\nexpected: %#v\ngot: %#v", c.local, out)
 		}
 	}
+}
+
+func testAccCheckFastlyServiceVCLGCSLoggingCompressionNotSpecified(service *gofastly.ServiceDetail, gcss []*gofastly.GCS) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		gcsList, err := conn.ListGCSs(context.TODO(), &gofastly.ListGCSsInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up GCS Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+		if len(gcsList) != len(gcss) {
+			return fmt.Errorf("GCS List count mismatch, expected (%d), got (%d)", len(gcss), len(gcsList))
+		}
+		for _, g := range gcss {
+			for _, lg := range gcsList {
+				if gofastly.ToValue(g.Name) == gofastly.ToValue(lg.Name) {
+					if gofastly.ToValue(lg.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(g.GzipLevel), gofastly.ToValue(lg.GzipLevel))
+					}
+					g.GzipLevel = lg.GzipLevel
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func testAccServiceVCLGCSLoggingConfigCompressionNotSpecified(serviceName, secretKey string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+
+  domain {
+    name    = "fastly-test.example.com"
+    comment = "test"
+  }
+
+  backend {
+    address = "aws.amazon.com"
+    name    = "amazon docs"
+  }
+
+  logging_gcs {
+    name               = "test-gcs-3"
+    user               = "email@example.com"
+    bucket_name        = "bucketname"
+    secret_key         = %q
+    path               = "/3XX/"
+    period             = 120
+    format             = %q
+    account_name       = "service-account"
+    project_id         = "project-id3"
+    message_type       = "classic"
+  }
+
+  force_destroy = true
+}
+`, serviceName, secretKey, LoggingFormatUpdate)
 }

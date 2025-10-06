@@ -99,28 +99,34 @@ func CompressionToAPIFields(compression string) (compressionCodec *string, gzipL
 // Reverse mapping:
 // - compression_codec: "zstd" -> "zstd"
 // - compression_codec: "snappy" -> "snappy"
-// - compression_codec: nil, gzip_level: 0 -> "none"
+// - compression_codec: "" (empty string), gzip_level: 0 -> "none"
 // - compression_codec: "gzip", gzip_level: 0 -> "gzip-0"
 // - compression_codec: "gzip", gzip_level: nil -> "gzip-3" (default)
-// - compression_codec: nil, gzip_level: 1-9 -> "gzip-1" through "gzip-9".
+// - compression_codec: nil, gzip_level: 1-9 -> "gzip-1" through "gzip-9"
+// - compression_codec: nil, gzip_level: 0 -> "" (not set by user).
 func APIFieldsToCompression(compressionCodec *string, gzipLevel *int) string {
-	if compressionCodec != nil && *compressionCodec != "" {
-		switch *compressionCodec {
-		case "zstd":
-			return CompressionZstd
-		case "snappy":
-			return CompressionSnappy
-		case "gzip":
-			if gzipLevel != nil {
-				return fmt.Sprintf("gzip-%d", *gzipLevel)
+	if compressionCodec != nil {
+		if *compressionCodec != "" {
+			switch *compressionCodec {
+			case "zstd":
+				return CompressionZstd
+			case "snappy":
+				return CompressionSnappy
+			case "gzip":
+				if gzipLevel != nil {
+					return fmt.Sprintf("gzip-%d", *gzipLevel)
+				}
+				return CompressionGzip3 // Default gzip level when codec is gzip but not specified
 			}
-			return CompressionGzip3 // Default gzip level when codec is gzip but not specified
+		} else if *compressionCodec == "" && gzipLevel != nil && *gzipLevel == 0 {
+			// When compression_codec is explicitly "" (empty string) and gzip_level is 0,
+			// this means the user set compression = "none"
+			return CompressionNone
 		}
-	} else if gzipLevel != nil && *gzipLevel == 0 {
-		// When compression_codec is nil/empty and gzip_level is 0, this represents "none"
-		return CompressionNone
 	}
 
+	// If compressionCodec is nil and gzipLevel is 0 or nil, compression was not set by the user
+	// Return empty string so it won't be added to state
 	if gzipLevel != nil && *gzipLevel >= 1 && *gzipLevel <= 9 {
 		return fmt.Sprintf("gzip-%d", *gzipLevel)
 	}

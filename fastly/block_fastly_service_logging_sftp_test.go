@@ -89,6 +89,27 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 		ProcessingRegion:  gofastly.ToPointer("none"),
 	}
 
+	log3 := gofastly.SFTP{
+		Address:          gofastly.ToPointer("sftp3.example.com"),
+		CompressionCodec: nil,
+		Format:           gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:    gofastly.ToPointer(2),
+		GzipLevel:        gofastly.ToPointer(0),
+		MessageType:      gofastly.ToPointer("classic"),
+		Name:             gofastly.ToPointer("third-sftp-endpoint"),
+		Password:         gofastly.ToPointer("password3"),
+		Path:             gofastly.ToPointer("/logs/"),
+		Period:           gofastly.ToPointer(120),
+		Placement:        gofastly.ToPointer("none"),
+		Port:             gofastly.ToPointer(22),
+		SSHKnownHosts:    gofastly.ToPointer("sftp3.example.com"),
+		SecretKey:        gofastly.ToPointer(""),
+		ServiceVersion:   gofastly.ToPointer(1),
+		TimestampFormat:  gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		User:             gofastly.ToPointer("user3"),
+		ProcessingRegion: gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -113,6 +134,16 @@ func TestAccFastlyServiceVCL_logging_sftp_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLSFTPAttributes(&service, []*gofastly.SFTP{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_sftp.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLSFTPConfigCompressionNotSpecified(name, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLSFTPCompressionNotSpecified(&service, []*gofastly.SFTP{&log3}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_sftp.#", "1"),
 				),
 			},
 		},
@@ -461,4 +492,60 @@ func TestResourceFastlyFlattenSFTP(t *testing.T) {
 			t.Fatalf("Error matching: %s", diff)
 		}
 	}
+}
+
+func testAccCheckFastlyServiceVCLSFTPCompressionNotSpecified(service *gofastly.ServiceDetail, sftps []*gofastly.SFTP) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		sftpList, err := conn.ListSFTPs(context.TODO(), &gofastly.ListSFTPsInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up SFTP Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+		if len(sftpList) != len(sftps) {
+			return fmt.Errorf("SFTP List count mismatch, expected (%d), got (%d)", len(sftps), len(sftpList))
+		}
+		for _, s := range sftps {
+			for _, ls := range sftpList {
+				if gofastly.ToValue(s.Name) == gofastly.ToValue(ls.Name) {
+					if gofastly.ToValue(ls.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(s.GzipLevel), gofastly.ToValue(ls.GzipLevel))
+					}
+					s.GzipLevel = ls.GzipLevel
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func testAccServiceVCLSFTPConfigCompressionNotSpecified(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+  domain {
+    name = "%s"
+    comment = "tf-sftp-logging"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
+  logging_sftp {
+    name = "third-sftp-endpoint"
+    address = "sftp3.example.com"
+    user = "user3"
+    password = "password3"
+    path = "/logs/"
+    ssh_known_hosts = "sftp3.example.com"
+    port = 22
+    period = 120
+    format = %q
+    message_type = "classic"
+  }
+  force_destroy = true
+}
+`, name, domain, LoggingFormatUpdate)
 }

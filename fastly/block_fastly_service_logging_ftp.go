@@ -280,7 +280,7 @@ func (h *FTPServiceAttributeHandler) pruneVCLLoggingAttributes(data map[string]a
 }
 
 // flattenFTP models data into format suitable for saving to Terraform state.
-func flattenFTP(remoteState []*gofastly.FTP, localState []any) []map[string]any {
+func flattenFTP(remoteState []*gofastly.FTP, _ []any) []map[string]any {
 	var result []map[string]any
 	for _, resource := range remoteState {
 		data := map[string]any{}
@@ -328,24 +328,11 @@ func flattenFTP(remoteState []*gofastly.FTP, localState []any) []map[string]any 
 			data["response_condition"] = *resource.ResponseCondition
 		}
 
-		// Check if compression was originally set in the config by looking at localState
-		var compressionSetInConfig bool
-		for _, s := range localState {
-			v := s.(map[string]any)
-			if resource.Name != nil && v["name"].(string) == *resource.Name {
-				_, compressionSetInConfig = v["compression"]
-				break
-			}
-		}
-
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		// Only set it in state if it was originally specified in the config
-		if compressionSetInConfig {
-			compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-			if compression != "" {
-				data["compression"] = compression
-			}
+		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
+		if compression != "" {
+			data["compression"] = compression
 		}
 
 		if resource.ProcessingRegion != nil {

@@ -103,6 +103,31 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 		ProcessingRegion:             gofastly.ToPointer("none"),
 	}
 
+	log3 := gofastly.S3{
+		ACL:                          gofastly.ToPointer(gofastly.S3AccessControlList("")),
+		AccessKey:                    gofastly.ToPointer(""),
+		BucketName:                   gofastly.ToPointer("fastlytestlogging3"),
+		CompressionCodec:             nil,
+		Domain:                       gofastly.ToPointer("s3-us-west-2.amazonaws.com"),
+		FileMaxBytes:                 gofastly.ToPointer(0),
+		Format:                       gofastly.ToPointer(LoggingFormatUpdate),
+		FormatVersion:                gofastly.ToPointer(2),
+		GzipLevel:                    gofastly.ToPointer(0),
+		IAMRole:                      gofastly.ToPointer(testS3IAMRole),
+		MessageType:                  gofastly.ToPointer("classic"),
+		Name:                         gofastly.ToPointer("yetanotherbucketlog"),
+		Path:                         gofastly.ToPointer(""),
+		Period:                       gofastly.ToPointer(120),
+		PublicKey:                    gofastly.ToPointer(""),
+		Redundancy:                   gofastly.ToPointer(gofastly.S3Redundancy("")),
+		ResponseCondition:            gofastly.ToPointer(""),
+		SecretKey:                    gofastly.ToPointer(""),
+		ServerSideEncryptionKMSKeyID: gofastly.ToPointer(""),
+		ServiceVersion:               gofastly.ToPointer(1),
+		TimestampFormat:              gofastly.ToPointer("%Y-%m-%dT%H:%M:%S.000"),
+		ProcessingRegion:             gofastly.ToPointer("none"),
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -127,6 +152,16 @@ func TestAccFastlyServiceVCL_s3logging_basic(t *testing.T) {
 					testAccCheckFastlyServiceVCLS3LoggingAttributes(&service, []*gofastly.S3{&log1AfterUpdate, &log2}, ServiceTypeVCL),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
 					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_s3.#", "2"),
+				),
+			},
+
+			{
+				Config: testAccServiceVCLS3LoggingConfigCompressionNotSpecified(name, domainName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists("fastly_service_vcl.foo", &service),
+					testAccCheckFastlyServiceVCLS3LoggingCompressionNotSpecified(&service, []*gofastly.S3{&log3}),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "name", name),
+					resource.TestCheckResourceAttr("fastly_service_vcl.foo", "logging_s3.#", "1"),
 				),
 			},
 		},
@@ -647,4 +682,57 @@ func TestResourceFastlyFlattenS3(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testAccCheckFastlyServiceVCLS3LoggingCompressionNotSpecified(service *gofastly.ServiceDetail, s3s []*gofastly.S3) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		conn := testAccProvider.Meta().(*APIClient).conn
+		s3List, err := conn.ListS3s(context.TODO(), &gofastly.ListS3sInput{
+			ServiceID:      gofastly.ToValue(service.ServiceID),
+			ServiceVersion: gofastly.ToValue(service.ActiveVersion.Number),
+		})
+		if err != nil {
+			return fmt.Errorf("error looking up S3 Logging for (%s), version (%v): %s", gofastly.ToValue(service.Name), gofastly.ToValue(service.ActiveVersion.Number), err)
+		}
+		if len(s3List) != len(s3s) {
+			return fmt.Errorf("s3 List count mismatch, expected (%d), got (%d)", len(s3s), len(s3List))
+		}
+		for _, s := range s3s {
+			for _, ls := range s3List {
+				if gofastly.ToValue(s.Name) == gofastly.ToValue(ls.Name) {
+					if gofastly.ToValue(ls.GzipLevel) != 0 {
+						return fmt.Errorf("Wrong GzipLevel, expected (%d), got (%d)", gofastly.ToValue(s.GzipLevel), gofastly.ToValue(ls.GzipLevel))
+					}
+					s.GzipLevel = ls.GzipLevel
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func testAccServiceVCLS3LoggingConfigCompressionNotSpecified(name, domain string) string {
+	return fmt.Sprintf(`
+resource "fastly_service_vcl" "foo" {
+  name = "%s"
+  domain {
+    name = "%s"
+    comment = "tf-testing-domain"
+  }
+  backend {
+    address = "aws.amazon.com"
+    name = "amazon docs"
+  }
+  logging_s3 {
+    name = "yetanotherbucketlog"
+    bucket_name = "fastlytestlogging3"
+    domain = "s3-us-west-2.amazonaws.com"
+    s3_iam_role = "%s"
+    period = 120
+    message_type = "classic"
+	format = %q
+  }
+  force_destroy = true
+}
+`, name, domain, testS3IAMRole, LoggingFormatUpdate)
 }

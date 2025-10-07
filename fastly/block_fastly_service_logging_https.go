@@ -241,9 +241,7 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 		opts.ContentType = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["compression"]; ok {
-		compressionCodec, gzipLevel := CompressionToAPIFields(v.(string))
-		opts.CompressionCodec = compressionCodec
-		opts.GzipLevel = gzipLevel
+		opts.CompressionCodec, opts.GzipLevel = CompressionToAPIFields(v.(string))
 	}
 	if v, ok := modified["header_name"]; ok {
 		opts.HeaderName = gofastly.ToPointer(v.(string))
@@ -393,8 +391,7 @@ func flattenHTTPS(remoteState []*gofastly.HTTPS, _ []any) []map[string]any {
 
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-		if compression != "" {
+		if compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel); compression != "" {
 			data["compression"] = compression
 		}
 

@@ -288,9 +288,7 @@ func (h *S3LoggingServiceAttributeHandler) Update(ctx context.Context, d *schema
 		opts.Period = gofastly.ToPointer(v.(int))
 	}
 	if v, ok := modified["compression"]; ok {
-		compressionCodec, gzipLevel := CompressionToAPIFields(v.(string))
-		opts.CompressionCodec = compressionCodec
-		opts.GzipLevel = gzipLevel
+		opts.CompressionCodec, opts.GzipLevel = CompressionToAPIFields(v.(string))
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.ToPointer(v.(string))
@@ -440,8 +438,7 @@ func flattenS3s(remoteState []*gofastly.S3, _ []any) []map[string]any {
 
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-		if compression != "" {
+		if compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel); compression != "" {
 			data["compression"] = compression
 		}
 

@@ -125,10 +125,12 @@ func APIFieldsToCompression(compressionCodec *string, gzipLevel *int) string {
 		}
 	}
 
-	// If compressionCodec is nil and gzipLevel is 0 or nil, compression was not set by the user
-	// Return empty string so it won't be added to state
+	// compressionCodec is nil at this point, so we have to  handle cases where gzipLevel is set.
 	if gzipLevel != nil && *gzipLevel >= 1 && *gzipLevel <= 9 {
+		// Return the specific gzip level.
 		return fmt.Sprintf("gzip-%d", *gzipLevel)
 	}
+	// Otherwise return an empty string to indicate that
+	// compression wasn't set by the end user.
 	return ""
 }

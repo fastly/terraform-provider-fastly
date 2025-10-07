@@ -248,9 +248,7 @@ func (h *BlobStorageLoggingServiceAttributeHandler) Update(ctx context.Context, 
 		opts.TimestampFormat = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["compression"]; ok {
-		compressionCodec, gzipLevel := CompressionToAPIFields(v.(string))
-		opts.CompressionCodec = compressionCodec
-		opts.GzipLevel = gzipLevel
+		opts.CompressionCodec, opts.GzipLevel = CompressionToAPIFields(v.(string))
 	}
 	if v, ok := modified["public_key"]; ok {
 		opts.PublicKey = gofastly.ToPointer(v.(string))
@@ -329,8 +327,7 @@ func flattenBlobStorages(remoteState []*gofastly.BlobStorage, _ []any) []map[str
 
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-		if compression != "" {
+		if compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel); compression != "" {
 			data["compression"] = compression
 		}
 

@@ -224,9 +224,7 @@ func (h *FTPServiceAttributeHandler) Update(ctx context.Context, d *schema.Resou
 		opts.Placement = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["compression"]; ok {
-		compressionCodec, gzipLevel := CompressionToAPIFields(v.(string))
-		opts.CompressionCodec = compressionCodec
-		opts.GzipLevel = gzipLevel
+		opts.CompressionCodec, opts.GzipLevel = CompressionToAPIFields(v.(string))
 	}
 	if v, ok := modified["message_type"]; ok {
 		opts.MessageType = gofastly.ToPointer(v.(string))
@@ -330,8 +328,7 @@ func flattenFTP(remoteState []*gofastly.FTP, _ []any) []map[string]any {
 
 		// compression represents the combined value of the compression_codec and gzip_level
 		// attributes that we will need to parse to the API accordingly
-		compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel)
-		if compression != "" {
+		if compression := APIFieldsToCompression(resource.CompressionCodec, resource.GzipLevel); compression != "" {
 			data["compression"] = compression
 		}
 

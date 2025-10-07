@@ -548,7 +548,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `file_max_bytes` (Number) Maximum size of an uploaded log file, if non-zero.
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)
@@ -575,7 +575,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
@@ -619,7 +619,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `domain` (String) The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
@@ -673,7 +673,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
@@ -697,7 +697,7 @@ Required:
 Optional:
 
 - `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `format` (String) Apache-style string or VCL variables to use for log formatting
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (Default: 2)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
@@ -799,7 +799,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `content_type` (String) Value of the `Content-Type` header sent with the request
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2)
@@ -975,7 +975,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `format` (String) Apache style log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either `1` or `2`. (default: `2`).
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
@@ -1017,7 +1017,7 @@ Required:
 Optional:
 
 - `acl` (String) The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `domain` (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
 - `file_max_bytes` (Number) Maximum size of an uploaded log file, if non-zero.
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
@@ -1070,7 +1070,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `format` (String) Apache-style string or VCL variables to use for log formatting.
 - `format_version` (Number) The version of the custom logging format used for the configured endpoint. Can be either 1 or 2. (default: 2).
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`

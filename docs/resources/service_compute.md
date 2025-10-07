@@ -293,7 +293,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `file_max_bytes` (Number) Maximum size of an uploaded log file, if non-zero.
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to. Must end with a trailing slash. If this field is left empty, the files will be saved in the container's root path
@@ -316,7 +316,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)
@@ -352,7 +352,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `domain` (String) The domain of the DigitalOcean Spaces endpoint (default `nyc3.digitaloceanspaces.com`)
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) The path to upload logs to
@@ -398,7 +398,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default `3600`)
 - `port` (Number) The port number. Default: `21`
@@ -418,7 +418,7 @@ Required:
 Optional:
 
 - `account_name` (String) The google account name used to obtain temporary credentials (default none). You may optionally provide this via an environment variable, `FASTLY_GCS_ACCOUNT_NAME`.
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds (Default 3600)
@@ -500,7 +500,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `content_type` (String) Value of the `Content-Type` header sent with the request
 - `header_name` (String) Custom header sent with the request
 - `header_value` (String) Value of the custom header sent with the request
@@ -648,7 +648,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `path` (String) Path to store the files. Must end with a trailing slash. If this field is left empty, the files will be saved in the bucket's root path
 - `period` (Number) How frequently the logs should be transferred, in seconds. Default `3600`
@@ -682,7 +682,7 @@ Required:
 Optional:
 
 - `acl` (String) The AWS [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl) to use for objects uploaded to the S3 bucket. Options are: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `domain` (String) If you created the S3 bucket outside of `us-east-1`, then specify the corresponding bucket endpoint. Example: `s3-us-west-2.amazonaws.com`
 - `file_max_bytes` (Number) Maximum size of an uploaded log file, if non-zero.
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
@@ -727,7 +727,7 @@ Required:
 
 Optional:
 
-- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none
+- `compression` (String) Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none
 - `message_type` (String) How the message should be formatted. Can be either `classic`, `loggly`, `logplex` or `blank`. Default is `classic`
 - `password` (String, Sensitive) The password for the server. If both `password` and `secret_key` are passed, `secret_key` will be preferred
 - `period` (Number) How frequently log files are finalized so they can be available for reading (in seconds, default `3600`)

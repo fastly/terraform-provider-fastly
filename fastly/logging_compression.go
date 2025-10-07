@@ -24,7 +24,7 @@ const (
 )
 
 // CompressionDescription describes the compression field for logging endpoints.
-const CompressionDescription = "Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, or none"
+const CompressionDescription = "Compression format for log data. Valid values: zstd, snappy, gzip-0 through gzip-9, and none"
 
 // LoggingCompressionOptions returns all valid compression options.
 func LoggingCompressionOptions() []string {

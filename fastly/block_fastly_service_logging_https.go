@@ -254,7 +254,14 @@ func (h *HTTPSLoggingServiceAttributeHandler) Update(ctx context.Context, d *sch
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition specificlly is added for HTTPS since we only recently
+		// added support for compression on this endpoint in v8.1.0. As such,
+		// users that upgraded were having a default value of `-1` being set up 'gzip_level'
+		// during an Update operation, but had no suppression of sending this `-1` value to
+		// to the API, resulting an errors as `-1` is not a valid value for `gzip_level`.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["header_name"]; ok {
 		opts.HeaderName = gofastly.ToPointer(v.(string))

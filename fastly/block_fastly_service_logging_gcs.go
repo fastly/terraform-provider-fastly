@@ -266,7 +266,11 @@ func (h *GCSLoggingServiceAttributeHandler) Update(ctx context.Context, d *schem
 		opts.CompressionCodec = gofastly.ToPointer(v.(string))
 	}
 	if v, ok := modified["gzip_level"]; ok {
-		opts.GzipLevel = gofastly.ToPointer(v.(int))
+		// This condition prevents users on old provider versions from having
+		// compatibility issues with the default 'gzip_level' value of `-1` when upgrading to more recent versions.
+		if gl := v.(int); gl != -1 {
+			opts.GzipLevel = gofastly.ToPointer(gl)
+		}
 	}
 	if v, ok := modified["format"]; ok {
 		opts.Format = gofastly.ToPointer(v.(string))

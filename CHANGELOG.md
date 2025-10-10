@@ -5,6 +5,7 @@
 ### ENHANCEMENTS:
 
 ### BUG FIXES:
+- fix(logging/https): corrected a bug where users that had a HTTPS logging block would encounter 'gzip_level' API errors after upgrading to the v8.1.0 provider or later ([#1118](https://github.com/fastly/terraform-provider-fastly/pull/1118))
 
 ### DEPENDENCIES:
 
